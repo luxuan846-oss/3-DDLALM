@@ -1,0 +1,50 @@
+\section{Preliminaries}
+\begin{definition}[KKT Point and $(\varepsilon_1, \varepsilon_2)$-KKT Point]
+\label{def:kkt}
+A point $\bx^* \in \calX$ is called a \emph{KKT point} 
+of problem \eqref{eq:nonlinear-composite} if
+\begin{equation}\label{eq:kkt}
+    0 \in \nabla f(\bx^*) + \partial g(\bx^*) 
+    + J_{\bc}(\bx^*)^\top \partial h\big(\bc(\bx^*)\big)
+    + \mathcal{N}_{\calX}(\bx^*).
+\end{equation}
+Moreover, for $\varepsilon_1, \varepsilon_2 > 0$, a point 
+$\bx^* \in \calX$ is called an 
+\emph{$(\varepsilon_1, \varepsilon_2)$-KKT point} if there exists 
+$\by^* \in \mathbb{R}^m$ such that:
+\begin{align}
+    \mathrm{dist}\Big(- \mathcal{N}_{\calX}(\bx^*),\; \nabla f(\bx^*) + \partial g(\bx^*) 
+    + J_{\bc}(\bx^*)^\top \partial h\big(\by^*\big)\Big) 
+    &\leq \varepsilon_1, \label{eq:eps-kkt-stationarity}\\
+    \|\bc(\bx^*) - \by^*\| 
+    &\leq \varepsilon_2. \label{eq:eps-kkt-feasibility}
+\end{align}
+\end{definition}
+\begin{remark}
+Condition \eqref{eq:kkt} is derived via the chain rule under 
+Assumption~\ref{ass:CQ}. In the block-separable formulation 
+\eqref{eq:block-separable}, introducing a dual multiplier 
+$\lambda^* \in \mathbb{R}^m$, the KKT condition 
+\eqref{eq:kkt} is equivalently expressed as:
+\begin{align}
+    0 &\in \nabla f(x^*) + \partial g(x^*) 
+        + J_{\bc}(x^*)^T \lambda^*, \\
+    0 &\in \partial h(y^*) - \lambda^*, \\
+    0 &= \bc(x^*) - y^*,
+\end{align}
+which reduces to \eqref{eq:kkt} upon eliminating $\lambda^*$.
+\end{remark}
+
+\subsection{Main Assumptions}
+To establish the ensuing analysis, we introduce the following standard assumptions for problem
+
+\begin{assumption}[Constraint Qualification]\label{ass:CQ}
+The following constraint qualification holds for problem 
+\eqref{eq:nonlinear-composite}:
+\[
+    \text{[CQ]} \qquad 
+    \nabla \bc(\bx)^T y = 0, \quad 
+    y \in \partial^\infty h\big(\bc(\bx)\big) 
+    \implies y = 0.
+\]
+\end{assumption}

@@ -1,0 +1,130 @@
+\section{Methodology}
+To decouple the nonlinear term $h\circ\bc$, we introduce an auxiliary variable
+$\by$ and a residual variable $\bz$ and rewrite \eqref{eq:nonlinear-composite} as
+\begin{equation}\label{eq:reformulated-problem}
+    \min_{\bx,\by,\bz}\; f(\bx)+g(\bx)+h(\by)
+    \quad\text{s.t.}\quad \bc(\bx)-\by = \bz,\ \ \bz=\bm{0}.
+\end{equation}
+
+Following~\cite{}, we define the perturbed proximal Lagrangian
+\begin{equation}\label{eq:perturbation_alf}
+\begin{aligned}
+    \calL(\bx,\by,\bz,\blmbd,\bmu)
+    :=\;& f(\bx)+g(\bx)+h(\by)
+    + \langle \blmbd,\,\bc(\bx)-\by-\bz\rangle
+    + \langle \bmu,\,\bz\rangle + \frac{\alpha}{2}\|\bz\|^2
+    - \frac{\beta}{2}\|\blmbd-\bmu\|^2 \notag \\
+    + \frac{\rho}{2} \| \bc(\bx) - \by\|^2
+\end{aligned}
+\end{equation}
+where $\blmbd,\bmu\in\RR^m$ are dual variables associated with the constraints
+in \eqref{eq:reformulated-problem}. The parameter $\alpha$ plays the role of a
+primal penalty on $\bz$, while $\beta$ introduces a dual regularization term.
+
+The proximal Lagrangian function, obtained by eliminating $\bz$ via its 
+stationary condition $\bz^*(\blmbd,\bmu) = \frac{\blmbd-\bmu}{\alpha}$, reduces to
+\begin{align}
+\label{eq:reduced_ppl}
+    \mathcal{L}_{\rho}(\bx, \by, \blmbd, \bmu)
+    := l_{\rho} (\bx, \by, \blmbd) - \frac{1}{2\rho} \|\blmbd - \bmu\|^2,
+\end{align} where \(l_{\rho} (\bx, \by, \blmbd) = f(\bx) + g(\bx) + h(\by)
+    + \langle \blmbd,\, \bc(\bx) - \by \rangle + \frac{\rho}{2} \| \bc(\bx) - \by\|^2 \) and \(\rho > 0\) is defined as 
+\begin{equation}\label{eq:rho-def}
+    \rho := \frac{\alpha}{1 + \alpha\beta} > 0.
+\end{equation}
+\begin{remark}
+    Here, 
+  \[
+    \phi_{\rho}(\bx,\by,\bmu) 
+    = \max_{\blmbd}\left\{ 
+        l_{\rho}(\bx,\by,\blmbd) - \frac{1}{2\rho}\|\blmbd-\bmu\|^2  % rho/2 → 1/2rho
+    \right\}
+    \]
+therefore 
+\[
+\max\limits_{\bmu} \min\limits_{\bx, \by }\phi_{\rho} (\bx, \by, \bmu)  
+\]  but the update of \(\blmbd\) is not considered.
+\end{remark}
+
+\subsection{Algorithm}
+
+We now describe one iteration of the proposed method. Given
+$(\bx^k,\by^k,\bz^k,\blmbd^k,\bmu^k)$, the blocks are updated as follows.
+
+\paragraph{Update of $\bx$.}
+We apply a prox-linear / proximal-gradient step to the
+$x$-block subproblem on \(l_{\rho}\)
+\begin{equation}\label{eq:x-update}
+\bx^{k+1}\in\argmin_{\bx\in\calX}
+\Big\{
+g(\bx)
++\big\langle \nabla f(\bx^k)+J_{\bc}(\bx^k)^\top\big(\blmbd^k+\rho(\bc(\bx^k)-\by^k)\big),\ \bx-\bx^k\big\rangle
++\frac{1}{2\eta}\|\bx-\bx^k\|^2
+\Big\}.
+\end{equation}
+
+\paragraph{Update of $\by$.}
+The $y$-block is updated by a proximal gradient step on $h$:
+\begin{equation}\label{eq:y-update}
+\begin{aligned}
+\by^{k+1}\in\argmin_{\by\in\RR^m}
+\Big\{
+    h(\by) + \langle -\blmbd^k+\rho\,(\by-\bc(x^{k+1}), \by - \by^k \rangle
+    +\frac{1}{2\tau}\|\by-\by^k\|^2
+\Big\}
+% \quad\Longleftrightarrow\quad
+% \by^{k+1}
+% =
+% \prox_{\frac{1}{\rho+1/\tau}\,h}
+% \!\left(
+% \frac{\rho\,\bc(\bx^{k+1})+\blmbd^k+\frac{1}{\tau}\by^k}{\rho+\frac{1}{\tau}}
+% \right).
+\end{aligned}
+\end{equation}
+
+\paragraph{Update of $\bmu$.}
+The auxiliary multiplier $\bmu$ is updated via a gradient acent step 
+\begin{equation}\label{eq:mu-update}
+    \bmu^{k+1}
+    = \bmu^k + \theta_k\big(\blmbd^k - \bmu^k\big),
+    \qquad \theta_k\in(0,1].
+\end{equation}
+
+\paragraph{Update of $\blmbd$.}
+The multiplier $\blmbd$ is updated by the unique maximizer of 
+$\calL_\rho$ with respect to $\blmbd$:
+\begin{equation}\label{eq:lambda-update}
+    \blmbd^{k+1}
+    = \bmu^{k+1} + \rho\big(\bc(\bx^{k+1})-\by^{k+1}\big).  % 1/rho → rho
+\end{equation}
+\paragraph{Update of $\bz$.}
+Finally, $\bz$ admits a closed-form expression from the optimality condition of
+\eqref{eq:perturbation_alf} with respect to $\bz$:
+\begin{equation}\label{eq:z-update}
+    \bz^{k+1} = \frac{1}{\alpha}\big(\blmbd^{k+1}-\bmu^{k+1}\big).
+\end{equation}
+% In practice, $\bz$ can be eliminated from the implementation and only used in the analysis.
+\begin{remark}
+    % 1. 外推
+\end{remark}
+
+\begin{algorithm}[H]
+    \caption{Peturbed linearized ADMM}
+    \label{alg:peturbation linearized ADMM}
+    \small
+    \setlength{\baselineskip}{0.8\baselineskip}
+    \begin{algorithmic}[1]
+        \STATE \textbf{Input:}
+        initial point $(\bx^{0}, \by^{0}, \blmbd^{0}, \bmu^{0})$,
+        parameters $\eta>0$, $\tau>0$, $\alpha>0$, $\beta>0$,
+        damping sequence $\{\theta_k\}_{k\ge0}$ and $\rho$ defined in \eqref{eq:rho-def}.
+        \FOR{$k = 0, 1, 2, \ldots$}
+            \STATE Update $\bx^{k+1}$ by \eqref{eq:x-update}.
+            \STATE Update $\by^{k+1}$ by \eqref{eq:y-update}.
+            \STATE Update $\bmu^{k+1}$ by \eqref{eq:mu-update} with \(\theta_k = \frac{\delta_k}{1 + \| \blmbd^k - \bmu^k \|^2}\).
+            \STATE Update $\blmbd^{k+1}$ by \eqref{eq:lambda-update}.
+            \STATE Update $\bz^{k+1}$ by \eqref{eq:z-update}.
+        \ENDFOR
+        \STATE \textbf{Output:} an iterate $\bx^{R}$ (e.g., the randomly selected one).
+    \end{algorithmic}
+\end{algorithm}

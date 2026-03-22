@@ -1,0 +1,50 @@
+\section{Introduction}
+In this paper, we consider a structured nonlinear composite optimization problem
+\begin{equation}\label{eq:nonlinear-composite}
+    \min_{\bx\in\calX}\; F(\bx)
+    := f(\bx) + g(\bx) + h\big(\bc(\bx)\big),
+\end{equation}
+where $\calX \subseteq \RR^n$ is a nonempty closed subset of $\RR^n$ 
+which admits an easy projection, $f:\RR^n\to\RR$ is continuously 
+differentiable (possibly nonconvex), $g:\RR^n\to\RR\cup\{+\infty\}$ 
+is a proper lower semicontinuous and prox-bounded function relative 
+to its domain $\mathrm{dom}\, g$ (possibly nonconvex), 
+$h:\RR^m\to\RR\cup\{+\infty\}$ is proper lower semicontinuous 
+(possibly nonsmooth and nonconvex), and $\bc:\RR^n\to\RR^m$ 
+is a $C^1$ mapping. Moreover, we assume that the problem is 
+well-posed, i.e., the feasible set is nonempty and the optimal 
+value is finite.
+
+Due to the separable structure of the objective function, operator-splitting approaches have emerged as a standard and effective technique for addressing problem (1.1). For the general composite setting, a typical reformulation introduces an auxiliary variable $y = c(\bx)$, leading to a block-separable formulation:
+\begin{equation}
+% \label{eq:block-separable}
+    \min_{\bx\in\calX,\, \by\in\RR^m}\; 
+    f(\bx) + g(\bx) + h(\by), 
+    \quad \text{s.t.} \quad \bc(\bx) - \by = \mathbf{0}. \notag
+\end{equation}
+\subsection*{Motivating Examples}
+A special case of Problem~\eqref{eq:nonlinear-composite} 
+is obtained by taking $h = \delta_{\{\mathbf{0}\}}$, which yields the nonlinear equality-constrained problem
+\[
+\min_{\bx\in \calX}\ f(\bx) + g(\bx), 
+\quad \text{s.t.} \quad \bc(\bx) = \mathbf{0}.\]
+
+\subsection{Related work}
+\paragraph{Nonlinear Constrained Optimization.}
+\paragraph{Noconvex Primal-Dual Method.} Not limited in the ADMM-related work
+
+\paragraph{Nonsmooth Compositional Optimization.}
+In nonsmooth compositional optimization, such as Problem~\eqref{eq:nonlinear-composite}, significant work has been done in the case where $h \circ \bc$ is either convex~\cite{zhang2020optimal,wang2024alexr} or weakly convex~\cite{duchi2018,davis2019,Drusvyatskiy2019,wang2024,hu23}. Specifically, prior works~\cite{duchi2018,davis2019,Drusvyatskiy2019,wang2024} typically ensure weak convexity of $h \circ \bc$ by imposing convexity on $h$ and smoothness on $\bc$. Recent work~\cite{hu23} assumes both $h$ and $\bc$ are weakly convex with $h$ being component-wise non-decreasing, thereby ensuring the weak convexity of $h \circ \bc$. However, when $h$ itself is nonconvex, as in our proposal, the composite function $h \circ \bc$ is not necessarily weakly convex, rendering these methods inapplicable. For the fully nonconvex case, \cite{Bolte2018} reformulates the problem as constrained optimization and establishes asymptotic convergence via a Lagrangian-based method. Under the assumption that $\bc$ is linear, some studies~\cite{boct2016inertial,bot2019proximal,boct2020proximal,guo2023preconditioned} have proposed full splitting algorithms and established global convergence guarantees in a single-loop framework. Recently, \cite{yao2024note} considers a similar setting to Problem~\eqref{eq:nonlinear-composite} with nonlinear $\bc$. Using a smoothing technique, they provide non-asymptotic convergence analysis, while \cite{zhang2025complexity} systematically analyzed scenarios where $h$ is Lipschitz continuous or non-Lipschitz continuous, establishing non-asymptotic and subsequential convergence results. 
+% Nevertheless, efficient single-loop methods with global convergence analysis for fully nonconvex, nonlinearly coupled composite problems remain largely unexplored.
+
+
+\subsection*{Contribution}
+% 客观亮点是什么？
+1. the constant penalty parameter for nonconvex ADMM; 
+
+
+2. the \(\calO(\varepsilon^{-?})\) between the  \(\calO(\varepsilon^{-2})\) bound for smooth bound and the \(\calO (\varepsilon^{-4})\) bound for the subgradient method.
+
+\subsection*{Notation} $\mathbb{R}^n$ denotes the $n$-dimensional Euclidean space, and $\mathbb{R}^n_+$ represents the non-negative orthant. We use $[m]$ to denote the set $\{1, \ldots, m\}$. The inner product between two vectors is denoted by $\langle \cdot, \cdot \rangle$, and the Euclidean norm of matrices and vectors is denoted by $\|\cdot\|$. The distance function between a vector $\mathbf{x}$ and a set $\mathcal{X} \subseteq \mathbb{R}^n$ is defined as $\mathrm{dist}(\mathbf{x}, \mathcal{X}) := \inf_{\mathbf{y} \in \mathcal{X}} \|\mathbf{y} - \mathbf{x}\|$. For a proper extended real-valued function $r$, its \textit{domain} is defined as $\mathrm{dom}(r) := \{\mathbf{x} \in \mathbb{R}^n : r(\mathbf{x}) < +\infty\}$. A function $r$ is considered \textit{proper} if $\mathrm{dom}(r) \neq \emptyset$ and it does not take the value $-\infty$. It is \textit{closed} if it is lower semicontinuous, meaning $\liminf_{\mathbf{x} \to \mathbf{x}^0} r(\mathbf{x}) \geq r(\mathbf{x}^0)$ for any $\mathbf{x}^0 \in \mathbb{R}^n$. For a convex function $r$ at $\mathbf{x}$, its \textit{subgradient} is denoted by $\partial r(\mathbf{x}) := \{\mathbf{d} \in \mathbb{R}^n : r(\mathbf{y}) \geq r(\mathbf{x}) + \langle \mathbf{d}, \mathbf{y} - \mathbf{x} \rangle, \forall \mathbf{y} \in \mathbb{R}^n,\ \mathbf{x} \in \mathrm{dom}(r)\}$. The \textit{proximal map} associated with a proper, closed, and convex function $r : \mathbb{R}^n \to \mathbb{R} \cup \{+\infty\}$ at $\mathbf{x} \in \mathbb{R}^n$ with $\eta > 0$ is uniquely defined by \(
+    \mathrm{prox}_{\eta r}(\mathbf{x}) = \operatorname{argmin}_{\mathbf{y} \in \mathbb{R}^n} \left\{ r(\mathbf{y}) + \frac{1}{2\eta} \|\mathbf{x} - \mathbf{y}\|^2 \right\}.
+\)
