@@ -36,6 +36,7 @@
 \maketitle
 
 \section{Introduction}
+\label{sec:intro}
 We consider the following nonconvex stochastic optimization problem with 
 equality and inequality constraints:
 \begin{align}\label{Prob: primal problem}
@@ -165,21 +166,43 @@ improving over the existing $\calO(\varepsilon^{-4})$ barrier for this setting.
 \subsection{Our Contributions}
 \text
 Can we design algorithms to solve problems of the form equation 1 with an improved iteration complexity bound and efficient update rules?
-\section{Preliminary}
+
 \subsection{Notation}
-Throughout this paper, $\|\cdot\|$ denotes the Euclidean norm, $\EE_{\xi}[\cdot]$ denotes expectation with respect to $\xi$, and $\calX\subseteq\RR^n$ is the closed domain set in Problem~\eqref{Prob: primal problem}.
-\subsection{Main Assumptions}
+Throughout this paper, $\|\cdot\|$ denotes the Euclidean norm and $\langle\cdot,\cdot\rangle$ denotes the Euclidean inner product. We use $\EE_{\xi}[\cdot]$ for expectation with respect to $\xi$. Let $[p]:=\{1,\ldots,p\}$, $\mathbb{N}:=\{0,1,2,\ldots\}$, and $\overline{\RR}:=\RR\cup\{+\infty\}$. For $A\in\RR^{m\times n}$, $\|A\|$ and $\sigma_{\min}(A)$ denote the largest and smallest singular values of $A$, respectively. For $X\subseteq\RR^n$, $\delta_X$ denotes its indicator function and $\mathrm{dist}(x,X):=\inf_{y\in X}\|x-y\|$. For complexity notation, we write $K=\calO(\varepsilon)$ if $K\leq B\varepsilon$ for some $B>0$, and $K=\Theta(\varepsilon)$ if $b\varepsilon\leq K\leq B\varepsilon$ for some constants $0<b<B<+\infty$.
+\subsection{Organization}
+The rest of the paper is organized as follows. Section~\ref{sec:prelim} introduces the assumptions and the stochastic KKT criterion. Section~\ref{sec:method} presents the perturbed proximal ALM formulation and the single-loop algorithm. Section~\ref{sec:analysis} establishes stochastic complexity and residual bounds. Section~\ref{sec:experiments} reports numerical experiments. Additional technical lemmas are provided in Appendix~\ref{sec:appendix-supported}.
+\section{Preliminaries and Assumptions}
+\label{sec:prelim}
+
+\subsection{Main Assumptions and stationarity}
 \label{Subsection: main assumptions}
 % \setcounter{assumption}{0}
-Throughout the paper, we make the following assumptions for Problem \eqref{Prob: primal problem}.
+In this subsection, we formally state our assumptions for Problem \eqref{Prob: primal problem} and the stationarity for problem.
+
+\begin{assumption}
+    \label{ass: proximal of nonsmooth part}
+    the function $g(\cdot)$ is proper and lower semicontinuous with effective domain denoted by  $\calX = \mathrm{dom}~g := \{x\in \R^n~|~g(x) < +\infty\}.$ Moreover, the proximal oracle of $g_i$ is available,  i.e., given $z_i \in \R^{n_i}$ and a sufficiently large constant $\mu >0$, we can solve the following problem
+		\begin{align}\label{eq: prox-oracle-g}
+			\min_{\bx\in \R^{n}} g_i(\bx) + \frac{\mu}{2}\|\bx-\bz\|^2.
+		\end{align}
+\end{assumption}
+
+
 \begin{assumption}
     \label{Ass: boundedness of c and f} Function $f(\cdot)$ is
-    $L_f$-smooth. Function  \(\bc\) is \(L_c\)-smooth; There exist $C, G>0$ such that 
-    \begin{align}
-         &\|\nabla f(\bx) \| \leq G, \,\| \partial h(\bx) \|\leq G, \| \partial g(\bx) \|\leq G, \notag \\
-         &\|\nabla \bc(\bx) \| \leq G,\, \| \bc(\bx) \| \leq C, \quad \forall \bx
-    \in \calX.\notag
-    \end{align}
+    $L_f$-smooth over $\calX$. The mapping $\bc_{\calI}(\cdot): \R^n \rightarrow \R^m$ and $\bc_{\calE}(\cdot): \R^n \rightarrow \R^p$ are continuously differentiable over $\calX$ and there exist $C, G>0$ such that 
+    	\begin{subequations}\label{eq: mp c const}
+		\begin{alignat}{2}
+			 & \max_{x_i\in X_i}\|h_i(x_i)\|\leq  M_{h_i}, 	 \quad  && \|h_i(x_i)-h_i(z_i)\| \leq  K_{h_i}\|x_i-z_i\|,   \\
+			 & \max_{x_i\in X_i}\|\nabla h_i(x_i)\| \leq  J_{h_i},  && \|\nabla h_i(x_i)-\nabla h_i(z_i)\| \leq   L_{h_i}\|x_i-z_i\|, 
+		\end{alignat}
+		\end{subequations}
+		where $\nabla h_i(x_i) = [\nabla h_{i1}(x_i), \cdots, \nabla h_{im}(x_i)]\in \R^{n_i \times m}$, and $\|\cdot\|$ denotes the Euclidean norm for vectors or the induced norm for matrices.
+    % \begin{align}
+    %      &\|\nabla f(\bx) \| \leq G, \,\| \partial h(\bx) \|\leq G, \| \partial g(\bx) \|\leq G, \notag \\
+    %      &\|\nabla \bc_{\calI}(\bx) \| \leq G,\, \| \bc_{\calI}(\bx) \| \leq C, \quad \forall \bx
+    % \in \calX.\notag
+    % \end{align}
 \end{assumption}
 
 \begin{assumption}
@@ -210,8 +233,7 @@ Before proceeding, we introduce an additional standard assumption, also known as
         \EE_{\bxi}\left[\left\|\nabla f(\bx; \bxi) - \nabla f(\by; \bxi)\right\|^{2}
         \right] \leq L_f^{2}\|\bx - \by\|^{2}.
     \]
-\end{assumption} 
-
+\end{assumption}
 % Given nonconvex constraints, we impose the following nonsingularity condition on the constraints to ensure the feasibility of solutions. Constraint qualifications are often required in solving constrained optimization problems; see~\cite{shi2025momentum,lu2024variancereducedfirstordermethodsdeterministically,liu2025single,curtis2024worst}.
 % \begin{assumption}
 %     \label{Ass: constraints conditions} 
@@ -235,6 +257,7 @@ such that the KKT conditions are satisfied:
 \end{equation}
 \end{definition}
 \section{Methodology and Algorithm}
+\label{sec:method}
 We introduce a residual variable $\bz$ and rewrite \eqref{Prob: primal problem} as
 \begin{equation}\label{eq:reformulated-problem}
     \min_{\bx\in\calX, \bz}\; f(\bx) + g(\bx)
@@ -327,6 +350,7 @@ g(\bx)
     \end{algorithmic}
 \end{algorithm}
 \section{Stochastic Complexity Analysis}
+\label{sec:analysis}
 \begin{lemma}[Smoothness of $\varphi_{\rho}$]
 \label{lem:phi-smooth}
 Under Assumptions~\ref{Ass: boundedness of c and f} 
@@ -1157,9 +1181,11 @@ Dividing both sides of \eqref{eq:theta-r-final} by $T$:
 \end{proof}
 
 \section{Numerical Experiments}
+\label{sec:experiments}
 
 \appendix
 \section{Supported Lemmas}
+\label{sec:appendix-supported}
 
 \begin{lemma}[Vector Azuma-Hoeffding Inequality]
 \label{lem:vector-azuma}
