@@ -25,9 +25,9 @@
 
 % \captionsetup[figure]{compatibility=false}
 
-% \PassOptionsToPackage{numbers, sort}{natbib} % 参考文献
+% \PassOptionsToPackage{numbers, sort}{natbib} % 参考文献 
 % \PassOptionsToPackage{numbers, sort, square}{natbib}
-\title{Stochastic Perturbed Proximal Augmented Lagrangian with Fixed Penalty for Nonconvex Constrained Optimization}
+\title{Stochastic Perturbed Proximal Augmented Lagrangian for Nonconvex Constrained Optimization}
 \newcommand{\calE}{\mathcal{E}}
 \newcommand{\calI}{\mathcal{I}}
 
@@ -37,39 +37,49 @@
 
 \section{Introduction}
 \label{sec:intro}
-We consider the following nonconvex stochastic optimization problem with 
-equality and inequality constraints:
+We consider the following nonconvex stochastic optimization problem with
+mixed deterministic constraints:
 \begin{align}\label{Prob: primal problem}
     \min_{\bx \in \calX} \quad & F(\bx) := f(\bx) + g(\bx), \notag \\
     \text{s.t.} \quad & \bc_{\calE}(\bx) = \bm{0}, \notag\\
     & \bc_{\calI}(\bx) \le \bm{0}, \tag{{\bf P}}
 \end{align}
-where $f(\bx) = \mathbb{E}_{\xi}[\mathbf{f}(\bx,\xi)]$ is a smooth nonconvex 
-function with $\xi$ a random variable on a probability space $\Xi$ independent 
-of $\bx$, and $g:\RR^n\to\RR\cup\{+\infty\}$ is a proper closed 
-proximal-friendly function. The mappings $\bc_{\calE}:\RR^n\to\RR^{|\calE|}$ and
-$\bc_{\calI}:\RR^n\to\RR^{|\calI|}$ are continuously differentiable. The set
-$\calX\subseteq\RR^n$ is assumed to be nonempty and closed.
-The feasible set is assumed to be nonempty and $F$ is lower 
-bounded by $F^*>-\infty$. Exact evaluation of $\nabla f$ is often expensive or 
-impractical, and thus we assume only access to stochastic gradients of $f$ at 
-queried points.
+where $\calE$ and $\calI$ index the equality and inequality blocks,
+respectively, and
+$\bc(\bx):=\big(\bc_{\calE}(\bx),\bc_{\calI}(\bx)\big)\in\RR^m$
+with $m:=|\calE|+|\calI|$.
+Here $f(\bx)=\EE_{\xi}[\mathbf{f}(\bx,\xi)]$ is a smooth nonconvex
+expectation objective, $g:\RR^n\to\RR\cup\{+\infty\}$ is a proper closed
+proximal-friendly function, and the mappings
+$\bc_{\calE}:\RR^n\to\RR^{|\calE|}$ and
+$\bc_{\calI}:\RR^n\to\RR^{|\calI|}$ are continuously differentiable.
+The set $\calX\subseteq\RR^n$ is nonempty and closed, the feasible set of
+\eqref{Prob: primal problem} is nonempty, and $F$ is bounded below by
+$F^*>-\infty$. Exact evaluation of $\nabla f$ is often impractical, so we
+assume access only to stochastic gradients queried at sample points.
 
+A key obstacle in this setting is that equality and inequality constraints
+enter augmented-Lagrangian models asymmetrically: equality blocks generate the
+standard quadratic augmentation, whereas inequality blocks require one-sided
+activation. Our approach is to absorb this asymmetry into a single
+\emph{effective multiplier}, which leads to a compact perturbed proximal
+augmented Lagrangian with a fixed penalty parameter and a genuinely
+single-loop primal--dual update.
 
 \subsection{Related Work}
 \label{sec:related-work}
 
 \paragraph{Deterministic nonconvex constrained optimization.}
 For deterministic nonconvex problems with equality and inequality constraints,
-first-order methods with non-asymptotic complexity guarantees have been studied
-extensively.
+first-order methods with non-asymptotic complexity guarantees have been
+studied extensively.
 Proximal point methods~\cite{boob2023stochastic,ma2022quadratically} achieve
-$\calO(\varepsilon^{-3})$ iteration complexity for smooth objectives via strongly
-convex subproblems, and Boob et al.~\cite{boob2022level} further attain
-$\calO(\varepsilon^{-2})$ by constructing quadratic models with adaptive
-constraint levels.
-Among penalty and augmented Lagrangian methods (ALMs), most approaches
-require the penalty parameter to grow as $\Omega(\varepsilon^{-1})$, yielding
+$\calO(\varepsilon^{-3})$ iteration complexity for smooth objectives via
+strongly convex subproblems, and Boob et al.~\cite{boob2022level} further
+attain $\calO(\varepsilon^{-2})$ by constructing quadratic models with
+adaptive constraint levels.
+Among penalty and augmented Lagrangian methods (ALMs), most approaches require
+the penalty parameter to grow as $\Omega(\varepsilon^{-1})$, yielding
 $\calO(\varepsilon^{-3})$ iteration complexity~\cite{li2021rate,jia2023first}.
 Xie and Wright~\cite{xie2021proximal} achieve $\calO(\varepsilon^{-2})$
 outer-loop complexity with a proximal ALM under a constant merit parameter,
@@ -86,14 +96,16 @@ We organize the literature by the two canonical settings:
 oracles).
 
 \emph{Semi-stochastic problems.}
-Without additional structure on the noise, proximal point~\cite{boob2023stochastic,ma2022quadratically},
+Without additional structure on the noise, proximal
+point~\cite{boob2023stochastic,ma2022quadratically},
 penalty~\cite{jin2022nested}, and SQP~\cite{curtis2021sqp} methods all achieve
-$\calO(\varepsilon^{-4})$ oracle complexity in stochastic gradient evaluations,
-matching the $\calO(\varepsilon^{-4})$ lower bound for unconstrained stochastic
-optimization~\cite{arjevani2023lower}.
-Under a mean-squared smoothness (MSS) condition,
-variance reduction techniques---STORM~\cite{cutkosky2019storm} and
-SPIDER~\cite{fang2018spider}---improve the complexity to $\calO(\varepsilon^{-3})$.
+$\calO(\varepsilon^{-4})$ oracle complexity in stochastic gradient
+evaluations, matching the $\calO(\varepsilon^{-4})$ lower bound for
+unconstrained stochastic optimization~\cite{arjevani2023lower}.
+Under a mean-squared smoothness (MSS) condition, variance reduction
+techniques---STORM~\cite{cutkosky2019storm} and
+SPIDER~\cite{fang2018spider}---improve the complexity to
+$\calO(\varepsilon^{-3})$.
 Representative results include the variance-reduced linearized ALM of
 Shi et al.~\cite{shi2022linearized}, the truncated variance reduction approach
 of Lu et al.~\cite{lu2022single}, and the inexact ALM of
@@ -117,10 +129,10 @@ constraint-evaluation complexity for nonsmooth problems.
 Cui et al.~\cite{cui2024adaptive} recently propose an adaptive exact penalty
 method for smooth \emph{equality}-constrained problems, obtaining
 $\calO(\varepsilon^{-3})$ gradient and $\calO(\varepsilon^{-5})$
-constraint-evaluation complexity; however, the analysis is confined to equality
-constraints and relies on an exact penalty reformulation.
-Stochastic SQP for equality-constrained fully stochastic problems~\cite{na2022sqp}
-currently achieves only $\calO(\varepsilon^{-8})$.
+constraint-evaluation complexity; however, the analysis is confined to
+equality constraints and relies on an exact penalty reformulation.
+Stochastic SQP for equality-constrained fully stochastic
+problems~\cite{na2022sqp} currently achieves only $\calO(\varepsilon^{-8})$.
 
 \paragraph{ALMs with fixed penalty parameter.}
 A fundamental challenge in ALM design for nonlinear constraints is that
@@ -137,9 +149,8 @@ $\calO(\varepsilon^{-2})$ iteration complexity for deterministic nonconvex
 problems under a genuinely constant penalty.
 In the stochastic setting, Alacaoglu and
 Wright~\cite{alacaoglu2024complexity} combine a fixed penalty with variance
-reduction to attain the optimal $\calO(\varepsilon^{-3})$ sample complexity for
-linear equality constraints; for nonlinear constraints, their single-loop
-algorithm requires an increasing penalty and achieves only $\calO(\varepsilon^{-4})$.
+reduction to attain the optimal $\calO(\varepsilon^{-3})$ sample complexity
+for linear equality constraints.
 Huang et al.~\cite{huang2025stochastic} extend the fixed-penalty result to
 linear inequality constraints via Moreau envelope smoothing, also reaching
 $\calO(\varepsilon^{-3})$.
@@ -149,28 +160,58 @@ yielding $\calO(\varepsilon^{-4})$ oracle complexity, or introduce dual
 momentum to partially compensate, achieving
 $\calO(\varepsilon^{-3.5})$~\cite{shi2025momentum}.
 To date, no single-loop ALM with a genuinely constant penalty parameter has
-been shown to achieve $\calO(\varepsilon^{-3})$ oracle complexity for nonlinear
-nonconvex constraints in the stochastic setting.
+been shown to achieve $\calO(\varepsilon^{-3})$ oracle complexity for general
+nonlinear mixed constraints in the stochastic setting.
 
-The proposed Perturbed ALM addresses this gap.
-By introducing a dual regularization term
-$-\tfrac{\beta}{2}\|\blmbd - \bmu\|^2$ into the augmented Lagrangian, the
-effective penalty parameter reduces to
-$\rho = \alpha / (1 + \alpha\beta)$,
-which is \emph{independent} of $\varepsilon$ for any fixed $\alpha, \beta > 0$.
-This perturbation simultaneously enables a \emph{single-loop} primal--dual
-update and achieves $\calO(\varepsilon^{-3})$ stochastic oracle complexity for
-nonlinear nonconvex constrained optimization,
-improving over the existing $\calO(\varepsilon^{-4})$ barrier for this setting.
+Our perturbed ALM addresses this gap by combining a uniform proximal
+perturbation on the multiplier vector with an effective-multiplier map that
+absorbs the equality/inequality asymmetry. This yields a compact PPAL model,
+keeps the penalty parameter fixed, and supports a single-loop stochastic
+scheme for nonlinear mixed constraints.
 
 \subsection{Our Contributions}
-\text
-Can we design algorithms to solve problems of the form equation 1 with an improved iteration complexity bound and efficient update rules?
+\begin{itemize}
+    \item \textbf{Unified PPAL formulation for mixed constraints.}
+    We introduce an effective multiplier
+    $\hat{\blmbd}(\blmbd,\bx)$ that absorbs the difference between equality
+    and inequality blocks, allowing the perturbed proximal augmented
+    Lagrangian to be written in a single compact form with one fixed penalty
+    parameter $\rho > 0$.
+    \item \textbf{Single-loop stochastic primal--dual algorithm.}
+    We develop a Stochastic Perturbed Proximal Augmented Lagrangian (SPPAL)
+    method that combines STORM variance reduction, a damped auxiliary
+    multiplier update, and a closed-form blockwise multiplier step that
+    handles equality and inequality constraints in a unified way.
+    \item \textbf{Residual-based convergence interface.}
+    We formulate mixed-constraint KKT residuals consistent with the effective
+    multiplier and establish the analysis interface needed for fixed-penalty
+    complexity bounds and feasibility control in the nonlinear stochastic
+    setting.
+\end{itemize}
 
 \subsection{Notation}
-Throughout this paper, $\|\cdot\|$ denotes the Euclidean norm and $\langle\cdot,\cdot\rangle$ denotes the Euclidean inner product. We use $\EE_{\xi}[\cdot]$ for expectation with respect to $\xi$. Let $[p]:=\{1,\ldots,p\}$, $\mathbb{N}:=\{0,1,2,\ldots\}$, and $\overline{\RR}:=\RR\cup\{+\infty\}$. For $A\in\RR^{m\times n}$, $\|A\|$ and $\sigma_{\min}(A)$ denote the largest and smallest singular values of $A$, respectively. For $X\subseteq\RR^n$, $\delta_X$ denotes its indicator function and $\mathrm{dist}(x,X):=\inf_{y\in X}\|x-y\|$. For complexity notation, we write $K=\calO(\varepsilon)$ if $K\leq B\varepsilon$ for some $B>0$, and $K=\Theta(\varepsilon)$ if $b\varepsilon\leq K\leq B\varepsilon$ for some constants $0<b<B<+\infty$.
+Throughout this paper, $\|\cdot\|$ denotes the Euclidean norm and
+$\langle\cdot,\cdot\rangle$ denotes the Euclidean inner product.
+For $a\in\RR$, let $[a]_+ := \max\{a,0\}$, and apply $[\cdot]_+$ to vectors
+componentwise. We use $\EE_{\xi}[\cdot]$ for expectation with respect to
+$\xi$, let $[p]:=\{1,\ldots,p\}$ and $\mathbb{N}:=\{0,1,2,\ldots\}$, and
+write $\overline{\RR}:=\RR\cup\{+\infty\}$.
+The Jacobian of $\bc$ is denoted by
+$J_{\bc}(\bx):=[J_{\bc_{\calE}}(\bx),J_{\bc_{\calI}}(\bx)]\in\RR^{n\times m}$.
+For $X\subseteq\RR^n$, $\delta_X$ denotes its indicator function and
+$\mathrm{dist}(\bx,X):=\inf_{\by\in X}\|\bx-\by\|$.
+For complexity notation, we write $K=\calO(\varepsilon)$ if
+$K\leq B\varepsilon$ for some $B>0$, and $K=\Theta(\varepsilon)$ if
+$b\varepsilon\leq K\leq B\varepsilon$ for some constants $0<b<B<+\infty$.
+
 \subsection{Organization}
-The rest of the paper is organized as follows. Section~\ref{sec:prelim} introduces the assumptions and the stochastic KKT criterion. Section~\ref{sec:method} presents the perturbed proximal ALM formulation and the single-loop algorithm. Section~\ref{sec:analysis} establishes stochastic complexity and residual bounds. Section~\ref{sec:experiments} reports numerical experiments. Additional technical lemmas are provided in Appendix~\ref{sec:appendix-supported}.
+The rest of the paper is organized as follows. Section~\ref{sec:prelim}
+introduces the assumptions and the stochastic KKT criterion.
+Section~\ref{sec:method} presents the perturbed proximal ALM formulation and
+the single-loop algorithm. Section~\ref{sec:analysis} establishes stochastic
+complexity and residual bounds. Section~\ref{sec:experiments} reports
+numerical experiments. Additional technical lemmas are provided in
+Appendix~\ref{sec:appendix-supported}.
 \section{Preliminaries and Assumptions}
 \label{sec:prelim}
 
@@ -179,52 +220,46 @@ The rest of the paper is organized as follows. Section~\ref{sec:prelim} introduc
 % \setcounter{assumption}{0}
 In this subsection, we formally state our assumptions for Problem \eqref{Prob: primal problem} and the stationarity for problem.
 
-\begin{assumption}
-    \label{ass: proximal of nonsmooth part}
-    the function $g(\cdot)$ is proper and lower semicontinuous with effective domain denoted by  $\calX = \mathrm{dom}~g := \{x\in \R^n~|~g(x) < +\infty\}.$ Moreover, the proximal oracle of $g_i$ is available,  i.e., given $z_i \in \R^{n_i}$ and a sufficiently large constant $\mu >0$, we can solve the following problem
-		\begin{align}\label{eq: prox-oracle-g}
-			\min_{\bx\in \R^{n}} g_i(\bx) + \frac{\mu}{2}\|\bx-\bz\|^2.
-		\end{align}
-\end{assumption}
+% \begin{assumption}
+%     \label{ass: proximal of nonsmooth part}
+%     the function $g(\cdot)$ is proper and lower semicontinuous with effective domain denoted by  $\calX = \mathrm{dom}~g := \{x\in \R^n~|~g(x) < +\infty\}.$ Moreover, the proximal oracle of $g_i$ is available,  i.e., given $z_i \in \R^{n_i}$ and a sufficiently large constant $\mu >0$, we can solve the following problem
+% 		\begin{align}\label{eq: prox-oracle-g}
+% 			\min_{\bx\in \R^{n}} g_i(\bx) + \frac{\mu}{2}\|\bx-\bz\|^2.
+% 		\end{align}
+% \end{assumption}
 
 
 \begin{assumption}
-    \label{Ass: boundedness of c and f} Function $f(\cdot)$ is
-    $L_f$-smooth over $\calX$. The mapping $\bc_{\calI}(\cdot): \R^n \rightarrow \R^m$ and $\bc_{\calE}(\cdot): \R^n \rightarrow \R^p$ are continuously differentiable over $\calX$ and there exist $C, G>0$ such that 
-    	\begin{subequations}\label{eq: mp c const}
-		\begin{alignat}{2}
-			 & \max_{x_i\in X_i}\|h_i(x_i)\|\leq  M_{h_i}, 	 \quad  && \|h_i(x_i)-h_i(z_i)\| \leq  K_{h_i}\|x_i-z_i\|,   \\
-			 & \max_{x_i\in X_i}\|\nabla h_i(x_i)\| \leq  J_{h_i},  && \|\nabla h_i(x_i)-\nabla h_i(z_i)\| \leq   L_{h_i}\|x_i-z_i\|, 
-		\end{alignat}
-		\end{subequations}
-		where $\nabla h_i(x_i) = [\nabla h_{i1}(x_i), \cdots, \nabla h_{im}(x_i)]\in \R^{n_i \times m}$, and $\|\cdot\|$ denotes the Euclidean norm for vectors or the induced norm for matrices.
-    % \begin{align}
-    %      &\|\nabla f(\bx) \| \leq G, \,\| \partial h(\bx) \|\leq G, \| \partial g(\bx) \|\leq G, \notag \\
-    %      &\|\nabla \bc_{\calI}(\bx) \| \leq G,\, \| \bc_{\calI}(\bx) \| \leq C, \quad \forall \bx
-    % \in \calX.\notag
-    % \end{align}
+    \label{Ass: boundedness of c and f}
+    Function $f(\cdot)$ is $L_f$-smooth over $\calX$.
+    The mapping $\bc=(\bc_{\calE},\bc_{\calI}):\RR^n\to\RR^m$ is continuously
+    differentiable over $\calX$, and there exist constants $C,G,L_c>0$ such
+    that, for all $\bx,\by\in\calX$,
+    \begin{equation}\label{eq: mp c const}
+        \|\bc(\bx)\| \leq C,\qquad
+        \|J_{\bc}(\bx)\| \leq G,\qquad
+        \|J_{\bc}(\bx)-J_{\bc}(\by)\| \leq L_c\|\bx-\by\|.
+    \end{equation}
 \end{assumption}
 
 \begin{assumption}
-    \label{Ass: unbiased gradient oracle} There exists a $\sigma > 0$ such that 
-    \begin{align}
-    &\EE_{\xi}[\nabla \mathbf f(\bx, \bxi)] = \nabla f(\bx), \notag \\
-    & \EE_{\xi}[\| \nabla  \mathbf f(\bx, \bxi) - \nabla f(\bx) \|^{2}] \leq \sigma^{2}, \quad \forall\bx
-    \in \calX. \notag
-    \end{align}
+     \label{Ass: unbiased gradient oracle} 
+     For any \(\bx\), there exists $\sigma > 0$ such that 
+     \begin{align}
+      &\EE_{\xi}[\nabla \mathbf f(\bx, \bxi)] = \nabla f(\bx), \notag \\
+    & \| \nabla  \mathbf f(\bx, \bxi) - \nabla f(\bx) \| \leq \sigma, \quad \forall \xi
+     \end{align}
 \end{assumption}
-
-\begin{assumption}[Boundedness of Multipliers]
-\label{Ass: bounded multiplier}
-The sequence of dual variables $\{\blmbd^k\}$ generated by 
-Algorithm~\ref{alg:PLADM-eq} is contained in a convex compact set 
-$\Lambda \subset \RR^m$, i.e., there exists a constant $B_\lambda > 0$ such that
-\begin{equation}
-    \|\blmbd^k\| \leq B_\lambda, \quad \forall\, k \geq 0.
-\end{equation}
-\end{assumption}
-
-Before proceeding, we introduce an additional standard assumption, also known as the mean-squared smoothness assumption, widely used in variance reduction methods.
+% \begin{assumption}
+%     \label{Ass: unbiased gradient oracle} 
+%     There exists a $\sigma > 0$ such that 
+%     \begin{align}
+%     &\EE_{\xi}[\nabla \mathbf f(\bx, \bxi)] = \nabla f(\bx), \notag \\
+%     & \EE_{\xi}[\| \nabla  \mathbf f(\bx, \bxi) - \nabla f(\bx) \|^{2}] \leq \sigma^{2}, \quad \forall\bx
+%     \in \calX. \notag
+%     \end{align}
+% \end{assumption}
+We also introduce a standard assumption, also known as the mean-squared smoothness assumption, widely used in variance reduction methods.
 \begin{assumption}
     \label{Ass: the expected smoothness of f} 
     For almost every $\bxi \in \Xi$, $f(\cdot, \bxi)$ is differentiable and 
@@ -233,6 +268,16 @@ Before proceeding, we introduce an additional standard assumption, also known as
         \EE_{\bxi}\left[\left\|\nabla f(\bx; \bxi) - \nabla f(\by; \bxi)\right\|^{2}
         \right] \leq L_f^{2}\|\bx - \by\|^{2}.
     \]
+\end{assumption}
+\begin{assumption}[Boundedness of Multipliers]
+\label{Ass: bounded multiplier}
+The sequence of dual variables $\{\blmbd^k\}$ generated by 
+Algorithm~\ref{alg:PLADM-eq} is contained in a convex compact set 
+$\Lambda \subset \RR^{|\calE|}\times\RR_+^{|\calI|}$, i.e., there exists a
+constant $B_\lambda > 0$ such that
+\begin{equation}
+    \|\blmbd^k\| \leq B_\lambda, \quad \forall\, k \geq 0.
+\end{equation}
 \end{assumption}
 % Given nonconvex constraints, we impose the following nonsingularity condition on the constraints to ensure the feasibility of solutions. Constraint qualifications are often required in solving constrained optimization problems; see~\cite{shi2025momentum,lu2024variancereducedfirstordermethodsdeterministically,liu2025single,curtis2024worst}.
 % \begin{assumption}
@@ -248,38 +293,98 @@ Before proceeding, we introduce an additional standard assumption, also known as
 \begin{definition}[Stochastic KKT point]
 \label{def:stationary}
 A point $\bx^* \in \calX$ is called a \emph{stationary point} of
-Problem~\eqref{Prob: primal problem} if there exists $\blmbd^* \in \RR^m$
-such that the KKT conditions are satisfied:
-\begin{equation}
-    \mathbf{0} \in \nabla f(\bx^*) + \partial g(\bx^*)
-    + J_{\bc}(\bx^*)^\top \blmbd^* + \mathcal{N}_{\calX}(\bx^*),
-    \qquad \bc(\bx^*) = \mathbf{0}.
-\end{equation}
+Problem~\eqref{Prob: primal problem} if there exists
+$\blmbd^* \in \RR^{|\calE|}\times\RR_+^{|\calI|}$ such that
+\begin{align}
+    \bm{0}
+    &\in \nabla f(\bx^*) + \partial g(\bx^*)
+    + J_{\bc_{\calE}}(\bx^*)^\top \blmbd_{\calE}^*
+    + J_{\bc_{\calI}}(\bx^*)^\top \blmbd_{\calI}^*
+    + \mathcal{N}_{\calX}(\bx^*), \label{eq:kkt-stationarity-main}\\
+    \bc_{\calE}(\bx^*) &= \bm{0}, \qquad
+    \bc_{\calI}(\bx^*) \leq \bm{0}, \qquad
+    \blmbd_{\calI}^* \odot \bc_{\calI}(\bx^*) = \bm{0}. \notag
+\end{align}
 \end{definition}
+
+\begin{definition}[$\varepsilon$-KKT point]
+\label{def:eps-kkt}
+A point $\bx \in \calX$ is called an \emph{$\varepsilon$-KKT point} of
+Problem~\eqref{Prob: primal problem} if there exists
+$\blmbd \in \RR^{|\calE|}\times\RR_+^{|\calI|}$ such that
+\begin{align}
+    \mathrm{dist}\!\Bigl(
+        \bm{0},\;
+        \nabla f(\bx) + \partial g(\bx) + \mathcal{N}_{\calX}(\bx)
+        + J_{\bc_{\calE}}(\bx)^\top \blmbd_{\calE}
+        + J_{\bc_{\calI}}(\bx)^\top \blmbd_{\calI}
+    \Bigr)
+    &\leq \varepsilon, \notag\\
+    \|\bc_{\calE}(\bx)\| \leq \varepsilon,\qquad
+    \|[\bc_{\calI}(\bx)]_+\| &\leq \varepsilon, \notag\\
+    \sum_{i\in\calI}|\blmbd_i c_i(\bx)| &\leq \varepsilon.
+\end{align}
+\end{definition}
+
+We measure progress by the mixed-constraint residual
+\begin{equation}\label{eq:kkt-residual}
+    R(\bx,\blmbd)
+    := \mathrm{dist}\!\Bigl(
+        -\nabla f(\bx) - J_{\bc}(\bx)^\top \hat{\blmbd}(\blmbd,\bx),\;
+        \partial g(\bx) + \mathcal{N}_{\calX}(\bx)
+    \Bigr)^2
+    + \|\bc_{\calE}(\bx)\|^2
+    + \|[\bc_{\calI}(\bx)]_+\|^2.
+\end{equation}
 \section{Methodology and Algorithm}
 \label{sec:method}
-We introduce a residual variable $\bz$ and rewrite \eqref{Prob: primal problem} as
-\begin{equation}\label{eq:reformulated-problem}
-    \min_{\bx\in\calX, \bz}\; f(\bx) + g(\bx)
-    \quad\text{s.t.}\quad \bc(\bx) = \bz,\ \ \bz = \mathbf{0}.
+To absorb the structural difference between equality and inequality
+constraints, we define the \emph{effective multiplier}
+\begin{equation}\label{eq:effective-multiplier}
+    \hat{\blmbd}_i(\blmbd,\bx)
+    :=
+    \begin{cases}
+        \blmbd_i + \rho\,c_i(\bx), & i\in\calE,\\[4pt]
+        \bigl[\blmbd_i + \rho\,c_i(\bx)\bigr]_+, & i\in\calI.
+    \end{cases}
 \end{equation}
+and write $\hat{\blmbd}(\blmbd,\bx)\in\RR^m$ for the stacked vector.
+This map absorbs the equality/inequality asymmetry, while the perturbation
+term acts on the full multiplier vector symmetrically.
 
-Following~\cite{}, we define the perturbed proximal Lagrangian
-\begin{equation}\label{eq:perturbation_alf}
-    \calL(\bx,\bz,\blmbd,\bmu)
-    := f(\bx) + g(\bx)
-    + \langle \blmbd,\, \bc(\bx) - \bz \rangle
-    + \langle \bmu,\, \bz \rangle
-    + \frac{\alpha}{2}\|\bz\|^2
-    - \frac{\beta}{2}\|\blmbd - \bmu\|^2
-    + \frac{\rho}{2}\|\bc(\bx)\|^2,
-\end{equation}
-where $\blmbd, \bmu \in \RR^m$ are dual variables. Eliminating $\bz$ via
-$\bz^*(\blmbd,\bmu) = \frac{\blmbd - \bmu}{\alpha}$ yields the reduced PPAL:
 \begin{equation}\label{eq:reduced_ppl}
     \mathcal{L}_{\rho}(\bx, \blmbd, \bmu)
-    = \underbrace{f(\bx) + \langle \blmbd,\, \bc(\bx) \rangle + \frac{\rho}{2}\|\bc(\bx)\|^2}_{\varphi_{\rho}(\bx, \blmbd)} + g(\bx) - \frac{1}{2\rho}\|\blmbd - \bmu\|^2,
-\end{equation} where $\rho := \frac{\alpha}{1+\alpha\beta} > 0$.
+    =
+    \underbrace{
+    f(\bx)
+    + \frac{1}{2\rho}\|\hat{\blmbd}(\blmbd,\bx)\|^2
+    - \frac{1}{2\rho}\|\blmbd\|^2
+    }_{\varphi_{\rho}(\bx,\blmbd)}
+    + g(\bx)
+    - \frac{1}{2\rho}\|\blmbd - \bmu\|^2.
+\end{equation}
+
+\begin{remark}
+For each $i\in\calE$,
+\[
+    \frac{1}{2\rho}\bigl(\blmbd_i+\rho c_i(\bx)\bigr)^2
+    - \frac{1}{2\rho}\blmbd_i^2
+    = \blmbd_i c_i(\bx) + \frac{\rho}{2}c_i(\bx)^2.
+\]
+For each $i\in\calI$,
+\[
+    \frac{1}{2\rho}\bigl[\blmbd_i+\rho c_i(\bx)\bigr]_+^2
+    - \frac{1}{2\rho}\blmbd_i^2
+\]
+recovers the sharp augmented-Lagrangian term for inequality constraints.
+Hence $\hat{\blmbd}(\blmbd,\bx)$ absorbs the block asymmetry, while
+$-\frac{1}{2\rho}\|\blmbd-\bmu\|^2$ supplies a uniform proximal perturbation.
+\end{remark}
+
+\begin{equation}\label{eq:phi-gradient}
+    \nabla_{\bx}\varphi_{\rho}(\bx,\blmbd)
+    = \nabla f(\bx) + J_{\bc}(\bx)^\top \hat{\blmbd}(\blmbd,\bx).
+\end{equation}
 
 \subsection{Algorithm}
 \textbf{Stochastic gradient estimator.}
@@ -298,16 +403,7 @@ g(\bx)
 + \frac{1}{2\eta}\|\bx - \bx^k\|^2
 \right\},
 \end{equation} where \(\hat{\nabla}_{\bx}\varphi_{\rho}(\bx^k, \blmbd^k)
-:= \bd^k + J_{\bc}(\bx^k)^\top\!\left(\blmbd^k + \rho\,\bc(\bx^k)\right).\)
-
-% \begin{equation}\label{eq:x-update}
-% \bx^{k+1} \in \argmin_{\bx \in \calX}
-% \left\{
-% g(\bx)
-% + \left\langle \bd^k + J_{\bc}(\bx^k)^\top\!\left(\blmbd^k + \rho\,\bc(\bx^k)\right),\ \bx - \bx^k \right\rangle
-% + \frac{1}{2\eta}\|\bx - \bx^k\|^2
-% \right\}.
-% \end{equation}
+:= \bd^k + J_{\bc}(\bx^k)^\top \hat{\blmbd}(\blmbd^k,\bx^k).\)
 
 \textbf{Update of $\bmu$.}
 \begin{equation}\label{eq:mu-update}
@@ -325,26 +421,33 @@ g(\bx)
 
 \textbf{Update of $\blmbd$.}
 \begin{equation}\label{eq:lambda-update}
-    \blmbd^{k+1} = \bmu^{k+1} + \rho\,\bc(\bx^{k+1}).
+    \blmbd^{k+1} = \hat{\blmbd}(\bmu^{k+1}, \bx^{k+1}).
 \end{equation}
-
-\textbf{Update of $\bz$.}
-\begin{equation}\label{eq:z-update}
-    \bz^{k+1} = \frac{1}{\alpha}\big(\blmbd^{k+1} - \bmu^{k+1}\big).
-\end{equation}
+Equivalently,
+\begin{align}
+    \blmbd_{\calE}^{k+1}
+    &= \bmu_{\calE}^{k+1} + \rho\,\bc_{\calE}(\bx^{k+1}), \notag\\
+    \blmbd_{\calI}^{k+1}
+    &= \bigl[\bmu_{\calI}^{k+1} + \rho\,\bc_{\calI}(\bx^{k+1})\bigr]_+.
+    \notag
+\end{align}
+If $\blmbd_{\calI}^0,\bmu_{\calI}^0 \geq \bm{0}$, then
+$\blmbd_{\calI}^k,\bmu_{\calI}^k \geq \bm{0}$ for all $k$.
 
 \begin{algorithm}[H]
-    \caption{Perturbed Linearized ALM}
+    \caption{Stochastic Perturbed Proximal Augmented Lagrangian (SPPAL)}
     \label{alg:PLADM-eq}
     \small
     \begin{algorithmic}[1]
-        \STATE \textbf{Input:} $(\bx^0, \blmbd^0, \bmu^0)$, parameters $\eta>0$, $\alpha>0$, $\beta>0$ and $\gamma$,
-        sequence $\{\delta_k\}$ with $\delta_k\to 0$, $\sum_k \delta_k = +\infty$.
+        \STATE \textbf{Input:} $(\bx^0, \blmbd^0, \bmu^0)$ with
+        $\blmbd_{\calI}^0,\bmu_{\calI}^0 \geq \bm{0}$, parameters
+        $\eta>0$, $\rho>0$, $\theta_0\in(0,1]$, momentum sequence
+        $\{\gamma_k\}$, and damping sequence $\{\delta_k\}$ satisfying
+        $\delta_k\to 0$ and $\sum_k \delta_k = +\infty$.
         \FOR{$k = 0, 1, 2, \ldots$}
             \STATE Update $\bx^{k+1}$ by \eqref{eq:x-update}.
             \STATE Update $\bmu^{k+1}$ by \eqref{eq:mu-update}.
             \STATE Update $\blmbd^{k+1}$ by \eqref{eq:lambda-update}.
-            \STATE Update $\bz^{k+1}$ by \eqref{eq:z-update}.
         \ENDFOR
         \STATE \textbf{Output:} $\bx^R$ (randomly selected iterate).
     \end{algorithmic}
@@ -723,9 +826,10 @@ Under Assumptions~\ref{Ass: boundedness of c and f}
 and~\ref{Ass: unbiased gradient oracle},
 define the stationarity residual
 \begin{equation}
-    \bzeta_{\bx}^{k+1} \in \nabla_{\bx}\varphi_\rho(\bx^{k+1}, \blmbd^{k+1}) 
-    + \partial g(\bx^{k+1}) = \partial_{\bx} \calL_{\rho}(\bw^k).
-\end{equation}Then for all $k \geq 0$,
+    \bzeta_{\bx}^{k+1} \in \nabla_{\bx}\varphi_\rho(\bx^{k+1}, \blmbd^{k+1})
+    + \partial g(\bx^{k+1}) + \mathcal{N}_{\calX}(\bx^{k+1}).
+\end{equation}
+Then for all $k \geq 0$,
 % \begin{equation}\label{eq:zeta-bound}
 %     \|\bzeta_{\bx}^{k+1}\|^2
 %     \;\leq\;
@@ -1078,18 +1182,30 @@ where $\calL_\rho^* \geq F^*$ is a lower bound on $\calL_\rho$.
 Under the same conditions as Lemma~\ref{lem:sufficient-descent},
 with $\delta_k = c/(k+1)$ for some $c > 0$, we have
 \begin{equation}\label{eq:feasibility-rate}
-  \textcolor{red}{%
-    \frac{1}{T}\sum_{k=0}^{T-1}\mathbb{E}\!\left[\|\bc(\bx^{k+1})\|^2\right]
+    \frac{1}{T}\sum_{k=0}^{T-1}\mathbb{E}\!\left[
+        \|\bc_{\calE}(\bx^{k+1})\|^2
+        + \|[\bc_{\calI}(\bx^{k+1})]_+\|^2
+    \right]
     = \mathcal{O}\!\left(\frac{\log T}{T}\right)
-  }
 \end{equation}
 \end{lemma}
 
 \begin{proof}
 Let $r_k := \blmbd^k - \bmu^k$. By the $\blmbd$-update
-\eqref{eq:lambda-update}, we have the identity
+\eqref{eq:lambda-update}, the equality block satisfies
+$r_{\calE}^{k+1} = \rho\,\bc_{\calE}(\bx^{k+1})$, while the inequality block
+obeys
+\[
+    r_{\calI}^{k+1}
+    = \bigl[\bmu_{\calI}^{k+1} + \rho\,\bc_{\calI}(\bx^{k+1})\bigr]_+
+    - \bmu_{\calI}^{k+1}.
+\]
+Since $\bmu_{\calI}^{k+1}\geq \bm{0}$ by the initialization and the convex
+combination update \eqref{eq:mu-update}, we have
+$[c_i(\bx^{k+1})]_+ \leq |r_i^{k+1}|/\rho$ for every $i\in\calI$, and hence
 \begin{equation}\label{eq:r-feasibility}
-  \|r_{k+1}\|^2 = \|\blmbd^{k+1} - \bmu^{k+1}\|^2 = \rho^2\|\bc(\bx^{k+1})\|^2,
+  \|\bc_{\calE}(\bx^{k+1})\|^2 + \|[\bc_{\calI}(\bx^{k+1})]_+\|^2
+  \leq \frac{1}{\rho^2}\|r_{k+1}\|^2,
 \end{equation}
 so it suffices to bound $\frac{1}{T}\sum_{k=0}^{T-1}\mathbb{E}[\|r_{k+1}\|^2]$.
 
