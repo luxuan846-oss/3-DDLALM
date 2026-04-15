@@ -1,0 +1,13 @@
+{
+  "ltex.enabled": [
+    "latex",
+    "bibtex",
+    "markdown"
+  ],
+  "ltex.language": "en-US",
+  "ltex.dictionary": {
+    "en-US": [],
+    "zh-CN": []
+  },
+  "ltex.checkFrequency": "save"
+}

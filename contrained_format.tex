@@ -27,9 +27,7 @@
 
 % \PassOptionsToPackage{numbers, sort}{natbib} % 参考文献 
 % \PassOptionsToPackage{numbers, sort, square}{natbib}
-\title{Stochastic Perturbed Proximal Augmented Lagrangianfor Nonconvex Constrained Optimization}
-\newcommand{\calE}{\mathcal{E}}
-\newcommand{\calI}{\mathcal{I}}
+\title{Linearized Dual Smoothing Augmented Lagrangian methods for Nonconvex Constrained Stochastic  Optimization}
 
 \begin{document}
 
@@ -37,18 +35,17 @@
 
 \section{Introduction}
 \label{sec:intro}
-We consider the following nonconvex stochastic optimization problem with 
-equality and inequality constraints:
+We consider the following nonconvex stochastic optimization problem with
+nonlinear equality constraints:
 \begin{align}\label{Prob: primal problem}
     \min_{\bx \in \calX} \quad & F(\bx) := f(\bx) + g(\bx), \notag \\
-    \text{s.t.} \quad & \bc_{\calE}(\bx) = \bm{0}, \notag\\
-    & \bc_{\calI}(\bx) \le \bm{0}, \tag{{\bf P}}
+    \text{s.t.} \quad & \bc(\bx) = \bm{0}. \tag{{\bf P}}
 \end{align}
 where $f(\bx) = \mathbb{E}_{\xi}[\mathbf{f}(\bx,\xi)]$ is a smooth nonconvex 
 function with $\xi$ a random variable on a probability space $\Xi$ independent 
 of $\bx$, and $g:\RR^n\to\RR\cup\{+\infty\}$ is a proper closed 
-proximal-friendly function. The mappings $\bc_{\calE}:\RR^n\to\RR^{|\calE|}$ and
-$\bc_{\calI}:\RR^n\to\RR^{|\calI|}$ are continuously differentiable. The set
+proximal-friendly function. The mapping $\bc:\RR^n\to\RR^{m}$
+is continuously differentiable. The set
 $\calX\subseteq\RR^n$ is assumed to be nonempty and closed.
 The feasible set is assumed to be nonempty and $F$ is lower 
 bounded by $F^*>-\infty$. Exact evaluation of $\nabla f$ is often expensive or 
@@ -60,7 +57,7 @@ queried points.
 \label{sec:related-work}
 
 \paragraph{Deterministic nonconvex constrained optimization.}
-For deterministic nonconvex problems with equality and inequality constraints,
+For deterministic nonconvex problems with nonlinear equality constraints,
 first-order methods with non-asymptotic complexity guarantees have been studied
 extensively.
 Proximal point methods~\cite{boob2023stochastic,ma2022quadratically} achieve
@@ -228,8 +225,17 @@ nonlinear nonconvex constrained optimization,
 improving over the existing $\calO(\varepsilon^{-4})$ barrier for this setting.
 
 \subsection{Our Contributions}
-\text
-Can we design algorithms to solve problems of the form equation 1 with an improved iteration complexity bound and efficient update rules?
+Our main contributions are summarized as follows.
+\begin{itemize}
+    \item We propose a \emph{single-loop} stochastic perturbed proximal ALM for nonlinear equality-constrained nonconvex optimization. The method combines a primal proximal step, a dual smoothing step, and a closed-form multiplier update.
+    \item We introduce a dual perturbation mechanism that yields the effective penalty parameter
+    \(
+    \rho = \alpha/(1+\alpha\beta)
+    \),
+    which is constant for fixed \((\alpha,\beta)\) and independent of the target accuracy \(\varepsilon\).
+    \item We establish non-asymptotic convergence guarantees in terms of KKT-type residuals and prove an oracle complexity of \(\calO(\varepsilon^{-3})\), improving over the \(\calO(\varepsilon^{-4})\) complexity level of existing single-loop stochastic ALM analyses for nonlinear constraints.
+    \item The framework avoids an increasing-penalty schedule and keeps each iteration simple, which improves practical implementability.
+\end{itemize}
 
 \subsection{Notation}
 Throughout this paper, $\|\cdot\|$ denotes the Euclidean norm and $\langle\cdot,\cdot\rangle$ denotes the Euclidean inner product. We use $\EE_{\xi}[\cdot]$ for expectation with respect to $\xi$. Let $[p]:=\{1,\ldots,p\}$, $\mathbb{N}:=\{0,1,2,\ldots\}$, and $\overline{\RR}:=\RR\cup\{+\infty\}$. For $A\in\RR^{m\times n}$, $\|A\|$ and $\sigma_{\min}(A)$ denote the largest and smallest singular values of $A$, respectively. For $X\subseteq\RR^n$, $\delta_X$ denotes its indicator function and $\mathrm{dist}(x,X):=\inf_{y\in X}\|x-y\|$. For complexity notation, we write $K=\calO(\varepsilon)$ if $K\leq B\varepsilon$ for some $B>0$, and $K=\Theta(\varepsilon)$ if $b\varepsilon\leq K\leq B\varepsilon$ for some constants $0<b<B<+\infty$.
@@ -243,34 +249,59 @@ The rest of the paper is organized as follows. Section~\ref{sec:prelim} introduc
 % \setcounter{assumption}{0}
 In this subsection, we formally state our assumptions for Problem \eqref{Prob: primal problem} and the stationarity for problem.
 
+\begin{assumption}[Bounded residual and proximal regularity]
+    \label{ass:the-meaning-of-the-problem}
+    There exists a constant $\Delta>0$ such that, for any $k\ge 0$,
+    \[
+    \|\bc(\bx^k)\| \leq \left(\frac{4\Delta}{\rho}\right)^{1/2},
+    \qquad
+    \|\bmu^k\| \leq (\rho\Delta)^{1/2}.
+    \]
+    Moreover, $g:\RR^n\to\overline{\RR}$ is proper and lower semicontinuous with
+    \[
+    \calX = \dom g := \{\bx\in \RR^n \mid g(\bx) < +\infty\},
+    \]
+    and $g$ is proximal-friendly: for any $\bz\in\RR^n$ and any $t>0$, the subproblem
+    \begin{equation}\label{eq:prox-oracle-g}
+        \min_{\bx\in \RR^{n}} \; g(\bx) + \frac{1}{2t}\|\bx-\bz\|^2
+    \end{equation}
+    is solvable.
+\end{assumption}
+
+
 % \begin{assumption}
-%     \label{ass: proximal of nonsmooth part}
-%     the function $g(\cdot)$ is proper and lower semicontinuous with effective domain denoted by  $\calX = \mathrm{dom}~g := \{x\in \R^n~|~g(x) < +\infty\}.$ Moreover, the proximal oracle of $g_i$ is available,  i.e., given $z_i \in \R^{n_i}$ and a sufficiently large constant $\mu >0$, we can solve the following problem
-% 		\begin{align}\label{eq: prox-oracle-g}
-% 			\min_{\bx\in \R^{n}} g_i(\bx) + \frac{\mu}{2}\|\bx-\bz\|^2.
-% 		\end{align}
+%     \label{Ass: boundedness of c and f} Function $f(\cdot)$ is
+%     $L_f$-smooth over $\calX$. The mapping $\bc(\cdot): \RR^n \rightarrow \RR^m$ is continuously differentiable over $\calX$ and there exist $C, G>0$ such that 
+%     	\begin{subequations}\label{eq: mp c const}
+% 		\begin{alignat}{2}
+% 			 & \max_{x_i\in X_i}\|h_i(x_i)\|\leq  M_{h_i}, 	 \quad  && \|h_i(x_i)-h_i(z_i)\| \leq  K_{h_i}\|x_i-z_i\|,   \\
+% 			 & \max_{x_i\in X_i}\|\nabla h_i(x_i)\| \leq  J_{h_i},  && \|\nabla h_i(x_i)-\nabla h_i(z_i)\| \leq   L_{h_i}\|x_i-z_i\|, 
+% 		\end{alignat}
+% 		\end{subequations}
+% 		where $\nabla h_i(x_i) = [\nabla h_{i1}(x_i), \cdots, \nabla h_{im}(x_i)]\in \RR^{n_i \times m}$, and $\|\cdot\|$ denotes the Euclidean norm for vectors or the induced norm for matrices.
+%     % \begin{align}
+%     %      &\|\nabla f(\bx) \| \leq G, \,\| \partial h(\bx) \|\leq G, \| \partial g(\bx) \|\leq G, \notag \\
+%     %      &\|\nabla \bc_{\calI}(\bx) \| \leq G,\, \| \bc_{\calI}(\bx) \| \leq C, \quad \forall \bx
+%     % \in \calX.\notag
+%     % \end{align}
 % \end{assumption}
-
-
 \begin{assumption}
-    \label{Ass: boundedness of c and f} Function $f(\cdot)$ is
-    $L_f$-smooth over $\calX$. The mapping $\bc_{\calI}(\cdot): \RR^n \rightarrow \RR^m$ and $\bc_{\calE}(\cdot): \RR^n \rightarrow \RR^p$ are continuously differentiable over $\calX$ and there exist $C, G>0$ such that 
-    	\begin{subequations}\label{eq: mp c const}
-		\begin{alignat}{2}
-			 & \max_{x_i\in X_i}\|h_i(x_i)\|\leq  M_{h_i}, 	 \quad  && \|h_i(x_i)-h_i(z_i)\| \leq  K_{h_i}\|x_i-z_i\|,   \\
-			 & \max_{x_i\in X_i}\|\nabla h_i(x_i)\| \leq  J_{h_i},  && \|\nabla h_i(x_i)-\nabla h_i(z_i)\| \leq   L_{h_i}\|x_i-z_i\|, 
-		\end{alignat}
-		\end{subequations}
-		where $\nabla h_i(x_i) = [\nabla h_{i1}(x_i), \cdots, \nabla h_{im}(x_i)]\in \RR^{n_i \times m}$, and $\|\cdot\|$ denotes the Euclidean norm for vectors or the induced norm for matrices.
-    % \begin{align}
-    %      &\|\nabla f(\bx) \| \leq G, \,\| \partial h(\bx) \|\leq G, \| \partial g(\bx) \|\leq G, \notag \\
-    %      &\|\nabla \bc_{\calI}(\bx) \| \leq G,\, \| \bc_{\calI}(\bx) \| \leq C, \quad \forall \bx
-    % \in \calX.\notag
-    % \end{align}
+    \label{Ass: boundedness of c and f}
+    Function $f(\cdot)$ is $L_f$-smooth over $\calX$.
+    The mapping $\bc(\cdot): \RR^n \to \RR^m$ is continuously differentiable over $\calX$.
+    There exist constants $C, G, L_c > 0$ such that for any $\bx,\by\in\calX$,
+    \begin{subequations}\label{eq: mp c const}
+    \begin{alignat}{2}
+        &\|\bc(\bx)\| \le C, \quad
+        && \|\bc(\bx)-\bc(\by)\| \le G\|\bx-\by\|, \\
+        &\|J_{\bc}(\bx)\| \le G, \quad
+        && \|J_{\bc}(\bx)-J_{\bc}(\by)\| \le L_c\|\bx-\by\|.
+    \end{alignat}
+    \end{subequations}
 \end{assumption}
 
 \begin{assumption}
-     \label{Ass: unbiased gradient oracle} 
+     \label{Ass: bounded stochastic gradient noise}
      For any \(\bx\), there exists $\sigma > 0$ such that 
      \begin{align}
       &\EE_{\xi}[\nabla \mathbf f(\bx, \bxi)] = \nabla f(\bx), \notag \\
@@ -290,24 +321,22 @@ We also introduce a standard assumption, also known as the mean-squared smoothne
 \begin{assumption}
     \label{Ass: the expected smoothness of f} 
     For almost every $\bxi \in \Xi$, $f(\cdot, \bxi)$ is differentiable and 
-    for all $\bx, \by \in \calX$,
+    for any $\bx, \by \in \calX$,
     \[
         \EE_{\bxi}\left[\left\|\nabla f(\bx; \bxi) - \nabla f(\by; \bxi)\right\|^{2}
         \right] \leq L_f^{2}\|\bx - \by\|^{2}.
     \]
 \end{assumption}
-\begin{assumption}[Boundedness of Multipliers]
-\label{Ass: bounded multiplier}
-The sequence of dual variables $\{\blmbd^k\}$ generated by 
-Algorithm~\ref{alg:PLADM-eq} is contained in a convex compact set 
-$\Lambda \subset \RR^m$, i.e., there exists a constant $B_\lambda > 0$ such that
-\begin{equation}
-    \|\blmbd^k\| \leq B_\lambda, \quad \forall\, k \geq 0.
-\end{equation}
-\end{assumption}
-\begin{align}
-    Here, we may
-\end{align}
+% \begin{assumption}[Boundedness of Multipliers]
+% \label{Ass: bounded multiplier}
+% The sequence of dual variables $\{\blmbd^k\}$ generated by 
+% Algorithm~\ref{alg:PLADM-eq} is contained in a convex compact set 
+% $\Lambda \subset \RR^m$, i.e., there exists a constant $B_\lambda > 0$ such that
+% \begin{equation}
+%     \|\blmbd^k\| \leq B_\lambda, \quad \forall\, k \geq 0.
+% \end{equation}
+% \end{assumption}
+
 % Given nonconvex constraints, we impose the following nonsingularity condition on the constraints to ensure the feasibility of solutions. Constraint qualifications are often required in solving constrained optimization problems; see~\cite{shi2025momentum,lu2024variancereducedfirstordermethodsdeterministically,liu2025single,curtis2024worst}.
 % \begin{assumption}
 %     \label{Ass: constraints conditions} 
@@ -340,7 +369,7 @@ such that the KKT conditions are satisfied:
 %     \bc_{\calI}(\bx) \leq \bz_{\calI},\ \bz_{\calI} = \mathbf{0}.
 % \end{equation}
 
-We now define the perturbed proximal Lagrangian
+We now define the proximal augmented Lagrangian function
 % \begin{equation}\label{eq:perturbation_alf}
 %     \calL(\bx,\bz,\blmbd,\bmu)
 %     := f(\bx) + g(\bx)
@@ -355,12 +384,16 @@ We now define the perturbed proximal Lagrangian
 \begin{equation}\label{eq:reduced_ppl}
     \mathcal{L}_{\rho}(\bx, \blmbd, \bmu)
     = \underbrace{f(\bx) + \langle \blmbd,\, \bc(\bx) \rangle + \frac{\rho}{2}\|\bc(\bx)\|^2}_{\varphi_{\rho}(\bx, \blmbd)} + g(\bx) - \frac{1}{2\rho}\|\blmbd - \bmu\|^2.
-\end{equation} 
-% where $\rho := \frac{\alpha}{1+\alpha\beta} > 0$.
+\end{equation}
+% where \(\rho := \frac{\alpha}{1+\alpha\beta} > 0\). 
+% The perturbation term
+% \(-\frac{1}{2\rho}\|\blmbd-\bmu\|^2\) regularizes the dual dynamics and enables a stable
+% single-loop primal--dual update under a fixed effective penalty.
 
 \subsection{Algorithm}
+\textbf{Update of $\bx$.} We adopt stochastic proximal descent for the primal variable $\bx$.
 
-\textbf{Stochastic gradient estimator.}
+
 Since the computation of exact gradient information of $f$ is costly and sometimes even prohibitive, we assume that a stochastic gradient at any inquiry point can be accessed. For a mini-batch sample $B_k$ at iteration $k$, let
 \[
 \nabla \mathbf{f}(\bx,B_k)
@@ -389,7 +422,6 @@ $\nabla \mathbf{f}(\bx^{k-1},B_k)$.
 
 We define \(\ \tilde{\nabla} \psi_{\rho}(\bx^k, \blmbd^k) := \bd^k + J_{\bc}(\bx^k)^\top\!\left(\blmbd^k + \rho\,\bc(\bx^k)\right)\ \) as the stochastic gradient estimator of $\nabla \varphi_{\rho}(\bx^k, \blmbd^k)$.    
 
-\textbf{Update of $\bx$.}
 \begin{equation}\label{eq:x-update}
 \bx^{k+1} \in \argmin_{\bx \in \calX}
 \left\{
@@ -400,7 +432,7 @@ g(\bx) + \langle \tilde{\nabla} \psi_{\rho}(\bx^k, \blmbd^k),\ \bx - \bx^k \rang
 \right\}.
 \end{equation}
 
-\textbf{Update of $\bmu$.}
+\textbf{Update of $\bmu$.} We perform the dual auxiliary variable $\bmu$ via gradient ascent step:
 \begin{equation}\label{eq:mu-update}
     \bmu^{k+1} = \bmu^k + \theta_k\big(\blmbd^k - \bmu^k\big),
 \end{equation} with a diminishing step-size
@@ -414,27 +446,30 @@ g(\bx) + \langle \tilde{\nabla} \psi_{\rho}(\bx^k, \blmbd^k),\ \bx - \bx^k \rang
     \sum_{k=0}^{\infty} \delta_k = +\infty.
 \end{equation}
 
-\textbf{Update of $\blmbd$.}
+\textbf{Update of $\blmbd$.} We perform the dual variable $\blmbd$ update by exactly minimizing
+% \begin{equation}\label{eq:lambda-update}
+%     \blmbd_{\calE}^{k+1} = \bmu_{\calE}^{k+1} + \rho\,\bc_{\calE}(\bx^{k+1}),
+%     \qquad
+%     \blmbd_{\calI}^{k+1} = \max\!\left(\bmu_{\calI}^{k+1} + \rho\,\bc_{\calI}(\bx^{k+1}),\;\bm{0}\right).
+% \end{equation}
 \begin{equation}\label{eq:lambda-update}
-    \blmbd_{\calE}^{k+1} = \bmu_{\calE}^{k+1} + \rho\,\bc_{\calE}(\bx^{k+1}),
-    \qquad
-    \blmbd_{\calI}^{k+1} = \max\!\left(\bmu_{\calI}^{k+1} + \rho\,\bc_{\calI}(\bx^{k+1}),\;\bm{0}\right).
+    \blmbd^{k+1} = \bmu^{k+1} + \rho\,\bc(\bx^{k+1}).
+    % \qquad
+    % \blmbd_{\calI}^{k+1} = \max\!\left(\bmu_{\calI}^{k+1} + \rho\,\bc_{\calI}(\bx^{k+1}),\;\bm{0}\right).
 \end{equation}
-
 % \textbf{Update of $\bz$.}
 % \begin{equation}\label{eq:z-update}
 %     \bz^{k+1} = \frac{1}{\alpha}\big(\blmbd^{k+1} - \bmu^{k+1}\big).
 % \end{equation}
 
 \begin{algorithm}[H]
-    \caption{Perturbed Linearized ALM}
+    \caption{Linearized DualProximal ALM}
     \label{alg:PLADM-eq}
     \small
     \begin{algorithmic}[1]
-        \STATE \textbf{Input:} $(\bx^0, \blmbd^0, \bmu^0)$, 
+        \STATE \textbf{Input:} $(\bx^0)$, $\blmbd^0 = \bmu^0 = \bm{0}$
         % parameters $\alpha>0$, $\beta>0$,
-        step-size sequence $\{\eta_k\}_{k\geq 0}$, momentum sequence $\{\gamma_k\}_{k\geq 0}$,
-        and sequence $\{\delta_k\}_{k\geq 0}$
+        step-size sequence $\{\eta_k\}_{k\geq 0}$, momentum sequence $\{\gamma_k\}_{k\geq 0}$, and sequence $\{\delta_k\}_{k\geq 0}$
         %  with $\delta_k\to 0$, $\sum_k \delta_k = +\infty$.
         \FOR{$k = 0, 1, 2, \ldots$}
             \STATE Update $\bx^{k+1}$ by \eqref{eq:x-update}.
@@ -446,25 +481,206 @@ g(\bx) + \langle \tilde{\nabla} \psi_{\rho}(\bx^k, \blmbd^k),\ \bx - \bx^k \rang
         % (randomly selected iterate).
     \end{algorithmic}
 \end{algorithm}
-\section{Stochastic Complexity Analysis}
+\section{Auxiliary Lemmas}
 \label{sec:analysis}
+We first establish some results on the boundedness of multipliers, the smoothness of $\varphi_{\rho}$, and basic relations on $\blmbd$ and $\bmu$.
+\begin{lemma}
+\label{lem:bounded-multiplier}
+Let $\{(\bx^k, \blmbd^k, \bmu^k)\}$ be the sequence generated by 
+Algorithm~\ref{alg:PLADM-eq}. Under
+Assumption~\ref{Ass: boundedness of c and f}, for any $k \geq 0$, it holds that
+\begin{align}
+    \|\bmu^{k+1}\|
+    &\leq \rho C\sum_{j=0}^{k}\theta_j,
+    \label{eq:mu-bound}\\
+    \|\blmbd^{k+1}\|
+    &\leq \rho C\!\left(1+\sum_{j=0}^{k}\theta_j\right), 
+    \label{eq:lambda-bound}
+\end{align} where \(C\) defined in \Cref{Ass: boundedness of c and f} and \(rho\) are independent of $K$. 
+\end{lemma}
+\begin{proof}
+From the $\blmbd$-update \eqref{eq:lambda-update},
+\[
+\blmbd^k - \bmu^k = \rho\,\bc(\bx^k), \qquad \forall k \geq 0.
+\]
+Substituting this identity into the $\bmu$-update \eqref{eq:mu-update} gives
+\[
+\bmu^{k+1} = \bmu^k + \rho\theta_k\,\bc(\bx^k).
+\]
+Summing from $j=0$ to $k$ and using $\bmu^0=\bm{0}$, we obtain
+\[
+\bmu^{k+1} = \rho\sum_{j=0}^{k}\theta_j\,\bc(\bx^j).
+\]
+Hence, by $\|\bc(\bx)\|\leq C$ from
+Assumption~\ref{Ass: boundedness of c and f},
+\[
+\|\bmu^{k+1}\|
+\leq \rho\sum_{j=0}^{k}\theta_j\|\bc(\bx^j)\|
+\leq \rho C\sum_{j=0}^{k}\theta_j.
+\]
+Plugging this into \eqref{eq:lambda-update},
+\[
+\blmbd^{k+1}
+= \bmu^{k+1} + \rho\,\bc(\bx^{k+1})
+= \rho\sum_{j=0}^{k}\theta_j\,\bc(\bx^j) + \rho\,\bc(\bx^{k+1}).
+\]
+Hence, by $\|\bc(\bx)\|\leq C$ from
+Assumption~\ref{Ass: boundedness of c and f},
+\[
+\|\blmbd^{k+1}\|
+\leq \rho\sum_{j=0}^{k}\theta_j\|\bc(\bx^j)\| + \rho\|\bc(\bx^{k+1})\|
+\leq \rho C\!\left(1+\sum_{j=0}^{k}\theta_j\right).
+\]
+This proves \eqref{eq:mu-bound} and \eqref{eq:lambda-bound}.
+\end{proof}
 \begin{lemma}[Smoothness of $\varphi_{\rho}$]
 \label{lem:phi-smooth}
-Under Assumptions~\ref{Ass: boundedness of c and f} 
-and~\ref{Ass: bounded multiplier}, the function 
-$\varphi_{\rho}(\cdot,\blmbd)$ is $L_{\varphi}$-smooth for any 
-$\blmbd$ with $\|\blmbd\|\leq B_{\lambda}$, i.e.,
+Under Assumptions~\ref{Ass: boundedness of c and f} and
+Lemma~\ref{lem:bounded-multiplier}, for any $k \geq 0$, the function
+$\varphi_{\rho}(\cdot,\blmbd^k)$ is $L_{\varphi}^k$-smooth, i.e.,
 \begin{equation}\label{eq:phi-smooth}
-    \|\nabla_{\bx}\varphi_{\rho}(\bx,\blmbd)
-     - \nabla_{\bx}\varphi_{\rho}(\by,\blmbd)\|
-    \leq L_{\varphi}\|\bx-\by\|,
+    \|\nabla_{\bx}\varphi_{\rho}(\bx,\blmbd^k)
+     - \nabla_{\bx}\varphi_{\rho}(\by,\blmbd^k)\|
+    \leq L_{\varphi}^k\|\bx-\by\|,
     \quad \forall\,\bx,\by\in\calX,
 \end{equation}
 where
 \begin{equation}\label{eq:Lphi-def}
-    L_{\varphi} := L_f + L_c(B_{\lambda}+\rho C) + \rho G^2.
+    L_{\varphi}^k := 
+    % L_f + L_c\bigl(\|\blmbd^k\|+\rho C\bigr) + \rho G^2
+    % \leq
+    L_f + \rho L_c C\!\left(2+\sum_{j=0}^{k-1}\theta_j\right) + \rho G^2,
 \end{equation}
+with the convention $\sum_{j=0}^{-1}\theta_j = 0$.
 \end{lemma}
+\begin{proof}
+By the definition of $\varphi_\rho$,
+\[
+\varphi_\rho(\bx,\blmbd^k)
+= f(\bx) + \langle \blmbd^k,\bc(\bx)\rangle + \frac{\rho}{2}\|\bc(\bx)\|^2,
+\]
+and hence
+\[
+\nabla_{\bx}\varphi_\rho(\bx,\blmbd^k)
+= \nabla f(\bx) + J_{\bc}(\bx)^\top \blmbd^k
++ \rho J_{\bc}(\bx)^\top\bc(\bx).
+\]
+Therefore,
+\begin{align*}
+&\nabla_{\bx}\varphi_\rho(\bx,\blmbd^k)
+ - \nabla_{\bx}\varphi_\rho(\by,\blmbd^k) \\
+=\;& \bigl(\nabla f(\bx)-\nabla f(\by)\bigr)
++ \bigl(J_{\bc}(\bx)-J_{\bc}(\by)\bigr)^\top \blmbd^k \\
+&\quad + \rho\Bigl(J_{\bc}(\bx)^\top\bc(\bx)-J_{\bc}(\by)^\top\bc(\by)\Bigr).
+\end{align*}
+Taking norms and using the triangle inequality, we obtain
+\begin{align*}
+&\|\nabla_{\bx}\varphi_\rho(\bx,\blmbd^k)
+ - \nabla_{\bx}\varphi_\rho(\by,\blmbd^k)\| \\
+\leq\;& \|\nabla f(\bx)-\nabla f(\by)\|
++ \|(J_{\bc}(\bx)-J_{\bc}(\by))^\top \blmbd^k\| \\
+&\quad + \rho\|J_{\bc}(\bx)^\top\bc(\bx)-J_{\bc}(\by)^\top\bc(\by)\|.
+\end{align*}
+We bound the three terms separately.
+
+Since $f$ is $L_f$-smooth on $\calX$,
+\[
+\|\nabla f(\bx)-\nabla f(\by)\| \leq L_f\|\bx-\by\|.
+\]
+By the Lipschitz continuity of $J_{\bc}$,
+\[
+\|(J_{\bc}(\bx)-J_{\bc}(\by))^\top \blmbd^k\|
+\leq \|J_{\bc}(\bx)-J_{\bc}(\by)\|\,\|\blmbd^k\|
+\leq L_c\|\blmbd^k\|\,\|\bx-\by\|.
+\]
+Also,
+\begin{align*}
+&J_{\bc}(\bx)^\top\bc(\bx)-J_{\bc}(\by)^\top\bc(\by) \\
+=\;& J_{\bc}(\bx)^\top\bigl(\bc(\bx)-\bc(\by)\bigr)
++ \bigl(J_{\bc}(\bx)-J_{\bc}(\by)\bigr)^\top \bc(\by),
+\end{align*}
+hence
+\begin{align*}
+&\rho\|J_{\bc}(\bx)^\top\bc(\bx)-J_{\bc}(\by)^\top\bc(\by)\| \\
+\leq\;& \rho\|J_{\bc}(\bx)\|\,\|\bc(\bx)-\bc(\by)\|
++ \rho\|J_{\bc}(\bx)-J_{\bc}(\by)\|\,\|\bc(\by)\| \\
+\leq\;& \rho G^2\|\bx-\by\| + \rho L_c C\|\bx-\by\|.
+\end{align*}
+Combining the above estimates,
+\[
+\|\nabla_{\bx}\varphi_\rho(\bx,\blmbd^k)
+ - \nabla_{\bx}\varphi_\rho(\by,\blmbd^k)\|
+\leq \Bigl(L_f + L_c(\|\blmbd^k\|+\rho C) + \rho G^2\Bigr)\|\bx-\by\|.
+\]
+This proves the first expression in \eqref{eq:Lphi-def}. From
+Lemma~\ref{lem:bounded-multiplier},
+\[
+\|\blmbd^k\|
+\leq \rho C\!\left(1+\sum_{j=0}^{k-1}\theta_j\right),
+\]
+which implies
+\[
+L_{\varphi}^k
+\leq L_f + \rho L_c C\!\left(2+\sum_{j=0}^{k-1}\theta_j\right) + \rho G^2.
+\]
+This completes the proof.  \eproof
+\end{proof}
+\begin{lemma}[Basic relations on $\blmbd$ and $\bmu$]
+\label{lem:basic-relations}
+Let $\{(\bx^k, \blmbd^k, \bmu^k)\}$ be the sequence generated by 
+Algorithm~\ref{alg:PLADM-eq}. Under Assumption~\ref{Ass: boundedness of c and f}, the following 
+relations hold for any $k \geq 0$:
+\begin{align}
+    \|\bmu^{k+1} - \bmu^k\|^2 = \theta_k^2 \|\blmbd^{k} - \bmu^k\|^2  &\leq \frac{\rho^2\delta_k^2}{4}, 
+    \label{eq:mu-diff}\\
+    \|\bmu^{k+1} - \blmbd^k\|^2 &= (1-\theta_k)^2\|\blmbd^k - \bmu^k\|^2,
+    \label{eq:mu-lambda-diff}\\
+    \theta_k \|\blmbd^k - \bmu^k\|^2 &\leq \rho\delta_k, 
+    \label{eq:theta-bound}\\
+    \|\blmbd^{k+1} - \blmbd^k\|^2 &\leq 
+    2\rho^2 L_c^2\,\|\bx^{k+1} - \bx^k\|^2 + \frac{\rho^2\delta_k^2}{2}.
+    \label{eq:lambda-diff}
+\end{align}
+\end{lemma}
+\begin{proof}
+\textbf{Relation \eqref{eq:mu-diff}.}
+From the $\bmu$-update \eqref{eq:mu-update},
+$\bmu^{k+1} - \bmu^k = \theta_k(\blmbd^k - \bmu^k)$, so
+\begin{align*}
+  \|\bmu^{k+1} - \bmu^k\|^2
+  = \theta_k^2\|\blmbd^k - \bmu^k\|^2
+  \leq \frac{\rho^2\delta_k^2}{\bigl(\|\blmbd^k-\bmu^k\|^2+1\bigr)^2}
+    \cdot \|\blmbd^k-\bmu^k\|^2
+  \leq \frac{\rho^2\delta_k^2}{4},
+\end{align*}
+where the last inequality uses $\frac{t}{(t+1)^2} \leq \frac{1}{4}$ for $t = \|\blmbd^k-\bmu^k\|^2 \geq 0$.
+ 
+\textbf{Relation \eqref{eq:theta-bound}.}
+By definition \eqref{eq:theta-def},
+$\theta_k \leq \frac{\rho\delta_k}{\|\blmbd^k-\bmu^k\|^2+1}$, hence
+\begin{align*}
+  \theta_k\|\blmbd^k-\bmu^k\|^2
+  \leq \frac{\rho\delta_k\|\blmbd^k-\bmu^k\|^2}{\|\blmbd^k-\bmu^k\|^2+1}
+  \leq \rho\delta_k.
+\end{align*}
+ 
+\textbf{Relation \eqref{eq:mu-lambda-diff}.}
+$\bmu^{k+1} - \blmbd^k = \bmu^k - \blmbd^k + \theta_k(\blmbd^k-\bmu^k)
+= (1-\theta_k)(\bmu^k - \blmbd^k)$,
+so $\|\bmu^{k+1}-\blmbd^k\|^2 = (1-\theta_k)^2\|\blmbd^k-\bmu^k\|^2$.
+ 
+\textbf{Relation \eqref{eq:lambda-diff}.}
+From the $\blmbd$-update \eqref{eq:lambda-update},
+$\blmbd^{k+1} - \blmbd^k
+= (\bmu^{k+1}-\bmu^k) + \rho\bigl(\bc(\bx^{k+1})-\bc(\bx^k)\bigr)$.
+Using $(a+b)^2 \leq 2(a^2+b^2)$ and $L_c$-smoothness of $\bc$:
+\begin{align*}
+  \|\blmbd^{k+1}-\blmbd^k\|^2
+  &\leq 2\|\bmu^{k+1}-\bmu^k\|^2 + 2\rho^2\|\bc(\bx^{k+1})-\bc(\bx^k)\|^2 \\
+  &\leq \frac{\rho^2\delta_k^2}{2} + 2\rho^2 L_c^2\|\bx^{k+1}-\bx^k\|^2.
+\end{align*}
+This proves \eqref{eq:lambda-diff}. \eproof
+\end{proof}
 
 For simplicity, we introduce the gradient error estimator
 \begin{align}
@@ -473,6 +689,183 @@ For simplicity, we introduce the gradient error estimator
     - \tilde{\nabla}\psi_{\rho}(\bx^k,\blmbd^k) \notag\\
     &= \nabla f(\bx^k) - \bd^k.
 \end{align}
+We then prove the approximate sufficient descent property of the augmented Lagrangian function $\calL_\rho$ along the iterates generated by Algorithm~\ref{alg:PLADM-eq}.   
+
+\begin{lemma}[Sufficient Descent]
+\label{lem:sufficient-descent}
+Let $\{(\bx^k, \blmbd^k, \bmu^k)\}$ be the sequence generated by
+Algorithm~\ref{alg:PLADM-eq}. Under
+Assumptions~\ref{Ass: boundedness of c and f}, the following inequality holds for any $k \ge 0$:
+\begin{align}
+  \calL_{\rho}(\bx^{k+1}, \blmbd^{k+1}, \bmu^{k+1})
+  &\;\le\;
+  \calL_{\rho}(\bx^k, \blmbd^k, \bmu^k)
+  - C_1^k\,\|\bx^{k+1}-\bx^k\|^2
+  + \frac{\eta_k}{2}\|\be^k\|^2
+  + \hat\delta_k,
+  \label{eq:sufficient-descent}
+\end{align}
+where
+\begin{equation}\label{eq:C1-deltahat-def}
+  C_1^k := \frac{1}{2\eta_k} - \frac{L_\varphi^k}{2} - \rho L_c^2 > 0,
+  \qquad
+  \hat\delta_k := \frac{\rho\delta_k^2}{4} + \delta_k.
+\end{equation}
+Furthermore, rearranging \eqref{eq:sufficient-descent} gives
+\begin{align}\label{eq:descent-rearranged}
+  C_1^k\,\|\bx^{k+1}-\bx^k\|^2
+  \leq\;
+  &\calL_{\rho}(\bx^k, \blmbd^k, \bmu^k)
+  - \calL_{\rho}(\bx^{k+1}, \blmbd^{k+1}, \bmu^{k+1})
+  + \frac{\eta_k}{2}\|\be^k\|^2
+  + \hat\delta_k.
+\end{align}
+\end{lemma}
+
+\begin{proof}
+Decompose the one-step change of $\calL_\rho$ as
+\begin{align}
+  &\calL_\rho(\bx^{k+1},\blmbd^{k+1},\bmu^{k+1})
+   - \calL_\rho(\bx^k,\blmbd^k,\bmu^k) \notag\\
+  &= \underbrace{
+      \calL_\rho(\bx^{k+1},\blmbd^k,\bmu^k)
+    - \calL_\rho(\bx^k,\blmbd^k,\bmu^k)
+    }_{\text{Part A}}
+  + \underbrace{
+      \calL_\rho(\bx^{k+1},\blmbd^{k+1},\bmu^{k+1})
+    - \calL_\rho(\bx^{k+1},\blmbd^k,\bmu^k)
+    }_{\text{Part B}}.
+  \label{eq:decompose}
+\end{align}
+
+\medskip\noindent\textbf{Part A (x-update).}
+By the $L_\varphi^k$-smoothness of $\varphi_\rho(\cdot,\blmbd^k)$
+(Lemma~\ref{lem:phi-smooth}) and the descent lemma:
+\begin{equation}
+  \calL_\rho(\bx^{k+1},\blmbd^k,\bmu^k)
+  - \calL_\rho(\bx^k,\blmbd^k,\bmu^k)
+  \leq \langle \nabla_{\bx}\varphi_\rho(\bx^k,\blmbd^k),\, \bx^{k+1}-\bx^k\rangle
+       + g(\bx^{k+1}) - g(\bx^k)
+       + \frac{L_\varphi^k}{2}\|\bx^{k+1}-\bx^k\|^2.
+  \label{eq:partA-descent}
+\end{equation}
+From the $\bx$-update optimality condition
+$-\tilde{\nabla}\psi_\rho(\bx^k,\blmbd^k)
+ - \frac{1}{\eta_k}(\bx^{k+1}-\bx^k) \in \partial g(\bx^{k+1})$,
+taking $\bx = \bx^k$ in the subgradient inequality gives
+\begin{equation}
+  g(\bx^{k+1}) - g(\bx^k)
+  \leq \Bigl\langle
+    -\tilde{\nabla}\psi_\rho(\bx^k,\blmbd^k)
+    - \tfrac{1}{\eta_k}(\bx^{k+1}-\bx^k),\;
+    \bx^{k+1}-\bx^k
+  \Bigr\rangle.
+  \label{eq:partA-sub}
+\end{equation}
+Substituting \eqref{eq:partA-sub} into \eqref{eq:partA-descent}
+and using
+$\tilde{\nabla}\psi_\rho(\bx^k,\blmbd^k)
+= \nabla_{\bx}\varphi_\rho(\bx^k,\blmbd^k) - \be^k$:
+\begin{align}
+  &\calL_\rho(\bx^{k+1},\blmbd^k,\bmu^k)
+  - \calL_\rho(\bx^k,\blmbd^k,\bmu^k) \notag\\
+  &\leq \langle \be^k,\, \bx^{k+1}-\bx^k\rangle
+       + \Bigl(\frac{L_\varphi^k}{2} - \frac{1}{\eta_k}\Bigr)
+         \|\bx^{k+1}-\bx^k\|^2.
+\end{align}
+Applying Young's inequality
+$\langle \be^k, \bx^{k+1}-\bx^k\rangle
+ \leq \frac{\eta_k}{2}\|\be^k\|^2
+    + \frac{1}{2\eta_k}\|\bx^{k+1}-\bx^k\|^2$:
+\begin{align}
+  &\calL_\rho(\bx^{k+1},\blmbd^k,\bmu^k)
+  - \calL_\rho(\bx^k,\blmbd^k,\bmu^k) \notag\\
+  &\leq -\Bigl(\frac{1}{2\eta_k} - \frac{L_\varphi^k}{2}\Bigr)
+        \|\bx^{k+1}-\bx^k\|^2
+       + \frac{\eta_k}{2}\|\be^k\|^2.
+  \label{eq:partA-bound}
+\end{align}
+
+\medskip\noindent\textbf{Part B (dual-variable change).}
+Expanding $\calL_\rho$ using definition \eqref{eq:reduced_ppl}:
+\begin{align}
+  \text{Part B}
+  &= \langle \blmbd^{k+1}-\blmbd^k,\, \bc(\bx^{k+1})\rangle
+    - \frac{1}{2\rho}\Bigl(
+        \|\blmbd^{k+1}-\bmu^{k+1}\|^2
+      - \|\blmbd^k-\bmu^k\|^2
+    \Bigr).
+  \label{eq:partB-expand}
+\end{align}
+Substituting
+$\bc(\bx^{k+1}) = \frac{1}{\rho}(\blmbd^{k+1}-\bmu^{k+1})$
+from \eqref{eq:lambda-update} into the inner product, and applying
+the polarization identity
+$\langle a,b\rangle = \frac{1}{2}\|a\|^2+\frac{1}{2}\|b\|^2
+-\frac{1}{2}\|a-b\|^2$
+with $a = \blmbd^{k+1}-\blmbd^k$ and $b = \blmbd^{k+1}-\bmu^{k+1}$
+(so $a - b = \bmu^{k+1}-\blmbd^k$):
+\begin{align}
+  \text{Part B}
+  &= \frac{1}{2\rho}\|\blmbd^{k+1}-\blmbd^k\|^2
+    - \frac{1}{2\rho}\|\bmu^{k+1}-\blmbd^k\|^2
+    + \frac{1}{2\rho}\|\blmbd^k-\bmu^k\|^2,
+  \label{eq:partB-identity}
+\end{align}
+where $\|\blmbd^{k+1}-\bmu^{k+1}\|^2$ cancels exactly.
+We now bound each term using Lemma~\ref{lem:basic-relations}.
+
+\medskip\noindent
+\textit{Second and third terms.}
+By \eqref{eq:mu-lambda-diff},
+$\|\bmu^{k+1}-\blmbd^k\|^2 = (1-\theta_k)^2\|\blmbd^k-\bmu^k\|^2$,
+so
+\begin{equation}
+  \frac{1}{2\rho}\|\blmbd^k-\bmu^k\|^2
+  - \frac{1}{2\rho}\|\bmu^{k+1}-\blmbd^k\|^2
+  = \frac{2\theta_k-\theta_k^2}{2\rho}\|\blmbd^k-\bmu^k\|^2
+  \leq \frac{\theta_k}{\rho}\|\blmbd^k-\bmu^k\|^2.
+\end{equation}
+By \eqref{eq:theta-bound}, $\theta_k\|\blmbd^k-\bmu^k\|^2 \leq \rho\delta_k$,
+hence this is $\leq \delta_k$.
+
+\medskip\noindent
+\textit{First term.}
+Applying \eqref{eq:lambda-diff}:
+\begin{equation}
+  \frac{1}{2\rho}
+  \|\blmbd^{k+1}-\blmbd^k\|^2
+  \leq \rho L_c^2\,
+  \|\bx^{k+1}-\bx^k\|^2
+  + \frac{\rho\delta_k^2}{4}.
+\end{equation}
+
+\medskip\noindent
+Combining the two estimates:
+\begin{align}
+  &\calL_\rho(\bx^{k+1},\blmbd^{k+1},\bmu^{k+1})
+  - \calL_\rho(\bx^{k+1},\blmbd^k,\bmu^k) \notag\\
+  \leq \rho L_c^2\,
+       \|\bx^{k+1}-\bx^k\|^2
+       + \frac{\rho\delta_k^2}{4} + \delta_k.
+  \label{eq:partB-bound}
+\end{align}
+
+\medskip\noindent\textbf{Combining Parts A and B.}
+Adding \eqref{eq:partA-bound} and \eqref{eq:partB-bound}:
+\begin{align}
+  &\calL_\rho(\bx^{k+1},\blmbd^{k+1},\bmu^{k+1})
+   - \calL_\rho(\bx^k,\blmbd^k,\bmu^k) \notag\\
+  &\leq -\underbrace{\Bigl(
+      \frac{1}{2\eta_k} - \frac{L_\varphi^k}{2} - \rho L_c^2
+    \Bigr)}_{=\,C_1^k}
+    \|\bx^{k+1}-\bx^k\|^2
+   + \frac{\eta_k}{2}\|\be^k\|^2
+   + \underbrace{\frac{\rho\delta_k^2}{4} + \delta_k}_{=\,\hat\delta_k}.
+\end{align}
+Condition \eqref{eq:step-cond} ensures $C_1^k > 0$,
+which completes the proof.
+\end{proof}
 Assume \(\gamma_k \equiv \gamma_f \in (0,1)\). It can be derived that, for \(k \ge 1\),
 \[
 \be^k = \sum_{t=0}^{k}(1-\gamma_f)^t\,\bu_{k-t},
@@ -488,7 +881,7 @@ where
 \end{align}
 
 \begin{lemma}
-    Under Assumption~\ref{Ass: boundedness of c and f}-\ref{Ass: unbiased gradient oracle}. 
+    Under Assumption~\ref{Ass: boundedness of c and f}-\ref{Ass: bounded stochastic gradient noise}. 
     Then for any \( K \geq 1\), it holds that with probability at least $1-2K \alpha$, that for any
     $k = 0, \cdots, K-1$, we have 
     \begin{align*}
@@ -618,79 +1011,11 @@ yields the claimed inequality.
 % \]
 % which completes the proof.
 % \end{proof}
-\begin{lemma}[Basic relations on $\blmbd$ and $\bmu$]
-\label{lem:basic-relations}
-Let $\{(\bx^k, \blmbd^k, \bmu^k)\}$ be the sequence generated by 
-Algorithm~\ref{alg:PLADM-eq}. Under Assumption~\ref{Ass: boundedness of c and f}, the following 
-relations hold for all $k \geq 0$:
-\begin{align}
-    \|\bmu^{k+1} - \bmu^k\|^2 = \theta_k^2 \|\blmbd^{k} - \bmu^k\|^2  &\leq \frac{\rho^2\delta_k^2}{4}, 
-    \label{eq:mu-diff}\\
-    \theta_k \|\blmbd^k - \bmu^k\|^2 &\leq \rho\delta_k, 
-    \label{eq:theta-bound}\\
-    \|\bmu^{k+1} - \blmbd^k\|^2 &= (1-\theta_k)^2\|\blmbd^k - \bmu^k\|^2,
-    \label{eq:mu-lambda-diff}\\
-    \mathbb{E}[\|\blmbd^{k+1} - \blmbd^k\|^2] &\leq 
-    2\rho^2 L_c^2\,\mathbb{E}[\|\bx^{k+1} - \bx^k\|^2] + \frac{\rho^2\delta_k^2}{2}.
-    \label{eq:lambda-diff}
-\end{align}
-\end{lemma}
-% \begin{proof}
-% \textbf{Relation \eqref{eq:mu-diff}.}
-% From the $\bmu$-update \eqref{eq:mu-update},
-% $\bmu^{k+1} - \bmu^k = \theta_k(\blmbd^k - \bmu^k)$, so
-% \begin{align*}
-%   \|\bmu^{k+1} - \bmu^k\|^2
-%   = \theta_k^2\|\blmbd^k - \bmu^k\|^2
-%   \leq \frac{\rho^2\delta_k^2}{\bigl(\|\blmbd^k-\bmu^k\|^2+1\bigr)^2}
-%     \cdot \|\blmbd^k-\bmu^k\|^2
-%   \leq \frac{\rho^2\delta_k^2}{4},
-% \end{align*}
-% where the last inequality uses $\frac{t}{(t+1)^2} \leq \frac{1}{4}$ for $t = \|\blmbd^k-\bmu^k\|^2 \geq 0$.
- 
-% \textbf{Relation \eqref{eq:theta-bound}.}
-% By definition \eqref{eq:theta-def},
-% $\theta_k \leq \frac{\rho\delta_k}{\|\blmbd^k-\bmu^k\|^2+1}$, hence
-% \begin{align*}
-%   \theta_k\|\blmbd^k-\bmu^k\|^2
-%   \leq \frac{\rho\delta_k\|\blmbd^k-\bmu^k\|^2}{\|\blmbd^k-\bmu^k\|^2+1}
-%   \leq \rho\delta_k.
-% \end{align*}
- 
-% \textbf{Relation \eqref{eq:mu-lambda-diff}.}
-% $\bmu^{k+1} - \blmbd^k = \bmu^k - \blmbd^k + \theta_k(\blmbd^k-\bmu^k)
-% = (1-\theta_k)(\bmu^k - \blmbd^k)$,
-% so $\|\bmu^{k+1}-\blmbd^k\|^2 = (1-\theta_k)^2\|\blmbd^k-\bmu^k\|^2$.
- 
-% \textbf{Relation \eqref{eq:lambda-diff}.}
-% From the $\blmbd$-update \eqref{eq:lambda-update},
-% $\blmbd^{k+1} - \blmbd^k
-% = (\bmu^{k+1}-\bmu^k) + \rho\bigl(\bc(\bx^{k+1})-\bc(\bx^k)\bigr)$.
-% Using $(a+b)^2 \leq 2(a^2+b^2)$ and $L_c$-smoothness of $\bc$:
-% \begin{align*}
-%   \|\blmbd^{k+1}-\blmbd^k\|^2
-%   &\leq 2\|\bmu^{k+1}-\bmu^k\|^2 + 2\rho^2\|\bc(\bx^{k+1})-\bc(\bx^k)\|^2 \\
-%   &\leq \frac{\rho^2\delta_k^2}{2} + 2\rho^2 L_c^2\|\bx^{k+1}-\bx^k\|^2.
-% \end{align*}
-% Taking expectation gives \eqref{eq:lambda-diff}.
-% \end{proof}
-% \begin{lemma}[Boundedness of multipliers]
-% \label{lem:bounded-multiplier}
-% Let $\{(\bx^k, \blmbd^k, \bmu^k)\}$ be the sequence generated by 
-% Algorithm~\ref{alg:PLADM-eq}. 
-% Under Assumption~\ref{Ass: boundedness of c and f}, for all $k \geq 0$,  it holds that
-% \begin{align}
-%     \|\bmu^{k+1}\| &\leq \|\bmu^0\| + \rho C\sum_{j=0}^{k}\tau_j\theta_j, 
-%     \label{eq:mu-bound}\\
-%     \|\blmbd^{k+1}\| &\leq \|\bmu^0\| + \rho C\left(\tau_k + \sum_{j=0}^{k}\tau_j\theta_j\right).
-%     \label{eq:lambda-bound}
-% \end{align}
-% \end{lemma}
 
 % \begin{lemma}[Primal Feasibility bound]
 % \label{lem:bounded-multiplier}
 % Let $\{(\bx^k, \blmbd^k, \bmu^k)\}$ be the sequence generated by 
-% Algorithm~\ref{alg:PLADM-eq} with \(\tau_k = \tau\). Under Assumption~\ref{Ass: boundedness of c and f}, for all $k \geq 0$,  it holds that
+% Algorithm~\ref{alg:PLADM-eq} with \(\tau_k = \tau\). Under Assumption~\ref{Ass: boundedness of c and f}, for any $k \geq 0$,  it holds that
 % \begin{align}
 %  \frac{1}{T}\sum_{k = 0}^{T-1}\mathbb{E}\big[\|\bc(\bx^{k+1})\|^2\big]  = \mathcal{O}(logT/T)\big]
 % \end{align} \blue{with \(\delta_k = \frac{c}{k+1}\)}.
@@ -734,190 +1059,19 @@ relations hold for all $k \geq 0$:
 %     Assumptions~\ref{Ass: boundedness of c and f}--\ref{Ass: unbiased gradient oracle},
 %     ...
 % \end{lemma}
-\begin{lemma}[Sufficient Descent]
-\label{lem:sufficient-descent}
-Let $\{(\bx^k, \blmbd^k, \bmu^k)\}$ be the sequence generated by
-Algorithm~\ref{alg:PLADM-eq}. Under
-Assumptions~\ref{Ass: boundedness of c and f},
-\ref{Ass: unbiased gradient oracle}, and~\ref{Ass: bounded multiplier}, the following inequality holds for all $k \ge 0$:
-\begin{align}
-  \calL_{\rho}(\bx^{k+1}, \blmbd^{k+1}, \bmu^{k+1})
-  &\;\le\;
-  \calL_{\rho}(\bx^k, \blmbd^k, \bmu^k)
-  - C_1^k\,\|\bx^{k+1}-\bx^k\|^2
-  + \frac{\eta_k}{2}\|\be^k\|^2
-  + \hat\delta_k,
-  \label{eq:sufficient-descent}
-\end{align}
-where
-\begin{equation}\label{eq:C1-deltahat-def}
-  C_1^k := \frac{1}{2\eta_k} - \frac{L_\varphi}{2} - \rho L_c^2 > 0,
-  \qquad
-  \hat\delta_k := \frac{\rho\delta_k^2}{4} + \delta_k.
-\end{equation}
-Furthermore, rearranging \eqref{eq:sufficient-descent} gives
-\begin{align}\label{eq:descent-rearranged}
-  C_1^k\,\|\bx^{k+1}-\bx^k\|^2
-  \leq\;
-  &\calL_{\rho}(\bx^k, \blmbd^k, \bmu^k)
-  - \calL_{\rho}(\bx^{k+1}, \blmbd^{k+1}, \bmu^{k+1})
-  + \frac{\eta_k}{2}\|\be^k\|^2
-  + \hat\delta_k.
-\end{align}
-\end{lemma}
 
-% \begin{proof}
-% Decompose the one-step change of $\calL_\rho$ as
-% \begin{align}
-%   &\calL_\rho(\bx^{k+1},\blmbd^{k+1},\bmu^{k+1})
-%    - \calL_\rho(\bx^k,\blmbd^k,\bmu^k) \notag\\
-%   &= \underbrace{
-%       \calL_\rho(\bx^{k+1},\blmbd^k,\bmu^k)
-%     - \calL_\rho(\bx^k,\blmbd^k,\bmu^k)
-%     }_{\text{Part A}}
-%   + \underbrace{
-%       \calL_\rho(\bx^{k+1},\blmbd^{k+1},\bmu^{k+1})
-%     - \calL_\rho(\bx^{k+1},\blmbd^k,\bmu^k)
-%     }_{\text{Part B}}.
-%   \label{eq:decompose}
-% \end{align}
-
-% \medskip\noindent\textbf{Part A (x-update).}
-% By the $L_\varphi$-smoothness of $\varphi_\rho(\cdot,\blmbd^k)$
-% (Lemma~\ref{lem:phi-smooth}) and the descent lemma:
-% \begin{align}
-%   \text{Part A}
-%   &\leq \langle \nabla_\bx\varphi_\rho(\bx^k,\blmbd^k),\, \bx^{k+1}-\bx^k\rangle
-%        + g(\bx^{k+1}) - g(\bx^k)
-%        + \frac{L_\varphi}{2}\|\bx^{k+1}-\bx^k\|^2.
-%   \label{eq:partA-descent}
-% \end{align}
-% From the $\bx$-update optimality condition
-% $-\hat{\nabla}_\bx\varphi_\rho(\bx^k,\blmbd^k)
-%  - \frac{1}{\eta_k}(\bx^{k+1}-\bx^k) \in \partial g(\bx^{k+1})$,
-% taking $\bx = \bx^k$ in the subgradient inequality gives
-% \begin{equation}
-%   g(\bx^{k+1}) - g(\bx^k)
-%   \leq \Bigl\langle
-%     -\hat{\nabla}_\bx\varphi_\rho(\bx^k,\blmbd^k)
-%     - \tfrac{1}{\eta_k}(\bx^{k+1}-\bx^k),\;
-%     \bx^{k+1}-\bx^k
-%   \Bigr\rangle.
-%   \label{eq:partA-sub}
-% \end{equation}
-% Substituting \eqref{eq:partA-sub} into \eqref{eq:partA-descent}
-% and using $\hat{\nabla}_\bx\varphi_\rho(\bx^k,\blmbd^k)
-% = \nabla_\bx\varphi_\rho(\bx^k,\blmbd^k) - \be^k$:
-% \begin{align}
-%   \text{Part A}
-%   &\leq \langle \be^k,\, \bx^{k+1}-\bx^k\rangle
-%        + \Bigl(\frac{L_\varphi}{2} - \frac{1}{2\eta_k}\Bigr)
-%          \|\bx^{k+1}-\bx^k\|^2.
-% \end{align}
-% Taking conditional expectation $\mathbb{E}[\,\cdot\,|\mathcal{F}_k]$
-% and applying Young's inequality
-% $\langle \be^k, \bx^{k+1}-\bx^k\rangle
-%  \leq \frac{\eta_k}{2}\|\be^k\|^2
-%     + \frac{1}{2\eta_k}\|\bx^{k+1}-\bx^k\|^2$:
-% \begin{align}
-%   \mathbb{E}[\text{Part A}\,|\,\mathcal{F}_k]
-%   &\leq -\Bigl(\frac{1}{2\eta_k} - \frac{L_\varphi}{2}\Bigr)
-%         \mathbb{E}[\|\bx^{k+1}-\bx^k\|^2\,|\,\mathcal{F}_k]
-%        + \frac{\eta_k}{2}\|\be^k\|^2.
-%   \label{eq:partA-bound}
-% \end{align}
-
-% \medskip\noindent\textbf{Part B (dual-variable change).}
-% Expanding $\calL_\rho$ using definition \eqref{eq:reduced_ppl}:
-% \begin{align}
-%   \text{Part B}
-%   &= \langle \blmbd^{k+1}-\blmbd^k,\, \bc(\bx^{k+1})\rangle
-%     - \frac{1}{2\rho}\Bigl(
-%         \|\blmbd^{k+1}-\bmu^{k+1}\|^2
-%       - \|\blmbd^k-\bmu^k\|^2
-%     \Bigr).
-%   \label{eq:partB-expand}
-% \end{align}
-% Substituting
-% $\bc(\bx^{k+1}) = \frac{1}{\rho}(\blmbd^{k+1}-\bmu^{k+1})$
-% from \eqref{eq:dual-gap-feasibility} into the inner product, and applying
-% the polarization identity
-% $\langle a,b\rangle = \frac{1}{2}\|a\|^2+\frac{1}{2}\|b\|^2
-% -\frac{1}{2}\|a-b\|^2$
-% with $a = \blmbd^{k+1}-\blmbd^k$ and $b = \blmbd^{k+1}-\bmu^{k+1}$
-% (so $a - b = \bmu^{k+1}-\blmbd^k$):
-% \begin{align}
-%   \text{Part B}
-%   &= \frac{1}{2\rho}\|\blmbd^{k+1}-\blmbd^k\|^2
-%     - \frac{1}{2\rho}\|\bmu^{k+1}-\blmbd^k\|^2
-%     + \frac{1}{2\rho}\|\blmbd^k-\bmu^k\|^2,
-%   \label{eq:partB-identity}
-% \end{align}
-% where $\|\blmbd^{k+1}-\bmu^{k+1}\|^2$ cancels exactly.
-% We now bound each term using Lemma~\ref{lem:basic-relations}.
-
-% \medskip\noindent
-% \textit{Second and third terms.}
-% By \eqref{eq:mu-lambda-diff},
-% $\|\bmu^{k+1}-\blmbd^k\|^2 = (1-\theta_k)^2\|\blmbd^k-\bmu^k\|^2$,
-% so
-% \begin{equation}
-%   \frac{1}{2\rho}\|\blmbd^k-\bmu^k\|^2
-%   - \frac{1}{2\rho}\|\bmu^{k+1}-\blmbd^k\|^2
-%   = \frac{2\theta_k-\theta_k^2}{2\rho}\|\blmbd^k-\bmu^k\|^2
-%   \leq \frac{\theta_k}{\rho}\|\blmbd^k-\bmu^k\|^2.
-% \end{equation}
-% By \eqref{eq:theta-bound}, $\theta_k\|\blmbd^k-\bmu^k\|^2 \leq \rho\delta_k$,
-% hence this is $\leq \delta_k$.
-
-% \medskip\noindent
-% \textit{First term.}
-% Taking conditional expectation and applying \eqref{eq:lambda-diff}:
-% \begin{equation}
-%   \frac{1}{2\rho}
-%   \mathbb{E}[\|\blmbd^{k+1}-\blmbd^k\|^2\,|\,\mathcal{F}_k]
-%   \leq \rho L_c^2\,
-%   \mathbb{E}[\|\bx^{k+1}-\bx^k\|^2\,|\,\mathcal{F}_k]
-%   + \frac{\rho\delta_k^2}{4}.
-% \end{equation}
-
-% \medskip\noindent
-% Combining the two estimates:
-% \begin{align}
-%   \mathbb{E}[\text{Part B}\,|\,\mathcal{F}_k]
-%   \leq \rho L_c^2\,
-%        \mathbb{E}[\|\bx^{k+1}-\bx^k\|^2\,|\,\mathcal{F}_k]
-%        + \frac{\rho\delta_k^2}{4} + \delta_k.
-%   \label{eq:partB-bound}
-% \end{align}
-
-% \medskip\noindent\textbf{Combining Parts A and B.}
-% Adding \eqref{eq:partA-bound} and \eqref{eq:partB-bound}:
-% \begin{align}
-%   &\mathbb{E}[\calL_\rho(\bx^{k+1},\blmbd^{k+1},\bmu^{k+1})\,|\,\mathcal{F}_k]
-%    - \calL_\rho(\bx^k,\blmbd^k,\bmu^k) \notag\\
-%   &\leq -\underbrace{\Bigl(
-%       \frac{1}{2\eta_k} - \frac{L_\varphi}{2} - \rho L_c^2
-%     \Bigr)}_{=\,C_1^k}
-%     \mathbb{E}[\|\bx^{k+1}-\bx^k\|^2\,|\,\mathcal{F}_k]
-%    + \frac{\eta_k}{2}\|\be^k\|^2
-%    + \underbrace{\frac{\rho\delta_k^2}{4} + \delta_k}_{=\,\hat\delta_k}.
-% \end{align}
-% Condition \eqref{eq:step-cond} ensures $C_1^k > 0$,
-% which completes the proof.
-% \end{proof}
 
 \begin{lemma}[Primal Stationarity Residual Bound]
 \label{lem:stationarity}
 Let $\{(\bx^k, \blmbd^k, \bmu^k)\}$ be the sequence generated by
 Algorithm~\ref{alg:PLADM-eq}.
 Under Assumptions~\ref{Ass: boundedness of c and f}
-and~\ref{Ass: unbiased gradient oracle},
+and~\ref{Ass: bounded stochastic gradient noise},
 define the stationarity residual
 \begin{equation}
     \bzeta_{\bx}^{k+1} \in \nabla_{\bx}\varphi_\rho(\bx^{k+1}, \blmbd^{k+1}) 
     + \partial g(\bx^{k+1}) = \partial_{\bx} \calL_{\rho}(\bw^k).
-\end{equation}Then for all $k \geq 0$,
+\end{equation}Then for any $k \geq 0$,
 % \begin{equation}\label{eq:zeta-bound}
 %     \|\bzeta_{\bx}^{k+1}\|^2
 %     \;\leq\;
@@ -931,7 +1085,7 @@ Lemma~\ref{lem:basic-relations}~\eqref{eq:lambda-diff},
 \begin{equation}\label{eq:zeta-expect}
     \mathbb{E}\!\left[\|\bzeta_{\bx}^{k+1}\|^2\right]
     \;\leq\;
-    4\!\left[\left(L_\varphi+\frac{1}{\eta_k}\right)^{\!2}
+    4\!\left[\left(L_\varphi^k+\frac{1}{\eta_k}\right)^{\!2}
              + 2G^2\rho^2 L_c^2\right]
     \mathbb{E}\!\left[\|\bx^{k+1}-\bx^k\|^2\right]
     \;+\; 4\,\mathbb{E}\!\left[\|\be^k\|^2\right]
@@ -1136,8 +1290,8 @@ Algorithm~1 with non-increasing step sizes $\{\eta_k\}_{k\geq 0}$ satisfying
     % \qquad
     % \eta_k \leq \frac{\sqrt{\gamma_k(2-\gamma_k)}}{2L_f},
     % \quad \forall\, k \geq 0.
-    (1 - L_{c,\varphi} \eta_k)^{-1} \leq 2
-\end{equation} where \(L_{c,\varphi} = L_{\varphi} + 2 \rho L_c^2\). Then for any $K \geq 1$,
+    (1 - L_{c,\varphi}^k \eta_k)^{-1} \leq 2
+\end{equation} where \(L_{c,\varphi}^k = L_{\varphi}^k + 2 \rho L_c^2\). Then for any $K \geq 1$,
 \begin{equation}\label{eq:main-bound}
     \frac{1}{K}\sum_{k=0}^{K-1}\gamma_k\,\EE\!\left[\|\be^k\|^2\right]
     \leq
@@ -1157,7 +1311,7 @@ where $\calL_\rho^* \geq F^*$ is a lower bound on $\calL_\rho$.
 %     \varphi^k \;:=\; \EE\!\left[\calL_\rho(\bx^k,\blmbd^k,\bmu^k)\right]
 %     + \frac{1}{8\eta_0 L_f^2}\,\EE\!\left[\|\be^k\|^2\right].
 % \end{equation}
-% Since $\eta_0 \geq \eta_k$ for all $k$, the coefficient $\frac{1}{8\eta_0 L_f^2}$
+% Since $\eta_0 \geq \eta_k$ for any $k$, the coefficient $\frac{1}{8\eta_0 L_f^2}$
 % is fixed.
 
 % \medskip\noindent\textbf{Step 2: One-step descent.}
