@@ -1,67 +1,50 @@
-\usepackage{xcolor}
-\usepackage{graphicx} % 图片加载
-\usepackage{amsmath} %更多数学符号
-\usepackage{lmodern}
-\usepackage{makecell}  
-\usepackage{array} 
-\usepackage{tabularx}
-% Math packages
+% 共享文档信息 (可以从主文档和补充文档中调用)
 
-\usepackage{mathrsfs}
-\usepackage{amsfonts}
-\usepackage{amsthm}
-\usepackage{bm}
-\usepackage{bbm}
-\usepackage{esint}
-\usepackage{algorithm,algpseudocode}
-\usepackage{enumitem} 
-\usepackage{pifont}
-% Other utility packages
-\usepackage{xcolor}
-\usepackage{algorithm, algpseudocode}
-\usepackage{enumitem}
-% \usepackage[utf8]{inputenc}
-\usepackage{url}
-\usepackage{nicefrac} % compact symbols for 1/2, etc.
-\usepackage{textcomp}
-\usepackage{setspace}
-\usepackage{latexsym}
-\usepackage{alltt}
-\usepackage{xspace}
-\usepackage{subcaption}
-\usepackage{booktabs}
-\usepackage{multirow} 
-\usepackage{float}
-\usepackage{appendix}  % 专门处理附录的包
-\usepackage{chngcntr} 
-\usepackage{threeparttable}
-\usepackage{enumitem}
-% Hyperref setup
-% 定理环境设置
-% \newtheorem{theorem}{Theorem}[section]
-% \newtheorem{lemma}[theorem]{Lemma}
-% \newtheorem{corollary}[theorem]{Corollary}
-% \newtheorem{proposition}[theorem]{Proposition}
+% Encoding and typography (load early)
+\usepackage[utf8]{inputenc} % UTF-8 input encoding
+\usepackage[T1]{fontenc}    % 8-bit T1 fonts
+\usepackage{microtype}      % Microtypography improvements
 
-% \theoremstyle{definition}
-% \newtheorem{definition}[theorem]{Definition}
-% \newtheorem{example}[theorem]{Example}
+% General utilities
+\usepackage{lipsum}         % Placeholder text
+\usepackage{graphicx}       % Image insertion
+% \usepackage{epstopdf}     % Uncomment only if EPS conversion is explicitly needed
+\usepackage{xcolor}         % Colors
+\usepackage{url}            % URL typesetting
+\usepackage{nicefrac}       % Compact fraction symbols
+\usepackage{xspace}         % Smart spacing for macros
+
+% Mathematical packages
+\usepackage{amsmath}        % Core math support
 % \theoremstyle{remark}
-% \newtheorem{remark}[theorem]{Remark}
-% \newtheorem{theorem}{Theorem}[section]
-% \newtheorem{lemma}{Lemma}[section]
-% \newtheorem{corollary}{Corollary}[section]
-% \newtheorem{proposition}{Proposition}[section]
-% \theoremstyle{definition}
-% \newtheorem{definition}{Definition}[section]
-% \newtheorem{example}{Example}[section]
-% \theoremstyle{remark}
-% \newtheorem{remark}{Remark}[section]
+\usepackage{amssymb}        % Math symbols (includes amsfonts)
+\usepackage{bbm}            % Blackboard bold 1 for \mathbbm
+\usepackage{mathrsfs}       % Script fonts
+\usepackage{bm}             % Bold math symbols
+\usepackage{booktabs}       % Professional tables
+\usepackage{subcaption}     % Subfigures
+\usepackage{multirow}       % Multirow tables
+\usepackage{array}          % Enhanced table formatting
+\usepackage{setspace}       % Line spacing control
 
-\newcommand{\theHalgorithm}{\arabic{algorithm}}
-\usepackage{cleveref}
-\usepackage{subcaption}
-%-----------------------------新命令-------------------------------
+% Algorithms
+\usepackage{algorithm}
+\usepackage{algorithmic}    % Consider algorithmicx or algorithm2e for modern alternatives
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,shapes.misc}
+% References and hyperlinks (load late)
+\usepackage{hyperref}       % Hyperlinks
+\usepackage{nameref}        % Reference names
+\usepackage{cleveref}       % Smart cross-references (loaded after amsmath and hyperref)
+
+% Ensure hyperref settings are robust
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=blue,
+    urlcolor=blue
+}
+%-----------------------------数学符号新命令------------------------------
 \newcommand{\eucalB}{\EuScript{B}}
 \newcommand{\eucalP}{\EuScript{P}}
 \newcommand{\Var}{\mathrm{Var}}
@@ -89,19 +72,21 @@
 \newcommand{\bB}{\bm{B}}
 \newcommand{\bH}{\bm{H}}
 \newcommand{\bF}{\bm{F}}
+\newcommand{\bS}{\bm{S}}
 \newcommand{\bX}{\bm{X}}
 \newcommand{\bx}{\bm{x}}
 \newcommand{\bb}{\bm{b}}
 \newcommand{\bc}{\bm{c}}
 \newcommand{\br}{\bm{r}}
-\newcommand{\be}{\bm{e}}
-\newcommand{\bbeta}{\bm{\rho}}
+\newcommand{\bbeta}{\bm{\beta}}
 \newcommand{\bt}{\bm{t}}
+% \newcommand{\eproof}{\hfill $\square$}
 \newcommand{\bh}{\bm{h}}
 \newcommand{\bu}{\bm{u}}
 \newcommand{\bz}{\bm{z}}
 \newcommand{\ba}{\bm{a}}
 \newcommand{\by}{\bm{y}}
+\newcommand{\be}{\bm{e}}
 \newcommand{\bU}{\bm{U}}
 \newcommand{\bZ}{\bm{Z}}
 \newcommand{\bY}{\bm{Y}}
@@ -109,8 +94,7 @@
 \newcommand{\bLmbd}{\bm{\Lambda}}
 \newcommand{\bg}{\bm{g}}
 \newcommand{\bd}{\bm{d}}
-\newcommand{\bxi}{\bm{\xi}}
-\newcommand{\bdelta}{\bm{\delta}}
+\newcommand{\bmu}{\bm{\mu}}
 \DeclareMathOperator*{\argmin}{\mathrm{argmin}}
 \DeclareMathOperator*{\Argmin}{\mathrm{Argmin}}
 \DeclareMathOperator*{\minimize}{\mathrm{minimize}\,}
@@ -125,14 +109,11 @@
 \newcommand{\calS}{\mathcal{S}}
 \newcommand{\calC}{\mathcal{C}}
 \newcommand{\calJ}{\mathcal{J}}
-\newcommand{\calF}{\mathcal{F}}
-\newcommand{\calM}{\mathcal{M}}
+\newcommand{\calD}{\mathcal{D}}
+\newcommand{\calQ}{\mathcal{Q}}
 \newcommand{\calO}{\mathcal{O}}
-\newcommand{\calI}{\mathcal{I}}
-\newcommand{\calE}{\mathcal{E}}
-\newcommand{\calH}{\mathcal{H}}
 \newcommand{\ent}{\mathrm{ent}}
-\newcommand{\diag}{\mathrm{diag}}
+% \newcommand{\diag}{\mathrm{diag}}
 \newcommand{\dom}{\mathrm{dom}}
 \newcommand{\interior}{\mathrm{int}}
 \newcommand{\zer}{\mathrm{zer}}
@@ -142,7 +123,6 @@
 \newcommand{\bmax}{b_{\max}}
 \newcommand{\bmin}{b_{\min}}
 \newcommand{\bp}{\bm{p}}
-\newcommand{\bmu}{\bm{\mu}}
 \newcommand{\bD}{\bm{D}}
 \newcommand{\mW}{\mathrm{W}}
 \newcommand{\bv}{\bm{v}}
@@ -155,24 +135,21 @@
 \newcommand{\sumq}{\sum_{k=1}^q}
 \newcommand{\summ}{\sum_{i=1}^m}
 \newcommand{\sumd}{\sum_{i=1}^d}
-\newcommand{\sumT}{\sum_{k=0}^{T-1}}
-\newcommand{\sumK}{\sum_{k=0}^{K-1}}
-\newcommand{\sumN}{\sum_{k=1}^{N}}
+\newcommand{\sumT}{\sum\limits_{ k =1}^{T}}
+\newcommand{\sumTa}{\frac{1}{T} \sum\limits_{ k =1}^{T}}
 \newcommand{\bC}{\bm{C}}
 \newcommand{\bI}{\bm{I}}
 \newcommand{\bM}{\bm{M}}
 \newcommand{\bR}{\bm{R}}
-\newcommand{\bS}{\bm{S}}
 \newcommand{\bV}{\bm{V}}
 \newcommand{\bW}{\bm{W}}
-\newcommand{\blambda}{\bm{\lambda}}
+\newcommand{\bxi}{\bm{\xi}}
 \newcommand{\tmu}{\widetilde{\bmu}}
 \newcommand{\tU}{\widetilde{\bU}}
 \newcommand{\tV}{\widetilde{\bV}}
 \newcommand{\tM}{\widetilde{\bM}}
 \newcommand{\bDelta}{\bm{\Delta}}
 \newcommand{\bs}{\bm{s}}
-\newcommand{\bzeta}{\bm{\zeta}}
 \newcommand{\ox}{\overline{x}}
 \newcommand{\ob}{\overline{b}}
 \newcommand{\op}{\overline{p}}
@@ -194,29 +171,50 @@
 \newcommand{\bfX}{\bm{\fX}}
 \newcommand{\bell}{\bm{\ell}}
 \newcommand{\bL}{\bm{L}}
+\newcommand{\bzeta}{\bm{\zeta}}
 \renewcommand{\vec}{\mathrm{vec}}
 \newcommand{\hy}{\widehat{y}}
 \newcommand{\ul}[1]{\underline{#1}}
-\newcommand{\xmark}{\ding{55}}
 \newtheorem{assumption}{Assumption}
-\newtheorem{Def}{Definition}
-% \newtheorem{corollary}{Corollary}
-\newenvironment{proofsketch}
-    {\noindent\textit{Proof sketch.}}
-    {\hfill$\square$}
-% \newtheorem{Proposition}{proposition} 
-% \crefname{Proposition}{proposition}{propositions}
-% \Crefname{Proposition}{Proposition}{Propositions}
-\newcommand{\eproof}{\hfill $\square$}
+\newtheorem{definition}{Definition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proof}{Proof}
+\newenvironment{noproof}{\par\noindent\textbf{Proof.}\space}{\hfill\par}
+\newtheorem{corollary}[theorem]{Corollary} 
+\newtheorem{remark}{Remark}[section]  % 按节编号的注释环境
+\newtheorem{proposition}{Proposition}
+
+% \newtheorem{remark}[theorem]{Remark}  % 与theorem共享编号
+
 \newcommand{\bcL}{\overline{\calL}}
 \newcommand{\KL}{K\L\xspace}
 \newcommand{\res}{\mathrm{res}}
-\newtheorem{lemma}{Lemma}
+\newcommand{\eproof}{\hfill $\square$}
+\newcommand{\calF}{\mathcal{F}}
 
 \newcommand{\commyy}[1]{{\color{red}(yy: #1)}} % Yuan Yao's comments
-\newcommand{\blue}[1]{\begin{color}{blue}#1\end{color}} 
-\newcommand{\red}[1]{\begin{color}{red}#1\end{color}}
 
 \numberwithin{equation}{section}
-\Crefname{algorithm}{Algorithm}{Algorithms}
+\newcommand{\blue}[1]{{\color{blue}#1}}
+\newcommand{\red}[1]{{\color{red}#1}}
 
+%% Packages and macros go here
+\usepackage{lipsum}
+\usepackage{amsfonts}
+\usepackage{graphicx}
+\usepackage{epstopdf}
+\usepackage{algorithmic}
+\ifpdf
+  \DeclareGraphicsExtensions{.eps,.pdf,.png,.jpg}
+\else
+  \DeclareGraphicsExtensions{.eps}
+\fi
+
+% Prevent itemized lists from running into the left margin inside theorems and proofs
+\usepackage{enumitem}
+\setlist[enumerate]{leftmargin=.5in}
+\setlist[itemize]{leftmargin=.5in}
+
+% Add a serial/Oxford comma by default.
+\newcommand{\creflastconjunction}{, and~}
