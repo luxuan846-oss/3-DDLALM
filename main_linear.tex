@@ -1,0 +1,46 @@
+% !LW recipe = latexmk
+% !TEX options = -synctex=1
+\documentclass[onefignum,onetabnum]{siamart220329}
+\input{tools/shared}
+
+\headers{Dual-Damping Linearized ADMM}{L. Li, K. Deng, C. Cui, and J. Hu}
+
+\title{{Dual-Damping Linearized ADMM for Nonsmooth Composite Optimization}}
+\author{
+Luxuan Li\thanks{School of Mathematical Sciences, Beihang University,
+Beijing 100191, China}
+\and Kangkang Deng\thanks{Department of Mathematics, National University of Defense Technology,
+Changsha 410073, China. Corresponding author. Email: \texttt{freedeng1208@gmail.com}.}
+\and Chunfeng Cui\thanks{School of Mathematical Sciences and State Key Laboratory of Virtual Reality Technology and Systems,
+Beihang University, Beijing 100191, China.}
+\and Jiang Hu\thanks{Yau Mathematical Sciences Center, Tsinghua University,
+Beijing 100084, China}
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+We study a class of structured nonconvex constrained optimization problems
+with nonsmooth composite terms.  We develop a dual-damping linearized
+augmented Lagrangian method and analyze its approximate KKT residual
+guarantees.
+\end{abstract}
+
+\begin{keywords}
+augmented Lagrangian method, nonsmooth optimization, ADMM, inearized methods, KKT residual
+\end{keywords}
+
+\begin{AMS}
+65K05, 90C26, 90C30, 90C46
+\end{AMS}
+
+\input{sections/Introduction}
+\input{sections/Preliminaries}
+\input{sections/Methodology}
+\input{sections/Convergence_analysis}
+
+\bibliographystyle{tools/siamplain}
+\bibliography{tools/refer}
+\end{document}

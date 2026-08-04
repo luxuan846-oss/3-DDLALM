@@ -1,0 +1,108 @@
+\section{Introduction}
+\label{sec:introduction}
+In this paper, we consider the following structured optimization problem
+\begin{align}
+    \min_{\bx\in\RR^n}\quad & F(\bx) = f(\bx) + h(\calA(\bx))
+    \tag{\textbf{P}}
+    \label{prob:main}
+\end{align}where $f\colon \RR^n \to \RR$ is a smooth (Lipschitz differentiable) function,
+and $h$ is a proper closed prox-friendly function that is continuous on its
+closed domain. The mapping $\calA\colon \RR^n \to \RR^m$ is continuously
+differentiable on $\RR^n$ with Lipschitz continuous Jacobian; the complete regularity conditions are deferred
+to Section~\ref{sec:assumptions}.
+Problems of the form \eqref{prob:main} arise naturally in data science,
+machine learning, and statistics: $f$ serves as a smooth data-fidelity
+term, while $h$ is a nonsmooth regularizer that promotes desired
+structural properties in $\calA(\bx)$
+\cite{charisopoulos2021low,markovsky2008structured,parekh2015convex}.
+
+% % 对于h = 0, 邻近梯度算法、共轭、ADMM 分裂算法，最好的复杂度结果是？
+For $h$ being the indicator function of a closed convex set, problem \eqref{prob:main} reduces to a standard nonlinear programming problem with nonlinear constraints. 
+In this case, the augmented Lagrangian method (ALM) is a classical and powerful framework for solving \eqref{prob:main} and has been extensively studied in the literature; see, e.g., \cite{bertsekas1997nonlinear,rockafellar2009variational} for comprehensive treatments.  For the general problem \eqref{prob:main}, the ALM framework can be adapted by introducing an auxiliary variable $\by=\calA(\bx)$ and reformulating \eqref{prob:main} as a constrained optimization problem with linear constraints.
+The resulting ALM-type algorithms typically involve solving a sequence of augmented Lagrangian subproblems, which can be computationally expensive in practice.  To mitigate this issue, linearized ALM-type algorithms have been developed, which linearize the smooth part of the augmented Lagrangian and add a proximal term to the primal update; see, e.g., \cite{li2021rate,li2024stochastic,xie2021proximal} for recent developments in this direction. The best-known complexity guarantees for these algorithms are $O(\epsilon^{-3})$ for finding an $\epsilon$-approximate KKT point of \eqref{prob:main} under suitable assumptions; see, e.g., \cite{li2021rate,li2024stochastic,xie2021proximal}.
+
+%  光滑化方法，做到-3. 然而，需要协调控制光滑化系数，最好的结果是-3，但是解肯呢个是近似解。。
+
+% in this paper, motiveted by the traindition alm method, we develop a dual-damping linearized augmented Lagrangian method (DDLALM) for solving \eqref{prob:main} and establish an $O(\epsilon^{-3})$ iteration complexity for finding an $\epsilon$-approximate KKT point of \eqref{prob:main} under suitable assumptions.  The key technical idea is to introduce a dual-damping term in the augmented Lagrangian, which allows us to control the growth of the multiplier sequence and establish a reduced-potential descent mechanism.  The resulting algorithm is single-loop and uses an explicit first-order primal update, making it simple to implement in practice.
+
+Single-loop algorithms do not require that the subproblems be solved to the required accuracy or that the number of inner iterations be tuned to improve the solution accuracy, and thus are often simpler to implement in practice. The study of single-loop algorithms has received much attention recently, and many algorithms of this kind have been proposed to solve \eqref{prob:main} under various structural assumptions. A notable common feature is that in most of these studies, $h$ is either Lipschitz or the indicator function of a closed convex set; see \cite{bohm2021variable,kume2024variable,yao2024note,boct2020variable,deng2025single,bot2015variable,tran2018smooth}, which assumed $h$ to be Lipschitz continuous, and \cite{Alacaoglu24a,deng2025single,tran2018smooth,LuMeiXiao24,LuXiao25}, which studied the case where $h$ is the indicator function of a closed convex set.
+However, the case where $h$ is a general non-Lipschitz function is not covered by existing single-loop algorithms.
+% In particular, when $h$ is the $\ell_p$ quasi-norm for some $p\in (0,1)$ (see Section~\ref{sec:nonlip} for a concrete application), direct applications of existing single-loop algorithms to the corresponding \eqref{problem} do not have convergence / complexity guarantees.
+
+
+% Penalty and augmented-Lagrangian methods are standard frameworks for
+% nonlinear constrained optimization, but their nonconvex complexity theory
+% often relies on an auxiliary mechanism that is expensive or delicate.
+% Proximal and inexact ALM schemes for nonlinear equality constraints solve
+% nonconvex augmented-Lagrangian subproblems to prescribed accuracy and obtain
+% complexity guarantees under penalty and proximal parameter choices tied to
+% the target accuracy~\cite{xie2021proximal,li2021rate}.  Stochastic and
+% single-loop variants reduce the per-iteration cost, and in certain linear or
+% structured cases can obtain strong complexity guarantees; for nonlinear
+% constraints, existing analyses commonly use increasing penalties, small dual
+% updates, or additional algorithmic machinery to control feasibility and
+% multiplier growth~\cite{alacaoglu2024complexity,li2024stochastic,
+% curtis2021sqp}.  Thus, for nonlinear equality constraints, a central issue is
+% how to retain an explicit single-loop linearized ALM structure while keeping
+% the multiplier dynamics stable enough to prove a KKT residual rate.
+
+% This paper develops a dual-damping linearized augmented Lagrangian method,
+% called DDLALM, for problem~\eqref{prob:main}.  The method keeps a fixed base
+% penalty $\rho$, but the dual-damping scale induces the scheduled effective
+% penalty $\bar\rho_k=\rho+s_k$.  Hence our result should be interpreted as an
+% explicit single-loop ALM-type complexity result with a scheduled effective
+% penalty, rather than as a truly constant-penalty ALM theorem.  The purpose of
+% dual damping is to separate two roles that are usually coupled in ALM:
+% stabilizing the multiplier sequence and increasing the effective penalty
+% strength used in the primal direction.
+
+% The main technical idea is to introduce a proximal damping term in the dual
+% variable and eliminate the damped multiplier in closed form.  The anchor
+% multiplier $\bmu^k$ is the evolving multiplier, while the virtual damped
+% multiplier $\blmbd^k$ is the closed-form maximizer generated by the
+% dual-damping term.  Along the algorithmic trajectory, the reduced potential is
+% \[
+%     \Phi_k(\bx;\bmu)
+%     =
+%     f(\bx)
+%     +
+%     \langle \bmu,\calA(\bx)\rangle
+%     +
+%     \frac{\bar\rho_k}{2}\|\calA(\bx)\|^2,
+%     \qquad
+%     \bar\rho_k=\rho+s_k .
+% \]
+% The primal step is a gradient step on this moving reduced augmented
+% Lagrangian, and the effective multiplier
+% $\by^k:=\bmu^k+\bar\rho_k\calA(\bx^k)$ is used to state the KKT residual.  The
+% analysis controls the anchor multiplier $\bmu^k$ directly, while the growth
+% of $\bar\rho_k$ controls feasibility through the reduced-potential estimates.
+
+
+The main contributions are as follows.
+\begin{itemize}
+    \item We derive DDLALM from a dual-damping reformulation whose damped
+    multiplier admits a closed-form expression.  The resulting algorithm is
+    single-loop and uses an explicit first-order primal update.
+    \item We prove boundedness of the anchor multiplier under a damped anchor
+    update and establish a reduced-potential descent mechanism.  The
+    smoothness constants depend on the bounded anchor multiplier $\bmu^k$,
+    rather than on an a priori bound for the virtual damped multiplier
+    $\blmbd^k$.
+    \item Under compact working-set and uniform LICQ assumptions, we derive a
+    weighted finite-length estimate for the primal steps.  This estimate is
+    the key link between the scheduled effective penalty and the KKT residual.
+    \item With $s_k\asymp k^{1/3}$ and
+    $\eta_k\asymp k^{-1/3}$, we show that a selected iterate satisfies
+    \[
+        \left\|
+        \nabla f(\bx^\kappa)
+        +J_{\calA}(\bx^\kappa)^\top\by^\kappa
+        \right\|
+        =O(K^{-1/3}),
+        \qquad
+        \|\calA(\bx^\kappa)\|=O(K^{-1/3}),
+    \]
+    which yields an $O(\epsilon^{-3})$ iteration complexity for finding an
+    approximate KKT point.
+\end{itemize}

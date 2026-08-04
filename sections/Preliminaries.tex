@@ -1,0 +1,126 @@
+\section{Preliminaries}
+% \subsection{Notation}
+% \label{sec:notation}
+\textbf{Notation.} We use $\langle\cdot,\cdot\rangle$ and $\|\cdot\|$ for the Euclidean inner
+product and norm.  For a matrix, $\|\cdot\|$ denotes the spectral norm.  For
+$\calA=(A_1,\ldots,A_m)^\top$, let $J_{\calA}(\bx)\in\RR^{m\times n}$ denote its
+Jacobian, whose $i$th row is $\nabla A_i(\bx)^\top$.  We write
+$\sigma_{\min}(J_{\calA}(\bx))$ for the smallest singular value of
+$J_{\calA}(\bx)$.  
+% Throughout the paper, $\partial h$ denotes the limiting
+% subdifferential of $h$.
+
+For a proper closed convex function \(h\), its convex subdifferential and
+proximal mapping are, respectively,
+\[
+    \partial h(y)
+    :=\{v:\ h(z)\ge h(y)+\langle v,z-y\rangle\ \text{for all }z\},
+\]
+\begin{equation}
+    \prox_{\gamma h}(u)
+    :=\argmin_{y\in\R^m}
+       \left\{h(y)+\frac{1}{2\gamma}\|y-u\|^2\right\},
+    \qquad \gamma>0.
+    \label{eq:prox-definition}
+\end{equation}
+
+We define the corresponding KKT system of Problem \eqref{prob:main} as
+\begin{equation}
+\begin{aligned}
+    \nabla f(x)+J_{\A}(x)^\top\lambda&=\zero,\\
+    \lambda&\in\partial h(y),\\
+    r(x,y)&=\zero.
+\end{aligned}
+% \label{eq:split-kkt}
+\notag
+\end{equation}
+
+\begin{definition}[\(\epsilon\)-KKT point]
+\label{def:eps-kkt}
+For \(\epsilon>0\), the triple \((x,y,\lambda)\) is called an \(\epsilon\)-KKT point of
+\eqref{eq:split-problem} if there exists $\blmbd \in \partial h(y)$ such that
+\begin{equation}
+    \begin{cases}
+        \|\nabla f(x)+J_{\A}(x)^\top\lambda\| \le \epsilon, \\
+        \|\A(x)-y\| \le \epsilon.
+    \end{cases}
+    \label{eq:eps-kkt-residual}
+\end{equation}
+\end{definition}
+
+\subsection{Assumptions}
+\label{sec:assumptions}
+
+\begin{assumption}[Level-bounded objective]
+\label{ass:level-boundedness}
+Assume that $F$ is level-bounded, that is, for every $\alpha\in\RR$, the set
+\[
+    \calS_{\alpha}:=\{\bx\in\RR^n:F(\bx)\le\alpha\}
+\]
+is empty or compact.
+\end{assumption}
+
+\begin{assumption}
+\label{ass:smoothness}
+There exists a compact convex set $\calS\subseteq\RR^n$ containing the
+generated sequence $\{\bx^k\}_{k\ge0}$ such that the following conditions
+hold:
+\begin{itemize}
+    \item[(i)] The function $f:\RR^n\to\RR$ is continuously differentiable,
+    and there exists $L_f\ge0$ such that
+    \[
+        \|\nabla f(\bx)-\nabla f(\bx')\|
+        \le
+        L_f\|\bx-\bx'\|,
+        \qquad \forall \bx,\bx'\in \calS.
+    \]
+
+    \item[(ii)] The mapping $\calA:\RR^n\to\RR^m$ is continuously
+    differentiable, and there exist $L_A,G_A\ge0$ such that
+    \[
+        \|J_{\calA}(\bx)-J_{\calA}(\bx')\|
+        \le
+        L_A\|\bx-\bx'\|,
+        \qquad \forall \bx,\bx'\in\calS,
+    \]
+    and
+    \[
+        \|J_{\calA}(\bx)\|\le G_A,
+        \qquad \forall \bx\in\calS.
+    \]
+\end{itemize}
+Since $\calA$ is continuous and $\calS$ is compact, the constant
+\[
+    B_A:=\sup_{\bx\in\calS}\|\calA(\bx)\|<\infty.
+\]
+\end{assumption}
+
+\begin{assumption}
+\label{ass:h}
+The function $h:\RR^m\to\RR$ is proper, closed, convex, and globally
+$L_h$-Lipschitz.  Consequently,
+\begin{equation}
+    \|\bxi\|\le L_h,
+    \qquad
+    \forall \by\in\RR^m,
+    \quad \forall \bxi\in\partial h(\by).
+    \label{eq:bounded-h-subgradients}
+\end{equation}
+\end{assumption}
+
+% \begin{assumption}[Uniform Jacobian regularity]
+% \label{ass:strong-licq}
+% There exists a constant $\nu>0$ such that
+% \[
+%     \sigma_{\min}\bigl(J_{\calA}(\bx)\bigr)\ge \nu,
+%     \qquad
+%     \forall \bx\in S.
+% \]
+% Equivalently,
+% \[
+%     \|J_{\calA}(\bx)^\top \by\|
+%     \ge
+%     \nu \|\by\|,
+%     \qquad \forall \bx\in S,\ \forall \by\in\RR^m.
+% \]
+% \end{assumption}

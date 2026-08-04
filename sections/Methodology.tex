@@ -1,0 +1,148 @@
+\section{Dual-Damping Linearized Augmented Lagrangian Method}
+\label{sec:method}
+
+This section develops a single-loop dual-damping linearized augmented
+Lagrangian method for problem~\eqref{prob:main}.  The method keeps the 
+augmented-Lagrangian penalty fixed, introduces a proximal regularization on
+the dual variable, and applies a Gauss--Seidel update in the order
+\(\bx\)-step, \(\by\)-step, and multiplier steps.
+
+\subsection{Dual-Damping Reformulation}
+\label{subsec:dual-damping-reformulation}
+
+Introduce the auxiliary variable \(\by=\calA(\bx)\).  Problem~\eqref{prob:main}
+is equivalently written as
+\begin{equation}\label{eq:split-problem}
+    \min_{\bx\in\RR^n,\,\by\in\RR^m}
+    \; f(\bx)+ h(\by)
+    \quad\text{s.t.}\quad
+    \calA(\bx)-\by=\zero.
+\end{equation}
+For a fixed penalty \(\rho>0\), a dual-regularizer parameter \(s>0\), and an
+anchor multiplier \(\bmu\in\RR^m\), define
+\begin{equation}\label{eq:dual-damping-pplf}
+\begin{aligned}
+    \mathcal P_s(\bx,\by,\blmbd;\bmu)
+    :=\;&
+    f(\bx)+h(\by)
+    +\langle \blmbd,\calA(\bx)-\by\rangle
+    +\frac{\rho}{2}\|\calA(\bx)-\by\|^2
+    -\frac{1}{2s}\|\blmbd-\bmu\|^2.
+\end{aligned}
+\end{equation}
+
+For fixed \((\bx,\by,\bmu)\), the map
+\(\blmbd\mapsto\mathcal P_s(\bx,\by,\blmbd;\bmu)\) is
+\(1/s\)-strongly concave.  Its unique maximizer is
+\begin{equation}\label{eq:lambda-star-s}
+    \blmbd_s(\bx,\by;\bmu)
+    =
+    \bmu+s\bigl(\calA(\bx)-\by\bigr).
+\end{equation}
+Substituting \eqref{eq:lambda-star-s} into
+\eqref{eq:dual-damping-pplf} gives the reduced dual-damping augmented
+Lagrangian
+\begin{equation}\label{eq:reduced-al}
+\begin{aligned}
+    \Phi_s(\bx,\by;\bmu)
+    := 
+    f(\bx)+h(\by)
+    +\langle \bmu,\calA(\bx)-\by\rangle
+    +\frac{\bar\rho_s}{2}\|\calA(\bx)-\by\|^2,
+    \qquad
+    \bar\rho_s:=\rho+s.
+\end{aligned}
+\end{equation}
+
+For later use, fix \((\bx,\bmu)\) and minimize
+\eqref{eq:reduced-al} with respect to \(\by\).  The resulting proximal point is
+\begin{equation}\label{eq:exact-y-map}
+    \by_s(\bx;\bmu)
+    =
+    \operatorname{prox}_{h/\bar\rho_s}
+    \left(
+        \calA(\bx)+\frac{\bmu}{\bar\rho_s}
+    \right).
+\end{equation}
+
+\subsection{Algorithm Design}
+\label{subsec:ddlalm-algorithm}
+
+Let \(\{s_k\}_{k\ge0}\) be a positive dual-damping sequence and define
+\begin{equation}\label{eq:effective-penalty}
+    \bar\rho_k:=\rho+s_k.
+\end{equation} where \(\{s_k\}_{k\ge0}\) is nondecreasing. 
+At iteration \(k\), the method starts from
+\((\bx^k,\by^k,\bmu^k)\).  Define the current feasibility residual and the
+multiplier driving the \(\bx\)-step by
+\begin{equation}\label{eq:current-residual-driving-multiplier}
+    \br^k:=\calA(\bx^k)-\by^k,
+    \qquad
+    \bw^k:=\bmu^k+\bar\rho_k\br^k.
+\end{equation}
+
+\paragraph{Gradient descent \(\bx\)-step}
+The first block is updated by linearizing the smooth part of
+\(\Phi_{s_k}(\cdot,\by^k;\bmu^k)\) at \(\bx^k\):
+\begin{equation}\label{eq:x-update-det}
+    \bx^{k+1}
+    =
+    \bx^k-
+    \eta_k
+    \left[
+        \nabla f(\bx^k)
+        +J_{\calA}(\bx^k)^\top\bw^k
+    \right].
+\end{equation}
+
+\paragraph{Exact \(\by\)-step}
+With \(\bx^{k+1}\) fixed, the second block is updated by exactly minimizing
+\(\Phi_{s_k}(\bx^{k+1},\cdot;\bmu^k)\):
+\begin{equation}\label{eq:y-update}
+    \by^{k+1}
+    =
+    \operatorname{prox}_{h/\bar\rho_k}
+    \left(
+        \calA(\bx^{k+1})+\frac{\bmu^k}{\bar\rho_k}
+    \right).
+\end{equation}
+
+\paragraph{Exact $\blmbd$-step}
+We update $\blmbd$ by using an exact update.
+\begin{equation}\label{eq:lambda-update}
+    \blmbd^{k+1}
+    :=
+    \bmu^k+s_k (\calA(\bx^{k+1}) - \by^{k+1}).
+\end{equation}
+
+\paragraph{Gradient ascent $\bmu$-step}
+We perform the update of $\mu^{k+1}$ as the gradient ascent:
+
+\begin{equation}\label{eq:mu-update}
+    \bmu^{k+1}
+    =
+    \left(1-\frac{\tau_k}{s_k}\right)\bmu^k
+    +\frac{\tau_k}{s_k}\blmbd^{k+1},
+\end{equation} 
+where the stepsize of the dual variable $\mu^k$ satisfies  $  0<\tau_k\le s_k.$
+The complete method is summarized in Algorithm~\ref{alg:ddlalm}.
+
+\begin{algorithm}[H]
+    \caption{Dual-Damping Linearized Augmented Lagrangian Method (DDLALM)}
+    \label{alg:ddlalm}
+    \small
+    \begin{algorithmic}[1]
+        \STATE \textbf{Input:}
+        \blue{\(\bx^0\in\RR^n\)}, \(\by^0\in\operatorname{dom}h\),
+        and \(\bmu^0\in\RR^m\),
+        fixed base penalty \(\rho>0\),
+        sequences \(\{s_k\}\), \(\{\eta_k\}\), and
+        \(\{\tau_k\}\), and iteration limit \(K\).
+        \FOR{\(k=0,1,\ldots,K-1\)}
+            \STATE Update \(\bx^{k+1}\) by \eqref{eq:x-update-det}.
+            \STATE Update \(\by^{k+1}\) by \eqref{eq:y-update}.
+            \STATE Update \(\blmbd^{k+1}\) by \eqref{eq:lambda-update}
+            \STATE Update  \(\bmu^{k+1}\) by \eqref{eq:mu-update}.
+        \ENDFOR
+    \end{algorithmic}
+\end{algorithm}
