@@ -91,126 +91,129 @@ which proves the residual estimate in \eqref{eq:basic-bounds}.  Combining this
 estimate with \eqref{eq:mu-drift-tau} gives the increment estimate, completing the proof.
 \end{proof}
 
-The lemma below characterizes the smoothness of
-$\Phi_s(\bx,\by;\bmu)$ with respect to $\bx$ for fixed $\bmu$ and $\by$.
+\blue{The lemma below gives an $\bx$-block smoothness bound on any prescribed
+compact convex set.  It does not assume in advance that the full generated
+sequence lies in that set.}
 
-\begin{lemma}
+\begin{lemma}[\blue{Localized $\bx$-block bounds}]
 \label{lem:x-block-smoothness}
 \color{blue}
-Suppose that Assumption~\ref{ass:smoothness} and the conditions of
-Lemma~\ref{lem:multiplier-boundedness} hold.  Define
+Suppose that Assumption~\ref{ass:smoothness} holds on a nonempty compact
+convex set $\calS$ and that the conditions of
+Lemma~\ref{lem:multiplier-boundedness} hold.  Assume further that
 \[
-    B_y
-    :=\max\left\{
-        \|\by^0\|,
-        B_A+\frac{M_\mu+L_h}{\bar\rho_0}
-    \right\}.
+    \Gamma_\rho
+    :=\sup_{k\ge1}\frac{\bar\rho_k}{\bar\rho_{k-1}}
+    <\infty,
 \]
-Then $\|\by^k\|\le B_y$ for every $k\ge0$.  Moreover, for every $k\ge0$
-and every $\bx,\bx'\in\calS$,
+and define
+\begin{equation}
+\begin{aligned}
+    M_w
+    &:=\max\left\{
+        \|\bw^0\|,M_\mu+\Gamma_\rho C_r
+    \right\},\\
+    G_f
+    &:=\sup_{\bx\in\calS}\|\nabla f(\bx)\|,
+    \qquad
+    M_d:=G_f+G_AM_w.
+\end{aligned}
+\label{eq:localized-direction-constants}
+\end{equation}
+Then $G_f<\infty$, $\|\bw^k\|\le M_w$ for every $k\ge0$, and, at every
+index $k$ for which $\bx^k\in\calS$,
 \begin{equation}
 \begin{aligned}
 &\left\|
 \nabla_{\bx}\Phi_{s_k}(\bx,\by^k;\bmu^k)
--\nabla_{\bx}\Phi_{s_k}(\bx',\by^k;\bmu^k)
+{}-\nabla_{\bx}\Phi_{s_k}(\bx^k,\by^k;\bmu^k)
 \right\|
-\le L_k\|\bx-\bx'\|,\\
+\le L_k\|\bx-\bx^k\|,
+\qquad \forall\bx\in\calS,\\
 &\qquad
 L_k
-:=L_f+L_AM_\mu
-+\bar\rho_k\left[L_A(B_A+B_y)+G_A^2\right].
+:=L_f+L_AM_w+\bar\rho_kG_A^2.
 \end{aligned}
 \label{eq:x-block-smoothness-constant}
+\end{equation}
+Moreover, the direction used by the explicit $\bx$-step satisfies
+\begin{equation}
+    \left\|
+    \nabla f(\bx^k)+J_{\calA}(\bx^k)^\top\bw^k
+    \right\|
+    \le M_d.
+    \label{eq:localized-direction-bound}
 \end{equation}
 In particular,
 \begin{equation}
     L_k\le\widehat L\bar\rho_k,
     \qquad
     \widehat L
-    :=\frac{L_f+L_AM_\mu}{\bar\rho_0}
-      +L_A(B_A+B_y)+G_A^2.
+    :=\frac{L_f+L_AM_w}{\bar\rho_0}+G_A^2.
     \label{eq:uniform-x-block-smoothness}
 \end{equation}
 \end{lemma}
 
 \begin{proof}
 \color{blue}
-Set
-\[
-    \bu^{k+1}
-    :=\calA(\bx^{k+1})+\frac{\bmu^k}{\bar\rho_k}.
-\]
-The optimality condition of the proximal update \eqref{eq:y-update} gives
-\[
-    \bar\rho_k(\bu^{k+1}-\by^{k+1})
-    \in\partial h(\by^{k+1}).
-\]
-Hence \eqref{eq:bounded-h-subgradients}, the multiplier bound, and
-$\bx^{k+1}\in\calS$ imply
+For $k\ge1$, \eqref{eq:basic-bounds} gives
 \[
 \begin{aligned}
-    \|\by^{k+1}\|
-    &\le \|\calA(\bx^{k+1})\|
-      +\frac{\|\bmu^k\|+L_h}{\bar\rho_k}\\
-    &\le B_A+\frac{M_\mu+L_h}{\bar\rho_0}
-    \le B_y,
+    \|\bw^k\|
+    &=\|\bmu^k+\bar\rho_k\br^k\|\\
+    &\le M_\mu
+      +\frac{\bar\rho_k}{\bar\rho_{k-1}}C_r
+    \le M_\mu+\Gamma_\rho C_r.
 \end{aligned}
 \]
-where the second inequality uses the monotonicity of $\{\bar\rho_k\}$.
-The definition of $B_y$ also covers $\by^0$.
+The definition of $M_w$ also covers $k=0$.  The finiteness of $G_f$ follows
+from the continuity of $\nabla f$ on the compact set $\calS$.
 
-Fix $k\ge0$ and $\bx,\bx'\in\calS$.  From \eqref{eq:reduced-al},
+Fix an index $k$ such that $\bx^k\in\calS$ and let $\bx\in\calS$.
+Since
 \[
-    \nabla_{\bx}\Phi_{s_k}(\bx,\by^k;\bmu^k)
-    =\nabla f(\bx)
-     +J_{\calA}(\bx)^\top(\bmu^k-\bar\rho_k\by^k)
-     +\bar\rho_kJ_{\calA}(\bx)^\top\calA(\bx).
+    \bmu^k+\bar\rho_k\bigl(\calA(\bx)-\by^k\bigr)
+    =\bw^k+\bar\rho_k
+      \bigl(\calA(\bx)-\calA(\bx^k)\bigr),
+\]
+the gradient difference admits the exact decomposition
+\[
+\begin{aligned}
+&\nabla_{\bx}\Phi_{s_k}(\bx,\by^k;\bmu^k)
+{}-\nabla_{\bx}\Phi_{s_k}(\bx^k,\by^k;\bmu^k)\\
+={}&\nabla f(\bx)-\nabla f(\bx^k)\\
+&+\bigl(J_{\calA}(\bx)-J_{\calA}(\bx^k)\bigr)^\top\bw^k\\
+&+\bar\rho_kJ_{\calA}(\bx)^\top
+  \bigl(\calA(\bx)-\calA(\bx^k)\bigr).
+\end{aligned}
 \]
 Because $\calS$ is convex, the Jacobian bound integrated along the segment
-joining $\bx'$ and $\bx$ gives
+joining $\bx^k$ and $\bx$ yields
 \[
-    \|\calA(\bx)-\calA(\bx')\|
-    \le G_A\|\bx-\bx'\|.
+    \|\calA(\bx)-\calA(\bx^k)\|
+    \le G_A\|\bx-\bx^k\|.
 \]
-Moreover,
-\[
-\begin{aligned}
-&J_{\calA}(\bx)^\top\calA(\bx)
--J_{\calA}(\bx')^\top\calA(\bx')\\
-={}&\bigl(J_{\calA}(\bx)-J_{\calA}(\bx')\bigr)^\top\calA(\bx)
-+J_{\calA}(\bx')^\top\bigl(\calA(\bx)-\calA(\bx')\bigr),
-\end{aligned}
-\]
-and therefore
-\[
-\left\|
-J_{\calA}(\bx)^\top\calA(\bx)
--J_{\calA}(\bx')^\top\calA(\bx')
-\right\|
-\le (L_AB_A+G_A^2)\|\bx-\bx'\|.
-\]
-Combining these estimates with
-$\|\bmu^k-\bar\rho_k\by^k\|
-\le M_\mu+\bar\rho_kB_y$
-proves \eqref{eq:x-block-smoothness-constant}.  Finally,
-$\bar\rho_k\ge\bar\rho_0$ gives
+The localized Lipschitz bounds and $\|\bw^k\|\le M_w$ now prove
+\eqref{eq:x-block-smoothness-constant}.  Evaluating the explicit direction at
+$\bx^k$ gives \eqref{eq:localized-direction-bound}.  Finally,
+$\bar\rho_k\ge\bar\rho_0$ proves
 \eqref{eq:uniform-x-block-smoothness}.
 \end{proof}
 
-The next lemma gives a quasi-descent estimate for the potential function under
-the stepsize condition.
-\begin{lemma}
+\blue{The next lemma gives a localized one-step quasi-descent estimate.}
+\begin{lemma}[\blue{Localized one-step quasi-descent}]
 \label{lem:descent-skeleton}
 \color{blue}
-Suppose that Assumptions~\ref{ass:smoothness} and~\ref{ass:h} hold and that
-the conditions of Lemma~\ref{lem:x-block-smoothness} are satisfied.  Let
+Suppose that Assumption~\ref{ass:h} holds and that the conditions of
+Lemma~\ref{lem:x-block-smoothness} are satisfied on $\calS$.  Let
 $\theta_x>0$ satisfy $\theta_x\widehat L\le1/2$, and choose
 \begin{equation}
     \eta_k=\frac{\theta_x}{\bar\rho_k},
     \qquad k\ge0.
     \label{eq:explicit-primal-stepsize-coupling}
 \end{equation}
-Then, for every $k\ge0$, it holds that
+Then, at every index $k\ge0$ for which
+$\bx^k,\bx^{k+1}\in\calS$, it holds that
 \begin{equation}\label{eq:variable-penalty-descent-multiplier}
 \begin{aligned}
     &\Phi_{s_{k+1}}(\bx^{k+1},\by^{k+1};\bmu^{k+1})
@@ -327,7 +330,7 @@ $\theta_x\widehat L\le1/2$.  Substituting it into
 \label{prop:bounded-iterates}
 \color{blue}
 Suppose that Assumption~\ref{ass:level-boundedness} and the conditions of
-Lemma~\ref{lem:descent-skeleton} hold.  Assume that
+Lemma~\ref{lem:multiplier-boundedness} hold.  Assume that
 \begin{equation}
 \begin{aligned}
     C_e
@@ -349,50 +352,68 @@ Define
     :=\overline\Phi+\frac{C_r^2}{2\bar\rho_0}.
     \label{eq:localized-level-value}
 \end{equation}
-Then, for every $k\ge0$,
+and the level set
+\begin{equation}
+    \calS_\alpha:=\{\bx\in\RR^n:F(\bx)\le\alpha\}.
+    \label{eq:derived-x-working-set}
+\end{equation}
+Suppose that the conditions of Lemma~\ref{lem:x-block-smoothness} hold on a
+nonempty compact convex set $\calS$ satisfying
+\begin{equation}
+    \calS_\alpha\subseteq\operatorname{int}(\calS).
+    \label{eq:level-set-interior-containment}
+\end{equation}
+Define
+\begin{equation}
+    d_{\calS}:=\operatorname{dist}(\calS_\alpha,\partial\calS)>0,
+    \label{eq:level-set-boundary-distance}
+\end{equation}
+and let $M_d$ and $\widehat L$ be the constants in
+Lemma~\ref{lem:x-block-smoothness}.  Choose $\eta_k$ according to
+\eqref{eq:explicit-primal-stepsize-coupling}, where $\theta_x>0$ satisfies
+\begin{equation}
+    \theta_x\widehat L\le\frac12,
+    \qquad
+    \frac{\theta_xM_d}{\bar\rho_0}\le d_{\calS}.
+    \label{eq:localized-primal-stepsize}
+\end{equation}
+Then \eqref{eq:variable-penalty-descent-multiplier} holds for every $k\ge0$,
+and
 \begin{equation}
     \Phi_{s_k}(\bx^k,\by^k;\bmu^k)\le\overline\Phi,
     \qquad
     F(\bx^k)\le\alpha.
     \label{eq:potential-and-objective-upper-bounds}
 \end{equation}
-Consequently, define
+Consequently, $\calS_\alpha$ is compact and
 \begin{equation}
-    S:=\calS_\alpha:=\{\bx\in\RR^n:F(\bx)\le\alpha\}.
-    \label{eq:derived-x-working-set}
-\end{equation}
-Then $S$ is compact and
-\begin{equation}
-    \bx^k\in S,
+    \bx^k\in\calS_\alpha,
     \qquad k\ge0,
     \label{eq:derived-x-trajectory-bound}
 \end{equation}
-Moreover, Lemma~\ref{lem:x-block-smoothness} gives
-$\|\by^k\|\le B_y$ for every $k\ge0$.  Thus $\{\bx^k\}$, $\{\by^k\}$,
-and $\{\bmu^k\}$ are bounded.  For later use, the constants
+For later use, define
 \begin{equation}
-    G_f:=\sup_{\bx\in S}\|\nabla f(\bx)\|,
+    C_A:=\sup_{\bx\in\calS_\alpha}\|\calA(\bx)\|,
     \qquad
-    C_A:=\sup_{\bx\in S}\|\calA(\bx)\|
+    B_y:=\max\left\{\|\by^0\|,C_A+\frac{C_r}{\bar\rho_0}\right\}.
     \label{eq:derived-operator-bounds}
 \end{equation}
-are finite.
+Then $C_A<\infty$, $\|\by^k\|\le B_y$ for every $k\ge0$, and the sequences
+$\{\bx^k\}$, $\{\by^k\}$, and $\{\bmu^k\}$ are bounded.
 \end{proposition}
 
 \begin{proof}
 \color{blue}
-Applying \eqref{eq:basic-bounds} to the last term in
-\eqref{eq:variable-penalty-descent-multiplier}, dropping the nonpositive
-primal terms, and summing from $j=0$ to $k-1$ give
+For every $k\ge0$, let $\br^k:=\calA(\bx^k)-\by^k$ and define
 \[
-    \Phi_{s_k}(\bx^k,\by^k;\bmu^k)
-    \le
-    \Phi_{s_0}(\bx^0,\by^0;\bmu^0)+C_e
-    =\overline\Phi.
+    e_k:=C_r^2\left(
+        \frac{\tau_k}{\bar\rho_k^2}
+        +\frac{\bar\rho_{k+1}-\bar\rho_k}{2\bar\rho_k^2}
+    \right).
 \]
-Let $\br^k:=\calA(\bx^k)-\by^k$.  The global Lipschitz continuity of $h$
-and the multiplier bound $\|\bmu^k\|\le M_\mu$ yield
-\[
+The global Lipschitz continuity of $h$ and
+$\|\bmu^k\|\le M_\mu$ give the pointwise estimate
+\begin{equation}
 \begin{aligned}
     F(\bx^k)
     &\le f(\bx^k)+h(\by^k)+L_h\|\br^k\|\\
@@ -403,24 +424,86 @@ and the multiplier bound $\|\bmu^k\|\le M_\mu$ yield
     &\le\Phi_{s_k}(\bx^k,\by^k;\bmu^k)
       +C_r\|\br^k\|
       -\frac{\bar\rho_k}{2}\|\br^k\|^2\\
-    &\le\overline\Phi+\frac{C_r^2}{2\bar\rho_k}
-    \le\alpha.
+    &\le\Phi_{s_k}(\bx^k,\by^k;\bmu^k)
+      +\frac{C_r^2}{2\bar\rho_k}.
 \end{aligned}
+\label{eq:potential-to-objective}
+\end{equation}
+We prove jointly by induction that
+\begin{equation}
+    \Phi_{s_k}(\bx^k,\by^k;\bmu^k)
+    \le \Phi_{s_0}(\bx^0,\by^0;\bmu^0)
+       +\sum_{j=0}^{k-1}e_j,
+    \qquad
+    \bx^k\in\calS_\alpha.
+    \label{eq:boundedness-induction-claim}
+\end{equation}
+For $k=0$, the potential estimate is immediate.  Applying
+\eqref{eq:potential-to-objective} at $k=0$ yields
+\[
+    F(\bx^0)
+    \le \Phi_{s_0}(\bx^0,\by^0;\bmu^0)
+       +\frac{C_r^2}{2\bar\rho_0}
+    \le\alpha,
 \]
-Assumption~\ref{ass:level-boundedness} proves that $\calS_\alpha$ is compact,
-and \eqref{eq:potential-and-objective-upper-bounds} gives
-$\bx^k\in\calS_\alpha=S$, which proves
-\eqref{eq:derived-x-trajectory-bound}.  The bound on $\{\by^k\}$ follows from
-Lemma~\ref{lem:x-block-smoothness}, and boundedness of $\{\bmu^k\}$ follows
-from Lemma~\ref{lem:multiplier-boundedness}.  Finally,
-continuity of $\nabla f$ and $\calA$ on the compact set $S$ proves
-\eqref{eq:derived-operator-bounds}.
+and hence $\bx^0\in\calS_\alpha$.
+
+Suppose that \eqref{eq:boundedness-induction-claim} holds at index $k$.
+Since $\bx^k\in\calS_\alpha\subseteq\calS$, the direction bound in
+Lemma~\ref{lem:x-block-smoothness} and
+\eqref{eq:localized-primal-stepsize} imply
+\[
+    \|\bx^{k+1}-\bx^k\|
+    \le\eta_kM_d
+    =\frac{\theta_xM_d}{\bar\rho_k}
+    \le\frac{\theta_xM_d}{\bar\rho_0}
+    \le d_{\calS}.
+\]
+By the definition of $d_{\calS}$, a segment starting from
+$\bx^k\in\calS_\alpha$ cannot leave $\calS$ without first traveling a distance
+greater than $d_{\calS}$.  Thus $\bx^{k+1}\in\calS$.  Since $\calS$ is convex,
+the line segment $[\bx^k,\bx^{k+1}]$ is contained in $\calS$, so
+Lemma~\ref{lem:descent-skeleton} applies at index $k$.  Using
+\eqref{eq:basic-bounds} in its controlled-ascent term and dropping the
+nonpositive primal terms give
+\[
+    \Phi_{s_{k+1}}(\bx^{k+1},\by^{k+1};\bmu^{k+1})
+    \le \Phi_{s_k}(\bx^k,\by^k;\bmu^k)+e_k
+    \le \Phi_{s_0}(\bx^0,\by^0;\bmu^0)
+       +\sum_{j=0}^{k}e_j.
+\]
+Because $\sum_{j=0}^{\infty}e_j=C_e$ and
+$\bar\rho_{k+1}\ge\bar\rho_0$, applying
+\eqref{eq:potential-to-objective} at index $k+1$ yields
+\[
+    F(\bx^{k+1})
+    \le\overline\Phi+\frac{C_r^2}{2\bar\rho_0}
+    =\alpha.
+\]
+Therefore, $\bx^{k+1}\in\calS_\alpha$, which closes the induction.
+
+The first part of \eqref{eq:boundedness-induction-claim} and
+$\sum_{j=0}^{k-1}e_j\le C_e$ prove
+\eqref{eq:potential-and-objective-upper-bounds}.  Assumption
+\ref{ass:level-boundedness} proves that $\calS_\alpha$ is compact.  Hence
+$C_A<\infty$ by continuity of $\calA$.  For $k\ge1$,
+\eqref{eq:basic-bounds} gives
+\[
+    \|\by^k\|
+    \le\|\calA(\bx^k)\|+\|\br^k\|
+    \le C_A+\frac{C_r}{\bar\rho_{k-1}}
+    \le C_A+\frac{C_r}{\bar\rho_0}
+    \le B_y.
+\]
+The case $k=0$ follows from the definition of $B_y$.  Finally,
+boundedness of $\{\bmu^k\}$ follows from
+Lemma~\ref{lem:multiplier-boundedness}.
 \end{proof}
 
 \begin{proposition}[Weighted finite length]
 \label{lem:weighted-finite-length}
-\blue{Suppose that Assumption~\ref{ass:level-boundedness} and the conditions of
-Lemma~\ref{lem:descent-skeleton} hold.}
+\blue{Suppose that the conditions of
+Proposition~\ref{prop:bounded-iterates} hold.}
 Assume in addition that
 \[
     \bar\rho_k=\rho+c_s(k+1)^a,
@@ -480,9 +563,8 @@ Moreover, $\bar\rho_k\ge c_s(k+1)^a$, so
     O(k^{-(1+a)}).
 \]
 Consequently, $\sum_{k=0}^{\infty}e_k<\infty$.
-\blue{Proposition~\ref{prop:bounded-iterates} now applies.  Hence the compact
-set $S=\calS_\alpha$ defined in
-\eqref{eq:derived-x-working-set} contains every $\bx^k$.}
+\blue{Proposition~\ref{prop:bounded-iterates} gives
+$\bx^k\in\calS_\alpha$ for every $k\ge0$.}
 
 \textbf{Step 2: Telescoping descent.}
 In \eqref{eq:variable-penalty-descent-multiplier}, the ascent term
@@ -535,14 +617,15 @@ Using this inequality, $\|\bmu^K\|\le M_\mu$, and completing the square give
     F(\bx^K)-C_r\|\br^K\|
     +\frac{\bar\rho_K}{2}\|\br^K\|^2\\
     &\ge
-    \inf_{\bx\in S}F(\bx)
+    \inf_{\bx\in\calS_\alpha}F(\bx)
     -\frac{C_r^2}{2\bar\rho_K}\\
     &\ge
-    \inf_{\bx\in S}F(\bx)
+    \inf_{\bx\in\calS_\alpha}F(\bx)
     -\frac{C_r^2}{2\bar\rho_0}.
 \end{aligned}
 \]
-The infimum is finite because $F$ is continuous on the compact set $S$.
+The infimum is finite because $F$ is continuous on the compact set
+$\calS_\alpha$.
 Therefore,
 \[
     \sum_{k=0}^{K-1}
@@ -552,7 +635,7 @@ Therefore,
     \left[
     \Phi_{s_0}(\bx^0,\by^0;\bmu^0)
     -
-    \inf_{\bx\in S}F(\bx)
+    \inf_{\bx\in\calS_\alpha}F(\bx)
     +
     \frac{C_r^2}{2\bar\rho_0}
     +
@@ -587,9 +670,9 @@ variation of $\{\bmu^k\}$ is not needed for that result.
 \end{remark}
 \begin{theorem}[Global KKT residual complexity]
 \label{theorem:target-complexity}
-\blue{Suppose that Assumptions~\ref{ass:level-boundedness},
-\ref{ass:smoothness}, and~\ref{ass:h} hold.}  Let $c_s>0$, $a\in(0,1)$,
-$\theta_x>0$ with $\theta_x\widehat L\le1/2$, and
+{\color{blue}
+Suppose that Assumptions~\ref{ass:level-boundedness} and~\ref{ass:h} hold.
+Let $c_s>0$, $a\in(0,1)$, $\theta_x>0$, and
 $\theta_\mu\in(0,1]$, and choose
 \begin{equation}
 \label{eq:complexity-parameter-schedule}
@@ -601,8 +684,20 @@ $\theta_\mu\in(0,1]$, and choose
     \qquad
     \tau_k=\frac{\theta_\mu s_k}{k+2},
 \end{equation}
-where $\widehat L$ is the constant in
-\eqref{eq:uniform-x-block-smoothness}.
+Let $C_e$, $\alpha$, and $\calS_\alpha$ be defined by
+\eqref{eq:total-potential-error}--\eqref{eq:derived-x-working-set}.  Suppose
+that Assumption~\ref{ass:smoothness} holds on a nonempty compact convex set
+$\calS$ satisfying
+$\calS_\alpha\subseteq\operatorname{int}(\calS)$.  Let $M_d$ and
+$\widehat L$ be the constants in Lemma~\ref{lem:x-block-smoothness}, define
+$d_{\calS}$ by \eqref{eq:level-set-boundary-distance}, and require
+\begin{equation}
+    \theta_x\widehat L\le\frac12,
+    \qquad
+    \frac{\theta_xM_d}{\bar\rho_0}\le d_{\calS}.
+    \label{eq:complexity-localized-primal-stepsize}
+\end{equation}
+}
 
 For any $K\ge2$, choose
 \[
@@ -704,10 +799,10 @@ optimality condition.
 \end{theorem}
 
 \begin{proof}
-The primal stepsize in \eqref{eq:complexity-parameter-schedule} satisfies
-\eqref{eq:explicit-primal-stepsize-coupling} and the conditions of
-Lemma~\ref{lem:descent-skeleton}.
-Moreover, $0<\tau_k\le s_k$ and
+{\color{blue}
+The schedule \eqref{eq:complexity-parameter-schedule} satisfies
+$\bar\rho_k/\bar\rho_{k-1}\le2^a$ for every $k\ge1$, so
+$\Gamma_\rho<\infty$.  Moreover, $0<\tau_k\le s_k$ and
 \[
 \begin{aligned}
     \sum_{k=0}^{\infty}\frac{\tau_k}{\bar\rho_k^2}
@@ -722,8 +817,16 @@ Moreover, $0<\tau_k\le s_k$ and
     <\infty.
 \end{aligned}
 \]
-Thus all conditions of Proposition~\ref{lem:weighted-finite-length} hold, and
-that proposition gives
+The same schedule satisfies
+\[
+    \frac{\bar\rho_{k+1}-\bar\rho_k}{\bar\rho_k^2}
+    =O(k^{-(1+a)}),
+\]
+so \eqref{eq:total-potential-error} holds.  Therefore, the assumptions on
+$\calS$ and \eqref{eq:complexity-localized-primal-stepsize} verify all
+conditions of Proposition~\ref{prop:bounded-iterates}.  Hence all conditions
+of Proposition~\ref{lem:weighted-finite-length} hold, and that proposition
+gives
 \[
     \sum_{k=0}^{K-1}
     \bar\rho_k\left(\|\Delta_{\bx}^{k+1}\|^2+\|\Delta_{\by}^{k+1}\|^2\right)
@@ -732,6 +835,7 @@ that proposition gives
     \qquad
     \forall K\ge1.
 \]
+}
 The index set $\{\lceil K/2\rceil,\ldots,K-1\}$ has
 $\lfloor K/2\rfloor$ elements, and $\lfloor K/2\rfloor\ge K/3$ for every
 $K\ge2$.  Hence, by the definition of $\kappa$,

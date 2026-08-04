@@ -24,29 +24,32 @@ proximal mapping are, respectively,
     \label{eq:prox-definition}
 \end{equation}
 
-We define the corresponding KKT system of Problem \eqref{prob:main} as
+{\color{blue}
+We write the splitting residual as $\br(\bx,\by):=\calA(\bx)-\by$ and define
+the KKT system of the split formulation of Problem~\eqref{prob:main} as
 \begin{equation}
 \begin{aligned}
-    \nabla f(x)+J_{\A}(x)^\top\lambda&=\zero,\\
-    \lambda&\in\partial h(y),\\
-    r(x,y)&=\zero.
+    \nabla f(\bx)+J_{\calA}(\bx)^\top\bz&=\zero,\\
+    \bz&\in\partial h(\by),\\
+    \br(\bx,\by)&=\zero.
 \end{aligned}
-% \label{eq:split-kkt}
 \notag
 \end{equation}
 
 \begin{definition}[\(\epsilon\)-KKT point]
 \label{def:eps-kkt}
-For \(\epsilon>0\), the triple \((x,y,\lambda)\) is called an \(\epsilon\)-KKT point of
-\eqref{eq:split-problem} if there exists $\blmbd \in \partial h(y)$ such that
+For \(\epsilon>0\), a triple \((\bx,\by,\bz)\) is called an
+\(\epsilon\)-KKT point of~\eqref{eq:split-problem} if
+\(\bz\in\partial h(\by)\) and
 \begin{equation}
     \begin{cases}
-        \|\nabla f(x)+J_{\A}(x)^\top\lambda\| \le \epsilon, \\
-        \|\A(x)-y\| \le \epsilon.
+        \|\nabla f(\bx)+J_{\calA}(\bx)^\top\bz\| \le \epsilon, \\
+        \|\calA(\bx)-\by\| \le \epsilon.
     \end{cases}
     \label{eq:eps-kkt-residual}
 \end{equation}
 \end{definition}
+}
 
 \subsection{Assumptions}
 \label{sec:assumptions}
@@ -60,11 +63,11 @@ Assume that $F$ is level-bounded, that is, for every $\alpha\in\RR$, the set
 is empty or compact.
 \end{assumption}
 
-\begin{assumption}
+\begin{assumption}[\blue{Localized smoothness}]
 \label{ass:smoothness}
-There exists a compact convex set $\calS\subseteq\RR^n$ containing the
-generated sequence $\{\bx^k\}_{k\ge0}$ such that the following conditions
-hold:
+\color{blue}
+Given a nonempty compact convex set $\calS\subseteq\RR^n$, suppose that the
+following conditions hold on $\calS$:
 \begin{itemize}
     \item[(i)] The function $f:\RR^n\to\RR$ is continuously differentiable,
     and there exists $L_f\ge0$ such that
@@ -89,10 +92,6 @@ hold:
         \qquad \forall \bx\in\calS.
     \]
 \end{itemize}
-Since $\calA$ is continuous and $\calS$ is compact, the constant
-\[
-    B_A:=\sup_{\bx\in\calS}\|\calA(\bx)\|<\infty.
-\]
 \end{assumption}
 
 \begin{assumption}
