@@ -81,28 +81,56 @@ However, the case where $h$ is a general non-Lipschitz function is not covered b
 
 The main contributions are as follows.
 \begin{itemize}
-    \item We derive DDLALM from a dual-damping reformulation whose damped
-    multiplier admits a closed-form expression.  The resulting algorithm is
-    single-loop and uses an explicit first-order primal update.
-    \item We prove boundedness of the anchor multiplier under a damped anchor
-    update and establish a reduced-potential descent mechanism.  The
-    smoothness constants depend on the bounded anchor multiplier $\bmu^k$,
-    rather than on an a priori bound for the virtual damped multiplier
-    $\blmbd^k$.
-    \item Under compact working-set and uniform LICQ assumptions, we derive a
-    weighted finite-length estimate for the primal steps.  This estimate is
-    the key link between the scheduled effective penalty and the KKT residual.
-    \item With $s_k\asymp k^{1/3}$ and
-    $\eta_k\asymp k^{-1/3}$, we show that a selected iterate satisfies
+    \item \textbf{Fixed base penalty with dual damping.}
+    We derive DDLALM from a dual-damping reformulation whose damped
+    multiplier admits a closed-form expression, yielding a single-loop
+    algorithm with an explicit first-order primal update. The
+    augmented-Lagrangian penalty $\rho$ is held fixed throughout. The
+    dual-damping term stabilizes the anchor multiplier $\bmu^k$ through
+    a convex-combination update, while the growth of the damping
+    schedule $s_k$ induces the increasing effective curvature
+    $\bar\rho_k=\rho+s_k$ that drives the splitting residual to zero.
+    This decouples multiplier stabilization from penalty growth, so the
+    penalty parameter need not be tuned or increased.
+
+    \item \textbf{An $\epsilon$-KKT point as the target.}
+    Under the assumption that $h$ is convex and $L_h$-Lipschitz, the
+    exact $\by$-proximal step yields a multiplier
+    $\bz^{k+1}\in\partial h(\by^{k+1})$ with $\|\bz^{k+1}\|\le L_h$. Our
+    target is an $\epsilon$-KKT point of the split formulation
+    of~\eqref{prob:main}, namely a triple $(\bx,\by,\bz)$ satisfying
+    \[
+        \|\nabla f(\bx)+J_{\calA}(\bx)^\top\bz\|\le\epsilon,
+        \qquad
+        \bz\in\partial h(\by),
+        \qquad
+        \|\calA(\bx)-\by\|\le\epsilon.
+    \]
+    The subdifferential residual is exactly zero by construction, so
+    only the stationarity and feasibility residuals must be controlled.
+    No constraint qualification on $J_{\calA}$ is needed: the split
+    constraint $\calA(\bx)-\by=\zero$ has full-row-rank Jacobian
+    $[J_{\calA}(\bx),-I]$, and the multiplier bound follows from the
+    Lipschitz continuity of $h$.
+
+    \item \textbf{$O(\epsilon^{-3})$ iteration complexity.}
+    With the coupled schedule $s_k\asymp k^{1/3}$,
+    $\eta_k\asymp k^{-1/3}$, $\tau_k\asymp k^{-2/3}$, the
+    reduced-potential descent and a weighted finite-length estimate
+    yield that a deterministic tail-best iterate
+    $(\bx^\kappa,\by^\kappa,\bz^\kappa)$ satisfies
     \[
         \left\|
-        \nabla f(\bx^\kappa)
-        +J_{\calA}(\bx^\kappa)^\top\by^\kappa
+        \nabla f(\bx^\kappa)+J_{\calA}(\bx^\kappa)^\top\bz^\kappa
         \right\|
         =O(K^{-1/3}),
         \qquad
-        \|\calA(\bx^\kappa)\|=O(K^{-1/3}),
+        \|\calA(\bx^\kappa)-\by^\kappa\|=O(K^{-1/3}),
+        \qquad
+        \bz^\kappa\in\partial h(\by^\kappa),
     \]
-    which yields an $O(\epsilon^{-3})$ iteration complexity for finding an
-    approximate KKT point.
+    so that $K=O(\epsilon^{-3})$ iterations suffice to obtain an
+    $\epsilon$-KKT point. The exponent $1/3$ balances
+    the stationarity rate $O(K^{-(1-a)/2})$ with the feasibility rate
+    $O(K^{-a})$.
 \end{itemize}
