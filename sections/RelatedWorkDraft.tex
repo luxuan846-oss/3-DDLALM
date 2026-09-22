@@ -17,13 +17,13 @@ constraint residual.
 The proposed DDLALM framework introduces a dual proximal damping term and
 eliminates the damped multiplier in closed form.  This produces a reduced
 augmented Lagrangian with an effective penalty
-$\bar\rho_k=\rho+s_k$, while the anchor multiplier $\bmu^k$ evolves through a
+$\rho_{s_k}=\rho+s_k$, while the anchor multiplier $\bmu^k$ evolves through a
 damped dual update.  The resulting method separates two roles that are often
 entangled in standard ALM analyses: the effective penalty controls feasibility,
 whereas the anchor multiplier is the stable dual object used in the descent
 argument.  Under a compact working-set assumption and a uniform LICQ condition,
 we prove a weighted finite-length estimate; with
-$\bar\rho_k\asymp k^{1/3}$ and $\eta_k\asymp k^{-1/3}$, this yields the
+$\rho_{s_k}\asymp k^{1/3}$ and $\eta_k\asymp k^{-1/3}$, this yields the
 standard $O(\epsilon^{-3})$ complexity for finding an approximate KKT point.
 
 \paragraph{Penalty and proximal augmented Lagrangian methods.}
@@ -75,7 +75,7 @@ obtained a single-loop first-order method with
 $\widetilde O(\epsilon^{-2})$ iteration complexity under their functional
 constraint setting.  Our method is aligned with this general principle, but
 uses the perturbation differently: the dual damping variable is eliminated
-to expose an effective penalty schedule $\bar\rho_k=\rho+s_k$, and the proof
+to expose an effective penalty schedule $\rho_{s_k}=\rho+s_k$, and the proof
 tracks a stable anchor multiplier separately from the virtual multiplier.
 This distinction is central to the descent and residual analysis.
 

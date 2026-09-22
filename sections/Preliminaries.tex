@@ -24,32 +24,32 @@ proximal mapping are, respectively,
     \label{eq:prox-definition}
 \end{equation}
 
-{\color{blue}
-We write the splitting residual as $\br(\bx,\by):=\calA(\bx)-\by$ and define
-the KKT system of the split formulation of Problem~\eqref{prob:main} as
+{
+Let define the splitting residual as $\br(\bx,\by):=\calA(\bx)-\by$ and 
+the KKT condition of the split formulation of Problem~\eqref{prob:main} as
 \begin{equation}
 \begin{aligned}
     \nabla f(\bx)+J_{\calA}(\bx)^\top\bz&=\zero,\\
     \bz&\in\partial h(\by),\\
-    \br(\bx,\by)&=\zero.
+    \calA(\bx)-\by &=\zero.
 \end{aligned}
 \notag
 \end{equation}
-
+Given an $\varepsilon>$
 \begin{definition}[\(\epsilon\)-KKT point]
 \label{def:eps-kkt}
 For \(\epsilon>0\), a triple \((\bx,\by,\bz)\) is called an
-\(\epsilon\)-KKT point of~\eqref{eq:split-problem} if
-\(\bz\in\partial h(\by)\) and
+\(\epsilon\)-KKT point of~\eqref{eq:split-problem} if there exists a variable 
+\(\bz\in\partial h(\by)\) such that the following hold:
 \begin{equation}
     \begin{cases}
         \|\nabla f(\bx)+J_{\calA}(\bx)^\top\bz\| \le \epsilon, \\
-        \|\calA(\bx)-\by\| \le \epsilon.
+        \|\calA(\bx)-\by\| \le \epsilon,
     \end{cases}
     \label{eq:eps-kkt-residual}
 \end{equation}
 \end{definition}
-}
+} which is closely related to the $\varepsilon$-GS stationary point defined in \cite{bohm2021variable}. 
 
 \subsection{Assumptions}
 \label{sec:assumptions}
@@ -65,39 +65,40 @@ is empty or compact.
 
 \begin{assumption}
 \label{ass:smoothness}
-\color{blue}
-Given a nonempty compact convex set $\calS\subseteq\RR^n$, suppose that the
-following conditions hold on $\calS$:
-\begin{itemize}
-    \item[(i)] The function $f:\RR^n\to\RR$ is continuously differentiable,
-    and there exists $L_f\ge0$ such that
+\begin{enumerate}[label={[\roman*].}]
+    \item The function $f:\RR^n\to\RR$ is continuously differentiable,
+    and there exists $L_f, G_f \ge0$ such that
     \[
         \|\nabla f(\bx)-\nabla f(\bx')\|
         \le
         L_f\|\bx-\bx'\|,
-        \qquad \forall \bx,\bx'\in \calS.
+        \qquad \forall \bx,\bx'\in \RR^n,
+    \] and 
+    \[
+    \|\nabla f(\bx)\| \leq  G_f,
+    \qquad \forall \bx\in\RR^n.
     \]
 
-    \item[(ii)] The mapping $\calA:\RR^n\to\RR^m$ is continuously
-    differentiable, and there exist $L_A,G_A\ge0$ such that
+    \item The mapping $\calA:\RR^n\to\RR^m$ is continuously
+    differentiable, and there exist $L_{\calA},G_{\calA}\ge0$ such that
     \[
         \|J_{\calA}(\bx)-J_{\calA}(\bx')\|
         \le
-        L_A\|\bx-\bx'\|,
-        \qquad \forall \bx,\bx'\in\calS,
+        L_{\calA}\|\bx-\bx'\|,
+        \qquad \forall \bx,\bx'\in\RR^n,
     \]
     and
     \[
-        \|J_{\calA}(\bx)\|\le G_A,
-        \qquad \forall \bx\in\calS.
+        \|J_{\calA}(\bx)\|\le G_{\calA},
+        \qquad \forall \bx\in\RR^n.
     \]
-\end{itemize}
+\end{enumerate}
 \end{assumption}
 
 \begin{assumption}
 \label{ass:h}
-The function $h:\RR^m\to\RR$ is proper, closed, convex, and globally
-$L_h$-Lipschitz.  Consequently,
+The function $h:\RR^m\to\RR$ is proper, closed, convex, and 
+$L_h$-Lipschitz, i.e.,
 \begin{equation}
     \|\bxi\|\le L_h,
     \qquad
@@ -113,13 +114,13 @@ $L_h$-Lipschitz.  Consequently,
 % \[
 %     \sigma_{\min}\bigl(J_{\calA}(\bx)\bigr)\ge \nu,
 %     \qquad
-%     \forall \bx\in S.
+%     \forall \bx\in\calS.
 % \]
 % Equivalently,
 % \[
 %     \|J_{\calA}(\bx)^\top \by\|
 %     \ge
 %     \nu \|\by\|,
-%     \qquad \forall \bx\in S,\ \forall \by\in\RR^m.
+%     \qquad \forall \bx\in\calS,\ \forall \by\in\RR^m.
 % \]
 % \end{assumption}

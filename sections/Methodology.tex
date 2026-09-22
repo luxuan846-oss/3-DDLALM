@@ -1,148 +1,199 @@
 \section{Dual-Damping Linearized Augmented Lagrangian Method}
 \label{sec:method}
 
-This section develops a single-loop dual-damping linearized augmented
-Lagrangian method for problem~\eqref{prob:main}.  The method keeps the 
-augmented-Lagrangian penalty fixed, introduces a proximal regularization on
-the dual variable, and applies a Gauss--Seidel update in the order
-\(\bx\)-step, \(\by\)-step, and multiplier steps.
+This section develops a single-loop primal-dual algorithm for problem~\eqref{prob:main}.  
 
-\subsection{Dual-Damping Reformulation}
+
+\subsection{Smoothed Perturbed augmented Lagrangian}
 \label{subsec:dual-damping-reformulation}
-
-Introduce the auxiliary variable \(\by=\calA(\bx)\).  Problem~\eqref{prob:main}
-is equivalently written as
+We first transform Problem~\eqref{prob:main} into a constrained problem by introducing the auxiliary variable \(\by=\calA(\bx)\):
 \begin{equation}\label{eq:split-problem}
     \min_{\bx\in\RR^n,\,\by\in\RR^m}
     \; f(\bx)+ h(\by)
     \quad\text{s.t.}\quad
-    \calA(\bx)-\by=\zero.
-\end{equation}
-For a fixed penalty \(\rho>0\), a dual-regularizer parameter \(s>0\), and an
-anchor multiplier \(\bmu\in\RR^m\), define
-\begin{equation}\label{eq:dual-damping-pplf}
-\begin{aligned}
-    \mathcal P_s(\bx,\by,\blmbd;\bmu)
-    :=\;&
+    \calA(\bx)-\by=\zero,
+\end{equation} whose augmented Lagrangian for~Problem \eqref{eq:split-problem} with penalty
+\(\rho>0\) and multiplier \(\blmbd\in\RR^m\) is
+\begin{equation}\label{eq:augmented-lagrangian}
+    \calL_\rho(\bx,\by,\blmbd)
+    :=
     f(\bx)+h(\by)
     +\langle \blmbd,\calA(\bx)-\by\rangle
-    +\frac{\rho}{2}\|\calA(\bx)-\by\|^2
-    -\frac{1}{2s}\|\blmbd-\bmu\|^2.
-\end{aligned}
+    +\frac{\rho}{2}\|\calA(\bx)-\by\|^2.
 \end{equation}
 
-For fixed \((\bx,\by,\bmu)\), the map
-\(\blmbd\mapsto\mathcal P_s(\bx,\by,\blmbd;\bmu)\) is
-\(1/s\)-strongly concave.  Its unique maximizer is
-\begin{equation}\label{eq:lambda-star-s}
-    \blmbd_s(\bx,\by;\bmu)
-    =
-    \bmu+s\bigl(\calA(\bx)-\by\bigr).
+We first record the value obtained by eliminating the auxiliary variable
+\(\by\) from the unregularized augmented Lagrangian.  Define the value function
+\begin{equation}\label{eq:reduced-al-base}
+    \begin{aligned}
+        \mathcal D_\rho\bigl(\bx,\blmbd; \by(\bx,\blmbd)\bigr)
+        &:=\mathcal L_\rho\bigl(\bx,\by(\bx,\blmbd),\blmbd\bigr) \\
+        &=f(\bx)
+        +M_{h/\rho}\!\left(\calA(\bx)+\frac{1}{\rho}\blmbd\right)
+        -\frac{1}{2\rho}\|\blmbd\|^2,
+    \end{aligned}
 \end{equation}
-Substituting \eqref{eq:lambda-star-s} into
-\eqref{eq:dual-damping-pplf} gives the reduced dual-damping augmented
-Lagrangian
-\begin{equation}\label{eq:reduced-al}
-\begin{aligned}
-    \Phi_s(\bx,\by;\bmu)
-    := 
-    f(\bx)+h(\by)
-    +\langle \bmu,\calA(\bx)-\by\rangle
-    +\frac{\bar\rho_s}{2}\|\calA(\bx)-\by\|^2,
-    \qquad
-    \bar\rho_s:=\rho+s.
-\end{aligned}
+where
+\[
+    M_{h/\rho}(v):=\min_{\by}\left\{
+        h(\by)+\frac{\rho}{2}\|\by-v\|^2
+    \right\}.
+\]
+The corresponding \(\by\) is given by
+\begin{equation}\label{eq:rho-prox-map}
+    \by (\bx,\blmbd)
+    :=\operatorname{prox}_{h/\rho}
+      \left(\calA(\bx)+\frac{1}{\rho}\blmbd\right).
 \end{equation}
-
-For later use, fix \((\bx,\bmu)\) and minimize
-\eqref{eq:reduced-al} with respect to \(\by\).  The resulting proximal point is
-\begin{equation}\label{eq:exact-y-map}
-    \by_s(\bx;\bmu)
-    =
-    \operatorname{prox}_{h/\bar\rho_s}
-    \left(
-        \calA(\bx)+\frac{\bmu}{\bar\rho_s}
-    \right).
-\end{equation}
+However, \(\mathcal D_\rho(\bx,\blmbd;\by(\bx,\blmbd))\) is generally nonconvex in \(\bx\)
+and concave in \(\blmbd\). To regularize the two blocks, fix a primal
+proximal parameter \(\gamma>0\) and a dual regularization parameter \(s>0\),
+and define the smoothe, perturbed augmented Lagrangian as
+\begin{equation}\label{eq:regularized-potential}
+    \begin{aligned}
+        \mathcal P_s(\bx,\blmbd;\bz,\bmu,\by(\bx,\blmbd) )
+        :=\;&  \mathcal D_\rho\bigl(\bx,\blmbd;\by(\bx,\blmbd)\bigr)
+        +\frac{1}{2\gamma}\|\bx-\bz\|^2
+        -\frac{1}{2s}\|\blmbd-\bmu\|^2.
+    \end{aligned}
+\end{equation} 
 
 \subsection{Algorithm Design}
 \label{subsec:ddlalm-algorithm}
+The method is formally presented in \Cref{alg:ddlalm}.
 
-Let \(\{s_k\}_{k\ge0}\) be a positive dual-damping sequence and define
-\begin{equation}\label{eq:effective-penalty}
-    \bar\rho_k:=\rho+s_k.
-\end{equation} where \(\{s_k\}_{k\ge0}\) is nondecreasing. 
-At iteration \(k\), the method starts from
-\((\bx^k,\by^k,\bmu^k)\).  Define the current feasibility residual and the
-multiplier driving the \(\bx\)-step by
-\begin{equation}\label{eq:current-residual-driving-multiplier}
-    \br^k:=\calA(\bx^k)-\by^k,
-    \qquad
-    \bw^k:=\bmu^k+\bar\rho_k\br^k.
+The gradients used in Algorithm~\ref{alg:ddlalm} are
+\begin{equation}\label{eq:explicit-p-gradients}
+    \begin{aligned}
+        \nabla_{\bx}\mathcal P_s
+        \bigl(\bx,\blmbd;\bz,\bmu,\by(\bx,\blmbd)\bigr)
+        &=
+        \nabla f(\bx)
+        +J_{\calA}(\bx)^\top\bq(\bx,\blmbd)
+        +\frac{1}{\gamma}(\bx-\bz), \\
+        \nabla_{\blmbd}\mathcal P_s
+        \bigl(\bx,\blmbd;\bz,\bmu,\by(\bx,\blmbd)\bigr)
+        &=
+        \calA(\bx)-\by(\bx,\blmbd)
+        -\frac{1}{s}(\blmbd-\bmu),
+    \end{aligned}
+\end{equation} where $ \bq(\bx,\blmbd) := \blmbd+\rho\bigl[\calA(\bx)-\by(\bx,\blmbd)\bigr]$, whose  optimality condition gives
+\begin{equation}
+    \bq(\bx,\blmbd)
+    \in\partial h\bigl(\by(\bx,\blmbd)\bigr).
+    \label{eq:certificate-membership}
 \end{equation}
 
-\paragraph{Gradient descent \(\bx\)-step}
-The first block is updated by linearizing the smooth part of
-\(\Phi_{s_k}(\cdot,\by^k;\bmu^k)\) at \(\bx^k\):
-\begin{equation}\label{eq:x-update-det}
-    \bx^{k+1}
-    =
-    \bx^k-
-    \eta_k
-    \left[
-        \nabla f(\bx^k)
-        +J_{\calA}(\bx^k)^\top\bw^k
-    \right].
+Consequently, the first two updates of
+Algorithm~\ref{alg:ddlalm} can be written explicitly as
+\begin{equation}\label{eq:explicit-updates}
+    \begin{aligned}
+        \bx^{k+1}
+        &=
+        \bx^k-\eta_k
+        \left[
+            \nabla f(\bx^k)
+            +J_{\calA}(\bx^k)^\top\bq(\bx^k,\blmbd^k)
+            +\frac{1}{\gamma}(\bx^k-\bz^k)
+        \right], \\
+        \blmbd^{k+1}
+        &=
+        \blmbd^k+\tau_k
+        \left[
+            \calA(\bx^{k+1})
+            -\by(\bx^{k+1},\blmbd^k)
+            -\frac{1}{s_k}(\blmbd^k-\bmu^k)
+        \right].
+    \end{aligned}
 \end{equation}
 
-\paragraph{Exact \(\by\)-step}
-With \(\bx^{k+1}\) fixed, the second block is updated by exactly minimizing
-\(\Phi_{s_k}(\bx^{k+1},\cdot;\bmu^k)\):
-\begin{equation}\label{eq:y-update}
-    \by^{k+1}
-    =
-    \operatorname{prox}_{h/\bar\rho_k}
-    \left(
-        \calA(\bx^{k+1})+\frac{\bmu^k}{\bar\rho_k}
-    \right).
-\end{equation}
-
-\paragraph{Exact $\blmbd$-step}
-We update $\blmbd$ by using an exact update.
-\begin{equation}\label{eq:lambda-update}
-    \blmbd^{k+1}
-    :=
-    \bmu^k+s_k (\calA(\bx^{k+1}) - \by^{k+1}).
-\end{equation}
-
-\paragraph{Gradient ascent $\bmu$-step}
-We perform the update of $\mu^{k+1}$ as the gradient ascent:
-
-\begin{equation}\label{eq:mu-update}
-    \bmu^{k+1}
-    =
-    \left(1-\frac{\tau_k}{s_k}\right)\bmu^k
-    +\frac{\tau_k}{s_k}\blmbd^{k+1},
-\end{equation} 
-where the stepsize of the dual variable $\mu^k$ satisfies  $  0<\tau_k\le s_k.$
-The complete method is summarized in Algorithm~\ref{alg:ddlalm}.
-
-\begin{algorithm}[H]
+\begin{algorithm}[t]
     \caption{Dual-Damping Linearized Augmented Lagrangian Method (DDLALM)}
     \label{alg:ddlalm}
     \small
     \begin{algorithmic}[1]
-        \STATE \textbf{Input:}
-        \blue{\(\bx^0\in\RR^n\)}, \(\by^0\in\operatorname{dom}h\),
-        and \(\bmu^0\in\RR^m\),
-        fixed base penalty \(\rho>0\),
-        sequences \(\{s_k\}\), \(\{\eta_k\}\), and
-        \(\{\tau_k\}\), and iteration limit \(K\).
+        \STATE \textbf{Input:} Initial
+        \(\bx^0,\bz^0\in\RR^n\) and
+        \(\blmbd^0,\bmu^0\in\RR^m\); 
+        Parameters: \(\rho>0\) and \(\gamma>0\);
+        sequences: \(\{\eta_k\}\), \(\{\tau_k\}\), \(\{\alpha_k\}\), and
+        \(\{\beta_k\}\);
+        and iteration limit \(K\).
         \FOR{\(k=0,1,\ldots,K-1\)}
-            \STATE Update \(\bx^{k+1}\) by \eqref{eq:x-update-det}.
-            \STATE Update \(\by^{k+1}\) by \eqref{eq:y-update}.
-            \STATE Update \(\blmbd^{k+1}\) by \eqref{eq:lambda-update}
-            \STATE Update  \(\bmu^{k+1}\) by \eqref{eq:mu-update}.
+            \STATE  \(\bx^{k+1}=\bx^k- \eta_k \nabla_{\bx} \mathcal P_{s_k}(\bx^{k}, \blmbd^{k}; \bz^{k}, \bmu^{k}, \by(\bx^k, \blmbd^k))\);
+            \STATE  \(\blmbd^{k+1}=\blmbd^k+\tau_k
+            \nabla_{\blmbd}\mathcal P_{s_k}
+            (\bx^{k+1},\blmbd^{k};\bz^{k},\bmu^{k},
+            \by(\bx^{k+1},\blmbd^k))\).
+            \STATE 
+            \(\bz^{k+1}=\bz^k+ \alpha_k(\bx^{k+1}-\bz^k)\).
+            \STATE  \(\bmu^{k+1}=\bmu^k+ \beta_k(\blmbd^{k+1}-\bmu^k)\).
         \ENDFOR
     \end{algorithmic}
 \end{algorithm}
+
+We use fixed primal and dual stepsizes together with diminishing center
+stepsizes. Choose \(\rho>0\) and \(\gamma>0\) satisfying
+Proposition~\ref{prop:curvature-smoothness}. With \(L_x\),
+\(\mu_\gamma\), and \(L_{d,0}\) defined in
+Section~\ref{sec:complexity-analysis}, one admissible choice is
+\begin{equation}\label{eq:ddlalm-parameter-schedule}
+\begin{aligned}
+    s_k &= c_s(k+1)^{1/3},
+    \qquad
+    \eta = \frac{1}{2L_x},
+    \qquad
+    \tau =
+    \left(
+        2L_{d,0}
+        +\frac{72L_xG_{\cal A}^2}{\mu_\gamma^2}
+    \right)^{-1},
+    \\
+    \alpha_k &=
+    \frac{\min\{s_0,\gamma\mu_\gamma\tau\}}{36s_k},
+    \qquad
+    \beta_k=\frac{\theta_\mu}{k+k_0},
+\end{aligned}
+\end{equation}
+where \(c_s>0\), \(\theta_\mu\in(0,1]\), and \(k_0\ge1\) are constants
+independent of \(K\). Consequently,
+\[
+    s_k=\Theta((k+1)^{1/3}),
+    \qquad
+    \alpha_k=\Theta((k+1)^{-1/3}),
+    \qquad
+    \beta_k=\Theta((k+1)^{-1}).
+\]
+
+\begin{theorem}
+\label{thm:main}
+Suppose that Assumptions~\ref{ass:level-boundedness},
+\ref{ass:smoothness}, and~\ref{ass:h} hold.
+Let the sequence generated by \Cref{alg:ddlalm} use
+\eqref{eq:ddlalm-parameter-schedule}, with $\rho$ and $\gamma$ as specified
+above. Then it holds that
+\[
+\max\left\{
+\left[
+    \left\|
+        \nabla f({\bx}^{I_K+1})
+        +
+        J_{\cal A}({\bx}^{I_K+1})^\top{\bq}^{I_K}
+    \right\|^2
+\right],
+\;
+\left[
+    \left\|
+        \cal A({\bx}^{I_K+1})-{\by}^{I_K+1}
+    \right\|^2
+\right]
+\right\}
+=
+\mathcal O(K^{-2/3}),
+\]
+with
+\({\bq}^{I_K}\in\partial h({\by}^{I_K+1})\).
+Consequently, given \(\epsilon>0\), the iteration complexity of
+\Cref{alg:ddlalm} to obtain an \(\epsilon\)-KKT point
+is of order \(\mathcal O(\epsilon^{-3})\).
+\end{theorem}
