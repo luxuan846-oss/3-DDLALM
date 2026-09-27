@@ -24,7 +24,6 @@ proximal mapping are, respectively,
     \label{eq:prox-definition}
 \end{equation}
 
-{
 Let define the splitting residual as $\br(\bx,\by):=\calA(\bx)-\by$ and 
 the KKT condition of the split formulation of Problem~\eqref{prob:main} as
 \begin{equation}
@@ -35,7 +34,6 @@ the KKT condition of the split formulation of Problem~\eqref{prob:main} as
 \end{aligned}
 \notag
 \end{equation}
-Given an $\varepsilon>$
 \begin{definition}[\(\epsilon\)-KKT point]
 \label{def:eps-kkt}
 For \(\epsilon>0\), a triple \((\bx,\by,\bz)\) is called an
@@ -49,7 +47,160 @@ For \(\epsilon>0\), a triple \((\bx,\by,\bz)\) is called an
     \label{eq:eps-kkt-residual}
 \end{equation}
 \end{definition}
-} which is closely related to the $\varepsilon$-GS stationary point defined in \cite{bohm2021variable}. 
+This definition is closely related to the $\varepsilon$-GS stationary point
+defined in \cite{bohm2021variable}.
+
+\subsection{Dual regularization and effective penalties}
+\label{sec:dual-penalty-identity}
+Here $s>0$ denotes the additional dual-damping parameter used by the
+algorithm, while $\rho+s$ is the resulting effective augmented-Lagrangian
+penalty. We first state the identity for a generic effective penalty
+$\sigma>0$ and then specialize it to $\sigma=\rho+s$.
+For $\sigma>0$, define the reduced augmented Lagrangian
+\begin{equation}\label{eq:reduced-al-effective}
+  \widehat{\calL}_\sigma(\bx,\bmu)
+  :=f(\bx)+\min_{\by}\left\{
+    h(\by)+\langle\bmu,\calA(\bx)-\by\rangle
+    +\frac{\sigma}{2}\|\calA(\bx)-\by\|^2\right\}.
+\end{equation}
+The minimizer is unique because $h$ is proper, closed, and convex.
+The following identity relates a quadratic dual regularizer to this value
+function; it does not require convexity in $\bx$.
+
+\begin{lemma}[Dual regularization and the reduced augmented Lagrangian]
+\label{lem:dual-penalty-identity}
+For every $\bx$, $\bmu$, and $\sigma>0$,
+\begin{equation}\label{eq:dual-reg}
+  \max_{\blmbd}\left\{
+    \Phi(\bx,\blmbd)-h^*(\blmbd)
+    -\frac{1}{2\sigma}\|\blmbd-\bmu\|^2\right\}
+  =\widehat{\calL}_\sigma(\bx,\bmu).
+\end{equation}
+Writing $h_t(v):=\min_{\by}\{h(\by)+\|\by-v\|^2/(2t)\}$,
+the same value is
+\begin{equation}\label{eq:dual-reg-envelope}
+  \widehat{\calL}_\sigma(\bx,\bmu)
+  =f(\bx)+h_{1/\sigma}\!\left(\calA(\bx)+\frac{\bmu}{\sigma}\right)
+    -\frac{\|\bmu\|^2}{2\sigma}.
+\end{equation}
+\end{lemma}
+\begin{proof}
+Fix $\bx$ and set $a=\calA(\bx)$. The unique minimizer in
+\eqref{eq:reduced-al-effective} and its subgradient certificate satisfy
+\begin{equation}\label{eq:effective-prox-certificate}
+  \by_\sigma=\prox_{h/\sigma}(a+\bmu/\sigma),
+  \qquad
+  \bq_\sigma:=\bmu+\sigma(a-\by_\sigma)\in\partial h(\by_\sigma).
+\end{equation}
+For every $\blmbd$, the Fenchel inequality gives
+\[
+  \langle a,\blmbd\rangle-h^*(\blmbd)
+    -\frac{\|\blmbd-\bmu\|^2}{2\sigma}
+  \le h(\by_\sigma)+\langle a-\by_\sigma,\blmbd\rangle
+    -\frac{\|\blmbd-\bmu\|^2}{2\sigma}.
+\]
+The right-hand side is maximized at
+$\blmbd=\bq_\sigma$, where the Fenchel inequality is also an equality.
+Its maximum is
+$h(\by_\sigma)+\langle\bmu,a-\by_\sigma\rangle
++\frac{\sigma}{2}\|a-\by_\sigma\|^2$.
+This proves~\eqref{eq:dual-reg}, including attainment of the maximum.
+Completing the square in~\eqref{eq:reduced-al-effective}
+yields~\eqref{eq:dual-reg-envelope}.
+\end{proof}
+
+\paragraph{Effective penalty in the proposed formulation.}
+The parameter $\sigma$ in~\eqref{eq:dual-reg} regularizes the original
+Lagrangian dual variable. In our method, the dual regularizer is instead
+applied to the reduced augmented Lagrangian $\mathcal D_\rho$
+in~\eqref{eq:reduced-al-base}. Its effective penalty is therefore
+$\sigma=\rho+s$. More precisely, suppressing the dependent argument
+$\by(\bx,\blmbd)$ in~\eqref{eq:regularized-potential}, we have
+\begin{equation}\label{eq:ps-effective-penalty}
+  \max_{\blmbd}\mathcal P_s(\bx,\blmbd;\bz,\bmu)
+  =\widehat{\calL}_{\rho+s}(\bx,\bmu)
+    +\frac{1}{2\gamma}\|\bx-\bz\|^2.
+\end{equation}
+To verify this, set $\sigma=\rho+s$ and use
+$(\by_\sigma,\bq_\sigma)$ from~\eqref{eq:effective-prox-certificate}.
+Define $\br_\sigma=a-\by_\sigma$ and
+$\blmbd_s=\bmu+s\br_\sigma$. Then
+\[
+  \blmbd_s+\rho\br_\sigma=\bq_\sigma\in\partial h(\by_\sigma),
+  \qquad
+  \br_\sigma-\frac{\blmbd_s-\bmu}{s}=\mathbf 0.
+\]
+The first relation gives $\by(\bx,\blmbd_s)=\by_\sigma$;
+the second is the first-order condition for maximizing
+$\mathcal D_\rho(\bx,\blmbd)-\|\blmbd-\bmu\|^2/(2s)$.
+This objective is $1/s$-strongly concave in $\blmbd$, so
+$\blmbd_s$ is its unique maximizer. Substitution gives
+\eqref{eq:ps-effective-penalty}.
+Thus increasing $s$ weakens the dual regularizer and increases the
+\emph{effective} primal penalty $\rho+s$, even when $\rho$ is fixed.
+
+\paragraph{Zero center and feasibility bias.}
+With $\bmu=\mathbf 0$, \eqref{eq:reduced-al-effective} is the quadratic
+penalty value $f(\bx)+h_{1/\sigma}(\calA(\bx))$.
+Equation~\eqref{eq:effective-prox-certificate} yields the exact relation
+\begin{equation}\label{eq:zero-center-bias}
+  \calA(\bx)-\by_\sigma=\frac{\bq_\sigma}{\sigma}.
+\end{equation}
+If $h$ is $L_h$-Lipschitz, the feasibility residual is at most $L_h/\sigma$.
+Hence a penalty of order $\epsilon^{-1}$ suffices for this residual
+alone; primal stationarity must be controlled separately.
+This penalty scaling can also be necessary for stationary points of the
+zero-center formulation. For example, take
+$f(x)=-cx$, $\calA(x)=x$, and $h(y)=L|y|$ with $0<c<L$.
+The original objective $-cx+L|x|$ is level-bounded. The reduced penalty
+has the unique stationary point
+\[
+  x_\sigma=\frac{c}{\sigma},\qquad
+  y_\sigma=0,\qquad q_\sigma=c.
+\]
+Indeed, $q_\sigma=c\in\partial h(0)$ and $f'(x_\sigma)+q_\sigma=0$,
+whereas $|x_\sigma-y_\sigma|=c/\sigma$.
+Thus this exact stationary point, with its proximal certificate, is an
+$\epsilon$-KKT point only if $\sigma\ge c/\epsilon$.
+For fixed $\rho$, this requires $s=\Omega(\epsilon^{-1})$ as
+$\epsilon\downarrow0$. This is a worst-case feasibility-bias statement
+for the zero-center formulation, not an iteration-complexity lower bound.
+Adding the primal smoothing term does not remove this stationary bias:
+at a fixed point of a center update with positive stepsize, $\bz=\bx$.
+
+\paragraph{Moving center and the augmented Lagrangian interpretation.}
+For general $\bmu$, \eqref{eq:reduced-al-effective} is the augmented
+Lagrangian minimized over the splitting variable $\by$, with multiplier
+$\bmu$ and penalty $\sigma$~\cite{hestenes1969multiplier,powell1969method}.
+Its certificate satisfies
+\begin{equation}\label{eq:moving-center-residual}
+  \calA(\bx)-\by_\sigma=\frac{\bq_\sigma-\bmu}{\sigma}.
+\end{equation}
+At fixed $\sigma$, feasibility can therefore be recovered by driving
+$\bq_\sigma-\bmu$ to zero. Merely choosing a nonzero center does not
+ensure this property; it must be established for the center update.
+Under exact dual maximization in~\eqref{eq:ps-effective-penalty},
+the update $\bmu^+=\bmu+\beta(\blmbd_s-\bmu)$ becomes
+$\bmu^+=\bmu+\beta s\br_\sigma$, an augmented-Lagrangian multiplier
+update with stepsize $\beta s$. With a single dual gradient step,
+$\blmbd^+$ need not equal $\blmbd_s$, and this exact relation need not hold.
+For the actual single-loop update, let
+$\br^+=\calA(\bx^+)-\by(\bx^+,\blmbd)$ and
+$\blmbd^+=\blmbd+\tau[\br^+-(\blmbd-\bmu)/s]$.
+Its center update obeys the exact identity
+\begin{equation}\label{eq:inexact-center-multiplier-update}
+  \bmu^+=\bmu+\beta\tau\br^+
+    +\beta\left(1-\frac{\tau}{s}\right)(\blmbd-\bmu).
+\end{equation}
+At a common fixed point with positive $\beta$ and $\tau$, the center
+update gives $\blmbd=\bmu$, and the dual update then gives
+$\br^+=\mathbf 0$, even for finite $s$.
+Together with $\bz=\bx$ from the primal-center update, primal
+stationarity yields the original KKT conditions.
+Convergence to such a fixed point and its iteration complexity require
+an analysis of the coupled updates. The identities above do not by
+themselves establish an exact dual proximal-point interpretation for
+the single-loop method.
 
 \subsection{Assumptions}
 \label{sec:assumptions}

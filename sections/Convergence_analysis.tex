@@ -4,7 +4,7 @@
 \section{Auxiliary Lemmas}
 \label{sec:basic-descent}
 To analysis the convergence of the algorithms, 
-This section establishes the basic descent properties of the DDLALM algorithm.
+This section establishes the basic descent properties of SPLALM.
 
 For convenience, we introduce the successive differences of the iterates
 \[
@@ -1469,123 +1469,64 @@ In particular, $\mathcal P_s$ is $L_x$-smooth in $\bx$ and $L_\lambda(s)$-smooth
 \subsection{Value Functions and Lyapunov Function}
 \label{subsec:value-functions}
 
-To facilitate the convergence analysis, we introduce two value functions
-associated with $\mathcal P_s$. For any $s>0$ and $(\bz,\bmu)$, let
-\[
+Fix $s>0$ and $(\bz,\bmu)$. By Proposition~\ref{prop:curvature-smoothness},
+$\mathcal P_s(\cdot,\cdot;\bz,\bmu)$ is strongly convex in $\bx$ and strongly
+concave in $\blmbd$. Hence the following value functions are well defined,
+and the minimizer and maximizer below are unique:
+\begin{align}
     d_s(\blmbd;\bz,\bmu)
-    :=\min_{\bx\in\RR^n}\mathcal P_s(\bx,\blmbd;\bz,\bmu),
-    \qquad
+    &:= \min_{\bx\in\RR^n}\mathcal P_s(\bx,\blmbd;\bz,\bmu),
+    &
+    \bx_s(\blmbd;\bz,\bmu)
+    &:= \argmin_{\bx\in\RR^n}\mathcal P_s(\bx,\blmbd;\bz,\bmu),
+    \label{eq:dual-value}\\
     p_s(\bz,\bmu)
-    :=\min_{\bx\in\RR^n}\max_{\blmbd\in\RR^m}
-      \mathcal P_s(\bx,\blmbd;\bz,\bmu).
-\]
-By Proposition~\ref{prop:curvature-smoothness}, $\mathcal P_s$ is strongly convex in $\bx$
-and strongly concave in $\blmbd$. Hence, strong duality yields
+    &:= \max_{\blmbd\in\RR^m} d_s(\blmbd;\bz,\bmu),
+    &
+    \blmbd_s^\star(\bz,\bmu)
+    &:= \argmax_{\blmbd\in\RR^m} d_s(\blmbd;\bz,\bmu).
+    \label{eq:saddle-value}
+\end{align}
+Strong convexity--strong concavity also yields strong duality,
 \begin{equation}
     p_s(\bz,\bmu)
-    = \max_{\blmbd\in\RR^m}d_s(\blmbd;\bz,\bmu).
+    = \min_{\bx\in\RR^n}\max_{\blmbd\in\RR^m}
+      \mathcal P_s(\bx,\blmbd;\bz,\bmu),
     \label{eq:minimax-equality}
 \end{equation}
-We consider the following Lyapunov function:
+and the unique saddle point is
+$(\bx_s^\star(\bz,\bmu),\blmbd_s^\star(\bz,\bmu))$, where
+\[
+    \bx_s^\star(\bz,\bmu)
+    :=\bx_s\bigl(\blmbd_s^\star(\bz,\bmu);\bz,\bmu\bigr).
+\]
+
+\blue{Following the three-value Lyapunov construction for smoothed nonconvex--concave minimax methods~\cite{zhang2020smoothed}, and its perturbed-smoothed extension~\cite{li2026smoothing}, we adapt the construction to the reduced augmented-Lagrangian setting and define}
 \begin{equation}
 \begin{aligned}
     \Psi_s(\bx,\blmbd;\bz,\bmu)
-    &:=
+    &:={}
     \mathcal P_s(\bx,\blmbd;\bz,\bmu)
     -2d_s(\blmbd;\bz,\bmu)
     +2p_s(\bz,\bmu) \\
-    &=
-    \underbrace{
-        \mathcal P_s(\bx,\blmbd;\bz,\bmu)
-        -d_s(\blmbd;\bz,\bmu)
-    }_{\text{primal optimality gap}}
-    +
-    \underbrace{
-        p_s(\bz,\bmu)-d_s(\blmbd;\bz,\bmu)
-    }_{\text{dual optimality gap}}
-    +
-    \underbrace{
-        p_s(\bz,\bmu)
-    }_{\text{saddle value}}.
+    &= \underbrace{\mathcal P_s(\bx,\blmbd;\bz,\bmu)-d_s(\blmbd;\bz,\bmu)}_{\text{primal gap at fixed }\blmbd}
+     + \underbrace{p_s(\bz,\bmu)-d_s(\blmbd;\bz,\bmu)}_{\text{dual gap}}
+     + p_s(\bz,\bmu).
 \end{aligned}
 \label{eq:lyapunov-decomposition}
 \end{equation}
-The above decomposition separates the primal and dual optimality gaps from
-the saddle value and will be useful in establishing the descent estimate.
+Both gaps are nonnegative, so $\Psi_s\ge p_s$.
 
-At iteration $k$, for each pair $(s^k,\bmu^k)$, we use the shorthand
-\[
-    \mathcal P_k(\bx,\blmbd;\bz)
-    :=\mathcal P_{s_k}(\bx,\blmbd;\bz,\bmu^k),
-\]
-and, correspondingly,
-\[
-    d_k(\blmbd;\bz)
-    := d_{s_k}(\blmbd;\bz,\bmu^k)
-    =\min_{\bx\in\RR^n}\mathcal P_k(\bx,\blmbd;\bz),
-\]
-and
-\[
-    p_k(\bz)
-    :=p_{s_k}(\bz,\bmu^k)
-    =\max_{\blmbd\in\RR^m}d_k(\blmbd;\bz)
-    =\min_{\bx\in\RR^n}\max_{\blmbd\in\RR^m}
-      \mathcal P_k(\bx,\blmbd;\bz).
-\]
-
-For the Lyapunov function, we have
-\[
-    \Psi_k(\bx,\blmbd;\bz)
-    :=\Psi_{s_k}(\bx,\blmbd;\bz,\bmu^k)
-\]
-\[
-    =\mathcal P_{s_k}(\bx,\blmbd;\bz,\bmu^k)
-    -2d_{s_k}(\blmbd;\bz,\bmu^k)
-    +2p_{s_k}(\bz,\bmu^k).
-\]
-We also use the incremental notation
-\[
-    \Delta_{\bx}^{k+1}:=\bx^{k+1}-\bx^k,\qquad
-    \Delta_{\blmbd}^{k+1}:=\blmbd^{k+1}-\blmbd^k,
-\]
-\[
-    \Delta_{\bz}^{k+1}:=\bz^{k+1}-\bz^k,\qquad
-    \Delta_{\bmu}^{k+1}:=\bmu^{k+1}-\bmu^k.
-\]
-
-
-Table~\ref{tab:notation-value-functions} summarizes the notation used below.
-\begin{table}[t]
-    \centering
-    \caption{Notation for value functions and related quantities.}
-    \label{tab:notation-value-functions}
-    \small
-    \renewcommand{\arraystretch}{1.15}
-    \setlength{\tabcolsep}{4pt}
-    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.24\textwidth}
-                                    >{\raggedright\arraybackslash}p{0.43\textwidth}
-                                    >{\raggedright\arraybackslash}X@{}}
-        \toprule
-        Notation & Definition & Description \\
-        \midrule
-        $d_k(\blmbd;\bz)$
-        & $\displaystyle\min_{\bx\in\RR^n}\mathcal P_k(\bx,\blmbd;\bz)$
-        & Dual value function \\
-        $\bx_k(\blmbd,\bz)$
-        & $\displaystyle\argmin_{\bx\in\RR^n}\mathcal P_k(\bx,\blmbd;\bz)$
-        & Minimizer for fixed $(\blmbd,\bz)$ \\
-        $p_k(\bz)$
-        & $\displaystyle\min_{\bx\in\RR^n}\max_{\blmbd\in\RR^m}\mathcal P_k(\bx,\blmbd;\bz)$
-        & Saddle value function \\
-        $\blmbd_k^\star(\bz)$
-        & $\displaystyle\argmax_{\blmbd\in\RR^m}d_k(\blmbd;\bz)$
-        & Dual component of the saddle point \\
-        $\bx_k^\star(\bz)$
-        & $\displaystyle\argmin_{\bx\in\RR^n}\max_{\blmbd\in\RR^m}\mathcal P_k(\bx,\blmbd;\bz)$
-        & Primal component of the saddle point \\
-        \bottomrule
-    \end{tabularx}
-\end{table}
+\paragraph{Iteration-$k$ shorthand.}
+At iteration $k$ we evaluate the above objects at $(s,\bmu)=(s_k,\bmu^k)$,
+replace the subscript $s$ by $k$, and suppress $\bmu^k$. For example,
+$\mathcal P_k(\bx,\blmbd;\bz):=\mathcal P_{s_k}(\bx,\blmbd;\bz,\bmu^k)$ and
+$d_k(\blmbd;\bz):=d_{s_k}(\blmbd;\bz,\bmu^k)$; the quantities
+$p_k$, $\bx_k$, $\blmbd_k^\star$, $\bx_k^\star$, and $\Psi_k$ are defined
+analogously. We also write
+$\Delta_{\bx}^{k+1}:=\bx^{k+1}-\bx^k$, and define
+$\Delta_{\blmbd}^{k+1}$, $\Delta_{\bz}^{k+1}$, and $\Delta_{\bmu}^{k+1}$
+in the same way.
 
 \subsection{Basic One-Step Estimate}
 \label{subsec:basic-one-step}
@@ -1638,7 +1579,7 @@ Under the conditions of Proposition~\ref{prop:curvature-smoothness}, for all $k\
 \begin{enumerate}[label=(\roman*)]
 \item
 For every \(\bz \in \RR^n \), the minimizer
-\(\bx_k(\blmbd,\bz)\) is unique and
+\(\bx_k(\blmbd;\bz)\) is unique and
 \(\frac{G_{\cal A}}{\mu_\gamma}\)-Lipschitz continuous in
 \(\blmbd\).
 
@@ -1649,7 +1590,7 @@ For every \(\bz \in \RR^n \), the minimizer
     \nabla_{\blmbd}d_k(\blmbd;\bz)
     =
     \nabla_{\blmbd}\mathcal P_k
-    \bigl(\bx_k(\blmbd,\bz),\blmbd;\bz\bigr),
+    \bigl(\bx_k(\blmbd;\bz),\blmbd;\bz\bigr),
 \]
 where \(L_{d,k}:=\frac1\rho+\frac1{s_k}+\frac{G_{\cal A}^2}{\mu_\gamma}\).
 
@@ -1673,9 +1614,10 @@ Lemma~\ref{lem:v2-value-regularity} hold, and let the iterates
 be generated by Algorithm~\ref{alg:ddlalm} with parameters satisfying
 \eqref{eq:basic-parameter-condition}.
 For every $k\ge 0$, assume that
-\[
+\begin{equation}
+\label{eq:dual-gain-condition}
     \frac{1}{\tau_k}+\frac{1}{2s_k} \ge 2L_{d,k}.
-\]
+\end{equation}
 Then the following holds
 \begin{equation*}
 \begin{aligned}
@@ -1876,66 +1818,51 @@ $k\ge0$,
 \end{equation}
 \end{lemma}
 
-The augmented estimate contains two types of terms that require uniform
-control. The first type involves the multiplier and center increments,
-such as $\|\blmbd^{k+1}-\bmu^k\|$ and
-$\|\bmu^{k+1}-\bmu^k\|$. The second type arises from the dependence of
-the value functions on the moving parameters $(s_k,\bmu^k)$. We first
-establish boundedness of the multiplier and center sequences. This gives
-iteration-independent bounds for the subsequent stability and transport
-estimates.
+Two gaps remain before $\Phi_k$ admits a genuine descent inequality: the augmented estimate still carries an indefinite cross term and positive multiplier/center-increment terms, and its left-hand side compares $d_k, p_k$ at both endpoints rather than the true $k \to k+1$ potential difference, which requires $d_{k+1}, p_{k+1}$. 
 
+For that, we establish boundedness of the multipliers directly, rather than assuming compactness a priori: both multipliers are controlled by the AL structure and the inner residual, not by projection onto a compact set.
 \begin{lemma}
 \label{lem:current-multiplier-boundedness}
 Suppose Assumptions~\ref{ass:smoothness} and~\ref{ass:h} hold.
 Let the iterates be generated by Algorithm~\ref{alg:ddlalm} with
 \eqref{eq:basic-parameter-condition} and
-\[
+\begin{equation}
+\label{eq:multiplier-boundedness-condition}
     \tau_k\left(\frac1\rho+\frac1{s_k}\right)\le1.
-\]
-Let
+\end{equation}
+Define the constant independent of $k$
 \[
     M:=\max\{\|\blmbd^0\|,\|\bmu^0\|,L_h\}.
 \]
-Then, for every $k\ge0$,
+Then, for every $k\ge0$, the following holds
 \[
     \|\blmbd^k\|\le M,
     \qquad
-    \|\bmu^k\|\le M,
+    \|\bmu^k\|\le M.
 \]
-and
+Moreover, for every $k\ge0$ and every $\bz\in\RR^n$, it holds that
 \[
-    \|\bmu^{k+1}-\bmu^k\|
-    \le 2M\beta_k.
+    \|\blmbd_k^\star(\bz)\|\le M.
 \]
-For every $s>0$, $\|\bmu\|\le M$, and fixed $\bx$, the maximizer of
-$\mathcal P_s(\bx,\cdot;\bz,\bmu)$ also has norm at most $M$.
-In particular, $\|\blmbd_k^\star(\bz)\|\le M$ for every $\bz$.
 \end{lemma}
 
-The augmented one-step estimate also contains the indefinite term
-\[
-\left\langle
-\bx_k(\blmbd^{k+1};\bz^{k+1})-\bx_k^\star(\bz^k),
-\bx^{k+1}-\bz^k
-\right\rangle.
-\]
-Its first factor combines two effects: the dual iterate may differ from
-the dual maximizer, and the saddle-point primal component may move when
-$\bz$ changes. The next lemma quantifies both effects. The first estimate
-relates the dual suboptimality gap $p_k-d_k$ to the corresponding primal
-distance, while the second estimate controls the sensitivity of the
-primal minimizers to the center variable.
+% The augmented one-step estimate also contains the indefinite term
+% \[
+% \left\langle
+% \bx_k(\blmbd^{k+1};\bz^{k+1})-\bx_k^\star(\bz^k),
+% \bx^{k+1}-\bz^k
+% \right\rangle.
+% \]
+% Its first factor combines two effects: the dual iterate may differ from
+% the dual maximizer, and the saddle-point primal component may move when
+% $\bz$ changes. The next lemma quantifies both effects. The first estimate
+% relates the dual suboptimality gap $p_k-d_k$ to the corresponding primal
+% distance, while the second estimate controls the sensitivity of the
+% primal minimizers to the center variable.
 
 \begin{lemma}
 \label{lem:saddle-center-stability}
-Under the conditions of Proposition~\ref{prop:curvature-smoothness},
-the minimizers and maximizer in Table~\ref{tab:notation-value-functions}
-are unique and satisfy
-\[
-    \bx_k^\star(\bz)=\bx_k(\blmbd_k^\star(\bz);\bz).
-\]
-For every $k\ge0$, $\blmbd\in\RR^m$, and $\bz\in\RR^n$,
+Under the conditions of Proposition~\ref{prop:curvature-smoothness}, for every $k\ge0$, $\blmbd\in\RR^m$, and $\bz\in\RR^n$, it holds that
 \begin{equation}
 \label{eq:current-saddle-stability}
 \|\bx_k(\blmbd;\bz)-\bx_k^\star(\bz)\|^2
@@ -1954,98 +1881,73 @@ For any $\bz,\bz'\in\RR^n$,
 \end{equation}
 \end{lemma}
 
-\begin{lemma}
-\label{lem:frozen-three-value-descent}
-Suppose the conditions of Proposition~\ref{prop:curvature-smoothness}
-hold, and let the iterates be generated by Algorithm~\ref{alg:ddlalm}.
-Assume that, for every $k\ge0$,
+We now establish an approximate descent inequality for
+\Cref{alg:ddlalm} with respect to the Lyapunov function defined in \eqref{eq:lyapunov-decomposition}. We assume 
+the parameters are chosen as
 \begin{equation}
-\label{eq:frozen-descent-stepsizes}
-\eta_kL_x\le\frac12,\qquad
-\tau_kL_{d,k}\le\frac12,\qquad
-\tau_kG_{\cal A}^2\le\frac{\eta_k\mu_\gamma^2}{36},\qquad
-0<\alpha_k\le
-\min\left\{\frac1{36},\frac{\gamma\mu_\gamma\tau_k}{36s_k}\right\},
+\label{eq:parameter-choice}
+\begin{gathered}
+    0<\gamma<\frac{1}{2L_{\calD,\bx}},\qquad
+    0<s_k\le s_{k+1},\qquad
+    0<\beta_k\le1,\qquad
+    0<\eta_k\le\frac{1}{2L_x},\\
+    0<\tau_k\le\left(\max\left\{2L_{d,k},\,
+        \frac{36G_{\mathcal A}^2}{\eta_k\mu_\gamma^2}\right\}\right)^{-1},\qquad
+    0<\alpha_k\le\frac1{36}\min\left\{1,\,
+        \frac{\gamma\mu_\gamma\tau_k}{s_k}\right\},
+\end{gathered}
 \end{equation}
-where $\eta_k,\tau_k>0$. Then
-\begin{equation}
-\label{eq:frozen-three-value-descent}
-\begin{aligned}
-&\Psi_k(\bx^{k+1},\blmbd^{k+1};\bz^{k+1})
--\Psi_k(\bx^k,\blmbd^k;\bz^k) \\
-&\quad\le
--\frac1{4\eta_k}\|\Delta_{\bx}^{k+1}\|^2
--\frac1{8\tau_k}\|\Delta_{\blmbd}^{k+1}\|^2
--\frac{\alpha_k}{2\gamma}\|\bx^{k+1}-\bz^k\|^2.
-\end{aligned}
-\end{equation}
-\end{lemma}
-
-% The constants in \eqref{eq:frozen-three-value-descent} are explicit:
-% the coefficients are $1/(4\eta_k)$, $1/(8\tau_k)$, and
-% $\alpha_k/(2\gamma)$. In particular, their normalized values
-% $1/4$, $1/8$, and $1/2$ are independent of $k$, $s_k$, and the terminal
-% horizon. No division by $G_{\cal A}$ is required in
-% \eqref{eq:frozen-descent-stepsizes}, so these conditions also cover
-% $G_{\cal A}=0$.
+where $L_{d,k}:=\rho^{-1}+s_k^{-1}+G_{\mathcal A}^2/\mu_\gamma$.
+Since $L_{d,k}\ge\rho^{-1}+s_k^{-1}$, \eqref{eq:parameter-choice} implies the conditions of Proposition~\ref{prop:curvature-smoothness},
+Lemma~\ref{lem:current-multiplier-boundedness},
+\eqref{eq:basic-parameter-condition},
+\eqref{eq:dual-gain-condition}, and
+\eqref{eq:multiplier-boundedness-condition}.
 
 \begin{lemma}
-\label{lem:current-parameter-transport}
-Under the conditions of Proposition~\ref{prop:curvature-smoothness} and
-Lemma~\ref{lem:current-multiplier-boundedness}, for any fixed
-$(\bx,\blmbd,\bz)$ with $\|\blmbd\|\le M$,
-\begin{equation}
-\label{eq:current-parameter-transport}
-\left|\Psi_{k+1}(\bx,\blmbd;\bz)-\Psi_k(\bx,\blmbd;\bz)\right|
-\le
-10M^2\left|\frac1{s_{k+1}}-\frac1{s_k}\right|
-+10M\frac1{s_k}\|\bmu^{k+1}-\bmu^k\|.
-\end{equation}
-Consequently, the following holds
-\[
-\left|\Psi_{k+1}(\bx,\blmbd;\bz)-\Psi_k(\bx,\blmbd;\bz)\right|
-\le
-10M^2\left|\frac1{s_{k+1}}-\frac1{s_k}\right|
-+20M^2\frac{\beta_k}{s_k}.
-\]
+\label{lem:moving-three-value-descent}
+\blue{Suppose that Assumptions~\ref{ass:level-boundedness},
+\ref{ass:smoothness}, and~\ref{ass:h} hold, and let}
+$\{(\bx^k,\blmbd^k,\bz^k,\bmu^k)\}$ be generated by \Cref{alg:ddlalm}
+with parameters satisfying~\eqref{eq:parameter-choice}. Then for every
+$k\ge0$:
+\begin{enumerate}[label=(\alph*)]
+    \item for all $\bx\in\RR^n$, $\blmbd\in\RR^m$, and $\bz\in\RR^n$,
+    \begin{equation}
+    \label{eq:current-lyapunov-lower-bound}
+        \Psi_k(\bx,\blmbd;\bz)\ge p_k(\bz)
+        \ge\inf_{\bx\in\RR^n}F(\bx)-\frac{(L_h+M)^2}{2s_0};
+    \end{equation}
+    \item the iterates satisfy
+    \begin{equation}
+    \label{eq:full-lyapunov-descent}
+    \begin{aligned}
+        &\Psi_{k+1}(\bx^{k+1},\blmbd^{k+1};\bz^{k+1})
+         -\Psi_k(\bx^k,\blmbd^k;\bz^k)\\
+        &\qquad\le
+         -\frac1{4\eta_k}\|\Delta_{\bx}^{k+1}\|^2
+         -\frac1{8\tau_k}\|\Delta_{\blmbd}^{k+1}\|^2
+         -\frac{\alpha_k}{2\gamma}\|\bx^{k+1}-\bz^k\|^2
+         +\delta_k,
+    \end{aligned}
+    \end{equation}
+    where
+    $\delta_k:=10M^2\bigl(s_k^{-1}-s_{k+1}^{-1}\bigr)+20M^2\beta_k/s_k$.
+\end{enumerate}
 \end{lemma}
 
-Combining Lemmas~\ref{lem:frozen-three-value-descent}
-and~\ref{lem:current-parameter-transport} gives the full one-step estimate
-\begin{equation}
-\label{eq:full-lyapunov-descent}
-\begin{aligned}
-&\Psi_{k+1}(\bx^{k+1},\blmbd^{k+1};\bz^{k+1})
--\Psi_k(\bx^k,\blmbd^k;\bz^k) \\
-&\quad\le
--\frac1{4\eta_k}\|\Delta_{\bx}^{k+1}\|^2
--\frac1{8\tau_k}\|\Delta_{\blmbd}^{k+1}\|^2
--\frac{\alpha_k}{2\gamma}\|\bx^{k+1}-\bz^k\|^2 \\
-&\qquad+
-10M^2\left|\frac1{s_{k+1}}-\frac1{s_k}\right|
-+20M^2\frac{\beta_k}{s_k}.
-\end{aligned}
-\end{equation}
-For $s_k=c_s(k+1)^{1/3}$ and
-$\beta_k=\theta_\mu/(k+k_0)$ with $k_0\ge1$, the total error satisfies
-\begin{equation}
-\label{eq:explicit-transport-budget}
-\sum_{k=0}^\infty
-\left[
-10M^2\left|\frac1{s_{k+1}}-\frac1{s_k}\right|
-+20M^2\frac{\beta_k}{s_k}
-\right]
-\le\frac{(10+80\theta_\mu)M^2}{c_s}.
-\end{equation}
-If $F$ is bounded below, then
-\begin{equation}
-\label{eq:current-lyapunov-lower-bound}
-\Psi_k(\bx,\blmbd;\bz)\ge p_k(\bz)
-\ge\inf_{\bx\in\RR^n}F(\bx)-\frac{(L_h+M)^2}{2s_0}.
-\end{equation}
-Thus \eqref{eq:full-lyapunov-descent} telescopes to a finite weighted
-sum of the three squared-step quantities, with an upper bound independent
-of the number of iterations.
+
+% For $s_k=c_s(k+1)^{1/3}$ and
+% $\beta_k=\theta_\mu/(k+k_0)$ with $k_0\ge1$, the total error satisfies
+% \begin{equation}
+% \label{eq:explicit-transport-budget}
+% \sum_{k=0}^\infty
+% \left[
+% 10M^2\left|\frac1{s_{k+1}}-\frac1{s_k}\right|
+% +20M^2\frac{\beta_k}{s_k}
+% \right]
+% \le\frac{(10+80\theta_\mu)M^2}{c_s}.
+% \end{equation}
 
 % The augmented estimate adds $2p_k$ to the partial potential in
 % \eqref{eq:partial-potential}. It uses the $1/\gamma$-smoothness of $p_k$
@@ -2072,7 +1974,7 @@ of the number of iterations.
 % \begin{equation}
 % \label{eq:saddle-primal-stability}
 % \left\|
-%     \bx_k(\blmbd,\bz)-\bx_k^\star(\bz)
+%     \bx_k(\blmbd;\bz)-\bx_k^\star(\bz)
 % \right\|
 % \le
 % \frac{G_{\mathcal A}}{\mu_\gamma}
@@ -2096,7 +1998,7 @@ of the number of iterations.
 % \begin{equation}
 % \label{eq:saddle-point-stability-final}
 % \left\|
-%     \bx_k(\blmbd,\bz)-\bx_k^\star(\bz)
+%     \bx_k(\blmbd;\bz)-\bx_k^\star(\bz)
 % \right\|^2
 % \le
 % \frac{2G_{\mathcal A}^2s_k}{\mu_\gamma^2}
@@ -2207,7 +2109,7 @@ Danskin's theorem and Lemma~\ref{lem:v2-value-regularity} give
 \nabla_{\blmbd}d_k(\blmbd^k;\bz^k)
 =
 \nabla_{\blmbd}\mathcal P_k
-\bigl(\bx_k(\blmbd^k,\bz^k),\blmbd^k,\bz^k\bigr).
+\bigl(\bx_k(\blmbd^k;\bz^k),\blmbd^k,\bz^k\bigr).
 \]
 The cross-Lipschitz estimate in
 Proposition~\ref{prop:curvature-smoothness} therefore yields
@@ -2220,12 +2122,12 @@ Proposition~\ref{prop:curvature-smoothness} therefore yields
 &\quad=
 \tau_k\left\langle
 \nabla_{\blmbd}\mathcal P_k
-\bigl(\bx_k(\blmbd^k,\bz^k),\blmbd^k,\bz^k\bigr),g^k
+\bigl(\bx_k(\blmbd^k;\bz^k),\blmbd^k,\bz^k\bigr),g^k
 \right\rangle \\
 &\quad\ge
 \tau_k\|g^k\|^2
 -\tau_kG_{\cal A}
-\|\bx^{k+1}-\bx_k(\blmbd^k,\bz^k)\|\|g^k\|.
+\|\bx^{k+1}-\bx_k(\blmbd^k;\bz^k)\|\|g^k\|.
 \end{aligned}
 \]
 Using
@@ -2243,7 +2145,7 @@ we obtain
 &\quad\ge
 \left(\frac{1}{\tau_k}-\frac{L_{d,k}}{2}\right)
 \|\Delta_{\blmbd}^{k+1}\|^2
--G_{\cal A}\|\bx^{k+1}-\bx_k(\blmbd^k,\bz^k)\|
+-G_{\cal A}\|\bx^{k+1}-\bx_k(\blmbd^k;\bz^k)\|
 \|\Delta_{\blmbd}^{k+1}\|.
 \end{aligned}
 \label{eq:dual-value-gain-appendix}
@@ -2263,19 +2165,19 @@ Multiplying \eqref{eq:dual-value-gain-appendix} by $2$ and rearranging gives
 2\bigl[d_k(\blmbd^{k+1};\bz^k)-d_k(\blmbd^k;\bz^k)\bigr]
 -b_k\|\Delta_{\blmbd}^{k+1}\|^2 \\
 &\qquad+
-2G_{\cal A}\|\bx^{k+1}-\bx_k(\blmbd^k,\bz^k)\|
+2G_{\cal A}\|\bx^{k+1}-\bx_k(\blmbd^k;\bz^k)\|
 \|\Delta_{\blmbd}^{k+1}\|.
 \end{aligned}
 \]
 The assumed parameter condition implies $b_k\ge L_{d,k}>0$. Young's inequality
 with parameter $L_{d,k}$ gives
 \[
-2G_{\cal A}\|\bx^{k+1}-\bx_k(\blmbd^k,\bz^k)\|
+2G_{\cal A}\|\bx^{k+1}-\bx_k(\blmbd^k;\bz^k)\|
 \|\Delta_{\blmbd}^{k+1}\|
 \le
 \frac{L_{d,k}}{2}\|\Delta_{\blmbd}^{k+1}\|^2
 +\frac{2G_{\cal A}^2}{L_{d,k}}
-\|\bx^{k+1}-\bx_k(\blmbd^k,\bz^k)\|^2.
+\|\bx^{k+1}-\bx_k(\blmbd^k;\bz^k)\|^2.
 \]
 Since $b_k\ge L_{d,k}$, we have
 \[
@@ -2474,15 +2376,15 @@ $\|\blmbd^k\|,\|\bmu^k\|\le M$ by induction from the definition of $M$.
 The center update then gives
 $\|\bmu^{k+1}-\bmu^k\|\le2M\beta_k$.
 
-For fixed $\bx$, $s>0$, and $\|\bmu\|\le M$, strong concavity gives
-a unique dual maximizer. Its first-order condition is
+At the saddle point, the dual first-order condition gives
 \[
-\blmbd=\frac{s}{\rho+s}\bq(\bx,\blmbd)
-+\frac{\rho}{\rho+s}\bmu.
+\blmbd_k^\star(\bz)
+=\frac{s_k}{\rho+s_k}
+  \bq\bigl(\bx_k^\star(\bz),\blmbd_k^\star(\bz)\bigr)
++\frac{\rho}{\rho+s_k}\bmu^k.
 \]
-It is therefore contained in the ball of radius $M$. At a saddle point,
-$\blmbd_k^\star(\bz)$ is this maximizer with $\bx=\bx_k^\star(\bz)$,
-which proves the last assertion.
+Since both vectors in this convex combination have norm at most $M$,
+$\|\blmbd_k^\star(\bz)\|\le M$.
 \end{proof}
 
 \begin{proof}[Proof of Lemma~\ref{lem:saddle-center-stability}]
@@ -2538,35 +2440,121 @@ $2\gamma\mu_\gamma>1$, this verifies the smoothness bound used above:
 \]
 \end{proof}
 
-\begin{proof}[Proof of Lemma~\ref{lem:frozen-three-value-descent}]
-Fix $(s_k,\bmu^k)$. Translate the dual variable by
-$\nu=\blmbd-\bmu^k$. Then the frozen update is the unprojected
-Perturbed Smoothed GDA update for the smooth NC--SC payoff
+\begin{proof}[Proof of Lemma~\ref{lem:moving-three-value-descent}]
+Let $u_{k+1}:=(\bx^{k+1},\blmbd^{k+1},\bz^{k+1})$ and define
 \[
-\widetilde{\mathcal P}_k(\bx,\nu;\bz)
-:=\mathcal D_\rho(\bx,\nu+\bmu^k)
-+\frac1{2\gamma}\|\bx-\bz\|^2
--\frac{r_k}{2}\|\nu\|^2.
+\widehat\Psi_{k+1|k}:=
+\mathcal P_{k+1}(\bx^{k+1},\blmbd^{k+1};\bz^{k+1})
+-2d_k(\blmbd^{k+1};\bz^{k+1})+2p_k(\bz^{k+1}).
 \]
-The coefficient conditions in \eqref{eq:frozen-descent-stepsizes}
-are precisely the frozen-transfer caps for this translated payoff:
-$\eta_k$ is the primal step, $\tau_k$ is the dual step, and
-$\alpha_k$ is the center step. Applying the frozen three-value transfer
-estimate and substituting $r_x=1/\gamma$ gives
+Then
 \[
-\Psi_k(\bx^{k+1},\blmbd^{k+1};\bz^{k+1})
--\Psi_k(\bx^k,\blmbd^k;\bz^k)
-\le
+\Psi_{k+1}(u_{k+1})-\Psi_k(u_k)
+=\widehat\Psi_{k+1|k}-\Psi_k(u_k)+R_k,
+\]
+where
+\[
+R_k:=2\bigl[d_k(\blmbd^{k+1};\bz^{k+1})
+-d_{k+1}(\blmbd^{k+1};\bz^{k+1})\bigr]
++2\bigl[p_{k+1}(\bz^{k+1})-p_k(\bz^{k+1})\bigr].
+\]
+
+Apply Lemma~\ref{lem:augmented-one-step} to the first difference.
+Decompose the indefinite term at $\bx_k^\star(\bz^{k+1})$ and apply
+Lemma~\ref{lem:saddle-center-stability}, followed by Young's inequality.
+The four bounds in \eqref{eq:parameter-choice} absorb the resulting
+cross terms and leave
+\[
+\begin{aligned}
+\widehat\Psi_{k+1|k}-\Psi_k(u_k)
+\le{}&
 -\frac1{4\eta_k}\|\Delta_{\bx}^{k+1}\|^2
 -\frac1{8\tau_k}\|\Delta_{\blmbd}^{k+1}\|^2
--\frac{\alpha_k}{2\gamma}
-\|\bx^{k+1}-\bz^k\|^2.
+-\frac{\alpha_k}{2\gamma}\|\bx^{k+1}-\bz^k\|^2 \\
+&+\frac{\beta_k(2-\beta_k)}{2s_k}
+\|\blmbd^{k+1}-\bmu^k\|^2
+\\
+&+\frac12\left(\frac1{s_k}-\frac1{s_{k+1}}\right)
+\|\blmbd^{k+1}-\bmu^{k+1}\|^2.
+\end{aligned}
 \]
-The displayed coefficients are the remaining margins after the three
-caps in \eqref{eq:frozen-descent-stepsizes} absorb the cross terms.
-This proves \eqref{eq:frozen-three-value-descent}.
+
+It remains to bound $R_k$. Lemma~\ref{lem:current-multiplier-boundedness}
+gives $\|\blmbd^j\|,\|\bmu^j\|,\|\blmbd_j^\star(\bz)\|\le M$ and
+$\|\bmu^{k+1}-\bmu^k\|\le2M\beta_k$. Direct comparison of the two
+quadratic damping terms gives, uniformly in $\bx$ and $\bz$,
+\[
+|d_{k+1}(\blmbd;\bz)-d_k(\blmbd;\bz)|
+\le\Delta_k,
+\qquad
+|p_{k+1}(\bz)-p_k(\bz)|\le\Delta_k,
+\]
+where
+\[
+\Delta_k:=2M^2\left(\frac1{s_k}-\frac1{s_{k+1}}\right)
++\frac{2M}{s_k}\|\bmu^{k+1}-\bmu^k\|.
+\]
+Consequently,
+\[
+|R_k|\le4\Delta_k
+\le8M^2\left(\frac1{s_k}-\frac1{s_{k+1}}\right)
++16M^2\frac{\beta_k}{s_k}.
+\]
+The two explicit positive terms above satisfy
+\[
+\frac{\beta_k(2-\beta_k)}{2s_k}
+\|\blmbd^{k+1}-\bmu^k\|^2
+\le4M^2\frac{\beta_k}{s_k},
+\]
+and
+\[
+\frac12\left(\frac1{s_k}-\frac1{s_{k+1}}\right)
+\|\blmbd^{k+1}-\bmu^{k+1}\|^2
+\le2M^2\left(\frac1{s_k}-\frac1{s_{k+1}}\right).
+\]
+Adding the estimates proves \eqref{eq:full-lyapunov-descent}.
+
+For the stated schedule, the two error series satisfy
+\[
+\sum_{k=0}^\infty\left(\frac1{s_k}-\frac1{s_{k+1}}\right)=\frac1{c_s},
+\qquad
+\sum_{k=0}^\infty\frac{\beta_k}{s_k}
+\le\frac{4\theta_\mu}{c_s},
+\]
+which makes the accumulated transport error finite. The lower bound
+\eqref{eq:current-lyapunov-lower-bound} follows as follows. For any
+$\blmbd\in\partial h(\calA(\bx))$, proximal optimality gives
+$\by(\bx,\blmbd)=\calA(\bx)$ and hence
+$\mathcal D_\rho(\bx,\blmbd)=F(\bx)$. Since
+$\|\blmbd\|\le L_h$ and $\|\bmu^k\|\le M$,
+\[
+\max_{\blmbd}\mathcal P_k(\bx,\blmbd;\bz)
+\ge F(\bx)+\frac1{2\gamma}\|\bx-\bz\|^2
+-\frac{(L_h+M)^2}{2s_k}.
+\]
+Minimizing in $\bx$ and using $s_k\ge s_0$ proves
+\eqref{eq:current-lyapunov-lower-bound}, because
+$\Psi_k=(\mathcal P_k-d_k)+(p_k-d_k)+p_k\ge p_k$.
+Summing \eqref{eq:full-lyapunov-descent} and using the error budget
+then gives
+\[
+\begin{aligned}
+&\sum_{k=0}^{N-1}\left[
+\frac1{4\eta_k}\|\Delta_{\bx}^{k+1}\|^2
++\frac1{8\tau_k}\|\Delta_{\blmbd}^{k+1}\|^2
++\frac{\alpha_k}{2\gamma}\|\bx^{k+1}-\bz^k\|^2\right] \\
+&\quad\le
+\Psi_0(\bx^0,\blmbd^0;\bz^0)-\inf_{\bx\in\RR^n}F(\bx)
++\frac{(L_h+M)^2}{2s_0}
++\frac{(10+80\theta_\mu)M^2}{c_s},
+\qquad N\ge1.
+\end{aligned}
+\]
 \end{proof}
 
+% The former standalone transport proof is retained below for reference.
+% The merged proof above now performs the parameter comparison directly.
+\iffalse
 \begin{proof}[Proof of Lemma~\ref{lem:current-parameter-transport}]
 For $\|\blmbd\|,\|\bmu\|,\|\bmu'\|\le M$, the center-dependent
 quadratic term satisfies
@@ -2596,10 +2584,15 @@ $s_{k+1}$. The two inequalities give the uniform bound
 +\frac{2M}{s_k}\|\bmu^{k+1}-\bmu^k\|.
 \]
 Taking minima over $\bx$ preserves this bound for $d_{k+1}-d_k$.
-By Lemma~\ref{lem:current-multiplier-boundedness}, for each $\bx$ the
-unconstrained dual maxima defining $p_k$ and $p_{k+1}$ are attained
-in $\{\blmbd:\|\blmbd\|\le M\}$. Thus the same uniform bound passes
-through the maximum and minimum defining $p_k$ and $p_{k+1}$.
+By Lemma~\ref{lem:current-multiplier-boundedness}, the maximizers
+$\blmbd_k^\star(\bz)$ and $\blmbd_{k+1}^\star(\bz)$ defining
+$p_k(\bz)$ and $p_{k+1}(\bz)$ lie in $\{\blmbd:\|\blmbd\|\le M\}$.
+Comparing each maximum at the other index's maximizer gives
+$|p_{k+1}(\bz)-p_k(\bz)|\le\Delta_k$, where
+\[
+\Delta_k:=2M^2\left|\frac1{s_{k+1}}-\frac1{s_k}\right|
++\frac{2M}{s_k}\|\bmu^{k+1}-\bmu^k\|.
+\]
 The coefficients of $\Psi=\mathcal P-2d+2p$ have absolute sum $5$,
 which proves \eqref{eq:current-parameter-transport}.
 The bound $\|\bmu^{k+1}-\bmu^k\|\le2M\beta_k$ gives the stated
@@ -2653,28 +2646,32 @@ proves the claimed uniform lower bound. Summing
 \end{aligned}
 \]
 \end{proof}
+\fi
+
 
 \begin{proof}[Proof of Theorem~\ref{thm:main}]
 The schedule \eqref{eq:ddlalm-parameter-schedule} satisfies
-\eqref{eq:frozen-descent-stepsizes}: $\eta_kL_x=1/2$,
+\eqref{eq:parameter-choice}: $\eta_kL_x=1/2$,
 $\tau_kL_{d,k}\le\tau_kL_{d,0}\le1/2$,
 $\tau_kG_{\cal A}^2\le\mu_\gamma^2/(72L_x)
 =\eta_k\mu_\gamma^2/36$, and the two bounds on $\alpha_k$ follow
-from $s_k\ge s_0$ and its definition. Since $L_{d,k}\ge1/\rho+1/s_k$,
+from $s_k\ge s_0$ and its definition. Moreover,
+$s_{k+1}\ge s_k>0$, $\eta_k,\tau_k>0$, and
+$0<\beta_k\le1$. Since $L_{d,k}\ge1/\rho+1/s_k$,
 the multiplier-boundedness condition also holds.
 Level-boundedness and continuity of $F$ imply
 $\inf_{\bx}F(\bx)>-\infty$. The master budget proved after
-Lemma~\ref{lem:current-parameter-transport} is therefore finite and
+Lemma~\ref{lem:moving-three-value-descent} is therefore finite and
 independent of $K$.
 
-The tail has $\lfloor K/2\rfloor\ge K/3$ elements. Because the primal
-and dual stepsizes are fixed, and
-$\alpha_k\ge\alpha_{K-1}=\Theta(K^{-1/3})$ on the tail, averaging
-the master budget gives
+The tail has $\lfloor K/2\rfloor\ge K/3$ elements. Since the primal
+and dual stepsizes are fixed and
+$\alpha_k\ge\alpha_{K-1}=\Theta(K^{-1/3})$ on the tail, the master
+budget and the definition of $\kappa$ give
 \[
-\mathbb E\|\Delta_{\bx}^{I_K+1}\|^2=O(K^{-1}),\qquad
-\mathbb E\|\Delta_{\blmbd}^{I_K+1}\|^2=O(K^{-1}),\qquad
-\mathbb E\|\bx^{I_K+1}-\bz^{I_K}\|^2=O(K^{-2/3}).
+\|\Delta_{\bx}^{\kappa+1}\|^2=O(K^{-1}),\qquad
+\|\Delta_{\blmbd}^{\kappa+1}\|^2=O(K^{-1}),\qquad
+\|\bx^{\kappa+1}-\bz^\kappa\|^2=O(K^{-2/3}).
 \]
 The output certificate follows directly from
 \eqref{eq:certificate-membership}. For stationarity, the $\bx$-update
@@ -2695,10 +2692,9 @@ and hence
 \|{\cal A}(\bx^{k+1})-\by^{k+1}\|
 \le\frac1{\tau_k}\|\Delta_{\blmbd}^{k+1}\|+\frac{2M}{s_k}.
 \]
-Square the last two bounds using $(a+b)^2\le2a^2+2b^2$, take
-expectations over $I_K$, and use $s_{I_K}^{-2}=O(K^{-2/3})$.
-Both expected squared residuals are $O(K^{-2/3})$. Their expected
-norms are therefore $O(K^{-1/3})$ by Cauchy--Schwarz. All constants
-depend only on the problem data and fixed initialization and parameters,
-so $K=O(\epsilon^{-3})$ suffices.
+Square the last two bounds using $(a+b)^2\le2a^2+2b^2$ and use
+$s_\kappa^{-2}=O(K^{-2/3})$. Both squared residuals are
+$O(K^{-2/3})$, so their norms are $O(K^{-1/3})$. All constants depend
+only on the problem data and fixed initialization and parameters, so
+$K=O(\epsilon^{-3})$ suffices.
 \end{proof}
