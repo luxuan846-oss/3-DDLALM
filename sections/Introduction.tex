@@ -101,7 +101,7 @@ $h\circ\calA$.
 From another perspective, Problem~\eqref{prob:main} also admits a minimax reformulation. In particular, eliminating $\by$ from the Lagrangian of~\eqref{prob:split} gives
 \begin{equation}\label{eq:ncl}
   \min_{\bx\in\RR^n}\max_{\blmbd\in\RR^m}\;
-  \calL(\bx,\bq) =  \Phi(\bx,\blmbd)-h^*(\blmbd), \qquad \Phi(\bx,\blmbd):=f(\bx)+\langle\blmbd,\calA(\bx)\rangle,
+  \calL(\bx,\blmbd) =  \Phi(\bx,\blmbd)-h^*(\blmbd), \qquad \Phi(\bx,\blmbd):=f(\bx)+\langle\blmbd,\calA(\bx)\rangle,
 \end{equation}
 where $\operatorname{dom}h^*\subseteq\mathbb B(\mathbf 0,L_h)$ by
 Assumption~\ref{ass:h}. This is a nonconvex--linear instance of the smooth
@@ -134,13 +134,12 @@ concave. In our reduced augmented-Lagrangian formulation, this regularization
 has an effective-penalty interpretation:
 \begin{equation}\label{eq:intro-effective-penalty}
   \max_{\blmbd}\mathcal P_s(\bx,\blmbd;\bz,\bmu)
-  =\widehat{\calL}_{\rho+s}(\bx,\bmu)
+  =\calD_{\rho+s}(\bx,\bmu)
     +\frac{1}{2\gamma}\|\bx-\bz\|^2,
 \end{equation}
-where $\mathcal P_s$ is defined in~\eqref{eq:regularized-potential},
-with its dependent $\by$-argument suppressed, and
-$\widehat{\calL}_{\rho+s}$ is the augmented Lagrangian minimized over
-$\by$; the derivation appears in Section~\ref{sec:dual-penalty-identity}.
+where $\mathcal P_s$ is defined in~\eqref{eq:potential} and
+$\calD_{\rho+s}$ is the reduced augmented Lagrangian~\eqref{eq:reduced-al}
+with penalty $\rho+s$; see Lemma~\ref{lem:effective-penalty}.
 A zero center $\bmu=\mathbf 0$ recovers a quadratic penalty with
 coefficient $\rho+s$, which can leave a nonzero feasibility residual
 when $s$ is fixed. Updating $\bmu$ instead provides a multiplier-update
@@ -171,20 +170,33 @@ $\widetilde{\mathcal O}(\epsilon^{-2})$ complexity with fixed parameters
 for functionally constrained optimization~\cite{kim2024fast}.
 However, its feasibility argument relies on asymptotic reasoning,
 and a corresponding finite-iteration feasibility bound remains
-to be verified.  These results motivate the following question within the
-primal-smoothed single-loop framework:
-\blue{
-\begin{quote}
-  \textbf{(Q1)}
-  \emph{With a moving dual center, can an $\mathcal O(\epsilon^{-3})$
-  complexity for finding an $\epsilon$-KKT point be achieved with
-  $s$ independent of the target accuracy, or is growth of $s$ necessary?}
-\end{quote}}
+to be verified.
 
-In this paper, our current result answers the achievability part of (Q1) in the
-increasing-$s_k$ regime. Table~\ref{tab:known-results} summarizes representative complexity guarantees, contrasting accuracy-dependent schedules with fixed base
-parameters and identifying the role of primal smoothing and the dual
-update mechanism.
+In all guarantees above that reach $\mathcal O(\epsilon^{-3})$, some
+parameter grows with $1/\epsilon$: either the penalty, as in penalty methods
+and GDPA, or the dual regularization, as in Perturbed Smoothed GDA. Practical
+ALM implementations, in contrast, usually keep the penalty fixed. Growing the
+penalty is costly for a single-loop method, because the Lipschitz constant of
+$\nabla_{\bx}\calD_\rho$ increases with $\rho$ and forces the primal stepsize
+to shrink. This leads to the following question.
+\begin{quote}
+  \textbf{(Q)}
+  \emph{To reach $\mathcal O(\epsilon^{-3})$, must a single-loop linearized ALM
+  let some parameter grow with $1/\epsilon$? If so, must this growth be
+  carried by the penalty parameter?}
+\end{quote}
+We answer the first part affirmatively and the second part negatively. By
+Lemma~\ref{lem:effective-penalty}, the relevant quantity is the effective
+penalty $\rho+s$. For every choice of the primal and dual center stepsizes,
+SPLALM requires $\Omega(\epsilon^{-4})$ iterations whenever
+$\rho+s\le c_1/\epsilon$ (Theorem~\ref{thm:lower-bound}). Conversely, with
+$\rho$ fixed and only $s_k$ increasing, SPLALM reaches an $\epsilon$-KKT point
+in $\mathcal O(\epsilon^{-3})$ iterations with primal and dual stepsizes
+independent of $\epsilon$ (Theorem~\ref{thm:main}). The growth required by
+the lower bound can thus be carried entirely by the dual regularization,
+while the penalty stays fixed.
+Table~\ref{tab:known-results} summarizes representative complexity
+guarantees.
 
 % The fixed-$s$ question, including the role of primal smoothing and structural conditions that may yield faster rates, remains the subject of the research objectives stated below.
 
@@ -249,13 +261,13 @@ update mechanism.
  & $\bmu\not\equiv\mathbf 0$ & $\Theta(1)$
  & $\widetilde{\mathcal O}(\epsilon^{-2})$ & --- \\[3pt]
  \midrule
-\makecell[l]{\textbf{\emph{SPLALM}}\\\emph{Theorem~?}}
- & $\rho=\Theta(1)$ & $\gamma=\Theta(1)$
- & $\bmu\not\equiv\mathbf 0$ & $\Theta(1)$
- & ? & ? \\ 
+\makecell[l]{\textbf{\emph{SPLALM}}\\\emph{Theorem~\ref{thm:lower-bound}}}
+ & $\rho>0$ & $\gamma=\Theta(1)$
+ & any & \makecell{$\rho+s$\\$\le c_1\epsilon^{-1}$}
+ & ? & $\Omega(\epsilon^{-4})$ \\[3pt]
 \makecell[l]{\textbf{\emph{SPLALM}}\\\emph{Theorem~\ref{thm:main}}}
  & $\rho=\Theta(1)$ & $\gamma=\Theta(1)$
- & $\bmu\not\equiv\mathbf 0$ & $\Theta(\epsilon^{-1})$
+ & $\bmu\not\equiv\mathbf 0$ & $\Theta((k+1)^{1/3})$
  & $\mathcal O(\epsilon^{-3})$ & ? \\
 \bottomrule
 \end{tabular}
@@ -272,180 +284,59 @@ stationarity criterion and assumptions; lower bounds are algorithm-specific.}
 \end{table*}
 \clearpage
 
-The second question isolates the contribution of primal smoothing. Existing
-results show a complexity improvement from primal smoothing in the
-zero-centered, accuracy-dependent perturbation regime. Under a fixed
-$s$, a moving dual center, and the same approximate KKT criterion, the
-corresponding comparison with a method without primal smoothing is not
-established.
-\begin{quote}
-  \textbf{(Q2)}
-  \emph{Under a fixed $s$ and a moving dual center, what complexity gain,
-  if any, is provided by primal smoothing?}
-\end{quote}
-
-The third question concerns structural conditions that can improve the
-fixed-$s$ rate. A global error bound linking the dual-center error to the
-solution of the primal proximal subproblem could reduce the amount of dual
-tracking required at each iteration. Such conditions are known in special
-settings, including linearly constrained problems and pointwise maxima, but
-their analogue for the present composite problem with nonlinear $\calA$
-remains to be characterized.
-\begin{quote}
-  \textbf{(Q3)}
-  \emph{Which structural conditions on $(f,h,\calA)$ yield a center--primal
-  solution error bound under fixed $s$, and what complexity does it imply?}
-\end{quote}
-
-Our contributions are organized as follows.
+Our contributions are as follows.
 \begin{enumerate}
-    \item \textbf{A single-loop method with an
-    $\mathcal O(\epsilon^{-3})$ complexity guarantee.}
-    We develop SPLALM by exploiting the proximal structure of the
-    splitting variable $\by$. The method combines primal smoothing,
-    centered dual regularization, and moving primal and dual centers,
-    without an iterative inner solver.
-    With $s_k=\Theta((k+1)^{1/3})$ and suitable center stepsizes,
-    we establish an $\mathcal O(\epsilon^{-3})$ iteration bound
-    for finding an $\epsilon$-KKT point.
-    The base penalty $\rho$ and the primal and dual gradient stepsizes
-    remain fixed, while the effective penalty $\rho+s_k$ increases.
+    \item \textbf{A single-loop ALM family and its effective penalty.}
+    We study SPLALM, which performs alternating gradient descent--ascent
+    steps with moving primal and dual centers on the reduced augmented
+    Lagrangian $\calD_\rho$ with a fixed penalty $\rho>0$
+    (Definition~\ref{def:splalm}). The family contains the update structures
+    of quadratic-penalty, doubly smoothed GDA, smoothed GDA, and linearized
+    ALM methods acting on $\calD_\rho$ (Table~\ref{tab:special-cases}).
+    Every member has the effective penalty $\rho+s$
+    (Lemma~\ref{lem:effective-penalty}), and its $\epsilon$-KKT certificates
+    are exactly $\epsilon$-game-stationary points of the Fenchel saddle
+    reformulation (Proposition~\ref{prop:kkt-gs}).
 
-    % 已有：Algorithm 3.1、参数调度 (3.9)、Theorem 3.1。
-    % 已有：第 2 节的正则化--有效罚参数恒等式与零中心偏差例子。
-    % 零中心例子证明：在该实例上，正则化问题的精确驻点及其
-    % 近端证书达到 epsilon-KKT，需要 rho+s = Omega(epsilon^{-1})。
-    % 这属于驻点偏差结论，不属于迭代复杂度下界。
-    %
-    % TODO：统一算法名称。当前 PDF 使用 SPLALM，
-    % 旧研究主线使用 DDLALM。
-    %
-    % TODO：研究 Q2，即 primal smoothing 的独立贡献。
-    % 首先核实 PPALA 的具体版本、假设和有限步可行性证明。
-    % 在相同问题假设、固定 s、移动 mu 和相同输出准则下，
-    % 分析去掉 primal smoothing 的版本。
-    % 固定 s 与递增 s_k 分别比较，不交叉归因。
-    % 区分“改善已知上界”与“证明实际最坏复杂度的分离”。
-    % 该部分目前不是现有定理的直接推论。
+    \item \textbf{A lower bound uniform in the center stepsizes.}
+    For every pair of center stepsizes $(\alpha,\beta)\in[0,1]^2$ and every
+    $(\rho,s)$ with $\epsilon(\rho+s)\le c_1$, we construct an instance with an
+    affine inner mapping on which the KKT certificates generated by SPLALM
+    require $\Omega(\epsilon^{-4})$ iterations
+    (Theorem~\ref{thm:lower-bound}). The initialization is fixed at zero, and
+    only the instance depends on the parameters. A strictly convex
+    perturbation of the outer function converts this bound into a lower bound
+    of the same order for game stationarity of the output pairs
+    $(\bx^{k+1},\bq^k)$.
+    % TODO: the GS conversion depends on the strict-convex perturbation lemma,
+    % which is not yet in the paper; keep this sentence only after it is proved.
+    Hence moving the centers cannot compensate for an effective penalty
+    $\rho+s=o(\epsilon^{-1})$.
 
-    \item \textbf{The complexity of ordinary center updates
-    under a fixed effective penalty.}
-
-    % TODO：首先建立固定 s 版本的复杂度基准。
-    % 核实 DS-GDA 分析向当前 D_rho 模型迁移所需的假设，
-    % 包括迭代有界性、光滑常数和更新顺序。
-    % 目标上界：O(epsilon^{-4})；尚未证明前不列为本文结果。
-    %
-    % TODO：证明实际单环更新下的乘子有界性。
-    % 利用 q^k in partial h(y^{k+1})、||q^k|| <= L_h，
-    % 以及 tau <= rho*s/(rho+s) 下的凸组合结构。
-    % 原始迭代有界性需另证，不能仅从目标水平集有界直接推出。
-    %
-    % TODO：研究固定 s 上界是否紧；下界正文暂留为空。
-    % 明确下界覆盖的更新族、参数调度、oracle 和输出规则，
-    % 保留初始间隙 Delta 及问题常数的依赖。
-    % Li et al. 的困难实例仅作为候选起点；
-    % 必须核实它能否嵌入当前复合问题及实际更新公式。
-    %
-    % TODO：若建立匹配的 Omega(epsilon^{-4}) 下界，
-    % 则与递增 s_k 的 O(epsilon^{-3}) 上界形成分离。
-    % 结论只限于下界覆盖的更新族和一般问题类。
-    % 不写成“所有 ALM 都必须增大罚参数”，
-    % 也不把 s 增长称为“唯一必要条件”。
-    %
-    % TODO：数值实验分别比较：
-    % 相同 s 调度下，零中心与移动中心的效果；
-    % 相同中心规则下，固定 s 与递增 s_k 的效果。
-    % 同时报告驻点残差、可行性残差和实际 oracle 调用次数。
-    %
-    % 可选：研究加速中心更新。
-    % 对固定原始中心的精确子问题，加速近端点法提供启发；
-    % 对当前单环算法，需重新控制原始中心漂移和求解误差。
-    % 暂不声称加速后必然达到 O(epsilon^{-3})。
-
-    \item \textbf{Structural conditions for faster convergence
-    with a fixed effective penalty.}
-
-    % TODO：定义原始近端子问题及其中心--原始解误差界。
-    % 明确 X_s(z,mu)、X_*(z)、Lambda_s(z,mu) 的存在唯一性，
-    % 以及误差界常数在哪个集合上一致成立。
-    %
-    % 候选误差界：
-    % ||X_s(z,mu)-X_*(z)||^2
-    %     <= C ||Lambda_s(z,mu)-mu||^p.
-    %
-    % TODO：证明该误差界如何控制实际单环迭代的跟踪误差，
-    % 并通过势函数与残差传递得到 epsilon-KKT 复杂度。
-    % O(epsilon^{-4/p}) 暂为待验证目标；
-    % p=2 的端点需单独分析，目标为 O(epsilon^{-2})。
-    %
-    % TODO：研究可验证的充分条件：
-    % 线性 A 与适当的秩或误差界条件；
-    % 严格互补与有效方向非退化的组合条件；
-    % 原始近端 KKT 系统的适当度量次正则性。
-    %
-    % 对非线性 A，不能仅凭 J_A J_A^T 的一致正定性
-    % 就断言近端对偶一致强凹；需要证明相应的统一曲率或误差界。
-    % primal smoothing 保证原始子问题强凸时，
-    % 也不自动保证去掉对偶正则项后的近端对偶强凹。
-    %
-    % TODO：区分局部与全局结果。
-    % 若条件仅局部成立，应证明迭代进入并保持在该邻域，
-    % 或明确给出局部初始化条件。
-    %
-    % 可选扩展：去掉 h 的 Lipschitz 假设。
-    % 必须以其他条件重新建立乘子有界性与所需光滑性，
-    % 不直接从 Jacobian 非退化推断全过程乘子有界。
+    \item \textbf{An upper bound without increasing the penalty.}
+    With $\rho$, $\gamma$, and the primal and dual stepsizes fixed, and with
+    $s_k=\Theta((k+1)^{1/3})$ and diminishing center stepsizes, SPLALM finds
+    an $\epsilon$-KKT point in $\mathcal O(\epsilon^{-3})$ iterations
+    (Theorem~\ref{thm:main}). Together with the lower bound, this identifies
+    $\epsilon^{-1}$ as the necessary scale of the effective penalty and shows
+    that the dual regularization, not the penalty, can carry it.
 \end{enumerate}
 
-\begin{table*}[t]
-\centering
-\small
-\caption{Current results and research objectives. Here
-$\rho+s_k$ is the effective penalty.
-The bounds in the last two rows are research targets.}
-\label{tab:research-roadmap}
-\setlength{\tabcolsep}{5pt}
-\renewcommand{\arraystretch}{1.15}
-\begin{tabular}{@{}p{0.19\textwidth}p{0.22\textwidth}
-                  p{0.28\textwidth}p{0.22\textwidth}@{}}
-\toprule
-Setting & Center and penalty & Result or objective & Status \\
-\midrule
-Zero-centered formulation
-& $\bmu=\mathbf 0$, $\rho+s$
-& A stationary-point example requires
-  $\rho+s=\Omega(\epsilon^{-1})$
-& Feasibility-bias example in Section~2 \\
-\addlinespace
-Current SPLALM
-& Moving $\bmu$;
-  $s_k=\Theta((k+1)^{1/3})$
-& $\mathcal O(\epsilon^{-3})$ for $\epsilon$-KKT
-& Theorem~\ref{thm:main} \\
-\addlinespace
-Fixed-$s$ variant
-& Moving $\bmu$; fixed $\rho+s$
-& Establish an $\mathcal O(\epsilon^{-4})$ bound
-  and investigate its tightness
-& Pending analysis \\
-\addlinespace
-Fixed-$s$ variant with structure
-& Moving $\bmu$; fixed $\rho+s$
-& Derive faster rates from a proximal error bound;
-  target $\mathcal O(\epsilon^{-2})$
-& Pending analysis \\
-\bottomrule
-\end{tabular}
-\end{table*}
+% Open questions moved from the former (Q2) and (Q3); to be placed in the
+% concluding section: (i) the complexity gain of primal smoothing under a
+% fixed s and a moving dual center; (ii) structural conditions on
+% (f,h,A) that yield a center--primal error bound and faster rates under a
+% fixed effective penalty.
 
 
-Structure of the paper. The paper is organized as follows. In Section 2, we introduce the preliminaries,
-including assumptions, stationarity notions, and the two acceleration tools: dual perturbation and smoothing.
-The main body of the paper focuses on single-loop methods: In Section 3, we present the main results,
-including the proposed Perturbed Smoothed GDA together with all iteration-complexity bounds and their
-tight analyses. In Section 4, we develop a unified convergence analysis framework for these single-loop
-algorithms. In Section 5, we provide a tight analysis that sharpens these iteration complexities. In Section 6,
-wefurthershowthatthetwo accelerationtechniquesand theunifiedanalysisfrom Section4also applyto a
-double-loop setting, resulting in a new algorithm, Perturbed Smoothed FOAM, improving the best known
-iterationcomplexities. Finally,Section7concludes the paper
+
+
+\paragraph{Organization}
+Section~\ref{sec:preliminaries} introduces the problem class, the KKT and
+game-stationarity criteria, the SPLALM family, and the complexity measure,
+and shows that every member of the family has the effective penalty
+$\rho+s$. Section~\ref{sec:lower-bound} states the lower bound for constant
+center stepsizes, and Section~\ref{sec:lb-proof} proves it.
+Section~\ref{sec:time-varying} extends the lower bound to time-varying center
+stepsizes. Section~\ref{sec:upper-bound} proves the $\mathcal O(\epsilon^{-3})$
+upper bound with a fixed penalty.

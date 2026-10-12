@@ -1,8 +1,3 @@
-% !LW recipe = latexmk
-% !TEX options = -synctex=1
-% Disable the legacy DVI-only hypdvips hook so the SIAM class also works with
-% XeLaTeX/LuaLaTeX, whose engine detection is not covered by the class's
-% historical \ifpdf branch.
 \makeatletter
 \ifdefined\XeTeXversion
   \providecommand{\headerps@out}[1]{}
@@ -13,15 +8,15 @@
 \documentclass[review,onefignum,onetabnum,nohypdvips]{siamart220329}
 \input{tools/shared}
 
-\headers{Moving the Center, Not the Penalty}{L. Li, K. Deng, C. Cui, and J. Hu}
+\headers{Growing the Dual Regularization, Not the Penalty}{L. Li, K. Deng, C. Cui, and J. Hu}
 
-\title{{Moving the Center, Not the Penalty: A Single-Loop Augmented Lagrangian Method for Nonconvex Composite Optimization}}
+\title{{Growing the Dual Regularization, Not the Penalty: A Fixed-Penalty Single-Loop Augmented Lagrangian Method for Nonconvex Composite Optimization}}
 \author{
 Luxuan Li\thanks{School of Mathematical Sciences, Beihang University,
 Beijing 100191, China}
 \and Kangkang Deng\thanks{Department of Mathematics, National University of Defense Technology,
 Changsha 410073, China. 
-% Corresponding author. Email: \texttt{freedeng1208@gmail.com}.
+Corresponding author. Email: \texttt{freedeng1208@gmail.com}.
 }
 \and Chunfeng Cui\thanks{School of Mathematical Sciences and State Key Laboratory of Virtual Reality Technology and Systems,
 Beihang University, Beijing 100191, China.}
@@ -47,8 +42,10 @@ nonsmooth composite optimization, augmented Lagrangian method, dual-regularizati
 
 \input{sections/Introduction}
 \input{sections/Preliminaries}
-% \input{sections/Methodology}
-% \input{sections/Convergence_analysis}
+\input{sections/LowerBound}
+\input{sections/LowerBoundProof}
+\input{sections/TimeVarying}
+\input{sections/UpperBound}
 
 \bibliographystyle{tools/siamplain}
 \bibliography{tools/refer}

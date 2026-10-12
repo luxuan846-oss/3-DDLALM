@@ -1,42 +1,39 @@
+% !TEX root = ../main.tex
 \section{Preliminaries}
+\label{sec:preliminaries}
 % \subsection{Notation}
 % \label{sec:notation}
-\textbf{Notation.} We use $\langle\cdot,\cdot\rangle$ and $\|\cdot\|$ for the Euclidean inner
-product and norm.  For a matrix, $\|\cdot\|$ denotes the spectral norm.  For
-$\calA=(A_1,\ldots,A_m)^\top$, let $J_{\calA}(\bx)\in\RR^{m\times n}$ denote its
-Jacobian, whose $i$th row is $\nabla A_i(\bx)^\top$.  We write
-$\sigma_{\min}(J_{\calA}(\bx))$ for the smallest singular value of
-$J_{\calA}(\bx)$. For a nonempty closed convex set $C$, we denote by
-$\Pi_C(u):=\argmin_{v\in C}\|u-v\|^2$ the Euclidean projection of $u$ onto $C$.
+\textbf{Notation.} We use $\langle\cdot,\cdot\rangle$ and $\|\cdot\|$ for the
+Euclidean inner product and norm; for a matrix, $\|\cdot\|$ is the spectral
+norm. For $\calA=(A_1,\ldots,A_m)^\top$, the Jacobian
+$J_{\calA}(\bx)\in\RR^{m\times n}$ has $i$th row $\nabla A_i(\bx)^\top$. For a
+nonempty closed convex set $C$, $\dist(\bu,C):=\min_{\bv\in C}\|\bu-\bv\|$, and
+$\Pi_C(\bu)$ is the Euclidean projection of $\bu$ onto $C$.
 % Throughout the paper, $\partial h$ denotes the limiting
 % subdifferential of $h$.
 
-For a proper closed convex function \(h\), its convex subdifferential and
-proximal mapping are, respectively,
+For a proper closed convex function \(h:\RR^m\to\RR\cup\{+\infty\}\), its
+subdifferential, convex conjugate, and proximal mapping are
 \[
-    \partial h(y)
-    :=\{v:\ h(z)\ge h(y)+\langle v,z-y\rangle\ \text{for all }z\},
+    \partial h(\by):=\{\bv:\ h(\bw)\ge h(\by)+\langle\bv,\bw-\by\rangle
+    \ \text{for all }\bw\},
+    \qquad
+    h^*(\bq):=\sup_{\by\in\RR^m}\{\langle\bq,\by\rangle-h(\by)\},
 \]
 \begin{equation}
-    \prox_{\gamma h}(u)
-    :=\argmin_{y\in\R^m}
-       \left\{h(y)+\frac{1}{2\gamma}\|y-u\|^2\right\},
-    \qquad \gamma>0.
+    \prox_{t h}(\bu)
+    :=\argmin_{\by\in\RR^m}
+       \Bigl\{h(\by)+\frac{1}{2t}\|\by-\bu\|^2\Bigr\},
+    \qquad t>0;
     \label{eq:prox-definition}
 \end{equation}
+see~\cite{rockafellar1970convex}. We write
+\(\dom\partial h^*:=\{\bq:\partial h^*(\bq)\neq\varnothing\}\).
 
 
 \subsection{Assumptions}
 \label{sec:assumptions}
 We impose the following assumptions.
-% \begin{assumption}[Level-bounded objective]
-% \label{ass:level-boundedness}
-% Assume that $F$ is level-bounded, that is, for every $\alpha\in\RR$, the set
-% \[
-%     \calS_{\alpha}:=\{\bx\in\RR^n:F(\bx)\le\alpha\}
-% \]
-% is empty or compact.
-% \end{assumption}
 % \begin{assumption}[Uniform Jacobian regularity]
 % \label{ass:strong-licq}
 % There exists a constant $\nu>0$ such that
@@ -53,7 +50,7 @@ We impose the following assumptions.
 %     \qquad \forall \bx\in\calS,\ \forall \by\in\RR^m.
 % \]
 % \end{assumption}
-\begin{assumption}
+\begin{assumption}[Smooth components]
 \label{ass:smoothness}
 There exist constants $L_f,G_f,L_{\calA},G_{\calA}\ge0$ such that, for
 all $\bx,\bx'\in\RR^n$,
@@ -69,17 +66,18 @@ all $\bx,\bx'\in\RR^n$,
 \]
 \end{assumption}
 
-\begin{assumption}
+\begin{assumption}[Lipschitz outer function]
 \label{ass:h}
-The function $h$ is proper, closed, convex, and globally $L_h$-Lipschitz:
+The function $h:\RR^m\to\RR$ is convex and $L_h$-Lipschitz:
 \[
     |h(\bu)-h(\bv)|\le L_h\|\bu-\bv\|,
     \qquad \bu,\bv\in\RR^m.
 \]
 \end{assumption}
 
-\subsection{Setup}
-To study Question 1, we introduce the following problem class.
+\subsection{Problem class, stationarity, and oracle}
+\label{subsec:setup}
+To study~(Q), we introduce the following problem class.
 \begin{definition}[Problem class]
 \label{def:problem-class}
 Let \(\Delta>0\) and
@@ -87,14 +85,19 @@ Let \(\Delta>0\) and
 We denote by \(\mathcal I(\mathbf C,\Delta)\) the set of all triples
 \((f,\calA,h)\), over all dimensions \(n,m\in\NN\), such that
 Assumptions~\ref{ass:smoothness} and~\ref{ass:h} hold with the constants
-in \(\mathbf C\) and $F(\zero)-\inf_{\bx\in\RR^n}F(\bx)\le\Delta$, where the constants \(\mathbf C\) and \(\Delta\) is independent on the target accuracy or on the dimensions \(n,m\). 
+in \(\mathbf C\) and
+\(
+    F(\zero)-\inf_{\bx\in\RR^n}F(\bx)\le\Delta .
+\)
 \end{definition}
+The constants \(\mathbf C\) and \(\Delta\) do not depend on the target
+accuracy or on \(n,m\), and the gap condition implies \(\inf F>-\infty\).
 % The gap condition implies
 % \(\inf F>-\infty\). Assumption~\ref{ass:level-boundedness} is not part of
 % \(\mathcal I(\mathbf C,\Delta)\); it is imposed separately in the complexity
 % results that require it.
 
-\red{We use the following stationarity measure for  Problem~\eqref{prob:main} as below. }
+\red{We use the following stationarity measure for Problem~\eqref{prob:main}.} 
 \begin{definition}[\(\epsilon\)-KKT point]
 \label{def:eps-kkt}
 Given \(\epsilon>0\). A triple \((\bx,\by,\bq)\) with
@@ -185,124 +188,247 @@ the cost of solving the proximal subproblem is represented by one exact
 proximal-oracle call.
 \end{definition}
 
-\subsection{Dual regularization and effective penalties}
-\label{sec:dual-penalty-identity}
+\subsection{Algorithm family and worst-case iteration complexity}
+\label{subsec:algorithm-family}
 
-This subsection clarifies the relationship between Fenchel duality,
-augmented Lagrangian regularization, and the dual damping used in our
-method. While , we clarify for completeness. 
+For \(\rho>0\), the reduced augmented Lagrangian of~\eqref{prob:split} is
+\begin{equation}
+    \calD_\rho(\bx,\blmbd)
+    :=\min_{\by\in\RR^m}\Bigl\{f(\bx)+h(\by)+\langle\blmbd,\calA(\bx)-\by\rangle
+    +\frac{\rho}{2}\|\calA(\bx)-\by\|^2\Bigr\}.
+    \label{eq:reduced-al}
+\end{equation}
+Its minimizer and the associated multiplier are
+\begin{equation}
+    \by(\bx,\blmbd):=\prox_{h/\rho}\Bigl(\calA(\bx)+\frac{\blmbd}{\rho}\Bigr),
+    \qquad
+    \bq(\bx,\blmbd):=\blmbd+\rho\bigl[\calA(\bx)-\by(\bx,\blmbd)\bigr],
+    \label{eq:prox-multiplier}
+\end{equation}
+and \(\bq(\bx,\blmbd)\in\partial h(\by(\bx,\blmbd))\).
+We study the smoothed perturbed linearized augmented Lagrangian method
+(SPLALM), which performs alternating gradient descent--ascent steps on the
+smoothed perturbed potential function
+\begin{equation}
+    \mathcal P_s(\bx,\blmbd;\bz,\bmu)
+    :=\calD_\rho(\bx,\blmbd)+\frac{1}{2\gamma}\|\bx-\bz\|^2
+    -\frac{1}{2s}\|\blmbd-\bmu\|^2 .
+    \label{eq:potential}
+\end{equation}
+The proximal term smooths the primal problem, the term
+\(-\frac{1}{2s}\|\blmbd-\bmu\|^2\) perturbs the dual problem, and
+\(\bz\in\RR^n\) and \(\bmu\in\RR^m\) are the primal and dual centers.
 
-\paragraph{ALM as a dual proximal update}
-For any $\sigma>0$ and $\mu\in\mathbb R^m$, define
-\[
-\widehat{\mathcal L}_{\sigma}(x,\mu)
-:=
-f(x)+\min_y
-\left\{
-h(y)+\langle \mu,A(x)-y\rangle
-+\frac{\sigma}{2}\|A(x)-y\|^2
-\right\}.
-\]
-By Fenchel duality,
-\[
-\widehat{\mathcal L}_{\sigma}(x,\mu)
-=
-f(x)+\max_{\lambda}
-\left\{
-\langle A(x),\lambda\rangle-h^*(\lambda)
--\frac{1}{2\sigma}\|\lambda-\mu\|^2
-\right\}.
-\]
-Thus, the standard ALM update with penalty $\rho$ is equivalent to a
-dual proximal update with proximal parameter $\rho$ and center
-$\mu=\lambda^k$:
+\begin{definition}[SPLALM]
+\label{def:splalm}
+Let \(\theta=(\rho,s,\gamma,\eta,\tau)\) satisfy \(\rho>0\),
+\(0<\eta\le\gamma<\infty\), and \(0<\tau\le s<\infty\), and let
+\((\alpha,\beta)\in[0,1]^2\). The method \(\mathrm{SPLALM}_{\theta,\alpha,\beta}\)
+starts from \((\bx^0,\blmbd^0,\bz^0,\bmu^0)=\zero\) and, for \(k\ge0\), sets
+\begin{equation}
+\begin{aligned}
+    \bx^{k+1}&=\bx^k-\eta\,\nabla_{\bx}\mathcal P_s(\bx^k,\blmbd^k;\bz^k,\bmu^k),\\
+    \blmbd^{k+1}&=\blmbd^k+\tau\,\nabla_{\blmbd}\mathcal P_s(\bx^{k+1},\blmbd^k;\bz^k,\bmu^k),\\
+    \bz^{k+1}&=\bz^k+\alpha(\bx^{k+1}-\bz^k),\\
+    \bmu^{k+1}&=\bmu^k+\beta(\blmbd^{k+1}-\bmu^k).
+\end{aligned}
+    \label{eq:splalm-updates}
+\end{equation}
+At iteration \(k\), it outputs
+\((\bx^{k+1},\by^{k+1},\bq^k)
+:=(\bx^{k+1},\by(\bx^{k+1},\blmbd^k),\bq(\bx^{k+1},\blmbd^k))\).
+\end{definition}
+
+With first-order information cached between iterations, \(K\) iterations and
+their outputs use \(K+1\) calls to \(\mathcal O_{f,\calA}\) and \(2K\) calls to
+\(\mathcal O_h\). Thus the total oracle count is \(3K+1\), and iteration
+and oracle complexity agree up to a factor of three, apart from one initial
+first-order oracle call.
+
+\begin{definition}[SPLALM family]
+\label{def:algorithm-family}
+For \(\theta\) as in Definition~\ref{def:splalm},
+\(\calC_\theta:=\{\mathrm{SPLALM}_{\theta,\alpha,\beta}:(\alpha,\beta)\in[0,1]^2\}\).
+\end{definition}
+
+\begin{definition}[Worst-case iteration complexity]
+\label{def:complexity-measure}
+Let \(\epsilon>0\) and \(I\in\mathcal I(\mathbf C,\Delta)\), and let
+\((\bx^{k+1},\by^{k+1},\bq^k)\) be the outputs of
+\(\mathrm{SPLALM}_{\theta,\alpha,\beta}\) on \(I\). Define
 \[
 \begin{aligned}
-\lambda^{k+1}
-&=
-\operatorname{prox}_{\rho h^*}
-\bigl(\lambda^k+\rho A(x^{k+1})\bigr) \\
-&=
-\argmin_{q\in\mathbb R^m}
-\left\{
-h^*(q)
-+\frac{1}{2\rho}
-\left\|
-q-\bigl(\lambda^k+\rho A(x^{k+1})\bigr)
-\right\|^2
-\right\}.
+    T^{\mathrm{KKT}}_\epsilon(\theta,\alpha,\beta;I)
+    &:=\inf\Bigl\{K\ge1:\ \min_{0\le k<K}
+        \mathcal R_{\mathrm{KKT}}(\bx^{k+1},\by^{k+1},\bq^k)\le\epsilon\Bigr\},\\
+    T^{\mathrm{GS}}_\epsilon(\theta,\alpha,\beta;I)
+    &:=\inf\Bigl\{K\ge1:\ \min_{0\le k<K}
+        \calG(\bx^{k+1},\bq^k)\le\epsilon\Bigr\},
 \end{aligned}
 \]
+with \(\inf\varnothing=+\infty\). For \(\bullet\in\{\mathrm{KKT},\mathrm{GS}\}\),
+the worst-case iteration complexity of \(\calC_\theta\) over
+\(\mathcal I(\mathbf C,\Delta)\) is
+\[
+    T^{\bullet}_\epsilon\bigl(\calC_\theta,\mathcal I(\mathbf C,\Delta)\bigr)
+    :=\inf_{(\alpha,\beta)\in[0,1]^2}\
+    \sup_{I\in\mathcal I(\mathbf C,\Delta)}\
+    T^{\bullet}_\epsilon(\theta,\alpha,\beta;I).
+\]
+\end{definition}
 
-\paragraph{Zero center and quadratic penalty}
-When the dual center is fixed at $\mu=0$, the same identity reduces to
-\[
-\max_{\lambda}
-\left\{
-\langle A(x),\lambda\rangle-h^*(\lambda)
--\frac{1}{2\sigma}\|\lambda\|^2
-\right\}
-=
-h_{1/\sigma}(A(x)),
-\]
-where $h_{1/\sigma}$ denotes the Moreau envelope of $h$. Hence, the
-zero-center formulation is equivalent to the quadratic-penalty value
-function
-\[
-f(x)+h_{1/\sigma}(A(x)).
-\]
-Its feasibility control is obtained through the penalty parameter
-$\sigma$.
+The infimum precedes the supremum, so \((\alpha,\beta)\) may depend on
+\(\epsilon\), \(\theta\), and \((\mathbf C,\Delta)\), but not on the instance.
+At least one of the first \(K\) outputs meets the tolerance if and only if
+\(K\ge T^{\bullet}_\epsilon\); hence the definition covers every rule that
+returns one of these outputs, including the best-so-far rule. By
+Proposition~\ref{prop:kkt-gs},
+\(\calG(\bx^{k+1},\bq^k)\le\mathcal R_{\mathrm{KKT}}(\bx^{k+1},\by^{k+1},\bq^k)\)
+for every \(k\), so
+\(T^{\mathrm{GS}}_\epsilon(\calC_\theta,\mathcal I)
+\le T^{\mathrm{KKT}}_\epsilon(\calC_\theta,\mathcal I)\). An upper bound for
+the KKT measure therefore yields the same upper bound for the GS measure, and
+a lower bound for the GS measure yields the same lower bound for the KKT
+measure.
 
-\paragraph{Additional dual regularization in our method.}
-Our method starts from the reduced augmented Lagrangian
-$\mathcal D_\rho(x,\lambda)$ and adds a moving-center dual regularizer:
+\begin{remark}[Family complexity and oracle complexity]
+\label{rem:family-not-oracle}
+Let \(\mathcal A_{\det}\) be the class of deterministic methods whose iterates
+are arbitrary maps of all previous responses of \(\mathcal O_{f,\calA}\) and
+\(\mathcal O_h\), defined as in~\cite[Section~2.2]{carmon2020lower}
+and~\cite[Definition~2.5]{pan2026optimal} with the oracles of
+Definition~\ref{def:oracle-model}. Then \(\calC_\theta\subset\mathcal A_{\det}\), and
 \[
-\mathcal P_s(x,\lambda;z,\mu)
-=
-\mathcal D_\rho(x,\lambda)
-+\frac{1}{2\gamma}\|x-z\|^2
--\frac{1}{2s}\|\lambda-\mu\|^2.
+    T_\epsilon(\mathcal A_{\det},\mathcal I)
+    =\inf_{A\in\mathcal A_{\det}}\sup_{I\in\mathcal I}T_\epsilon(A;I)
+    \le\inf_{(\alpha,\beta)\in[0,1]^2}\sup_{I\in\mathcal I}
+    T_\epsilon(\theta,\alpha,\beta;I)
+    =T_\epsilon(\calC_\theta,\mathcal I).
 \]
-Therefore, the additional quadratic term is applied to the already
-reduced augmented Lagrangian, rather than directly to the original
-Lagrangian. Maximizing over $\lambda$ and applying the preceding
-identity gives
-\[
-\max_{\lambda}\mathcal P_s(x,\lambda;z,\mu)
-=
-\widehat{\mathcal L}_{\rho+s}(x,\mu)
-+\frac{1}{2\gamma}\|x-z\|^2.
-\]
-Thus, the dual regularization produces the effective penalty
-\[
-\rho_{\mathrm{eff}}=\rho+s
-\]
-while the base ALM penalty $\rho$ remains fixed.
+\begin{enumerate}[label=(\roman*)]
+\item (Scope) A lower bound on \(T_\epsilon(\calC_\theta,\mathcal I)\) does not
+  bound \(T_\epsilon(\mathcal A_{\det},\mathcal I)\); methods outside
+  \(\calC_\theta\) may be faster. When \(h\) is the support function of a
+  compact convex set, \eqref{eq:ncl} is a smooth nonconvex--concave problem,
+  and the \(O(\epsilon^{-5/2})\) GS bound of~\cite{zhang2026matching} and the
+  \(O(\epsilon^{-3})\) OS bound of~\cite{pan2026optimal} are attained by
+  methods outside \(\calC_\theta\).
+\item (Uniformity) The infimum ranges over all \((\alpha,\beta)\in[0,1]^2\),
+  including the endpoint cases in Table~\ref{tab:special-cases}, and
+  Theorem~\ref{thm:lower-bound} holds for all \((\rho,s)\) with
+  \(\epsilon(\rho+s)\le c_1\). A lower bound on
+  \(T_\epsilon(\calC_\theta,\mathcal I)\) therefore cannot be removed by
+  tuning the center stepsizes; it is governed by the effective penalty
+  \(\rho+s\) of Lemma~\ref{lem:effective-penalty}.
+\item (Transfer) Conversely, every lower bound on
+  \(T_\epsilon(\mathcal A_{\det},\mathcal I)\) for the same problem class and
+  measure also holds for \(\calC_\theta\).
+\end{enumerate}
+\end{remark}
 
-\paragraph{Feasibility interpretation.}
-At the exact effective saddle point, let
-$q_\sigma\in\partial h(y_\sigma)$ with $\sigma=\rho+s$. Then
+\subsection{Effective penalty and special cases}
+\label{subsec:effective-penalty}
+
+The reduced augmented Lagrangian is a dual proximal smoothing of the saddle
+function \(\calL(\bx,\bq)=f(\bx)+\langle\calA(\bx),\bq\rangle-h^*(\bq)\)
+in~\eqref{eq:ncl}~\cite{rockafellar1976augmented}. The center of this
+smoothing is the multiplier, and its strength is the penalty. Adding the dual
+regularizer of~\eqref{eq:potential} keeps this form; it only raises the
+penalty and moves the center.
+
+\begin{lemma}[Effective penalty]
+\label{lem:effective-penalty}
+Suppose that Assumption~\ref{ass:h} holds. For every \(\sigma>0\),
+\begin{equation}
+    \calD_\sigma(\bx,\blmbd)
+    =\max_{\bq\in\RR^m}\Bigl\{\calL(\bx,\bq)-\frac{1}{2\sigma}\|\bq-\blmbd\|^2\Bigr\},
+    \label{eq:dual-smoothing}
+\end{equation}
+and consequently
+\begin{equation}
+    \max_{\blmbd\in\RR^m}\mathcal P_s(\bx,\blmbd;\bz,\bmu)
+    =\calD_{\rho+s}(\bx,\bmu)+\frac{1}{2\gamma}\|\bx-\bz\|^2 .
+    \label{eq:effective-penalty}
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Write \(\bu=\calA(\bx)\) and \(h(\by)=\max_{\bq}\{\langle\bq,\by\rangle-h^*(\bq)\}\).
+Since \(\dom h^*\) lies in a ball by Assumption~\ref{ass:h}, Sion's minimax
+theorem allows the minimum over \(\by\) and the maximum over \(\bq\) in
+\(\min_{\by}\max_{\bq}\{\langle\bq-\blmbd,\by\rangle-h^*(\bq)
++\frac{\sigma}{2}\|\bu-\by\|^2\}\) to be interchanged. The inner minimizer is
+\(\by=\bu-(\bq-\blmbd)/\sigma\), which gives~\eqref{eq:dual-smoothing}.
+Applying~\eqref{eq:dual-smoothing} with \(\sigma=\rho\) and exchanging the two
+maximizations,
 \[
-A(x)-y_\sigma
-=
-\frac{q_\sigma-\mu}{\rho+s}.
+    \max_{\blmbd}\mathcal P_s
+    =\max_{\bq}\Bigl\{\calL(\bx,\bq)-\min_{\blmbd}\Bigl[\frac{\|\bq-\blmbd\|^2}{2\rho}
+    +\frac{\|\blmbd-\bmu\|^2}{2s}\Bigr]\Bigr\}+\frac{\|\bx-\bz\|^2}{2\gamma},
 \]
-In particular, when $\mu=0$ and $h$ is $L_h$-Lipschitz,
+and the inner minimum equals \(\|\bq-\bmu\|^2/(2(\rho+s))\).
+Then~\eqref{eq:dual-smoothing} with \(\sigma=\rho+s\)
+gives~\eqref{eq:effective-penalty}.
+\end{proof}
+
+Lemma~\ref{lem:effective-penalty} shows that every member of
+\(\calC_\theta\) has the effective penalty \(\rho+s\), whatever the center
+stepsizes are. The center stepsize \(\beta\) only places the dual center
+between two classical choices, and \(\alpha\) decides whether the primal
+variable is smoothed.
+
+\emph{Zero center} (\(\beta=0\)). Then \(\bmu^k=\zero\), and
+\(\calD_{\rho+s}(\bx,\zero)=f(\bx)+\min_{\by}\{h(\by)
++\frac{\rho+s}{2}\|\calA(\bx)-\by\|^2\}\) is the quadratic penalty function
+with parameter \(\rho+s\). The dual step carries the perturbation
+\(-\blmbd^k/s\), as in perturbed GDA~\cite{lu2020hybrid,xu2023unified} and
+perturbed smoothed GDA~\cite{li2026smoothing}.
+
+\emph{Current multiplier as center} (\(\beta=1\)). Then
+\(\bmu^k=\blmbd^k\), the gradient of the dual regularizer vanishes at every
+dual step, and
 \[
-\|A(x)-y_\sigma\|
-\le
-\frac{L_h}{\rho+s}.
+    \blmbd^{k+1}=\Bigl(1-\frac{\tau}{\rho}\Bigr)\blmbd^k+\frac{\tau}{\rho}\,\bq^k,
+    \qquad
+    \bq^k=\prox_{\rho h^*}\bigl(\blmbd^k+\rho\calA(\bx^{k+1})\bigr).
 \]
-For a general moving center, the corresponding bound is
-\[
-\|A(x)-y_\sigma\|
-\le
-\frac{L_h+\|\mu\|}{\rho+s}.
-\]
-These are upper bounds induced by the effective penalty. Feasibility can
-also be recovered with a bounded $\rho+s$ if the center update drives
-$q_\sigma-\mu$ to zero. For the actual single-loop method, this
-property must be established from the coupled multiplier and center
-updates; the value-function identity alone does not imply exact ALM
-equivalence.
+For \(\tau=\rho\), this is the multiplier update of the augmented Lagrangian
+method~\cite{hestenes1969multiplier,powell1969method,rockafellar1973multiplier},
+that is, a proximal ascent step on \(\calL(\bx^{k+1},\cdot)\)
+by~\eqref{eq:dual-smoothing}. The iterates do not depend on \(s\), so this
+choice also reproduces the case without dual regularizer, \(s=\infty\).
+
+\emph{Moving center} (\(0<\beta<1\)). The dual center is an exponentially
+weighted average of past multipliers, and the method has the structure of doubly smoothed
+GDA~\cite{zheng2023universal}.
+
+Table~\ref{tab:special-cases} collects these cases. The identities
+\(\bmu^k=\zero\), \(\bmu^k=\blmbd^k\), and \(\bz^k=\bx^k\) for
+\(\beta=0\), \(\beta=1\), and \(\alpha=1\), respectively, follow by induction
+from the zero initialization. Every entry refers to the cited update structure
+applied to \(\calD_\rho\) with \(\rho>0\); methods acting on \(\calL\) itself
+are compared in Section~\ref{subsec:gda-embedding}.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Special cases of \(\calC_\theta\). All methods act on
+\(\calD_\rho\) with \(\rho>0\) and have the effective penalty \(\rho+s\).}
+\label{tab:special-cases}
+\begin{tabular}{@{}llll@{}}
+\toprule
+\(\beta\) & Dual center & \(\alpha=1\) & \(0<\alpha<1\) \\
+\midrule
+\(0\) & \(\zero\)
+  & perturbed GDA~\cite{lu2020hybrid,xu2023unified}
+  & perturbed smoothed GDA~\cite{li2026smoothing} \\
+\((0,1)\) & \(\sum_{j=1}^{k}\beta(1-\beta)^{k-j}\blmbd^j\)
+  & ---
+  & DS-GDA~\cite{zheng2023universal}, \(r_1=1/\gamma\), \(r_2=1/s\) \\
+\(1\) & \(\blmbd^k\)
+  & linearized ALM (\(\tau=\rho\))
+  & smoothed GDA~\cite{zhang2020smoothed} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
