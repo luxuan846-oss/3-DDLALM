@@ -2,4 +2,37 @@
 \section{Hard Instances and Proof of Theorem~\ref{thm:lower-bound}}
 \label{sec:lb-proof}
 
-\todo{Hard instances and proof for constant center stepsizes.}
+The proof uses two instances, according to the size of the primal center
+stepsize \(\alpha\). Set \(\varpi:=\max\{1,4\tau,4\gamma\tau\}\) and
+\(\alpha_\epsilon:=1024\varpi\epsilon^2\).
+
+\paragraph{Small \(\alpha\).}
+Take \(\calA\equiv0\), \(h=|\cdot|\), and let \(f\) be a one-dimensional
+Huber function whose slope equals \(g:=2\epsilon\) on a plateau of height
+\(\Delta\). Since \(\calA\equiv0\), the multipliers stay at zero, and the
+center \(z^k\) moves by at most \(\alpha\gamma g\) per iteration, so
+\(x^k\le\gamma g(1+\alpha k)\). The iterates therefore stay on the plateau,
+where \(R_k=2\epsilon\), for \(\Omega\bigl(\Delta/(\gamma\alpha\epsilon^2)\bigr)\)
+iterations. For \(\alpha\le\alpha_\epsilon\), this is
+\(\Omega(\Delta\epsilon^{-4})\).
+
+\paragraph{Large \(\alpha\).}
+Take \(h=\|\cdot\|_2\), \(\calA(\bx)=b(\bx-\bx_c)\), and let \(f\) be a
+quadratic with negative curvature \(-\kappa\) near \(\bx_c\). While the
+trajectory stays in \(\mathcal R_\rho\), Proposition~\ref{prop:embedding}
+shows that the update is the linear time-invariant system
+\(\bw^{k+1}=\mathbb T\bw^k\). We choose \(b\) and \(\kappa\) so that
+\(\mathbb T\) has an eigenvalue \(\zeta\) with \(|\zeta|=1\). Along its
+eigenvector \(\bv\), the iterates rotate without decay, and the certificate
+keeps a fixed positive value. The zero initialization is not parallel to
+\(\bv\). We write it as \(\bv+\br\), where \(\br\) lies in the invariant
+subspace of the remaining eigenvalues, all strictly inside the unit circle.
+The shifts \(\bx_c\) and \(\blmbd_c\) make \(\bv+\br\) correspond to the
+origin. A bound on the transient \(\mathbb T^k\br\) keeps the trajectory in
+\(\mathcal R_\rho\) and gives \(R_k\ge\frac76\epsilon\) for all \(k\). The
+case \(\beta=0\) uses a separate one-dimensional instance with a Huber outer
+function \(h\).
+
+\todo{Subsections: plateau instance; rotating instance (parameters, spectral
+decomposition, transient bound, verification); \(\beta=0\) instance; proof of
+Theorem~\ref{thm:lower-bound} with constants \(c_1,c_2\).}
