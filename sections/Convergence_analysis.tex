@@ -213,10 +213,10 @@ By the definition of $\Phi_s$, the gradient of the $\bx$-block gives
     \label{eq:grad-phi-x-block}
 \end{equation}
 We bound the Lipschitz constant of each term on $\calS$ separately.
-By Assumption~\ref{ass:smoothness}\rm(i), $\nabla f$ is $L_f$-Lipschitz
+By Assumption~\ref{ass:smoothness}, $\nabla f$ is $L_f$-Lipschitz
 on $\calS$.  Since $\bmu-\rho_s\by$ is a fixed vector and
 $J_{\calA}$ is $L_{\calA}$-Lipschitz on $\calS$ by
-Assumption~\ref{ass:smoothness}\rm(ii), the second term is
+Assumption~\ref{ass:smoothness}, the second term is
 $L_{\calA}\|\bmu-\rho_s\by\|$-Lipschitz.  It remains to control the third
 term, i.e., $J_{\calA}(\bx)^\top\calA(\bx)$.
 
@@ -231,7 +231,7 @@ For any $\bx,\bx'\in\calS$, we apply the identity
     J_{\calA}(\bx')^\top\bigl[\calA(\bx)-\calA(\bx')\bigr].
 \]
 Taking norms and using $\|\calA(\bx)\|\le M_{\calA}$ on $\calS$ and
-$\|J_{\calA}(\bx')\|\le G_{\calA}$ by Assumption~\ref{ass:smoothness}\rm(ii),
+$\|J_{\calA}(\bx')\|\le G_{\calA}$ by Assumption~\ref{ass:smoothness},
 we obtain
 \[
     \bigl\|
@@ -1097,8 +1097,8 @@ By Lemma~\ref{lem:multiplier-boundedness},
     =
     O(K^{-a}).
 \]
-The exact $\by$-update optimality condition and
-\eqref{eq:bounded-h-subgradients} give
+The exact $\by$-update optimality condition and the global
+$L_h$-Lipschitz property in Assumption~\ref{ass:h} give
 \[
     \bz^\kappa\in\partial h(\by^\kappa),
     \qquad
@@ -2659,8 +2659,7 @@ from $s_k\ge s_0$ and its definition. Moreover,
 $s_{k+1}\ge s_k>0$, $\eta_k,\tau_k>0$, and
 $0<\beta_k\le1$. Since $L_{d,k}\ge1/\rho+1/s_k$,
 the multiplier-boundedness condition also holds.
-Level-boundedness and continuity of $F$ imply
-$\inf_{\bx}F(\bx)>-\infty$. The master budget proved after
+By assumption, $\inf_{\bx}F(\bx)>-\infty$. The master budget proved after
 Lemma~\ref{lem:moving-three-value-descent} is therefore finite and
 independent of $K$.
 

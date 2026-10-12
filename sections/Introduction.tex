@@ -101,9 +101,7 @@ $h\circ\calA$.
 From another perspective, Problem~\eqref{prob:main} also admits a minimax reformulation. In particular, eliminating $\by$ from the Lagrangian of~\eqref{prob:split} gives
 \begin{equation}\label{eq:ncl}
   \min_{\bx\in\RR^n}\max_{\blmbd\in\RR^m}\;
-  \Phi(\bx,\blmbd)-h^*(\blmbd),
-  \qquad
-  \Phi(\bx,\blmbd):=f(\bx)+\langle\blmbd,\calA(\bx)\rangle,
+  \calL(\bx,\bq) =  \Phi(\bx,\blmbd)-h^*(\blmbd), \qquad \Phi(\bx,\blmbd):=f(\bx)+\langle\blmbd,\calA(\bx)\rangle,
 \end{equation}
 where $\operatorname{dom}h^*\subseteq\mathbb B(\mathbf 0,L_h)$ by
 Assumption~\ref{ass:h}. This is a nonconvex--linear instance of the smooth
@@ -440,3 +438,14 @@ Fixed-$s$ variant with structure
 \bottomrule
 \end{tabular}
 \end{table*}
+
+
+Structure of the paper. The paper is organized as follows. In Section 2, we introduce the preliminaries,
+including assumptions, stationarity notions, and the two acceleration tools: dual perturbation and smoothing.
+The main body of the paper focuses on single-loop methods: In Section 3, we present the main results,
+including the proposed Perturbed Smoothed GDA together with all iteration-complexity bounds and their
+tight analyses. In Section 4, we develop a unified convergence analysis framework for these single-loop
+algorithms. In Section 5, we provide a tight analysis that sharpens these iteration complexities. In Section 6,
+wefurthershowthatthetwo accelerationtechniquesand theunifiedanalysisfrom Section4also applyto a
+double-loop setting, resulting in a new algorithm, Perturbed Smoothed FOAM, improving the best known
+iterationcomplexities. Finally,Section7concludes the paper

@@ -6,7 +6,8 @@ product and norm.  For a matrix, $\|\cdot\|$ denotes the spectral norm.  For
 $\calA=(A_1,\ldots,A_m)^\top$, let $J_{\calA}(\bx)\in\RR^{m\times n}$ denote its
 Jacobian, whose $i$th row is $\nabla A_i(\bx)^\top$.  We write
 $\sigma_{\min}(J_{\calA}(\bx))$ for the smallest singular value of
-$J_{\calA}(\bx)$.  
+$J_{\calA}(\bx)$. For a nonempty closed convex set $C$, we denote by
+$\Pi_C(u):=\argmin_{v\in C}\|u-v\|^2$ the Euclidean projection of $u$ onto $C$.
 % Throughout the paper, $\partial h$ denotes the limiting
 % subdifferential of $h$.
 
@@ -24,30 +25,165 @@ proximal mapping are, respectively,
     \label{eq:prox-definition}
 \end{equation}
 
-Let define the splitting residual as $\br(\bx,\by):=\calA(\bx)-\by$ and 
-the KKT condition of the split formulation of Problem~\eqref{prob:main} as
-\begin{equation}
+
+\subsection{Assumptions}
+\label{sec:assumptions}
+We impose the following assumptions.
+% \begin{assumption}[Level-bounded objective]
+% \label{ass:level-boundedness}
+% Assume that $F$ is level-bounded, that is, for every $\alpha\in\RR$, the set
+% \[
+%     \calS_{\alpha}:=\{\bx\in\RR^n:F(\bx)\le\alpha\}
+% \]
+% is empty or compact.
+% \end{assumption}
+% \begin{assumption}[Uniform Jacobian regularity]
+% \label{ass:strong-licq}
+% There exists a constant $\nu>0$ such that
+% \[
+%     \sigma_{\min}\bigl(J_{\calA}(\bx)\bigr)\ge \nu,
+%     \qquad
+%     \forall \bx\in\calS.
+% \]
+% Equivalently,
+% \[
+%     \|J_{\calA}(\bx)^\top \by\|
+%     \ge
+%     \nu \|\by\|,
+%     \qquad \forall \bx\in\calS,\ \forall \by\in\RR^m.
+% \]
+% \end{assumption}
+\begin{assumption}
+\label{ass:smoothness}
+There exist constants $L_f,G_f,L_{\calA},G_{\calA}\ge0$ such that, for
+all $\bx,\bx'\in\RR^n$,
+\[
 \begin{aligned}
-    \nabla f(\bx)+J_{\calA}(\bx)^\top\bz&=\zero,\\
-    \bz&\in\partial h(\by),\\
-    \calA(\bx)-\by &=\zero.
+    \|\nabla f(\bx)-\nabla f(\bx')\|
+    &\le L_f\|\bx-\bx'\|,
+    &\|\nabla f(\bx)\|&\le G_f,\\
+    \|J_{\calA}(\bx)-J_{\calA}(\bx')\|
+    &\le L_{\calA}\|\bx-\bx'\|,
+    &\|J_{\calA}(\bx)\|&\le G_{\calA}.
 \end{aligned}
-\notag
-\end{equation}
+\]
+\end{assumption}
+
+\begin{assumption}
+\label{ass:h}
+The function $h$ is proper, closed, convex, and globally $L_h$-Lipschitz:
+\[
+    |h(\bu)-h(\bv)|\le L_h\|\bu-\bv\|,
+    \qquad \bu,\bv\in\RR^m.
+\]
+\end{assumption}
+
+\subsection{Setup}
+To study Question 1, we introduce the following problem class.
+\begin{definition}[Problem class]
+\label{def:problem-class}
+Let \(\Delta>0\) and
+\(\mathbf C=(L_f,G_f,L_{\calA},G_{\calA},L_h)\in\RR^5_{\ge0}\).
+We denote by \(\mathcal I(\mathbf C,\Delta)\) the set of all triples
+\((f,\calA,h)\), over all dimensions \(n,m\in\NN\), such that
+Assumptions~\ref{ass:smoothness} and~\ref{ass:h} hold with the constants
+in \(\mathbf C\) and $F(\zero)-\inf_{\bx\in\RR^n}F(\bx)\le\Delta$, where the constants \(\mathbf C\) and \(\Delta\) is independent on the target accuracy or on the dimensions \(n,m\). 
+\end{definition}
+% The gap condition implies
+% \(\inf F>-\infty\). Assumption~\ref{ass:level-boundedness} is not part of
+% \(\mathcal I(\mathbf C,\Delta)\); it is imposed separately in the complexity
+% results that require it.
+
+We use the following stationarity measure for  Problem~\eqref{prob:main} as below. 
 \begin{definition}[\(\epsilon\)-KKT point]
 \label{def:eps-kkt}
-For \(\epsilon>0\), a triple \((\bx,\by,\bz)\) is called an
-\(\epsilon\)-KKT point of~\eqref{eq:split-problem} if there exists a variable 
-\(\bz\in\partial h(\by)\) such that the following hold:
+Given \(\epsilon>0\). A triple \((\bx,\by,\bq)\) with
+\(\bq\in\partial h(\by)\) is an \(\epsilon\)-KKT point of
+\eqref{prob:main} if
 \begin{equation}
-    \begin{cases}
-        \|\nabla f(\bx)+J_{\calA}(\bx)^\top\bz\| \le \epsilon, \\
-        \|\calA(\bx)-\by\| \le \epsilon,
-    \end{cases}
-    \label{eq:eps-kkt-residual}
+    \mathcal{R}_{\mathrm{KKT}}(\bx,\by,\bq)
+    :=
+    \max\Bigl\{
+        \bigl\|\nabla f(\bx)+J_{\calA}(\bx)^\top\bq\bigr\|,\;
+        \|\calA(\bx)-\by\|
+    \Bigr\} \leq \epsilon
+    \label{eq:kkt-residual}
 \end{equation}
 \end{definition}
-This definition is closely related to the $\varepsilon$-GS stationary point defined in \cite{li2025nonsmooth}.
+
+We next relate Definition~\ref{def:eps-kkt} to game stationarity (GS) for the
+minimax reformulation~Problem~\eqref{eq:ncl} of Problem~\eqref{prob:main}. We use the
+following GS definition from \cite[Definition~3.1(b)]{li2025nonsmooth} and
+\cite[(2.10)--(2.11)]{zhang2026matching}.
+\begin{definition}[\(\epsilon\)-GS point]
+\label{def:eps-gs}
+Let \(\epsilon>0\). A pair \((\bx,\bq)\in\RR^n\times\dom\partial h^*\) is an
+\(\epsilon\)-game stationary point (\(\epsilon\)-GS) of~Problem~\eqref{eq:ncl} if
+\[
+    \calG(\bx,\bq)
+    :=
+    \max\Bigl\{
+        \bigl\|\nabla f(\bx)+J_{\calA}(\bx)^\top\bq\bigr\|,\;
+        \dist\bigl(\calA(\bx),\partial h^*(\bq)\bigr)
+    \Bigr\}
+    \le\epsilon .
+\]
+\end{definition}
+We now relate $\epsilon$-KKT points of Problem~\eqref{prob:main}
+to $\epsilon$-GS points of its Fenchel saddle reformulation~Problem~\eqref{eq:ncl}. 
+\begin{proposition}[KKT points of Problem~\eqref{prob:main} and GS points of~Problem~\eqref{eq:ncl}]
+\label{prop:kkt-gs}
+Suppose that Assumption~\ref{ass:h} holds, and let
+\((\bx,\bq)\in\RR^n\times\dom\partial h^*\). Then the following measurement relationship holds: 
+\[
+    \calG(\bx,\bq)
+    =
+    \min_{\by\in\partial h^*(\bq)}
+    \mathcal{R}_{\mathrm{KKT}}(\bx,\by,\bq),
+\]
+with minimum attained at
+\(\hat\by=\Pi_{\partial h^*(\bq)}\bigl(\calA(\bx)\bigr)\). Consequently, for
+every \(\epsilon>0\):
+\begin{enumerate}[label=(\alph*)]
+\item if \((\bx,\by,\bq)\) is an \(\epsilon\)-KKT point
+  of~Problem~\eqref{prob:main}, then \((\bx,\bq)\) is an \(\epsilon\)-GS point
+  of~Problem~\eqref{eq:ncl};
+\item if \((\bx,\bq)\) is an \(\epsilon\)-GS point of~Problem~\eqref{eq:ncl}, then
+  \((\bx,\hat\by,\bq)\) is an \(\epsilon\)-KKT point of~Problem~\eqref{prob:main}.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+Since \(h\) is proper, closed, and convex,
+\(\bq\in\partial h(\by)\) if and only if \(\by\in\partial h^*(\bq)\)
+\cite[Theorem~23.5]{rockafellar1970convex}. The first term of
+\(\mathcal{R}_{\mathrm{KKT}}\) does not depend on \(\by\). The set
+\(\partial h^*(\bq)\) is nonempty, closed, and convex, so
+\(\min_{\by\in\partial h^*(\bq)}\|\calA(\bx)-\by\|
+=\dist(\calA(\bx),\partial h^*(\bq))\), attained at \(\hat\by\).
+Statements~(a) and~(b) follow.
+\end{proof}
+
+We next introduce the following deterministic first-order oracle model.
+\begin{definition}[Oracle model]
+\label{def:oracle-model}
+We assume access to a deterministic first-order oracle
+\[
+    \mathcal{O}_{f,\mathcal{A}}(\bx)
+    :=
+    \bigl(f(\bx),\nabla f(\bx),\mathcal{A}(\bx),J_{\mathcal{A}}(\bx)\bigr),
+\]
+and an exact proximal oracle
+\[
+    \mathcal{O}_{h}(\bv,t)
+    :=
+    \operatorname{prox}_{t h}(\bv),
+    \qquad t>0.
+\]
+Each call to either oracle counts as one oracle evaluation. In particular,
+the cost of solving the proximal subproblem is represented by one exact
+proximal-oracle call.
+\end{definition}
 
 \subsection{Dual regularization and effective penalties}
 \label{sec:dual-penalty-identity}
@@ -170,76 +306,3 @@ $q_\sigma-\mu$ to zero. For the actual single-loop method, this
 property must be established from the coupled multiplier and center
 updates; the value-function identity alone does not imply exact ALM
 equivalence.
-\subsection{Assumptions}
-\label{sec:assumptions}
-
-\begin{assumption}[Level-bounded objective]
-\label{ass:level-boundedness}
-Assume that $F$ is level-bounded, that is, for every $\alpha\in\RR$, the set
-\[
-    \calS_{\alpha}:=\{\bx\in\RR^n:F(\bx)\le\alpha\}
-\]
-is empty or compact.
-\end{assumption}
-
-\begin{assumption}
-\label{ass:smoothness}
-\begin{enumerate}[label={[\roman*].}]
-    \item The function $f:\RR^n\to\RR$ is continuously differentiable,
-    and there exists $L_f, G_f \ge0$ such that
-    \[
-        \|\nabla f(\bx)-\nabla f(\bx')\|
-        \le
-        L_f\|\bx-\bx'\|,
-        \qquad \forall \bx,\bx'\in \RR^n,
-    \] and 
-    \[
-    \|\nabla f(\bx)\| \leq  G_f,
-    \qquad \forall \bx\in\RR^n.
-    \]
-
-    \item The mapping $\calA:\RR^n\to\RR^m$ is continuously
-    differentiable, and there exist $L_{\calA},G_{\calA}\ge0$ such that
-    \[
-        \|J_{\calA}(\bx)-J_{\calA}(\bx')\|
-        \le
-        L_{\calA}\|\bx-\bx'\|,
-        \qquad \forall \bx,\bx'\in\RR^n,
-    \]
-    and
-    \[
-        \|J_{\calA}(\bx)\|\le G_{\calA},
-        \qquad \forall \bx\in\RR^n.
-    \]
-\end{enumerate}
-\end{assumption}
-
-\begin{assumption}
-\label{ass:h}
-The function $h:\RR^m\to\RR$ is proper, closed, convex, and 
-$L_h$-Lipschitz, i.e.,
-\begin{equation}
-    \|\bxi\|\le L_h,
-    \qquad
-    \forall \by\in\RR^m,
-    \quad \forall \bxi\in\partial h(\by).
-    \label{eq:bounded-h-subgradients}
-\end{equation}
-\end{assumption}
-
-% \begin{assumption}[Uniform Jacobian regularity]
-% \label{ass:strong-licq}
-% There exists a constant $\nu>0$ such that
-% \[
-%     \sigma_{\min}\bigl(J_{\calA}(\bx)\bigr)\ge \nu,
-%     \qquad
-%     \forall \bx\in\calS.
-% \]
-% Equivalently,
-% \[
-%     \|J_{\calA}(\bx)^\top \by\|
-%     \ge
-%     \nu \|\by\|,
-%     \qquad \forall \bx\in\calS,\ \forall \by\in\RR^m.
-% \]
-% \end{assumption}
