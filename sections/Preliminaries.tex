@@ -1,50 +1,245 @@
 \section{Preliminaries}
-\begin{definition}[KKT Point and $(\varepsilon_1, \varepsilon_2)$-KKT Point]
-\label{def:kkt}
-A point $\bx^* \in \calX$ is called a \emph{KKT point} 
-of problem \eqref{eq:nonlinear-composite} if
-\begin{equation}\label{eq:kkt}
-    0 \in \nabla f(\bx^*) + \partial g(\bx^*) 
-    + J_{\bc}(\bx^*)^\top \partial h\big(\bc(\bx^*)\big)
-    + \mathcal{N}_{\calX}(\bx^*).
-\end{equation}
-Moreover, for $\varepsilon_1, \varepsilon_2 > 0$, a point 
-$\bx^* \in \calX$ is called an 
-\emph{$(\varepsilon_1, \varepsilon_2)$-KKT point} if there exists 
-$\by^* \in \mathbb{R}^m$ such that:
-\begin{align}
-    \mathrm{dist}\Big(- \mathcal{N}_{\calX}(\bx^*),\; \nabla f(\bx^*) + \partial g(\bx^*) 
-    + J_{\bc}(\bx^*)^\top \partial h\big(\by^*\big)\Big) 
-    &\leq \varepsilon_1, \label{eq:eps-kkt-stationarity}\\
-    \|\bc(\bx^*) - \by^*\| 
-    &\leq \varepsilon_2. \label{eq:eps-kkt-feasibility}
-\end{align}
-\end{definition}
-\begin{remark}
-Condition \eqref{eq:kkt} is derived via the chain rule under 
-Assumption~\ref{ass:CQ}. In the block-separable formulation 
-\eqref{eq:block-separable}, introducing a dual multiplier 
-$\lambda^* \in \mathbb{R}^m$, the KKT condition 
-\eqref{eq:kkt} is equivalently expressed as:
-\begin{align}
-    0 &\in \nabla f(x^*) + \partial g(x^*) 
-        + J_{\bc}(x^*)^T \lambda^*, \\
-    0 &\in \partial h(y^*) - \lambda^*, \\
-    0 &= \bc(x^*) - y^*,
-\end{align}
-which reduces to \eqref{eq:kkt} upon eliminating $\lambda^*$.
-\end{remark}
+% \subsection{Notation}
+% \label{sec:notation}
+\textbf{Notation.} We use $\langle\cdot,\cdot\rangle$ and $\|\cdot\|$ for the Euclidean inner
+product and norm.  For a matrix, $\|\cdot\|$ denotes the spectral norm.  For
+$\calA=(A_1,\ldots,A_m)^\top$, let $J_{\calA}(\bx)\in\RR^{m\times n}$ denote its
+Jacobian, whose $i$th row is $\nabla A_i(\bx)^\top$.  We write
+$\sigma_{\min}(J_{\calA}(\bx))$ for the smallest singular value of
+$J_{\calA}(\bx)$.  
+% Throughout the paper, $\partial h$ denotes the limiting
+% subdifferential of $h$.
 
-\subsection{Main Assumptions}
-To establish the ensuing analysis, we introduce the following standard assumptions for problem
-
-\begin{assumption}[Constraint Qualification]\label{ass:CQ}
-The following constraint qualification holds for problem 
-\eqref{eq:nonlinear-composite}:
+For a proper closed convex function \(h\), its convex subdifferential and
+proximal mapping are, respectively,
 \[
-    \text{[CQ]} \qquad 
-    \nabla \bc(\bx)^T y = 0, \quad 
-    y \in \partial^\infty h\big(\bc(\bx)\big) 
-    \implies y = 0.
+    \partial h(y)
+    :=\{v:\ h(z)\ge h(y)+\langle v,z-y\rangle\ \text{for all }z\},
 \]
+\begin{equation}
+    \prox_{\gamma h}(u)
+    :=\argmin_{y\in\R^m}
+       \left\{h(y)+\frac{1}{2\gamma}\|y-u\|^2\right\},
+    \qquad \gamma>0.
+    \label{eq:prox-definition}
+\end{equation}
+
+Let define the splitting residual as $\br(\bx,\by):=\calA(\bx)-\by$ and 
+the KKT condition of the split formulation of Problem~\eqref{prob:main} as
+\begin{equation}
+\begin{aligned}
+    \nabla f(\bx)+J_{\calA}(\bx)^\top\bz&=\zero,\\
+    \bz&\in\partial h(\by),\\
+    \calA(\bx)-\by &=\zero.
+\end{aligned}
+\notag
+\end{equation}
+\begin{definition}[\(\epsilon\)-KKT point]
+\label{def:eps-kkt}
+For \(\epsilon>0\), a triple \((\bx,\by,\bz)\) is called an
+\(\epsilon\)-KKT point of~\eqref{eq:split-problem} if there exists a variable 
+\(\bz\in\partial h(\by)\) such that the following hold:
+\begin{equation}
+    \begin{cases}
+        \|\nabla f(\bx)+J_{\calA}(\bx)^\top\bz\| \le \epsilon, \\
+        \|\calA(\bx)-\by\| \le \epsilon,
+    \end{cases}
+    \label{eq:eps-kkt-residual}
+\end{equation}
+\end{definition}
+This definition is closely related to the $\varepsilon$-GS stationary point defined in \cite{li2025nonsmooth}.
+
+\subsection{Dual regularization and effective penalties}
+\label{sec:dual-penalty-identity}
+
+This subsection clarifies the relationship between Fenchel duality,
+augmented Lagrangian regularization, and the dual damping used in our
+method. While , we clarify for completeness. 
+
+\paragraph{ALM as a dual proximal update}
+For any $\sigma>0$ and $\mu\in\mathbb R^m$, define
+\[
+\widehat{\mathcal L}_{\sigma}(x,\mu)
+:=
+f(x)+\min_y
+\left\{
+h(y)+\langle \mu,A(x)-y\rangle
++\frac{\sigma}{2}\|A(x)-y\|^2
+\right\}.
+\]
+By Fenchel duality,
+\[
+\widehat{\mathcal L}_{\sigma}(x,\mu)
+=
+f(x)+\max_{\lambda}
+\left\{
+\langle A(x),\lambda\rangle-h^*(\lambda)
+-\frac{1}{2\sigma}\|\lambda-\mu\|^2
+\right\}.
+\]
+Thus, the standard ALM update with penalty $\rho$ is equivalent to a
+dual proximal update with proximal parameter $\rho$ and center
+$\mu=\lambda^k$:
+\[
+\begin{aligned}
+\lambda^{k+1}
+&=
+\operatorname{prox}_{\rho h^*}
+\bigl(\lambda^k+\rho A(x^{k+1})\bigr) \\
+&=
+\argmin_{q\in\mathbb R^m}
+\left\{
+h^*(q)
++\frac{1}{2\rho}
+\left\|
+q-\bigl(\lambda^k+\rho A(x^{k+1})\bigr)
+\right\|^2
+\right\}.
+\end{aligned}
+\]
+
+\paragraph{Zero center and quadratic penalty}
+When the dual center is fixed at $\mu=0$, the same identity reduces to
+\[
+\max_{\lambda}
+\left\{
+\langle A(x),\lambda\rangle-h^*(\lambda)
+-\frac{1}{2\sigma}\|\lambda\|^2
+\right\}
+=
+h_{1/\sigma}(A(x)),
+\]
+where $h_{1/\sigma}$ denotes the Moreau envelope of $h$. Hence, the
+zero-center formulation is equivalent to the quadratic-penalty value
+function
+\[
+f(x)+h_{1/\sigma}(A(x)).
+\]
+Its feasibility control is obtained through the penalty parameter
+$\sigma$.
+
+\paragraph{Additional dual regularization in our method.}
+Our method starts from the reduced augmented Lagrangian
+$\mathcal D_\rho(x,\lambda)$ and adds a moving-center dual regularizer:
+\[
+\mathcal P_s(x,\lambda;z,\mu)
+=
+\mathcal D_\rho(x,\lambda)
++\frac{1}{2\gamma}\|x-z\|^2
+-\frac{1}{2s}\|\lambda-\mu\|^2.
+\]
+Therefore, the additional quadratic term is applied to the already
+reduced augmented Lagrangian, rather than directly to the original
+Lagrangian. Maximizing over $\lambda$ and applying the preceding
+identity gives
+\[
+\max_{\lambda}\mathcal P_s(x,\lambda;z,\mu)
+=
+\widehat{\mathcal L}_{\rho+s}(x,\mu)
++\frac{1}{2\gamma}\|x-z\|^2.
+\]
+Thus, the dual regularization produces the effective penalty
+\[
+\rho_{\mathrm{eff}}=\rho+s
+\]
+while the base ALM penalty $\rho$ remains fixed.
+
+\paragraph{Feasibility interpretation.}
+At the exact effective saddle point, let
+$q_\sigma\in\partial h(y_\sigma)$ with $\sigma=\rho+s$. Then
+\[
+A(x)-y_\sigma
+=
+\frac{q_\sigma-\mu}{\rho+s}.
+\]
+In particular, when $\mu=0$ and $h$ is $L_h$-Lipschitz,
+\[
+\|A(x)-y_\sigma\|
+\le
+\frac{L_h}{\rho+s}.
+\]
+For a general moving center, the corresponding bound is
+\[
+\|A(x)-y_\sigma\|
+\le
+\frac{L_h+\|\mu\|}{\rho+s}.
+\]
+These are upper bounds induced by the effective penalty. Feasibility can
+also be recovered with a bounded $\rho+s$ if the center update drives
+$q_\sigma-\mu$ to zero. For the actual single-loop method, this
+property must be established from the coupled multiplier and center
+updates; the value-function identity alone does not imply exact ALM
+equivalence.
+\subsection{Assumptions}
+\label{sec:assumptions}
+
+\begin{assumption}[Level-bounded objective]
+\label{ass:level-boundedness}
+Assume that $F$ is level-bounded, that is, for every $\alpha\in\RR$, the set
+\[
+    \calS_{\alpha}:=\{\bx\in\RR^n:F(\bx)\le\alpha\}
+\]
+is empty or compact.
 \end{assumption}
+
+\begin{assumption}
+\label{ass:smoothness}
+\begin{enumerate}[label={[\roman*].}]
+    \item The function $f:\RR^n\to\RR$ is continuously differentiable,
+    and there exists $L_f, G_f \ge0$ such that
+    \[
+        \|\nabla f(\bx)-\nabla f(\bx')\|
+        \le
+        L_f\|\bx-\bx'\|,
+        \qquad \forall \bx,\bx'\in \RR^n,
+    \] and 
+    \[
+    \|\nabla f(\bx)\| \leq  G_f,
+    \qquad \forall \bx\in\RR^n.
+    \]
+
+    \item The mapping $\calA:\RR^n\to\RR^m$ is continuously
+    differentiable, and there exist $L_{\calA},G_{\calA}\ge0$ such that
+    \[
+        \|J_{\calA}(\bx)-J_{\calA}(\bx')\|
+        \le
+        L_{\calA}\|\bx-\bx'\|,
+        \qquad \forall \bx,\bx'\in\RR^n,
+    \]
+    and
+    \[
+        \|J_{\calA}(\bx)\|\le G_{\calA},
+        \qquad \forall \bx\in\RR^n.
+    \]
+\end{enumerate}
+\end{assumption}
+
+\begin{assumption}
+\label{ass:h}
+The function $h:\RR^m\to\RR$ is proper, closed, convex, and 
+$L_h$-Lipschitz, i.e.,
+\begin{equation}
+    \|\bxi\|\le L_h,
+    \qquad
+    \forall \by\in\RR^m,
+    \quad \forall \bxi\in\partial h(\by).
+    \label{eq:bounded-h-subgradients}
+\end{equation}
+\end{assumption}
+
+% \begin{assumption}[Uniform Jacobian regularity]
+% \label{ass:strong-licq}
+% There exists a constant $\nu>0$ such that
+% \[
+%     \sigma_{\min}\bigl(J_{\calA}(\bx)\bigr)\ge \nu,
+%     \qquad
+%     \forall \bx\in\calS.
+% \]
+% Equivalently,
+% \[
+%     \|J_{\calA}(\bx)^\top \by\|
+%     \ge
+%     \nu \|\by\|,
+%     \qquad \forall \bx\in\calS,\ \forall \by\in\RR^m.
+% \]
+% \end{assumption}

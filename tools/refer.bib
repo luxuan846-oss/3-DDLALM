@@ -279,6 +279,16 @@
   year    = {2018}
 }
 
+@article{tran2018smooth,
+  author  = {Q. Tran-Dinh and O. Fercoq and V. Cevher},
+  title   = {A smooth primal-dual optimization framework for nonsmooth composite convex minimization},
+  journal = {SIAM J. Optim.},
+  volume  = {28},
+  number  = {1},
+  pages   = {96--134},
+  year    = {2018}
+}
+
 @article{bot2020variable,
   author  = {R. I. Bo\c{t} and E. R. Csetnek and D.-K. Nguyen},
   title   = {A forward-backward-forward differential equation and its asymptotic properties},
@@ -289,13 +299,22 @@
   year    = {2020}
 }
 
+@article{boct2020variable,
+  author  = {R. I. Bo{\c{t}} and A. B{\"o}hm},
+  title   = {Variable smoothing for convex optimization problems using stochastic gradients},
+  journal = {J. Sci. Comput.},
+  volume  = {85},
+  number  = {2},
+  pages   = {33},
+  year    = {2020}
+}
+
 @article{bot2015variable,
-  author  = {R. I. Bo\c{t} and E. R. Csetnek},
-  title   = {An inertial forward-backward-forward primal-dual splitting algorithm for solving monotone inclusion problems},
-  journal = {Numer. Algorithms},
-  volume  = {71},
-  number  = {3},
-  pages   = {519--540},
+  author  = {R. I. Bo{\c{t}} and C. Hendrick},
+  title   = {A variable smoothing algorithm for solving convex optimization problems},
+  journal = {TOP},
+  volume  = {23},
+  pages   = {124--150},
   year    = {2015}
 }
 
@@ -330,8 +349,10 @@
 % ========== 非线性耦合 - 约束优化 ==========
 @article{Alacaoglu24a,
   author  = {A. Alacaoglu and S. J. Wright},
-  title   = {Complexity of a stochastic ADMM algorithm for equality-constrained optimization problems with nonsmooth loss functions},
-  journal = {arXiv preprint arXiv:2409.09906},
+  title   = {Complexity of single loop algorithms for nonlinear programming with stochastic objective and constraints},
+  journal = {AISTATS},
+  volume  = {238},
+  pages   = {4627--4635},
   year    = {2024}
 }
 
@@ -343,10 +364,17 @@
 }
 
 @article{deng2025single,
-  author  = {Z. Deng and H. Mansur and A. S. Bandeira},
-  title   = {Single-loop stochastic methods for geodesically nonsmooth optimization on Riemannian manifolds},
-  journal = {arXiv preprint arXiv:2502.05643},
+  author  = {K. Deng and Z. Peng and W. Wu},
+  title   = {Single-loop $\mathcal{O}(\epsilon^{-3})$ stochastic smoothing algorithms for nonsmooth Riemannian optimization},
+  journal = {arXiv preprint arXiv:2505.09485},
   year    = {2025}
+}
+
+@article{LuMeiXiao24,
+  author  = {Z. Lu and S. Mei and Y. Xiao},
+  title   = {Variance-reduced first-order methods for deterministically constrained stochastic nonconvex optimization with strong convergence guarantees},
+  journal = {arXiv preprint arXiv:2409.09906},
+  year    = {2024}
 }
 
 @article{LuXiao25,
@@ -564,6 +592,34 @@ year = {2018},
   author={Charisopoulos, Vasileios and Davis, Damek and D{\'\i}az, Mateo and Drusvyatskiy, Dmitriy},
   journal={arXiv preprint arXiv:1901.01624},
   year={2019}
+}
+
+@article{charisopoulos2021low,
+  author  = {V. Charisopoulos and Y. Chen and D. Davis and M. D{\'\i}az and L. Ding and D. Drusvyatskiy},
+  title   = {Low-rank matrix recovery with composite optimization: good conditioning and rapid convergence},
+  journal = {Found. Comput. Math.},
+  volume  = {21},
+  number  = {6},
+  pages   = {1505--1593},
+  year    = {2021}
+}
+
+@article{markovsky2008structured,
+  author  = {I. Markovsky},
+  title   = {Structured low-rank approximation and its applications},
+  journal = {Automatica},
+  volume  = {44},
+  number  = {4},
+  pages   = {891--909},
+  year    = {2008}
+}
+
+@inproceedings{parekh2015convex,
+  author    = {A. Parekh and I. W. Selesnick},
+  title     = {Convex fused {LASSO} denoising with non-convex regularization and its use for pulse detection},
+  booktitle = {IEEE Signal Processing in Medicine and Biology Symposium},
+  pages     = {1--6},
+  year      = {2015}
 }
 
 @article{bertsekas1997nonlinear,
@@ -873,24 +929,24 @@ year = {2023}
   volume  = {86},
   number  = {3},
   pages   = {38},
-  year    = {2021}
+  year    = {2021},
+  doi     = {10.1007/s10915-021-01409-y},
+  url     = {https://doi.org/10.1007/s10915-021-01409-y}
 }
 
 % ============================================================
 %  Deterministic ALM / penalty (large penalty)
 % ============================================================
-@article{li2021rate,
+@inproceedings{li2021rate,
   title     = {Rate-Improved Inexact Augmented {Lagrangian} Method for
                Constrained Nonconvex Optimization},
   author    = {Li, Zichong and Chen, Pin-Yu and Liu, Sijia and Lu, Songtao
                and Xu, Yangyang},
-  booktitle = {Proceedings of the 24th International Conference on Artificial
-               Intelligence and Statistics},
-  series    = {Proceedings of Machine Learning Research},
-  volume    = {130},
+  booktitle = {AISTATS},
   pages     = {2170--2178},
   year      = {2021},
-  note      = {Published as @inproceedings; verify details}
+  url       = {https://proceedings.mlr.press/v130/li21d.html},
+  pdf       = {http://proceedings.mlr.press/v130/li21d/li21d.pdf}
 }
 
 @inproceedings{jia2023first,
@@ -1044,24 +1100,25 @@ year = {2023}
 %  Fixed penalty, stochastic (linear constraints)
 % ============================================================
 @inproceedings{alacaoglu2024complexity,
-  title     = {Complexity of Single Loop Algorithms for Nonlinear Programming},
+  title     = {Complexity of Single Loop Algorithms for Nonlinear Programming
+               with Stochastic Objective and Constraints},
   author    = {Alacaoglu, Ahmet and Wright, Stephen J.},
   booktitle = {Proceedings of the 27th International Conference on Artificial
                Intelligence and Statistics},
   series    = {Proceedings of Machine Learning Research},
+  volume    = {238},
+  pages     = {4627--4635},
   year      = {2024},
   note      = {arXiv:2311.00678}
 }
 
 @inproceedings{huang2025stochastic,
-  title     = {Stochastic Augmented {Lagrangian} with Fixed Penalty for
-               Nonconvex Optimization with Linear Inequality Constraints},
-  author    = {Huang, Yifan and others},
+  title     = {Stochastic Smoothed Primal-Dual Algorithms for Nonconvex
+               Optimization with Linear Inequality Constraints},
+  author    = {Huang, Ruichuan and Zhang, Jiawei and Alacaoglu, Ahmet},
   booktitle = {Proceedings of the 42nd International Conference on Machine
                Learning},
-  year      = {2025},
-  note      = {Verify exact authors and title; uses Moreau envelope,
-               $\calO(\varepsilon^{-3})$ for linear inequality constraints}
+  year      = {2025}
 }
 
 % ============================================================
@@ -1081,11 +1138,26 @@ year = {2023}
 @article{shi2025momentum,
   title   = {A Momentum-Based Linearized Augmented {Lagrangian} Method for
              Nonconvex Constrained Stochastic Optimization},
-  author  = {Shi, Chuwen and others},
-  journal = {Mathematical Methods of Operations Research},
+  author  = {Shi, Qiankun and Wang, Xiao and Wang, Hao},
+  journal = {Mathematics of Operations Research},
+  volume  = {51},
+  number  = {1},
+  pages   = {92--133},
   year    = {2025},
-  note    = {Verify exact authors and title; achieves
-             $\calO(\varepsilon^{-3.5})$ with dual momentum}
+  doi     = {10.1287/moor.2022.0193}
+}
+
+@article{lu2026variance,
+  title   = {Variance-Reduced First-Order Methods for Deterministically
+             Constrained Stochastic Nonconvex Optimization with Strong
+             Convergence Guarantees},
+  author  = {Lu, Zhaosong and Mei, Sanyou and Xiao, Yifeng},
+  journal = {SIAM Journal on Optimization},
+  volume  = {36},
+  number  = {1},
+  pages   = {1--31},
+  year    = {2026},
+  doi     = {10.1137/24M1693933}
 }
 
 
@@ -1101,6 +1173,38 @@ year = {2023}
   publisher = {SIAM}
 }
 
+@inproceedings{luSingleLoopGradientDescent2022,
+  title     = {A Single-Loop Gradient Descent and Perturbed Ascent Algorithm
+               for Nonconvex Functional Constrained Optimization},
+  author    = {Lu, Songtao},
+  booktitle = {ICML},
+  pages     = {14315--14357},
+  year      = {2022},
+  url       = {https://proceedings.mlr.press/v162/lu22a.html},
+  pdf       = {https://proceedings.mlr.press/v162/lu22a/lu22a.pdf}
+}
+
+@article{shi2025adaptive,
+  title   = {Adaptive Directional Decomposition Methods for Nonconvex
+             Constrained Optimization},
+  author  = {Shi, Qiankun and Wang, Xiao},
+  journal = {arXiv preprint arXiv:2511.03210},
+  year    = {2025},
+  doi     = {10.48550/arXiv.2511.03210},
+  url     = {https://arxiv.org/abs/2511.03210}
+}
+
+@article{anonymous2026beyond,
+  title   = {Beyond Convexity: Proximal-Perturbed Lagrangian Methods for
+             Efficient Functional Constrained Optimization},
+  author  = {Moon, Sang Bin and Kim, Jong Gwang and Chandra, Ashish and
+             Brinton, Christopher and Hashemi, Abolfazl},
+  journal = {arXiv preprint arXiv:2406.17107},
+  year    = {2025},
+  doi     = {10.48550/arXiv.2406.17107},
+  url     = {https://arxiv.org/abs/2406.17107}
+}
+
 @inproceedings{pmlr-v267-jin25e,
   title     = {{PARQ}: Piecewise-Affine Regularized Quantization},
   author    = {Jin, Lisa and Ma, Jianhao and Liu, Zechun and Gromov, Andrey and Defazio, Aaron and Xiao, Lin},
@@ -1114,4 +1218,363 @@ year = {2023}
   publisher = {PMLR},
   url       = {https://proceedings.mlr.press/v267/jin25e.html},
   pdf       = {https://raw.githubusercontent.com/mlresearch/v267/main/assets/jin25e/jin25e.pdf}
+}
+
+@article{berahas2025linearized,
+  title   = {Complexity of Linearized Perturbed Augmented Lagrangian Methods for Nonsmooth Nonconvex Optimization with Nonlinear Equality Constraints},
+  author  = {El Bourkhissi, Lahcen and Necoara, Ion and Patrinos, Panagiotis and Tran-Dinh, Quoc},
+  journal = {arXiv preprint arXiv:2503.01056},
+  year    = {2025},
+  doi     = {10.48550/arXiv.2503.01056},
+  url     = {https://arxiv.org/abs/2503.01056}
+}
+
+
+@inproceedings{zhang2020smoothed,
+  author    = {Zhang, Jiawei and Xiao, Peijun and Sun, Ruoyu and Luo, Zhi-Quan},
+  title     = {A Single-Loop Smoothed Gradient Descent-Ascent Algorithm for
+               Nonconvex-Concave Min-Max Problems},
+  booktitle = {Advances in Neural Information Processing Systems},
+  volume    = {33},
+  pages     = {7377--7389},
+  year      = {2020},
+  url       = {https://proceedings.neurips.cc/paper/2020/hash/52aaa62e71f829d41d74892a18a11d59-Abstract.html}
+}
+
+
+@misc{li2026smoothing,
+  author        = {Li, Jiajin and Nagarajan, Mahesh and Pan, Siyu and Zhang, Nanxi},
+  title         = {Smoothing Meets Perturbation: Unified and Tight Analysis
+                   for Nonconvex-Concave Minimax Optimization},
+  year          = {2026},
+  eprint        = {2602.14185},
+  archivePrefix = {arXiv},
+  primaryClass  = {math.OC},
+  doi           = {10.48550/arXiv.2602.14185},
+  url           = {https://arxiv.org/abs/2602.14185}
+}
+
+@inproceedings{zheng2023universal,
+  author    = {Zheng, Taoli and Zhu, Linglingzhi and So, Anthony Man-Cho
+               and Blanchet, Jose and Li, Jiajin},
+  title     = {Universal Gradient Descent Ascent Method for
+               Nonconvex-Nonconcave Minimax Optimization},
+  booktitle = {Advances in Neural Information Processing Systems},
+  volume    = {36},
+  year      = {2023},
+  url       = {https://proceedings.neurips.cc/paper_files/paper/2023/file/a961dea42c23c3c0d01b79918701fb6e-Paper-Conference.pdf}
+}
+
+@article{xu2026rada,
+  author  = {Xu, Meng and Jiang, Bo and Liu, Ya-Feng and So, Anthony Man-Cho},
+  title   = {A Riemannian Alternating Descent Ascent Algorithmic Framework for
+             Nonconvex-Linear Minimax Problems on Riemannian Manifolds},
+  journal = {Mathematics of Operations Research},
+  year    = {2026},
+  doi     = {10.1287/moor.2025.1055},
+  url     = {https://pubsonline.informs.org/doi/10.1287/moor.2025.1055}
+}
+
+@misc{hu2026fixed,
+  author = {Hu, Jiang and Deng, Kangkang},
+  title  = {Fixed-Penalty Manifold Augmented Lagrangian Methods},
+  year   = {2026},
+  note   = {Workshop presentation}
+}
+
+@article{hestenes1969multiplier,
+  author  = {Hestenes, Magnus R.},
+  title   = {Multiplier and gradient methods},
+  journal = {Journal of Optimization Theory and Applications},
+  volume  = {4},
+  number  = {5},
+  pages   = {303--320},
+  year    = {1969}
+}
+
+@incollection{powell1969method,
+  author    = {Powell, M. J. D.},
+  title     = {A method for nonlinear constraints in minimization problems},
+  booktitle = {Optimization},
+  editor    = {Fletcher, R.},
+  publisher = {Academic Press},
+  address   = {London},
+  pages     = {283--298},
+  year      = {1969}
+}
+
+@article{rockafellar1973multiplier,
+  author  = {Rockafellar, R. Tyrrell},
+  title   = {The multiplier method of {H}estenes and {P}owell applied to convex programming},
+  journal = {Journal of Optimization Theory and Applications},
+  volume  = {12},
+  number  = {6},
+  pages   = {555--562},
+  year    = {1973}
+}
+
+@article{kong2019complexity,
+  author  = {Kong, Weiwei and Melo, Jefferson G. and Monteiro, Renato D. C.},
+  title   = {Complexity of a quadratic penalty accelerated inexact proximal point method for solving linearly constrained nonconvex composite programs},
+  journal = {SIAM Journal on Optimization},
+  volume  = {29},
+  number  = {4},
+  pages   = {2566--2593},
+  year    = {2019}
+}
+
+@article{lin2022complexity,
+  author  = {Lin, Qihang and Ma, Runchao and Xu, Yangyang},
+  title   = {Complexity of an inexact proximal-point penalty method for constrained smooth non-convex optimization},
+  journal = {Computational Optimization and Applications},
+  volume  = {82},
+  pages   = {175--224},
+  year    = {2022}
+}
+
+@inproceedings{sahin2019inexact,
+  author    = {Sahin, Mehmet Fatih and Eftekhari, Armin and Alacaoglu, Ahmet and Latorre, Fabian and Cevher, Volkan},
+  title     = {An inexact augmented {L}agrangian framework for nonconvex optimization with nonlinear constraints},
+  booktitle = {Advances in Neural Information Processing Systems},
+  volume    = {32},
+  pages     = {13943--13955},
+  year      = {2019}
+}
+
+@article{grapiglia2021complexity,
+  author  = {Grapiglia, Geovani N. and Yuan, Ya-xiang},
+  title   = {On the complexity of an augmented {L}agrangian method for nonconvex optimization},
+  journal = {IMA Journal of Numerical Analysis},
+  volume  = {41},
+  number  = {2},
+  pages   = {1546--1568},
+  year    = {2021}
+}
+
+@article{hajinezhad2019perturbed,
+  author  = {Hajinezhad, Davood and Hong, Mingyi},
+  title   = {Perturbed proximal primal-dual algorithm for nonconvex nonsmooth optimization},
+  journal = {Mathematical Programming},
+  volume  = {176},
+  number  = {1--2},
+  pages   = {207--245},
+  year    = {2019}
+}
+
+@article{hallak2023adaptive,
+  author  = {Hallak, Nadav and Teboulle, Marc},
+  title   = {An adaptive {L}agrangian-based scheme for nonconvex composite optimization},
+  journal = {Mathematics of Operations Research},
+  volume  = {48},
+  number  = {4},
+  pages   = {2337--2352},
+  year    = {2023}
+}
+
+@misc{elbourkhissi2025perturbed,
+  author        = {El Bourkhissi, Lahcen and Necoara, Ion and Patrinos, Panagiotis and Tran-Dinh, Quoc},
+  title         = {Complexity of linearized perturbed augmented {L}agrangian methods for nonsmooth nonconvex optimization with nonlinear equality constraints},
+  year          = {2025},
+  eprint        = {2503.01056},
+  archivePrefix = {arXiv},
+  primaryClass  = {math.OC}
+}
+
+@misc{elbourkhissi2025linearized,
+  author        = {El Bourkhissi, Lahcen and Necoara, Ion},
+  title         = {Complexity of a linearized augmented {L}agrangian method for nonconvex minimization with nonlinear equality constraints},
+  year          = {2025},
+  eprint        = {2301.08345},
+  archivePrefix = {arXiv},
+  primaryClass  = {math.OC}
+}
+
+@misc{liu2026fixed,
+  author        = {Liu, Benqi and Deng, Kangkang and Wang, Zichen and Wen, Zaiwen},
+  title         = {A fixed-penalty linearized augmented {L}agrangian method with classical multiplier updates},
+  year          = {2026},
+  eprint        = {2608.19847},
+  archivePrefix = {arXiv},
+  primaryClass  = {math.OC}
+}
+
+@article{pan2021efficient,
+  author  = {Pan, W. and Shen, J. and Xu, Z.},
+  title   = {An efficient algorithm for nonconvex-linear minimax optimization problem and its application in solving weighted maximin dispersion problem},
+  journal = {Computational Optimization and Applications},
+  volume  = {78},
+  pages   = {287--306},
+  year    = {2021}
+}
+
+@article{he2024approximation,
+  author  = {He, J. and Zhang, H. and Xu, Z.},
+  title   = {An approximation proximal gradient algorithm for nonconvex-linear minimax problems with nonconvex nonsmooth terms},
+  journal = {Journal of Global Optimization},
+  volume  = {90},
+  pages   = {73--92},
+  year    = {2024}
+}
+
+@article{lin2020gradient,
+  author  = {Lin, Tianyi and Jin, Chi and Jordan, Michael I.},
+  title   = {On gradient descent ascent for nonconvex-concave minimax problems},
+  journal = {Proceedings of the 37th International Conference on Machine Learning},
+  volume  = {119},
+  pages   = {6083--6093},
+  year    = {2020}
+}
+
+@book{bertsekas1982,
+  author    = {Bertsekas, Dimitri P.},
+  title     = {Constrained Optimization and Lagrange Multiplier Methods},
+  publisher = {Academic Press},
+  year      = {1982}
+}
+
+@article{zhang2022global,
+  author  = {Zhang, Jiawei and Luo, Zhi-Quan},
+  title   = {A Global Dual Error Bound and Its Application to the Analysis of Linearly Constrained Nonconvex Optimization},
+  journal = {SIAM Journal on Optimization},
+  volume  = {32},
+  number  = {3},
+  pages   = {2319--2346},
+  year    = {2022},
+  doi     = {10.1137/20M135474X}
+}
+
+@inproceedings{zhang2020single,
+  title     = {A Single-Loop Smoothed Gradient Descent-Ascent Algorithm for
+               Nonconvex-Concave Min-Max Problems},
+  author    = {Zhang, Jiawei and Xiao, Peijun and Sun, Ruoyu and Luo, Zhi-Quan},
+  booktitle = {Advances in Neural Information Processing Systems},
+  volume    = {33},
+  pages     = {7377--7389},
+  year      = {2020}
+}
+
+@article{lu2020hybrid,
+  title   = {Hybrid Block Successive Approximation for One-Sided Non-Convex
+             Min-Max Problems: Algorithms and Applications},
+  author  = {Lu, Songtao and Tsaknakis, Ioannis and Hong, Mingyi and Chen, Yongxin},
+  journal = {IEEE Transactions on Signal Processing},
+  volume  = {68},
+  pages   = {3676--3691},
+  year    = {2020}
+}
+
+@article{xu2023unified,
+  title   = {A Unified Single-Loop Alternating Gradient Projection Algorithm for
+             Nonconvex--Concave and Convex--Nonconcave Minimax Problems},
+  author  = {Xu, Zi and Zhang, Huiling and Xu, Yang and Lan, Guanghui},
+  journal = {Mathematical Programming},
+  volume  = {201},
+  number  = {1},
+  pages   = {635--706},
+  year    = {2023}
+}
+
+@article{kim2024fast,
+  title   = {A Fast Single-Loop Primal-Dual Algorithm for Non-Convex Functional
+             Constrained Optimization},
+  author  = {Kim, Jong Gwang and Chandra, Ashish and Hashemi, Abolfazl and
+             Brinton, Christopher},
+  journal = {arXiv preprint arXiv:2406.17107},
+  year    = {2024}
+}
+
+@article{hoffman1952,
+  title   = {On Approximate Solutions of Systems of Linear Inequalities},
+  author  = {Hoffman, Alan J.},
+  journal = {Journal of Research of the National Bureau of Standards},
+  volume  = {49},
+  number  = {4},
+  pages   = {263--265},
+  year    = {1952}
+}
+
+@article{zhang2020proximal,
+  title   = {A Proximal Alternating Direction Method of Multiplier for Linearly
+             Constrained Nonconvex Minimization},
+  author  = {Zhang, Jiawei and Luo, Zhi-Quan},
+  journal = {SIAM Journal on Optimization},
+  volume  = {30},
+  number  = {3},
+  pages   = {2272--2302},
+  year    = {2020}
+}
+
+@article{duchi2019solving,
+  title   = {Solving (Most) of a Set of Quadratic Equalities: Composite
+             Optimization for Robust Phase Retrieval},
+  author  = {Duchi, John C. and Ruan, Feng},
+  journal = {Information and Inference: A Journal of the IMA},
+  volume  = {8},
+  number  = {3},
+  pages   = {471--529},
+  year    = {2019}
+}
+
+@article{bot2020proximal,
+  title   = {The Proximal Alternating Direction Method of Multipliers in the
+             Nonconvex Setting: Convergence Analysis and Rates},
+  author  = {Bo{\c{t}}, Radu Ioan and Nguyen, Dang-Khoa},
+  journal = {Mathematics of Operations Research},
+  volume  = {45},
+  number  = {2},
+  pages   = {682--712},
+  year    = {2020}
+}
+
+@article{cohen2022dynamic,
+  title   = {A Dynamic Alternating Direction of Multipliers for Nonconvex
+             Minimization with Nonlinear Functional Equality Constraints},
+  author  = {Cohen, Eyal and Hallak, Nadav and Teboulle, Marc},
+  journal = {Journal of Optimization Theory and Applications},
+  volume  = {193},
+  pages   = {324--353},
+  year    = {2022}
+}
+
+@article{moreau1965,
+  author  = {Moreau, Jean-Jacques},
+  title   = {Proximit{\'e} et dualit{\'e} dans un espace hilbertien},
+  journal = {Bulletin de la Soci{\'e}t{\'e} Math{\'e}matique de France},
+  volume  = {93},
+  pages   = {273--299},
+  year    = {1965},
+  doi     = {10.24033/bsmf.1625}
+}
+
+@article{nesterov2005smooth,
+  author  = {Nesterov, Yurii},
+  title   = {Smooth minimization of non-smooth functions},
+  journal = {Mathematical Programming},
+  volume  = {103},
+  number  = {1},
+  pages   = {127--152},
+  year    = {2005},
+  doi     = {10.1007/s10107-004-0552-5}
+}
+
+@article{rockafellar1976augmented,
+  author  = {Rockafellar, R. Tyrrell},
+  title   = {Augmented Lagrangians and Applications of the Proximal Point
+             Algorithm in Convex Programming},
+  journal = {Mathematics of Operations Research},
+  volume  = {1},
+  number  = {2},
+  pages   = {97--116},
+  year    = {1976},
+  doi     = {10.1287/moor.1.2.97}
+}
+
+@article{li2025nonsmooth,
+  author  = {Li, Jiajin and Zhu, Linglingzhi and So, Anthony Man-Cho},
+  title   = {Nonsmooth Nonconvex--Nonconcave Minimax Optimization:
+             Primal--Dual Balancing and Iteration Complexity Analysis},
+  journal = {Mathematical Programming},
+  year    = {2025},
+  volume  = {214},
+  pages   = {591--641}
 }

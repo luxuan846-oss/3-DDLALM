@@ -1,28 +1,17 @@
-.DS_Store
-
-# LaTeX intermediate files
+## LaTeX intermediate files
 *.aux
 *.bbl
-*.bcf
 *.blg
 *.fdb_latexmk
 *.fls
 *.log
 *.out
-*.run.xml
 *.synctex.gz
+*.thm
 *.toc
 *.lof
 *.lot
-*.nav
-*.snm
-*.vrb
-*.xdv
-*.dvi
-*.acn
-*.acr
-*.alg
-*.glg
-*.glo
-*.gls
-*.ist
+*.fdb_latexmk
+*.synctex(busy)
+*.bcf
+*.run.xml

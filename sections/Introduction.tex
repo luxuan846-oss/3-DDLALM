@@ -1,50 +1,442 @@
 \section{Introduction}
-In this paper, we consider a structured nonlinear composite optimization problem
-\begin{equation}\label{eq:nonlinear-composite}
-    \min_{\bx\in\calX}\; F(\bx)
-    := f(\bx) + g(\bx) + h\big(\bc(\bx)\big),
+\label{sec:introduction}
+In this paper, we study the structured nonsmooth nonconvex composite problem
+\begin{align}
+    \min_{\bx\in\RR^n}\quad & F(\bx) := f(\bx) + h(\calA(\bx)),
+    \tag{\textbf{P}}
+    \label{prob:main}
+\end{align}
+where $f\colon\RR^n\to\RR$ is a possibly nonconvex function with a Lipschitz
+continuous gradient, $\calA\colon\RR^n\to\RR^m$ is a smooth and possibly nonlinear
+mapping, and $h\colon\RR^m\to\RR\cup\{+\infty\}$ is a proper closed convex function
+whose proximal mapping is easy to evaluate; the complete assumptions are stated in
+Section~\ref{sec:assumptions}. The two components play complementary roles: $f$ is
+usually a smooth loss or data-fidelity term, whereas $h$ is a nonsmooth convex function
+that imposes robustness, sparsity, or other structure on the transformed variable
+$\calA(\bx)$
+\cite{charisopoulos2021low,markovsky2008structured,parekh2015convex}. Several models
+of practical interest take this form. 
+
+\subsection{Motivating Examples}
+
+\textbf{Robust phase retrieval}~\cite{duchi2019solving}.
+Given measurement vectors $\mathbf a_i\in\RR^n$ and observations
+$b_i\approx\langle\mathbf a_i,\bx^\star\rangle^2$, a fraction of which may be grossly
+corrupted, one solves
+\begin{equation*}
+  \min_{\bx\in\RR^n}\;\frac1m\sum_{i=1}^m
+  \bigl|\langle\mathbf a_i,\bx\rangle^2-b_i\bigr|.
+\end{equation*}
+This is~Problem \eqref{prob:main} with $f\equiv0$, $h=\frac1m\|\cdot\|_1$, and
+$\calA(\bx)_i=\langle\mathbf a_i,\bx\rangle^2-b_i$; the $\ell_1$ loss makes the
+model robust to outliers.
+
+\textbf{Robust low-rank matrix recovery}~\cite{charisopoulos2021low}.
+Given a linear measurement map $\mathcal M\colon\RR^{d_1\times d_2}\to\RR^m$ and
+observations $\mathbf b$ containing outliers, a rank-$r$ matrix is recovered in
+factorized form via
+\begin{equation*}
+  \min_{\mathbf U\in\RR^{d_1\times r},\,\mathbf V\in\RR^{d_2\times r}}
+  \frac1m\bigl\|\mathcal M(\mathbf U\mathbf V^\top)-\mathbf b\bigr\|_1.
+\end{equation*}
+Here $\bx=(\mathbf U,\mathbf V)$, $h=\frac1m\|\cdot\|_1$, and
+$\calA(\bx)=\mathcal M(\mathbf U\mathbf V^\top)-\mathbf b$ is bilinear in
+$(\mathbf U,\mathbf V)$, so the model again has the form~Problem \eqref{prob:main}.
+
+\textbf{Minimizing a pointwise maximum}~\cite{zhang2020single}.
+For smooth losses $f_1,\dots,f_m$, such as the losses on $m$ data subgroups, one solves
+\begin{equation*}
+  \min_{\bx\in\RR^n}\;\max_{1\le i\le m} f_i(\bx).
+\end{equation*}
+This is~Problem \eqref{prob:main} with $h(u)=\max_{1\le i\le m}u_i$ and
+$\calA(\bx)=(f_1(\bx),\dots,f_m(\bx))$; a smooth regularizer, if present, enters
+through $f$, and the proximal mapping of $h$ reduces to a projection onto the unit
+simplex.
+
+\subsection{Related Work}
+
+Introducing the auxiliary variable $\by=\calA(\bx)$ rewrites~Problem \eqref{prob:main} as
+the equality-constrained problem
+\begin{equation}\label{prob:split}
+  \min_{\bx,\by}\; f(\bx)+h(\by)\quad\text{s.t.}\quad \calA(\bx)=\by,
 \end{equation}
-where $\calX \subseteq \RR^n$ is a nonempty closed subset of $\RR^n$ 
-which admits an easy projection, $f:\RR^n\to\RR$ is continuously 
-differentiable (possibly nonconvex), $g:\RR^n\to\RR\cup\{+\infty\}$ 
-is a proper lower semicontinuous and prox-bounded function relative 
-to its domain $\mathrm{dom}\, g$ (possibly nonconvex), 
-$h:\RR^m\to\RR\cup\{+\infty\}$ is proper lower semicontinuous 
-(possibly nonsmooth and nonconvex), and $\bc:\RR^n\to\RR^m$ 
-is a $C^1$ mapping. Moreover, we assume that the problem is 
-well-posed, i.e., the feasible set is nonempty and the optimal 
-value is finite.
+which brings it within the scope of penalty methods and augmented Lagrangian methods
+(ALMs). For general nonlinearly constrained nonconvex problems, both families control
+feasibility through the penalty parameter. Quadratic penalty methods increase the
+penalty without bound~\cite{kong2019complexity,lin2022complexity}. ALMs were
+originally introduced to avoid such unbounded penalties
+\cite{hestenes1969multiplier,powell1969method}, and in convex programming any fixed
+penalty suffices~\cite{rockafellar1973multiplier}; in the nonconvex setting, however,
+inexact ALMs still increase the penalty across outer iterations to obtain complexity
+guarantees~\cite{sahin2019inexact,li2021rate}, and proximal ALM, which keeps the
+penalty fixed within a run, chooses its value according to the target accuracy
+\cite{xie2021proximal}. Single-loop methods have attracted growing attention because
+they avoid solving subproblems to high accuracy, yet they rely on the same mechanism:
+single-loop quadratic penalty schemes increase the penalty~\cite{alacaoglu2024complexity},
+and linearized ALMs use small dual steps oraccuracy $eps$-dependent parameters
+\cite{shi2025momentum}. A large penalty inflates the smoothness constant of the
+primal update, which forces small step sizes and makes the primal subproblems
+increasingly ill-conditioned.
 
-Due to the separable structure of the objective function, operator-splitting approaches have emerged as a standard and effective technique for addressing problem (1.1). For the general composite setting, a typical reformulation introduces an auxiliary variable $y = c(\bx)$, leading to a block-separable formulation:
-\begin{equation}
-% \label{eq:block-separable}
-    \min_{\bx\in\calX,\, \by\in\RR^m}\; 
-    f(\bx) + g(\bx) + h(\by), 
-    \quad \text{s.t.} \quad \bc(\bx) - \by = \mathbf{0}. \notag
+The split formulation~\eqref{prob:split} also carries favorable structure. Its
+constraint Jacobian $[J_{\calA}(\bx),\,-I]$ has full row rank at every $\bx$, so
+constraint qualifications hold automatically, and its objective separates into a
+smooth part in $\bx$ and a prox-friendly part in $\by$. Nonconvex ADMM and related
+Lagrangian-based splitting methods exploit exactly this structure
+\cite{bot2020proximal,cohen2022dynamic,hallak2023adaptive,elbourkhissi2025perturbed}.
+The structure, however, does not remove the need for a large penalty. For nonlinear
+$\calA$, adaptive Lagrangian schemes require penalty levels proportional to
+$1/\epsilon$~\cite{hallak2023adaptive}, and linearized perturbed ALMs use
+accuracy-dependent penalty and perturbation parameters~\cite{elbourkhissi2025perturbed}.
+The nonconvex--linear minimax route attains $\mathcal O(\epsilon^{-3})$
+\cite{pan2021efficient,he2024approximation,xu2026rada}, but its dual regularization
+acts as an effective penalty that grows as the target accuracy decreases. Fixed-penalty
+guarantees are available for smooth nonlinear equality constraints under a uniform LICQ
+\cite{elbourkhissi2025linearized,liu2026fixed}, but they do not cover the nonsmooth
+term $h(\by)$ in~\eqref{prob:split}. It therefore remains open whether a single-loop
+ALM can keep every penalty-type parameter independent of both the accuracy
+and the target accuracy while retaining an explicit first-order update for
+$h\circ\calA$.
+
+From another perspective, Problem~\eqref{prob:main} also admits a minimax reformulation. In particular, eliminating $\by$ from the Lagrangian of~\eqref{prob:split} gives
+\begin{equation}\label{eq:ncl}
+  \min_{\bx\in\RR^n}\max_{\blmbd\in\RR^m}\;
+  \Phi(\bx,\blmbd)-h^*(\blmbd),
+  \qquad
+  \Phi(\bx,\blmbd):=f(\bx)+\langle\blmbd,\calA(\bx)\rangle,
 \end{equation}
-\subsection*{Motivating Examples}
-A special case of Problem~\eqref{eq:nonlinear-composite} 
-is obtained by taking $h = \delta_{\{\mathbf{0}\}}$, which yields the nonlinear equality-constrained problem
-\[
-\min_{\bx\in \calX}\ f(\bx) + g(\bx), 
-\quad \text{s.t.} \quad \bc(\bx) = \mathbf{0}.\]
+where $\operatorname{dom}h^*\subseteq\mathbb B(\mathbf 0,L_h)$ by
+Assumption~\ref{ass:h}. This is a nonconvex--linear instance of the smooth
+nonconvex--concave (NC-C) minimax problem. Since $\blmbd$ is exactly the multiplier of $\calA(\bx)=\by$, KKT points
+of~\eqref{prob:split} and game-stationary (GS) points of~\eqref{eq:ncl} agree up to
+constants, and ALMs can be read as single-loop minimax methods. 
+For large-scale problems, we focus on single-loop first-order methods, which
+update each variable by one explicit step per iteration without an inner
+solver. The basic method of this kind for~\eqref{eq:ncl} is gradient
+descent--ascent (GDA). It converges slowly because regularity fails on both
+sides: $\Phi$ is only linear in $\blmbd$, so the best response
+$\blmbd^\star(\bx)$ is in general set-valued, and $\Phi$ is nonconvex in $\bx$,
+so $\bx^\star(\blmbd)$ need not be unique or stable. Even with two timescales,
+GDA needs $\mathcal O(\epsilon^{-6})$ iterations to reach an $\epsilon$-GS
+point~\cite{lin2020gradient}.
 
-\subsection{Related work}
-\paragraph{Nonlinear Constrained Optimization.}
-\paragraph{Noconvex Primal-Dual Method.} Not limited in the ADMM-related work
+Two techniques improve on this rate, each restoring regularity on one side.
+The first is primal smoothing, which adds $\frac{1}{2\gamma}\|\bx-\bz\|^2$ with
+a fixed $\gamma$ and moves the center slowly by
+$\bz^{t+1}=\bz^t+\beta(\bx^{t+1}-\bz^t)$. The target accuracy enters only
+through $\beta$: with $\beta=\Theta(\epsilon^2)$, the resulting Smoothed GDA
+finds an $\epsilon$-GS point in $\mathcal O(\epsilon^{-4})$ iterations. For the
+pointwise maximum of finitely many smooth functions, i.e.,~\eqref{eq:ncl} with
+$h(\bu)=\max_i u_i$, strict complementarity permits a constant $\beta$ and
+improves the bound to $\mathcal O(\epsilon^{-2})$~\cite{zhang2020single}.
 
-\paragraph{Nonsmooth Compositional Optimization.}
-In nonsmooth compositional optimization, such as Problem~\eqref{eq:nonlinear-composite}, significant work has been done in the case where $h \circ \bc$ is either convex~\cite{zhang2020optimal,wang2024alexr} or weakly convex~\cite{duchi2018,davis2019,Drusvyatskiy2019,wang2024,hu23}. Specifically, prior works~\cite{duchi2018,davis2019,Drusvyatskiy2019,wang2024} typically ensure weak convexity of $h \circ \bc$ by imposing convexity on $h$ and smoothness on $\bc$. Recent work~\cite{hu23} assumes both $h$ and $\bc$ are weakly convex with $h$ being component-wise non-decreasing, thereby ensuring the weak convexity of $h \circ \bc$. However, when $h$ itself is nonconvex, as in our proposal, the composite function $h \circ \bc$ is not necessarily weakly convex, rendering these methods inapplicable. For the fully nonconvex case, \cite{Bolte2018} reformulates the problem as constrained optimization and establishes asymptotic convergence via a Lagrangian-based method. Under the assumption that $\bc$ is linear, some studies~\cite{boct2016inertial,bot2019proximal,boct2020proximal,guo2023preconditioned} have proposed full splitting algorithms and established global convergence guarantees in a single-loop framework. Recently, \cite{yao2024note} considers a similar setting to Problem~\eqref{eq:nonlinear-composite} with nonlinear $\bc$. Using a smoothing technique, they provide non-asymptotic convergence analysis, while \cite{zhang2025complexity} systematically analyzed scenarios where $h$ is Lipschitz continuous or non-Lipschitz continuous, establishing non-asymptotic and subsequential convergence results. 
-% Nevertheless, efficient single-loop methods with global convergence analysis for fully nonconvex, nonlinearly coupled composite problems remain largely unexplored.
+The second technique is dual regularization, which subtracts
+$\frac{1}{2s}\|\blmbd-\bmu\|^2$ from the dual objective and makes it strongly
+concave. In our reduced augmented-Lagrangian formulation, this regularization
+has an effective-penalty interpretation:
+\begin{equation}\label{eq:intro-effective-penalty}
+  \max_{\blmbd}\mathcal P_s(\bx,\blmbd;\bz,\bmu)
+  =\widehat{\calL}_{\rho+s}(\bx,\bmu)
+    +\frac{1}{2\gamma}\|\bx-\bz\|^2,
+\end{equation}
+where $\mathcal P_s$ is defined in~\eqref{eq:regularized-potential},
+with its dependent $\by$-argument suppressed, and
+$\widehat{\calL}_{\rho+s}$ is the augmented Lagrangian minimized over
+$\by$; the derivation appears in Section~\ref{sec:dual-penalty-identity}.
+A zero center $\bmu=\mathbf 0$ recovers a quadratic penalty with
+coefficient $\rho+s$, which can leave a nonzero feasibility residual
+when $s$ is fixed. Updating $\bmu$ instead provides a multiplier-update
+mechanism that may recover feasibility while keeping $\rho+s$ fixed;
+its convergence and complexity depend on the coupled updates.
 
+With the dual center fixed at $\bmu=\mathbf 0$, Perturbed GDA
+attains an $\mathcal O(\epsilon^{-4})$ complexity for finding an
+$\epsilon$-GS point~\cite{lu2020hybrid,xu2023unified}, and Li et al. establish
+a matching algorithm-specific lower bound~\cite{li2026smoothing}.
+Methods exploiting the NC-L structure attain
+$\mathcal O(\epsilon^{-3})$~\cite{pan2021efficient,he2024approximation,xu2026rada}.
+These guarantees rely on accuracy-dependent regularization parameters,
+corresponding to an effective penalty that increases as $\epsilon$ decreases. To improve the iteration complexity, Li et al. combine primal smoothing
+with zero-centered dual perturbation to develop Perturbed Smoothed GDA,
+which yields a genius improvement in complexity order, reducing
+the GS complexity of Perturbed GDA from $\mathcal O(\epsilon^{-4})$
+to $\mathcal O(\epsilon^{-3})$ with a matching lower
+bound~\cite{li2026smoothing}. However, the dual regularization coefficient still satisfies
+$1/s=\Theta(\epsilon)$.
 
-\subsection*{Contribution}
-% 客观亮点是什么？
-1. the constant penalty parameter for nonconvex ADMM; 
+With a moving dual center $\bmu$ and fixed primal and dual regularization
+coefficients, DS-GDA achieves $\mathcal O(\epsilon^{-4})$ complexity
+for nonconvex--concave problems. Faster rates are available under a
+uniform one-sided K{\L} condition~\cite{zheng2023universal}.
+Without primal smoothing, PPALA reports
+$\widetilde{\mathcal O}(\epsilon^{-2})$ complexity with fixed parameters
+for functionally constrained optimization~\cite{kim2024fast}.
+However, its feasibility argument relies on asymptotic reasoning,
+and a corresponding finite-iteration feasibility bound remains
+to be verified.  These results motivate the following question within the
+primal-smoothed single-loop framework:
+\blue{
+\begin{quote}
+  \textbf{(Q1)}
+  \emph{With a moving dual center, can an $\mathcal O(\epsilon^{-3})$
+  complexity for finding an $\epsilon$-KKT point be achieved with
+  $s$ independent of the target accuracy, or is growth of $s$ necessary?}
+\end{quote}}
 
+In this paper, our current result answers the achievability part of (Q1) in the
+increasing-$s_k$ regime. Table~\ref{tab:known-results} summarizes representative complexity guarantees, contrasting accuracy-dependent schedules with fixed base
+parameters and identifying the role of primal smoothing and the dual
+update mechanism.
 
-2. the \(\calO(\varepsilon^{-?})\) between the  \(\calO(\varepsilon^{-2})\) bound for smooth bound and the \(\calO (\varepsilon^{-4})\) bound for the subgradient method.
+% The fixed-$s$ question, including the role of primal smoothing and structural conditions that may yield faster rates, remains the subject of the research objectives stated below.
 
-\subsection*{Notation} $\mathbb{R}^n$ denotes the $n$-dimensional Euclidean space, and $\mathbb{R}^n_+$ represents the non-negative orthant. We use $[m]$ to denote the set $\{1, \ldots, m\}$. The inner product between two vectors is denoted by $\langle \cdot, \cdot \rangle$, and the Euclidean norm of matrices and vectors is denoted by $\|\cdot\|$. The distance function between a vector $\mathbf{x}$ and a set $\mathcal{X} \subseteq \mathbb{R}^n$ is defined as $\mathrm{dist}(\mathbf{x}, \mathcal{X}) := \inf_{\mathbf{y} \in \mathcal{X}} \|\mathbf{y} - \mathbf{x}\|$. For a proper extended real-valued function $r$, its \textit{domain} is defined as $\mathrm{dom}(r) := \{\mathbf{x} \in \mathbb{R}^n : r(\mathbf{x}) < +\infty\}$. A function $r$ is considered \textit{proper} if $\mathrm{dom}(r) \neq \emptyset$ and it does not take the value $-\infty$. It is \textit{closed} if it is lower semicontinuous, meaning $\liminf_{\mathbf{x} \to \mathbf{x}^0} r(\mathbf{x}) \geq r(\mathbf{x}^0)$ for any $\mathbf{x}^0 \in \mathbb{R}^n$. For a convex function $r$ at $\mathbf{x}$, its \textit{subgradient} is denoted by $\partial r(\mathbf{x}) := \{\mathbf{d} \in \mathbb{R}^n : r(\mathbf{y}) \geq r(\mathbf{x}) + \langle \mathbf{d}, \mathbf{y} - \mathbf{x} \rangle, \forall \mathbf{y} \in \mathbb{R}^n,\ \mathbf{x} \in \mathrm{dom}(r)\}$. The \textit{proximal map} associated with a proper, closed, and convex function $r : \mathbb{R}^n \to \mathbb{R} \cup \{+\infty\}$ at $\mathbf{x} \in \mathbb{R}^n$ with $\eta > 0$ is uniquely defined by \(
-    \mathrm{prox}_{\eta r}(\mathbf{x}) = \operatorname{argmin}_{\mathbf{y} \in \mathbb{R}^n} \left\{ r(\mathbf{y}) + \frac{1}{2\eta} \|\mathbf{x} - \mathbf{y}\|^2 \right\}.
-\)
+\begin{table*}[tp]
+\centering
+\begin{threeparttable}
+\scriptsize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+\multirow{3}{*}{Algorithms}
+ & \multicolumn{4}{c}{Regularization and penalty parameters}
+ & \multicolumn{2}{c}{Complexity} \\
+\cmidrule(lr){2-5}\cmidrule(lr){6-7}
+ & \multirow{2}{*}{\makecell{Penalty\\parameter}}
+ & \multirow{2}{*}{\makecell{Primal smoothing\\$\frac{1}{2\gamma}\|\bx-\bz\|^2$}}
+ & \multicolumn{2}{c}{\makecell{Dual regularization\\$-\frac{1}{2s}\|\blmbd-\bmu\|^2$}}
+ & \multirow{2}{*}{Upper bound} & \multirow{2}{*}{Lower bound} \\
+\cmidrule(lr){4-5}
+ & & & Center $\bmu$ & Parameter $s$ & & \\
+\midrule
+\rowcolor{gray!15}
+\multicolumn{7}{@{}l}{\textbf{GDA-based Methods}} \\[2pt]
+\makecell[l]{\emph{Smoothed GDA}\\\cite{zhang2020smoothed,li2026smoothing}}
+ & --- & $\gamma=\Theta(1)$ & --- & ---
+ & $\mathcal O(\epsilon^{-4})$ & $\Omega(\epsilon^{-4})$ \\[3pt]
+\makecell[l]{\emph{Perturbed GDA}\\\cite{lu2020hybrid,xu2023unified,li2026smoothing}}
+ & --- & ---
+ & $\bmu\equiv\mathbf 0$ & $\Theta(\epsilon^{-1})$
+ & $\mathcal O(\epsilon^{-4})$ & $\Omega(\epsilon^{-4})$ \\[3pt]
+\makecell[l]{\emph{Perturbed Smoothed GDA}\\\cite{li2026smoothing}}
+ & --- & $\gamma=\Theta(1)$
+ & $\bmu\equiv\mathbf 0$ & $\Theta(\epsilon^{-1})$
+ & $\mathcal O(\epsilon^{-3})$ & $\Omega(\epsilon^{-3})$ \\[3pt]
+\makecell[l]{\emph{RADA}\\\cite{xu2026rada}}
+ & --- & ---
+ & $\bmu\not\equiv\mathbf 0$ & $(r_\epsilon+\beta_k)^{-1}$
+ & $\mathcal O(\epsilon^{-3})$ & --- \\[3pt]
+\makecell[l]{\emph{DS-GDA}\\\cite{zheng2023universal}}
+ & --- & $\gamma=\Theta(1)$
+ & $\bmu\not\equiv\mathbf 0$ & $\Theta(1)$
+ & $\underline{\mathcal O(\epsilon^{-4})}$ & --- \\
+\midrule
+\rowcolor{gray!15}
+\multicolumn{7}{@{}l}{\textbf{Penalty and augmented Lagrangian-based methods}} \\[2pt]
+\makecell[l]{\emph{Quadratic penalty}\\\cite{alacaoglu2024complexity}}
+ & $\rho_k=\Theta((k+1)^{1/4})$ & ---
+ & $\bmu\equiv\mathbf 0$ & $\Theta((k+1)^{1/4})$
+ & $\widetilde{\mathcal O}(\epsilon^{-4})$ & --- \\[3pt]
+% \makecell[l]{\emph{MLALM}\\\cite{shi2025momentum}}
+%  & \makecell{$\rho=\Theta(K^{1/4})$\\$=\Theta(\epsilon^{-1})$}
+%  & --- & --- & ---
+%  & $\mathcal O(\epsilon^{-4})$ & --- \\[3pt]
+\makecell[l]{\emph{GDPA}\\\cite{luSingleLoopGradientDescent2022}}
+ & $\rho_k=\Theta(\epsilon^{-1})$
+ & ---
+ & $\bmu\equiv\mathbf 0$ & $\Theta(\epsilon^{-1})$
+ & $\mathcal O(\epsilon^{-3})$ & --- \\[3pt]
+\makecell[l]{\emph{PPALA}\\\cite{kim2024fast}}
+ & $\rho=\Theta(1)$ & ---
+ & $\bmu\not\equiv\mathbf 0$ & $\Theta(1)$
+ & $\widetilde{\mathcal O}(\epsilon^{-2})$ & --- \\[3pt]
+ \midrule
+\makecell[l]{\textbf{\emph{SPLALM}}\\\emph{Theorem~?}}
+ & $\rho=\Theta(1)$ & $\gamma=\Theta(1)$
+ & $\bmu\not\equiv\mathbf 0$ & $\Theta(1)$
+ & ? & ? \\ 
+\makecell[l]{\textbf{\emph{SPLALM}}\\\emph{Theorem~\ref{thm:main}}}
+ & $\rho=\Theta(1)$ & $\gamma=\Theta(1)$
+ & $\bmu\not\equiv\mathbf 0$ & $\Theta(\epsilon^{-1})$
+ & $\mathcal O(\epsilon^{-3})$ & ? \\
+\bottomrule
+\end{tabular}
+\caption{Representative single-loop methods, grouped by their original
+formulation. The constrained rows concern nonlinear constraints. Upper bounds display the dependence on $\epsilon$, suppressing
+problem constants and bounded initial gaps. The regularization columns specify parameters and centers, not gradient
+stepsizes; primal smoothing uses a separate
+moving center. ``---'' denotes an absent regularizer or an unreported lower
+bound; question marks denote results to be established. Constant parameters
+are independent of $\epsilon$ and $k$. The rates use each method's stated
+stationarity criterion and assumptions; lower bounds are algorithm-specific.}
+\label{tab:known-results}
+\end{threeparttable}
+\end{table*}
+\clearpage
+
+The second question isolates the contribution of primal smoothing. Existing
+results show a complexity improvement from primal smoothing in the
+zero-centered, accuracy-dependent perturbation regime. Under a fixed
+$s$, a moving dual center, and the same approximate KKT criterion, the
+corresponding comparison with a method without primal smoothing is not
+established.
+\begin{quote}
+  \textbf{(Q2)}
+  \emph{Under a fixed $s$ and a moving dual center, what complexity gain,
+  if any, is provided by primal smoothing?}
+\end{quote}
+
+The third question concerns structural conditions that can improve the
+fixed-$s$ rate. A global error bound linking the dual-center error to the
+solution of the primal proximal subproblem could reduce the amount of dual
+tracking required at each iteration. Such conditions are known in special
+settings, including linearly constrained problems and pointwise maxima, but
+their analogue for the present composite problem with nonlinear $\calA$
+remains to be characterized.
+\begin{quote}
+  \textbf{(Q3)}
+  \emph{Which structural conditions on $(f,h,\calA)$ yield a center--primal
+  solution error bound under fixed $s$, and what complexity does it imply?}
+\end{quote}
+
+Our contributions are organized as follows.
+\begin{enumerate}
+    \item \textbf{A single-loop method with an
+    $\mathcal O(\epsilon^{-3})$ complexity guarantee.}
+    We develop SPLALM by exploiting the proximal structure of the
+    splitting variable $\by$. The method combines primal smoothing,
+    centered dual regularization, and moving primal and dual centers,
+    without an iterative inner solver.
+    With $s_k=\Theta((k+1)^{1/3})$ and suitable center stepsizes,
+    we establish an $\mathcal O(\epsilon^{-3})$ iteration bound
+    for finding an $\epsilon$-KKT point.
+    The base penalty $\rho$ and the primal and dual gradient stepsizes
+    remain fixed, while the effective penalty $\rho+s_k$ increases.
+
+    % 已有：Algorithm 3.1、参数调度 (3.9)、Theorem 3.1。
+    % 已有：第 2 节的正则化--有效罚参数恒等式与零中心偏差例子。
+    % 零中心例子证明：在该实例上，正则化问题的精确驻点及其
+    % 近端证书达到 epsilon-KKT，需要 rho+s = Omega(epsilon^{-1})。
+    % 这属于驻点偏差结论，不属于迭代复杂度下界。
+    %
+    % TODO：统一算法名称。当前 PDF 使用 SPLALM，
+    % 旧研究主线使用 DDLALM。
+    %
+    % TODO：研究 Q2，即 primal smoothing 的独立贡献。
+    % 首先核实 PPALA 的具体版本、假设和有限步可行性证明。
+    % 在相同问题假设、固定 s、移动 mu 和相同输出准则下，
+    % 分析去掉 primal smoothing 的版本。
+    % 固定 s 与递增 s_k 分别比较，不交叉归因。
+    % 区分“改善已知上界”与“证明实际最坏复杂度的分离”。
+    % 该部分目前不是现有定理的直接推论。
+
+    \item \textbf{The complexity of ordinary center updates
+    under a fixed effective penalty.}
+
+    % TODO：首先建立固定 s 版本的复杂度基准。
+    % 核实 DS-GDA 分析向当前 D_rho 模型迁移所需的假设，
+    % 包括迭代有界性、光滑常数和更新顺序。
+    % 目标上界：O(epsilon^{-4})；尚未证明前不列为本文结果。
+    %
+    % TODO：证明实际单环更新下的乘子有界性。
+    % 利用 q^k in partial h(y^{k+1})、||q^k|| <= L_h，
+    % 以及 tau <= rho*s/(rho+s) 下的凸组合结构。
+    % 原始迭代有界性需另证，不能仅从目标水平集有界直接推出。
+    %
+    % TODO：研究固定 s 上界是否紧；下界正文暂留为空。
+    % 明确下界覆盖的更新族、参数调度、oracle 和输出规则，
+    % 保留初始间隙 Delta 及问题常数的依赖。
+    % Li et al. 的困难实例仅作为候选起点；
+    % 必须核实它能否嵌入当前复合问题及实际更新公式。
+    %
+    % TODO：若建立匹配的 Omega(epsilon^{-4}) 下界，
+    % 则与递增 s_k 的 O(epsilon^{-3}) 上界形成分离。
+    % 结论只限于下界覆盖的更新族和一般问题类。
+    % 不写成“所有 ALM 都必须增大罚参数”，
+    % 也不把 s 增长称为“唯一必要条件”。
+    %
+    % TODO：数值实验分别比较：
+    % 相同 s 调度下，零中心与移动中心的效果；
+    % 相同中心规则下，固定 s 与递增 s_k 的效果。
+    % 同时报告驻点残差、可行性残差和实际 oracle 调用次数。
+    %
+    % 可选：研究加速中心更新。
+    % 对固定原始中心的精确子问题，加速近端点法提供启发；
+    % 对当前单环算法，需重新控制原始中心漂移和求解误差。
+    % 暂不声称加速后必然达到 O(epsilon^{-3})。
+
+    \item \textbf{Structural conditions for faster convergence
+    with a fixed effective penalty.}
+
+    % TODO：定义原始近端子问题及其中心--原始解误差界。
+    % 明确 X_s(z,mu)、X_*(z)、Lambda_s(z,mu) 的存在唯一性，
+    % 以及误差界常数在哪个集合上一致成立。
+    %
+    % 候选误差界：
+    % ||X_s(z,mu)-X_*(z)||^2
+    %     <= C ||Lambda_s(z,mu)-mu||^p.
+    %
+    % TODO：证明该误差界如何控制实际单环迭代的跟踪误差，
+    % 并通过势函数与残差传递得到 epsilon-KKT 复杂度。
+    % O(epsilon^{-4/p}) 暂为待验证目标；
+    % p=2 的端点需单独分析，目标为 O(epsilon^{-2})。
+    %
+    % TODO：研究可验证的充分条件：
+    % 线性 A 与适当的秩或误差界条件；
+    % 严格互补与有效方向非退化的组合条件；
+    % 原始近端 KKT 系统的适当度量次正则性。
+    %
+    % 对非线性 A，不能仅凭 J_A J_A^T 的一致正定性
+    % 就断言近端对偶一致强凹；需要证明相应的统一曲率或误差界。
+    % primal smoothing 保证原始子问题强凸时，
+    % 也不自动保证去掉对偶正则项后的近端对偶强凹。
+    %
+    % TODO：区分局部与全局结果。
+    % 若条件仅局部成立，应证明迭代进入并保持在该邻域，
+    % 或明确给出局部初始化条件。
+    %
+    % 可选扩展：去掉 h 的 Lipschitz 假设。
+    % 必须以其他条件重新建立乘子有界性与所需光滑性，
+    % 不直接从 Jacobian 非退化推断全过程乘子有界。
+\end{enumerate}
+
+\begin{table*}[t]
+\centering
+\small
+\caption{Current results and research objectives. Here
+$\rho+s_k$ is the effective penalty.
+The bounds in the last two rows are research targets.}
+\label{tab:research-roadmap}
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{@{}p{0.19\textwidth}p{0.22\textwidth}
+                  p{0.28\textwidth}p{0.22\textwidth}@{}}
+\toprule
+Setting & Center and penalty & Result or objective & Status \\
+\midrule
+Zero-centered formulation
+& $\bmu=\mathbf 0$, $\rho+s$
+& A stationary-point example requires
+  $\rho+s=\Omega(\epsilon^{-1})$
+& Feasibility-bias example in Section~2 \\
+\addlinespace
+Current SPLALM
+& Moving $\bmu$;
+  $s_k=\Theta((k+1)^{1/3})$
+& $\mathcal O(\epsilon^{-3})$ for $\epsilon$-KKT
+& Theorem~\ref{thm:main} \\
+\addlinespace
+Fixed-$s$ variant
+& Moving $\bmu$; fixed $\rho+s$
+& Establish an $\mathcal O(\epsilon^{-4})$ bound
+  and investigate its tightness
+& Pending analysis \\
+\addlinespace
+Fixed-$s$ variant with structure
+& Moving $\bmu$; fixed $\rho+s$
+& Derive faster rates from a proximal error bound;
+  target $\mathcal O(\epsilon^{-2})$
+& Pending analysis \\
+\bottomrule
+\end{tabular}
+\end{table*}

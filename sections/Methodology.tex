@@ -1,130 +1,214 @@
-\section{Methodology}
-To decouple the nonlinear term $h\circ\bc$, we introduce an auxiliary variable
-$\by$ and a residual variable $\bz$ and rewrite \eqref{eq:nonlinear-composite} as
-\begin{equation}\label{eq:reformulated-problem}
-    \min_{\bx,\by,\bz}\; f(\bx)+g(\bx)+h(\by)
-    \quad\text{s.t.}\quad \bc(\bx)-\by = \bz,\ \ \bz=\bm{0}.
+\section{Smoothed Perturbed Linearized Augmented Lagrangian Method}
+\label{sec:method}
+
+This section develops a single-loop primal-dual algorithm for problem~\eqref{prob:main}.  
+
+\subsection{Smoothed perturbed augmented Lagrangian}
+\label{subsec:dual-damping-reformulation}
+We first transform Problem~\eqref{prob:main} into a constrained problem by introducing the auxiliary variable \(\by=\calA(\bx)\):
+\begin{equation}\label{eq:split-problem}
+    \min_{\bx\in\RR^n,\,\by\in\RR^m}
+    \; f(\bx)+ h(\by)
+    \quad\text{s.t.}\quad
+    \calA(\bx)-\by=\zero,
+\end{equation} whose augmented Lagrangian for~Problem \eqref{eq:split-problem} with penalty
+\(\rho>0\) and multiplier \(\blmbd\in\RR^m\) is
+\begin{equation}\label{eq:augmented-lagrangian}
+    \calL_\rho(\bx,\by,\blmbd)
+    :=
+    f(\bx)+h(\by)
+    +\langle \blmbd,\calA(\bx)-\by\rangle
+    +\frac{\rho}{2}\|\calA(\bx)-\by\|^2.
 \end{equation}
 
-Following~\cite{}, we define the perturbed proximal Lagrangian
-\begin{equation}\label{eq:perturbation_alf}
-\begin{aligned}
-    \calL(\bx,\by,\bz,\blmbd,\bmu)
-    :=\;& f(\bx)+g(\bx)+h(\by)
-    + \langle \blmbd,\,\bc(\bx)-\by-\bz\rangle
-    + \langle \bmu,\,\bz\rangle + \frac{\alpha}{2}\|\bz\|^2
-    - \frac{\beta}{2}\|\blmbd-\bmu\|^2 \notag \\
-    + \frac{\rho}{2} \| \bc(\bx) - \by\|^2
-\end{aligned}
+We first record the value obtained by eliminating the auxiliary variable
+\(\by\) from the unregularized augmented Lagrangian.  Define the value function
+\begin{equation}\label{eq:reduced-al-base}
+    \begin{aligned}
+        \mathcal D_\rho\bigl(\bx,\blmbd; \by(\bx,\blmbd)\bigr)
+        &:=\mathcal L_\rho\bigl(\bx,\by(\bx,\blmbd),\blmbd\bigr) \\
+        &=f(\bx)
+        +M_{h/\rho}\!\left(\calA(\bx)+\frac{1}{\rho}\blmbd\right)
+        -\frac{1}{2\rho}\|\blmbd\|^2,
+    \end{aligned}
 \end{equation}
-where $\blmbd,\bmu\in\RR^m$ are dual variables associated with the constraints
-in \eqref{eq:reformulated-problem}. The parameter $\alpha$ plays the role of a
-primal penalty on $\bz$, while $\beta$ introduces a dual regularization term.
-
-The proximal Lagrangian function, obtained by eliminating $\bz$ via its 
-stationary condition $\bz^*(\blmbd,\bmu) = \frac{\blmbd-\bmu}{\alpha}$, reduces to
-\begin{align}
-\label{eq:reduced_ppl}
-    \mathcal{L}_{\rho}(\bx, \by, \blmbd, \bmu)
-    := l_{\rho} (\bx, \by, \blmbd) - \frac{1}{2\rho} \|\blmbd - \bmu\|^2,
-\end{align} where \(l_{\rho} (\bx, \by, \blmbd) = f(\bx) + g(\bx) + h(\by)
-    + \langle \blmbd,\, \bc(\bx) - \by \rangle + \frac{\rho}{2} \| \bc(\bx) - \by\|^2 \) and \(\rho > 0\) is defined as 
-\begin{equation}\label{eq:rho-def}
-    \rho := \frac{\alpha}{1 + \alpha\beta} > 0.
-\end{equation}
-\begin{remark}
-    Here, 
-  \[
-    \phi_{\rho}(\bx,\by,\bmu) 
-    = \max_{\blmbd}\left\{ 
-        l_{\rho}(\bx,\by,\blmbd) - \frac{1}{2\rho}\|\blmbd-\bmu\|^2  % rho/2 → 1/2rho
-    \right\}
-    \]
-therefore 
+where
 \[
-\max\limits_{\bmu} \min\limits_{\bx, \by }\phi_{\rho} (\bx, \by, \bmu)  
-\]  but the update of \(\blmbd\) is not considered.
-\end{remark}
+    M_{h/\rho}(v):=\min_{\by}\left\{
+        h(\by)+\frac{\rho}{2}\|\by-v\|^2
+    \right\}.
+\]
+The corresponding \(\by\) is given by
+\begin{equation}\label{eq:rho-prox-map}
+    \by (\bx,\blmbd)
+    :=\operatorname{prox}_{h/\rho}
+      \left(\calA(\bx)+\frac{1}{\rho}\blmbd\right).
+\end{equation}
+However, \(\mathcal D_\rho(\bx,\blmbd;\by(\bx,\blmbd))\) is generally nonconvex in \(\bx\)
+and concave in \(\blmbd\). To regularize the two blocks, fix a primal
+proximal parameter \(\gamma>0\) and a dual regularization parameter \(s>0\),
+and define the smoothe, perturbed augmented Lagrangian as
+\begin{equation}\label{eq:regularized-potential}
+    \begin{aligned}
+        \mathcal P_s(\bx,\blmbd;\bz,\bmu,\by(\bx,\blmbd) )
+        :=\;&  \mathcal D_\rho\bigl(\bx,\blmbd;\by(\bx,\blmbd)\bigr)
+        +\frac{1}{2\gamma}\|\bx-\bz\|^2
+        -\frac{1}{2s}\|\blmbd-\bmu\|^2.
+    \end{aligned}
+\end{equation} 
 
-\subsection{Algorithm}
+\subsection{Algorithm Design}
+\label{subsec:ddlalm-algorithm}
+The method is formally presented in \Cref{alg:ddlalm}.
 
-We now describe one iteration of the proposed method. Given
-$(\bx^k,\by^k,\bz^k,\blmbd^k,\bmu^k)$, the blocks are updated as follows.
-
-\paragraph{Update of $\bx$.}
-We apply a prox-linear / proximal-gradient step to the
-$x$-block subproblem on \(l_{\rho}\)
-\begin{equation}\label{eq:x-update}
-\bx^{k+1}\in\argmin_{\bx\in\calX}
-\Big\{
-g(\bx)
-+\big\langle \nabla f(\bx^k)+J_{\bc}(\bx^k)^\top\big(\blmbd^k+\rho(\bc(\bx^k)-\by^k)\big),\ \bx-\bx^k\big\rangle
-+\frac{1}{2\eta}\|\bx-\bx^k\|^2
-\Big\}.
+The gradients used in Algorithm~\ref{alg:ddlalm} are
+\begin{equation}\label{eq:explicit-p-gradients}
+    \begin{aligned}
+        \nabla_{\bx}\mathcal P_s
+        \bigl(\bx,\blmbd;\bz,\bmu,\by(\bx,\blmbd)\bigr)
+        &=
+        \nabla f(\bx)
+        +J_{\calA}(\bx)^\top\bq(\bx,\blmbd)
+        +\frac{1}{\gamma}(\bx-\bz), \\
+        \nabla_{\blmbd}\mathcal P_s
+        \bigl(\bx,\blmbd;\bz,\bmu,\by(\bx,\blmbd)\bigr)
+        &=
+        \calA(\bx)-\by(\bx,\blmbd)
+        -\frac{1}{s}(\blmbd-\bmu),
+    \end{aligned}
+\end{equation} where $ \bq(\bx,\blmbd) := \blmbd+\rho\bigl[\calA(\bx)-\by(\bx,\blmbd)\bigr]$, whose  optimality condition gives
+\begin{equation}
+    \bq(\bx,\blmbd)
+    \in\partial h\bigl(\by(\bx,\blmbd)\bigr).
+    \label{eq:certificate-membership}
 \end{equation}
 
-\paragraph{Update of $\by$.}
-The $y$-block is updated by a proximal gradient step on $h$:
-\begin{equation}\label{eq:y-update}
-\begin{aligned}
-\by^{k+1}\in\argmin_{\by\in\RR^m}
-\Big\{
-    h(\by) + \langle -\blmbd^k+\rho\,(\by-\bc(x^{k+1}), \by - \by^k \rangle
-    +\frac{1}{2\tau}\|\by-\by^k\|^2
-\Big\}
-% \quad\Longleftrightarrow\quad
-% \by^{k+1}
-% =
-% \prox_{\frac{1}{\rho+1/\tau}\,h}
-% \!\left(
-% \frac{\rho\,\bc(\bx^{k+1})+\blmbd^k+\frac{1}{\tau}\by^k}{\rho+\frac{1}{\tau}}
-% \right).
-\end{aligned}
+Consequently, the first two updates of
+Algorithm~\ref{alg:ddlalm} can be written explicitly as
+\begin{equation}\label{eq:explicit-updates}
+    \begin{aligned}
+        \bx^{k+1}
+        &=
+        \bx^k-\eta_k
+        \left[
+            \nabla f(\bx^k)
+            +J_{\calA}(\bx^k)^\top\bq(\bx^k,\blmbd^k)
+            +\frac{1}{\gamma}(\bx^k-\bz^k)
+        \right], \\
+        \blmbd^{k+1}
+        &=
+        \blmbd^k+\tau_k
+        \left[
+            \calA(\bx^{k+1})
+            -\by(\bx^{k+1},\blmbd^k)
+            -\frac{1}{s_k}(\blmbd^k-\bmu^k)
+        \right].
+    \end{aligned}
 \end{equation}
 
-\paragraph{Update of $\bmu$.}
-The auxiliary multiplier $\bmu$ is updated via a gradient acent step 
-\begin{equation}\label{eq:mu-update}
-    \bmu^{k+1}
-    = \bmu^k + \theta_k\big(\blmbd^k - \bmu^k\big),
-    \qquad \theta_k\in(0,1].
-\end{equation}
+For brevity, set
+\[
+    \bq^k:=\bq(\bx^{k+1},\blmbd^k),
+    \qquad
+    \bq^k\in\partial h(\by^{k+1}).
+\]
 
-\paragraph{Update of $\blmbd$.}
-The multiplier $\blmbd$ is updated by the unique maximizer of 
-$\calL_\rho$ with respect to $\blmbd$:
-\begin{equation}\label{eq:lambda-update}
-    \blmbd^{k+1}
-    = \bmu^{k+1} + \rho\big(\bc(\bx^{k+1})-\by^{k+1}\big).  % 1/rho → rho
-\end{equation}
-\paragraph{Update of $\bz$.}
-Finally, $\bz$ admits a closed-form expression from the optimality condition of
-\eqref{eq:perturbation_alf} with respect to $\bz$:
-\begin{equation}\label{eq:z-update}
-    \bz^{k+1} = \frac{1}{\alpha}\big(\blmbd^{k+1}-\bmu^{k+1}\big).
-\end{equation}
-% In practice, $\bz$ can be eliminated from the implementation and only used in the analysis.
-\begin{remark}
-    % 1. 外推
-\end{remark}
-
-\begin{algorithm}[H]
-    \caption{Peturbed linearized ADMM}
-    \label{alg:peturbation linearized ADMM}
+\begin{algorithm}[t]
+    \caption{Smoothed-Perturbed Linearized Augmented Lagrangian Method (SPLALM)}
+    \label{alg:ddlalm}
     \small
-    \setlength{\baselineskip}{0.8\baselineskip}
     \begin{algorithmic}[1]
-        \STATE \textbf{Input:}
-        initial point $(\bx^{0}, \by^{0}, \blmbd^{0}, \bmu^{0})$,
-        parameters $\eta>0$, $\tau>0$, $\alpha>0$, $\beta>0$,
-        damping sequence $\{\theta_k\}_{k\ge0}$ and $\rho$ defined in \eqref{eq:rho-def}.
-        \FOR{$k = 0, 1, 2, \ldots$}
-            \STATE Update $\bx^{k+1}$ by \eqref{eq:x-update}.
-            \STATE Update $\by^{k+1}$ by \eqref{eq:y-update}.
-            \STATE Update $\bmu^{k+1}$ by \eqref{eq:mu-update} with \(\theta_k = \frac{\delta_k}{1 + \| \blmbd^k - \bmu^k \|^2}\).
-            \STATE Update $\blmbd^{k+1}$ by \eqref{eq:lambda-update}.
-            \STATE Update $\bz^{k+1}$ by \eqref{eq:z-update}.
+        \STATE \textbf{Input:} Initial
+        \(\bx^0,\bz^0\in\RR^n\) and
+        \(\blmbd^0,\bmu^0\in\RR^m\); 
+        Parameters: \(\rho>0\) and \(\gamma>0\);
+        sequences: \(\{\eta_k\}\), \(\{\tau_k\}\), \(\{\alpha_k\}\), and
+        \(\{\beta_k\}\);
+        and iteration limit \(K\).
+        \FOR{\(k=0,1,\ldots,K-1\)}
+            \STATE  \(\bx^{k+1}=\bx^k- \eta_k \nabla_{\bx} \mathcal P_{s_k}(\bx^{k}, \blmbd^{k}; \bz^{k}, \bmu^{k}, \by(\bx^k, \blmbd^k))\);
+            \STATE  \(\blmbd^{k+1}=\blmbd^k+\tau_k
+            \nabla_{\blmbd}\mathcal P_{s_k}
+            (\bx^{k+1},\blmbd^{k};\bz^{k},\bmu^{k},
+            \by(\bx^{k+1},\blmbd^k))\).
+            \STATE 
+            \(\bz^{k+1}=\bz^k+ \alpha_k(\bx^{k+1}-\bz^k)\).
+            \STATE  \(\bmu^{k+1}=\bmu^k+ \beta_k(\blmbd^{k+1}-\bmu^k)\).
         \ENDFOR
-        \STATE \textbf{Output:} an iterate $\bx^{R}$ (e.g., the randomly selected one).
     \end{algorithmic}
 \end{algorithm}
+
+We use fixed primal and dual stepsizes together with diminishing center
+stepsizes. Choose \(\rho>0\) and \(\gamma>0\) satisfying
+Proposition~\ref{prop:curvature-smoothness}. With \(L_x\),
+\(\mu_\gamma\), and \(L_{d,0}\) defined in
+Section~\ref{sec:complexity-analysis}, one admissible choice is
+Set $\eta_k\equiv\eta$ and $\tau_k\equiv\tau$. An admissible choice is
+\begin{equation}\label{eq:ddlalm-parameter-schedule}
+\begin{aligned}
+    s_k &= c_s(k+1)^{1/3},
+    \qquad
+    \eta = \frac{1}{2L_x},
+    \qquad
+    \tau =
+    \left(
+        2L_{d,0}
+        +\frac{72L_xG_{\cal A}^2}{\mu_\gamma^2}
+    \right)^{-1},
+    \\
+    \alpha_k &=
+    \frac{\min\{s_0,\gamma\mu_\gamma\tau\}}{36s_k},
+    \qquad
+    \beta_k=\frac{\theta_\mu}{k+k_0},
+\end{aligned}
+\end{equation}
+where \(c_s>0\), \(\theta_\mu\in(0,1]\), and \(k_0\ge1\) are constants
+independent of \(K\). Consequently,
+\[
+    s_k=\Theta((k+1)^{1/3}),
+    \qquad
+    \alpha_k=\Theta((k+1)^{-1/3}),
+    \qquad
+    \beta_k=\Theta((k+1)^{-1}).
+\]
+
+\begin{theorem}
+\label{thm:main}
+Suppose that Assumptions~\ref{ass:level-boundedness},
+\ref{ass:smoothness}, and~\ref{ass:h} hold.
+Let the sequence generated by \Cref{alg:ddlalm} use
+\eqref{eq:ddlalm-parameter-schedule}, with $\rho$ and $\gamma$ as specified
+above. For $K\ge2$, choose a tail-best index
+\[
+    \kappa\in\argmin_{k\in\{\lceil K/2\rceil,\ldots,K-1\}}
+    \left\{
+        \|\Delta_{\bx}^{k+1}\|^2
+        +\|\Delta_{\blmbd}^{k+1}\|^2
+        +\alpha_k\|\bx^{k+1}-\bz^k\|^2
+    \right\}.
+\]
+Then it holds that
+\[
+\max\left\{
+\left[
+    \left\|
+        \nabla f({\bx}^{\kappa+1})
+        +
+        J_{\cal A}({\bx}^{\kappa+1})^\top{\bq}^{\kappa}
+    \right\|^2
+\right],
+\;
+\left[
+    \left\|
+        {\cal A}({\bx}^{\kappa+1})-{\by}^{\kappa+1}
+    \right\|^2
+\right]
+\right\}
+=
+\mathcal O(K^{-2/3}),
+\]
+with \({\bq}^{\kappa}\in\partial h({\by}^{\kappa+1})\).
+Consequently, given \(\epsilon>0\), the iteration complexity of
+\Cref{alg:ddlalm} to obtain an \(\epsilon\)-KKT point
+is of order \(\mathcal O(\epsilon^{-3})\).
+\end{theorem}
