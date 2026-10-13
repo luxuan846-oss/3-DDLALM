@@ -1,0 +1,117 @@
+[
+  {
+    "anchor": "Thmdefinition1",
+    "kind": "ltx_theorem ltx_theorem_definition",
+    "text": "Definition 1 (Population directional objective) . The population counterpart of the empirical CRN objective is $\\psi(s)=\\mathbb{E}_{\\tau}[\\phi_{i}(s)],$ where the expectation is taken with respect to the distribution used to generate the empirical objective."
+  },
+  {
+    "anchor": "Thmassumption1",
+    "kind": "ltx_theorem ltx_theorem_assumption",
+    "text": "Assumption 1 (Pathwise smoothness) . For each example $\\tau_{i}$ , the per-sample directional objective $\\phi_{i}$ is five times continuously differentiable on the interval $[-\\epsilon,R]$ : $\\phi_{i}\\in C^{5}([-\\epsilon,R]).$"
+  },
+  {
+    "anchor": "Thmassumption2",
+    "kind": "ltx_theorem ltx_theorem_assumption",
+    "text": "Assumption 2 (Higher-order derivative bounds) . There exist constants $W,M,B,L>0$ such that, for every $i$ and every $s\\in[-\\epsilon,R]$ , $|\\phi_{i}^{\\prime\\prime}(s)|\\leq W,$ $|\\phi_{i}^{\\prime\\prime\\prime}(s)|\\leq M,$ $|\\phi_{i}^{(4)}(s)|\\leq B,$ and $|\\phi_{i}^{(5)}(s)|\\leq L.$"
+  },
+  {
+    "anchor": "Thmassumption3",
+    "kind": "ltx_theorem ltx_theorem_assumption",
+    "text": "Assumption 3 (CRN) . For each index $i$ , the same example $\\tau_{i}$ is used to evaluate $\\{\\phi_{i}(-\\epsilon),\\phi_{i}(0),\\phi_{i}(\\epsilon)\\}.$ Moreover, for $i\\neq j$ , the examples $\\tau_{i}$ and $\\tau_{j}$ are sampled independently."
+  },
+  {
+    "anchor": "Thmassumption4",
+    "kind": "ltx_theorem ltx_theorem_assumption",
+    "text": "Assumption 4 . (Sub-Gaussian Deviation) For each $\\phi_{i},$ the directional deviations at $s=0$ are sub-gaussian up to third order, i.e., there exists constant $\\sigma$ such that, for every $k\\in\\{0,1,2,3\\}$ and all $\\lambda\\in\\mathbb{R},$ $\\mathbb{E}[\\exp(\\lambda[\\phi_{i}^{(k)}(0)-\\psi^{(k)}(0)])]\\leq\\exp(\\frac{\\lambda^{2}\\sigma^{2}}{2}).$"
+  },
+  {
+    "anchor": "Thmtheorem1",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 1 (CRN curvature concentration) . Suppose Assumptions 1 – 4 hold. Then, with probability at least $1-\\delta$ , $\\left|\\widehat{\\phi^{\\prime\\prime}}(0)-\\psi^{\\prime\\prime}(0)\\right|\\leq\\frac{B\\epsilon^{2}}{12}+\\sigma\\sqrt{\\frac{2\\log(4/\\delta)}{n}},$ and $\\left|\\widehat{\\phi^{\\prime\\prime\\prime}}(0)-\\psi^{\\prime\\prime\\prime}(0)\\right|\\leq\\frac{L\\epsilon^{2}}{20}+\\sigma\\sqrt{\\frac{2\\log(4/\\delta)}{n}}.$"
+  },
+  {
+    "anchor": "Thmtheorem2",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 2 (Second-order Taylor approximation bound) . Suppose Assumptions 1 and 2 hold. Then the step selected by maximizing the second-order Taylor model satisfies $\\phi(s_{M})\\geq\\phi(s_{\\phi})-\\frac{MR^{3}}{3}-\\frac{B\\epsilon^{2}R^{2}}{12}.$"
+  },
+  {
+    "anchor": "Thmassumption5",
+    "kind": "ltx_theorem ltx_theorem_assumption",
+    "text": "Assumption 5 (Smooth and bounded objective) . The true objective $J:\\mathbb{R}^{d}\\to\\mathbb{R}$ is $\\mathcal{L}_{J}$ -smooth and bounded above by $J^{\\star}$ . That is, for all $x,y$ , $J(y)\\geq J(x)+\\langle\\nabla J(x),y-x\\rangle-\\frac{\\mathcal{L}_{J}}{2}\\|y-x\\|^{2},$ and $J(\\theta_{t})\\leq J^{\\star}$ for all iterations $t$ . Additionally, the expected surrogate $\\bar{F}$ is also $\\mathcal{L}_{\\bar{F}}$ -smooth."
+  },
+  {
+    "anchor": "Thmassumption6",
+    "kind": "ltx_theorem ltx_theorem_assumption",
+    "text": "Assumption 6 (Aligned update direction) . There exists $\\mu>0$ such that, for all $t$ , $q_{t}=\\mathbb{E}_{t}[\\langle\\nabla J(\\theta_{t}),z_{t}\\rangle]\\geq\\mu\\|\\nabla J(\\theta_{t})\\|.$"
+  },
+  {
+    "anchor": "Thmtheorem3",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 3 (Stationarity of the ZFO update) . Let Assumptions 5 – 6 hold and $q_{t}/\\mathcal{L}_{J}\\in I_{t}.$ Then, for every $T>0$ , with probability at least $1-\\delta,$ we have $\\min_{0\\leq t\\leq T}\\mathbb{E}\\|\\nabla J(\\theta_{t})\\|^{2}\\leq\\frac{2\\mathcal{L}_{J}(J^{\\star}-J(\\theta_{0}))}{\\mu^{2}T}+\\frac{2\\mathcal{L}_{J}\\tilde{\\Delta}_{T}}{\\mu^{2}},\\text{ where }\\tilde{\\Delta}_{T}=\\frac{1}{T}\\sum_{t=0}^{T-1}\\mathbb{E}[\\Delta_{t}].$"
+  },
+  {
+    "anchor": "Thmtheorem1a",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 1 (CRN curvature concentration) . Suppose Assumptions 1 – 4 hold. Then, with probability at least $1-\\delta$ , $\\left|\\widehat{\\phi^{\\prime\\prime}}(0)-\\psi^{\\prime\\prime}(0)\\right|\\leq\\frac{B\\epsilon^{2}}{12}+\\sigma\\sqrt{\\frac{2\\log(4/\\delta)}{n}},$ and $\\left|\\widehat{\\phi^{\\prime\\prime\\prime}}(0)-\\psi^{\\prime\\prime\\prime}(0)\\right|\\leq\\frac{L\\epsilon^{2}}{20}+\\sigma\\sqrt{\\frac{2\\log(4/\\delta)}{n}}.$"
+  },
+  {
+    "anchor": "Thmtheorem2a",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 2 (Second-order Taylor approximation bound) . Suppose Assumptions 1 and 2 hold. Then the step selected by maximizing the second-order Taylor model satisfies $\\phi(s_{M})\\geq\\phi(s_{\\phi})-\\frac{MR^{3}}{3}-\\frac{B\\epsilon^{2}R^{2}}{12}.$"
+  },
+  {
+    "anchor": "Thmdefinition2",
+    "kind": "ltx_theorem ltx_theorem_definition",
+    "text": "Definition 2 . Let $P_{k}(s)$ be the $k$ -th order Padé approximation of $\\phi(s)$ over $[0,{R}]$ , where $P_{k}(s)=\\frac{N(s)}{D(s)},N(s)=a_{0}+a_{1}s,$ with $D(s)=1+d_{1}s$ for $k=2$ and $D(s)=1+d_{1}s+d_{2}s^{2}$ for $k=3$ , and ${R}=s_{\\rm FO}\\beta,$ such that $\\beta>0$ . The coefficients of $N(s)$ and $D(s)$ are chosen so that $P_{k}(s)$ agrees with the $k$ -th order Taylor model $T_{k}(s)$ when Taylor expanded. Define the Padé residual $r(s):=D(s)\\phi(s)-N(s).$"
+  },
+  {
+    "anchor": "Thmassumption7",
+    "kind": "ltx_theorem ltx_theorem_assumption",
+    "text": "Assumption 7 . The Padé denominator is bounded away from zero on $[0,{R}]$ , i.e., there exists $\\eta>0$ such that $|D(s)|\\geq\\eta,\\forall s\\in[0,{R}],$ for both Padé 2 and Padé 3 ."
+  },
+  {
+    "anchor": "Thmassumption8",
+    "kind": "ltx_theorem ltx_theorem_assumption",
+    "text": "Assumption 8 . The Padé residual has bounded higher-order derivatives, i.e., there exist $Q,P>0$ such that $|r^{(3)}(s)|\\leq Q\\quad\\text{(Pad\\'{e}${}_{2}$)},\\quad|r^{(4)}(s)|\\leq P\\quad\\text{(Pad\\'{e}${}_{3}$)},\\quad\\forall s\\in[0,{R}].$"
+  },
+  {
+    "anchor": "Thmcorollary1",
+    "kind": "ltx_theorem ltx_theorem_corollary",
+    "text": "Corollary 1 (Third-order Taylor approximation bound) . Suppose Assumptions 1 - 2 hold. Then the step selected by maximizing the third-order Taylor model satisfies $\\phi(s_{M})\\geq\\phi(s_{\\phi})-\\frac{BR^{4}}{12}-\\frac{B\\epsilon^{2}R^{2}}{12}-\\frac{L\\epsilon^{2}R^{3}}{60}.$"
+  },
+  {
+    "anchor": "Thmcorollary2",
+    "kind": "ltx_theorem ltx_theorem_corollary",
+    "text": "Corollary 2 (Padé 2 approximation bound) . Let Assumptions 1 - 2 and 7 - 8 hold. Then the step selected by maximizing the Padé 2 model satisfies $\\phi(s_{M})\\geq\\phi(s_{\\phi})-\\frac{B\\epsilon^{2}{R}^{2}}{12\\eta}-\\frac{Q{R}^{3}}{3\\eta}.$"
+  },
+  {
+    "anchor": "Thmcorollary3",
+    "kind": "ltx_theorem ltx_theorem_corollary",
+    "text": "Corollary 3 (Padé 3 approximation bound) . Let Assumptions 1 - 2 and 7 - 8 hold. Then the step selected by maximizing the Padé 3 model satisfies $\\phi(s_{M})\\geq\\phi(s_{\\phi})-\\frac{B\\epsilon^{2}{R}^{2}}{12\\eta}-\\frac{L\\epsilon^{2}{R}^{3}}{60\\eta}-\\frac{|d_{1}|B\\epsilon^{2}{R}^{3}}{12\\eta}-\\frac{P{R}^{4}}{12\\eta}.$"
+  },
+  {
+    "anchor": "Thmassumption9",
+    "kind": "ltx_theorem ltx_theorem_assumption",
+    "text": "Assumption 9 . Let the difference between the second derivative of $\\phi$ and the second order approximation of $\\phi$ at $s=0$ be bounded, i.e., there exists $D>0$ such that $|\\phi^{\\prime\\prime}(s)-\\frac{\\phi(\\epsilon)-2\\phi(0)+\\phi(-\\epsilon)}{\\epsilon^{2}}|\\leq D;\\forall s\\in[0,{R}].$"
+  },
+  {
+    "anchor": "Thmassumption10",
+    "kind": "ltx_theorem ltx_theorem_assumption",
+    "text": "Assumption 10 . Let $\\phi$ be $\\nu$ -strongly concave on $[0,{R}]$ , i.e., $\\phi(u)\\leq\\phi(s)+\\phi^{\\prime}(s)(u-s)-\\frac{\\nu}{2}(u-s)^{2};$ for all $s,u\\in[0,{R}]$ where $\\nu>0.$"
+  },
+  {
+    "anchor": "Thmassumption11",
+    "kind": "ltx_theorem ltx_theorem_assumption",
+    "text": "Assumption 11 . Let the maximum of $T_{2}(s)$ be an interior point, i.e., $-\\frac{\\epsilon^{2}\\phi^{\\prime}(0)}{\\phi(\\epsilon)-2\\phi(0)+\\phi(-\\epsilon)}\\in[0,{R}]$ and $\\phi(\\epsilon)-2\\phi(0)+\\phi(-\\epsilon)<0$ ."
+  },
+  {
+    "anchor": "Thmtheorem4",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 4 (Second-order Taylor win guarantee) . If Assumption 1 and Assumptions 9 - 11 hold, and if $s_{\\rm FO}\\in[0,{R}]$ , then the following relation holds between $\\phi(s_{M})$ and $\\phi(s_{\\rm FO})$ : $\\text{if }|s_{\\rm FO}-s_{M}|=0\\text{ or }|s_{\\rm FO}-s_{M}|\\geq\\frac{2Ds_{M}}{\\nu},\\text{ then }\\phi(s_{M})\\geq\\phi(s_{\\rm FO}).$"
+  },
+  {
+    "anchor": "Thmtheorem3a",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 3 (Stationarity of the ZFO update) . Suppose Assumptions 5 – 6 hold. Assume also that $q_{t}/\\mathcal{L}_{J}\\in I_{t}.$ Then, for every $T>0$ , with probability at least $1-\\delta,$ $\\min_{0\\leq t\\leq T}\\mathbb{E}\\|\\nabla J(\\theta_{t})\\|^{2}\\leq\\frac{2\\mathcal{L}_{J}(J^{\\star}-J(\\theta_{0}))}{\\mu^{2}T}+\\frac{2\\mathcal{L}_{J}\\tilde{\\Delta}_{T}}{\\mu^{2}},\\text{ where }\\tilde{\\Delta}_{T}=\\frac{1}{T}\\sum_{t=0}^{T-1}\\mathbb{E}[\\Delta_{t}].$"
+  }
+]

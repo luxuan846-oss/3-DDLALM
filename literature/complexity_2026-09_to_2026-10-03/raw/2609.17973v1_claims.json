@@ -1,0 +1,132 @@
+[
+  {
+    "anchor": "S2.Thmassumption1",
+    "kind": "ltx_theorem ltx_theorem_assumption",
+    "text": "Assumption 2.1 . The function $f$ is continuously differentiable on an open neighborhood of $X\\times Y$ and satisfies the following conditions. (i) For some $L>0$ and all $(x,y),(x^{\\prime},y^{\\prime})\\in X\\times Y$ , $\\lVert\\nabla f(x^{\\prime},y^{\\prime})-\\nabla f(x,y)\\rVert\\leq L\\lVert(x^{\\prime}-x,y^{\\prime}-y)\\rVert.$ (2.2) (ii) For some $0\\leq\\mu\\leq L$ , the function $f(x,\\cdot)$ is $\\mu$ -strongly concave on $Y$ for every $x\\in X$ ; namely, ${f(x,y^{\\prime})\\leq f(x,y)+\\langle\\nabla_{y}f(x,y),y^{\\prime}-y\\rangle-\\frac{\\mu}{2}\\lVert y^{\\prime}-y\\rVert^{2},\\qquad y,y^{\\prime}\\in Y.}$ (2.3) (iii) The value function is bounded below: $\\inf_{x\\in X}\\max_{y\\in Y}f(x,y)>-\\infty.$ (2.4)"
+  },
+  {
+    "anchor": "S2.Thmdefinition1",
+    "kind": "ltx_theorem ltx_theorem_definition",
+    "text": "Definition 2.1 ( $\\varepsilon$ -optimization stationary point) . For $\\lambda>L$ and $\\varepsilon>0$ , a point $x\\in X$ is an $\\varepsilon$ -optimization stationary point relative to $\\lambda$ if $\\lVert\\nabla\\Phi_{\\lambda}(x)\\rVert\\leq\\varepsilon.$ (2.9) A random point $Z\\in X$ almost surely is $\\varepsilon$ -optimization stationary in expectation relative to $\\lambda$ if $\\mathbb{E}\\lVert\\nabla\\Phi_{\\lambda}(Z)\\rVert\\leq\\varepsilon.$"
+  },
+  {
+    "anchor": "S2.Thmdefinition2",
+    "kind": "ltx_theorem ltx_theorem_definition",
+    "text": "Definition 2.2 ( $\\varepsilon$ -game stationary point) . For $\\varepsilon>0$ , a pair $(x,y)\\in X\\times Y$ is an $\\varepsilon$ -game stationary point of ( 2.1 ) if $\\mathcal{R}(x,y)\\leq\\varepsilon.$ (2.11)"
+  },
+  {
+    "anchor": "S4.Thmtheorem1",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 4.1 (Unified Lyapunov descent) . Under Assumption 2.1 and the parameter choice ( 4.3 ), Algorithm 1 satisfies $\\mathcal{V}_{t}\\geq 0$ for every $t$ . Moreover, $\\displaystyle\\mathcal{V}_{t+1}-\\mathcal{V}_{t}\\leq-\\frac{1}{2}\\mathcal{D}_{z_{t}}(w_{t+1},w_{t})-\\frac{\\beta}{8L}\\|\\nabla p(z_{t})\\|^{2}.$ (4.7) In particular, $\\mathcal{V}_{t+1}-\\mathcal{V}_{t}\\leq-\\frac{\\beta}{8L}\\|\\nabla p(z_{t})\\|^{2}.$ (4.8)"
+  },
+  {
+    "anchor": "S4.Thmcorollary1",
+    "kind": "ltx_theorem ltx_theorem_corollary",
+    "text": "Corollary 4.1 . Under the conditions of Theorem 4.1 , the deterministic output satisfies ${\\mathcal{R}(x_{\\rm out},y_{\\rm out})\\leq\\sqrt{S_{j}}+\\tau\\|y_{j+1}\\|\\leq\\sqrt{\\frac{32L\\Delta_{\\tau}}{\\beta T}}+\\tau D_{Y}.}$ (4.12) The random output $z_{\\rm out}\\in X$ satisfies $\\mathbb{E}\\|\\nabla p(z_{\\rm out})\\|^{2}\\leq\\frac{8L\\Delta_{\\tau}}{\\beta T}$ (4.13) and $\\mathbb{E}\\|\\nabla\\Phi_{2L}(z_{\\rm out})\\|^{2}\\leq\\frac{16L\\Delta_{\\tau}}{\\beta T}+8L\\tau D_{Y}^{2}.$ (4.14)"
+  },
+  {
+    "anchor": "S4.Thmtheorem2",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 4.2 (Nonconvex–strongly concave optimization-stationarity complexity) . Suppose that Assumption 2.1 holds with $\\mu>0$ . For $\\varepsilon>0$ , let $\\tau=0$ , $\\mu_{y}=\\mu$ , and $\\lambda=2L$ , and choose the remaining parameters as in ( 4.3 ). Run Algorithm 1 for $T=\\max\\left\\{1,\\left\\lceil\\frac{128L\\Delta_{0}}{\\beta\\varepsilon^{2}}\\right\\rceil\\right\\}$ (4.15) iterations. The random center returned by Algorithm 1 satisfies $\\mathbb{E}\\|\\nabla\\Phi_{2L}(z_{\\rm out})\\|^{2}\\leq\\varepsilon^{2}.$ (4.16)"
+  },
+  {
+    "anchor": "S4.Thmremark1",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 4.1 . For fixed $\\Delta_{0}>0$ , as $\\varepsilon\\downarrow 0$ , the first-order oracle complexity of Theorem 4.2 is $O\\!\\left(\\sqrt{\\kappa}L\\Delta_{0}\\varepsilon^{-2}\\right).$ (4.17)"
+  },
+  {
+    "anchor": "S4.Thmtheorem3",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 4.3 (Nonconvex–strongly concave game-stationarity complexity) . Under the assumptions and parameter choices of Theorem 4.2 , run Algorithm 1 for $T$ iterations, with $T$ given by ( 4.15 ). The deterministic game output satisfies $\\mathcal{R}(x_{\\rm out},y_{\\rm out})\\leq\\varepsilon.$ (4.18)"
+  },
+  {
+    "anchor": "S4.Thmremark2",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 4.2 . For fixed $\\Delta_{0}>0$ , as $\\varepsilon\\downarrow 0$ , the first-order oracle complexity of Theorem 4.3 is $O\\!\\left(\\sqrt{\\kappa}L\\Delta_{0}\\varepsilon^{-2}\\right).$ (4.19)"
+  },
+  {
+    "anchor": "S4.Thmtheorem4",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 4.4 (Nonconvex–concave optimization-stationarity complexity) . Suppose that Assumption 2.1 holds with $\\mu=0$ . For $\\varepsilon>0$ , let $\\tau=\\min\\left\\{L,\\frac{\\varepsilon^{2}}{16LD_{Y}^{2}}\\right\\},\\qquad\\mu_{y}=\\tau,$ (4.22) let $\\lambda=2L$ , and choose the remaining parameters as in ( 4.3 ). Run Algorithm 1 for $T=\\max\\left\\{1,\\left\\lceil\\frac{128L\\Delta_{\\tau}}{\\beta\\varepsilon^{2}}\\right\\rceil\\right\\}$ (4.23) iterations. The random output of Algorithm 1 satisfies $\\mathbb{E}\\|\\nabla\\Phi_{2L}(z_{\\rm out})\\|^{2}\\leq\\varepsilon^{2}.$ (4.24)"
+  },
+  {
+    "anchor": "S4.Thmremark3",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 4.3 . By Lemma 4.4 and the choice of $\\tau$ , $\\Delta_{\\tau}\\leq\\bar{\\Delta}_{0}+O(\\varepsilon^{2}/L)$ as $\\varepsilon\\downarrow 0$ . For fixed $\\bar{\\Delta}_{0}>0$ , the first-order oracle complexity of Theorem 4.4 is therefore $O\\!\\left(L^{2}D_{Y}\\bar{\\Delta}_{0}\\varepsilon^{-3}\\right).$ (4.25)"
+  },
+  {
+    "anchor": "S4.Thmtheorem5",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 4.5 (Nonconvex–concave game-stationarity complexity) . Suppose that Assumption 2.1 holds with $\\mu=0$ . For $\\varepsilon>0$ , let $\\tau=\\min\\left\\{L,\\frac{\\varepsilon}{2D_{Y}}\\right\\},\\qquad\\mu_{y}=\\tau,$ (4.26) let $\\lambda=2L$ , and choose the remaining parameters as in ( 4.3 ). Run Algorithm 1 for $T$ iterations, with $T$ given by ( 4.23 ) using the present values of $\\beta$ and $\\Delta_{\\tau}$ . The deterministic game output of Algorithm 1 satisfies $\\mathcal{R}(x_{\\rm out},y_{\\rm out})\\leq\\varepsilon.$ (4.27)"
+  },
+  {
+    "anchor": "S4.Thmremark4",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 4.4 . By Lemma 4.4 and the choice of $\\tau$ , $\\Delta_{\\tau}\\leq\\bar{\\Delta}_{0}+O(\\varepsilon D_{Y})$ as $\\varepsilon\\downarrow 0$ . For fixed $\\bar{\\Delta}_{0}>0$ , the first-order oracle complexity of Theorem 4.5 is therefore $O\\!\\left(L^{3/2}D_{Y}^{1/2}\\bar{\\Delta}_{0}\\varepsilon^{-5/2}\\right).$ (4.28)"
+  },
+  {
+    "anchor": "S4.Thmtheorem6",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 4.6 (Warm-started residual bounds and oracle complexity) . Under the conditions above, Algorithm 2 satisfies $\\mathbb{E}\\|\\nabla p(z_{\\rm out})\\|^{2}\\leq\\frac{\\varepsilon^{2}}{16},\\qquad S_{j}\\leq\\frac{\\varepsilon^{2}}{4}.$ (4.36) Consequently, $\\mathcal{R}(x_{\\rm out},y_{\\rm out})\\leq\\frac{\\varepsilon}{2}+\\tau D_{Y},\\qquad\\mathbb{E}\\|\\nabla\\Phi_{2L}(z_{\\rm out})\\|^{2}\\leq\\frac{\\varepsilon^{2}}{8}+8L\\tau D_{Y}^{2}.$ (4.37) When $\\tau=0$ , the OS bound is sharpened to $\\mathbb{E}\\|\\nabla\\Phi_{2L}(z_{\\rm out})\\|^{2}\\leq\\varepsilon^{2}/16$ . The number $N$ of full first-order oracle calls satisfies $\\displaystyle N$ $\\displaystyle\\leq 1+2(T_{\\rm w}+T)$ (4.38) $\\displaystyle\\leq 5+\\frac{\\log q_{\\mu,\\tau,\\eta}}{32\\beta}+\\frac{256LB_{\\mu,\\tau,\\eta}}{\\beta\\varepsilon^{2}}.$ There are $4(T_{\\rm w}+T)$ projections. The initial query used to compute ( 4.30 ) is shared with the first prediction, and no additional query is required at the phase transition."
+  },
+  {
+    "anchor": "S4.Thmcorollary2",
+    "kind": "ltx_theorem ltx_theorem_corollary",
+    "text": "Corollary 4.2 (Warm-started NC–SC complexity) . Suppose that $\\mu>0$ . Set $\\tau=0$ , $\\eta=\\varepsilon^{2}/L$ , and $\\kappa=L/\\mu$ , and write $\\overline{H}_{\\mu}:=\\overline{H}_{\\mu,0}$ . Algorithm 2 returns a random OS center and a deterministic GS pair satisfying $\\mathbb{E}\\|\\nabla\\Phi_{2L}(z_{\\rm out})\\|^{2}\\leq\\varepsilon^{2},\\qquad\\mathcal{R}(x_{\\rm out},y_{\\rm out})\\leq\\varepsilon.$ (4.39) Its oracle complexity is $N=O\\!\\left(\\sqrt{\\kappa}\\left[\\frac{L\\Delta_{\\phi}}{\\varepsilon^{2}}+1+\\log\\!\\left(1+\\frac{L\\overline{H}_{\\mu}}{\\varepsilon^{2}}\\right)\\right]\\right).$ (4.40) For a fixed instance with $\\Delta_{\\phi}>0$ , the leading term is $O(\\sqrt{\\kappa}L\\Delta_{\\phi}\\varepsilon^{-2})$ ."
+  },
+  {
+    "anchor": "S4.Thmcorollary3",
+    "kind": "ltx_theorem ltx_theorem_corollary",
+    "text": "Corollary 4.3 (Warm-started NC–C optimization stationarity) . Suppose that $\\mu=0$ . Choose $\\tau$ as in ( 4.22 ) and set $\\eta=\\tau D_{Y}^{2}$ . Algorithm 2 returns a random center satisfying $\\mathbb{E}\\|\\nabla\\Phi_{2L}(z_{\\rm out})\\|^{2}\\leq\\varepsilon^{2}.$ (4.41) The full query bound is ( 4.38 ), with $B_{0,\\tau,\\eta}=\\Delta_{\\phi}+3\\tau D_{Y}^{2}/2$ . For a fixed instance with $\\Delta_{\\phi}>0$ , its leading order as $\\varepsilon\\downarrow 0$ is $O\\!\\left(L^{2}D_{Y}\\Delta_{\\phi}\\varepsilon^{-3}\\right).$ (4.42)"
+  },
+  {
+    "anchor": "S4.Thmcorollary4",
+    "kind": "ltx_theorem ltx_theorem_corollary",
+    "text": "Corollary 4.4 (Warm-started NC–C game stationarity) . Suppose that $\\mu=0$ . Choose $\\tau$ as in ( 4.26 ) and set $\\eta=\\tau D_{Y}^{2}$ . Algorithm 2 returns a deterministic pair satisfying $\\mathcal{R}(x_{\\rm out},y_{\\rm out})\\leq\\varepsilon.$ (4.43) The full query bound is again ( 4.38 ), with $B_{0,\\tau,\\eta}=\\Delta_{\\phi}+3\\tau D_{Y}^{2}/2$ . For a fixed instance with $\\Delta_{\\phi}>0$ , its leading order as $\\varepsilon\\downarrow 0$ is $O\\!\\left(L^{3/2}D_{Y}^{1/2}\\Delta_{\\phi}\\varepsilon^{-5/2}\\right).$ (4.44)"
+  },
+  {
+    "anchor": "S4.Thmremark5",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 4.5 (Tolerance and budget information) . The positive tolerance $\\eta$ is distinct from the perturbation parameter $\\tau$ . In the NC–C case, $\\eta=\\tau D_{Y}^{2}$ recovers the original warm-up target; in the NC–SC case, $\\tau=0$ and this target must be replaced by a positive tolerance. The choice $\\eta=\\varepsilon^{2}/L$ is valid even when $\\Delta_{\\phi}=0$ . If only a known bound $\\overline{\\Delta}\\geq\\Delta_{\\phi}$ is available, it may replace $\\Delta_{\\phi}$ in the budget and complexity statements. In particular, for NC–SC and $\\overline{\\Delta}>0$ , the alternative $\\eta=\\overline{\\Delta}$ and $B=2\\overline{\\Delta}$ gives $N=O\\!\\left(\\sqrt{\\kappa}\\left[\\frac{L\\overline{\\Delta}}{\\varepsilon^{2}}+1+\\log\\max\\{1,\\overline{H}_{\\mu}/\\overline{\\Delta}\\}\\right]\\right),$ (4.45) whose warm-up length is independent of $\\varepsilon$ . Neither version evaluates the envelope or its infimum. The additive terms in the full bounds cannot be discarded for a zero gap or unbounded initialization errors."
+  },
+  {
+    "anchor": "S5.Thmdefinition1",
+    "kind": "ltx_theorem ltx_theorem_definition",
+    "text": "Definition 5.1 (Projected zero-respecting first-order method) . Let $\\mathcal{Z}=\\mathbb{R}^{d_{x}}\\times Y$ and $F(x,y)=(\\nabla_{x}f(x,y),-\\nabla_{y}f(x,y))$ . A deterministic method starts at $w^{0}=0$ and queries $F$ at feasible points $w^{t}\\in\\mathcal{Z}$ . It is projected zero-respecting if each subsequent query satisfies $\\begin{gathered}w^{t+1}=\\Pi_{\\mathcal{Z}}(a^{t+1}),\\\\ \\supp(a^{t+1})\\subseteq\\bigcup_{s=0}^{t}\\bigl(\\supp(w^{s})\\cup\\supp(F(w^{s}))\\bigr).\\end{gathered}$ (5.3) After $T$ queries, at $w^{0},\\ldots,w^{T-1}$ , its output must also satisfy $\\begin{gathered}w^{\\mathrm{out}}=\\Pi_{\\mathcal{Z}}(a^{\\mathrm{out}}),\\\\ \\supp(a^{\\mathrm{out}})\\subseteq\\bigcup_{s=0}^{T-1}\\bigl(\\supp(w^{s})\\cup\\supp(F(w^{s}))\\bigr).\\end{gathered}$ (5.4) A primal-only output is permitted if it is the first block of such a $w^{\\mathrm{out}}$ . For $T=0$ , the union is empty and the output is the origin. Complexity counts first-order oracle calls; projections are not charged."
+  },
+  {
+    "anchor": "S5.Thmtheorem1",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 5.1 (Optimization-stationarity query lower bound) . Let $L_{0}=128$ , $c_{0}=1/512$ , and define $\\varepsilon_{*}:=\\min\\left\\{c_{0}\\sqrt{\\frac{L\\Delta}{40L_{0}}},\\frac{c_{0}LD_{Y}}{8L_{0}}\\right\\},\\qquad c_{*}:=\\frac{c_{0}^{3}}{320L_{0}^{2}}.$ (5.16) For every $0<\\varepsilon\\leq\\varepsilon_{*}$ , there is an instance satisfying ( 5.1 ), with initial gap $2\\Delta/5\\leq\\Delta_{\\phi}\\leq\\Delta$ , such that any method in Definition 5.1 whose output satisfies ( 5.2 ) must make at least $T\\geq c_{*}\\frac{L^{2}\\Delta_{\\phi}D_{Y}}{\\varepsilon^{3}}$ (5.17) first-order oracle calls. More precisely, for the dimensions chosen in the proof, every output after $T<M(n+1)$ queries satisfies $\\|\\nabla\\Phi_{2L}(x^{\\mathrm{out}})\\|>2\\varepsilon$ ."
+  },
+  {
+    "anchor": "S5.Thmremark1",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 5.1 (Randomized outputs) . The support induction and Moreau-gradient barrier hold pathwise. For randomized methods satisfying ( 5.3 )–( 5.4 ) almost surely, any fixed query budget $T<M(n+1)$ therefore gives $\\mathbb{E}\\|\\nabla\\Phi_{2L}(x^{\\mathrm{out}})\\|>2\\varepsilon,\\qquad\\mathbb{E}\\|\\nabla\\Phi_{2L}(x^{\\mathrm{out}})\\|^{2}>4\\varepsilon^{2}.$ Thus the lower bound also holds for the expected-norm OS criterion in Definition 2.1 and the expected squared-norm criterion in Theorem 4.4 , at a fixed total query budget."
+  },
+  {
+    "anchor": "S5.Thmremark2",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 5.2 (Matching the upper bound) . The leading OS upper bound ( 4.42 ) for Algorithm 2 matches the lower bound in Theorem 5.1 in its $L^{2}D_{Y}\\Delta_{\\phi}\\varepsilon^{-3}$ dependence within the class of projected zero-respecting methods. The additional terms in ( 4.38 ) are lower order for each fixed instance with $\\Delta_{\\phi}>0$ as $\\varepsilon\\downarrow 0$ . Appendix 11.4 verifies the initialization and oracle-class conditions required for this comparison."
+  },
+  {
+    "anchor": "S9.Thmtheorem1",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 9.1 . For each iteration $t$ , the update from $w_{t}$ to $w_{t+1}$ at the fixed center $z_{t}$ satisfies $\\displaystyle\\mathcal{E}_{z_{t}}(w_{t+1})-\\mathcal{E}_{z_{t}}(w_{t})+\\frac{\\sqrt{2L\\mu_{y}}}{256L^{2}}\\bigl(\\|v_{t+1}\\|^{2}-\\|v_{t}\\|^{2}\\bigr)$ (9.21) $\\displaystyle+\\frac{h\\sqrt{2L\\mu_{y}}}{32}\\left[\\mathcal{E}_{z_{t}}(w_{t+1})+\\frac{\\sqrt{2L\\mu_{y}}}{256L^{2}}\\|v_{t+1}\\|^{2}\\right]\\leq-\\mathcal{D}_{z_{t}}(w_{t+1},w_{t}).$ Both terms in brackets are nonnegative by Lemma 9.2 ."
+  },
+  {
+    "anchor": "S10.Thmremark1",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 10.1 (Budget from an initial-energy upper bound) . The budget does not require computing $\\Delta_{0}$ exactly. Given any known $\\overline{\\Delta}_{0}\\geq\\Delta_{0}$ , choose instead $T=\\max\\left\\{1,\\left\\lceil\\frac{128L\\overline{\\Delta}_{0}}{\\beta\\varepsilon^{2}}\\right\\rceil\\right\\}.$ (10.15) The conclusions of Theorems 4.2 and 4.3 then hold, and for fixed $\\overline{\\Delta}_{0}>0$ the complexity as $\\varepsilon\\downarrow 0$ is $O\\!\\left(\\sqrt{\\frac{L}{\\mu}}\\,\\frac{L\\overline{\\Delta}_{0}}{\\varepsilon^{2}}\\right)$ (10.16) first-order oracle calls. This follows from the same proof by using $\\Delta_{0}\\leq\\overline{\\Delta}_{0}$ in the two summation estimates. Thus an available upper bound suffices to prescribe the run length, without evaluating the envelope or its infimum."
+  },
+  {
+    "anchor": "S10.Thmremark2",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 10.2 (Optimal accuracy dependence under strong concavity) . The $\\varepsilon^{-2}$ accuracy dependence is optimal with the regularity and initialization bounds fixed. To see this, embed a smooth nonconvex minimization instance $g$ into $f(x,y)=g(x)-\\mu\\|y\\|^{2}/2$ , with $X=\\mathbb{R}^{n}$ and a fixed compact convex $Y$ containing $0$ . Then $\\phi=g$ , and the game residual controls $\\|\\nabla g(x)\\|$ . For OS, let $u=\\operatorname{prox}_{g/(2L)}(z)$ . Proximal optimality and smoothness give $\\nabla\\Phi_{2L}(z)=\\nabla g(u)=2L(z-u),\\qquad\\|\\nabla g(z)\\|\\leq\\tfrac{3}{2}\\|\\nabla\\Phi_{2L}(z)\\|.$ This pointwise inequality also transfers an expected squared-norm guarantee. Initialize $z_{0}=x_{0}$ , $y_{0}=0$ , and the normal and momentum variables at zero. The definition of $\\Delta_{0}$ and the gradient-gap inequality imply $\\Delta_{0}\\leq g(x_{0})-\\inf g+\\frac{\\|\\nabla g(x_{0})\\|^{2}}{L}\\leq 3\\bigl(g(x_{0})-\\inf g\\bigr).$ The smooth-minimization lower bound of Carmon et al. (2020) therefore applies under a common bounded initialization budget. This establishes optimality of the accuracy exponent, without asserting optimality of the condition-number dependence."
+  },
+  {
+    "anchor": "S10.Thmremark3",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 10.3 (Dependence on the condition number) . Writing $\\kappa=L/\\mu$ , Theorems 4.2 and 4.3 give a baseline gradient complexity upper bound of order $1+\\sqrt{\\kappa}L\\Delta_{0}\\varepsilon^{-2}$ for each stated output criterion. Corollary 4.2 replaces $\\Delta_{0}$ in the leading term by $\\Delta_{\\phi}$ , with an additive initialization cost. An optimality comparison must retain both the stationarity criterion and the initialization quantity: lower bounds expressed through the gradient of the value function do not, by themselves, establish a matching lower bound for either guarantee stated here."
+  }
+]

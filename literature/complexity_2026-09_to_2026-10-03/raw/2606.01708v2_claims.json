@@ -1,0 +1,102 @@
+[
+  {
+    "anchor": "S2.Thmdefinition1",
+    "kind": "ltx_theorem ltx_theorem_definition",
+    "text": "Definition 2.1 (Frontier) . A frontier $\\mathcal{F}\\subseteq\\mathcal{T}\\setminus\\{r\\}$ is a complete cut of the tree, meaning that every root-to-leaf path intersects $\\mathcal{F}$ in exactly one node."
+  },
+  {
+    "anchor": "S2.Thmdefinition2",
+    "kind": "ltx_theorem ltx_theorem_definition",
+    "text": "Definition 2.2 (Fast oracle $F$ ) . The fast oracle returns a deterministic value $V_{F}(v)$ . Equivalently, $\\nu_{v,1}$ is a degenerate distribution at $V_{F}(v)$ , so $\\mu_{v,1}=V_{F}(v)$ and $|V_{F}(v)-V^{*}(v)|\\leq B(h(v)).$"
+  },
+  {
+    "anchor": "S2.Thmdefinition3",
+    "kind": "ltx_theorem ltx_theorem_definition",
+    "text": "Definition 2.3 (Slow oracle $S$ ) . For each node $v$ , repeated slow-oracle queries return independent $\\sigma$ -sub-Gaussian samples $Y_{v,s}$ with distribution $\\nu_{v,2}$ and mean $\\mu_{v,2}=V^{*}(v).$"
+  },
+  {
+    "anchor": "S2.Thmtheorem1",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 2.1 . The unbiased slow oracle setup is analogous to that of Kaufmann and Koolen [5] , which defines the sampling oracle as mean-correct $\\mathbb{E}[Y_{l,s}]=V^{*}(l)$ ; in § 4 , we instantiate it by adding actual noise to true minimax values. Also, unlike classical BAI-MCTS [ 5 ] , where stochastic samples are attached to leaf rollouts, our slow oracle may be queried at any exposed non-root node. In § 3.2 , we add further worst-case guarantee to real-world applications, where slow-oracles are biased."
+  },
+  {
+    "anchor": "S2.Thmtheorem2",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 2.2 (Fast-oracle envelop) . We note that the envelope structure in Eq. ( 1 ) can be motivated by finite horizon MARL. Specifically, for a critic $\\widehat{V}_{t}$ with the correct terminal value, discount $0\\leq\\gamma\\leq 1$ , and minimax Bellman residual $\\eta_{t}=\\lVert\\widehat{V}_{t}-\\mathcal{T}_{t}\\widehat{V}_{t+1}\\rVert_{\\infty}$ , Bellman nonexpansiveness gives $\\lVert\\widehat{V}_{t}-V_{t}^{*}\\rVert_{\\infty}\\leq\\sum_{j=t}^{H-1}\\gamma^{j-t}\\eta_{j}$ . A known bound $\\eta_{j}\\leq\\bar{\\eta}$ provides the nondecreasing envelope $B(h)=\\bar{\\eta}\\sum_{i=0}^{h-1}\\gamma^{i}$ ."
+  },
+  {
+    "anchor": "S2.Thmdefinition4",
+    "kind": "ltx_theorem ltx_theorem_definition",
+    "text": "Definition 2.4 (Effective gap) . Set the root effective gap to $\\Delta_{r}^{\\mathrm{eff}}\\coloneqq\\Delta_{*}$ . For every non-root node $v$ , let $p(v)$ denotes the parent of $v$ , we define recursively $\\Delta_{v}^{\\mathrm{eff}}\\coloneqq\\max\\!\\left\\{\\Delta_{p(v)}^{\\mathrm{eff}},\\,|V^{*}(v)-V^{*}(p(v))|\\right\\}.$"
+  },
+  {
+    "anchor": "S2.Thmtheorem5",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 2.5 . We note that instance-dependent complexity measures are standard in fixed-confidence BAI. Classical bounds are often stated in terms of gap-dependent hardness quantities such as $H_{1}=\\sum_{i\\neq i^{*}}\\Delta_{i}^{-2}$ , while refined analyses use information-theoretic characteristic times to quantify the intrinsic difficulty of an instance [ 16 , 17 , 18 ] . BAI-MCTS and multi-fidelity BAI follow the same convention, using tree- or fidelity-dependent oracle complexities to state adaptive cost guarantees [ 5 , 2 , 4 ] . Our $H^{*}$ serves as an analysis-only recursive oracle complexity under perfect gap information, rather than an information-theoretic lower bound; see Appendix B.8 ."
+  },
+  {
+    "anchor": "S3.Thmtheorem1",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 3.1 (PAC correctness) . Fix any feasible confidence allocation $\\boldsymbol{\\delta}=(\\delta_{v})_{v\\in\\mathcal{T}\\setminus\\{r\\}}$ and any $\\varepsilon\\geq 0$ . Consider Algorithm 1 run with accuracy $\\varepsilon$ , let $\\tau$ be its stopping time, and, on the event $\\{\\tau<\\infty\\}$ , let $\\hat{a}_{\\tau}$ be the returned root child. Then, $\\mathbb{P}\\!\\left(\\tau<\\infty\\text{ \\emph{and} }V^{*}(r,a^{*})-V^{*}(r,\\hat{a}_{\\tau})>\\varepsilon\\right)\\leq\\delta$ . In fact, on the simultaneous-validity event $\\mathcal{E}_{\\delta}$ , every finite-time recommendation made by the stopping rule is $\\varepsilon$ -optimal."
+  },
+  {
+    "anchor": "S3.Thmtheorem2",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 3.2 . We note that Theorem 3.1 uses only simultaneous interval validity and the root stopping rule and does not use any assumptions in the later upper-bound proof. Its proof is very straightforward, and we defer it to Appendix B.4 . The finite stopping guarantee is elaborated in Theorem 3.6 ."
+  },
+  {
+    "anchor": "S3.Thmtheorem3",
+    "kind": "ltx_theorem ltx_theorem_assumption",
+    "text": "Assumption 3.3 (Local dyadic scale regularity) . Fix the confidence allocation $\\boldsymbol{\\delta}$ , we assume there exist constants $\\Lambda_{\\mathrm{pre}}\\geq 1$ and $\\Lambda_{\\mathrm{gap}}\\geq 1$ such that, for every non-root node $v$ and every $K\\geq 0$ , $\\sum_{j=0}^{K}\\Gamma_{v}^{(j)}(\\delta_{v})\\leq\\Lambda_{\\mathrm{pre}}\\Gamma_{v}^{(K)}(\\delta_{v}),$ (10) and, for every non-root node $v$ , $\\Gamma_{v}\\!\\left(\\frac{\\Delta_{v}^{\\mathrm{eff}}}{2},\\delta_{v}\\right)\\leq\\Lambda_{\\mathrm{gap}}\\,\\Gamma_{v}(\\Delta_{v}^{\\mathrm{eff}},\\delta_{v}).$ (11) We write $\\Lambda_{\\mathrm{loc}}\\coloneqq\\Lambda_{\\mathrm{pre}}\\Lambda_{\\mathrm{gap}}$ ."
+  },
+  {
+    "anchor": "S3.Thmtheorem4",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 3.4 . Assumption 3.3 is purely local: it does not compare the raw recursive dyadic DP with $J^{*}$ . The prefix condition is the standard dyadic regularity of a statistical sample-complexity curve; it holds with a constant for polynomial laws, e.g., $m_{v}(\\rho,\\delta_{v})\\asymp\\rho^{-2}\\log(1/\\delta_{v})$ with uniform comparison constants over the positive-cost scales. The second condition only asks that moving from the effective gap to the neighboring dyadic half-scale changes the local stop cost by at most a constant factor. This is the only place where the deterministic fast-bias cutoff in Eq. ( 7 ) can create a knife-edge, which is ruled out by the assumption at the exact effective gap."
+  },
+  {
+    "anchor": "S3.Thmtheorem6",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 3.6 (General-depth upper bound) . Fix any feasible confidence allocation $\\boldsymbol{\\delta}=(\\delta_{v})_{v\\in\\mathcal{T}\\setminus\\{r\\}}$ satisfying Assumption 3.3 , and run Algorithm 1 with $\\varepsilon=0$ . On $\\mathcal{E}_{\\delta}$ , the algorithm is guaranteed to stop at a finite time $\\tau$ , returns $\\hat{a}_{\\tau}=a^{*}$ , and satisfies $C_{\\tau}\\leq P_{D}\\,H(\\boldsymbol{\\delta})$ . With the depth budgets $\\alpha_{h}=(h+1)^{2}$ , the cost $C_{\\tau}\\leq\\mathcal{O}_{\\Lambda_{\\mathrm{pre}},\\Lambda_{\\mathrm{gap}}}\\!\\left(D^{2}H(\\boldsymbol{\\delta})\\right)$ . Consequently, suppose the regularity constants $\\Lambda_{\\mathrm{pre}}$ and $\\Lambda_{\\mathrm{gap}}$ are uniform along a near-optimal feasible sequence: for every $\\eta>0$ , there exists a feasible allocation $\\boldsymbol{\\delta}^{\\eta}$ satisfying Assumption 3.3 with these same constants and $H(\\boldsymbol{\\delta}^{\\eta})\\leq H^{*}+\\eta.$ Then, the corresponding run satisfies, with probability at least $1-\\delta$ , $\\hat{a}_{\\tau}=a^{*},\\qquad C_{\\tau}\\leq P_{D}\\bigl(H^{*}+\\eta\\bigr).$ In particular, when $\\alpha_{h}=(h+1)^{2}$ and the local regularity constants are uniform constants, $C_{\\tau}\\leq\\mathcal{O}_{\\Lambda_{\\mathrm{pre}},\\Lambda_{\\mathrm{gap}}}\\!\\left(D^{2}(H^{*}+\\eta)\\right),$ and, since $H^{*}\\geq|\\mathrm{Ch}(r)|\\geq 2$ , one obtains $\\mathcal{O}_{\\Lambda_{\\mathrm{pre}},\\Lambda_{\\mathrm{gap}}}(D^{2}H^{*})$ by taking $\\eta\\leq H^{*}$ , or $\\eta=0$ whenever the infimum in Eq. ( 9 ) is attained with the same regularity constants."
+  },
+  {
+    "anchor": "S3.Thmtheorem7",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 3.7 . Suppose the slow oracle has fixed mean $V^{*}(v)+b_{v}$ , with known $\\xi\\geq\\max_{v}|b_{v}|$ , and its samples satisfy Eq. ( 3 ) around this mean. Replacing each slow radius $\\beta_{v}$ by $\\beta_{v}+\\xi$ preserves the $(\\varepsilon,\\delta)$ finite-output correctness of 2FFS. The bias inflation does not accumulate with tree depth."
+  },
+  {
+    "anchor": "S3.Thmtheorem8",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 3.8 . Let $B(h)$ denote the true fast-oracle envelope, and let $\\hat{B}(h)$ be a nondecreasing proxy envelope with $\\hat{B}(0)=0$ and $\\hat{B}(h)\\geq B(h)$ for all $h$ . Replacing $B(h)$ with $\\hat{B}(h)$ preserves the finite-output PAC guarantee and, on $\\mathcal{E}_{\\delta}$ for the same query history, can only widen the resulting confidence intervals."
+  },
+  {
+    "anchor": "A2.Thmtheorem1",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark B.1 (Scale-synchronous progress) . Recursive descent is required to remain synchronized with the current parent obligation and its remaining recursive budget. Concretely, inside a call $\\textsc{Resolve}(v,s,k,B)$ , a child call $\\textsc{Resolve}(u,s^{\\prime},K_{s^{\\prime}}^{\\leq k}(u,t),B_{\\mathrm{rec}})$ is admissible only if the scale- $k$ certificate at $v$ is still unresolved at the current round, the child is selected by the current scale- $k$ rule at $v$ , and $B_{\\mathrm{rec}}$ is no larger than the remaining budget $\\mathsf{B}_{v,k}^{\\mathrm{rec}}-M_{v,k}^{\\mathrm{exp}}$ . In particular, • in a comparison case, the algorithm may refine only the current blocking contender $b_{s}(v,k,t)\\in A_{s}(v,k,t)$ ; the blocker is refined first on $(b_{s}(v,k,t),\\bar{s},K_{\\bar{s}}^{\\leq k}(b_{s}(v,k,t),t))$ whenever this obligation is finite, and otherwise on $(b_{s}(v,k,t),s,K_{s}^{\\leq k}(b_{s}(v,k,t),t))$ ; • in a selector case, the algorithm may refine only a child $u\\in A_{s}(v,k,t)$ with $\\neg\\mathsf{Comp}_{s}(u,k,t)$ , and it calls that child at $K_{s}^{\\leq k}(u,t)$ . Every invocation of $\\textsc{Resolve}(v,s,k,B)$ performs at most one positive oracle action, either a slow query or an expansion, at the current node or below it. A local query may follow a zero-cost blocked child return. After each positive action, the algorithm updates the intervals, comparison endpoints, blockers, and active child sets before descending again. Thus the coarser-scale tests that could already certify or exclude a child from the current scale- $k$ obligation are checked before that child is refined further."
+  },
+  {
+    "anchor": "A2.Thmdefinition1",
+    "kind": "ltx_theorem ltx_theorem_definition",
+    "text": "Definition B.1 (Side-specific scale safety) . Fix a scale index $k\\geq 0$ , a round $t$ , an explored non-root node $v$ , and a side $s\\in\\{L,U\\}$ . We say that $v$ is $(s,k)$ -safe at round $t$ if $\\begin{cases}V^{*}(v)-L_{v}(t)\\leq\\rho_{k}/2,&\\text{if }s=L,\\\\[4.0pt] U_{v}(t)-V^{*}(v)\\leq\\rho_{k}/2,&\\text{if }s=U.\\end{cases}$"
+  },
+  {
+    "anchor": "A2.Thmtheorem10",
+    "kind": "ltx_theorem ltx_theorem_proposition",
+    "text": "Proposition B.10 (Active-call localization with explicit depth bound) . Assume $\\mathcal{E}_{\\delta}$ and $\\varepsilon=0$ . Consider any invocation $\\textsc{Resolve}(v,s,k)$ with finite scale $k$ made by Algorithm 1 during an outer-loop iteration. Let $m$ be the number of recursive edges from the initially selected root child in that outer-loop iteration to $v$ . Then $m\\leq D$ and $\\Delta_{v}^{\\mathrm{eff}}\\leq C_{\\mathrm{act}}(D)\\rho_{k},\\qquad C_{\\mathrm{act}}(D)=2.$ Equivalently, every active finite-scale call satisfies $\\Delta_{v}^{\\mathrm{eff}}\\leq 2\\rho_{k}.$"
+  },
+  {
+    "anchor": "A2.Thmdefinition2",
+    "kind": "ltx_theorem ltx_theorem_definition",
+    "text": "Definition B.2 (Aggregate subtree call cost) . For a non-root node $v$ , let $\\mathfrak{C}_{v}(t)$ be the sum of the costs returned by all invocations at $v$ in the first $t$ completed outer-loop rounds. Equivalently, this is the slow cost at $v$ , together with all fast and slow costs strictly below $v$ ; it excludes the fast query that first exposed $v$ . Set this quantity to zero for an unexposed node. Write $L_{v}^{\\mathrm{cost}}(t)$ for the direct slow cost at $v$ , and $E_{v}^{\\mathrm{cost}}(t)$ for the remaining, recursive cost. Then $\\mathfrak{C}_{v}(t)=L_{v}^{\\mathrm{cost}}(t)+E_{v}^{\\mathrm{cost}}(t),\\qquad E_{v}^{\\mathrm{cost}}(t)=\\mathbf{1}\\{v\\text{ expanded by }t\\}|\\mathrm{Ch}(v)|+\\sum_{u\\in\\mathrm{Ch}(v)}\\mathfrak{C}_{u}(t).$ The second term is zero at a leaf. Costs in a child subtree also appear in its ancestors’ costs, but no sum over all nodes is used: the root-child subtrees are disjoint, and their sum counts every post-initialization oracle cost exactly once."
+  },
+  {
+    "anchor": "A2.Thmtheorem16",
+    "kind": "ltx_theorem ltx_theorem_proposition",
+    "text": "Proposition B.16 (Aggregate subtree charging) . Assume $\\mathcal{E}_{\\delta}$ , $\\varepsilon=0$ , and Assumption 3.3 , and let $P_{h}$ be defined in Eq. ( 12 ). For every finite round $T$ and every non-root node $v$ , $\\mathfrak{C}_{v}(T)\\leq P_{h(v)}J_{v}^{*}(\\boldsymbol{\\delta}).$ In fact, for every currently unresolved finite obligation $(v,s,k)$ with $\\Delta_{v}^{\\mathrm{eff}}\\leq 2\\rho_{k}$ , the stronger bound holds: $\\mathfrak{C}_{v}(T)+d_{v}(s,k;T)\\leq P_{h(v)}J_{v}^{*}(\\boldsymbol{\\delta}).$ (13) Consequently, $C_{T}\\leq|\\mathrm{Ch}(r)|+P_{D-1}\\sum_{a\\in\\mathrm{Ch}(r)}J_{a}^{*}(\\boldsymbol{\\delta})\\leq P_{D}H(\\boldsymbol{\\delta}).$ For $\\alpha_{h}=(h+1)^{2}$ , $P_{D}\\leq\\Lambda_{\\mathrm{loc}}(1+\\alpha_{D})\\prod_{i=1}^{D}\\left(1+\\frac{\\Lambda_{\\mathrm{pre}}}{\\alpha_{i}}\\right),$ so $P_{D}=O_{\\Lambda_{\\mathrm{pre}},\\Lambda_{\\mathrm{gap}}}(D^{2})$ ."
+  },
+  {
+    "anchor": "A2.Thmtheorem19",
+    "kind": "ltx_theorem ltx_theorem_proposition",
+    "text": "Proposition B.19 (Finite stopping and correctness) . Assume $\\mathcal{E}_{\\delta}$ , $\\varepsilon=0$ , and Assumption 3.3 . Then Algorithm 1 halts after finitely many oracle calls. At its stopping time $\\tau$ , every returned action $\\hat{a}_{\\tau}$ is the unique optimal root action $a^{*}$ ."
+  }
+]

@@ -1,0 +1,139 @@
+\documentclass[10pt]{article}
+\usepackage[a4paper,margin=24mm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,booktabs,xcolor,hyperref}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
+\newcommand{\auditbox}[3]{\par\noindent\fcolorbox{#1}{#1!5}{\parbox{0.95\linewidth}{\textbf{#2}\par #3}}\par}
+\title{Analytic Audit of Appendix A}
+\author{DDLALM / SPLALM manuscript}
+\date{13 October 2026}
+\begin{document}
+\maketitle
+\auditbox{green!50!black}{PASS after one explanatory addition}{The parameter bounds,
+problem-class membership, spectral decomposition, transient estimates, and
+rotating-branch KKT lower bound are valid under the stated hypotheses.
+The executor and an independent reviewer checked the derivations analytically.
+No numerical verification was performed.}
+
+\section*{Scope and finding}
+This audit covers \texttt{appendix/LowerBoundRotation.tex} and its direct
+interfaces in the lower-bound statements, problem-class definition, and rotating
+trajectory proof. It is not a whole-manuscript audit.
+
+\begin{center}
+\begin{tabular}{llll}
+\toprule
+Finding & Severity / impact & Action & Status\\
+\midrule
+A-DENSITY-1 & Minor / exposition & Add derivation & Closed\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\auditbox{red!70!black}{Before}{The original text asserted that algebraic
+exceptional sets have dense complement. It did not show that the repeated-root
+condition is nontrivial or that boundary perturbations preserve admissibility.}
+\auditbox{orange!80!black}{Why an addition was needed}{An algebraic equality can
+hold identically. The actual parameter formulas must exclude that possibility.
+The claimed density is correct; no counterexample or false constant was found.}
+\auditbox{green!50!black}{After}{The proof now checks the relevant denominators,
+exhibits a nonzero limit of the discriminant, and constructs admissible
+perturbations. No assumption or theorem conclusion was changed.}
+
+\section*{Complete added argument}
+Use the appendix notation $D=\alpha W$, $V=\beta+d_\tau(1-\beta)$,
+$\vartheta=(1-V)\xi$, and
+\[
+Q_{\rm f}(t)=(t-1+D)(t-1+V)-\vartheta(t-1+\alpha).
+\]
+For $\alpha,\beta,d_\tau\in(0,1)$ and $V\ne\alpha$, the definitions give
+$W-1>0$ and $\vartheta>0$. Hence
+\[
+Q_{\rm f}(1-\alpha)=\alpha(W-1)(V-\alpha)\ne0,
+\qquad Q_{\rm f}(1-V)=\vartheta(V-\alpha)\ne0.
+\]
+Also, the parameter definitions give
+\[
+\beta\eta\tau b^2=\nu\bigl(WV-(1-V)\xi\bigr),\qquad
+Q_{\rm f}(1)=\frac{\alpha\beta\eta\tau b^2}{\nu}>0.
+\]
+These evaluations exclude all root-dependent denominators. The synchronization
+system has determinant $\alpha(1-V)(\alpha-V)(W+\xi)\ne0$.
+
+For fixed interior $\alpha,\beta,d_\tau$, the discriminant
+\[
+(D+V-\vartheta)^2-4(DV-\alpha\vartheta)
+\]
+is rational in $\epsilon^2$ and tends to $(U-V)^2$ as $\epsilon\downarrow0$.
+For $U\ne V$ it is not identically zero and its zeros are isolated. Interior
+variation of $\beta$ changes $V$ strictly, so $V=\alpha$ and $V=U$ can also
+be avoided by arbitrarily small perturbations. If
+$\epsilon(\rho+s)=c_1$, first decrease $\epsilon$ slightly to make room for
+perturbing the other parameters. The strict inequalities
+$\epsilon<c_2$ and $\alpha>\alpha_\epsilon$ are preserved for sufficiently
+small perturbations. Thus admissible nondegenerate parameters approximate
+every allowed endpoint and repeated-root case.
+
+All entries of $Q_{\rm f}(\mathbb T)\mathbf r$ are continuous there because
+$\alpha,b,V,W+\xi>0$ and the complex denominators are nonzero. The annihilator
+identity therefore extends to every admissible tuple.
+
+\section*{Other verified proof obligations}
+\textbf{Parameter bounds.} The alpha threshold gives
+$\nu/\alpha^2<1/64$ and $64U/65\le D\le U\le1$.
+The first term in $c_1$ gives $\xi C_{\rm tr}\le1/16$ and hence
+\[
+\frac{12}{13}\le\frac{b^2}{64\epsilon^2}\le1,
+\qquad 7\epsilon\le b\le8\epsilon.
+\]
+The real-part identity in the appendix yields both amplitude estimates.
+The remaining terms in $c_1,c_2$ yield $\kappa\le1/32$ and the required
+products involving $bs$ and $b\rho$.
+
+\textbf{Spectral decomposition.} Eliminating the center coordinates gives the
+stated quartic characteristic polynomial. Comparing coefficients using the
+parameter identities gives its two quadratic factors. The synchronized
+two-dimensional system yields exactly the stated $r_x,r_\lambda$.
+For $|t|\ge1$,
+\[
+|(t-1+D)(t-1+V)|\ge DV|t|^2
+>2\vartheta|t|\ge|\vartheta(t-1+\alpha)|.
+\]
+Thus every fast root is strictly inside the unit circle, including the
+repeated-root cases. No diagonalizability assumption is used.
+
+\textbf{Transient bounds.} The nonnegative convolution kernel has supremum
+at most $1/D$ and sum $1/(DV)$. Finite-prefix maximum and sum inequalities
+give
+\[
+|p_k|\le X/4,\qquad \sum_{k\ge0}|p_k|\le X/(4DV).
+\]
+The dual difference recursion and the weighted-average tail sum then give
+$|\ell_k|\le s(\gamma/\eta+5/4)bX$. These bounds do not require a uniform
+spectral gap as $\beta\downarrow0$.
+
+\textbf{Membership and trajectory.} The radial pieces match through first
+derivatives, and their Hessian norms are at most $\kappa$. The objective gap is
+\[
+F(0)-\inf F\le6\epsilon+32\gamma\epsilon^2\le\Delta.
+\]
+The trajectory induction verifies the current and staggered proximal conditions
+in order, with both norms at most $3/4$. The two amplitude cases yield
+\[
+R_k\ge\frac b2\max\{X,|\Lambda|\}=b/6\ge7\epsilon/6.
+\]
+
+\section*{Closure and provenance}
+Dependency order: parameter bounds, spectral identities, transient bounds,
+then membership and trajectory. The forward reference in the membership proof
+creates no cycle. Analytic endpoint checks covered $\alpha=1$, $\beta=1$,
+$s=\tau$, $V=\alpha$, repeated roots, $\eta=\gamma$, and $\beta\downarrow0$.
+No analytic counterexample was found. There are no open obligations in this scope.
+
+The configured external reviewer model was unavailable. Independent review was
+completed by the session agent \texttt{appendix\_a\_analytic\_review}, which also
+verified the added paragraph. The manuscript compiles to 38 pages with no
+undefined references or LaTeX errors in the final log. Detailed Chinese
+derivations are in \texttt{notes/progress/appendix-a-audit-20261013.md}.
+\end{document}

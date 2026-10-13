@@ -1,0 +1,475 @@
+% !TEX root = ../main.tex
+\section{Details for the rotating instance}
+\label{app:lb-rotation}
+
+\subsection{Parameters}
+\label{app:lb-rotation-params}
+Let \(V:=\beta+\frac{\tau}{s}(1-\beta)\) and
+\begin{equation}
+\nu:=\frac{64\eta\tau\alpha\beta\epsilon^2}
+  {\bigl(\alpha+\frac{\eta}{\gamma}(1-\alpha)\bigr)V},
+\qquad
+\zeta:=1-\frac{\nu}{2}+i\sqrt{\nu-\frac{\nu^2}{4}} .
+\label{eq:rot-basic}
+\end{equation}
+Under the conditions of Lemma~\ref{lem:rot-estimates}, \(0<\nu<4\); hence
+\(\zeta\notin\RR\), \(|\zeta|=1\), and \(|\zeta-1|^2=\nu\). Let
+\(W:=1+\frac{\eta}{\gamma}\alpha(1-\alpha)/|\zeta-1+\alpha|^2\), and define
+\begin{equation}
+b^2:=\frac{\nu W|\zeta-1+V|^2}{\eta\tau\bigl(\beta V+(1-V)\nu\bigr)},
+\qquad
+a:=\frac{\nu(W-1)}{\eta\alpha}+\frac{\tau b^2(V-\beta)}{|\zeta-1+V|^2},
+\qquad
+\kappa:=\rho b^2+a.
+\label{eq:rot-b-a}
+\end{equation}
+Let \(X>0\) be such that \(\max\{X,\|\Lambda\|\}=\frac13\), where
+\(\Lambda:=\frac{\tau b\zeta(\zeta-1+\beta)}{(\zeta-1)(\zeta-1+V)}X\), and set
+\begin{equation}
+\bv:=\Bigl(X,\ \Lambda,\ \frac{\alpha\zeta}{\zeta-1+\alpha}X,\
+  \frac{\beta\zeta}{\zeta-1+\beta}\Lambda\Bigr).
+\label{eq:rot-eigvec}
+\end{equation}
+The shifts \(x_c\) and \(\lambda_c\) are given in~\eqref{eq:rot-shift}. They
+are chosen so that \(-\bw_c-\bv\) lies in the \(\mathbb T\)-invariant subspace
+on which the spectral radius of \(\mathbb T\) is less than one.
+
+
+We use the following choices of the constants in Theorem~\ref{thm:lower-bound}:
+\begin{equation}
+\label{eq:rot-thresholds}
+\begin{aligned}
+c_1&:=\min\left\{
+\frac1{32}\sqrt{\frac{\tau}{\eta(1+4\gamma/\eta)}},\,
+\frac1{64(\gamma/\eta+5/2)},\,
+\frac1{16(3+\tau^{-1})}\right\},\\
+c_2&:=\min\left\{\frac1{64},\,
+\frac1{32\sqrt{\max\{1,4\tau,4\gamma\tau\}}},\,
+\frac\Delta{12},\,\frac{\sqrt\Delta}{2},\,
+\sqrt{\frac\Delta{64\gamma}}\right\}.
+\end{aligned}
+\end{equation}
+Throughout this appendix, assume the parameter conditions of
+Lemma~\ref{lem:rot-estimates}. All complex scalars represent vectors in
+\(\RR^2\), with the Euclidean norm equal to the complex modulus.
+For the calculations below, write
+\[
+\chi:=\frac\eta\gamma,\qquad d_\tau:=\frac\tau s,\qquad
+U:=\alpha+\chi(1-\alpha),\qquad D:=\alpha W,
+\]
+\[
+E:=|\zeta-1+\alpha|^2=\alpha^2+(1-\alpha)\nu,\qquad
+H:=|\zeta-1+V|^2=V^2+(1-V)\nu,
+\]
+\[
+\Upsilon:=\beta V+(1-V)\nu,\qquad
+\xi:=\frac{\eta\tau b^2(V-\beta)}H,\qquad
+C_{\rm tr}:=\frac1{d_\tau}+\frac{2(1+d_\tau^{-1})}{\chi}.
+\]
+These quantities are used only to prove the estimates and spectral identities.
+
+\subsection{Parameter bounds and proof of Lemma~\ref{lem:rot-estimates}~(i)}
+\label{app:lb-rotation-params-proof}
+\begin{lemma}
+\label{lem:rot-parameter-bounds}
+Under the conditions of Lemma~\ref{lem:rot-estimates}, the parameters satisfy
+\[
+7\epsilon\le b\le8\epsilon,
+\qquad \max\{X,\|\Lambda\|\}=\frac13,
+\]
+\[
+aX\le\frac18b\|\Lambda\|+sb^2X,
+\]
+\[
+bs\Bigl(\frac{\gamma}{\eta}+\frac52\Bigr)\le\frac18,
+\qquad
+b\Bigl(2s\Bigl(\frac{\gamma}{\eta}+\frac54\Bigr)+\frac54\rho\Bigr)\le\frac14.
+\]
+\end{lemma}
+
+\begin{proof}[Proof of Lemma~\ref{lem:rot-parameter-bounds}]
+We first establish the bounds needed in all three proofs. Since
+\(U\ge\chi\), \(V\ge\beta\), and
+\(\alpha>1024\max\{1,4\tau,4\gamma\tau\}\epsilon^2\),
+\[
+0<\frac\nu{\alpha^2}
+\le\frac{64\gamma\tau\epsilon^2}{\alpha}<\frac1{64}.
+\]
+In particular, \(0<\nu<4\), so \(\zeta\) is well defined and
+\(|\zeta|=1\). The definition of \(W\) gives
+\[
+\frac{64}{65}U\le
+D=\alpha+\frac{\chi(1-\alpha)}{1+(1-\alpha)\nu/\alpha^2}
+\le U\le1,
+\qquad D\ge\frac\chi2.
+\]
+Since \(V\Upsilon-\beta H=(1-V)(V-\beta)\nu\ge0\),
+\[
+\frac{b^2}{64\epsilon^2}=\frac D U\frac{\beta H}{V\Upsilon}\le1.
+\]
+Also, \(H\ge V^2\), \(V\ge d_\tau\), and \(V-\beta\le V\) imply
+\(0\le\xi\le\eta s b^2\). Using
+\(C_{\rm tr}\le(1+4/\chi)/d_\tau\) and~\eqref{eq:rot-thresholds}, we obtain
+\begin{equation}
+\label{eq:rot-small-feedback}
+\xi C_{\rm tr}
+\le\frac{64\eta(1+4/\chi)}\tau(\epsilon s)^2
+\le\frac1{16}.
+\end{equation}
+Thus \(\xi/d_\tau\le1/16\). The identity
+\[
+\frac{\beta H}{V\Upsilon}
+=1-\frac{(1-V)\xi}{WV}\ge\frac{15}{16}
+\]
+now yields \(b^2/(64\epsilon^2)\ge12/13>49/64\), proving
+\(7\epsilon\le b\le8\epsilon\).
+The normalization of \(X\) gives \(\max\{X,\|\Lambda\|\}=1/3\).
+
+To bound \(a\), set
+\(a_{\rm p}:=\nu(W-1)/(\eta\alpha)\) and \(a_{\rm d}:=\xi/\eta\).
+The definitions imply
+\begin{equation}
+\label{eq:rot-algebra-identities}
+\eta a=\frac{\nu(W-1)}\alpha+\xi,
+\qquad \eta\tau b^2=\nu W+V\xi,
+\qquad U-D=\frac{(1-\alpha)\nu(W-1)}\alpha.
+\end{equation}
+Hence \(a=a_{\rm p}+a_{\rm d}\),
+\(a_{\rm p}\le\tau b^2/\alpha\), and \(a_{\rm d}\le sb^2\).
+Since \(c_1\le1/224\) and \(\epsilon<1/64\),
+\[
+0<\kappa\le(\rho+s)b^2+\frac{\tau b^2}\alpha
+\le64c_1\epsilon+\frac{\tau}{16\max\{1,4\tau,4\gamma\tau\}}
+\le\frac1{32}.
+\]
+For the amplitude bounds, put \(E_\beta:=\beta^2+(1-\beta)\nu\).
+The formula for \(\Lambda\) gives
+\(\|\Lambda\|^2/X^2=\tau WE_\beta/(\eta\Upsilon)\).
+Moreover,
+\[
+\Upsilon\le
+\operatorname{Re}\bigl((\zeta-1+V)\overline{(\zeta-1+\beta)}\bigr)
+\le\sqrt{HE_\beta},
+\]
+where the difference in the first inequality is \((V-\beta)\nu/2\).
+Consequently,
+\[
+\frac{a_{\rm p}X}{b\|\Lambda\|}
+=\frac{\sqrt\nu(W-1)\Upsilon}{\alpha W\sqrt{HE_\beta}}
+\le\frac{\sqrt\nu}\alpha\le\frac18,
+\]
+\[
+\frac{a_{\rm p}X^2}{b^2\|\Lambda\|^2}
+=\frac{\eta(W-1)\Upsilon^2}{\alpha W^2HE_\beta}
+\le\frac\eta D\le2\gamma.
+\]
+Adding the bound on \(a_{\rm d}\) proves the asserted bound on \(aX\)
+and also gives
+\begin{equation}
+\label{eq:rot-gap-curvature}
+\kappa X^2\le(\rho+s+2\gamma)b^2\max\{X^2,\|\Lambda\|^2\}.
+\end{equation}
+Finally, \(b\le8\epsilon\) and~\eqref{eq:rot-thresholds} imply
+\[
+bs\Bigl(\frac1\chi+\frac52\Bigr)
+\le8c_1\Bigl(\frac1\chi+\frac52\Bigr)\le\frac18,
+\]
+\[
+b\Bigl(2s\Bigl(\frac1\chi+\frac54\Bigr)+\frac54\rho\Bigr)
+\le16c_1\Bigl(\frac1\chi+\frac54\Bigr)
+\le\frac{1/\chi+5/4}{4(1/\chi+5/2)}<\frac14.
+\]
+\end{proof}
+
+\begin{proof}[Proof of Lemma~\ref{lem:rot-estimates}~(i)]
+We use the bounds on \(\mathbb T^k\br\) proved in
+Appendix~\ref{app:lb-rotation-transient-proof}; that proof uses only
+Lemma~\ref{lem:rot-parameter-bounds} and the spectral identities, and does
+not use membership in the problem class. At \(k=0\), those bounds and
+\eqref{eq:rot-shift} give
+\[
+\|x_c\|\le\frac54X=R_*,\qquad
+\|\lambda_c\|\le\|\Lambda\|+s\Bigl(\frac1\chi+\frac54\Bigr)bX
+\le\frac13\left(1+\frac{1/\chi+5/4}{8(1/\chi+5/2)}\right)<\frac12.
+\]
+The function \(\psi\) and its first derivative agree at \(R_*\) and
+\(3R_*\). On each smooth radial piece, the Hessian of
+\(\psi(\|x-x_c\|)\) has radial eigenvalue \(\psi''(r)\) and tangential
+eigenvalue \(\psi'(r)/r\), both of absolute value at most \(\kappa\).
+Near \(x_c\), this function is quadratic. Integrating its continuous
+gradient along line segments therefore shows that
+\(\operatorname{Lip}(\nabla f)\le\kappa\le1/32\).
+Also \(|\psi'(r)|\le\kappa R_*\) for every \(r\ge0\), so
+\[
+\|\nabla f(x)\|\le\kappa R_*+b\|\lambda_c\|
+\le\frac5{384}+\frac12<1.
+\]
+Here we used \(R_*\le5/12\) and \(b\le8\epsilon<1\).
+The affine mapping \(\calA\) has constant Jacobian of norm \(b\le1\),
+and \(h=\|\cdot\|_2\) is convex and 1-Lipschitz.
+
+It remains to bound the initial gap. Since \(\psi(r)\ge-\kappa R_*^2\)
+and \(\|\lambda_c\|<1/2\),
+\[
+F(x)=\psi(\|x-x_c\|)-b\langle\lambda_c,x-x_c\rangle+b\|x-x_c\|
+\ge-\kappa R_*^2.
+\]
+At the origin, \(\|x_c\|\le R_*\) and \(\psi(\|x_c\|)\le0\), whence
+\[
+F(0)-\inf F\le\frac32bR_*+\kappa R_*^2
+\le5\epsilon+\frac{100}{9}(\rho+s+2\gamma)\epsilon^2.
+\]
+By \(\epsilon(\rho+s)\le c_1\le1/224\), this is at most
+\(6\epsilon+32\gamma\epsilon^2\le\Delta\), where the last inequality
+uses \(\epsilon<c_2\). Thus the instance belongs to
+\(\mathcal I(\mathbf C_0,\Delta)\).
+\end{proof}
+
+\subsection{Proof of Lemma~\ref{lem:rot-spectral}}
+\label{app:lb-rotation-spectral-proof}
+Define
+\[
+\begin{aligned}
+r_x&:=-\frac{(W-1)\frac{\zeta-1}{\zeta-1+\alpha}+\frac{\xi\zeta}{\zeta-1+V}}
+  {W+\xi}\,X,\\
+r_\lambda&:=\frac{1}{\eta b}\Bigl[\frac{\eta}{\gamma}
+  \frac{(1-\alpha)(\zeta-1)}{\zeta-1+\alpha}X+(\eta a+\alpha W)r_x
+  -\xi\Bigl((1-\alpha)r_x+\frac{(V-\alpha)\zeta}{\zeta-1+V}X\Bigr)\Bigr].
+\end{aligned}
+\]
+Set
+\begin{equation}
+x_c:=-(X+r_x),\qquad \lambda_c:=-(\Lambda+r_\lambda),\qquad
+\br:=-\bw_c-\bv .
+\label{eq:rot-shift}
+\end{equation}
+\begin{proof}
+For this calculation, write \(Z:=\bv_z\), \(M:=\bv_\mu\), and
+\(\vartheta:=(1-V)\xi\). The characteristic polynomial factors as
+\begin{equation}
+\label{eq:rot-characteristic-factorization}
+\begin{aligned}
+\det((1+t)I-\mathbb T)
+&=t^2(t+U)(t+V)-\eta a\,t(t+\alpha)(t+V)\\
+&\quad+\eta\tau b^2(t+1)(t+\alpha)(t+\beta)\\
+&=(t^2+\nu t+\nu)
+  \bigl((t+D)(t+V)-\vartheta(t+\alpha)\bigr).
+\end{aligned}
+\end{equation}
+The first equality follows by eliminating the two center coordinates in
+\eqref{eq:rot-matrix}; expansion using~\eqref{eq:rot-algebra-identities}
+gives the second equality. Since
+\((\zeta-1)^2+\nu(\zeta-1)+\nu=0\), substitution of
+\eqref{eq:rot-eigvec} in the four rows of \(\mathbb T\) gives
+\[
+\mathbb T\bv=\zeta\bv.
+\]
+For example, the center rows follow from
+\((\zeta-1+\alpha)Z=\alpha\zeta X\) and
+\((\zeta-1+\beta)M=\beta\zeta\Lambda\); the dual row reduces to
+\((\zeta-1)(\zeta-1+V)\Lambda
+=\tau b\zeta(\zeta-1+\beta)X\).
+The primal row then follows from the first factor in
+\eqref{eq:rot-characteristic-factorization}. The bounds on \(\nu\)
+proved above give \(\zeta\notin\RR\) and \(|\zeta|=1\).
+
+We next prove
+\begin{equation}
+\label{eq:rot-annihilator}
+Q_{\rm f}(\mathbb T)\br=0,
+\qquad Q_{\rm f}(t):=(t-1+D)(t-1+V)-\vartheta(t-1+\alpha).
+\end{equation}
+First consider distinct roots \(t_1,t_2\) of \(Q_{\rm f}\), with
+\(\alpha<1\), \(\beta<1\), \(d_\tau<1\), \(V\ne\alpha\), and all
+following denominators nonzero. An eigenvector associated with a root \(t\) is
+\[
+\left(1,\ \frac{\tau bt(t-1+\beta)}{(t-1)(t-1+V)},\
+\frac{\alpha t}{t-1+\alpha},\
+\frac{\tau b\beta t^2}{(t-1)(t-1+V)}\right)^\top.
+\]
+Let its coefficients at \(t_1,t_2\) be \(c_1',c_2'\).
+Requiring that their sum with \(\bv\) have equal first and third
+coordinates, and equal second and fourth coordinates, gives
+\[
+\sum_{j=1}^2c_j'\frac{t_j-1}{t_j-1+\alpha}
+=-\frac{\zeta-1}{\zeta-1+\alpha}X,
+\qquad
+\sum_{j=1}^2c_j'\frac{t_j}{t_j-1+V}
+=-\frac\zeta{\zeta-1+V}X.
+\]
+To solve these two equations, set
+\(S_0:=c_1'+c_2'\), \(S_1:=\sum_j(t_j-1)c_j'\),
+\(C_{\rm f}:=D+V-\vartheta\), and \(D_{\rm f}:=DV-\alpha\vartheta\).
+At a root \(v=t_j-1\) of \(v^2+C_{\rm f}v+D_{\rm f}\),
+\[
+\frac v{v+\alpha}
+=\frac{D_{\rm f}+\alpha v}{\alpha^2-C_{\rm f}\alpha+D_{\rm f}},
+\qquad
+\frac{v+1}{v+V}
+=\frac{D_{\rm f}-C_{\rm f}+V-(1-V)v}{V^2-C_{\rm f}V+D_{\rm f}}.
+\]
+The two denominators equal \(\alpha(W-1)(V-\alpha)\) and
+\(\vartheta(V-\alpha)\), respectively. The resulting system has
+coefficient determinant \(\alpha(1-V)(\alpha-V)(W+\xi)\ne0\), and its solution is
+\[
+S_0=r_x,\qquad
+S_1=-Dr_x+\xi\left((1-\alpha)r_x+
+\frac{(V-\alpha)\zeta}{\zeta-1+V}X\right).
+\]
+The primal row of \(\mathbb T\) now gives
+\(\eta br_\lambda=\chi(X-Z)+\eta ar_x-S_1\), which is the stated
+formula for \(r_\lambda\). The center synchronization gives
+\(r_z=X-Z+r_x\) and \(r_\mu=\Lambda-M+r_\lambda\).
+Thus this linear combination is precisely \(\br\), proving
+\eqref{eq:rot-annihilator} in the stated nondegenerate case.
+
+All entries of \(Q_{\rm f}(\mathbb T)\br\) are continuous functions
+of the admissible parameters: \(\alpha,b,V>0\), \(W+\xi>0\), and
+\(|\zeta-1+\alpha|,|\zeta-1+V|>0\).
+To justify the density used here, first take
+\(\alpha,\beta,d_\tau\in(0,1)\) and \(V\ne\alpha\).
+Then \(W-1>0\) and \(\vartheta>0\), so the two displayed denominators
+and the coefficient determinant are nonzero. Moreover,
+\[
+Q_{\rm f}(1)=DV-\alpha\vartheta
+=\frac{\alpha\beta\eta\tau b^2}{\nu}>0,
+\]
+so neither root equals one. The remaining exclusion is a repeated root.
+For fixed \(\alpha,\beta,d_\tau\), its discriminant
+\[
+(D+V-\vartheta)^2-4(DV-\alpha\vartheta)
+\]
+is a rational function of \(\epsilon^2\) and tends to \((U-V)^2\) as
+\(\epsilon\downarrow0\). If \(U\ne V\), this rational function is not
+identically zero, so its zeros are isolated. Since
+\(V=\beta+d_\tau(1-\beta)\) varies strictly with \(\beta\) in the interior,
+the restrictions \(V\ne\alpha\) and \(V\ne U\) also define a dense subset.
+These perturbations can be made within the admissible parameter set:
+first decrease \(\epsilon\) slightly if
+\(\epsilon(\rho+s)=c_1\), and then perturb the other parameters.
+Taking limits therefore proves~\eqref{eq:rot-annihilator} also when roots
+coincide, \(V=\alpha\), or \(\alpha=1\), \(\beta=1\), or \(d_\tau=1\).
+
+To locate the roots of \(Q_{\rm f}\), note that
+\(0<D,V\le1\) and, by~\eqref{eq:rot-small-feedback},
+\[
+\frac{2\vartheta}{DV}\le\frac{4\xi}{\chi d_\tau}
+\le2\xi C_{\rm tr}\le\frac18.
+\]
+If \(|t|\ge1\), then
+\[
+|(t-1+D)(t-1+V)|\ge DV|t|^2
+>2\vartheta|t|\ge|\vartheta(t-1+\alpha)|.
+\]
+Thus every root of \(Q_{\rm f}\) lies inside the unit circle.
+The subspace \(\ker Q_{\rm f}(\mathbb T)\) is invariant under \(\mathbb T\),
+and every eigenvalue of the restriction is a root of \(Q_{\rm f}\).
+It contains \(\br\) by~\eqref{eq:rot-annihilator}, proving (ii), including
+repeated roots. Finally, \(\bv+\br=-\bw_c\) follows from
+\eqref{eq:rot-shift}, proving (iii).
+\end{proof}
+
+\subsection{Proof of Lemma~\ref{lem:rot-estimates}~(ii)}
+\label{app:lb-rotation-transient-proof}
+\begin{proof}
+Write \((\mathbb T^k\br)_x\), \((\mathbb T^k\br)_\lambda\), and
+\((\mathbb T^k\br)_\mu\) as \(p_k,\ell_k,m_k\), respectively.
+These are components of the linear recursion, not new algorithm iterates.
+By the preceding spectral proof, all these components tend to zero.
+Put \(r_{\rm p}:=1-D\), \(r_{\rm d}:=1-V\), and
+\(\vartheta:=(1-V)\xi\). Equation~\eqref{eq:rot-annihilator} gives
+\[
+p_{k+2}-(r_{\rm p}+r_{\rm d})p_{k+1}+r_{\rm p}r_{\rm d}p_k
+=\vartheta\bigl(p_{k+1}-(1-\alpha)p_k\bigr).
+\]
+The initial values are \(p_0=r_x\) and
+\(p_1=r_{\rm p}r_x+\omega_x\), where
+\[
+\omega_x:=\xi\left((1-\alpha)r_x+
+\frac{(V-\alpha)\zeta}{\zeta-1+V}X\right).
+\]
+Since \(|\zeta-1|=\sqrt\nu\), the formula for \(r_x\) implies
+\[
+|r_x|\le\left(\frac{\sqrt\nu}{\alpha}+\frac\xi{d_\tau}\right)X
+\le\frac{3X}{16}.
+\]
+As \(|V-\alpha|\le1\), it follows that
+\(|\omega_x|\le\xi(1+d_\tau^{-1})X\). Hence
+\begin{equation}
+\label{eq:rot-initial-transient}
+|r_x|+\frac{|\omega_x|}D
+\le\left(\frac18+\xi C_{\rm tr}\right)X\le\frac{3X}{16}.
+\end{equation}
+
+For \(j\ge0\), define the convolution kernel
+\(G_j:=\sum_{i=0}^jr_{\rm p}^{j-i}r_{\rm d}^i\).
+Since \(0\le r_{\rm p},r_{\rm d}<1\),
+\[
+0\le G_j\le\sum_{i=0}^jr_{\rm p}^{j-i}\le\frac1D,
+\qquad \sum_{j\ge0}G_j=\frac1{DV}.
+\]
+Solving the scalar recurrence gives, for \(k\ge1\),
+\[
+p_k=r_{\rm p}^kr_x+G_{k-1}\omega_x+
+\vartheta\sum_{j=0}^{k-2}G_{k-2-j}\bigl(p_{j+1}-(1-\alpha)p_j\bigr),
+\]
+with an empty sum when \(k=1\). This formula follows by substitution
+in the recurrence and its two initial values.
+For each finite \(N\), let \(M_N:=\max_{0\le k\le N}|p_k|\).
+Using~\eqref{eq:rot-initial-transient} and \(2\vartheta/(DV)\le1/4\),
+\[
+M_N\le\frac{3X}{16}+\frac{2\vartheta}{DV}M_N,
+\qquad M_N\le\frac X4.
+\]
+Since \(N\) is arbitrary, this proves the primal bound.
+Summing absolute values on a finite prefix instead gives
+\[
+\sum_{k=0}^N|p_k|
+\le\frac{|r_x|}D+\frac{|\omega_x|}{DV}
++\frac{2\vartheta}{DV}\sum_{k=0}^N|p_k|.
+\]
+Because \(D,V\le1\),
+\[
+\frac{|r_x|}D+\frac{|\omega_x|}{DV}
+\le\frac{|r_x|+|\omega_x|/D}{DV}.
+\]
+Letting \(N\) increase yields
+\begin{equation}
+\label{eq:rot-transient-sum}
+\sum_{k\ge0}|p_k|\le\frac X{4DV}\le\frac X{\chi d_\tau}.
+\end{equation}
+
+For the dual bound, introduce the difference and weighted average
+\[
+e_k:=\ell_k-m_k,
+\qquad q_k:=\frac{\beta(1-d_\tau)\ell_k+d_\tau m_k}{V}.
+\]
+The dual and center rows of \(\mathbb T\) give
+\[
+e_{k+1}=(1-V)e_k+\tau b(1-\beta)p_{k+1},
+\qquad q_{k+1}=q_k+\frac{\tau b\beta}{V}p_{k+1}.
+\]
+The synchronization at \(k=0\) implies
+\[
+e_0=-\frac{\tau b(1-\beta)\zeta}{\zeta-1+V}X,
+\qquad |e_0|\le sbX.
+\]
+Iterating the first recurrence and using \(|p_k|\le X/4\) gives
+\[
+|e_k|\le sbX+\frac{\tau b(1-\beta)}V\frac X4\le\frac54sbX.
+\]
+Since \(q_k\to0\), the second recurrence and the absolutely summable
+bound~\eqref{eq:rot-transient-sum} give
+\[
+q_k=-\frac{\tau b\beta}V\sum_{j=k+1}^{\infty}p_j,
+\qquad |q_k|\le\frac{s}{\chi}bX.
+\]
+Finally, \(\ell_k=q_k+(d_\tau/V)e_k\), with \(d_\tau/V\le1\).
+Thus
+\[
+\|(\mathbb T^k\br)_\lambda\|=|\ell_k|
+\le s\left(\frac1\chi+\frac54\right)bX
+=s\left(\frac\gamma\eta+\frac54\right)bX,
+\]
+as required.
+\end{proof}

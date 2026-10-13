@@ -1,0 +1,1561 @@
+\documentclass[10pt]{article}
+\usepackage[top=1.1in, bottom=1.1in, left=1.1in, right=1.1in, letterpaper]{geometry}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage[numbers,compress]{natbib}
+\input{neurips_2025_shared}
+
+\usepackage{multibib}
+\newcites{supp}{References (Supplementary Material)}
+
+\usepackage{wrapfig}
+\usepackage{caption}
+% \usepackage{subcaption}
+\usepackage[title,toc,page]{appendix}
+\pdfstringdefDisableCommands{%
+  \def\Cref#1{Ref #1}%
+  \let\new@ifnextchar\relax%
+  \let\textsubscript\relax% 处理下标
+  \let\textsuperscript\relax% 处理上标
+  \def\_{}% 处理下划线
+}
+\usepackage{multirow}
+\allowdisplaybreaks[2]  % 中等优先级允许公式跨页
+\usepackage{xcolor} % 在导言区加载
+
+% \captionsetup[figure]{compatibility=false}
+
+% \PassOptionsToPackage{numbers, sort}{natbib} % 参考文献 
+% \PassOptionsToPackage{numbers, sort, square}{natbib}
+\title{Linearized Dual Smoothing Augmented Lagrangian methods for Nonconvex Constrained Stochastic  Optimization}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+\label{sec:intro}
+We consider the following nonconvex stochastic optimization problem with
+nonlinear equality constraints:
+\begin{align}\label{Prob: primal problem}
+    \min_{\bx \in \calX} \quad & F(\bx) := f(\bx) + g(\bx), \notag \\
+    \text{s.t.} \quad & \bc(\bx) = \bm{0}. \tag{{\bf P}}
+\end{align}
+where $f(\bx) = \mathbb{E}_{\xi}[\mathbf{f}(\bx,\xi)]$ is a smooth nonconvex 
+function with $\xi$ a random variable on a probability space $\Xi$ independent 
+of $\bx$, and $g:\RR^n\to\RR\cup\{+\infty\}$ is a proper closed 
+proximal-friendly function. The mapping $\bc:\RR^n\to\RR^{m}$
+is continuously differentiable. The set
+$\calX\subseteq\RR^n$ is assumed to be nonempty and closed.
+The feasible set is assumed to be nonempty and $F$ is lower 
+bounded by $F^*>-\infty$. Exact evaluation of $\nabla f$ is often expensive or 
+impractical, and thus we assume only access to stochastic gradients of $f$ at 
+queried points.
+
+
+\subsection{Related Work}
+\label{sec:related-work}
+
+\paragraph{Deterministic nonconvex constrained optimization.}
+For deterministic nonconvex problems with nonlinear equality constraints,
+first-order methods with non-asymptotic complexity guarantees have been studied
+extensively.
+Proximal point methods~\cite{boob2023stochastic,ma2022quadratically} achieve
+$\calO(\varepsilon^{-3})$ iteration complexity for smooth objectives via strongly
+convex subproblems, and Boob et al.~\cite{boob2022level} further attain
+$\calO(\varepsilon^{-2})$ by constructing quadratic models with adaptive
+constraint levels.
+Among penalty and augmented Lagrangian methods (ALMs), most approaches
+require the penalty parameter to grow as $\Omega(\varepsilon^{-1})$, yielding
+$\calO(\varepsilon^{-3})$ iteration complexity~\cite{li2021rate,jia2023first}.
+Xie and Wright~\cite{xie2021proximal} achieve $\calO(\varepsilon^{-2})$
+outer-loop complexity with a proximal ALM under a constant merit parameter,
+but the algorithm is double-loop and the merit parameter must satisfy
+$\rho = \Omega(\varepsilon^{-\eta})$ for some $\eta \in (0,1)$, making it
+$\varepsilon$-dependent in theory.
+SQP methods~\cite{curtis2021sqp,cartis2014complexity} also attain
+$\calO(\varepsilon^{-2})$ complexity.
+
+\paragraph{Stochastic nonconvex constrained optimization.}
+We organize the literature by the two canonical settings:
+\emph{semi-stochastic} (stochastic objective, deterministic constraints) and
+\emph{fully stochastic} (both objective and constraints involve stochastic
+oracles).
+
+\emph{Semi-stochastic problems.}
+Without additional structure on the noise, proximal point~\cite{boob2023stochastic,ma2022quadratically},
+penalty~\cite{jin2022nested}, and SQP~\cite{curtis2021sqp} methods all achieve
+$\calO(\varepsilon^{-4})$ oracle complexity in stochastic gradient evaluations,
+matching the $\calO(\varepsilon^{-4})$ lower bound for unconstrained stochastic
+optimization~\cite{arjevani2023lower}.
+Under a mean-squared smoothness (MSS) condition,
+variance reduction techniques---STORM~\cite{cutkosky2019storm} and
+SPIDER~\cite{fang2018spider}---improve the complexity to $\calO(\varepsilon^{-3})$.
+Representative results include the variance-reduced linearized ALM of
+Shi et al.~\cite{shi2022linearized}, the truncated variance reduction approach
+of Lu et al.~\cite{lu2022single}, and the inexact ALM of
+Li et al.~\cite{li2021rate}, each attaining $\calO(\varepsilon^{-3})$ oracle
+complexity under MSS for nonlinear constraints.
+
+\emph{Fully stochastic problems.}
+When constraint evaluations are also stochastic, complexity results are
+uniformly higher.
+Proximal point methods~\cite{boob2023stochastic,ma2022quadratically} incur
+$\calO(\varepsilon^{-6})$ total oracle complexity due to the cost of solving
+stochastic strongly convex subproblems.
+Penalty-based ALMs employing STORM-type variance
+reduction~\cite{alacaoglu2023augmented,cui2022complexity} face a large merit
+parameter $\beta = \Theta(\varepsilon^{-1})$, which amplifies the variance of
+the stochastic gradient and yields $\calO(\varepsilon^{-5})$ complexity even
+under MSS.
+Exact penalty methods combined with SPIDER~\cite{liu2022exact} achieve
+$\calO(\varepsilon^{-4})$ (sub)gradient and $\calO(\varepsilon^{-6})$
+constraint-evaluation complexity for nonsmooth problems.
+Cui et al.~\cite{cui2024adaptive} recently propose an adaptive exact penalty
+method for smooth \emph{equality}-constrained problems, obtaining
+$\calO(\varepsilon^{-3})$ gradient and $\calO(\varepsilon^{-5})$
+constraint-evaluation complexity; however, the analysis is confined to equality
+constraints and relies on an exact penalty reformulation.
+Stochastic SQP for equality-constrained fully stochastic problems~\cite{na2022sqp}
+currently achieves only $\calO(\varepsilon^{-8})$.
+
+% \paragraph{Linearly Constrained nonconvex problem}
+\paragraph{Linearly constrained nonconvex problem}
+
+% We consider the following linearly constrained nonconvex composite optimization problem:
+% \begin{equation}
+%   \min_{x \in \mathbb{R}^n} \; f(x) + h(x) \quad \text{subject to} \quad Ax = b,
+% \end{equation}
+% where $f$ is smooth and possibly nonconvex, $h$ is a proper convex lower-semicontinuous 
+% regularizer, $A \in \mathbb{R}^{m \times n}$, and $b \in \mathbb{R}^m$.
+
+\emph{Deterministic objective.}
+The augmented Lagrangian (AL) framework, introduced by Hestenes~\cite{hestenes1969} and 
+Powell~\cite{powell1969} and systematically developed by Bertsekas~\cite{bertsekas2014}, 
+forms the algorithmic backbone for constrained optimization.
+For nonconvex problems, early global convergence results were established for ADMM-type 
+methods under boundedness assumptions on the dual iterates 
+\cite{wang2019admm,bote2019,li2020global}.
+From a complexity standpoint, Hajinezhad and Hong~\cite{hajinezhad2019} proposed a 
+perturbed proximal primal-dual algorithm achieving $O(\varepsilon^{-4})$ iteration 
+complexity, but requiring a feasible initialization.
+Kong et al.~\cite{kong2019,kong2020} developed double-loop proximal AL methods attaining 
+$O(\varepsilon^{-3})$ and further $O(\varepsilon^{-2.5})$ complexity under Slater's 
+condition; however, these require solving subproblems in an inner loop, increasing 
+implementation overhead.
+The first single-loop method achieving $O(\varepsilon^{-2})$ iteration complexity was 
+proposed by Zhang and Luo~\cite{zhang2020proximal,zhang2022global} via the SProx-ALM 
+framework, exploiting Hoffman's error bound for the linear constraints.
+More recently, Kim~\cite{kim2023} introduced the Proximal-Perturbed Lagrangian (PPAL) 
+framework, which uses artificial variables and a dual smoothing term (``false penalty'') 
+to enable a single-loop algorithm with $O(\varepsilon^{-2})$ complexity.
+A distinctive feature of PPAL is that it works with a \emph{fixed} penalty parameter 
+and does not require feasible initialization, Slater's condition, or full column rank of $A$.
+
+\emph{Stochastic objective.}
+When $f(x) = \mathbb{E}_\xi[F(x;\xi)]$ is an expectation function accessible only via 
+stochastic oracles, the analysis becomes substantially more challenging due to gradient 
+noise accumulation.
+Shi, Wang, and Wang~\cite{shi2025mlalm} proposed MLALM, a single-loop linearized AL 
+method incorporating a recursive momentum (STORM-type) technique 
+for stochastic gradient estimation.
+Under an unbounded increasing penalty schedule, MLALM achieves $O(\varepsilon^{-4})$ 
+oracle complexity to find an $\varepsilon$-stationary point or $\varepsilon$-KKT point; 
+this improves to $O(\varepsilon^{-3})$ only when the initial iterate is 
+\emph{nearly feasible} within a prescribed accuracy.
+Alacaoglu and Wright~\cite{alacaoglu2024} systematically studied single-loop variance-reduced 
+AL and quadratic penalty algorithms across three constraint regimes:
+for \emph{linear deterministic} constraints, they achieved $\widetilde{O}(\varepsilon^{-3})$ 
+sample complexity using a constant penalty parameter and variance reduction, matching the 
+lower bound for unconstrained stochastic nonconvex optimization;
+for \emph{nonlinear deterministic} constraints, $\widetilde{O}(\varepsilon^{-4})$; 
+and for \emph{stochastic nonlinear} constraints, $\widetilde{O}(\varepsilon^{-5})$.
+Notably, they explicitly identified as an open problem the question of whether ALM with 
+a \emph{fixed} penalty parameter (independent of $\varepsilon$) can achieve 
+$O(\varepsilon^{-3})$ complexity for nonlinear equality constraints.
+Lu, Mei, and Xiao~\cite{lu2026} addressed this gap partially via truncated recursive 
+and Polyak momentum schemes, establishing $\widetilde{O}(\varepsilon^{-3})$ sample 
+complexity together with \emph{high-probability} ($\varepsilon$-surely feasible) 
+guarantees under an error bound condition; however, their analysis requires 
+gradient clipping and relies on the error bound parameter $\theta \geq 1$, with 
+the increasing penalty schedule remaining necessary.
+In the PPAL setting with stochastic objectives, Zuo, Wang, and Wang~\cite{zuo2025adassp} 
+proposed AdaSSP, an adaptive single-loop stochastic penalty method with high-probability 
+complexity analysis; this method also employs an unbounded penalty sequence.
+
+\paragraph{ALMs with fixed penalty parameter.}
+A fundamental challenge in ALM design for nonlinear constraints is that
+standard convergence analysis requires the penalty parameter to scale as
+$\Omega(\varepsilon^{-1})$.
+This growth inflates the Lipschitz constant of the augmented Lagrangian and
+forces the step size to shrink proportionally, degrading the stochastic oracle
+complexity.
+For polyhedral (linear) constraints, the Luo--Pang global error
+bound~\cite{luo1994error} decouples feasibility control from the penalty
+magnitude.
+Exploiting this structure, Zhang and Luo~\cite{zhang2022proximal} achieve
+$\calO(\varepsilon^{-2})$ iteration complexity for deterministic nonconvex
+problems under a genuinely constant penalty.
+In the stochastic setting, Alacaoglu and
+Wright~\cite{alacaoglu2024complexity} combine a fixed penalty with variance
+reduction to attain the optimal $\calO(\varepsilon^{-3})$ sample complexity for
+linear equality constraints; for nonlinear constraints, their single-loop
+algorithm requires an increasing penalty and achieves only $\calO(\varepsilon^{-4})$.
+Huang et al.~\cite{huang2025stochastic} extend the fixed-penalty result to
+linear inequality constraints via Moreau envelope smoothing, also reaching
+$\calO(\varepsilon^{-3})$.
+For general nonlinear constraints, existing stochastic methods either require
+an increasing penalty parameter~\cite{li2024stochastic,alacaoglu2024complexity},
+yielding $\calO(\varepsilon^{-4})$ oracle complexity, or introduce dual
+momentum to partially compensate, achieving
+$\calO(\varepsilon^{-3.5})$~\cite{shi2025momentum}.
+To date, no single-loop ALM with a genuinely constant penalty parameter has
+been shown to achieve $\calO(\varepsilon^{-3})$ oracle complexity for nonlinear
+nonconvex constraints in the stochastic setting.
+
+The proposed Perturbed ALM addresses this gap.
+By introducing a dual regularization term
+$-\tfrac{\beta}{2}\|\blmbd - \bmu\|^2$ into the augmented Lagrangian, the
+effective penalty parameter reduces to
+$\rho = \alpha / (1 + \alpha\beta)$,
+which is \emph{independent} of $\varepsilon$ for any fixed $\alpha, \beta > 0$.
+This perturbation simultaneously enables a \emph{single-loop} primal--dual
+update and achieves $\calO(\varepsilon^{-3})$ stochastic oracle complexity for
+nonlinear nonconvex constrained optimization,
+improving over the existing $\calO(\varepsilon^{-4})$ barrier for this setting.
+
+\subsection{Our Contributions}
+Our main contributions are summarized as follows.
+\begin{itemize}
+    \item We propose a \emph{single-loop} stochastic perturbed proximal ALM for nonlinear equality-constrained nonconvex optimization. The method combines a primal proximal step, a dual smoothing step, and a closed-form multiplier update.
+    \item We introduce a dual perturbation mechanism that yields the effective penalty parameter
+    \(
+    \rho = \alpha/(1+\alpha\beta)
+    \),
+    which is constant for fixed \((\alpha,\beta)\) and independent of the target accuracy \(\varepsilon\).
+    \item We establish non-asymptotic convergence guarantees in terms of KKT-type residuals and prove an oracle complexity of \(\calO(\varepsilon^{-3})\), improving over the \(\calO(\varepsilon^{-4})\) complexity level of existing single-loop stochastic ALM analyses for nonlinear constraints.
+    \item The framework avoids an increasing-penalty schedule and keeps each iteration simple, which improves practical implementability.
+\end{itemize}
+
+\subsection{Notation}
+Throughout this paper, $\|\cdot\|$ denotes the Euclidean norm and $\langle\cdot,\cdot\rangle$ denotes the Euclidean inner product. We use $\EE_{\xi}[\cdot]$ for expectation with respect to $\xi$. Let $[p]:=\{1,\ldots,p\}$, $\mathbb{N}:=\{0,1,2,\ldots\}$, and $\overline{\RR}:=\RR\cup\{+\infty\}$. For $A\in\RR^{m\times n}$, $\|A\|$ and $\sigma_{\min}(A)$ denote the largest and smallest singular values of $A$, respectively. For $X\subseteq\RR^n$, $\delta_X$ denotes its indicator function and $\mathrm{dist}(x,X):=\inf_{y\in X}\|x-y\|$. For complexity notation, we write $K=\calO(\varepsilon)$ if $K\leq B\varepsilon$ for some $B>0$, and $K=\Theta(\varepsilon)$ if $b\varepsilon\leq K\leq B\varepsilon$ for some constants $0<b<B<+\infty$.
+\subsection{Organization}
+The rest of the paper is organized as follows. Section~\ref{sec:prelim} introduces the assumptions and the stochastic KKT criterion. Section~\ref{sec:method} presents the perturbed proximal ALM formulation and the single-loop algorithm. Section~\ref{sec:analysis} establishes stochastic complexity and residual bounds. Section~\ref{sec:experiments} reports numerical experiments. Additional technical lemmas are provided in Appendix~\ref{sec:appendix-supported}.
+\section{Preliminaries and Assumptions}
+\label{sec:prelim}
+
+\subsection{Main Assumptions and stationarity}
+\label{Subsection: main assumptions}
+% \setcounter{assumption}{0}
+In this subsection, we formally state our assumptions for Problem \eqref{Prob: primal problem} and the stationarity for problem.
+
+\begin{assumption}[Bounded residual and proximal regularity]
+    \label{ass:the-meaning-of-the-problem}
+    There exists a constant $\Delta>0$ such that, for any $k\ge 0$,
+    \[
+    \|\bc(\bx^k)\| \leq \left(\frac{4\Delta}{\rho}\right)^{1/2},
+    \qquad
+    \|\bmu^k\| \leq (\rho\Delta)^{1/2}.
+    \]
+    Moreover, $g:\RR^n\to\overline{\RR}$ is proper and lower semicontinuous with
+    \[
+    \calX = \dom g := \{\bx\in \RR^n \mid g(\bx) < +\infty\},
+    \]
+    and $g$ is proximal-friendly: for any $\bz\in\RR^n$ and any $t>0$, the subproblem
+    \begin{equation}\label{eq:prox-oracle-g}
+        \min_{\bx\in \RR^{n}} \; g(\bx) + \frac{1}{2t}\|\bx-\bz\|^2
+    \end{equation}
+    is solvable.
+\end{assumption}
+
+
+% \begin{assumption}
+%     \label{Ass: boundedness of c and f} Function $f(\cdot)$ is
+%     $L_f$-smooth over $\calX$. The mapping $\bc(\cdot): \RR^n \rightarrow \RR^m$ is continuously differentiable over $\calX$ and there exist $C, G>0$ such that 
+%     	\begin{subequations}\label{eq: mp c const}
+% 		\begin{alignat}{2}
+% 			 & \max_{x_i\in X_i}\|h_i(x_i)\|\leq  M_{h_i}, 	 \quad  && \|h_i(x_i)-h_i(z_i)\| \leq  K_{h_i}\|x_i-z_i\|,   \\
+% 			 & \max_{x_i\in X_i}\|\nabla h_i(x_i)\| \leq  J_{h_i},  && \|\nabla h_i(x_i)-\nabla h_i(z_i)\| \leq   L_{h_i}\|x_i-z_i\|, 
+% 		\end{alignat}
+% 		\end{subequations}
+% 		where $\nabla h_i(x_i) = [\nabla h_{i1}(x_i), \cdots, \nabla h_{im}(x_i)]\in \RR^{n_i \times m}$, and $\|\cdot\|$ denotes the Euclidean norm for vectors or the induced norm for matrices.
+%     % \begin{align}
+%     %      &\|\nabla f(\bx) \| \leq G, \,\| \partial h(\bx) \|\leq G, \| \partial g(\bx) \|\leq G, \notag \\
+%     %      &\|\nabla \bc_{\calI}(\bx) \| \leq G,\, \| \bc_{\calI}(\bx) \| \leq C, \quad \forall \bx
+%     % \in \calX.\notag
+%     % \end{align}
+% \end{assumption}
+\begin{assumption}
+    \label{Ass: boundedness of c and f}
+    Function $f(\cdot)$ is $L_f$-smooth over $\calX$.
+    The mapping $\bc(\cdot): \RR^n \to \RR^m$ is continuously differentiable over $\calX$.
+    There exist constants $C, G, L_c > 0$ such that for any $\bx,\by\in\calX$,
+    \begin{subequations}\label{eq: mp c const}
+    \begin{alignat}{2}
+        &\|\bc(\bx)\| \le C, \quad
+        && \|\bc(\bx)-\bc(\by)\| \le G\|\bx-\by\|, \\
+        &\|J_{\bc}(\bx)\| \le G, \quad
+        && \|J_{\bc}(\bx)-J_{\bc}(\by)\| \le L_c\|\bx-\by\|.
+    \end{alignat}
+    \end{subequations}
+\end{assumption}
+
+\begin{assumption}
+     \label{Ass: bounded stochastic gradient noise}
+     For any \(\bx\), there exists $\sigma > 0$ such that 
+     \begin{align}
+      &\EE_{\xi}[\nabla \mathbf f(\bx, \bxi)] = \nabla f(\bx), \notag \\
+    & \| \nabla  \mathbf f(\bx, \bxi) - \nabla f(\bx) \| \leq \sigma, \quad \forall \xi
+     \end{align}
+\end{assumption}
+% \begin{assumption}
+%     \label{Ass: unbiased gradient oracle} 
+%     There exists a $\sigma > 0$ such that 
+%     \begin{align}
+%     &\EE_{\xi}[\nabla \mathbf f(\bx, \bxi)] = \nabla f(\bx), \notag \\
+%     & \EE_{\xi}[\| \nabla  \mathbf f(\bx, \bxi) - \nabla f(\bx) \|^{2}] \leq \sigma^{2}, \quad \forall\bx
+%     \in \calX. \notag
+%     \end{align}
+% \end{assumption}
+We also introduce a standard assumption, also known as the mean-squared smoothness assumption, widely used in variance reduction methods.
+\begin{assumption}
+    \label{Ass: the expected smoothness of f} 
+    For almost every $\bxi \in \Xi$, $f(\cdot, \bxi)$ is differentiable and 
+    for any $\bx, \by \in \calX$,
+    \[
+        \EE_{\bxi}\left[\left\|\nabla f(\bx; \bxi) - \nabla f(\by; \bxi)\right\|^{2}
+        \right] \leq L_f^{2}\|\bx - \by\|^{2}.
+    \]
+\end{assumption}
+% \begin{assumption}[Boundedness of Multipliers]
+% \label{Ass: bounded multiplier}
+% The sequence of dual variables $\{\blmbd^k\}$ generated by 
+% Algorithm~\ref{alg:PLADM-eq} is contained in a convex compact set 
+% $\Lambda \subset \RR^m$, i.e., there exists a constant $B_\lambda > 0$ such that
+% \begin{equation}
+%     \|\blmbd^k\| \leq B_\lambda, \quad \forall\, k \geq 0.
+% \end{equation}
+% \end{assumption}
+
+% Given nonconvex constraints, we impose the following nonsingularity condition on the constraints to ensure the feasibility of solutions. Constraint qualifications are often required in solving constrained optimization problems; see~\cite{shi2025momentum,lu2024variancereducedfirstordermethodsdeterministically,liu2025single,curtis2024worst}.
+% \begin{assumption}
+%     \label{Ass: constraints conditions} 
+%     % For some sufficientlCQy small \(\varepsilon_0 > 0\), t
+%     There exists constant $\delta > 0$ such that
+%     \begin{align*}
+%         \|\nabla \bc(\bx) \bc(\bx)\| \geq \delta \| \bc(\bx) \|, \quad \forall \bx
+%     \in \RR^n.
+%     \end{align*}
+% \end{assumption}
+\subsection{Stochastic KKT Point}
+\begin{definition}[Stochastic KKT point]
+\label{def:stationary}
+A point $\bx^* \in \calX$ is called a \emph{stationary point} of
+Problem~\eqref{Prob: primal problem} if there exists $\blmbd^* \in \RR^m$
+such that the KKT conditions are satisfied:
+\begin{equation}
+    \mathbf{0} \in \nabla f(\bx^*) + \partial g(\bx^*)
+    + J_{\bc}(\bx^*)^\top \blmbd^* + \mathcal{N}_{\calX}(\bx^*),
+    \qquad \bc(\bx^*) = \mathbf{0}.
+\end{equation}
+\end{definition}
+\section{Methodology and Algorithm}
+\label{sec:method}
+% We introduce residual variables $\bz_{\calE}$ and $\bz_{\calI}$ and rewrite \eqref{Prob: primal problem} as
+% \begin{equation}\label{eq:reformulated-problem}
+%     \min_{\bx\in\calX,\,\bz_{\calE},\,\bz_{\calI}}\; f(\bx) + g(\bx)
+%     \quad\text{s.t.}\quad
+%     \bc_{\calE}(\bx) = \bz_{\calE},\ \bz_{\calE} = \mathbf{0},\quad
+%     \bc_{\calI}(\bx) \leq \bz_{\calI},\ \bz_{\calI} = \mathbf{0}.
+% \end{equation}
+
+We now define the proximal augmented Lagrangian function
+% \begin{equation}\label{eq:perturbation_alf}
+%     \calL(\bx,\bz,\blmbd,\bmu)
+%     := f(\bx) + g(\bx)
+%     + \langle \blmbd,\, \bc(\bx) - \bz \rangle
+%     + \langle \bmu,\, \bz \rangle
+%     + \frac{\alpha}{2}\|\bz\|^2
+%     - \frac{\beta}{2}\|\blmbd - \bmu\|^2
+%     + \frac{\rho}{2}\|\bc(\bx)\|^2,
+% \end{equation}
+% where $\blmbd, \bmu \in \RR^m$ are dual variables. Eliminating $\bz$ via
+% $\bz^*(\blmbd,\bmu) = \frac{\blmbd - \bmu}{\alpha}$ yields the reduced PPAL:
+\begin{equation}\label{eq:reduced_ppl}
+    \mathcal{L}_{\rho}(\bx, \blmbd, \bmu)
+    = \underbrace{f(\bx) + \langle \blmbd,\, \bc(\bx) \rangle + \frac{\rho}{2}\|\bc(\bx)\|^2}_{\varphi_{\rho}(\bx, \blmbd)} + g(\bx) - \frac{1}{2\rho}\|\blmbd - \bmu\|^2.
+\end{equation}
+% where \(\rho := \frac{\alpha}{1+\alpha\beta} > 0\). 
+% The perturbation term
+% \(-\frac{1}{2\rho}\|\blmbd-\bmu\|^2\) regularizes the dual dynamics and enables a stable
+% single-loop primal--dual update under a fixed effective penalty.
+
+\subsection{Algorithm}
+\textbf{Update of $\bx$.} We adopt stochastic proximal descent for the primal variable $\bx$.
+
+
+Since the computation of exact gradient information of $f$ is costly and sometimes even prohibitive, we assume that a stochastic gradient at any inquiry point can be accessed. For a mini-batch sample $B_k$ at iteration $k$, let
+\[
+\nabla \mathbf{f}(\bx,B_k)
+:=
+\frac{1}{|B_k|}\sum_{\xi \in B_k} \nabla \mathbf{f}(\bx,\xi).
+\]
+Then, at the current iterate $\bx^k$, we compute the stochastic gradient estimator by
+\begin{equation}\label{eq:storm}
+    \bd^k
+    =
+    \nabla \mathbf{f}(\bx^k, B_k)
+    + (1-\gamma_{k-1})
+    \big(
+        \bd^{k-1}
+        - \nabla \mathbf{f}(\bx^{k-1}, B_k)
+    \big),
+    \qquad k \geq 1,
+\end{equation}
+with initialization
+\begin{equation}\label{eq:storm-init}
+    \bd^0 = \nabla \mathbf{f}(\bx^0,B_0).
+\end{equation}
+Here, the same mini-batch $B_k$ is used to evaluate both
+$\nabla \mathbf{f}(\bx^k,B_k)$ and
+$\nabla \mathbf{f}(\bx^{k-1},B_k)$.
+
+We define \(\ \tilde{\nabla} \psi_{\rho}(\bx^k, \blmbd^k) := \bd^k + J_{\bc}(\bx^k)^\top\!\left(\blmbd^k + \rho\,\bc(\bx^k)\right)\ \) as the stochastic gradient estimator of $\nabla \varphi_{\rho}(\bx^k, \blmbd^k)$.    
+
+\begin{equation}\label{eq:x-update}
+\bx^{k+1} \in \argmin_{\bx \in \calX}
+\left\{
+% g(\bx)
+% + \left\langle \bd^k + J_{\bc}(\bx^k)^\top\!\left(\blmbd^k + \rho\,\bc(\bx^k)\right),\ \bx - \bx^k \right\rangle
+% + \frac{1}{2\eta_k}\|\bx - \bx^k\|^2
+g(\bx) + \langle \tilde{\nabla} \psi_{\rho}(\bx^k, \blmbd^k),\ \bx - \bx^k \rangle + \frac{1}{2\eta_k}\|\bx - \bx^k\|^2
+\right\}.
+\end{equation}
+
+\textbf{Update of $\bmu$.} We perform the dual auxiliary variable $\bmu$ via gradient ascent step:
+\begin{equation}\label{eq:mu-update}
+    \bmu^{k+1} = \bmu^k + \theta_k\big(\blmbd^k - \bmu^k\big),
+\end{equation} with a diminishing step-size
+\begin{equation}\label{eq:theta-def}
+    \theta_k = \min\!\left\{\theta_0,\; 
+    \frac{\rho\delta_k}{\|\blmbd^k - \bmu^k\|^2 + 1}\right\},
+\end{equation} and \(\delta_k \) satisfies
+\begin{equation}\label{eq:delta-conditions}
+    \delta_0 \in (0,1], \qquad 
+    \lim_{k\to\infty} \delta_k = 0, \qquad \text{and} \qquad
+    \sum_{k=0}^{\infty} \delta_k = +\infty.
+\end{equation}
+
+\textbf{Update of $\blmbd$.} We perform the dual variable $\blmbd$ update by exactly minimizing
+% \begin{equation}\label{eq:lambda-update}
+%     \blmbd_{\calE}^{k+1} = \bmu_{\calE}^{k+1} + \rho\,\bc_{\calE}(\bx^{k+1}),
+%     \qquad
+%     \blmbd_{\calI}^{k+1} = \max\!\left(\bmu_{\calI}^{k+1} + \rho\,\bc_{\calI}(\bx^{k+1}),\;\bm{0}\right).
+% \end{equation}
+\begin{equation}\label{eq:lambda-update}
+    \blmbd^{k+1} = \bmu^{k+1} + \rho\,\bc(\bx^{k+1}).
+    % \qquad
+    % \blmbd_{\calI}^{k+1} = \max\!\left(\bmu_{\calI}^{k+1} + \rho\,\bc_{\calI}(\bx^{k+1}),\;\bm{0}\right).
+\end{equation}
+% \textbf{Update of $\bz$.}
+% \begin{equation}\label{eq:z-update}
+%     \bz^{k+1} = \frac{1}{\alpha}\big(\blmbd^{k+1} - \bmu^{k+1}\big).
+% \end{equation}
+
+\begin{algorithm}[H]
+    \caption{Linearized DualProximal ALM}
+    \label{alg:PLADM-eq}
+    \small
+    \begin{algorithmic}[1]
+        \STATE \textbf{Input:} $(\bx^0)$, $\blmbd^0 = \bmu^0 = \bm{0}$
+        % parameters $\alpha>0$, $\beta>0$,
+        step-size sequence $\{\eta_k\}_{k\geq 0}$, momentum sequence $\{\gamma_k\}_{k\geq 0}$, and sequence $\{\delta_k\}_{k\geq 0}$
+        %  with $\delta_k\to 0$, $\sum_k \delta_k = +\infty$.
+        \FOR{$k = 0, 1, 2, \ldots$}
+            \STATE Update $\bx^{k+1}$ by \eqref{eq:x-update}.
+            \STATE Update $\bmu^{k+1}$ by \eqref{eq:mu-update}.
+            \STATE Update $\blmbd^{k+1}$ by \eqref{eq:lambda-update}.
+            % \STATE Update $\bz^{k+1}$ by \eqref{eq:z-update}.
+        \ENDFOR
+        \STATE \textbf{Output:} $\bx^R$ 
+        % (randomly selected iterate).
+    \end{algorithmic}
+\end{algorithm}
+\section{Auxiliary Lemmas}
+\label{sec:analysis}
+We first establish some results on the boundedness of multipliers, the smoothness of $\varphi_{\rho}$, and basic relations on $\blmbd$ and $\bmu$.
+\begin{lemma}
+\label{lem:bounded-multiplier}
+Let $\{(\bx^k, \blmbd^k, \bmu^k)\}$ be the sequence generated by 
+Algorithm~\ref{alg:PLADM-eq}. Under
+Assumption~\ref{Ass: boundedness of c and f}, for any $k \geq 0$, it holds that
+\begin{align}
+    \|\bmu^{k+1}\|
+    &\leq \rho C\sum_{j=0}^{k}\theta_j,
+    \label{eq:mu-bound}\\
+    \|\blmbd^{k+1}\|
+    &\leq \rho C\!\left(1+\sum_{j=0}^{k}\theta_j\right), 
+    \label{eq:lambda-bound}
+\end{align} where \(C\) defined in \Cref{Ass: boundedness of c and f} and \(rho\) are independent of $K$. 
+\end{lemma}
+\begin{proof}
+From the $\blmbd$-update \eqref{eq:lambda-update},
+\[
+\blmbd^k - \bmu^k = \rho\,\bc(\bx^k), \qquad \forall k \geq 0.
+\]
+Substituting this identity into the $\bmu$-update \eqref{eq:mu-update} gives
+\[
+\bmu^{k+1} = \bmu^k + \rho\theta_k\,\bc(\bx^k).
+\]
+Summing from $j=0$ to $k$ and using $\bmu^0=\bm{0}$, we obtain
+\[
+\bmu^{k+1} = \rho\sum_{j=0}^{k}\theta_j\,\bc(\bx^j).
+\]
+Hence, by $\|\bc(\bx)\|\leq C$ from
+Assumption~\ref{Ass: boundedness of c and f},
+\[
+\|\bmu^{k+1}\|
+\leq \rho\sum_{j=0}^{k}\theta_j\|\bc(\bx^j)\|
+\leq \rho C\sum_{j=0}^{k}\theta_j.
+\]
+Plugging this into \eqref{eq:lambda-update},
+\[
+\blmbd^{k+1}
+= \bmu^{k+1} + \rho\,\bc(\bx^{k+1})
+= \rho\sum_{j=0}^{k}\theta_j\,\bc(\bx^j) + \rho\,\bc(\bx^{k+1}).
+\]
+Hence, by $\|\bc(\bx)\|\leq C$ from
+Assumption~\ref{Ass: boundedness of c and f},
+\[
+\|\blmbd^{k+1}\|
+\leq \rho\sum_{j=0}^{k}\theta_j\|\bc(\bx^j)\| + \rho\|\bc(\bx^{k+1})\|
+\leq \rho C\!\left(1+\sum_{j=0}^{k}\theta_j\right).
+\]
+This proves \eqref{eq:mu-bound} and \eqref{eq:lambda-bound}.
+\end{proof}
+\begin{lemma}[Smoothness of $\varphi_{\rho}$]
+\label{lem:phi-smooth}
+Under Assumptions~\ref{Ass: boundedness of c and f} and
+Lemma~\ref{lem:bounded-multiplier}, for any $k \geq 0$, the function
+$\varphi_{\rho}(\cdot,\blmbd^k)$ is $L_{\varphi}^k$-smooth, i.e.,
+\begin{equation}\label{eq:phi-smooth}
+    \|\nabla_{\bx}\varphi_{\rho}(\bx,\blmbd^k)
+     - \nabla_{\bx}\varphi_{\rho}(\by,\blmbd^k)\|
+    \leq L_{\varphi}^k\|\bx-\by\|,
+    \quad \forall\,\bx,\by\in\calX,
+\end{equation}
+where
+\begin{equation}\label{eq:Lphi-def}
+    L_{\varphi}^k := 
+    % L_f + L_c\bigl(\|\blmbd^k\|+\rho C\bigr) + \rho G^2
+    % \leq
+    L_f + \rho L_c C\!\left(2+\sum_{j=0}^{k-1}\theta_j\right) + \rho G^2,
+\end{equation}
+with the convention $\sum_{j=0}^{-1}\theta_j = 0$.
+\end{lemma}
+\begin{proof}
+By the definition of $\varphi_\rho$,
+\[
+\varphi_\rho(\bx,\blmbd^k)
+= f(\bx) + \langle \blmbd^k,\bc(\bx)\rangle + \frac{\rho}{2}\|\bc(\bx)\|^2,
+\]
+and hence
+\[
+\nabla_{\bx}\varphi_\rho(\bx,\blmbd^k)
+= \nabla f(\bx) + J_{\bc}(\bx)^\top \blmbd^k
++ \rho J_{\bc}(\bx)^\top\bc(\bx).
+\]
+Therefore,
+\begin{align*}
+&\nabla_{\bx}\varphi_\rho(\bx,\blmbd^k)
+ - \nabla_{\bx}\varphi_\rho(\by,\blmbd^k) \\
+=\;& \bigl(\nabla f(\bx)-\nabla f(\by)\bigr)
++ \bigl(J_{\bc}(\bx)-J_{\bc}(\by)\bigr)^\top \blmbd^k \\
+&\quad + \rho\Bigl(J_{\bc}(\bx)^\top\bc(\bx)-J_{\bc}(\by)^\top\bc(\by)\Bigr).
+\end{align*}
+Taking norms and using the triangle inequality, we obtain
+\begin{align*}
+&\|\nabla_{\bx}\varphi_\rho(\bx,\blmbd^k)
+ - \nabla_{\bx}\varphi_\rho(\by,\blmbd^k)\| \\
+\leq\;& \|\nabla f(\bx)-\nabla f(\by)\|
++ \|(J_{\bc}(\bx)-J_{\bc}(\by))^\top \blmbd^k\| \\
+&\quad + \rho\|J_{\bc}(\bx)^\top\bc(\bx)-J_{\bc}(\by)^\top\bc(\by)\|.
+\end{align*}
+We bound the three terms separately.
+
+Since $f$ is $L_f$-smooth on $\calX$,
+\[
+\|\nabla f(\bx)-\nabla f(\by)\| \leq L_f\|\bx-\by\|.
+\]
+By the Lipschitz continuity of $J_{\bc}$,
+\[
+\|(J_{\bc}(\bx)-J_{\bc}(\by))^\top \blmbd^k\|
+\leq \|J_{\bc}(\bx)-J_{\bc}(\by)\|\,\|\blmbd^k\|
+\leq L_c\|\blmbd^k\|\,\|\bx-\by\|.
+\]
+Also,
+\begin{align*}
+&J_{\bc}(\bx)^\top\bc(\bx)-J_{\bc}(\by)^\top\bc(\by) \\
+=\;& J_{\bc}(\bx)^\top\bigl(\bc(\bx)-\bc(\by)\bigr)
++ \bigl(J_{\bc}(\bx)-J_{\bc}(\by)\bigr)^\top \bc(\by),
+\end{align*}
+hence
+\begin{align*}
+&\rho\|J_{\bc}(\bx)^\top\bc(\bx)-J_{\bc}(\by)^\top\bc(\by)\| \\
+\leq\;& \rho\|J_{\bc}(\bx)\|\,\|\bc(\bx)-\bc(\by)\|
++ \rho\|J_{\bc}(\bx)-J_{\bc}(\by)\|\,\|\bc(\by)\| \\
+\leq\;& \rho G^2\|\bx-\by\| + \rho L_c C\|\bx-\by\|.
+\end{align*}
+Combining the above estimates,
+\[
+\|\nabla_{\bx}\varphi_\rho(\bx,\blmbd^k)
+ - \nabla_{\bx}\varphi_\rho(\by,\blmbd^k)\|
+\leq \Bigl(L_f + L_c(\|\blmbd^k\|+\rho C) + \rho G^2\Bigr)\|\bx-\by\|.
+\]
+This proves the first expression in \eqref{eq:Lphi-def}. From
+Lemma~\ref{lem:bounded-multiplier},
+\[
+\|\blmbd^k\|
+\leq \rho C\!\left(1+\sum_{j=0}^{k-1}\theta_j\right),
+\]
+which implies
+\[
+L_{\varphi}^k
+\leq L_f + \rho L_c C\!\left(2+\sum_{j=0}^{k-1}\theta_j\right) + \rho G^2.
+\]
+This completes the proof.  \eproof
+\end{proof}
+\begin{lemma}[Basic relations on $\blmbd$ and $\bmu$]
+\label{lem:basic-relations}
+Let $\{(\bx^k, \blmbd^k, \bmu^k)\}$ be the sequence generated by 
+Algorithm~\ref{alg:PLADM-eq}. Under Assumption~\ref{Ass: boundedness of c and f}, the following 
+relations hold for any $k \geq 0$:
+\begin{align}
+    \|\bmu^{k+1} - \bmu^k\|^2 = \theta_k^2 \|\blmbd^{k} - \bmu^k\|^2  &\leq \frac{\rho^2\delta_k^2}{4}, 
+    \label{eq:mu-diff}\\
+    \|\bmu^{k+1} - \blmbd^k\|^2 &= (1-\theta_k)^2\|\blmbd^k - \bmu^k\|^2,
+    \label{eq:mu-lambda-diff}\\
+    \theta_k \|\blmbd^k - \bmu^k\|^2 &\leq \rho\delta_k, 
+    \label{eq:theta-bound}\\
+    \|\blmbd^{k+1} - \blmbd^k\|^2 &\leq 
+    2\rho^2 L_c^2\,\|\bx^{k+1} - \bx^k\|^2 + \frac{\rho^2\delta_k^2}{2}.
+    \label{eq:lambda-diff}
+\end{align}
+\end{lemma}
+\begin{proof}
+\textbf{Relation \eqref{eq:mu-diff}.}
+From the $\bmu$-update \eqref{eq:mu-update},
+$\bmu^{k+1} - \bmu^k = \theta_k(\blmbd^k - \bmu^k)$, so
+\begin{align*}
+  \|\bmu^{k+1} - \bmu^k\|^2
+  = \theta_k^2\|\blmbd^k - \bmu^k\|^2
+  \leq \frac{\rho^2\delta_k^2}{\bigl(\|\blmbd^k-\bmu^k\|^2+1\bigr)^2}
+    \cdot \|\blmbd^k-\bmu^k\|^2
+  \leq \frac{\rho^2\delta_k^2}{4},
+\end{align*}
+where the last inequality uses $\frac{t}{(t+1)^2} \leq \frac{1}{4}$ for $t = \|\blmbd^k-\bmu^k\|^2 \geq 0$.
+ 
+\textbf{Relation \eqref{eq:theta-bound}.}
+By definition \eqref{eq:theta-def},
+$\theta_k \leq \frac{\rho\delta_k}{\|\blmbd^k-\bmu^k\|^2+1}$, hence
+\begin{align*}
+  \theta_k\|\blmbd^k-\bmu^k\|^2
+  \leq \frac{\rho\delta_k\|\blmbd^k-\bmu^k\|^2}{\|\blmbd^k-\bmu^k\|^2+1}
+  \leq \rho\delta_k.
+\end{align*}
+ 
+\textbf{Relation \eqref{eq:mu-lambda-diff}.}
+$\bmu^{k+1} - \blmbd^k = \bmu^k - \blmbd^k + \theta_k(\blmbd^k-\bmu^k)
+= (1-\theta_k)(\bmu^k - \blmbd^k)$,
+so $\|\bmu^{k+1}-\blmbd^k\|^2 = (1-\theta_k)^2\|\blmbd^k-\bmu^k\|^2$.
+ 
+\textbf{Relation \eqref{eq:lambda-diff}.}
+From the $\blmbd$-update \eqref{eq:lambda-update},
+$\blmbd^{k+1} - \blmbd^k
+= (\bmu^{k+1}-\bmu^k) + \rho\bigl(\bc(\bx^{k+1})-\bc(\bx^k)\bigr)$.
+Using $(a+b)^2 \leq 2(a^2+b^2)$ and $L_c$-smoothness of $\bc$:
+\begin{align*}
+  \|\blmbd^{k+1}-\blmbd^k\|^2
+  &\leq 2\|\bmu^{k+1}-\bmu^k\|^2 + 2\rho^2\|\bc(\bx^{k+1})-\bc(\bx^k)\|^2 \\
+  &\leq \frac{\rho^2\delta_k^2}{2} + 2\rho^2 L_c^2\|\bx^{k+1}-\bx^k\|^2.
+\end{align*}
+This proves \eqref{eq:lambda-diff}. \eproof
+\end{proof}
+
+For simplicity, we introduce the gradient error estimator
+\begin{align}
+    \be^k
+    &:= \nabla_{\bx}\varphi_{\rho}(\bx^k,\blmbd^k)
+    - \tilde{\nabla}\psi_{\rho}(\bx^k,\blmbd^k) \notag\\
+    &= \nabla f(\bx^k) - \bd^k.
+\end{align}
+We then prove the approximate sufficient descent property of the augmented Lagrangian function $\calL_\rho$ along the iterates generated by Algorithm~\ref{alg:PLADM-eq}.   
+
+\begin{lemma}[Sufficient Descent]
+\label{lem:sufficient-descent}
+Let $\{(\bx^k, \blmbd^k, \bmu^k)\}$ be the sequence generated by
+Algorithm~\ref{alg:PLADM-eq}. Under
+Assumptions~\ref{Ass: boundedness of c and f}, the following inequality holds for any $k \ge 0$:
+\begin{align}
+  \calL_{\rho}(\bx^{k+1}, \blmbd^{k+1}, \bmu^{k+1})
+  &\;\le\;
+  \calL_{\rho}(\bx^k, \blmbd^k, \bmu^k)
+  - C_1^k\,\|\bx^{k+1}-\bx^k\|^2
+  + \frac{\eta_k}{2}\|\be^k\|^2
+  + \hat\delta_k,
+  \label{eq:sufficient-descent}
+\end{align}
+where
+\begin{equation}\label{eq:C1-deltahat-def}
+  C_1^k := \frac{1}{2\eta_k} - \frac{L_\varphi^k}{2} - \rho L_c^2 > 0,
+  \qquad
+  \hat\delta_k := \frac{\rho\delta_k^2}{4} + \delta_k.
+\end{equation}
+Furthermore, rearranging \eqref{eq:sufficient-descent} gives
+\begin{align}\label{eq:descent-rearranged}
+  C_1^k\,\|\bx^{k+1}-\bx^k\|^2
+  \leq\;
+  &\calL_{\rho}(\bx^k, \blmbd^k, \bmu^k)
+  - \calL_{\rho}(\bx^{k+1}, \blmbd^{k+1}, \bmu^{k+1})
+  + \frac{\eta_k}{2}\|\be^k\|^2
+  + \hat\delta_k.
+\end{align}
+\end{lemma}
+
+\begin{proof}
+Decompose the one-step change of $\calL_\rho$ as
+\begin{align}
+  &\calL_\rho(\bx^{k+1},\blmbd^{k+1},\bmu^{k+1})
+   - \calL_\rho(\bx^k,\blmbd^k,\bmu^k) \notag\\
+  &= \underbrace{
+      \calL_\rho(\bx^{k+1},\blmbd^k,\bmu^k)
+    - \calL_\rho(\bx^k,\blmbd^k,\bmu^k)
+    }_{\text{Part A}}
+  + \underbrace{
+      \calL_\rho(\bx^{k+1},\blmbd^{k+1},\bmu^{k+1})
+    - \calL_\rho(\bx^{k+1},\blmbd^k,\bmu^k)
+    }_{\text{Part B}}.
+  \label{eq:decompose}
+\end{align}
+
+\medskip\noindent\textbf{Part A (x-update).}
+By the $L_\varphi^k$-smoothness of $\varphi_\rho(\cdot,\blmbd^k)$
+(Lemma~\ref{lem:phi-smooth}) and the descent lemma:
+\begin{equation}
+  \calL_\rho(\bx^{k+1},\blmbd^k,\bmu^k)
+  - \calL_\rho(\bx^k,\blmbd^k,\bmu^k)
+  \leq \langle \nabla_{\bx}\varphi_\rho(\bx^k,\blmbd^k),\, \bx^{k+1}-\bx^k\rangle
+       + g(\bx^{k+1}) - g(\bx^k)
+       + \frac{L_\varphi^k}{2}\|\bx^{k+1}-\bx^k\|^2.
+  \label{eq:partA-descent}
+\end{equation}
+From the $\bx$-update optimality condition
+$-\tilde{\nabla}\psi_\rho(\bx^k,\blmbd^k)
+ - \frac{1}{\eta_k}(\bx^{k+1}-\bx^k) \in \partial g(\bx^{k+1})$,
+taking $\bx = \bx^k$ in the subgradient inequality gives
+\begin{equation}
+  g(\bx^{k+1}) - g(\bx^k)
+  \leq \Bigl\langle
+    -\tilde{\nabla}\psi_\rho(\bx^k,\blmbd^k)
+    - \tfrac{1}{\eta_k}(\bx^{k+1}-\bx^k),\;
+    \bx^{k+1}-\bx^k
+  \Bigr\rangle.
+  \label{eq:partA-sub}
+\end{equation}
+Substituting \eqref{eq:partA-sub} into \eqref{eq:partA-descent}
+and using
+$\tilde{\nabla}\psi_\rho(\bx^k,\blmbd^k)
+= \nabla_{\bx}\varphi_\rho(\bx^k,\blmbd^k) - \be^k$:
+\begin{align}
+  &\calL_\rho(\bx^{k+1},\blmbd^k,\bmu^k)
+  - \calL_\rho(\bx^k,\blmbd^k,\bmu^k) \notag\\
+  &\leq \langle \be^k,\, \bx^{k+1}-\bx^k\rangle
+       + \Bigl(\frac{L_\varphi^k}{2} - \frac{1}{\eta_k}\Bigr)
+         \|\bx^{k+1}-\bx^k\|^2.
+\end{align}
+Applying Young's inequality
+$\langle \be^k, \bx^{k+1}-\bx^k\rangle
+ \leq \frac{\eta_k}{2}\|\be^k\|^2
+    + \frac{1}{2\eta_k}\|\bx^{k+1}-\bx^k\|^2$:
+\begin{align}
+  &\calL_\rho(\bx^{k+1},\blmbd^k,\bmu^k)
+  - \calL_\rho(\bx^k,\blmbd^k,\bmu^k) \notag\\
+  &\leq -\Bigl(\frac{1}{2\eta_k} - \frac{L_\varphi^k}{2}\Bigr)
+        \|\bx^{k+1}-\bx^k\|^2
+       + \frac{\eta_k}{2}\|\be^k\|^2.
+  \label{eq:partA-bound}
+\end{align}
+
+\medskip\noindent\textbf{Part B (dual-variable change).}
+Expanding $\calL_\rho$ using definition \eqref{eq:reduced_ppl}:
+\begin{align}
+  \text{Part B}
+  &= \langle \blmbd^{k+1}-\blmbd^k,\, \bc(\bx^{k+1})\rangle
+    - \frac{1}{2\rho}\Bigl(
+        \|\blmbd^{k+1}-\bmu^{k+1}\|^2
+      - \|\blmbd^k-\bmu^k\|^2
+    \Bigr).
+  \label{eq:partB-expand}
+\end{align}
+Substituting
+$\bc(\bx^{k+1}) = \frac{1}{\rho}(\blmbd^{k+1}-\bmu^{k+1})$
+from \eqref{eq:lambda-update} into the inner product, and applying
+the polarization identity
+$\langle a,b\rangle = \frac{1}{2}\|a\|^2+\frac{1}{2}\|b\|^2
+-\frac{1}{2}\|a-b\|^2$
+with $a = \blmbd^{k+1}-\blmbd^k$ and $b = \blmbd^{k+1}-\bmu^{k+1}$
+(so $a - b = \bmu^{k+1}-\blmbd^k$):
+\begin{align}
+  \text{Part B}
+  &= \frac{1}{2\rho}\|\blmbd^{k+1}-\blmbd^k\|^2
+    - \frac{1}{2\rho}\|\bmu^{k+1}-\blmbd^k\|^2
+    + \frac{1}{2\rho}\|\blmbd^k-\bmu^k\|^2,
+  \label{eq:partB-identity}
+\end{align}
+where $\|\blmbd^{k+1}-\bmu^{k+1}\|^2$ cancels exactly.
+We now bound each term using Lemma~\ref{lem:basic-relations}.
+
+\medskip\noindent
+\textit{Second and third terms.}
+By \eqref{eq:mu-lambda-diff},
+$\|\bmu^{k+1}-\blmbd^k\|^2 = (1-\theta_k)^2\|\blmbd^k-\bmu^k\|^2$,
+so
+\begin{equation}
+  \frac{1}{2\rho}\|\blmbd^k-\bmu^k\|^2
+  - \frac{1}{2\rho}\|\bmu^{k+1}-\blmbd^k\|^2
+  = \frac{2\theta_k-\theta_k^2}{2\rho}\|\blmbd^k-\bmu^k\|^2
+  \leq \frac{\theta_k}{\rho}\|\blmbd^k-\bmu^k\|^2.
+\end{equation}
+By \eqref{eq:theta-bound}, $\theta_k\|\blmbd^k-\bmu^k\|^2 \leq \rho\delta_k$,
+hence this is $\leq \delta_k$.
+
+\medskip\noindent
+\textit{First term.}
+Applying \eqref{eq:lambda-diff}:
+\begin{equation}
+  \frac{1}{2\rho}
+  \|\blmbd^{k+1}-\blmbd^k\|^2
+  \leq \rho L_c^2\,
+  \|\bx^{k+1}-\bx^k\|^2
+  + \frac{\rho\delta_k^2}{4}.
+\end{equation}
+
+\medskip\noindent
+Combining the two estimates:
+\begin{align}
+  &\calL_\rho(\bx^{k+1},\blmbd^{k+1},\bmu^{k+1})
+  - \calL_\rho(\bx^{k+1},\blmbd^k,\bmu^k) \notag\\
+  \leq \rho L_c^2\,
+       \|\bx^{k+1}-\bx^k\|^2
+       + \frac{\rho\delta_k^2}{4} + \delta_k.
+  \label{eq:partB-bound}
+\end{align}
+
+\medskip\noindent\textbf{Combining Parts A and B.}
+Adding \eqref{eq:partA-bound} and \eqref{eq:partB-bound}:
+\begin{align}
+  &\calL_\rho(\bx^{k+1},\blmbd^{k+1},\bmu^{k+1})
+   - \calL_\rho(\bx^k,\blmbd^k,\bmu^k) \notag\\
+  &\leq -\underbrace{\Bigl(
+      \frac{1}{2\eta_k} - \frac{L_\varphi^k}{2} - \rho L_c^2
+    \Bigr)}_{=\,C_1^k}
+    \|\bx^{k+1}-\bx^k\|^2
+   + \frac{\eta_k}{2}\|\be^k\|^2
+   + \underbrace{\frac{\rho\delta_k^2}{4} + \delta_k}_{=\,\hat\delta_k}.
+\end{align}
+Condition \eqref{eq:step-cond} ensures $C_1^k > 0$,
+which completes the proof.
+\end{proof}
+Assume \(\gamma_k \equiv \gamma_f \in (0,1)\). It can be derived that, for \(k \ge 1\),
+\[
+\be^k = \sum_{t=0}^{k}(1-\gamma_f)^t\,\bu_{k-t},
+\]
+where
+\begin{align}
+\bu_k :=
+\begin{cases}
+\nabla \mathbf f(\bx^0,B_0) - \nabla f(\bx^0), & k=0,\\[2pt]
+\nabla \mathbf f(\bx^k,B_k) - \nabla f(\bx^k) 
++(1-\gamma_f)\!\left(\nabla f(\bx^{k-1}) - \nabla \mathbf f(\bx^{k-1},B_k) \right) & k\ge1.
+\end{cases}
+\end{align}
+
+\begin{lemma}
+    Under Assumption~\ref{Ass: boundedness of c and f}-\ref{Ass: bounded stochastic gradient noise}. 
+    Then for any \( K \geq 1\), it holds that with probability at least $1-2K \alpha$, that for any
+    $k = 0, \cdots, K-1$, we have 
+    \begin{align*}
+    \|\be^k\|^2
+\;\le\;
+9\log(1/\alpha)\!\left(
+\frac{a_f^2}{|B_0|}
++\frac{1}{\gamma_f}\max_{1\le j\le k}
+\Big[
+\frac{\gamma_f^2 a_f^2}{|B_j|}
++\frac{(1-\gamma_f)^2L_f^2\|\bx^j-\bx^{j-1}\|^2}{|B_j|}
+\Big]
+\right),
+    \end{align*}
+\end{lemma}
+\begin{proof}
+For $k=0$, by concentration for mini-batch average,
+\[
+\|\bu_0\|
+\le 3a_f\sqrt{\frac{\log(1/\alpha)}{|B_0|}}
+\quad\text{with probability at least }1-\alpha.
+\]
+
+For $k\ge 1$, decompose $\bu_k$ into a variance part and a drift part:
+\[
+\bu_k
+=
+\underbrace{
+\frac{1}{|B_k|}\sum_{\xi\in B_k}
+\!\left[
+\gamma_f\big(\nabla f_\xi(\bx^k)-\nabla f(\bx^k)\big)
++(1-\gamma_f)\Big(
+\nabla f_\xi(\bx^k)-\nabla f_\xi(\bx^{k-1})
+-(\nabla f(\bx^k)-\nabla f(\bx^{k-1}))
+\Big)
+\right]}_{=: \text{sample fluctuation}}
++
+(1-\gamma_f)\big(\nabla f(\bx^{k-1})-\nabla f(\bx^k)\big).
+\]
+Using concentration and smoothness,
+\[
+\|\bu_k\|
+\le
+3\gamma_f a_f\sqrt{\frac{\log(1/\alpha)}{|B_k|}}
++
+6(1-\gamma_f)L_f\|\bx^k-\bx^{k-1}\|
+\sqrt{\frac{\log(1/\alpha)}{|B_k|}}
+\]
+with probability at least $1-\alpha$.
+
+Applying union bound over $k=0,\ldots,K-1$ gives an event of probability
+at least $1-2K\alpha$ where all above bounds hold simultaneously.
+
+On this event,
+\[
+\be^k=\sum_{t=0}^k(1-\gamma_f)^t\bu_{k-t}.
+\]
+By Cauchy-Schwarz (or weighted Jensen),
+\[
+\|\be^k\|^2
+\le
+\Big(\sum_{t=0}^k(1-\gamma_f)^t\Big)
+\sum_{t=0}^k(1-\gamma_f)^t\|\bu_{k-t}\|^2
+\le
+\frac{1}{\gamma_f}\sum_{t=0}^k(1-\gamma_f)^t\|\bu_{k-t}\|^2.
+\]
+Substituting the high-probability bounds of $\bu_0,\bu_1,\ldots,\bu_k$
+yields the claimed inequality.
+\end{proof}
+% Recall that
+% \(
+% \nabla_{\bx}\varphi_{\rho}(\bx,\blmbd)
+% = \nabla f(\bx) + J_{\bc}(\bx)^{\top}\!\bigl(\blmbd+\rho\,\bc(\bx)\bigr).
+% \)
+% For any $\bx,\by\in\RR^n$, add and subtract 
+% $J_{\bc}(\bx)^{\top}(\blmbd+\rho\,\bc(\by))$ to obtain
+% \begin{align}
+% &\|\nabla_{\bx}\varphi_{\rho}(\bx,\blmbd)
+%   -\nabla_{\bx}\varphi_{\rho}(\by,\blmbd)\| \notag\\
+% &\leq
+%   \underbrace{\|\nabla f(\bx)-\nabla f(\by)\|}_{\mathrm{(I)}}
+%   +\underbrace{\bigl\|[J_{\bc}(\bx)-J_{\bc}(\by)]^{\top}
+%     (\blmbd+\rho\,\bc(\by))\bigr\|}_{\mathrm{(II)}}
+%   +\underbrace{\bigl\|J_{\bc}(\bx)^{\top}\rho
+%     [\bc(\bx)-\bc(\by)]\bigr\|}_{\mathrm{(III)}}.
+%     \label{eq:phi-three-terms}
+% \end{align}
+
+% \medskip\noindent
+% \textbf{Term (I).}
+% By $L_f$-smoothness of $f$:
+% \begin{equation}
+%     \mathrm{(I)} \leq L_f\|\bx-\by\|.
+% \end{equation}
+
+% \medskip\noindent
+% \textbf{Term (II).}
+% Since $\bc$ is $L_c$-smooth, we have 
+% $\|J_{\bc}(\bx)-J_{\bc}(\by)\|\leq L_c\|\bx-\by\|$.
+% Using $\|\blmbd\|\leq B_{\lambda}$ and $\|\bc(\by)\|\leq C$ 
+% from Assumptions~\ref{Ass: bounded multiplier} 
+% and~\ref{Ass: boundedness of c and f}:
+% \begin{equation}
+%     \mathrm{(II)}
+%     \leq L_c\|\bx-\by\|\cdot\|\blmbd+\rho\,\bc(\by)\|
+%     \leq L_c(B_{\lambda}+\rho C)\|\bx-\by\|.
+% \end{equation}
+
+% \medskip\noindent
+% \textbf{Term (III).}
+% By $\|J_{\bc}(\bx)\|\leq G$ and the $G$-Lipschitz 
+% continuity of $\bc$ (Assumption~\ref{Ass: boundedness of c and f}):
+% \begin{equation}
+%     \mathrm{(III)}
+%     \leq \rho\|J_{\bc}(\bx)\|\cdot\|\bc(\bx)-\bc(\by)\|
+%     \leq \rho G^2\|\bx-\by\|.
+% \end{equation}
+
+% \medskip\noindent
+% Substituting (I)--(III) back into \eqref{eq:phi-three-terms} gives
+% \[
+%     \|\nabla_{\bx}\varphi_{\rho}(\bx,\blmbd)
+%      -\nabla_{\bx}\varphi_{\rho}(\by,\blmbd)\|
+%     \leq \bigl(L_f + L_c(B_{\lambda}+\rho C)+\rho G^2\bigr)
+%          \|\bx-\by\|
+%     = L_{\varphi}\|\bx-\by\|,
+% \]
+% which completes the proof.
+% \end{proof}
+
+% \begin{lemma}[Primal Feasibility bound]
+% \label{lem:bounded-multiplier}
+% Let $\{(\bx^k, \blmbd^k, \bmu^k)\}$ be the sequence generated by 
+% Algorithm~\ref{alg:PLADM-eq} with \(\tau_k = \tau\). Under Assumption~\ref{Ass: boundedness of c and f}, for any $k \geq 0$,  it holds that
+% \begin{align}
+%  \frac{1}{T}\sum_{k = 0}^{T-1}\mathbb{E}\big[\|\bc(\bx^{k+1})\|^2\big]  = \mathcal{O}(logT/T)\big]
+% \end{align} \blue{with \(\delta_k = \frac{c}{k+1}\)}.
+
+% \end{lemma}
+% \begin{proof}
+%     \begin{align}
+%  \frac{1}{T}\sum_{k = 0}^{T-1}\mathbb{E}\big[\|\bc(\bx^{k+1})\|^2\big]  = \frac{1}{\rho^2\tau^2}\frac{1}{T}\sum_{k = 0}^{T-1}\mathbb{E}\big[\|\blmbd^{k+1}-\bmu^{k+1}\|^2\big].
+% \end{align}
+% \end{proof}
+
+% \begin{lemma}[sufficient descent]
+% \end{lemma}
+
+
+% \begin{lemma}[primal feasibility bound]
+% \end{lemma}
+
+% ================================================================
+%  Sufficient Descent + Primal Feasibility  (equality-constrained)
+%  Adapted from PLADA Lemma 33 to stochastic / no-slack setting
+% ================================================================
+
+% ----------------------------------------------------------------
+% Notation reminders (consistent with contrained_format__1_.tex):
+%   L_rho(x,lambda,mu) = f(x)+g(x)+<lambda,c(x)>
+%                        + rho/2*||c(x)||^2 - 1/(2rho)*||lambda-mu||^2
+%   x-update  : proximal-gradient with STORM estimator d^k
+%   mu-update : mu^{k+1} = mu^k + theta_k(lambda^k - mu^k),
+%               theta_k = delta_k / (1 + ||lambda^k - mu^k||^2)
+%   lambda-update (tau_k = tau, constant):
+%               lambda^{k+1} = mu^{k+1} + rho*tau*c(x^{k+1})
+%
+%  Key consequence of lambda-update (used everywhere):
+%   lambda^{k+1} - mu^{k+1} = rho*tau*c(x^{k+1})           ... (*)
+% ----------------------------------------------------------------
+% \begin{lemma}[High-probability bound of the STORM estimator]
+%     \label{lem:high-probability-bound-of-storm-estimator}
+%     Let $\{\bx^k\}$ be the sequence generated by
+%     Algorithm~\ref{alg:PLADM-eq}. Under
+%     Assumptions~\ref{Ass: boundedness of c and f}--\ref{Ass: unbiased gradient oracle},
+%     ...
+% \end{lemma}
+
+
+\begin{lemma}[Primal Stationarity Residual Bound]
+\label{lem:stationarity}
+Let $\{(\bx^k, \blmbd^k, \bmu^k)\}$ be the sequence generated by
+Algorithm~\ref{alg:PLADM-eq}.
+Under Assumptions~\ref{Ass: boundedness of c and f}
+and~\ref{Ass: bounded stochastic gradient noise},
+define the stationarity residual
+\begin{equation}
+    \bzeta_{\bx}^{k+1} \in \nabla_{\bx}\varphi_\rho(\bx^{k+1}, \blmbd^{k+1}) 
+    + \partial g(\bx^{k+1}) = \partial_{\bx} \calL_{\rho}(\bw^k).
+\end{equation}Then for any $k \geq 0$,
+% \begin{equation}\label{eq:zeta-bound}
+%     \|\bzeta_{\bx}^{k+1}\|^2
+%     \;\leq\;
+%     4\!\left(L_\varphi + \frac{1}{\eta_k}\right)^{\!2}
+%     \|\bx^{k+1} - \bx^k\|^2
+%     \;+\; 4\|\be^k\|^2
+%     \;+\; 4G^2\|\blmbd^{k+1} - \blmbd^k\|^2,
+% \end{equation}
+% Consequently, taking expectation and applying
+Lemma~\ref{lem:basic-relations}~\eqref{eq:lambda-diff},
+\begin{equation}\label{eq:zeta-expect}
+    \mathbb{E}\!\left[\|\bzeta_{\bx}^{k+1}\|^2\right]
+    \;\leq\;
+    4\!\left[\left(L_\varphi^k+\frac{1}{\eta_k}\right)^{\!2}
+             + 2G^2\rho^2 L_c^2\right]
+    \mathbb{E}\!\left[\|\bx^{k+1}-\bx^k\|^2\right]
+    \;+\; 4\,\mathbb{E}\!\left[\|\be^k\|^2\right]
+    \;+\; 2G^2\rho^2\delta_k^2.
+\end{equation} where $\be^k := \nabla f(\bx^k) - \bd^k$ is the STORM estimation error.
+\end{lemma}
+
+
+ 
+% \begin{proof}
+ 
+% \medskip\noindent\textbf{Step 1: Residual decomposition.}
+% From the first-order optimality condition of the $\bx$-update
+% \eqref{eq:x-update}, there exists $v^{k+1} \in \partial g(\bx^{k+1})$
+% such that
+% \begin{equation}\label{eq:x-opt}
+%     v^{k+1}
+%     = -\bd^k
+%       - J_{\bc}(\bx^k)^{\top}\!\left(\blmbd^k + \rho\,\bc(\bx^k)\right)
+%       - \frac{1}{\eta_k}\left(\bx^{k+1} - \bx^k\right).
+% \end{equation}
+% Setting $\bzeta^{k+1}
+% := \nabla f(\bx^{k+1}) + v^{k+1}
+%    + J_{\bc}(\bx^{k+1})^{\top}\blmbd^{k+1}$
+% and substituting \eqref{eq:x-opt},
+% we add and subtract $\nabla_{\bx}\varphi_{\rho}(\bx^k, \blmbd^{k+1})$
+% to obtain
+% \begin{align}
+%     \bzeta^{k+1}
+%     &= \underbrace{
+%          \nabla_{\bx}\varphi_{\rho}(\bx^{k+1}, \blmbd^{k+1})
+%          - \nabla_{\bx}\varphi_{\rho}(\bx^k, \blmbd^{k+1})
+%        }_{\displaystyle\mathrm{(I)}}
+%     + \underbrace{
+%          \nabla_{\bx}\varphi_{\rho}(\bx^k, \blmbd^{k+1})
+%          - \nabla_{\bx}\varphi_{\rho}(\bx^k, \blmbd^k)
+%        }_{\displaystyle\mathrm{(II)}}
+%     - \be^k
+%     - \frac{1}{\eta_k}\left(\bx^{k+1} - \bx^k\right).
+%     \label{eq:zeta-decomp}
+% \end{align}
+% Note that by definition of $\varphi_\rho$,
+% \begin{equation}\label{eq:phi-lambda-diff}
+%     \nabla_{\bx}\varphi_{\rho}(\bx, \blmbd_1)
+%     - \nabla_{\bx}\varphi_{\rho}(\bx, \blmbd_2)
+%     = J_{\bc}(\bx)^{\top}(\blmbd_1 - \blmbd_2),
+% \end{equation}
+% so $\mathrm{(II)} = J_{\bc}(\bx^k)^{\top}(\blmbd^{k+1} - \blmbd^k)$.
+ 
+% \medskip\noindent\textbf{Step 2: Bounding each term.}
+% Applying $(a_1+a_2+a_3+a_4)^2 \leq 4(a_1^2+a_2^2+a_3^2+a_4^2)$
+% to \eqref{eq:zeta-decomp}:
+ 
+% \medskip\noindent\textit{Term~(I).}
+% By $L_\varphi$-smoothness of $\varphi_\rho(\cdot,\blmbd^{k+1})$
+% (Lemma~\ref{lem:phi-smooth}):
+% \begin{equation}
+%     \|\mathrm{(I)}\|
+%     \;\leq\; L_\varphi\|\bx^{k+1} - \bx^k\|.
+% \end{equation}
+ 
+% \medskip\noindent\textit{Term~(II).}
+% By \eqref{eq:phi-lambda-diff} and
+% Assumption~\ref{Ass: boundedness of c and f}:
+% \begin{equation}
+%     \|\mathrm{(II)}\|
+%     \;=\; \|J_{\bc}(\bx^k)^{\top}(\blmbd^{k+1} - \blmbd^k)\|
+%     \;\leq\; G\|\blmbd^{k+1} - \blmbd^k\|.
+% \end{equation}
+ 
+% \medskip\noindent
+% Collecting the four terms and squaring yields \eqref{eq:zeta-bound}.
+ 
+% \medskip\noindent\textbf{Step 3: Taking expectation.}
+% Applying Lemma~\ref{lem:basic-relations}~\eqref{eq:lambda-diff}:
+% \begin{equation}
+%     4G^2\,\mathbb{E}\!\left[\|\blmbd^{k+1}-\blmbd^k\|^2\right]
+%     \;\leq\;
+%     8G^2\rho^2 L_c^2\,\mathbb{E}\!\left[\|\bx^{k+1}-\bx^k\|^2\right]
+%     + 2G^2\rho^2\delta_k^2.
+% \end{equation}
+% Substituting into \eqref{eq:zeta-bound} and taking expectation
+% yields \eqref{eq:zeta-expect}.
+% \end{proof}
+
+% \begin{lemma}[Primal Feasibility Bound]
+% \label{lem:primal-feasibility}
+% Under the same conditions as Lemma~\ref{lem:sufficient-descent},
+% with $\delta_k = c/(k+1)$ for some $c > 0$, we have
+% \begin{align}
+%   \frac{1}{T}\sum_{k=0}^{T-1}\mathbb{E}\!\left[\|\bc(\bx^{k+1})\|^2\right]
+%   \;=\; \mathcal{O}\!\left(\frac{\log T}{T}\right).
+%   \label{eq:feasibility-rate}
+% \end{align}
+% \end{lemma}
+% \begin{proof}
+% \textbf{Step 1: Derive the residual expression.}
+% From the first-order optimality condition of the $\bx$-update 
+% \eqref{eq:x-update}, there exists $v^{k+1} \in \partial g(\bx^{k+1})$ 
+% such that
+% \begin{equation}\label{eq:x-opt}
+%     v^{k+1} = -\bd^k - J_{\bc}(\bx^k)^\top\!\left(\blmbd^k 
+%     + \rho\,\bc(\bx^k)\right) - \frac{1}{\eta_k}(\bx^{k+1} - \bx^k).
+% \end{equation}
+% Setting $\bzeta^{k+1} := \nabla f(\bx^{k+1}) + v^{k+1} 
+% + J_{\bc}(\bx^{k+1})^\top\blmbd^{k+1}$ and substituting 
+% \eqref{eq:x-opt}, we add and subtract 
+% $\nabla_{\bx}\varphi_{\rho}(\bx^{k+1}, \blmbd^k)$ to obtain
+% \begin{align}
+%     \bzeta^{k+1} 
+%     &= \underbrace{\bigl[\nabla_{\bx}\varphi_{\rho}(\bx^{k+1},\blmbd^k)
+%       - \nabla_{\bx}\varphi_{\rho}(\bx^k,\blmbd^k)\bigr]}_{\text{(I)}}
+%     - \be^k
+%     + \underbrace{J_{\bc}(\bx^{k+1})^\top
+%       (\bmu^{k+1} - \blmbd^k)}_{\text{(II)}}
+%     - \frac{1}{\eta_k}(\bx^{k+1} - \bx^k),
+%     \label{eq:zeta-decomp}
+% \end{align}
+% where we used the $\blmbd$-update \eqref{eq:lambda-update} to simplify:
+% \begin{equation}
+%     \blmbd^{k+1} - \blmbd^k - \rho\,\bc(\bx^{k+1}) 
+%     = \bmu^{k+1} + \rho\,\bc(\bx^{k+1}) - \blmbd^k 
+%       - \rho\,\bc(\bx^{k+1}) 
+%     = \bmu^{k+1} - \blmbd^k.
+% \end{equation}
+
+% \textbf{Step 2: Bound each term.}
+% Applying $(a+b+c+d)^2 \leq 4(a^2+b^2+c^2+d^2)$ to 
+% \eqref{eq:zeta-decomp}:
+
+% \medskip\noindent\textit{Term (I).} 
+% By $L_\varphi$-smoothness of $\varphi_\rho(\cdot,\blmbd^k)$ with 
+% $\blmbd^k$ fixed:
+% \begin{equation}
+%     \|\text{(I)}\| \leq L_\varphi\|\bx^{k+1} - \bx^k\|.
+% \end{equation}
+
+% \medskip\noindent\textit{Term (II).} 
+% By Assumption~\ref{Ass: boundedness of c and f} and 
+% Lemma~\ref{lem:basic-relations} \eqref{eq:mu-lambda-diff}:
+% \begin{equation}
+%     \|\text{(II)}\| \leq G\|\bmu^{k+1} - \blmbd^k\| 
+%     = G(1-\theta_k)\|\blmbd^k - \bmu^k\|.
+% \end{equation}
+
+% \medskip\noindent
+% Combining the four terms and applying $(a+b+c+d)^2\leq 4(a^2+b^2+c^2+d^2)$
+% yields \eqref{eq:zeta-bound} with constant absorbed into $C_2$.
+
+% \textbf{Step 3: Ergodic bound.}
+% Taking expectation and averaging over $k = 0,\ldots,T-1$:
+% \begin{align}
+%     \frac{1}{T}\sum_{k=0}^{T-1}\mathbb{E}[\|\bzeta^{k+1}\|^2]
+%     &\leq \frac{C_2}{T}\sum_{k=0}^{T-1}
+%       \mathbb{E}[\|\bx^{k+1}-\bx^k\|^2]
+%     + \frac{1}{T}\sum_{k=0}^{T-1}\mathbb{E}[\|\be^k\|^2]
+%     + \frac{3G^2}{T}\sum_{k=0}^{T-1}
+%       \mathbb{E}[\|\bmu^{k+1}-\blmbd^k\|^2].
+% \end{align}
+% % The three terms are bounded as follows:
+% % \begin{itemize}
+% %     \item \textbf{First term:} By Lemma~\ref{lem:sufficient-descent} 
+% %     \eqref{eq:sufficient-descent} and telescoping, 
+% %     $\frac{1}{T}\sum\mathbb{E}[\|\bx^{k+1}-\bx^k\|^2] 
+% %     = \mathcal{O}(\log T/T)$.
+% %     \item \textbf{Second term:} By the STORM variance bound 
+% %     (Lemma~\ref{lem:storm}), 
+% %     $\frac{1}{T}\sum\mathbb{E}[\|\be^k\|^2] 
+% %     = \mathcal{O}(\log T / T)$.
+% %     \item \textbf{Third term:} By Lemma~\ref{lem:basic-relations} 
+% %     \eqref{eq:mu-lambda-diff} and \eqref{eq:theta-bound},
+% %     $\|\bmu^{k+1}-\blmbd^k\|^2 = (1-\theta_k)^2\|\blmbd^k-\bmu^k\|^2$,
+% %     and $\theta_k\|\blmbd^k-\bmu^k\|^2 \leq \rho\delta_k$, so
+% %     $\frac{1}{T}\sum\mathbb{E}[\|\bmu^{k+1}-\blmbd^k\|^2] 
+% %     = \mathcal{O}(\log T/T)$.
+% % \end{itemize}
+% Combining the three bounds gives \eqref{eq:ergodic-stationarity}.
+% \end{proof}
+
+% \begin{lemma}[Recursive Gradient Error]
+% \label{lem:storm}
+% Suppose that Assumptions~\ref{Ass: boundedness of c and f},
+% \ref{Ass: unbiased gradient oracle}, and
+% \ref{Ass: the expected smoothness of f} hold.
+% Then, for any $k \geq 0$, it holds that
+% \begin{equation}\label{eq:storm-error-bound}
+%     \EE\!\left[\|\be^{k+1}\|^2\right]
+%     \leq (1 - \gamma_k)^2\,\EE\!\left[\|\be^k\|^2\right]
+%     + 2(1 - \gamma_k)^2L_f^2\,\EE\!\left[\|\bx^{k+1} - \bx^k\|^2\right]
+%     + 2\gamma_k^2\sigma^2.
+% \end{equation}
+% % where $\be^k := \bd^k - \nabla f(\bx^k)$ is the STORM estimation error.
+% \end{lemma}
+
+\begin{lemma}\label{lm: the variance reduction}
+Under Assumptions~\ref{Ass: boundedness of c and f}--\ref{Ass: the expected
+smoothness of f}, let $\{(\bx^k,\blmbd^k,\bmu^k)\}$ be generated by
+Algorithm~1 with non-increasing step sizes $\{\eta_k\}_{k\geq 0}$ satisfying
+% $\eta_0 = \sup_k \eta_k$ and
+\begin{equation}\label{eq:step-cond}
+    % \eta_k < \frac{1}{2(L_\varphi + 2\rho L_c^2)},
+    % \qquad
+    % \eta_k \leq \frac{\sqrt{\gamma_k(2-\gamma_k)}}{2L_f},
+    % \quad \forall\, k \geq 0.
+    (1 - L_{c,\varphi}^k \eta_k)^{-1} \leq 2
+\end{equation} where \(L_{c,\varphi}^k = L_{\varphi}^k + 2 \rho L_c^2\). Then for any $K \geq 1$,
+\begin{equation}\label{eq:main-bound}
+    \frac{1}{K}\sum_{k=0}^{K-1}\gamma_k\,\EE\!\left[\|\be^k\|^2\right]
+    \leq
+    \frac{16\eta_0 L_f^2\bigl(\calL_\rho^0 - \calL_\rho^*\bigr)}{K}
+    + \frac{2\,\EE\!\left[\|\be^1\|^2\right]}{K}
+    + \frac{16\eta_0 L_f^2}{K}\sum_{k=0}^{K-1}\hat{\delta}_k
+    + \frac{1}{K}\sum_{k=0}^{K-1}4\gamma_k^2\sigma^2,
+\end{equation}
+where $\calL_\rho^* \geq F^*$ is a lower bound on $\calL_\rho$.
+\end{lemma}
+
+% \begin{proof}
+
+% \medskip\noindent\textbf{Step 1: Lyapunov function.}
+% Define
+% \begin{equation}\label{eq:Phi-def}
+%     \varphi^k \;:=\; \EE\!\left[\calL_\rho(\bx^k,\blmbd^k,\bmu^k)\right]
+%     + \frac{1}{8\eta_0 L_f^2}\,\EE\!\left[\|\be^k\|^2\right].
+% \end{equation}
+% Since $\eta_0 \geq \eta_k$ for any $k$, the coefficient $\frac{1}{8\eta_0 L_f^2}$
+% is fixed.
+
+% \medskip\noindent\textbf{Step 2: One-step descent.}
+% From Lemma~\ref{lem:descent} (taking full expectation of~\eqref{eq:descent}):
+% \begin{equation}\label{eq:A2}
+%     \EE\!\left[\calL_\rho^{k+1}\right]
+%     \leq \EE\!\left[\calL_\rho^k\right]
+%     - C_1^k\,\EE\!\left[\|\bx^{k+1}-\bx^k\|^2\right]
+%     + \frac{\eta_k}{2}\,\EE\!\left[\|\be^k\|^2\right]
+%     + \hat{\delta}_k,
+%     \tag{A}
+% \end{equation}
+% where $C_1^k := \frac{1}{2\eta_k} - \frac{L_\varphi}{2} - \rho L_c^2 > 0$
+% by~\eqref{eq:step-cond}.
+
+% \medskip\noindent\textbf{Step 3: Scaled STORM recursion.}
+% Multiply Lemma~\ref{lem:storm}~\eqref{eq:storm-error-bound} by
+% $\frac{1}{8\eta_0 L_f^2}$:
+% \begin{equation}\label{eq:B2}
+%     \frac{\EE[\|\be^{k+1}\|^2]}{8\eta_0 L_f^2}
+%     \leq
+%     \frac{(1-\gamma_k)^2}{8\eta_0 L_f^2}\EE\!\left[\|\be^k\|^2\right]
+%     + \frac{(1-\gamma_k)^2}{4\eta_0}\EE\!\left[\|\bx^{k+1}-\bx^k\|^2\right]
+%     + \frac{\gamma_k^2\sigma^2}{4\eta_0 L_f^2}.
+%     \tag{B}
+% \end{equation}
+
+% \medskip\noindent\textbf{Step 4: Combine and identify coefficients.}
+% Adding \eqref{eq:A2} and \eqref{eq:B2}:
+% \begin{align}
+%     \varphi^{k+1}
+%     &\leq \varphi^k
+%     - \underbrace{\Bigl(C_1^k - \frac{(1-\gamma_k)^2}{4\eta_0}\Bigr)}_{=:\,\tilde{C}_1^k\,\geq\, 0}
+%       \EE\!\left[\|\bx^{k+1}-\bx^k\|^2\right] \notag\\
+%     &\quad
+%     - \underbrace{\Bigl(\frac{\gamma_k(2-\gamma_k)}{8\eta_0 L_f^2}
+%       - \frac{\eta_k}{2}\Bigr)}_{=:\,\tilde{C}_2^k\,\geq\, 0}
+%       \EE\!\left[\|\be^k\|^2\right]
+%     + \hat{\delta}_k
+%     + \frac{\gamma_k^2\sigma^2}{4\eta_0 L_f^2}.
+%     \label{eq:one-step}
+% \end{align}
+% Here we used $1-(1-\gamma_k)^2 = \gamma_k(2-\gamma_k)$.
+% Positivity of $\tilde{C}_2^k$ follows from the second condition
+% in~\eqref{eq:step-cond}:
+% $\eta_k \leq \frac{\sqrt{\gamma_k(2-\gamma_k)}}{2L_f}$ implies
+% $\eta_k^2 \leq \frac{\gamma_k(2-\gamma_k)}{4L_f^2}$, hence
+% $\frac{\eta_k}{2} \leq \frac{\gamma_k(2-\gamma_k)}{8\eta_k L_f^2}
+% \leq \frac{\gamma_k(2-\gamma_k)}{8\eta_0 L_f^2}$,
+% where the last inequality uses $\eta_0 \geq \eta_k$.
+
+% \medskip\noindent\textbf{Step 5: Drop non-negative terms and rearrange.}
+% Since $\tilde{C}_1^k \geq 0$, dropping the $\|\bx^{k+1}-\bx^k\|^2$ term and
+% rearranging~\eqref{eq:one-step}:
+% \begin{equation}\label{eq:rearranged}
+%     \tilde{C}_2^k\,\EE\!\left[\|\be^k\|^2\right]
+%     \leq \varphi^k - \varphi^{k+1} + \hat{\delta}_k
+%     + \frac{\gamma_k^2\sigma^2}{4\eta_0 L_f^2}.
+% \end{equation}
+% Since $\tilde{C}_2^k \geq \frac{\gamma_k(2-\gamma_k)}{8\eta_0 L_f^2}
+% - \frac{\eta_k}{2} \geq \frac{\gamma_k(2-\gamma_k)}{16\eta_0 L_f^2}$
+% (using $\frac{\eta_k}{2} \leq \frac{\gamma_k(2-\gamma_k)}{16\eta_0 L_f^2}$
+% which follows from the step size condition), and since
+% $\gamma_k(2-\gamma_k) \geq \gamma_k$ for $\gamma_k \in (0,1)$, we have
+% $\tilde{C}_2^k \geq \frac{\gamma_k}{16\eta_0 L_f^2}$.
+% Substituting into~\eqref{eq:rearranged}:
+% \begin{equation}
+%     \frac{\gamma_k}{16\eta_0 L_f^2}\,\EE\!\left[\|\be^k\|^2\right]
+%     \leq \varphi^k - \varphi^{k+1} + \hat{\delta}_k
+%     + \frac{\gamma_k^2\sigma^2}{4\eta_0 L_f^2}.
+% \end{equation}
+
+% \medskip\noindent\textbf{Step 6: Telescoping.}
+% Summing over $k = 0, \ldots, K-1$:
+% \begin{equation}
+%     \frac{1}{16\eta_0 L_f^2}\sum_{k=0}^{K-1}\gamma_k\,\EE\!\left[\|\be^k\|^2\right]
+%     \leq \varphi^0 - \varphi^K
+%     + \sum_{k=0}^{K-1}\hat{\delta}_k
+%     + \frac{1}{4\eta_0 L_f^2}\sum_{k=0}^{K-1}\gamma_k^2\sigma^2.
+% \end{equation}
+% Using $\varphi^K \geq \calL_\rho^* + \frac{\EE[\|\be^K\|^2]}{8\eta_0 L_f^2} \geq \calL_\rho^*$
+% and expanding $\varphi^0 = \calL_\rho^0 + \frac{\EE[\|\be^0\|^2]}{8\eta_0 L_f^2}$
+% where $\EE[\|\be^0\|^2] \leq 4\sigma^2$ (bounded by initialization), then
+% multiplying both sides by $\frac{16\eta_0 L_f^2}{K}$ gives
+% \begin{equation}
+%     \frac{1}{K}\sum_{k=0}^{K-1}\gamma_k\,\EE\!\left[\|\be^k\|^2\right]
+%     \leq
+%     \frac{16\eta_0 L_f^2(\calL_\rho^0 - \calL_\rho^*)}{K}
+%     + \frac{2\,\EE[\|\be^1\|^2]}{K}
+%     + \frac{16\eta_0 L_f^2}{K}\sum_{k=0}^{K-1}\hat{\delta}_k
+%     + \frac{1}{K}\sum_{k=0}^{K-1}4\gamma_k^2\sigma^2,
+% \end{equation}
+% which is~\eqref{eq:main-bound}.
+% \end{proof}
+\begin{lemma}[KKT residual stationarity]
+\begin{align}
+&\frac{1}{K}\sum_{k=0}^{K-1}\mathbb{E}\!\left[\|\zeta_x^{k+1}\|^2\right] \notag \\
+\leq &
+\left(\frac{\eta_0 L_f^2}{\gamma_K \cdot K} + \frac{1}{\eta_{K-1} \cdot K}\right)
+\!\bigl(\mathcal{L}_\rho^0 - \mathcal{L}^*\bigr)
++ \frac{2\,\mathbb{E}\!\left[\|\mathbf{e}^1\|^2\right]}{\gamma_K \cdot K}
++ \frac{\displaystyle\sum_{k=0}^{K-1} 4\gamma_k^2\sigma^2}{\gamma_K \cdot K}
++ \frac{1}{K}\sum_{k=0}^{K-1}\delta_k \notag \\
+&\quad
++ \left[\frac{1}{\eta_{K-1} \cdot K} + \frac{16\eta_0 L_f^2}{\gamma_K \cdot K}\right]
+\sum_{k=0}^{K-1}\hat{\delta}_k
+\end{align}
+    
+\end{lemma}
+\begin{lemma}[Violation Bound]\label{lem:feasibility}
+Under the same conditions as Lemma~\ref{lem:sufficient-descent},
+with $\delta_k = c/(k+1)$ for some $c > 0$, we have
+\begin{equation}\label{eq:feasibility-rate}
+  \textcolor{red}{%
+    \frac{1}{T}\sum_{k=0}^{T-1}\mathbb{E}\!\left[\|\bc(\bx^{k+1})\|^2\right]
+    = \mathcal{O}\!\left(\frac{\log T}{T}\right)
+  }
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Let $r_k := \blmbd^k - \bmu^k$. By the $\blmbd$-update
+\eqref{eq:lambda-update}, we have the identity
+\begin{equation}\label{eq:r-feasibility}
+  \|r_{k+1}\|^2 = \|\blmbd^{k+1} - \bmu^{k+1}\|^2 = \rho^2\|\bc(\bx^{k+1})\|^2,
+\end{equation}
+so it suffices to bound $\frac{1}{T}\sum_{k=0}^{T-1}\mathbb{E}[\|r_{k+1}\|^2]$.
+
+\medskip\noindent\textbf{Step 1: Derive the recursion for $\|r_{k+1}\|^2$.}
+By the triangle inequality and $(a+b)^2 \leq 2(a^2+b^2)$,
+\begin{equation}\label{eq:r-triangle}
+  \|r_{k+1}\|^2
+  \leq 2\|\blmbd^{k+1} - \blmbd^k\|^2 + 2\|\blmbd^k - \bmu^{k+1}\|^2.
+\end{equation}
+Applying Lemma~\ref{lem:basic-relations}~\eqref{eq:mu-lambda-diff}
+to the second term and \eqref{eq:lambda-diff} to the first:
+\begin{align}
+  \|\blmbd^k - \bmu^{k+1}\|^2 &= (1-\theta_k)^2\|r_k\|^2, \notag\\
+  \mathbb{E}[\|\blmbd^{k+1}-\blmbd^k\|^2 \mid \mathcal{F}_k]
+  &\leq 2\rho^2 L_c^2\,\mathbb{E}[\|\bx^{k+1}-\bx^k\|^2 \mid \mathcal{F}_k]
+    + \frac{\rho^2\delta_k^2}{2}. \notag
+\end{align}
+Substituting into \eqref{eq:r-triangle} and using
+$(1-\theta_k)^2 \leq (1-\theta_k)$ (since $\theta_k \in (0,1]$):
+\begin{equation}\label{eq:r-recursion}
+  \mathbb{E}[\|r_{k+1}\|^2 \mid \mathcal{F}_k]
+  \leq 2(1-\theta_k)\|r_k\|^2
+       + 4\rho^2 L_c^2\,\mathbb{E}[\|\bx^{k+1}-\bx^k\|^2 \mid \mathcal{F}_k]
+       + \rho^2\delta_k^2.
+\end{equation}
+
+\medskip\noindent\textbf{Step 2: Sum the recursion.}
+Rearranging \eqref{eq:r-recursion}:
+\begin{equation}
+  2\theta_k\|r_k\|^2
+  \leq 2\|r_k\|^2 - \mathbb{E}[\|r_{k+1}\|^2 \mid \mathcal{F}_k]
+       + 4\rho^2 L_c^2\,\mathbb{E}[\|\bx^{k+1}-\bx^k\|^2 \mid \mathcal{F}_k]
+       + \rho^2\delta_k^2.
+\end{equation}
+Taking total expectation and summing over $k = 0,\ldots,T-1$:
+\begin{equation}\label{eq:theta-r-sum}
+  2\sum_{k=0}^{T-1}\theta_k\,\mathbb{E}[\|r_k\|^2]
+  \leq 2\sum_{k=0}^{T-1}\mathbb{E}[\|r_k\|^2]
+       - \sum_{k=0}^{T-1}\mathbb{E}[\|r_{k+1}\|^2]
+       + 4\rho^2 L_c^2\sum_{k=0}^{T-1}\mathbb{E}[\|\bx^{k+1}-\bx^k\|^2]
+       + \rho^2\sum_{k=0}^{T-1}\delta_k^2.
+\end{equation}
+Note that the first two sums on the right telescope:
+\begin{equation}\label{eq:telescope-r}
+  2\sum_{k=0}^{T-1}\mathbb{E}[\|r_k\|^2] - \sum_{k=0}^{T-1}\mathbb{E}[\|r_{k+1}\|^2]
+  = \sum_{k=0}^{T-1}\mathbb{E}[\|r_k\|^2] - \sum_{k=1}^{T-1}\mathbb{E}[\|r_k\|^2]
+    + \mathbb{E}[\|r_0\|^2] - \mathbb{E}[\|r_T\|^2]
+  \leq \mathbb{E}[\|r_0\|^2].
+\end{equation}
+Substituting \eqref{eq:telescope-r} into \eqref{eq:theta-r-sum}:
+\begin{equation}\label{eq:theta-r-final}
+  2\sum_{k=0}^{T-1}\theta_k\,\mathbb{E}[\|r_k\|^2]
+  \leq \|r_0\|^2
+       + 4\rho^2 L_c^2\sum_{k=0}^{T-1}\mathbb{E}[\|\bx^{k+1}-\bx^k\|^2]
+       + \rho^2\sum_{k=0}^{T-1}\delta_k^2.
+\end{equation}
+Dividing both sides of \eqref{eq:theta-r-final} by $T$:
+  \textcolor{red}{
+\begin{equation}\label{eq:feasibility-weighted}
+  \frac{2}{T}\sum_{k=0}^{T-1}\theta_k\,\mathbb{E}[\|r_k\|^2]
+  \leq \frac{\|r_0\|^2}{T}
+       + \frac{4\rho^2 L_c^2}{T}\sum_{k=0}^{T-1}\mathbb{E}[\|\bx^{k+1}-\bx^k\|^2]
+       + \frac{\rho^2}{T}\sum_{k=0}^{T-1}\delta_k^2.
+\end{equation}}
+% where the last equality follows from
+% Lemma~\ref{lem:sufficient-descent} (which gives
+% $\frac{1}{T}\sum_{k=0}^{T-1}\mathbb{E}[\|\bx^{k+1}-\bx^k\|^2]
+% = \mathcal{O}(\log T / T)$)
+% and $\frac{1}{T}\sum_{k=0}^{T-1}\delta_k^2 = \mathcal{O}(1/T)$
+% for $\delta_k = c/(k+1)$.
+% Since $\theta_k \geq 0$ and $\|r_k\|^2 = \rho^2\|\bc(\bx^k)\|^2 \geq 0$,
+% \eqref{eq:feasibility-weighted} implies that
+% $\theta_k\,\mathbb{E}[\|\bc(\bx^k)\|^2] \to 0$ in a weighted ergodic sense.
+
+% \medskip\noindent\textbf{Step 4: Bound each term.}
+% By Lemma~\ref{lem:sufficient-descent} and Lemma~\ref{lem:storm}:
+% \begin{equation}
+%   \frac{1}{T}\sum_{k=0}^{T-1}\mathbb{E}[\|\bx^{k+1}-\bx^k\|^2]
+%   = \mathcal{O}\!\left(\frac{\log T}{T}\right).
+% \end{equation}
+% For $\delta_k = c/(k+1)$:
+% \[
+%   \frac{1}{T}\sum_{k=0}^{T-1}\delta_k = \mathcal{O}\!\left(\frac{\log T}{T}\right),
+%   \qquad
+%   \frac{1}{T}\sum_{k=0}^{T-1}\delta_k^2 = \mathcal{O}\!\left(\frac{1}{T}\right).
+% \]
+% Substituting into \eqref{eq:feasibility-pre} and applying \eqref{eq:r-feasibility}
+% yields \eqref{eq:feasibility-rate}.
+\end{proof}
+
+\section{Numerical Experiments}
+\label{sec:experiments}
+
+\appendix
+\section{Supported Lemmas}
+\label{sec:appendix-supported}
+
+\begin{lemma}[Vector Azuma-Hoeffding Inequality]
+\label{lem:vector-azuma}
+Let $\{\bv^k\}_{k=1}^K$ be a vector-valued martingale difference
+sequence adapted to filtration $\{\calF_k\}_{k=0}^K$, satisfying
+\begin{equation}
+    \EE[\bv^k \mid \calF_{k-1}] = \zero,
+    \qquad
+    \|\bv^k\| \leq a_k,\quad k=1,\ldots,K.
+\end{equation}
+Then for any $\delta \in (0,1)$, with probability at least $1-\delta$,
+\begin{equation}
+    \left\|\sum_{k=1}^{K}\bv^k\right\|
+    \leq
+    3\sqrt{\log(1/\delta)\sum_{k=1}^{K}a_k^2}.
+\end{equation}
+\end{lemma}
+
+\noindent
+The above bound is a standard vector-valued Azuma-Hoeffding concentration result.
+
+\clearpage
+\small
+\bibliographystyle{plain}
+\bibliography{refer}
+\end{document}

@@ -1,0 +1,619 @@
+Content selection saved. Describe the issue below:
+
+Revisiting AdaGrad in Stochastic Convex Optimization: Last Iterates, High Probability, and Lower Bounds
+
+AdaGrad and AdaGrad-Norm are widely used adaptive methods, but their precise behavior in stochastic convex optimization remains less understood. We first show that AdaGrad-Norm and AdaGrad do not admit any universal last-iterate rate, even under sub-Gaussian noise and bounded iterates. We then prove that bounded variance alone is too weak: even with bounded iterates, it cannot yield high-probability average-iterate rates, and without bounded iterates it may not even guarantee convergence in expectation. Besides, we construct tight $\Omega(\log T/\sqrt{T})$ lower bounds for both AdaGrad-Norm and AdaGrad under sub-Gaussian noise, showing that $\log T$ in existing average-iterate upper bounds is unavoidable. Finally, we show that this $\log T$ loss disappears once bounded-iterate condition is imposed: under a general ABC condition, both methods achieve rates ${O}(1/\sqrt{T})$ .
+
+1 Introduction
+
+AdaGrad scales its updates using the gradients observed so far, replacing a prescribed stepsize schedule by a data-dependent normalization. The original coordinate-wise method was developed in online convex optimization by McMahan and Streeter [32] and Duchi et al. [8] . AdaGrad-Norm instead uses a single accumulator for the cumulative squared gradient norms [ 45 ] . Although the methods share a common regret-analysis framework, their stochastic guarantees depend on the noise model, the output, and the behavior of the iterates.
+
+For smooth convex objectives, average-iterate bounds are available for delayed AdaGrad-type schemes [ 24 ] , standard AdaGrad-Norm under suitable tail assumptions [ 3 , 29 ] , and coordinate-wise AdaGrad on bounded domains [ 28 ] . Log-free, noise-adaptive rates also have precedents on bounded domains or under bounded-iterate assumptions [ 22 , 43 ] . These guarantees do not automatically describe the final point returned by an implementation. Our central question is therefore whether the standard updates admit an explicit, vanishing last-iterate rate under the same smoothness, light-tail, and stability conditions.
+
+Our main result gives a negative answer in the general conditional-oracle model. For every proposed positive sequence $r_{T}\to 0$ , we construct one smooth convex objective and one infinite-horizon, conditionally unbiased sub-Gaussian oracle such that the expected last-iterate error exceeds $r_{T}$ by an unbounded factor along a deterministic subsequence. All iterates remain inside an arbitrarily prescribed radius. Thus the issue is not merely a missing polynomial exponent: no prescribed vanishing rate is valid uniformly over this class . The hard instance itself converges, separating convergence from a uniform quantitative guarantee. Its oracle is time- and history-dependent, so the result does not preclude rates under additional sampling restrictions.
+
+A second question concerns the confidence of an averaged output. Averaging often gives guarantees unavailable for the last iterate, but we show that it does not repair the poor confidence dependence of unmodified AdaGrad under finite variance. Our construction combines three properties: a fixed infinite-horizon instance , the uniformly averaged iterate , and any prescribed almost-sure trajectory radius . This output distinction matters: the lower bound in Chezhegov et al. [5, Theorem B.4] , specialized to zero momentum, is stated for the last iterate. A last-iterate lower bound alone does not establish an average-iterate lower bound. Our result excludes polynomial decay in time with only polylogarithmic dependence on the inverse failure probability.
+
+The remaining results place these two limitations in context. Without a common stability radius, finite variance permits constant worst-case expected average error. Even under bounded, hence sub-Gaussian, noise, a scalar construction gives an $\Omega(\log T/\sqrt{T})$ average-error lower bound for the fixed-parameter unprojected updates and a corresponding inverse-square-root SGD schedule. With bounded iterates, by contrast, classical regret analysis yields explicit noise-adaptive average-error bounds under the conditional ABC model. The distinction between a fixed instance and a horizon-dependent family is kept explicit throughout: choosing a different function for each horizon does not establish nonconvergence on one fixed instance.
+
+1.1 Our contributions
+
+Table 1 summarizes the results in the order developed below. Every lower-bound construction is one-dimensional and applies to both AdaGrad-Norm and coordinate-wise AdaGrad.
+
+No universal vanishing last-iterate rate. Theorem 3.1 shows that every prescribed $r_{T}\to 0$ is violated by a single fixed sub-Gaussian instance with bounded iterates. Its expected error satisfies $\mathbb{E}[\Delta_{T_{n}}]/r_{T_{n}}\to\infty$ along a deterministic subsequence. Delayed bounded pulses keep the accumulator small until an arbitrarily late time; the resulting displacement defeats the proposed rate without preventing convergence of the constructed instance.
+
+A high-probability limitation for the average iterate. Theorem 3.5 excludes polynomial-in- $T$ rates with only polynomial dependence on $\log(1/\delta)$ for uniform averaging , on one fixed infinite-horizon finite-variance instance inside any prescribed radius $D>0$ . A pulse cascade increases the accumulator through alternating small displacements. The combination of fixed-instance quantifiers, averaged output, and arbitrary stability radius distinguishes the statement from the last-iterate lower bound of Chezhegov et al. [5] ; the general heavy-tail difficulty itself is already known.
+
+Average-error lower bounds without a uniform stability radius. Theorem 3.8 gives a horizon-dependent family with constant worst-case expected average error under independent identically distributed additive finite-variance noise. Theorem 3.10 gives $\Omega(\eta\sigma\log T/\sqrt{T})$ under sub-Gaussian noise, even from a minimizer. Both concern fixed algorithm parameters. The latter construction also proves a smooth-convex average-error lower bound for inverse-square-root SGD; the final part of Appendix D shows that its SGD version can use independent bounded additive noise.
+
+An explicit noise-adaptive ABC upper bound. Under bounded iterates, Theorem 3.14 gives $O(T^{-1}+\sqrt{C/T})$ expected average error, with initialization and the ABC coefficients explicit. The $C=0$ case gives $O(T^{-1})$ even with state-dependent noise. This is a unified extension of classical regret and self-bounding analysis [ 8 , 22 , 43 ] , not a new noise-adaptation principle. It assumes, rather than proves, trajectory stability.
+
+Table 1: Results for standard unprojected AdaGrad-Norm and AdaGrad on smooth convex objectives with conditionally unbiased oracles. Errors are in expectation unless high probability is specified. a For each prescribed $r_{T}\to 0$ , one fixed infinite-horizon instance satisfies $\mathbb{E}[\Delta_{T_{n}}]/r_{T_{n}}\to\infty$ . b One fixed infinite-horizon instance, uniformly averaged output, and any prescribed radius $D>0$ ; the excluded bounds have polynomial decay in $T$ and only polynomial dependence on $\log(1/\delta)$ . c Horizon-dependent families with fixed algorithm parameters and no common trajectory radius. The upper bound is an explicit ABC extension of classical analysis.
+
+1.2 Related work
+
+Last-iterate convergence versus uniform rates.
+
+Last-iterate convergence has been studied extensively for stochastic gradient methods [ 4 , 48 , 42 , 36 , 37 , 26 ] , stochastic mirror descent [ 31 ] , and momentum methods based on follow-the-regularized-leader updates [ 23 ] . For adaptive methods, Li and Orabona [24] analyze delayed updates, while Jin et al. [19] , Jin and Wang [18] study qualitative stochastic convergence of current-gradient AdaGrad under their respective assumptions. The deterministic nonsmooth analysis of Preobrazhenskaia et al. [38] concerns another setting. Theorem 3.1 does not assert a first qualitative convergence theorem. It instead rules out every prescribed uniform vanishing rate under smoothness, bounded iterates, and a general conditional sub-Gaussian oracle. The distinction is substantive: almost-sure convergence of individual trajectories does not supply a uniform expected rate for the entire oracle class.
+
+High-probability guarantees and the averaged output.
+
+Foundational and subsequent high-probability analyses of stochastic mirror descent and gradient methods include Nemirovski et al. [34] , Gorbunov et al. [12] , Gorbunov et al. [13] , Li and Orabona [25] . Clipping can control heavy-tailed gradients [ 6 , 27 ] ; high-probability analyses for adaptive methods include Kavis et al. [20] , Attia and Koren [3] , Hong and Lin [16] , Hong and Lin [15] . Most directly, Chezhegov et al. [5] establish poor confidence dependence for unmodified adaptive methods and show how clipping improves it. Their Theorem B.4 concerns the event $f(x_{K})-f(x^{\star})\geq\varepsilon$ for the last iterate of their momentum-AdaGrad update; setting the momentum coefficient to zero recovers AdaGrad-Norm. Our Theorem 3.5 directly controls $f(\bar{x}_{T})-f(x^{\star})$ instead, on one fixed infinite-horizon instance within an arbitrary prescribed radius. The proof keeps the post-cascade iterates on the same side of the minimizer, so averaging cannot cancel the long-lived displacement. This is an averaged-output obstruction, not an inference from a last-iterate event. It remains compatible with weaker confidence bounds obtained from expectation by Markov’s inequality.
+
+Lower bounds for SGD and adaptive methods.
+
+Classical oracle-complexity and information-theoretic results establish an $\Omega(T^{-1/2})$ stochastic term for suitable convex problem classes [ 35 , 1 , 39 ] . The logarithmic lower bound of Harvey et al. [14] concerns a nonsmooth last iterate ; it does not give a smooth-convex lower bound for uniform averaging. Lower bounds for nonconvex stationarity [ 2 , 17 ] and structured nonconvex objectives [ 41 ] concern different settings. Recent smooth-convex SGD analyses include last-iterate upper bounds [ 31 , 11 ] . We are not aware of an earlier $\Omega(\log T/\sqrt{T})$ lower bound for the exact combination considered here: uniformly averaged unprojected SGD, a smooth convex objective, bounded noise, and a fixed inverse-square-root stepsize schedule . Theorem 3.10 and its SGD extension in Appendix D establish this statement directly. This scoped comparison is not a lower bound for all SGD schedules: properly tuned finite-horizon steps and averaging admit different guarantees [ 34 ] .
+
+Adaptive methods and noise adaptation.
+
+The online analysis of McMahan and Streeter [32] , Duchi et al. [8] provides the starting point for adaptive normalization. Related developments include adaptive steplength rules and variants of AdaGrad, RMSProp, and Adam [ 47 , 33 , 40 ] , delayed AdaGrad-type schemes [ 24 ] , and standard updates under stronger tail assumptions [ 3 , 29 ] . On a bounded convex set, Levy et al. [22] obtain a log-free $O(LD^{2}/T+\sigma D/\sqrt{T})$ expected bound for scalar AdaGrad. Under bounded iterates and component-function assumptions, Vaswani et al. [43] derive an analogous noise-adaptive transition using regret, self-bounding, and a quadratic inequality. Their residual-noise parameter differs from the conditional variance bound used here. Coordinate-wise adaptation under anisotropic smoothness and noise is studied by Liu et al. [28] . Our Theorem 3.14 keeps constants explicit under the global conditional ABC model. A broader nonconvex literature studies scalar and coordinate-wise normalization [ 7 , 20 , 10 , 9 , 30 , 46 , 44 , 16 ] .
+
+2 Preliminaries and setup
+
+Problem and notation.
+
+We consider
+
+$\min_{x\in\mathbb{R}^{d}}f(x),$ (Opt)
+
+where $f$ is differentiable, convex, and attains its minimum. Fix $x^{\star}\in\arg\min f$ and write
+
+$f^{\star}=f(x^{\star}),\qquad\Delta_{t}=f(x_{t})-f^{\star},\qquad\bar{x}_{T}=\frac{1}{T}\sum_{t=1}^{T}x_{t}.$
+
+When a hard objective depends on the horizon, we write $f_{T}$ and $f_{T}^{\star}$ explicitly. The corresponding trajectory is always generated on that chosen instance. We use Euclidean norms, $u_{+}=\max\{u,0\}$ , and the usual floor and ceiling functions. For nonnegative sequences, $a_{T}=O(b_{T})$ and $a_{T}=\Omega(b_{T})$ denote eventual upper and lower bounds up to positive constants; $a_{T}\asymp b_{T}$ means both. Unless stated otherwise, constants may depend on fixed problem and algorithm parameters, but not on $T$ or the failure probability.
+
+Oracle and filtration.
+
+At $x_{t}$ , the oracle returns $g_{t}=\nabla f(x_{t})+\xi_{t}$ . The initialization $x_{1}$ is deterministic, $\mathcal{F}_{0}$ is trivial, and $\mathcal{F}_{t}=\sigma(g_{1},\ldots,g_{t})$ , so $x_{t}$ is $\mathcal{F}_{t-1}$ -measurable. Every conditional assumption below refers to the history before the current query and holds for all $t\geq 1$ . The oracle may depend on time and history; independent identically distributed noise is imposed only where stated. We distinguish one fixed infinite-horizon instance from a family whose objective or oracle changes with $T$ .
+
+To conduct the theoretical analysis, we introduce some assumptions below.
+
+For some $L>0$ , for all $x,y\in\mathbb{R}^{d}$ ,
+
+$\|\nabla f(x)-\nabla f(y)\|\leq L\|x-y\|.$
+
+The oracle satisfies $\mathbb{E}[g_{t}\mid\mathcal{F}_{t-1}]=\nabla f(x_{t})$ .
+
+These two assumptions are used throughout. The results differ in which of the following moment conditions is imposed.
+
+For some $\sigma>0$ ,
+
+$\mathbb{E}\!\left[\exp\!\left(\frac{\|\xi_{t}\|^{2}}{\sigma^{2}}\right)\middle|\mathcal{F}_{t-1}\right]\leq e.$
+
+For some $\sigma\geq 0$ , $\mathbb{E}[\|\xi_{t}\|^{2}\mid\mathcal{F}_{t-1}]\leq\sigma^{2}$ .
+
+There are $A,B,C\geq 0$ such that
+
+$\mathbb{E}[\|g_{t}\|^{2}\mid\mathcal{F}_{t-1}]\leq A\Delta_{t}+B\|\nabla f(x_{t})\|^{2}+C.$ (2.1)
+
+Conditional Jensen’s inequality shows that Assumption 3 implies Assumption 4 . Together with unbiasedness, bounded variance implies the ABC condition with $(A,B,C)=(0,1,\sigma^{2})$ . The ABC framework therefore includes both preceding noise models [ 21 ] . The case $C=0$ permits state-dependent noise; it does not require every gradient to be deterministic.
+
+Algorithms.
+
+For $b_{0},\eta>0$ , AdaGrad-Norm uses
+
+$b_{t}^{2}=b_{0}^{2}+\sum_{s=1}^{t}\|g_{s}\|^{2},\qquad x_{t+1}=x_{t}-\eta\frac{g_{t}}{b_{t}}.$ (AdaGrad-Norm)
+
+For $b_{0,i},\eta>0$ , coordinate-wise AdaGrad uses
+
+$b_{t,i}^{2}=b_{0,i}^{2}+\sum_{s=1}^{t}g_{s,i}^{2},\qquad x_{t+1,i}=x_{t,i}-\eta\frac{g_{t,i}}{b_{t,i}},\quad 1\leq i\leq d.$ (AdaGrad)
+
+Both updates are unprojected, and each denominator includes the current gradient; it is generally not $\mathcal{F}_{t-1}$ -measurable. In dimension one, the algorithms coincide when their initial accumulators agree. All lower bounds exploit this common scalar update, whereas the upper bound treats the two normalizations separately and allows arbitrary positive $b_{0,i}$ .
+
+3 Main results
+
+We first rule out a universal last-iterate rate, then show that averaging does not remove the high-probability obstruction under finite variance. The next two results address expected average error without a common stability radius. The final theorem gives the complementary noise-adaptive upper bound when stability is available.
+
+3.1 No universal vanishing last-iterate rate
+
+Our first result concerns the expected error at the actual final iterate. Neither smoothness, sub-Gaussian noise, nor an arbitrarily small trajectory radius supplies a universal vanishing rate in the conditional-oracle model.
+
+Fix $L,\sigma,b_{0},\eta,D>0$ . For every prescribed sequence $r_{T}>0$ with $r_{T}\to 0$ , there exist a single convex $L$ -smooth quadratic $f:\mathbb{R}\to\mathbb{R}$ , a single infinite-horizon oracle satisfying Assumptions 2 and 3 , and deterministic $T_{n}\to\infty$ , such that both algorithms, initialized at $x_{1}=x^{\star}=0$ , satisfy $|x_{t}-x^{\star}|\leq D$ almost surely for all $t\geq 1$ and
+
+$\frac{\mathbb{E}[f(x_{T_{n}})-f^{\star}]}{r_{T_{n}}}\longrightarrow\infty.$ (3.1)
+
+At the minimizer of a small quadratic, both the iterate and accumulator stay unchanged until a nonzero pulse occurs. At scheduled times $\tau_{n}$ , allow symmetric noise of fixed magnitude with probability $q/(n+1)^{2}$ , and switch off all noise after the first pulse. That pulse creates a fixed displacement, followed by deterministic contraction. Its occurrence probability gives $\mathbb{E}[\Delta_{\tau_{n}+1}]\geq c_{1}/(n+1)^{2}$ ; see ( A.4 ). Choosing $\tau_{n}$ so that $r_{\tau_{n}+1}\leq(n+1)^{-4}$ proves the claim. The delay, rather than growing noise magnitude, defeats the rate. Appendix A also verifies asymptotic convergence of this particular instance. ∎
+
+The quantifiers select an instance after the proposed sequence $r_{T}$ , but then hold it fixed for all evaluation times. Thus the theorem is stronger than excluding every polynomial exponent separately, and is not a horizon-by-horizon change of oracle. The quantifier is $\forall(r_{T}\to 0)\,\exists\mathcal{I}\,\exists(T_{n})$ , not the existence of one instance slower than every possible sequence. The constructed instance satisfies $\mathbb{E}[\Delta_{t}]\to 0$ ; no general qualitative convergence theorem is asserted. An explicit schedule, independent of a proposed rate, gives
+
+$\mathbb{E}[\Delta_{T_{n}}]\geq\frac{c}{(1+\log\log T_{n})^{2}},\qquad T_{n}=\lceil\exp(\exp n)\rceil+1,$ (3.2)
+
+where $c>0$ depends only on $L,\sigma,b_{0},\eta,D$ . The schedule for an arbitrary $r_{T}$ need not be this particular one. The obstruction uses delayed, time- and history-dependent noise, not unbounded pulse magnitudes; it does not rule out rates under additional oracle restrictions.
+
+The construction uses a fixed objective and bounded pulses. The objective is a strongly convex quadratic with curvature $\ell=\min\{L,b_{0}/(2\eta)\}$ , independent of the proposed rate. Its minimizer, the initialization, the radius, and the pulse magnitude $M$ are also fixed independently of $r_{T}$ . In fact, the construction satisfies the stronger pathwise bounds $|\xi_{t}|\leq M$ and $|g_{t}|\leq\ell d_{0}+M$ , with $d_{0}\leq D$ . Only the scheduled pulse times depend on $r_{T}$ . Thus the obstruction is neither a flattening sequence of objectives nor increasingly large gradients. It arises because elapsed time need not force growth of the adaptive accumulator: the oracle can remain noiseless at a minimizer for an arbitrarily long interval. The uniform moment assumptions control pulse size and probability but do not impose a clock on when stochastic variation must occur.
+
+Averaging can still have a rate because it dilutes a late excursion: before the pulse, the objective error is zero and the accumulator stays at $b_{0}$ ; immediately afterward, the last iterate has a fixed error. A late evaluation can therefore detect the entire displacement, whereas uniform averaging dilutes a short late excursion by the horizon. This explains why Theorem 3.14 can give an explicit expected average-iterate rate on the same class. An average-iterate upper bound cannot be converted into a last-iterate rate merely by substituting the final point.
+
+3.2 A high-probability limitation even for the average iterate
+
+We next weaken the noise assumption to finite variance and ask for a high-probability guarantee for the uniform average , rather than the last iterate. The following result combines one fixed infinite-horizon instance, this averaged output, and any prescribed bounded-trajectory radius.
+
+Fix $L,\sigma,b_{0},\eta,D>0$ . There exist a fixed one-dimensional convex $L$ -smooth quadratic and a fixed infinite-horizon oracle satisfying Assumptions 2 and 4 , such that both algorithms, initialized at $x_{1}=x^{\star}=0$ , satisfy $|x_{t}-x^{\star}|\leq D$ almost surely for every $t\geq 1$ . There also exist deterministic $T_{n}\to\infty$ , $\delta_{n}\in(0,1/2)$ , and constants $c_{\star},K>0$ such that
+
+$\displaystyle\mathbb{P}\{f(\bar{x}_{T_{n}})-f^{\star}\geq c_{\star}\}$ $\displaystyle\geq 2\delta_{n},$ (3.3) $\displaystyle\log(1/\delta_{n})$ $\displaystyle\leq K(1+\log T_{n})^{2}.$
+
+Consequently, no bound
+
+$f(\bar{x}_{T})-f^{\star}\leq K_{0}\bigl[T^{-a}+P(\log(1/\delta))T^{-b}\bigr],\qquad a,b>0,$ (3.4)
+
+can hold with probability at least $1-\delta$ for every $T\geq 1$ and $\delta\in(0,1/2)$ , with $K_{0}<\infty$ and a fixed polynomial $P$ , nonnegative on $[\log 2,\infty)$ , independent of $T,\delta$ .
+
+A single large gradient can move the iterate almost $\eta$ , so it cannot respect an arbitrary radius $D<\eta$ . Instead, arrange a finite random cascade whose designated path alternates between $0$ and $-d_{0}$ , while the accumulator grows geometrically; see ( B.2 ). Rare pulses preserve a common conditional variance bound, and every departure switches off the noise. Stopping after an odd number $n$ of pulses leaves a nonzero displacement and an exponentially large accumulator, so the displacement survives for an exponentially long horizon. The designated event has probability at least $\exp(-O(n^{2}))$ , yielding ( 3.3 ). Appendix B checks all paths and the fixed-oracle quantifier. ∎
+
+Our result concerns the averaged output on one fixed bounded instance. The last-iterate event in Chezhegov et al. [5, Theorem B.4] does not by itself lower-bound $f(\bar{x}_{T})-f^{\star}$ . Convexity gives an upper bound on $f(\bar{x}_{T})$ by the mean of the iterate values, not the lower bound needed here. Our cascade instead creates a displacement that persists for a substantial fraction of the horizon. On the designated event all iterates are nonpositive and the late ones have magnitude at least $d_{0}/2$ , so their uniform average has magnitude at least $d_{0}/4$ ; see ( B.8 ). The argument directly excludes the stated confidence dependence even for this more forgiving output.
+
+The fixed-instance quantifier is particularly strong here. Once the cascade law has been chosen from $L,\sigma,b_{0},\eta,D$ , the same instance excludes every pair of positive exponents and every fixed polynomial appearing in ( 3.4 ). It is not retuned for a proposed confidence bound. Small oscillations consume normalization while leaving little net displacement; after the last designated pulse, the accumulated normalization prevents rapid recovery. This separates trajectory containment from concentration of the averaged objective error. In contrast, a single large initial pulse need not respect a prescribed radius smaller than $\eta$ .
+
+The obstruction concerns confidence dependence rather than nonconvergence: the levels $\delta_{n}$ shrink with the horizons. The theorem does not say that the averaged error fails to vanish for a fixed $\delta$ , nor that averaging fails almost surely on the hard instance. Indeed, Theorem 3.14 and Markov’s inequality give, in dimension one, for every $\delta>0$ ,
+
+$\mathbb{P}\!\left\{f(\bar{x}_{T})-f^{\star}>\frac{1}{\delta}\left(\frac{2L\Gamma^{2}+\Gamma b_{0}}{T}+\frac{\Gamma\sigma}{\sqrt{T}}\right)\right\}\leq\delta,\quad\Gamma=\frac{D^{2}}{2\eta}+\eta.$ (3.5)
+
+Its $1/\delta$ dependence is outside the class excluded by ( 3.4 ). Thus the substantive distinction is that uniform averaging does not upgrade finite variance to a polynomial rate with polylogarithmic confidence dependence , even on one fixed bounded instance.
+
+3.3 Finite variance permits constant worst-case average error
+
+The previous theorem retains a bounded trajectory and isolates confidence dependence. If that stability condition is removed, finite variance alone does not even supply a vanishing uniform worst-case expected average-error bound for fixed algorithm parameters.
+
+Fix $\sigma,b_{0},\eta>0$ . For every sufficiently large integer $T$ , there exist a one-dimensional convex $1$ -smooth function $f_{T}$ with $f_{T}^{\star}=0$ and an oracle with independent identically distributed additive noise satisfying Assumptions 2 and 4 , such that both algorithms, initialized at $x_{1}=1$ with $x^{\star}=0$ , satisfy
+
+$\mathbb{E}[f_{T}(\bar{x}_{T})-f_{T}^{\star}]\geq\frac{\eta\sigma^{2}}{256\sqrt{b_{0}^{2}+\sigma^{2}/16}}.$ (3.6)
+
+The objective and noise law may depend on $T$ , but the initial distance, algorithm parameters, variance bound, and displayed lower-bound constant do not.
+
+Use a smooth hinge with slope $a=\sigma/(4\sqrt{T})$ . In its linear region, the oracle returns $-a$ with probability $1-1/T$ ; a rare large positive correction preserves unbiasedness and bounded variance. With probability at least $1/4$ , no correction occurs before $T$ . On that event the accumulator stays bounded, the iterates move away from the minimizer, and their average displacement is of order $\eta aT$ . The objective gap is therefore of order $\eta a^{2}T$ , a positive constant in $T$ . Equations ( C.4 )–( C.5 ) in Appendix C make the constants explicit. ∎
+
+This horizon-wise lower bound concerns uniform worst-case convergence, not a failure of convergence on one fixed instance. Unlike the preceding pulse constructions, it uses independent identically distributed additive noise on every fixed instance. The initial distance remains one across the family; the obstruction cannot be attributed to a growing initialization error.
+
+3.4 A logarithmic average-error lower bound under sub-Gaussian noise
+
+The finite-variance counterexamples allow increasingly large gradients. The next construction shows that a loss persists even with uniformly bounded noise. A single scalar, fixed-magnitude oracle proves the result for both algorithms, without an auxiliary coordinate.
+
+Fix $L,\sigma,b_{0},\eta>0$ . For every sufficiently large integer $T$ , there exist a convex $L$ -smooth function $f_{T}:\mathbb{R}\to\mathbb{R}$ with $f_{T}^{\star}=0$ and an oracle satisfying Assumptions 2 and 3 , such that both AdaGrad-Norm and AdaGrad, initialized at $x_{1}=x^{\star}=0$ , satisfy
+
+$\mathbb{E}[f_{T}(\bar{x}_{T})-f_{T}^{\star}]\geq c\eta\sigma\frac{\log T}{\sqrt{T}},$ (3.7)
+
+where $c>0$ is universal. The objective and oracle may depend on $T$ , but $L,\sigma,b_{0},\eta$ do not. No horizon-independent bounded-iterate radius is assumed.
+
+Choose a smooth hinge with slope $a\asymp\sigma\sqrt{\log T/T}$ and an unbiased oracle with $g_{t}\in\{-\gamma,\gamma\}$ , where $\gamma=\sigma/2$ . Then $b_{t}^{2}=b_{0}^{2}+t\gamma^{2}$ is deterministic. The average splits into a mean-zero martingale term and a nonnegative drift. The squared martingale weights sum to order $\eta^{2}\log T$ , so second- and fourth-moment estimates give a positive fluctuation of order $\eta\sqrt{\log T}$ ; see ( D.7 )–( D.10 ). Choosing the slope constant small makes the drift smaller than this fluctuation. Multiplication by $a$ yields ( 3.7 ). Appendix D verifies the oracle and smoothing conditions. ∎
+
+The scope of the logarithmic lower bound is smooth-convex average function value, rather than the nonconvex stationarity metric of Jiang et al. [17] . It does not exclude horizon-dependent parameter tuning, alternative outputs, or modifications such as projection. In particular, it does not establish that every logarithm in every AdaGrad upper bound is necessary.
+
+The same construction has a consequence for inverse-square-root SGD: since $g_{t}^{2}=\gamma^{2}$ on this oracle, AdaGrad is exactly unprojected SGD with deterministic stepsizes $\eta/\sqrt{b_{0}^{2}+t\gamma^{2}}$ . More generally, fix $L,\sigma,\lambda,\tau>0$ and consider
+
+$x_{t+1}=x_{t}-\frac{\lambda}{\sqrt{t+\tau}}g_{t}.$ (3.8)
+
+For every sufficiently large $T$ , there exists a convex $L$ -smooth scalar objective $f_{T}$ , with $x_{1}=x^{\star}=0$ , for which even the independent additive-noise oracle $g_{t}=f_{T}^{\prime}(x_{t})+\xi_{t}$ , $\mathbb{P}(\xi_{t}=\sigma/2)=\mathbb{P}(\xi_{t}=-\sigma/2)=1/2$ , satisfies
+
+$\mathbb{E}[f_{T}(\bar{x}_{T})-f_{T}^{\star}]\geq c_{\mathrm{SGD}}\lambda\sigma^{2}\frac{\log T}{\sqrt{T}},$ (3.9)
+
+where $c_{\mathrm{SGD}}>0$ is universal. The final part of Appendix D gives the full reduction and checks the independent-noise version. This is a lower bound for a smooth-convex average iterate , not the nonsmooth last-iterate lower bound of Harvey et al. [14] . We are not aware of an earlier result for this exact combination of assumptions and schedule. The qualification on the schedule is essential: the claim does not extend to all SGD stepsizes, suffix averages, or projected variants.
+
+The stepsize schedule matters and cannot be omitted from the statement. For example, for SGD with a constant step $0<\alpha\leq 1/(2L)$ on a fixed horizon and a conditionally unbiased oracle of variance at most $\sigma^{2}$ , the squared-distance recursion and $\|\nabla f(x)\|^{2}\leq 2L(f(x)-f^{\star})$ give
+
+$\mathbb{E}[f(\bar{x}_{T})-f^{\star}]\leq\frac{\|x_{1}-x^{\star}\|^{2}}{\alpha T}+\alpha\sigma^{2}.$ (3.10)
+
+Indeed, one update decreases expected squared distance by at least $\alpha\mathbb{E}[\Delta_{t}]-\alpha^{2}\sigma^{2}$ ; summation and convexity prove the display. A horizon-dependent choice $\alpha\asymp T^{-1/2}$ therefore gives $O(T^{-1/2})$ . On the lower-bound instance $x_{1}=x^{\star}$ , even the initial-distance term vanishes. The logarithm in ( 3.9 ) is a limitation of the fixed inverse-square-root schedule with uniform averaging, not of the stochastic oracle problem itself. The final part of Appendix D also verifies the integrability and distance calculation behind ( 3.10 ).
+
+3.5 Noise-adaptive upper bounds under the ABC condition
+
+The preceding results distinguish instability, heavy-tail confidence dependence, and last-iterate behavior. None prevents a log-free expected average-error bound under bounded iterates. The final theorem makes this complementary guarantee explicit using the classical regret and self-bounding argument [ 8 , 22 , 43 , 28 ] .
+
+Under Assumptions 1 , 2 , and 5 , let $Q=A+2LB$ . For every integer $T\geq 1$ :
+
+AdaGrad-Norm. If $\|x_{t}-x^{\star}\|\leq D$ almost surely for all $t$ , set $\Gamma=D^{2}/(2\eta)+\eta$ . Then
+
+$\mathbb{E}[f(\bar{x}_{T})-f^{\star}]\leq\frac{\Gamma^{2}Q+\Gamma b_{0}}{T}+\Gamma\sqrt{\frac{C}{T}}.$ (3.11)
+
+AdaGrad. If $|x_{t,i}-x_{i}^{\star}|\leq D_{i}$ almost surely for all $t,i$ , set $\Gamma_{i}=D_{i}^{2}/(2\eta)+\eta$ , $\Lambda=(\sum_{i}\Gamma_{i}^{2})^{1/2}$ , and $\beta_{0}=(\sum_{i}b_{0,i}^{2})^{1/2}$ . Then
+
+$\mathbb{E}[f(\bar{x}_{T})-f^{\star}]\leq\frac{\Lambda^{2}Q+\Lambda\beta_{0}}{T}+\Lambda\sqrt{\frac{C}{T}}.$ (3.12)
+
+The radii are nonnegative, finite, and independent of $t$ . In particular, $C=0$ gives $O(T^{-1})$ ; bounded variance permits $Q=2L$ , $C=\sigma^{2}$ and gives $O(T^{-1}+\sigma T^{-1/2})$ .
+
+The key is to retain the objective gap in the second-moment bound instead of replacing it by a uniform constant. For $S_{T}=\sum_{t=1}^{T}\mathbb{E}[\Delta_{t}]$ , smoothness and the ABC condition give $\sum_{t=1}^{T}\mathbb{E}[\|g_{t}\|^{2}]\leq QS_{T}+CT$ . A pathwise regret inequality removes the correlated denominator before taking expectations, yielding $S_{T}\leq\Gamma\sqrt{b_{0}^{2}+QS_{T}+CT}$ for AdaGrad-Norm. For AdaGrad, coordinate-wise regret and Cauchy–Schwarz give the same inequality with $(\Gamma,b_{0})$ replaced by $(\Lambda,\beta_{0})$ ; see ( E.4 ) and ( E.8 ). Solving these quadratic inequalities produces the noise-adaptive bounds. Appendix E supplies separate proofs for the two algorithms. ∎
+
+Noise adaptation here is conditional on stability, although the algorithms need not know $A,B,C,L$ or the stability radii. For a common coordinate initialization, $\beta_{0}=\sqrt{d}\,b_{0}$ . The case $C=0$ permits state-dependent stochastic noise; it does not require a deterministic oracle. The root-form refinements and the two separate algorithm proofs are in Appendix E . The theorem assumes stability and therefore does not contradict the lower bounds in Sections 3.3 and 3.4 , where a common trajectory radius is absent.
+
+4 Conclusion
+
+Our first result rules out any prescribed uniform vanishing expected last-iterate rate for AdaGrad-Norm and AdaGrad under conditional sub-Gaussian oracles, even within an arbitrarily small trajectory radius. One fixed instance violates the proposed rate along a subsequence while still converging; only the pulse schedule depends on that rate.
+
+Under finite variance, a fixed infinite-horizon instance also defeats polynomial average-iterate rates with polylogarithmic confidence dependence within any prescribed radius. A persistent one-sided displacement survives averaging, but the conclusion remains compatible with fixed-confidence convergence and Markov bounds.
+
+Without a common radius, horizon-dependent families give constant worst-case expected average error under finite variance or a logarithmic lower bound under bounded noise. The latter also applies to fixed inverse-square-root SGD, not every stepsize or output. Under bounded iterates, classical regret analysis gives noise-adaptive ABC upper bounds. Identifying sampling assumptions that restore uniform last-iterate rates for the unchanged updates remains an important direction.
+
+References
+
+APPENDIX
+
+The proofs follow the original order of the main results. Appendix A first proves the absence of a universal last-iterate rate on a fixed instance. Appendix B treats the uniformly averaged output at shrinking confidence levels, still on a fixed infinite-horizon bounded instance. Appendices C and D then construct horizon-dependent expected average-error lower bounds, and the final part of Appendix D proves the SGD consequence. Appendix E provides separate proofs of the two noise-adaptive upper bounds. Each lower-bound construction for AdaGrad is scalar, so the two algorithms have the same trajectory.
+
+Appendix A Proof of Theorem 3.1
+
+We begin with the last-iterate limitation, for which the entire oracle must remain fixed while the evaluation times tend to infinity. The construction below separates the timing of stochastic variation from its magnitude, so a bounded pulse can reveal slow convergence at an arbitrarily late time.
+
+The construction starts at the minimizer and keeps the accumulator unchanged until the first nonzero pulse. Choose the objective curvature and pulse size so that a pulse respects the stability radius and every later noise-free update contracts. Specifically, set
+
+$\ell=\min\{L,b_{0}/(2\eta)\},\qquad d_{0}=\min\{D/2,\eta/2\},\qquad M=\frac{b_{0}d_{0}}{\sqrt{\eta^{2}-d_{0}^{2}}},\qquad f(x)=\frac{\ell}{2}x^{2}.$ (A.1)
+
+Initialize at $x_{1}=x^{\star}=0$ , and let
+
+$q=\min\left\{\frac{1}{4},\frac{e-1}{\exp(M^{2}/\sigma^{2})-1}\right\},\qquad q_{n}=\frac{q}{(n+1)^{2}}.$
+
+Given a deterministic strictly increasing sequence $(\tau_{n})_{n\geq 1}$ of positive integers, allow noise at time $t=\tau_{n}$ only if no earlier nonzero pulse has occurred. At such an active time, draw $\xi_{t}=M,-M,0$ with probabilities $q_{n}/2,q_{n}/2,1-q_{n}$ , using fresh randomness. At all other times, including every time after the first nonzero pulse, set $\xi_{t}=0$ . Define $g_{t}=\ell x_{t}+\xi_{t}$ .
+
+The noise is conditionally symmetric and hence unbiased. At active times,
+
+$\mathbb{E}[e^{\xi_{t}^{2}/\sigma^{2}}\mid\mathcal{F}_{t-1}]=1+q_{n}(e^{M^{2}/\sigma^{2}}-1)\leq e;$ (A.2)
+
+at inactive times the conditional expectation is $1$ . Thus one fixed infinite-horizon oracle satisfies the required moment bound for any choice of the schedule.
+
+With the oracle specified, we next verify stability and quantify the displacement. Before the first pulse, $x_{t}=0$ and $b_{t-1}=b_{0}$ , regardless of how much time has elapsed. If the first pulse occurs at $\tau_{n}$ , the next iterate satisfies
+
+$b_{\tau_{n}}=\sqrt{b_{0}^{2}+M^{2}},\qquad|x_{\tau_{n}+1}|=\frac{\eta M}{\sqrt{b_{0}^{2}+M^{2}}}=d_{0}.$
+
+Afterward the noise is zero and
+
+$x_{t+1}=(1-\eta\ell/b_{t})x_{t},\qquad 0<\eta\ell/b_{t}\leq 1/2.$ (A.3)
+
+Consequently $|x_{t}|\leq d_{0}\leq D$ on every path.
+
+Let $A_{n}$ be the event that the first nonzero pulse occurs at $\tau_{n}$ . Since $\sum_{j\geq 1}q_{j}<q\leq 1/4$ ,
+
+$\mathbb{P}(A_{n})=q_{n}\prod_{j<n}(1-q_{j})\geq\frac{3}{4}q_{n}.$
+
+With $T_{n}=\tau_{n}+1$ , the fixed displacement on $A_{n}$ therefore yields
+
+$\mathbb{E}[\Delta_{T_{n}}]\geq\frac{3\ell d_{0}^{2}q}{8(n+1)^{2}}.$ (A.4)
+
+For the explicit schedule $\tau_{n}=\lceil\exp(\exp n)\rceil$ , we have $\log\log T_{n}\geq n$ . Hence ( 3.2 ) follows with $c=3\ell d_{0}^{2}q/8$ .
+
+For an arbitrary prescribed sequence $r_{T}>0$ tending to zero, choose the times recursively so that $r_{\tau_{n}+1}\leq(n+1)^{-4}$ . Such increasing times exist because $r_{T}\to 0$ . Equation ( A.4 ) then gives
+
+$\frac{\mathbb{E}[\Delta_{T_{n}}]}{r_{T_{n}}}\geq\frac{3\ell d_{0}^{2}q}{8}(n+1)^{2}\longrightarrow\infty.$
+
+Once this schedule has been chosen, both the objective and the entire oracle are fixed. Only the evaluation times change along the subsequence.
+
+To complete the argument, we verify that the lower bound concerns speed, not failure of convergence. Indeed, every path has at most one nonzero pulse. After it occurs, $b_{t}^{2}\leq b_{0}^{2}+M^{2}+\ell^{2}d_{0}^{2}t$ , so $\sum_{t}\eta\ell/b_{t}=\infty$ . Equation ( A.3 ) and $1-u\leq e^{-u}$ imply $x_{t}\to 0$ on that path. A path with no pulse remains at zero. Since $0\leq\Delta_{t}\leq\ell d_{0}^{2}/2$ , bounded convergence also gives $\mathbb{E}[\Delta_{t}]\to 0$ . This verifies convergence only for the constructed instance; no general fixed-instance convergence theorem is used or asserted.
+
+∎
+
+Appendix B Proof of Theorem 3.5
+
+The preceding proof exploits an accumulator that remains small; we now study the opposite mechanism for the averaged output. A finite cascade increases normalization without leaving a prescribed radius, and the resulting displacement persists long enough to survive uniform averaging.
+
+A single sufficiently large gradient can cause a displacement close to $\eta$ , so it need not respect a prescribed radius $D<\eta$ . We instead prescribe alternating small displacements and fix their law independently of the eventual evaluation horizons. Let
+
+$d_{0}=\min\{D/4,\eta/4\},\qquad\ell=\min\{L,b_{0}/(2\eta)\},\qquad f(x)=\frac{\ell}{2}x^{2},\qquad x_{1}=x^{\star}=0.$ (B.1)
+
+To keep each designated displacement equal to $d_{0}$ , define
+
+$r=\frac{d_{0}}{\sqrt{\eta^{2}-d_{0}^{2}}},\qquad R=\sqrt{1+r^{2}}>1,\qquad M_{j}=rb_{0}R^{j-1},\qquad p_{j}=\min\{1/4,\sigma^{2}/(4M_{j}^{2})\}.$
+
+If the first $j$ gradients follow the designated signs $g_{j}=(-1)^{j+1}M_{j}$ , then
+
+$b_{j}=b_{0}R^{j},\qquad\frac{\eta M_{j}}{b_{j}}=d_{0},\qquad x_{j+1}=\begin{cases}-d_{0},&j\text{ odd},\\ 0,&j\text{ even}.\end{cases}$ (B.2)
+
+These identities follow by induction from $M_{j}=rb_{j-1}$ on that path and $\eta r/R=d_{0}$ .
+
+We now embed this path in an unbiased oracle. Draw an internal finite odd integer $N$ with $\mathbb{P}(N=2k+1)=2^{-(k+1)}$ for $k\geq 0$ , independently of the fresh random choices used below. The oracle is active at time $j$ only if $j\leq N$ and every preceding gradient followed its designated sign. Write $h_{j}=\ell x_{j}$ . On an active branch, use
+
+$g_{j}=\begin{cases}+M_{j},&\text{with probability }\frac{p_{j}}{2}(1+h_{j}/M_{j}),\\ -M_{j},&\text{with probability }\frac{p_{j}}{2}(1-h_{j}/M_{j}),\\ h_{j},&\text{with probability }1-p_{j}.\end{cases}$ (B.3)
+
+After an outcome different from the designated sign, or after time $N$ , the oracle permanently returns $g_{j}=h_{j}$ . Thus one law specifies the oracle for the entire infinite trajectory; no later choice of $T_{n}$ changes it.
+
+The designated path explains the mechanism, but the theorem requires all outcomes to satisfy the oracle and stability assumptions. We therefore check the active branch and every possible way of leaving it.
+
+On an active branch, ( B.2 ) gives $|x_{j}|\leq d_{0}$ , and
+
+$|h_{j}|\leq\ell d_{0}\leq\frac{b_{0}d_{0}}{2\eta}\leq\frac{M_{1}}{2}\leq\frac{M_{j}}{2}.$
+
+The probabilities in ( B.3 ) are consequently valid. Let $\mathcal{G}_{j-1}=\sigma(N,g_{1},\ldots,g_{j-1})$ , which also reveals whether the oracle is active. On an active branch, direct calculation gives
+
+$\mathbb{E}[g_{j}\mid\mathcal{G}_{j-1}]=h_{j},\qquad\mathbb{E}[(g_{j}-h_{j})^{2}\mid\mathcal{G}_{j-1}]=p_{j}(M_{j}^{2}-h_{j}^{2})\leq\frac{\sigma^{2}}{4}.$ (B.4)
+
+On an inactive branch, the mean remains $h_{j}$ and the variance is zero. Conditioning these statements on $\mathcal{F}_{j-1}\subseteq\mathcal{G}_{j-1}$ proves Assumptions 2 and 4 for the natural filtration. The internal draw of $N$ need not be observable to the algorithm.
+
+For stability, the only undesignated sign sends $0$ to $d_{0}$ or $-d_{0}$ to $-2d_{0}$ . A deterministic-gradient outcome instead contracts toward zero, since $0\leq\eta\ell/b_{j}\leq 1/2$ . After deactivation every update is such a contraction. Thus
+
+$|x_{j}-x^{\star}|\leq 2d_{0}\leq D\qquad\text{for every }j\geq 1\text{ on every path}.$ (B.5)
+
+No relation such as $D\geq\eta$ is required.
+
+Having verified the assumptions globally, we can focus on rare paths on which the cascade lasts long enough to make later updates very small. For odd $n$ , let $E_{n}$ be the event that $N=n$ and the first $n$ gradients all follow the designated signs. Each such sign has conditional probability at least $p_{j}/4$ . Set
+
+$p_{\star}=\min\{1/4,\sigma^{2}/(4r^{2}b_{0}^{2})\}>0,\qquad\pi_{n}=2^{-(n+1)/2}(p_{\star}/4)^{n}R^{-n(n-1)}.$
+
+Since $p_{j}\geq p_{\star}R^{-2(j-1)}$ ,
+
+$\mathbb{P}(E_{n})\geq 2^{-(n+1)/2}\prod_{j=1}^{n}(p_{j}/4)\geq\pi_{n}.$ (B.6)
+
+On $E_{n}$ , $x_{n+1}=-d_{0}$ , $b_{n}=b_{0}R^{n}$ , and all subsequent noise vanishes. For sufficiently large odd $n$ , choose
+
+$T_{n}=\left\lfloor\sqrt{b_{0}R^{n}}\right\rfloor.$ (B.7)
+
+Then $T_{n}\geq 2(n+1)$ and $\eta\ell T_{n}/(b_{0}R^{n})\leq 1/2$ . Monotonicity of the accumulator and Bernoulli’s inequality imply, for $n+1\leq t\leq T_{n}$ ,
+
+$|x_{t}|\geq d_{0}\left(1-\frac{\eta\ell}{b_{0}R^{n}}\right)^{t-n-1}\geq d_{0}\left(1-\frac{\eta\ell T_{n}}{b_{0}R^{n}}\right)\geq\frac{d_{0}}{2}.$
+
+All earlier iterates on this event are also nonpositive. Consequently,
+
+$|\bar{x}_{T_{n}}|\geq\frac{T_{n}-n}{T_{n}}\frac{d_{0}}{2}\geq\frac{d_{0}}{4},\qquad f(\bar{x}_{T_{n}})-f^{\star}\geq\frac{\ell d_{0}^{2}}{32}=:c_{\star}.$ (B.8)
+
+Taking $\delta_{n}=\pi_{n}/2$ proves the probability statement in ( 3.3 ). To compare confidence and horizon, observe that
+
+$\displaystyle\log(1/\delta_{n})$ $\displaystyle=\log 2+\frac{n+1}{2}\log 2+n\log(4/p_{\star})+n(n-1)\log R=O(n^{2}),$ $\displaystyle\log T_{n}$ $\displaystyle=\frac{n}{2}\log R+O(1).$
+
+This gives the second statement in ( 3.3 ) with a fixed parameter-dependent $K$ . The sequence over sufficiently large odd $n$ is eventually strictly increasing; relabeling it yields the sequence asserted in the theorem.
+
+Finally, for every fixed polynomial $P$ and $a,b>0$ , $T_{n}^{-a}+P(\log(1/\delta_{n}))T_{n}^{-b}\to 0$ . Thus the right-hand side of ( 3.4 ) is eventually smaller than $c_{\star}$ , while its failure probability is at least $2\delta_{n}>\delta_{n}$ . This proves the claimed impossibility on one fixed bounded instance.
+
+For clarity, the same rate formula and constants are required for every pair $(T,\delta)$ , but the theorem does not require a single probability event holding simultaneously over all times. This quantitative requirement should not be confused with qualitative convergence at a fixed confidence level. In this construction the internal odd integer $N$ is finite almost surely, and noise is permanently switched off no later than time $N+1$ . Thereafter $x_{t+1}=(1-\eta\ell/b_{t})x_{t}$ , with $0<\eta\ell/b_{t}\leq 1/2$ . On each path, boundedness gives $b_{t}^{2}\leq K(\omega)+4\ell^{2}d_{0}^{2}t$ for a finite path-dependent constant $K(\omega)$ , so $\sum_{t}\eta\ell/b_{t}=\infty$ . The contraction product tends to zero, hence $x_{t}\to 0$ and $\bar{x}_{T}\to 0$ almost surely. Bounded convergence also gives $\mathbb{E}[f(\bar{x}_{T})-f^{\star}]\to 0$ . What fails is precisely the rate/confidence combination in ( 3.4 ); the rare event probabilities are not bounded away from zero as $n\to\infty$ .
+
+∎
+
+Appendix C Proof of Theorem 3.8
+
+Appendix B retained a uniform trajectory radius and isolated the dependence on confidence. Removing that radius allows a different obstruction: a horizon-dependent family with constant expected average error, even though its additive noise is independent and identically distributed on each chosen instance.
+
+We use rare corrections to make a usually misleading gradient unbiased, while keeping the probability of no correction bounded below over the chosen horizon. Fix a sufficiently large integer $T\geq 2$ and set
+
+$q=\frac{1}{T},\qquad a=\frac{\sigma\sqrt{q}}{4},\qquad B_{0}=\sqrt{b_{0}^{2}+\sigma^{2}/16}.$ (C.1)
+
+Take $T$ large enough that $a\leq 1$ , and define
+
+$f_{T}(x)=\begin{cases}0,&x\leq 0,\\ x^{2}/2,&0<x<a,\\ ax-a^{2}/2,&x\geq a.\end{cases}$ (C.2)
+
+Its derivative is continuous, nondecreasing, and $1$ -Lipschitz. Thus $f_{T}$ is convex and $1$ -smooth, with $f_{T}^{\star}=0$ . Choose $x^{\star}=0$ and initialize at $x_{1}=1$ .
+
+For this fixed instance, draw independent identically distributed noise at every time with law
+
+$\xi_{t}=\begin{cases}-2a,&\text{with probability }1-q,\\ 2a(1-q)/q,&\text{with probability }q.\end{cases}$ (C.3)
+
+The probabilities and values do not vary with time. Direct calculation gives
+
+$\mathbb{E}[\xi_{t}]=0,\qquad\mathbb{E}[\xi_{t}^{2}]=\frac{4a^{2}(1-q)}{q}\leq\frac{\sigma^{2}}{4}.$
+
+Therefore $g_{t}=f_{T}^{\prime}(x_{t})+\xi_{t}$ satisfies the conditional unbiasedness and variance assumptions for all $t\geq 1$ . The objective and noise law depend on the chosen horizon, but the variance bound is common to the entire family.
+
+The noise law is unbiased only after averaging over its rare correction. To obtain a lower bound, we isolate the complementary event on which that correction never occurs. Let $\mathcal{E}_{T}$ be the event that the first $T$ noise values are all $-2a$ . Then $\mathbb{P}(\mathcal{E}_{T})=(1-1/T)^{T}\geq 1/4$ .
+
+On $\mathcal{E}_{T}$ , induction shows that $x_{t}\geq 1\geq a$ and $g_{t}=-a$ through time $T$ . The updates thus remain in the linear region and move to the right. From ( C.1 ), for $t\leq T$ ,
+
+$b_{t}^{2}=b_{0}^{2}+ta^{2}\leq B_{0}^{2},\qquad x_{t}\geq 1+\frac{\eta a}{B_{0}}(t-1),\qquad\bar{x}_{T}\geq 1+\frac{\eta a(T-1)}{2B_{0}}.$ (C.4)
+
+Because $a-a^{2}/2\geq 0$ , evaluating ( C.2 ) on this event gives
+
+$f_{T}(\bar{x}_{T})\geq\frac{\eta a^{2}(T-1)}{2B_{0}}=\frac{\eta\sigma^{2}(T-1)}{32B_{0}T}\geq\frac{\eta\sigma^{2}}{64B_{0}}.$ (C.5)
+
+The objective is nonnegative on the complement of $\mathcal{E}_{T}$ . Multiplying the last bound by $\mathbb{P}(\mathcal{E}_{T})\geq 1/4$ proves ( 3.6 ). This argument fixes an instance for each $T$ ; it does not produce nonconvergence of one instance as $T\to\infty$ .
+
+∎
+
+Appendix D Proof of Theorem 3.10
+
+The previous lower bound used rare large corrections under a variance constraint; we now ask what remains possible when the noise is uniformly bounded. A constant-magnitude scalar oracle exposes harmonic accumulation of fluctuations, yielding the logarithmic average-error lower bound for both algorithms.
+
+Fix a sufficiently large horizon $T$ . We choose a shallow linear region so that the restoring drift is smaller than the accumulated fluctuations, and then smooth its junction with the minimum region. Set $\gamma=\sigma/2$ , choose a universal constant $c_{0}>0$ below, and define
+
+$a=c_{0}\gamma\sqrt{\frac{\log T}{T}},\qquad f_{T}(x)=\begin{cases}0,&x\leq 0,\\ Lx^{2}/2,&0<x<a/L,\\ ax-a^{2}/(2L),&x\geq a/L.\end{cases}$ (D.1)
+
+The derivative is continuous, nondecreasing, and $L$ -Lipschitz, so $f_{T}$ is convex and $L$ -smooth. Its minimum is zero, and we initialize at $x_{1}=x^{\star}=0$ .
+
+For large enough $T$ , $a\leq\gamma/2$ . Write $h_{t}=f_{T}^{\prime}(x_{t})\in[0,a]$ and, using fresh randomness at each query, let
+
+$\mathbb{P}(g_{t}=\gamma\mid\mathcal{F}_{t-1})=\frac{1}{2}(1+h_{t}/\gamma),\qquad\mathbb{P}(g_{t}=-\gamma\mid\mathcal{F}_{t-1})=\frac{1}{2}(1-h_{t}/\gamma).$ (D.2)
+
+These probabilities are valid and give $\mathbb{E}[g_{t}\mid\mathcal{F}_{t-1}]=h_{t}$ . For $\xi_{t}=g_{t}-h_{t}$ ,
+
+$|\xi_{t}|\leq\gamma+a\leq\frac{3\sigma}{4},\qquad\mathbb{E}[\xi_{t}^{2}\mid\mathcal{F}_{t-1}]=\gamma^{2}-h_{t}^{2}\geq\frac{3}{4}\gamma^{2}.$ (D.3)
+
+The pathwise noise bound implies Assumption 3 . The oracle is defined for every time $t\geq 1$ , not just for the first $T$ queries. Moreover, $g_{t}^{2}=\gamma^{2}$ on every path, so both algorithms have the deterministic accumulator
+
+$b_{t}^{2}=b_{0}^{2}+t\gamma^{2}.$ (D.4)
+
+For a fixed chosen $T$ , the oracle depends on the current point through $h_{t}$ , rather than on an externally specified time schedule.
+
+With the oracle verified, the deterministic denominator allows us to expand the recursion with nonrandom weights. This is the step that isolates the source of the logarithmic factor. Define
+
+$\bar{x}_{T}=Y_{T}-\mathcal{D}_{T},\qquad Y_{T}=-\sum_{s=1}^{T-1}\alpha_{s}\xi_{s},\qquad\mathcal{D}_{T}=\sum_{s=1}^{T-1}\alpha_{s}h_{s},\qquad\alpha_{s}=\frac{\eta(T-s)}{Tb_{s}}.$ (D.5)
+
+Here $Y_{T}$ is a sum of martingale differences and has mean zero. The drift is random, but it admits the deterministic bound
+
+$0\leq\mathcal{D}_{T}\leq\frac{\eta a}{\gamma}\sum_{s=1}^{T-1}s^{-1/2}\leq 2c_{0}\eta\sqrt{\log T}=:d_{T}^{\max}.$ (D.6)
+
+We use this pathwise upper bound when comparing positive parts; the random drift itself is never moved outside an expectation.
+
+To quantify the fluctuations, put $W_{T}=\gamma^{2}\sum_{s=1}^{T-1}\alpha_{s}^{2}$ . Orthogonality of martingale differences and ( D.3 ) imply
+
+$\mathbb{E}[Y_{T}]=0,\qquad\frac{3}{4}W_{T}\leq\mathbb{E}[Y_{T}^{2}]\leq W_{T}.$ (D.7)
+
+Let $s_{0}=\max\{1,\lceil b_{0}^{2}/\gamma^{2}\rceil\}$ . For $s_{0}\leq s\leq\lfloor T/2\rfloor$ , we have $b_{s}^{2}\leq 2s\gamma^{2}$ and $(T-s)/T\geq 1/2$ . Consequently, for all sufficiently large $T$ ,
+
+$\frac{\eta^{2}}{16}\log T\leq\frac{\eta^{2}}{8}\sum_{s=s_{0}}^{\lfloor T/2\rfloor}\frac{1}{s}\leq W_{T}\leq\eta^{2}\sum_{s=1}^{T-1}\frac{1}{s}\leq\eta^{2}(1+\log T).$ (D.8)
+
+The lower estimate holds once the finite initial segment up to $s_{0}$ is negligible relative to $\log T$ .
+
+The second-moment estimate must now be converted into a positive fluctuation. A variance lower bound alone would allow that fluctuation to be concentrated on very rare events. The bounded martingale increments give a fourth-moment bound that prevents this, and hence a lower bound on the expected positive part.
+
+Set $X_{s}=-\alpha_{s}\xi_{s}$ and $d_{s}=3\gamma\alpha_{s}/2$ . Then $\mathbb{E}[X_{s}\mid\mathcal{F}_{s-1}]=0$ and $|X_{s}|\leq d_{s}$ , with $d_{s}$ deterministic. Convexity of the exponential on $[-d_{s},d_{s}]$ gives, for any $u\in\mathbb{R}$ ,
+
+$\mathbb{E}[e^{uX_{s}}\mid\mathcal{F}_{s-1}]\leq\cosh(ud_{s})\leq e^{u^{2}d_{s}^{2}/2}.$
+
+Iterated conditioning and Chernoff’s inequality therefore yield
+
+$\mathbb{P}(|Y_{T}|\geq v)\leq 2e^{-v^{2}/(2V_{T})},\qquad V_{T}=\sum_{s=1}^{T-1}d_{s}^{2}=\frac{9}{4}W_{T}.$
+
+Integrating the tail proves
+
+$\mathbb{E}[Y_{T}^{4}]\leq\int_{0}^{\infty}8v^{3}e^{-v^{2}/(2V_{T})}\,dv=16V_{T}^{2}=81W_{T}^{2}.$ (D.9)
+
+Hölder’s inequality and ( D.7 ) now give
+
+$\mathbb{E}[|Y_{T}|]\geq\frac{(\mathbb{E}[Y_{T}^{2}])^{3/2}}{(\mathbb{E}[Y_{T}^{4}])^{1/2}}\geq\frac{\sqrt{3}}{24}\sqrt{W_{T}}.$
+
+Since $Y_{T}$ is integrable and mean zero, $\mathbb{E}[(Y_{T})_{+}]=\mathbb{E}[|Y_{T}|]/2$ ; symmetry of its law is not needed. Combining this identity with ( D.8 ), we obtain
+
+$\mathbb{E}[(Y_{T})_{+}]\geq k\eta\sqrt{\log T},\qquad k=\frac{\sqrt{3}}{192}.$ (D.10)
+
+We can now convert this fluctuation into objective error. It remains to choose the slope so that neither the restoring drift nor the smoothing interval absorbs the positive fluctuation. Set $c_{0}=k/8$ and increase the threshold on $T$ so that $a/L\leq(k/4)\eta\sqrt{\log T}$ . Using $(y-z)_{+}\geq y_{+}-z$ for $z\geq 0$ , together with ( D.5 ), ( D.6 ), and ( D.10 ), gives
+
+$\mathbb{E}\!\left[\left(\bar{x}_{T}-\frac{a}{L}\right)_{+}\right]\geq\mathbb{E}[(Y_{T})_{+}]-d_{T}^{\max}-\frac{a}{L}\geq\frac{k}{2}\eta\sqrt{\log T}.$ (D.11)
+
+For every $x\in\mathbb{R}$ , ( D.1 ) implies $f_{T}(x)\geq a(x-a/L)_{+}$ . On $x<a/L$ this follows from nonnegativity, and on $x\geq a/L$ it follows from the linear formula. Hence
+
+$\mathbb{E}[f_{T}(\bar{x}_{T})-f_{T}^{\star}]\geq\frac{ak\eta}{2}\sqrt{\log T}=\frac{k^{2}}{32}\eta\sigma\frac{\log T}{\sqrt{T}}.$
+
+This proves ( 3.7 ) with the universal constant $c=k^{2}/32$ . Every lower threshold on $T$ depends only on $L,\sigma,b_{0},\eta$ . The same scalar function and oracle prove the statement for both algorithms.
+
+∎
+
+We now verify ( 3.9 ), including the independent additive-noise version. This consequence is separate from the AdaGrad oracle construction: constant gradient magnitude is needed to make the adaptive denominator deterministic, but is unnecessary when SGD already uses deterministic stepsizes.
+
+Fix $L,\sigma,\lambda,\tau>0$ , and put $\gamma=\sigma/2$ , $\widetilde{\eta}=\lambda\gamma$ , and $\widetilde{b}_{0}=\gamma\sqrt{\tau}$ . Then
+
+$\frac{\widetilde{\eta}}{\sqrt{\widetilde{b}_{0}^{2}+t\gamma^{2}}}=\frac{\lambda}{\sqrt{t+\tau}}.$
+
+With the constant-magnitude oracle ( D.2 ), this identity makes the SGD and scalar AdaGrad trajectories exactly equal. Substituting $\eta=\widetilde{\eta}$ in ( 3.7 ) already proves the conditional-oracle version of ( 3.9 ).
+
+For the stronger independent-noise statement, use the same objective ( D.1 ) with $a=c_{0}\gamma\sqrt{\log T/T}$ , $c_{0}=k/8$ , and $k=\sqrt{3}/192$ , but draw independent Rademacher noise $\xi_{t}\in\{-\gamma,\gamma\}$ . Let $g_{t}=f_{T}^{\prime}(x_{t})+\xi_{t}$ . Conditional unbiasedness holds, and $\mathbb{E}[\exp(\xi_{t}^{2}/\sigma^{2})\mid\mathcal{F}_{t-1}]=e^{1/4}\leq e$ . All these noise laws are fixed independently of the evaluation horizon.
+
+Write $h_{t}=f_{T}^{\prime}(x_{t})\in[0,a]$ and
+
+$w_{s}=\frac{\lambda(T-s)}{T\sqrt{s+\tau}},\qquad Y_{T}=-\sum_{s<T}w_{s}\xi_{s},\qquad\mathcal{D}_{T}=\sum_{s<T}w_{s}h_{s},\qquad W_{T}=\gamma^{2}\sum_{s<T}w_{s}^{2}.$
+
+The SGD recursion gives $\bar{x}_{T}=Y_{T}-\mathcal{D}_{T}$ , and
+
+$0\leq\mathcal{D}_{T}\leq 2c_{0}\widetilde{\eta}\sqrt{\log T},\qquad\mathbb{E}[Y_{T}]=0,\qquad\mathbb{E}[Y_{T}^{2}]=W_{T}.$
+
+The harmonic estimates ( D.8 ) apply with $\eta=\widetilde{\eta}$ , $b_{0}=\widetilde{b}_{0}$ , since $w_{s}$ is exactly the previous deterministic weight. Independence also gives the elementary fourth-moment identity
+
+$\mathbb{E}[Y_{T}^{4}]=\gamma^{4}\sum_{s<T}w_{s}^{4}+6\gamma^{4}\sum_{r<s<T}w_{r}^{2}w_{s}^{2}=3W_{T}^{2}-2\gamma^{4}\sum_{s<T}w_{s}^{4}\leq 3W_{T}^{2}.$
+
+Thus the weaker estimates $\mathbb{E}[Y_{T}^{2}]\geq 3W_{T}/4$ and $\mathbb{E}[Y_{T}^{4}]\leq 81W_{T}^{2}$ used in ( D.10 ) remain valid. They yield $\mathbb{E}[(Y_{T})_{+}]\geq k\widetilde{\eta}\sqrt{\log T}$ . The same drift and smoothing comparison ( D.11 ) therefore gives
+
+$\mathbb{E}[f_{T}(\bar{x}_{T})-f_{T}^{\star}]\geq\frac{k^{2}}{32}\widetilde{\eta}\sigma\frac{\log T}{\sqrt{T}}=\frac{k^{2}}{64}\lambda\sigma^{2}\frac{\log T}{\sqrt{T}}.$
+
+This proves ( 3.9 ) with $c_{\mathrm{SGD}}=k^{2}/64$ . Every sufficiently-large- $T$ threshold depends only on $L,\sigma,\lambda,\tau$ . Only the hard objective changes with $T$ ; the stepsize schedule and the independent noise distribution do not. ∎
+
+The finite-horizon comparison.
+
+For completeness, let SGD use a constant $0<\alpha\leq 1/(2L)$ and put $z_{t}=x_{t}-x^{\star}$ . Conditional unbiasedness, convexity, and the smooth self-bound give
+
+$\mathbb{E}[\|z_{t+1}\|^{2}\mid\mathcal{F}_{t-1}]\leq\|z_{t}\|^{2}-2\alpha(1-L\alpha)\Delta_{t}+\alpha^{2}\sigma^{2}\leq\|z_{t}\|^{2}-\alpha\Delta_{t}+\alpha^{2}\sigma^{2}.$
+
+All finite-time moments here exist: $\|\nabla f(x_{t})\|\leq L\|z_{t}\|$ and the variance bound imply, recursively, a finite second moment for $z_{t}$ from deterministic $x_{1}$ . Taking expectations, summing over $t\leq T$ , dropping the nonnegative terminal squared distance, and using convexity of $f$ proves ( 3.10 ). This comparison is a direct distance-recursion calculation, not a claim that every SGD schedule avoids logarithmic losses.
+
+Appendix E Proof of Theorem 3.14
+
+The lower bounds above isolate failures that averaging, tail assumptions, and stability do not individually remove. We now combine expected averaging with bounded iterates and the conditional ABC condition. The proof follows the classical regret and self-bounding approach [ 8 , 22 , 43 ] , while retaining the initialization and noise coefficients. After establishing the shared estimates, we give a separate proof for each algorithm.
+
+E.1 Shared self-bounding and integrability estimates
+
+Both proofs close the same quadratic inequality, but use different pathwise regret bounds. We first record the common second-moment estimate and justify the expectations used later. Smoothness applied at $x-\nabla f(x)/L$ gives
+
+$f^{\star}\leq f\!\left(x-\frac{\nabla f(x)}{L}\right)\leq f(x)-\frac{\|\nabla f(x)\|^{2}}{2L}.$
+
+Therefore
+
+$\|\nabla f(x)\|^{2}\leq 2L(f(x)-f^{\star}).$ (E.1)
+
+Writing $S_{T}=\sum_{t=1}^{T}\mathbb{E}[\Delta_{t}]$ and using $Q=A+2LB$ , the ABC condition implies
+
+$\sum_{t=1}^{T}\mathbb{E}[\|g_{t}\|^{2}]\leq QS_{T}+CT.$ (E.2)
+
+All terms are finite. Indeed, smoothness at $x^{\star}$ , where $\nabla f(x^{\star})=0$ , bounds $\Delta_{t}$ by $LD^{2}/2$ for AdaGrad-Norm and by $(L/2)\sum_{i}D_{i}^{2}$ for AdaGrad. The ABC condition then gives uniform conditional second-moment bounds. In particular, the accumulators have finite first moments at each finite time, and the inner products with bounded iterates are integrable. These observations justify both the martingale cancellation and the applications of Jensen’s inequality below.
+
+E.2 AdaGrad-Norm
+
+Scalar normalization allows a single Euclidean distance identity. The important order of operations is to sum this identity pathwise before taking expectations, so the correlation between $g_{t}$ and $b_{t}$ never needs to be discarded.
+
+Write $z_{t}=x_{t}-x^{\star}$ . The actual current-gradient update gives
+
+$\langle g_{t},z_{t}\rangle=\frac{b_{t}}{2\eta}(\|z_{t}\|^{2}-\|z_{t+1}\|^{2})+\frac{\eta\|g_{t}\|^{2}}{2b_{t}}.$
+
+Summation by parts and $\|z_{t}\|\leq D$ yield
+
+$\displaystyle\sum_{t=1}^{T}b_{t}(\|z_{t}\|^{2}-\|z_{t+1}\|^{2})$ $\displaystyle=b_{1}\|z_{1}\|^{2}+\sum_{t=2}^{T}(b_{t}-b_{t-1})\|z_{t}\|^{2}-b_{T}\|z_{T+1}\|^{2}$ $\displaystyle\leq D^{2}b_{T}.$
+
+Also,
+
+$\frac{\|g_{t}\|^{2}}{b_{t}}=\frac{(b_{t}-b_{t-1})(b_{t}+b_{t-1})}{b_{t}}\leq 2(b_{t}-b_{t-1}).$
+
+Consequently,
+
+$\sum_{t=1}^{T}\langle g_{t},z_{t}\rangle\leq\left(\frac{D^{2}}{2\eta}+\eta\right)b_{T}-\eta b_{0}\leq\Gamma b_{T}.$ (E.3)
+
+Because $z_{t}$ is bounded and $\mathcal{F}_{t-1}$ -measurable, conditional unbiasedness gives $\mathbb{E}[\langle\xi_{t},z_{t}\rangle]=0$ . Convexity and ( E.3 ) thus imply
+
+$S_{T}\leq\sum_{t=1}^{T}\mathbb{E}[\langle\nabla f(x_{t}),z_{t}\rangle]=\sum_{t=1}^{T}\mathbb{E}[\langle g_{t},z_{t}\rangle]\leq\Gamma\mathbb{E}[b_{T}].$
+
+Applying Jensen’s inequality only now, and then ( E.2 ), gives
+
+$S_{T}\leq\Gamma\sqrt{\mathbb{E}[b_{T}^{2}]}\leq\Gamma\sqrt{b_{0}^{2}+QS_{T}+CT}.$ (E.4)
+
+Since $S_{T}\geq 0$ , squaring and solving the quadratic inequality yields
+
+$S_{T}\leq\frac{\Gamma^{2}Q+\sqrt{\Gamma^{4}Q^{2}+4\Gamma^{2}(b_{0}^{2}+CT)}}{2}.$
+
+Convexity gives $\mathbb{E}[f(\bar{x}_{T})-f^{\star}]\leq S_{T}/T$ , hence the sharper estimate
+
+$\mathbb{E}[f(\bar{x}_{T})-f^{\star}]\leq\frac{\Gamma^{2}Q+\sqrt{\Gamma^{4}Q^{2}+4\Gamma^{2}(b_{0}^{2}+CT)}}{2T}.$ (E.5)
+
+Finally,
+
+$\sqrt{\Gamma^{4}Q^{2}+4\Gamma^{2}(b_{0}^{2}+CT)}\leq\Gamma^{2}Q+2\Gamma\sqrt{b_{0}^{2}+CT}\leq\Gamma^{2}Q+2\Gamma b_{0}+2\Gamma\sqrt{CT},$
+
+which proves ( 3.11 ) with the stated constants. ∎
+
+E.3 Coordinate-wise AdaGrad
+
+Each coordinate has its own accumulator, so one first bounds its scalar regret separately. Summing these bounds and applying Cauchy–Schwarz recovers a scalar quadratic inequality without requiring coordinate-wise ABC assumptions.
+
+Let $z_{t,i}=x_{t,i}-x_{i}^{\star}$ . The update in coordinate $i$ gives
+
+$g_{t,i}z_{t,i}=\frac{b_{t,i}}{2\eta}(z_{t,i}^{2}-z_{t+1,i}^{2})+\frac{\eta g_{t,i}^{2}}{2b_{t,i}}.$
+
+Since $|z_{t,i}|\leq D_{i}$ and $b_{t,i}$ is nondecreasing,
+
+$\sum_{t=1}^{T}b_{t,i}(z_{t,i}^{2}-z_{t+1,i}^{2})\leq D_{i}^{2}b_{T,i},\qquad\sum_{t=1}^{T}\frac{g_{t,i}^{2}}{b_{t,i}}\leq 2(b_{T,i}-b_{0,i}).$
+
+It follows pathwise that
+
+$\sum_{t=1}^{T}g_{t,i}z_{t,i}\leq\left(\frac{D_{i}^{2}}{2\eta}+\eta\right)b_{T,i}-\eta b_{0,i}\leq\Gamma_{i}b_{T,i}.$ (E.6)
+
+Summing over $i$ , taking expectations, and using convexity and conditional unbiasedness after this pathwise estimate gives
+
+$S_{T}\leq\sum_{i=1}^{d}\Gamma_{i}\mathbb{E}[b_{T,i}]\leq\sum_{i=1}^{d}\Gamma_{i}\sqrt{b_{0,i}^{2}+\sum_{t=1}^{T}\mathbb{E}[g_{t,i}^{2}]}.$ (E.7)
+
+The martingale terms cancel because $z_{t,i}$ is bounded and $\mathcal{F}_{t-1}$ -measurable. Cauchy–Schwarz and the global estimate ( E.2 ) now yield
+
+$\displaystyle S_{T}$ $\displaystyle\leq\left(\sum_{i=1}^{d}\Gamma_{i}^{2}\right)^{1/2}\left(\sum_{i=1}^{d}b_{0,i}^{2}+\sum_{t=1}^{T}\mathbb{E}[\|g_{t}\|^{2}]\right)^{1/2}$ (E.8) $\displaystyle\leq\Lambda\sqrt{\beta_{0}^{2}+QS_{T}+CT}.$
+
+Squaring and taking the positive root gives
+
+$S_{T}\leq\frac{\Lambda^{2}Q+\sqrt{\Lambda^{4}Q^{2}+4\Lambda^{2}(\beta_{0}^{2}+CT)}}{2}.$
+
+Dividing by $T$ and using convexity of $f$ gives the sharper estimate
+
+$\mathbb{E}[f(\bar{x}_{T})-f^{\star}]\leq\frac{\Lambda^{2}Q+\sqrt{\Lambda^{4}Q^{2}+4\Lambda^{2}(\beta_{0}^{2}+CT)}}{2T}.$ (E.9)
+
+The estimate
+
+$\sqrt{\Lambda^{4}Q^{2}+4\Lambda^{2}(\beta_{0}^{2}+CT)}\leq\Lambda^{2}Q+2\Lambda\beta_{0}+2\Lambda\sqrt{CT}$
+
+then gives ( 3.12 ). This argument uses only the global ABC condition. The intermediate bound ( E.7 ) preserves more detailed coordinate-wise second-moment information when it is available. ∎
+
+E.4 Noise specializations and the role of stability
+
+The two proofs have the same final dependence on the residual coefficient $C$ , even though their geometric constants differ. When $C=0$ , their simplified bounds are $(\Gamma^{2}Q+\Gamma b_{0})/T$ and $(\Lambda^{2}Q+\Lambda\beta_{0})/T$ . This case allows nonzero state-dependent noise; it excludes only an additive residual term in the ABC model.
+
+Under conditional unbiasedness and bounded variance,
+
+$\mathbb{E}[\|g_{t}\|^{2}\mid\mathcal{F}_{t-1}]=\|\nabla f(x_{t})\|^{2}+\mathbb{E}[\|\xi_{t}\|^{2}\mid\mathcal{F}_{t-1}]\leq\|\nabla f(x_{t})\|^{2}+\sigma^{2}.$
+
+Thus $(A,B,C)=(0,1,\sigma^{2})$ , so $Q=2L$ and
+
+$\mathbb{E}[f(\bar{x}_{T})-f^{\star}]\leq\frac{2L\Gamma^{2}+\Gamma b_{0}}{T}+\frac{\Gamma\sigma}{\sqrt{T}}$
+
+for AdaGrad-Norm, with the analogous substitution $(\Gamma,b_{0})\mapsto(\Lambda,\beta_{0})$ for AdaGrad. These guarantees assume a common almost-sure stability radius. They therefore do not contradict the horizon-dependent lower bounds without such a radius, nor do they imply a last-iterate rate or polynomial high-probability bounds with polylogarithmic confidence dependence. Markov’s inequality does give the weaker $1/\delta$ dependence in ( 3.5 ).

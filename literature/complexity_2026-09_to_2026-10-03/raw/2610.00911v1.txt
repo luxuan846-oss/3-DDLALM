@@ -1,0 +1,981 @@
+Content selection saved. Describe the issue below:
+
+Block Optimism for Nonstationary Bandits with Latent Linear Dynamics
+
+We study an endogenous nonstationary stochastic bandit problem with latent linear dynamics, where actions affect both immediate rewards and the future evolution of an unobserved latent state. Rewards are bilinear in the current action and latent state, inducing history-dependent rewards and a nontrivial long-horizon planning problem. The existing explore-then-commit approach achieves $\widetilde{\mathcal{O}}(T^{2/3})$ regret by uniformly exploring to estimate the latent dynamics and then committing to an optimized open-loop action sequence. We show that this rate can be improved via adaptive block-level optimism. Our key step is a cyclic approximation: under stable dynamics, the infinite-memory reward process can be truncated, and the open-loop benchmark can be approximated by optimizing a finite-memory block-level proxy. Building on this reduction, we propose a UCB-based block algorithm that maintains confidence sets for the truncated dynamics parameters and selects blocks optimistically. We prove a regret bound of order $\widetilde{\mathcal{O}}(\sqrt{T})$ , significantly improving over the previous $\widetilde{\mathcal{O}}(T^{2/3})$ guarantee for the same model. To the best of our knowledge, this is the first $\widetilde{\mathcal{O}}(\sqrt{T})$ regret guarantee for latent linear-dynamics bandits with bilinear reward observations and an open-loop action-sequence benchmark.
+
+1 Introduction
+
+Many sequential decision-making problems exhibit endogenous nonstationarity : the learner’s actions affect not only immediate rewards but also the future state of the environment. This phenomenon naturally arises in recommender systems, online advertising, and personalized interventions, where repeated recommendations or interventions can change a user’s latent preferences and thereby alter future rewards [ 18 , 22 , 21 , 33 ] . While classical stochastic bandits assume fixed reward distributions, much of the nonstationary bandit literature models nonstationarity as exogenous, for example through variation budgets, change points, or drifting parameters [ 7 , 10 , 31 , 19 ] . Other action-induced models, such as rotting, recharging, blocking, rebounding, and delay-dependent bandits [ 27 , 34 , 20 , 6 , 26 , 8 ] , capture temporal effects at the arm level, but are less suited for structured action spaces where one action can affect the future rewards of many related actions.
+
+A recent work introduces a latent linear-dynamics bandit model in which actions drive an unobserved latent state with linear dynamics and rewards are bilinear in the current action and latent state [ 11 ] . This model captures cross-action endogenous effects through a latent state representation, but creates a coupled learning-and-planning problem: the learner must infer the latent input-output dynamics from scalar, temporally correlated rewards while choosing actions whose effects persist over the horizon. The prior explore-then-commit (ETC) algorithm separates these tasks by first estimating the latent dynamics from random exploration and then committing to an optimized open-loop action sequence, yielding a $\widetilde{\mathcal{O}}(T^{2/3})$ regret guarantee [ 11 ] . This phase separation leads to a suboptimal exploration–exploitation trade-off, since data collected during exploration are not used for reward maximization, while observations obtained after commitment are not used to revise the plan. This raises a natural question:
+
+Can we design an adaptive exploration strategy for latent linear-dynamics bandits that interleaves learning and planning and achieves sharper regret?
+
+We answer this question affirmatively by exploiting the stability of the latent dynamics. In latent linear-dynamics bandits, past actions can continue to influence future rewards through the evolving latent state, so the induced reward process generally depends on the full action history. Under stable dynamics, however, the influence of far-past actions decays geometrically, allowing this infinite-memory reward process to be approximated by a finite-memory model. This observation enables a cyclic approximation that reduces the original long-horizon planning problem to a stationary block-level learning problem. In this block-level problem, the proxy reward is approximately linear in a truncated representation of the latent dynamics. Building on this reduction, we develop an adaptive optimistic learning strategy that updates its estimate at the end of each block and selects subsequent blocks optimistically. This interleaves learning and planning throughout the horizon and yields a regret bound of order $\widetilde{\mathcal{O}}(\sqrt{T})$ , significantly improving over the $\widetilde{\mathcal{O}}(T^{2/3})$ ETC guarantee for the same model. Our main contributions are summarized as follows:
+
+We first show that, under stable latent dynamics, the influence of far-past actions decays geometrically, allowing the infinite-memory reward process to be approximated by truncating its dependence to a finite window of recent actions. Building on this approximation, we extend the cyclic approximation principle for finite-memory bandits [ 12 , 5 ] to our latent linear-dynamics setting, showing that the optimal open-loop benchmark can still be approximated by a cyclic block sequence despite the persistent influence of past actions through the latent state.
+
+Building on this block-level reduction, we propose a block-level UCB algorithm that adaptively explores the latent dynamics while exploiting the current estimate. Unlike the previous ETC method [ 11 ] , our algorithm does not require a long initial phase of uniform exploration. Instead, it maintains confidence sets for the truncated dynamics parameters, selects each block optimistically, and updates its estimate after every block, so that every block contributes simultaneously to exploration and exploitation.
+
+We prove that the proposed algorithm achieves a $\widetilde{\mathcal{O}}(\sqrt{T})$ -order regret bound. We decompose each block-level reward observation into a linear signal and residual terms. The main challenge is that one residual component contains pre-block process noises and can therefore be correlated with the adaptively selected block, so it cannot be treated as standard martingale noise. We address this dependence by establishing a uniform bound on the corresponding vector-valued tail, which yields valid confidence sets under adaptive block selection and enables the optimism-based regret analysis. This significantly improves over the previous $\widetilde{\mathcal{O}}(T^{2/3})$ ETC guarantee for the same latent linear-dynamics bandit model [ 11 ] . To the best of our knowledge, this is the first $\widetilde{\mathcal{O}}(\sqrt{T})$ -order regret guarantee for latent linear-dynamics bandits with bilinear reward observations.
+
+We provide numerical experiments demonstrating that the proposed block-level optimistic algorithm performs favorably against baselines. The results illustrate the empirical benefit of adaptive block-level exploration.
+
+1.1 Related Work
+
+Nonstationary bandits.
+
+One common approach models nonstationarity as exogenous , for instance through variation budgets [ 7 ] , switching or drifting reward parameters [ 10 , 31 ] , or nonstationary stochastic linear bandit models [ 19 ] . These models capture environments whose reward functions change over time, but the changes are typically not caused by the learner’s own actions.
+
+Several lines of work study action-induced endogenous nonstationarity. Rotting bandits [ 27 , 34 ] , recharging bandits [ 20 ] , blocking bandits [ 6 ] , rebounding bandits [ 26 ] , and bandits with delay-dependent payoffs [ 8 ] model temporal effects such as satiation, recovery, blocking, or delay-dependent rewards. These models typically describe how the reward of an individual arm changes as a function of its own past usage or delay. Another line of work studies bandit models with finite memory, where the reward at each round depends on only a bounded window of past actions [ 12 , 5 ] . In these models, the memory length is specified as part of the problem, so the influence of sufficiently distant actions vanishes by construction.
+
+A closer structural analogue is dynamical linear bandits [ 29 ] , where actions drive an unobserved linear dynamical system. Their reward is a linear combination of the latent state and the current action, and under stability the relevant benchmark reduces to the best constant action. By contrast, the bilinear reward structure in our setting induces interactions between current and past actions, leading to a finite-horizon open-loop action-sequence benchmark. The closest setting to ours is the latent linear-dynamics bandit model [ 11 ] , which adopts this bilinear reward structure. Unlike bandit models with finite memory, the resulting reward process has infinite memory because past actions can continue to influence future rewards through the latent state. Compared with the previous ETC approach [ 11 ] , we show that a UCB-based adaptive algorithm achieves improved statistical efficiency, yielding a sharper regret guarantee.
+
+Online control and nonstochastic control.
+
+Our problem is also related to online control of linear dynamical systems. A large literature studies regret minimization in Linear Quadratic Regulator (LQR), Linear Quadratic Gaussian (LQG), and related control problems, where the learner controls a linear system and incurs state-action costs [ 2 , 14 , 28 , 13 , 24 ] . More recent work on nonstochastic control allows adversarial perturbations and adversarially chosen convex losses [ 3 , 4 , 16 , 35 ] . These works share with ours the use of stability and input-output representations of linear dynamical systems. However, their objective is control with exogenous loss functions, typically convex or quadratic costs in the state, observation, and control, and the benchmark is a feedback controller class. By contrast, our model is a bandit reward-maximization problem in which the only observation is a scalar bilinear reward, and the benchmark is an optimal finite-horizon open-loop action sequence. This bilinear reward structure creates pairwise interactions between current and past actions after unrolling the dynamics, which do not arise in standard LQR/LQG or nonstochastic control formulations.
+
+2 Preliminaries
+
+Notations.
+
+For a vector $\mathbf{x}\in\mathbb{R}^{d}$ , we denote its $\ell_{2}$ -norm by $\|\mathbf{x}\|_{2}$ . For a positive semidefinite matrix $\mathbf{A}$ , we define the $\mathbf{A}$ -weighted norm by $\|\mathbf{x}\|_{\mathbf{A}}=\sqrt{\mathbf{x}^{\top}\mathbf{A}\mathbf{x}}$ . For a matrix $\mathbf{M}$ , we use $\|\mathbf{M}\|_{2}$ to denote its spectral norm, $\rho(\mathbf{M})$ its spectral radius, and $\lambda_{\max}(\mathbf{M})$ its largest eigenvalue when $\mathbf{M}$ is symmetric. We denote the Frobenius norm of a matrix $\mathbf{M}$ by $\|\mathbf{M}\|_{F}$ . We write $\vect(\mathbf{M})$ for the vectorization of $\mathbf{M}$ , and $\otimes$ for the Kronecker product. The vector ${\bf 0}_{d}$ denotes the zero vector in $\mathbb{R}^{d}$ . We use $\mathcal{O}(\cdot)$ to hide universal constant factors, and $\widetilde{\mathcal{O}}(\cdot)$ to additionally hide logarithmic factors.
+
+Problem setup.
+
+We study an endogenous nonstationary stochastic bandit problem in which rewards are generated through controlled latent dynamics. At each round $t=1,\ldots,T$ , the learner selects an action $\mathbf{u}_{t}\in\mathcal{U}\subset\mathbb{R}^{p}$ and observes a scalar reward $r_{t}$ , while the latent state $\mathbf{x}_{t}\in\mathbb{R}^{n}$ remains unobserved. The reward depends bilinearly on the current action and the latent state, and the action also affects the future evolution of the latent state. Specifically, the system evolves as
+
+$\mathbf{x}_{t+1}=\mathbf{A}\mathbf{x}_{t}+\mathbf{B}\mathbf{u}_{t}+\mathbf{w}_{t},\qquad r_{t}=\mathbf{u}_{t}^{\top}\mathbf{C}\mathbf{x}_{t}+z_{t},$ (1)
+
+where $\mathbf{x}_{1}={\bf 0}_{n}$ , and $\mathbf{A}\in\mathbb{R}^{n\times n}$ , $\mathbf{B}\in\mathbb{R}^{n\times p}$ , and $\mathbf{C}\in\mathbb{R}^{p\times n}$ are unknown matrices. The process noise $\{\mathbf{w}_{t}\}_{t\geq 1}$ and reward noise $\{z_{t}\}_{t\geq 1}$ are unobserved zero-mean noise processes.
+
+For a deterministic open-loop action sequence $\mathbf{u}_{1:T}\in\mathcal{U}^{T}$ , unrolling Eq. ( 1 ) gives $r_{t}=\sum_{s=1}^{t-1}\mathbf{u}_{t}^{\top}\mathbf{C}\mathbf{A}^{s-1}\mathbf{B}\mathbf{u}_{t-s}+\sum_{s=1}^{t-1}\mathbf{u}_{t}^{\top}\mathbf{C}\mathbf{A}^{s-1}\mathbf{w}_{t-s}+z_{t}.$ Therefore, for deterministic open-loop sequences, the expected reward at round $t$ is
+
+$\mu_{t}(\mathbf{u}_{1:t})=\sum_{s=1}^{\infty}\mathbf{u}_{t}^{\top}\mathbf{G}_{s-1}\mathbf{u}_{t-s}.\qquad\mathbf{G}_{h}:=\mathbf{C}\mathbf{A}^{h}\mathbf{B}\,,$ (2)
+
+where we set $\mathbf{u}_{s}={\bf 0}_{p}$ for all $s\leq 0$ . For adaptive policies, we use $\mu_{t}(\mathbf{u}_{1:t})$ as the action-driven mean-reward functional obtained by removing the process-noise and reward-noise terms from the unrolled reward. The open-loop benchmark is $\mathrm{OPT}_{T}:=\sup_{\mathbf{u}_{1:T}\in\mathcal{U}^{T}}\sum_{t=1}^{T}\mu_{t}(\mathbf{u}_{1:t}).$ For an adaptive policy $\pi$ , the realized action sequence $\mathbf{u}_{1:T}^{\pi}$ is random. We define its pseudo-regret with respect to the open-loop benchmark as
+
+$\mathcal{R}^{\mathrm{pseudo}}_{T}(\pi):=\mathrm{OPT}_{T}-\sum_{t=1}^{T}\mu_{t}(\mathbf{u}_{1:t}^{\pi}).$
+
+Thus, $\mathcal{R}^{\mathrm{pseudo}}_{T}(\pi)$ is a random variable through the action sequence generated by the policy. Now, we define the actual expected regret in terms of the realized rewards collected by policy $\pi$ :
+
+$\mathrm{Regret}_{T}(\pi):=\mathrm{OPT}_{T}-\mathbb{E}_{\pi}\!\left[\sum_{t=1}^{T}r_{t}^{\pi}\right].$
+
+Here the expectation is over the policy randomization and the process and reward noises.
+
+Recent work on latent linear dynamics bandits [ 11 ] analyzes expected regret defined in terms of realized rewards. In this paper, we first establish a high-probability bound on the pseudo-regret $\mathcal{R}^{\mathrm{pseudo}}_{T}(\pi)$ , which is defined with respect to the action-driven mean-reward functional. For adaptive policies, this pseudo-regret need not coincide with actual expected regret, because actions may be correlated with past process noise through previously observed rewards. We then translate the pseudo-regret guarantee into an actual expected regret guarantee for our block-committed algorithm by bounding the resulting adaptation gap (Lemma 8 ).
+
+Assumptions.
+
+We next state some standard modeling assumptions, commonly used in stochastic bandits and linear dynamical systems, under which we design and analyze our algorithm.
+
+The action set is compact, i.e., $\mathcal{U}$ is closed and for all $\mathbf{u}\in\mathcal{U}$ , $\|\mathbf{u}\|_{2}\leq 1$ .
+
+For some $\rho\in(0,1)$ and $M_{\rho}\geq 1$ , $\|\mathbf{A}^{h}\|_{2}\leq M_{\rho}\rho^{h}$ for all $h\geq 0$ .
+
+Let $\{\mathcal{F}_{t}\}_{t\geq 0}$ be a filtration containing the interaction history and the latent process. At each round $t$ , the action $\mathbf{u}_{t}$ is $\mathcal{F}_{t-1}$ -measurable, and the noises $(z_{t},\mathbf{w}_{t})$ are realized after $\mathbf{u}_{t}$ is chosen. Conditional on $\mathcal{F}_{t-1}$ , $z_{t}$ and $\mathbf{w}_{t}$ are independent. The reward noise $z_{t}$ is conditionally $\sigma_{z}^{2}$ -sub-Gaussian, and the process noise $\mathbf{w}_{t}$ is conditionally sub-Gaussian with variance proxy $\Sigma_{w}\succeq{\bf 0}_{n\times n}$ : for every $\mathbf{v}\in\mathbb{R}^{n}$ and every $\alpha\in\mathbb{R}$ ,
+
+$\mathbb{E}\!\left[\exp(\alpha z_{t})\mid\mathcal{F}_{t-1}\right]\leq\exp\!\left(\frac{\alpha^{2}\sigma_{z}^{2}}{2}\right)\quad\text{and}\quad\mathbb{E}\!\left[\exp(\alpha\mathbf{v}^{\top}\mathbf{w}_{t})\mid\mathcal{F}_{t-1}\right]\leq\exp\!\left(\frac{\alpha^{2}\mathbf{v}^{\top}\boldsymbol{\Sigma}_{w}\mathbf{v}}{2}\right)\,.$
+
+These assumptions are standard in stochastic bandit and linear dynamical system models. Assumption 1 rules out unbounded rewards and ensures that the open-loop benchmark is well-defined over a compact action set. Assumption 2 imposes exponential stability of the latent dynamics, which is equivalent to Schur stability in finite dimensions. This type of stability assumption is common in learning and control of linear dynamical systems, since it keeps the state and rewards well behaved under persistent inputs and process noise, and ensures geometric decay of past actions and noises [ 35 , 30 , 25 , 36 , 32 , 11 ] . Assumption 3 is a standard light-tail condition used for high-probability least-squares and self-normalized martingale concentration arguments.
+
+3 Main Results
+
+3.1 Cyclic Approximation
+
+A central difficulty in the latent-dynamics bandit model is that learning and planning are inherently coupled. The learner must estimate the latent input-output dynamics from temporally correlated rewards, while also choosing actions whose effects propagate through the latent state over the horizon. The ETC approach [ 11 ] addresses this challenge by separating learning and planning: it first estimates the latent dynamics from exploratory data and then commits to an optimized open-loop sequence. This phase separation yields a $\widetilde{\mathcal{O}}(T^{2/3})$ regret rate, reflecting a suboptimal exploration–exploitation trade-off. Our goal is to avoid this separation by updating the dynamics estimate and revising the plan adaptively throughout the horizon.
+
+To avoid this rigid phase separation, we exploit the stability of the latent dynamics. Stability makes the effect of far-past actions decay geometrically, allowing the infinite-memory mean-reward functional to be approximated by a finite-memory proxy. We then use a block construction of length $m+L$ : the first $m$ actions serve as a warm-up segment, and the last $L$ positions yield informative rewards whose $m$ -step histories remain inside the block. This turns the long-horizon open-loop problem into a stationary block-level learning problem, in which each block is a composite action and the proxy reward is linear in the truncated Markov parameters.
+
+Finite-memory approximation.
+
+We first formalize the finite-memory approximation of the mean reward defined in Eq. ( 2 ). For a memory cutoff $m\geq 1$ , define the truncated mean reward as
+
+$\bar{\mu}_{t}(\mathbf{u}_{1:t}):=\sum_{s=1}^{m}\mathbf{u}_{t}^{\top}\mathbf{G}_{s-1}\mathbf{u}_{t-s}\,,$
+
+where we use the convention $\mathbf{u}_{j}={\bf 0}_{p}$ for all $j\leq 0$ . Under the stability condition in Assumption 2 , the truncation error decays geometrically. In particular, since $\|\mathbf{u}\|_{2}\leq 1$ for every $\mathbf{u}\in\mathcal{U}$ , we have
+
+$\left|\mu_{t}(\mathbf{u}_{1:t})-\bar{\mu}_{t}(\mathbf{u}_{1:t})\right|\leq\Delta_{m}:=\sum_{h=m}^{\infty}\|\mathbf{G}_{h}\|_{2}\leq\frac{\|\mathbf{C}\|_{2}\|\mathbf{B}\|_{2}M_{\rho}}{1-\rho}\rho^{m}\,.$ (3)
+
+We refer to $\Delta_{m}$ as the finite-memory truncation error. The derivation of Eq. ( 3 ) is provided in Lemma 4 in Appendix A .
+
+Block-level proxy reward.
+
+The finite-memory representation allows us to localize the reward within short blocks. Fix an informative suffix length $L\geq 1$ , and let the block length be $m+L$ . For simplicity, we assume that $T/(m+L)$ is an integer; a nonzero remainder contributes only an additive $\mathcal{O}(m+L)$ term.
+
+For a block $\mathbf{U}=(\mathbf{v}_{1},\ldots,\mathbf{v}_{m+L})\in\mathcal{U}^{m+L}$ , we define its proxy reward as the truncated reward accumulated over the last $L$ positions of the block as $\bar{r}_{m}(\mathbf{U}):=\sum_{j=m+1}^{m+L}\sum_{s=1}^{m}\mathbf{v}_{j}^{\top}\mathbf{G}_{s-1}\mathbf{v}_{j-s}\,.$ The first $m$ positions serve as a warm-up segment so that every informative position $j\in\{m+1,\ldots,m+L\}$ has its full $m$ -step action history contained inside the same block. This block construction reveals a linear reward structure : $\bar{r}_{m}(\mathbf{U})$ can be written as a linear function of the truncated Markov parameters. Define
+
+$\boldsymbol{\theta}_{m}^{*}:=\begin{bmatrix}\mathrm{vec}(\mathbf{G}_{0})\\ \mathrm{vec}(\mathbf{G}_{1})\\ \vdots\\ \mathrm{vec}(\mathbf{G}_{m-1})\end{bmatrix}\in\mathbb{R}^{p^{2}m},\qquad\boldsymbol{\phi}_{j}(\mathbf{U}):=\begin{bmatrix}\mathbf{v}_{j-1}\otimes\mathbf{v}_{j}\\ \mathbf{v}_{j-2}\otimes\mathbf{v}_{j}\\ \vdots\\ \mathbf{v}_{j-m}\otimes\mathbf{v}_{j}\end{bmatrix}\in\mathbb{R}^{p^{2}m},$
+
+for each informative position $j\in\{m+1,\ldots,m+L\}$ . Then we have
+
+$\bar{r}_{m}(\mathbf{U})\!=\!\!\!\!\sum_{j=m+1}^{m+L}\sum_{s=1}^{m}\mathbf{v}_{j}^{\top}\mathbf{G}_{s-1}\mathbf{v}_{j-s}=\!\!\!\!\sum_{j=m+1}^{m+L}\sum_{s=1}^{m}\langle\mathbf{v}_{j-s}\otimes\mathbf{v}_{j},\vect(\mathbf{G}_{s-1})\rangle=\!\!\!\!\sum_{j=m+1}^{m+L}\left\langle\boldsymbol{\phi}_{j}(\mathbf{U}),\boldsymbol{\theta}_{m}^{*}\right\rangle.$ (4)
+
+Thus, under the finite-memory block construction, each block can be viewed as a composite action whose expected proxy reward is linear in the unknown parameter $\boldsymbol{\theta}_{m}^{*}$ . This linear representation is the key reduction that enables us to apply optimism-based linear bandit methods at the block level.
+
+Cyclic approximation.
+
+We next show that the original open-loop benchmark can be approximated by optimizing the block-level proxy reward. Let $\mathbf{U}^{*}\in\mathop{\mathrm{argmax}}_{\mathbf{U}\in\mathcal{U}^{m+L}}\bar{r}_{m}(\mathbf{U})$ be a proxy-optimal block , and let $\mathbf{U}^{*}_{\mathrm{cyc}}\in\mathcal{U}^{T}$ denote its cyclic repetition over the horizon $T$ . The following proposition shows that this cyclic sequence approximates the optimal benchmark up to a controlled additive error.
+
+Suppose that Assumptions 1 and 2 hold. Then, we have
+
+$\sup_{\mathbf{u}_{1:T}\in\mathcal{U}^{T}}\sum_{t=1}^{T}\bar{\mu}_{t}(\mathbf{u}_{1:t})-\sum_{t=1}^{T}\bar{\mu}_{t}\!\left((\mathbf{U}^{*}_{\mathrm{cyc}})_{1:t}\right)\leq\frac{2Tm}{m+L}R_{m}\,,$
+
+where $R_{m}:=\frac{\|\mathbf{C}\|_{2}\|\mathbf{B}\|_{2}M_{\rho}}{1-\rho}$ . Consequently,
+
+$\mathrm{OPT}_{T}-\sum_{t=1}^{T}\mu_{t}\!\left((\mathbf{U}^{*}_{\mathrm{cyc}})_{1:t}\right)\leq 2T\Delta_{m}+\frac{2Tm}{m+L}R_{m}\,,$
+
+where $\Delta_{m}$ is the finite-memory truncation error defined in Eq. ( 3 ).
+
+Discussion of Proposition 1 .
+
+Proposition 1 reduces the original nonstationary planning problem to a stationary block-level optimization problem: it suffices to learn and optimize the proxy reward $\bar{r}_{m}(\mathbf{U})$ over blocks, while paying the approximation error $2T\Delta_{m}+2TmR_{m}/(m+L)$ .
+
+This reduction is related to the block-cyclic construction for linear bandits with finite memory [ 12 , 5 ] , but our setting differs in two important ways. First, in finite-memory bandits, the memory length is part of the model, so after ignoring the first $m$ positions of each block, the remaining rewards are exactly localized within the block. In our latent-dynamics model, the reward process has infinite memory : every past action can affect the current reward through the latent state, and the cutoff $m$ is only an approximation parameter. Thus, our block reduction must control both the truncation error $\Delta_{m}$ and the warm-up loss induced at block boundaries, of order $mR_{m}/(m+L)$ . Second, the reward in finite-memory linear bandits [ 12 , 5 ] is linear in observed action features, whereas our reward depends bilinearly on the current action and an unobserved latent state. After unrolling the dynamics, this induces a quadratic dependence on pairs of past and current actions through unknown Markov parameters. Therefore, Proposition 1 is not merely a reuse of a finite-memory blocking argument; it shows that an endogenous latent-dynamics bandit with infinite memory can be approximated by a stationary linear bandit problem over blocks.
+
+3.2 Algorithm: Block-OFUL
+
+Algorithm 1 Block-OFUL
+
+Proposition 1 shows that the original nonstationary planning problem can be reduced, up to a controlled approximation error, to learning and optimizing the block-level proxy reward $\bar{r}_{m}(\mathbf{U})$ . Since Eq. ( 4 ) represents $\bar{r}_{m}(\mathbf{U})$ as a linear function of the unknown truncated Markov parameter $\boldsymbol{\theta}_{m}^{*}$ , we can treat each block $\mathbf{U}\in\mathcal{U}^{m+L}$ as a composite action in a linear bandit problem. Based on this reduction, we propose Block-OFUL , an optimistic block-level algorithm described in Algorithm 1 .
+
+The algorithm proceeds over blocks of length $m+L$ . At the beginning of each block $\tau$ , it constructs a confidence set around the ridge estimator $\hat{\boldsymbol{\theta}}_{\tau-1}$ using the Gram matrix $\mathbf{V}_{\tau-1}$ , and selects a block $\mathbf{U}_{\tau}$ that maximizes a UCB on the proxy reward. More specifically, the selected block maximizes the sum of the estimated reward and the uncertainty bonus over the informative suffix $j=m+1,\ldots,m+L$ :
+
+$\mathrm{UCB}_{\tau-1}(\mathbf{U}):=\sum_{j=m+1}^{m+L}\left(\langle\boldsymbol{\phi}_{j}(\mathbf{U}),\hat{\boldsymbol{\theta}}_{\tau-1}\rangle+\gamma_{\tau-1}\|\boldsymbol{\phi}_{j}(\mathbf{U})\|_{\mathbf{V}_{\tau-1}^{-1}}\right).$
+
+After playing the chosen block sequentially, the learner observes all rewards in the block, but uses only the last $L$ rewards for the regression update. The first $m$ actions are used only to build the within-block history required by the finite-memory proxy, while the informative suffix provides noisy linear observations of $\boldsymbol{\theta}_{m}^{*}$ .
+
+This design differs from the previous ETC approach [ 11 ] . Rather than spending an initial exploration phase to estimate the Markov parameters and then committing to a fixed action sequence, our proposed algorithm interleaves exploration and exploitation at the block level. After each block, it updates its estimate of $\boldsymbol{\theta}_{m}^{*}$ and immediately uses the refined confidence set to choose the next block optimistically. This block-level adaptivity is the key mechanism that avoids the sub-optimal exploration–exploitation trade-off inherent in the previous ETC approach.
+
+The block selection step in Algorithm 1 is formulated as an offline UCB maximization problem over $\mathcal{U}^{m+L}$ . Our theoretical analysis assumes access to an exact maximization oracle; similar oracle-based formulations have been widely used in the previous literature [ 9 , 23 , 12 ] . This allows us to focus on the statistical learning aspect of the problem, separately from the implementation of the offline optimizer. In practice, the UCB objective can be optimized approximately, for example by gradient ascent when $\mathcal{U}$ is continuous. Designing computationally efficient oracles tailored to the block-UCB objective, together with corresponding regret guarantees, is an interesting direction for future work.
+
+3.3 Regret Bound
+
+We now state the main regret guarantee of Algorithm 1 . Before stating the theorem, we introduce some notation. For a fixed memory cutoff $m\in\mathbb{N}$ , let $S_{m}$ be an upper bound on the norm of the vectorized truncated Markov parameter $\boldsymbol{\theta}_{m}^{*}$ , i.e., $\|\boldsymbol{\theta}_{m}^{*}\|_{2}\leq S_{m}$ . Also, let $L_{\phi}$ be a uniform upper bound on the lifted features, i.e., $\|\boldsymbol{\phi}_{j}(\mathbf{U})\|_{2}\leq L_{\phi}$ for all $\mathbf{U}\in\mathcal{U}^{m+L}$ and $j\in\{m+1,\ldots,m+L\}$ .
+
+Suppose that Assumptions 1 , 2 , and 3 hold. Let $d=p^{2}m$ , and let $N=T/(m+L)$ be an integer. For any $\delta\in(0,1)$ , set the parameters in Algorithm 1 as $\lambda\geq L_{\phi}^{2}$ and $\gamma_{\tau}=\alpha_{\tau}+\beta_{\tau}$ , where
+
+$\displaystyle\alpha_{\tau}:=\sigma_{\mathcal{B}}\sqrt{d\log\!\left(1+\frac{\tau LL_{\phi}^{2}}{d\lambda}\right)+2\log\frac{1}{\delta}}+\sqrt{\lambda}S_{m},$ $\displaystyle\beta_{\tau}:=\bar{\Delta}_{m}(\delta)\sqrt{2\tau Ld\log\!\left(1+\frac{\tau LL_{\phi}^{2}}{d\lambda}\right)}\,,\quad\sigma_{\mathcal{B}}^{2}:=\sigma_{z}^{2}+\frac{\lambda_{\max}(\boldsymbol{\Sigma}_{w})\|\mathbf{C}\|_{2}^{2}M_{\rho}^{2}}{(1-\rho)^{2}},$ $\displaystyle\bar{\Delta}_{m}(\delta):=\frac{\|\mathbf{C}\|_{2}\|\mathbf{B}\|_{2}M_{\rho}}{1-\rho}\rho^{m}+2\rho^{m}\sqrt{\frac{2\lambda_{\max}(\boldsymbol{\Sigma}_{w})\|\mathbf{C}\|_{2}^{2}M_{\rho}^{2}}{1-\rho^{2}}\log\frac{2\cdot 5^{p}T}{\delta}}.$
+
+Then, with probability at least $1-\delta$ , the pseudo-regret of the policy $\pi$ of Algorithm 1 satisfies
+
+$\mathcal{R}^{\mathrm{pseudo}}_{T}(\pi)\leq 2T\Delta_{m}+\frac{2Tm}{m+L}R_{m}+2\gamma_{N}\left[\frac{2LL_{\phi}d}{\sqrt{\lambda}}+\sqrt{2Td\log\left(1+\frac{TL_{\phi}^{2}}{\lambda d}\right)}\right].$
+
+In particular, choosing $m=-\frac{1}{2}\log_{\rho}T$ , $L=\frac{\sqrt{mT}}{d^{3/4}}-m$ , and $\lambda=L_{\phi}^{2}$ gives
+
+$\mathcal{R}^{\mathrm{pseudo}}_{T}(\pi)=\widetilde{\mathcal{O}}\!\left(d^{3/4}\sqrt{mT}+d\sqrt{T}\right).$
+
+Now, we provide the actual expected regret guarantee of Algorithm 1 .
+
+Suppose the assumptions of Lemma 1 hold. For a fixed $\delta\in(0,1)$ , let $B_{T}(\delta)$ be the pseudo-regret bound established in Lemma 1 . Define $\Delta_{0}:=\sum_{h=0}^{\infty}\|\mathbf{G}_{h}\|_{2}$ . Then, we have
+
+$\mathrm{Regret}_{T}(\pi)\leq B_{T}(\delta)+2\delta T\Delta_{0}+\frac{\|\mathbf{C}\|_{2}M_{\rho}}{1-\rho}\sqrt{\frac{p\lambda_{\max}(\boldsymbol{\Sigma}_{w})}{1-\rho^{2}}}\frac{T}{m+L}\,.$
+
+Consequently, choosing $\delta=T^{-2}$ and the parameters $m=-\frac{1}{2}\log_{\rho}T\,,L=\frac{\sqrt{mT}}{d^{3/4}}-m\,,\lambda=L_{\phi}^{2}\,,$ up to integer rounding and whenever $L\geq 1$ , gives
+
+$\mathrm{Regret}_{T}(\pi)=\widetilde{O}\!\left(d^{3/4}\sqrt{mT}+d\sqrt{T}\right)=\widetilde{O}\left(\left[\frac{p^{3/2}}{\log(1/\rho)^{5/4}}+\frac{p^{2}}{\log(1/\rho)}\right]\sqrt{T}\right)\,.$
+
+Discussion of Theorem 1 .
+
+Theorem 1 establishes an actual expected regret guarantee for Algorithm 1 . Compared with the recent ETC approach for the same latent-dynamics bandit model [ 11 ] , our result improves the regret rate from $\widetilde{\mathcal{O}}(T^{2/3})$ to $\widetilde{\mathcal{O}}(\sqrt{T})$ under the open-loop action-sequence benchmark. The improvement comes from replacing the phase-separated explore-then-commit strategy with adaptive block-level optimism. In ETC, the learner spends a long initial uniform-exploration phase to estimate the latent dynamics and then commits to a fixed open-loop sequence, which induces the suboptimal exploration–exploitation trade-off leading to the $\widetilde{\mathcal{O}}(T^{2/3})$ rate. In contrast, Algorithm 1 updates its confidence set after each block and selects the next block optimistically, so every block contributes simultaneously to learning and reward maximization. Thus, adaptive exploration at the block level removes the need for a long pure-exploration phase and yields the improved regret.
+
+3.4 Regret Analysis
+
+In this section, we present the main technical ingredients of the regret analysis for Lemma 1 . First, we relate the pseudo-regret to the proxy regret for the block-level proxy reward. Second, we establish a high-probability confidence set for the truncated Markov parameter $\boldsymbol{\theta}_{m}^{*}$ . Finally, we use optimism to bound the proxy regret by a cumulative uncertainty term and control this term through a blockwise elliptical-potential argument.
+
+Pseudo-regret decomposition.
+
+Let $N:=T/(m+L)$ , and let $\mathbf{U}_{1},\ldots,\mathbf{U}_{N}$ be the sequence of blocks selected by Algorithm 1 . Define the proxy regret $\mathcal{R}_{\text{proxy}}:=\sum_{\tau=1}^{N}\left(\bar{r}_{m}(\mathbf{U}^{*})-\bar{r}_{m}(\mathbf{U}_{\tau})\right)\,,$ where $\mathbf{U}^{*}\in\mathop{\mathrm{argmax}}_{\mathbf{U}\in\mathcal{U}^{m+L}}\bar{r}_{m}(\mathbf{U})$ is the proxy-optimal block. By Proposition 1 , the pseudo-regret is bounded by the approximation error plus the proxy regret:
+
+$\mathcal{R}^{\mathrm{pseudo}}_{T}(\pi)\leq 2T\Delta_{m}+\frac{2Tm}{m+L}R_{m}+\mathcal{R}_{\text{proxy}}\,.$
+
+Thus, it remains to control $\mathcal{R}_{\text{proxy}}$ .
+
+Confidence set for truncated Markov parameters.
+
+We establish a confidence set for the truncated Markov parameter $\boldsymbol{\theta}_{m}^{*}$ . The key step is to express the informative rewards in each block as noisy linear observations of $\boldsymbol{\theta}_{m}^{*}$ . The following decomposition separates the observed reward into the linear signal, the current-block noise, the action-tail bias due to finite-memory truncation, and the process-noise tail coming from process noises outside the current finite-memory window.
+
+Let $N=T/(m+L)$ , and assume that $N\in\mathbb{N}$ . For each block $\tau\in[N]$ , let $\mathbf{U}_{\tau}=(\mathbf{u}_{\tau,1},\ldots,\mathbf{u}_{\tau,m+L})$ , $\mathbf{u}_{\tau,j}=\mathbf{u}_{t_{\tau,j}}$ , and $t_{\tau,j}:=(\tau-1)(m+L)+j$ . For every $j\in\{m+1,\ldots,m+L\}$ , define $r_{\tau,j}:=r_{t_{\tau,j}}$ . Then,
+
+$r_{\tau,j}=\left\langle\boldsymbol{\phi}_{j}(\mathbf{U}_{\tau}),\boldsymbol{\theta}_{m}^{*}\right\rangle+\epsilon_{\tau,j}+\eta_{\tau,j}+\zeta_{\tau,j},$
+
+where
+
+$\displaystyle\epsilon_{\tau,j}$ $\displaystyle:=z_{t_{\tau,j}}+\sum_{h=0}^{j-2}\mathbf{u}_{\tau,j}^{\top}\mathbf{C}\mathbf{A}^{h}\mathbf{w}_{t_{\tau,j}-1-h}\,,$ (current-block noise) $\displaystyle\eta_{\tau,j}$ $\displaystyle:=\sum_{s=m+1}^{\infty}\mathbf{u}_{\tau,j}^{\top}\mathbf{G}_{s-1}\mathbf{u}_{t_{\tau,j}-s}\,,$ (action-tail bias) $\displaystyle\zeta_{\tau,j}$ $\displaystyle:=\sum_{h=j-1}^{\infty}\mathbf{u}_{\tau,j}^{\top}\mathbf{C}\mathbf{A}^{h}\mathbf{w}_{t_{\tau,j}-1-h}\,.$ (process-noise tail)
+
+Using the decomposition in Lemma 2 , we construct a confidence set for the truncated Markov parameter $\boldsymbol{\theta}_{m}^{*}$ . The current-block noise $\epsilon_{\tau,j}$ is controlled through a self-normalized martingale concentration argument, whereas the action-tail bias $\eta_{\tau,j}$ and the process-noise tail $\zeta_{\tau,j}$ are controlled by the stability of the latent dynamics.
+
+Let $N=T/(m+L)$ , and assume that $N\in\mathbb{N}$ . Suppose Assumptions 1 – 3 hold. Fix $\delta\in(0,1)$ , and suppose that $\lambda\geq L_{\phi}^{2}$ . Then, with probability at least $1-\delta$ , for all $\tau\in[N]$ , $\|\hat{\boldsymbol{\theta}}_{\tau}-\boldsymbol{\theta}_{m}^{*}\|_{\mathbf{V}_{\tau}}\leq\gamma_{\tau},$ where $\gamma_{\tau}$ is the confidence radius specified in Lemma 1 .
+
+Lemma 3 is the key ingredient that enables optimism in our block-level formulation. At a high level, it plays a role analogous to the confidence set used in block-based analyses for linear bandits with finite memory [ 12 ] . However, there is an important distinction. In finite-memory linear bandits, the memory length is part of the model specification, and each informative reward is exactly linear in a finite-memory feature with martingale noise.
+
+In our latent-dynamics model, however, the finite-memory representation is only an approximation of an infinite-memory reward process induced by the latent state dynamics. This distinction is reflected in Lemma 2 . Each informative reward contains not only the current-block noise $\epsilon_{\tau,j}$ , but also the action-tail bias $\eta_{\tau,j}$ and the process-noise tail $\zeta_{\tau,j}$ . The term $\eta_{\tau,j}$ appears because actions more than $m$ steps in the past can still affect the current reward through the latent state, while $\zeta_{\tau,j}$ captures the contribution of process noises generated before the current block. Importantly, these pre-block noises can be correlated with the adaptively selected block through past reward observations, so $\zeta_{\tau,j}$ is not a martingale-difference noise term with respect to the pre-block history. Thus, unlike in the finite-memory setting, blocking does not yield a linear observation model with martingale noise.
+
+We overcome these difficulties by exploiting the exponential stability of $\mathbf{A}$ . The action-tail bias is bounded directly through the geometric decay of the Markov parameters. For the process-noise tail, we separate the adaptively chosen action from the underlying vector-valued noise tail and establish a uniform high-probability bound over all informative indices. This bound remains valid for the adaptively selected blocks. The current-block noise is then controlled using a blockwise self-normalized martingale concentration argument. Combining these bounds yields the confidence set in Lemma 3 , extending the finite-memory block analysis to our latent-dynamics setting, where effective finite memory arises from stability rather than being built into the model.
+
+Proxy regret.
+
+We control the proxy regret on the confidence event from Lemma 3 . By optimism, the proxy-optimal block is upper bounded by its UCB score, while Algorithm 1 selects a block maximizing this score. Hence, for every $\tau$ ,
+
+$\bar{r}_{m}(\mathbf{U}^{*})-\bar{r}_{m}(\mathbf{U}_{\tau})\leq 2\gamma_{\tau-1}\sum_{j=m+1}^{m+L}\|\boldsymbol{\phi}_{j}(\mathbf{U}_{\tau})\|_{\mathbf{V}_{\tau-1}^{-1}}.$
+
+Summing over $\tau=1,\ldots,N$ and using the monotonicity of $\gamma_{\tau}$ , we obtain
+
+$\mathcal{R}_{\mathrm{proxy}}\leq 2\gamma_{N}\sum_{\tau=1}^{N}\sum_{j=m+1}^{m+L}\|\boldsymbol{\phi}_{j}(\mathbf{U}_{\tau})\|_{\mathbf{V}_{\tau-1}^{-1}}.$
+
+It remains to control the cumulative uncertainty term. The main technical issue is that the UCB score uses the pre-block Gram matrix $\mathbf{V}_{\tau-1}$ , whereas the elliptical-potential argument naturally applies to sequentially updated within-block Gram matrices. In the previous block-cyclic analysis [ 12 ] , this mismatch is absorbed by enlarging the confidence radius, which makes the block length appear multiplicatively in the leading estimation term. Instead, we keep the confidence radius tied to $\mathbf{V}_{\tau-1}$ and control the mismatch directly in the uncertainty sum.
+
+Let $\mathbf{V}_{\tau,j}:=\mathbf{V}_{\tau-1}+\sum_{i=m+1}^{j}\boldsymbol{\phi}_{i}(\mathbf{U}_{\tau})\boldsymbol{\phi}_{i}(\mathbf{U}_{\tau})^{\top}$ , with $\mathbf{V}_{\tau,m}:=\mathbf{V}_{\tau-1}$ . We decompose each uncertainty term into
+
+$\|\boldsymbol{\phi}_{j}(\mathbf{U}_{\tau})\|_{\mathbf{V}_{\tau-1}^{-1}}=\|\boldsymbol{\phi}_{j}(\mathbf{U}_{\tau})\|_{\mathbf{V}_{\tau,j-1}^{-1}}+\Big(\|\boldsymbol{\phi}_{j}(\mathbf{U}_{\tau})\|_{\mathbf{V}_{\tau-1}^{-1}}-\|\boldsymbol{\phi}_{j}(\mathbf{U}_{\tau})\|_{\mathbf{V}_{\tau,j-1}^{-1}}\Big).$
+
+The first term is controlled by the usual elliptical-potential argument, and the second by a Gram-matrix telescoping argument. This yields
+
+$\sum_{\tau=1}^{N}\sum_{j=m+1}^{m+L}\|\boldsymbol{\phi}_{j}(\mathbf{U}_{\tau})\|_{\mathbf{V}_{\tau-1}^{-1}}\leq\frac{2LL_{\phi}d}{\sqrt{\lambda}}+\sqrt{2Td\log\left(1+\frac{TL_{\phi}^{2}}{\lambda d}\right)}.$
+
+Thus, $L$ contributes only through an additive block-update mismatch term, rather than multiplying the leading $\sqrt{T}$ -type uncertainty term. Combining this bound with the proxy-regret decomposition proves Lemma 1 ; the full derivation is deferred to Appendix B .
+
+4 Experiments
+
+Figure 1 : Cumulative reward on latent linear-dynamics bandit instances with different stability levels.
+
+We evaluate the proposed algorithm, Block-OFUL , on two synthetic instances of the latent linear-dynamics model in Eq. ( 1 ). In both instances, the latent-state dimension is $n=4$ , the action dimension is $p=3$ , and the action set is $\mathcal{U}=\{-1,+1\}^{p}$ . We use the same input and reward matrices
+
+$\mathbf{B}=\begin{bmatrix}0.75&0.35&0.54\\ 0.01&0.58&0.46\\ 0.68&-0.09&-0.61\\ -0.15&0.83&-0.47\end{bmatrix},\qquad\mathbf{C}=\begin{bmatrix}0.67&0.04&0.72&-0.19\\ 0.20&0.65&0.00&0.76\\ 0.54&0.46&-0.61&-0.47\end{bmatrix},$
+
+and consider two transition matrices with different stability levels:
+
+$\displaystyle\mathbf{A}_{0.95}$ $\displaystyle=\begin{bmatrix}0.52&0.14&0.27&-0.18\\ 0.14&0.50&-0.08&-0.06\\ 0.27&-0.08&0.75&0.03\\ -0.18&-0.06&0.03&0.52\end{bmatrix},\qquad\mathbf{A}_{0.3}$ $\displaystyle=\begin{bmatrix}0.16&0.04&0.09&-0.06\\ 0.04&0.13&-0.02&-0.03\\ 0.09&-0.02&0.23&0.00\\ -0.06&-0.03&0.00&0.14\end{bmatrix}.$
+
+Here, $\rho(\mathbf{A}_{0.95})=0.95$ and $\rho(\mathbf{A}_{0.3})=0.3$ . These two instances allow us to examine the effect of the persistence of the latent dynamics. We compare Block-OFUL with the ETC baseline [ 11 ] . For ETC, we use an exploration length of $H=120$ in both instances. For Block-OFUL , we use $(m,L)=(8,36)$ when $\rho(\mathbf{A})=0.95$ and $(m,L)=(2,24)$ when $\rho(\mathbf{A})=0.3$ . The reward and process noises are Gaussian with variance proxy $0.01$ .
+
+Figure 1 shows the cumulative reward over the interaction horizon. Across both stability regimes, Block-OFUL consistently accumulates reward faster than ETC, while the random baseline remains close to zero. For the instance with $\rho(\mathbf{A})=0.95$ , the performance gap between Block-OFUL and ETC becomes increasingly pronounced over time, indicating that continued adaptation is particularly beneficial when the effects of past actions decay slowly. For the faster-decaying instance with $\rho(\mathbf{A})=0.3$ , both methods exhibit more stable reward accumulation, but Block-OFUL maintains a consistently higher cumulative-reward trajectory throughout most of the horizon. Overall, these results demonstrate the benefit of adaptive block-level learning over the phase-separated ETC strategy across different levels of dynamical persistence.
+
+5 Conclusion
+
+We studied an endogenous nonstationary stochastic bandit problem with latent linear dynamics, where actions influence both immediate rewards and the future latent state. This structure induces history-dependent rewards and makes long-horizon planning substantially more challenging than in classical stochastic bandits. We showed that, under stable latent dynamics, the original infinite-memory problem can be reduced to a stationary block-level linear bandit problem through cyclic approximation. Based on this reduction, we proposed an optimistic algorithm that learns the truncated Markov parameters while adaptively selecting blocks. Our main result establishes a regret bound of order $\widetilde{\mathcal{O}}(\sqrt{T})$ , significantly improving over the previous $\widetilde{\mathcal{O}}(T^{2/3})$ explore-then-commit guarantee for the same model. To the best of our knowledge, this is the first regret guarantee of order $\widetilde{\mathcal{O}}(\sqrt{T})$ for latent linear-dynamics bandits with bilinear rewards and action-controlled latent states. Future work includes developing computationally efficient oracles for block-UCB maximization, extending the analysis to adaptive or feedback benchmarks, and designing parameter-free variants that adapt to unknown stability and memory scales.
+
+References
+
+Appendix A Proof of Proposition 1
+
+In this section, we provide the technical details for our cyclic approximation. First, we show that under the stability condition, the truncation error decays geometrically.
+
+Let $\bar{\mu}_{t}(\mathbf{u}_{1:t})$ denote the $m$ -truncated version of the mean reward $\mu_{t}(\mathbf{u}_{1:t})$ , defined by
+
+$\mu_{t}(\mathbf{u}_{1:t})=\sum_{s=1}^{\infty}\mathbf{u}_{t}^{\top}\mathbf{G}_{s-1}\mathbf{u}_{t-s},\qquad\bar{\mu}_{t}(\mathbf{u}_{1:t}):=\sum_{s=1}^{m}\mathbf{u}_{t}^{\top}\mathbf{G}_{s-1}\mathbf{u}_{t-s}.$
+
+Suppose Assumptions 1 and 2 hold. Then, for every $t\geq 1$ , we have
+
+$|\mu_{t}(\mathbf{u}_{1:t})-\bar{\mu}_{t}(\mathbf{u}_{1:t})|\leq\Delta_{m}:=\sum_{h=m}^{\infty}\|\mathbf{G}_{h}\|_{2}\leq\frac{\|\mathbf{C}\|_{2}\|\mathbf{B}\|_{2}M_{\rho}}{1-\rho}\rho^{m},$
+
+and
+
+$|\bar{\mu}_{t}(\mathbf{u}_{1:t})|\leq R_{m}:=\frac{\|\mathbf{C}\|_{2}\|\mathbf{B}\|_{2}M_{\rho}}{1-\rho}.$
+
+Recall that for every $t\geq 1$ , we have
+
+$\mu_{t}(\mathbf{u}_{1:t}):=\sum_{s=1}^{\infty}\mathbf{u}_{t}^{\top}\mathbf{G}_{s-1}\mathbf{u}_{t-s}\,.$
+
+For a fixed memory cutoff $m\geq 1$ , the truncated mean reward is defined as
+
+$\bar{\mu}_{t}(\mathbf{u}_{1:t}):=\sum_{s=1}^{m}\mathbf{u}_{t}^{\top}\mathbf{G}_{s-1}\mathbf{u}_{t-s}\,.$
+
+Then,
+
+$\mu_{t}(\mathbf{u}_{1:t})-\bar{\mu}_{t}(\mathbf{u}_{1:t})=\sum_{s=m+1}^{\infty}\mathbf{u}_{t}^{\top}\mathbf{G}_{s-1}\mathbf{u}_{t-s}\,.$
+
+Since $\|\mathbf{u}\|_{2}\leq 1$ for every $\mathbf{u}\in\mathcal{U}$ , we have
+
+$\left|\mathbf{u}_{t}^{\top}\mathbf{G}_{s-1}\mathbf{u}_{t-s}\right|\leq\|\mathbf{u}_{t}\|_{2}\|\mathbf{G}_{s-1}\|_{2}\|\mathbf{u}_{t-s}\|_{2}\leq\|\mathbf{G}_{s-1}\|_{2}\,.$
+
+Therefore,
+
+$\left|\mu_{t}(\mathbf{u}_{1:t})-\bar{\mu}_{t}(\mathbf{u}_{1:t})\right|\leq\sum_{s=m+1}^{\infty}\|\mathbf{G}_{s-1}\|_{2}=\sum_{h=m}^{\infty}\|\mathbf{G}_{h}\|_{2}\,.$
+
+Finally, by Assumption 2 ,
+
+$\|\mathbf{G}_{h}\|_{2}=\|\mathbf{C}\mathbf{A}^{h}\mathbf{B}\|_{2}\leq\|\mathbf{C}\|_{2}\|\mathbf{A}^{h}\|_{2}\|\mathbf{B}\|_{2}\leq\|\mathbf{C}\|_{2}\|\mathbf{B}\|_{2}M_{\rho}\rho^{h}.$
+
+Hence, we have
+
+$\left|\mu_{t}(\mathbf{u}_{1:t})-\bar{\mu}_{t}(\mathbf{u}_{1:t})\right|\leq\|\mathbf{C}\|_{2}\|\mathbf{B}\|_{2}M_{\rho}\sum_{h=m}^{\infty}\rho^{h}=\frac{\|\mathbf{C}\|_{2}\|\mathbf{B}\|_{2}M_{\rho}}{1-\rho}\rho^{m}\,.$
+
+∎
+
+Now, we provide the proof of Proposition 1 . See 1
+
+Fix an arbitrary action sequence $\mathbf{u}_{1:T}\in\mathcal{U}^{T}$ , and partition it into consecutive blocks of length $m+L$ . By definition,
+
+$\displaystyle\sum_{t=1}^{T}\bar{\mu}_{t}(\mathbf{u}_{1:t})$ $\displaystyle=\sum_{\tau=1}^{T/(m+L)}\sum_{j=1}^{m+L}\bar{\mu}_{(\tau-1)(m+L)+j}\big(\mathbf{u}_{1:(\tau-1)(m+L)+j}\big)$ $\displaystyle=\sum_{\tau=1}^{T/(m+L)}\sum_{j=1}^{m}\bar{\mu}_{(\tau-1)(m+L)+j}\big(\mathbf{u}_{1:(\tau-1)(m+L)+j}\big)$ $\displaystyle\quad+\sum_{\tau=1}^{T/(m+L)}\sum_{j=m+1}^{m+L}\bar{\mu}_{(\tau-1)(m+L)+j}\big(\mathbf{u}_{1:(\tau-1)(m+L)+j}\big)\,.$
+
+By Lemma 4 , each prefix term satisfies $|\bar{\mu}_{t}|\leq R_{m}$ . Hence,
+
+$\sum_{\tau=1}^{T/(m+L)}\sum_{j=1}^{m}\bar{\mu}_{(\tau-1)(m+L)+j}\big(\mathbf{u}_{1:(\tau-1)(m+L)+j}\big)\leq\frac{Tm}{m+L}R_{m}\,.$ (5)
+
+For the suffix term, since $j\geq m+1$ , the truncated reward depends only on the previous $m$ actions within the same block. Therefore, for each block $\tau$ ,
+
+$\displaystyle\sum_{j=m+1}^{m+L}\bar{\mu}_{(\tau-1)(m+L)+j}\big(\mathbf{u}_{1:(\tau-1)(m+L)+j}\big)$ $\displaystyle=\bar{r}_{m}\big(\mathbf{u}_{(\tau-1)(m+L)+1:\tau(m+L)}\big)$ $\displaystyle\leq\bar{r}_{m}(\mathbf{U}^{*}),$
+
+where the last inequality follows from the optimality of $\mathbf{U}^{*}\in\mathop{\mathrm{argmax}}_{\mathbf{U}\in\mathcal{U}^{m+L}}\bar{r}_{m}(\mathbf{U})$ . Combining this with Eq. ( 5 ), we obtain
+
+$\sum_{t=1}^{T}\bar{\mu}_{t}(\mathbf{u}_{1:t})\leq\frac{T}{m+L}\bar{r}_{m}(\mathbf{U}^{*})+\frac{Tm}{m+L}R_{m}.$ (6)
+
+We now apply the same decomposition to the cyclic sequence $\mathbf{U}^{*}_{\mathrm{cyc}}$ . For each block, the suffix contribution is exactly $\bar{r}_{m}(\mathbf{U}^{*})$ , while the prefix contribution is bounded from below by $-mR_{m}$ . Thus,
+
+$\displaystyle\sum_{t=1}^{T}\bar{\mu}_{t}\big((\mathbf{U}^{*}_{\mathrm{cyc}})_{1:t}\big)$ $\displaystyle\geq-\frac{Tm}{m+L}R_{m}+\frac{T}{m+L}\bar{r}_{m}(\mathbf{U}^{*}).$ (7)
+
+Combining Eqs. ( 6 ) and ( 7 ), we get
+
+$\sum_{t=1}^{T}\bar{\mu}_{t}(\mathbf{u}_{1:t})-\sum_{t=1}^{T}\bar{\mu}_{t}\big((\mathbf{U}^{*}_{\mathrm{cyc}})_{1:t}\big)\leq\frac{2Tm}{m+L}R_{m}\,.$
+
+Since this holds for every $\mathbf{u}_{1:T}\in\mathcal{U}^{T}$ , we have
+
+$\sup_{\mathbf{u}_{1:T}\in\mathcal{U}^{T}}\sum_{t=1}^{T}\bar{\mu}_{t}(\mathbf{u}_{1:t})-\sum_{t=1}^{T}\bar{\mu}_{t}\big((\mathbf{U}^{*}_{\mathrm{cyc}})_{1:t}\big)\leq\frac{2Tm}{m+L}R_{m}.$ (8)
+
+It remains to transfer this bound from the truncated rewards to the original rewards. By Lemma 4 , for every action sequence $\mathbf{u}_{1:T}$ ,
+
+$\left|\sum_{t=1}^{T}\mu_{t}(\mathbf{u}_{1:t})-\sum_{t=1}^{T}\bar{\mu}_{t}(\mathbf{u}_{1:t})\right|\leq\sum_{t=1}^{T}\left|\mu_{t}(\mathbf{u}_{1:t})-\bar{\mu}_{t}(\mathbf{u}_{1:t})\right|\leq T\Delta_{m}\,.$
+
+Therefore,
+
+$\displaystyle\mathrm{OPT}_{T}-\sum_{t=1}^{T}\mu_{t}\big((\mathbf{U}^{*}_{\mathrm{cyc}})_{1:t}\big)$ $\displaystyle\leq\sup_{\mathbf{u}_{1:T}\in\mathcal{U}^{T}}\sum_{t=1}^{T}\bar{\mu}_{t}(\mathbf{u}_{1:t})-\sum_{t=1}^{T}\bar{\mu}_{t}\big((\mathbf{U}^{*}_{\mathrm{cyc}})_{1:t}\big)+2T\Delta_{m}$ $\displaystyle\leq\frac{2Tm}{m+L}R_{m}+2T\Delta_{m},$
+
+where the last inequality follows from Eq. ( 8 ). ∎
+
+Appendix B Proof of Theorem 1
+
+B.1 Proof of Lemma 2
+
+See 2
+
+We first unroll the latent dynamics. Since $\mathbf{x}_{1}={\bf 0}_{n}$ , for any $t\geq 1$ ,
+
+$\displaystyle\mathbf{x}_{t}$ $\displaystyle=\sum_{i=1}^{t-1}\mathbf{A}^{t-1-i}\left(\mathbf{B}\mathbf{u}_{i}+\mathbf{w}_{i}\right)$ $\displaystyle=\sum_{i=1}^{t-1}\mathbf{A}^{t-1-i}\mathbf{B}\mathbf{u}_{i}+\sum_{i=1}^{t-1}\mathbf{A}^{t-1-i}\mathbf{w}_{i}.$
+
+Therefore,
+
+$\displaystyle r_{t}$ $\displaystyle=\mathbf{u}_{t}^{\top}\mathbf{C}\mathbf{x}_{t}+z_{t}$ $\displaystyle=\sum_{i=1}^{t-1}\mathbf{u}_{t}^{\top}\mathbf{C}\mathbf{A}^{t-1-i}\mathbf{B}\mathbf{u}_{i}+\sum_{i=1}^{t-1}\mathbf{u}_{t}^{\top}\mathbf{C}\mathbf{A}^{t-1-i}\mathbf{w}_{i}+z_{t}.$
+
+Reindexing the first sum by $s=t-i$ , and the second sum by $h=t-1-i$ , gives
+
+$\displaystyle r_{t}$ $\displaystyle=\sum_{s=1}^{\infty}\mathbf{u}_{t}^{\top}\mathbf{G}_{s-1}\mathbf{u}_{t-s}+\sum_{h=0}^{\infty}\mathbf{u}_{t}^{\top}\mathbf{C}\mathbf{A}^{h}\mathbf{w}_{t-1-h}+z_{t}\,,$
+
+where $\mathbf{G}_{h}:=\mathbf{C}\mathbf{A}^{h}\mathbf{B}$ , and we use the convention that $\mathbf{u}_{s}={\bf 0}_{p}$ and $\mathbf{w}_{s}={\bf 0}_{n}$ for $s\leq 0$ .
+
+Now fix a block $\tau\in[N]$ and an informative position $j\in\{m+1,\ldots,m+L\}$ , and set $t=t_{\tau,j}$ . Since $\mathbf{u}_{t_{\tau,j}}=\mathbf{u}_{\tau,j}$ , the above identity yields
+
+$\displaystyle r_{\tau,j}$ $\displaystyle=\sum_{s=1}^{\infty}\mathbf{u}_{\tau,j}^{\top}\mathbf{G}_{s-1}\mathbf{u}_{t_{\tau,j}-s}+z_{t_{\tau,j}}+\sum_{h=0}^{\infty}\mathbf{u}_{\tau,j}^{\top}\mathbf{C}\mathbf{A}^{h}\mathbf{w}_{t_{\tau,j}-1-h}$ $\displaystyle=\sum_{s=1}^{m}\mathbf{u}_{\tau,j}^{\top}\mathbf{G}_{s-1}\mathbf{u}_{t_{\tau,j}-s}+\sum_{s=m+1}^{\infty}\mathbf{u}_{\tau,j}^{\top}\mathbf{G}_{s-1}\mathbf{u}_{t_{\tau,j}-s}$ $\displaystyle\quad+z_{t_{\tau,j}}+\sum_{h=0}^{j-2}\mathbf{u}_{\tau,j}^{\top}\mathbf{C}\mathbf{A}^{h}\mathbf{w}_{t_{\tau,j}-1-h}+\sum_{h=j-1}^{\infty}\mathbf{u}_{\tau,j}^{\top}\mathbf{C}\mathbf{A}^{h}\mathbf{w}_{t_{\tau,j}-1-h}\,.$
+
+Since $j\geq m+1$ , for every $s=1,\ldots,m$ , the action $\mathbf{u}_{t_{\tau,j}-s}$ lies in the same block and equals $\mathbf{u}_{\tau,j-s}$ . Hence,
+
+$\displaystyle\sum_{s=1}^{m}\mathbf{u}_{\tau,j}^{\top}\mathbf{G}_{s-1}\mathbf{u}_{t_{\tau,j}-s}$ $\displaystyle=\sum_{s=1}^{m}\mathbf{u}_{\tau,j}^{\top}\mathbf{G}_{s-1}\mathbf{u}_{\tau,j-s}$ $\displaystyle=\left\langle\boldsymbol{\phi}_{j}(\mathbf{U}_{\tau}),\boldsymbol{\theta}_{m}^{*}\right\rangle,$
+
+by the definitions of $\boldsymbol{\phi}_{j}(\mathbf{U}_{\tau})$ and $\boldsymbol{\theta}_{m}^{*}$ . Collecting the remaining terms according to the definitions of $\epsilon_{\tau,j}$ , $\eta_{\tau,j}$ , and $\zeta_{\tau,j}$ gives
+
+$r_{\tau,j}=\left\langle\boldsymbol{\phi}_{j}(\mathbf{U}_{\tau}),\boldsymbol{\theta}_{m}^{*}\right\rangle+\epsilon_{\tau,j}+\eta_{\tau,j}+\zeta_{\tau,j}\,.$
+
+∎
+
+B.2 Proof of Lemma 3
+
+See 3
+
+For each block $s\in[N]$ and informative position $j\in\{m+1,\ldots,m+L\}$ , let
+
+$\boldsymbol{\phi}_{s,j}:=\boldsymbol{\phi}_{j}(\mathbf{U}_{s}).$
+
+Define the block feature matrix and reward vector by
+
+$\boldsymbol{\Phi}_{s}:=\big[\boldsymbol{\phi}_{s,m+1},\ldots,\boldsymbol{\phi}_{s,m+L}\big]\in\mathbb{R}^{d\times L},\qquad\mathbf{r}_{s}:=(r_{s,m+1},\ldots,r_{s,m+L})^{\top}\in\mathbb{R}^{L}.$
+
+Similarly, define
+
+$\boldsymbol{\epsilon}_{s}:=(\epsilon_{s,m+1},\ldots,\epsilon_{s,m+L})^{\top},\quad\boldsymbol{\eta}_{s}:=(\eta_{s,m+1},\ldots,\eta_{s,m+L})^{\top},\quad\boldsymbol{\zeta}_{s}:=(\zeta_{s,m+1},\ldots,\zeta_{s,m+L})^{\top}.$
+
+Then Lemma 2 gives the vector form
+
+$\mathbf{r}_{s}=\boldsymbol{\Phi}_{s}^{\top}\boldsymbol{\theta}_{m}^{*}+\boldsymbol{\epsilon}_{s}+\boldsymbol{\eta}_{s}+\boldsymbol{\zeta}_{s}.$
+
+Recall that
+
+$\mathbf{V}_{\tau}=\lambda\mathbf{I}_{d}+\sum_{s=1}^{\tau}\boldsymbol{\Phi}_{s}\boldsymbol{\Phi}_{s}^{\top},\qquad\widehat{\boldsymbol{\theta}}_{\tau}=\mathbf{V}_{\tau}^{-1}\sum_{s=1}^{\tau}\boldsymbol{\Phi}_{s}\mathbf{r}_{s}.$
+
+Using the reward decomposition, we obtain
+
+$\displaystyle\mathbf{V}_{\tau}\big(\widehat{\boldsymbol{\theta}}_{\tau}-\boldsymbol{\theta}_{m}^{*}\big)$ $\displaystyle=-\lambda\boldsymbol{\theta}_{m}^{*}+\sum_{s=1}^{\tau}\boldsymbol{\Phi}_{s}\boldsymbol{\epsilon}_{s}+\sum_{s=1}^{\tau}\boldsymbol{\Phi}_{s}(\boldsymbol{\eta}_{s}+\boldsymbol{\zeta}_{s}).$
+
+Therefore,
+
+$\left\|\widehat{\boldsymbol{\theta}}_{\tau}-\boldsymbol{\theta}_{m}^{*}\right\|_{\mathbf{V}_{\tau}}\leq\sqrt{\lambda}\,\|\boldsymbol{\theta}_{m}^{*}\|_{2}+\underbrace{\left\|\sum_{s=1}^{\tau}\boldsymbol{\Phi}_{s}\boldsymbol{\epsilon}_{s}\right\|_{\mathbf{V}_{\tau}^{-1}}}_{\text{block noise}}+\underbrace{\left\|\sum_{s=1}^{\tau}\boldsymbol{\Phi}_{s}(\boldsymbol{\eta}_{s}+\boldsymbol{\zeta}_{s})\right\|_{\mathbf{V}_{\tau}^{-1}}}_{\text{bias}}\,.$ (9)
+
+The first term is bounded by $\sqrt{\lambda}S_{m}$ . It remains to control the current-block noise term and the bias term. For the current-block noise term, we introduce the following lemmas.
+
+Let $\mathcal{H}_{\tau-1}$ denote the sigma-field just before the process and reward noises in block $\tau$ are revealed; in particular, $\mathbf{U}_{\tau}$ and $\boldsymbol{\Phi}_{\tau}$ are $\mathcal{H}_{\tau-1}$ -measurable. Under Assumptions 1 and 3 , for every $\tau\in[N]$ , every $\xi\in\mathbb{R}^{L}$ , and every $\eta\in\mathbb{R}$ ,
+
+$\mathbb{E}\!\left[\exp\!\left(\eta\xi^{\top}\boldsymbol{\epsilon}_{\tau}\right)\,\middle|\,\mathcal{H}_{\tau-1}\right]\leq\exp\!\left(\frac{\eta^{2}\sigma_{\mathcal{B}}^{2}}{2}\|\xi\|_{2}^{2}\right),$
+
+where
+
+$\sigma_{\mathcal{B}}^{2}:=\sigma_{z}^{2}+\lambda_{\max}(\boldsymbol{\Sigma}_{w})\frac{\|\mathbf{C}\|_{2}^{2}M_{\rho}^{2}}{(1-\rho)^{2}}.$
+
+Equivalently, $\boldsymbol{\epsilon}_{\tau}$ is conditionally $\sigma_{\mathcal{B}}$ -sub-Gaussian as a vector in $\mathbb{R}^{L}$ .
+
+Let $(\mathcal{H}_{\tau})_{\tau\geq 0}$ be a filtration. Let $\boldsymbol{\Phi}_{\tau}\in\mathbb{R}^{d\times L}$ be $\mathcal{H}_{\tau-1}$ -measurable, and let $\boldsymbol{\epsilon}_{\tau}\in\mathbb{R}^{L}$ be $\mathcal{H}_{\tau}$ -measurable. Assume that $\boldsymbol{\epsilon}_{\tau}$ is conditionally $\sigma$ -sub-Gaussian as a vector: for every $\boldsymbol{\xi}\in\mathbb{R}^{L}$ and every $\alpha\in\mathbb{R}$ ,
+
+$\mathbb{E}\!\left[\exp\!\left(\alpha\boldsymbol{\xi}^{\top}\boldsymbol{\epsilon}_{\tau}\right)\,\middle|\,\mathcal{H}_{\tau-1}\right]\leq\exp\!\left(\frac{\alpha^{2}\sigma^{2}}{2}\|\boldsymbol{\xi}\|_{2}^{2}\right).$
+
+Let $\lambda>0$ , $\mathbf{V}_{0}=\lambda\mathbf{I}_{d}$ , and define
+
+$\mathbf{V}_{\tau}:=\mathbf{V}_{0}+\sum_{s=1}^{\tau}\boldsymbol{\Phi}_{s}\boldsymbol{\Phi}_{s}^{\top},\qquad\mathbf{S}_{\tau}:=\sum_{s=1}^{\tau}\boldsymbol{\Phi}_{s}\boldsymbol{\epsilon}_{s}.$
+
+Then, for any $\delta\in(0,1)$ , with probability at least $1-\delta$ , the following holds simultaneously for all $\tau\geq 0$ :
+
+$\|\mathbf{S}_{\tau}\|_{\mathbf{V}_{\tau}^{-1}}\leq\sigma\sqrt{2\log\left(\frac{\det(\mathbf{V}_{\tau})^{1/2}}{\det(\mathbf{V}_{0})^{1/2}\delta}\right)}.$
+
+Lemma 5 shows that the vector of current-block noises $\boldsymbol{\epsilon}_{\tau}$ is conditionally sub-Gaussian at the block level. This is needed because the $L$ informative rewards within a block are not treated as independent scalar observations; rather, they enter the regression update jointly through the matrix $\boldsymbol{\Phi}_{\tau}$ . Lemma 6 then converts this blockwise sub-Gaussianity into a self-normalized concentration bound for the martingale sum $\sum_{s=1}^{\tau}\boldsymbol{\Phi}_{s}\boldsymbol{\epsilon}_{s}\,.$ It is the block/vector-valued analogue of the standard self-normalized inequality for scalar martingale noise used in linear bandits [ 1 ] . Combining these two lemmas, the event
+
+$\Omega_{\mathrm{sn}}(\delta):=\left\{\forall\tau\in[N]:\left\|\sum_{s=1}^{\tau}\boldsymbol{\Phi}_{s}\boldsymbol{\epsilon}_{s}\right\|_{\mathbf{V}_{\tau}^{-1}}\leq\sigma_{\mathcal{B}}\sqrt{2\log\left(\frac{\det(\mathbf{V}_{\tau})^{1/2}}{\det(\lambda\mathbf{I}_{d})^{1/2}\delta}\right)}\right\}$ (10)
+
+holds with probability at least $1-\delta$ . Now it remains to control the bias term. We use the following high-probability bound for the action-tail bias and the process-noise tail.
+
+Fix $\delta\in(0,1)$ . Then, with probability at least $1-\delta$ , the event
+
+$\Omega_{\mathrm{bias}}(\delta):=\left\{\forall\tau\in[N],\ \forall j\in\{m+1,\ldots,m+L\},\ |\eta_{\tau,j}+\zeta_{\tau,j}|\leq\bar{\Delta}_{m}(\delta)\right\}$
+
+holds, where
+
+$\bar{\Delta}_{m}(\delta):=\frac{\|\mathbf{C}\|_{2}\|\mathbf{B}\|_{2}M_{\rho}}{1-\rho}\rho^{m}+2\rho^{m}\sqrt{2\lambda_{\max}(\boldsymbol{\Sigma}_{w})\,\frac{\|\mathbf{C}\|_{2}^{2}M_{\rho}^{2}}{1-\rho^{2}}\log\frac{2\cdot 5^{p}T}{\delta}}\,.$
+
+By Lemma 7 , the event $\Omega_{\mathrm{bias}}(\delta)$ holds with probability at least $1-\delta$ . On $\Omega_{\mathrm{bias}}(\delta)$ , for every $\tau\in[N]$ ,
+
+$\displaystyle\left\|\sum_{s=1}^{\tau}\boldsymbol{\Phi}_{s}(\boldsymbol{\eta}_{s}+\boldsymbol{\zeta}_{s})\right\|_{\mathbf{V}_{\tau}^{-1}}$ $\displaystyle=\left\|\sum_{s=1}^{\tau}\sum_{j=m+1}^{m+L}\boldsymbol{\phi}_{s,j}(\eta_{s,j}+\zeta_{s,j})\right\|_{\mathbf{V}_{\tau}^{-1}}$ $\displaystyle\leq\sum_{s=1}^{\tau}\sum_{j=m+1}^{m+L}|\eta_{s,j}+\zeta_{s,j}|\|\boldsymbol{\phi}_{s,j}\|_{\mathbf{V}_{\tau}^{-1}}$ $\displaystyle\leq\bar{\Delta}_{m}(\delta)\sum_{s=1}^{\tau}\sum_{j=m+1}^{m+L}\|\boldsymbol{\phi}_{s,j}\|_{\mathbf{V}_{\tau}^{-1}}$ $\displaystyle\leq\bar{\Delta}_{m}(\delta)\sqrt{\tau L\sum_{s=1}^{\tau}\sum_{j=m+1}^{m+L}\|\boldsymbol{\phi}_{s,j}\|_{\mathbf{V}_{\tau}^{-1}}^{2}},$
+
+where the last inequality follows from Cauchy–Schwarz.
+
+It remains to bound the sum of squared norms. Let $\mathbf{V}_{s,j-1}$ denote the sequential Gram matrix immediately before adding the feature $\boldsymbol{\phi}_{s,j}$ ; that is,
+
+$\mathbf{V}_{s,j-1}:=\lambda\mathbf{I}_{d}+\sum_{q=1}^{s-1}\sum_{i=m+1}^{m+L}\boldsymbol{\phi}_{q,i}\boldsymbol{\phi}_{q,i}^{\top}+\sum_{i=m+1}^{j-1}\boldsymbol{\phi}_{s,i}\boldsymbol{\phi}_{s,i}^{\top}.$
+
+Since $\mathbf{V}_{\tau}\succeq\mathbf{V}_{s,j-1}$ for all $s\leq\tau$ , we have
+
+$\|\boldsymbol{\phi}_{s,j}\|_{\mathbf{V}_{\tau}^{-1}}\leq\|\boldsymbol{\phi}_{s,j}\|_{\mathbf{V}_{s,j-1}^{-1}}.$
+
+Moreover, $\lambda\geq L_{\phi}^{2}$ and $\|\boldsymbol{\phi}_{s,j}\|_{2}\leq L_{\phi}$ imply
+
+$\|\boldsymbol{\phi}_{s,j}\|_{\mathbf{V}_{s,j-1}^{-1}}^{2}\leq\frac{\|\boldsymbol{\phi}_{s,j}\|_{2}^{2}}{\lambda}\leq 1.$
+
+Therefore, the standard elliptical-potential (Lemma 10 ) bound gives
+
+$\sum_{s=1}^{\tau}\sum_{j=m+1}^{m+L}\|\boldsymbol{\phi}_{s,j}\|_{\mathbf{V}_{\tau}^{-1}}^{2}\leq\sum_{s=1}^{\tau}\sum_{j=m+1}^{m+L}\|\boldsymbol{\phi}_{s,j}\|_{\mathbf{V}_{s,j-1}^{-1}}^{2}\leq 2\log\!\left(\frac{\det(\mathbf{V}_{\tau})}{\det(\lambda\mathbf{I}_{d})}\right).$
+
+Consequently,
+
+$\left\|\sum_{s=1}^{\tau}\boldsymbol{\Phi}_{s}(\boldsymbol{\eta}_{s}+\boldsymbol{\zeta}_{s})\right\|_{\mathbf{V}_{\tau}^{-1}}\leq\bar{\Delta}_{m}(\delta)\sqrt{2\tau L\log\!\left(\frac{\det(\mathbf{V}_{\tau})}{\det(\lambda\mathbf{I}_{d})}\right)}.$ (11)
+
+Now define the good event
+
+$\Omega_{\mathrm{good}}(\delta):=\Omega_{\mathrm{sn}}(\delta/2)\cap\Omega_{\mathrm{bias}}(\delta/2).$
+
+By the bounds above and a union bound,
+
+$\mathbb{P}\!\left(\Omega_{\mathrm{good}}(\delta)\right)\geq 1-\delta.$
+
+On $\Omega_{\mathrm{good}}(\delta)$ , combining Eqs. ( 9 ), ( 10 ), and ( 11 ), and using $\|\boldsymbol{\theta}_{m}^{*}\|_{2}\leq S_{m}$ , yields for all $\tau\in[N]$ ,
+
+$\displaystyle\left\|\widehat{\boldsymbol{\theta}}_{\tau}-\boldsymbol{\theta}_{m}^{*}\right\|_{\mathbf{V}_{\tau}}\leq$ $\displaystyle\;\sqrt{\lambda}S_{m}+\sigma_{\mathcal{B}}\sqrt{2\log\!\left(\frac{2\det(\mathbf{V}_{\tau})^{1/2}}{\det(\lambda\mathbf{I}_{d})^{1/2}\delta}\right)}$ $\displaystyle\quad+\bar{\Delta}_{m}(\delta/2)\sqrt{2\tau L\log\!\left(\frac{\det(\mathbf{V}_{\tau})}{\det(\lambda\mathbf{I}_{d})}\right)}.$
+
+The right-hand side is exactly the confidence radius $\gamma_{\tau}$ chosen in Lemma 1 . Hence,
+
+$\left\|\widehat{\boldsymbol{\theta}}_{\tau}-\boldsymbol{\theta}_{m}^{*}\right\|_{\mathbf{V}_{\tau}}\leq\gamma_{\tau}\qquad\forall\tau\in[N],$
+
+with probability at least $1-\delta$ . ∎
+
+B.3 Proof of Lemma 1
+
+See 1
+
+Let $N:=T/(m+L)$ , and assume $N\in\mathbb{N}$ . Define the proxy regret
+
+$\mathcal{R}_{\mathrm{proxy}}:=\sum_{\tau=1}^{N}\left(\bar{r}_{m}(\mathbf{U}^{*})-\bar{r}_{m}(\mathbf{U}_{\tau})\right).$
+
+On the confidence event, for any block $\mathbf{U}\in\mathcal{U}^{m+L}$ ,
+
+$\bar{r}_{m}(\mathbf{U})\leq\mathrm{UCB}_{\tau-1}(\mathbf{U}),$
+
+where
+
+$\mathrm{UCB}_{\tau-1}(\mathbf{U}):=\sum_{j=m+1}^{m+L}\left(\left\langle\boldsymbol{\phi}_{j}(\mathbf{U}),\widehat{\boldsymbol{\theta}}_{\tau-1}\right\rangle+\gamma_{\tau-1}\left\|\boldsymbol{\phi}_{j}(\mathbf{U})\right\|_{\mathbf{V}_{\tau-1}^{-1}}\right).$
+
+Since $\mathbf{U}_{\tau}$ maximizes this UCB score,
+
+$\bar{r}_{m}(\widetilde{\mathbf{b}})\leq\mathrm{UCB}_{\tau-1}(\widetilde{\mathbf{b}})\leq\mathrm{UCB}_{\tau-1}(\mathbf{U}_{\tau}).$
+
+Moreover, the confidence event also implies
+
+$\bar{r}_{m}(\mathbf{U}_{\tau})\geq\mathrm{UCB}_{\tau-1}(\mathbf{U}_{\tau})-2\gamma_{\tau-1}\sum_{j=m+1}^{m+L}\left\|\boldsymbol{\phi}_{j}(\mathbf{U}_{\tau})\right\|_{\mathbf{V}_{\tau-1}^{-1}}.$
+
+Combining the two inequalities gives
+
+$\bar{r}_{m}(\widetilde{\mathbf{b}})-\bar{r}_{m}(\mathbf{U}_{\tau})\leq 2\gamma_{\tau-1}\sum_{j=m+1}^{m+L}\left\|\boldsymbol{\phi}_{j}(\mathbf{U}_{\tau})\right\|_{\mathbf{V}_{\tau-1}^{-1}}.$
+
+Summing over $\tau=1,\ldots,N$ and using the monotonicity of $\gamma_{\tau}$ , we obtain
+
+$\mathcal{R}_{\mathrm{proxy}}\leq 2\gamma_{N}\sum_{\tau=1}^{N}\sum_{j=m+1}^{m+L}\left\|\boldsymbol{\phi}_{j}(\mathbf{U}_{\tau})\right\|_{\mathbf{V}_{\tau-1}^{-1}}.$ (12)
+
+It remains to control the cumulative uncertainty term. For each block $\tau$ , define the within-block sequential Gram matrices
+
+$\mathbf{V}_{\tau,j}:=\mathbf{V}_{\tau-1}+\sum_{i=m+1}^{j}\boldsymbol{\phi}_{i}(\mathbf{U}_{\tau})\boldsymbol{\phi}_{i}(\mathbf{U}_{\tau})^{\top},\qquad j=m+1,\ldots,m+L,$
+
+with the convention $\mathbf{V}_{\tau,m}:=\mathbf{V}_{\tau-1}$ . Then
+
+$\left\|\boldsymbol{\phi}_{j}(\mathbf{U}_{\tau})\right\|_{\mathbf{V}_{\tau-1}^{-1}}=\left\|\boldsymbol{\phi}_{j}(\mathbf{U}_{\tau})\right\|_{\mathbf{V}_{\tau,j-1}^{-1}}+\left(\left\|\boldsymbol{\phi}_{j}(\mathbf{U}_{\tau})\right\|_{\mathbf{V}_{\tau-1}^{-1}}-\left\|\boldsymbol{\phi}_{j}(\mathbf{U}_{\tau})\right\|_{\mathbf{V}_{\tau,j-1}^{-1}}\right).$
+
+We bound the two terms separately.
+
+First, by Cauchy–Schwarz and the standard elliptical-potential lemma (Lemma 10 ),
+
+$\displaystyle\sum_{\tau=1}^{N}\sum_{j=m+1}^{m+L}\left\|\boldsymbol{\phi}_{j}(\mathbf{U}_{\tau})\right\|_{\mathbf{V}_{\tau,j-1}^{-1}}$ $\displaystyle\leq\sqrt{NL\sum_{\tau=1}^{N}\sum_{j=m+1}^{m+L}\left\|\boldsymbol{\phi}_{j}(\mathbf{U}_{\tau})\right\|_{\mathbf{V}_{\tau,j-1}^{-1}}^{2}}$ $\displaystyle\leq\sqrt{2NL\log\!\left(\frac{\det(\mathbf{V}_{N})}{\det(\lambda\mathbf{I}_{d})}\right)}$ $\displaystyle\leq\sqrt{2Td\log\!\left(1+\frac{TL_{\phi}^{2}}{\lambda d}\right)},$
+
+where the last inequality uses $NL\leq T$ , $\|\boldsymbol{\phi}_{j}(\mathbf{U}_{\tau})\|_{2}\leq L_{\phi}$ , and the determinant-trace inequality (Lemma 11 ).
+
+Next, since $\mathbf{V}_{\tau,j-1}\preceq\mathbf{V}_{\tau}$ , we have
+
+$\left\|\boldsymbol{\phi}_{j}(\mathbf{U}_{\tau})\right\|_{\mathbf{V}_{\tau,j-1}^{-1}}\geq\left\|\boldsymbol{\phi}_{j}(\mathbf{U}_{\tau})\right\|_{\mathbf{V}_{\tau}^{-1}}.$
+
+Hence,
+
+$\left\|\boldsymbol{\phi}_{j}(\mathbf{U}_{\tau})\right\|_{\mathbf{V}_{\tau-1}^{-1}}-\left\|\boldsymbol{\phi}_{j}(\mathbf{U}_{\tau})\right\|_{\mathbf{V}_{\tau,j-1}^{-1}}\leq\left\|\boldsymbol{\phi}_{j}(\mathbf{U}_{\tau})\right\|_{\mathbf{V}_{\tau-1}^{-1}}-\left\|\boldsymbol{\phi}_{j}(\mathbf{U}_{\tau})\right\|_{\mathbf{V}_{\tau}^{-1}}.$
+
+Let $\lambda_{\tau,1},\ldots,\lambda_{\tau,d}$ be the eigenvalues of $\mathbf{V}_{\tau}$ . To control the discrepancy between the pre-block and within-block Gram matrices, we use the Gram-matrix telescoping inequality for block updates (Lemma 12 ):
+
+$\displaystyle\sum_{\tau=1}^{N}\sum_{j=m+1}^{m+L}\left(\left\|\boldsymbol{\phi}_{j}(\mathbf{U}_{\tau})\right\|_{\mathbf{V}_{\tau-1}^{-1}}-\left\|\boldsymbol{\phi}_{j}(\mathbf{U}_{\tau})\right\|_{\mathbf{V}_{\tau,j-1}^{-1}}\right)$ $\displaystyle\quad\leq\sum_{\tau=1}^{N}\sum_{j=m+1}^{m+L}\left(\left\|\boldsymbol{\phi}_{j}(\mathbf{U}_{\tau})\right\|_{\mathbf{V}_{\tau-1}^{-1}}-\left\|\boldsymbol{\phi}_{j}(\mathbf{U}_{\tau})\right\|_{\mathbf{V}_{\tau}^{-1}}\right)$ $\displaystyle\quad\leq\sum_{\tau=1}^{N}\sum_{j=m+1}^{m+L}2\left\|\boldsymbol{\phi}_{j}(\mathbf{U}_{\tau})\right\|_{2}\sum_{k=1}^{d}\left(\lambda_{\tau-1,k}^{-1/2}-\lambda_{\tau,k}^{-1/2}\right)$ $\displaystyle\quad\leq 2LL_{\phi}\sum_{\tau=1}^{N}\sum_{k=1}^{d}\left(\lambda_{\tau-1,k}^{-1/2}-\lambda_{\tau,k}^{-1/2}\right)$ $\displaystyle\quad\leq 2LL_{\phi}\sum_{k=1}^{d}\left(\lambda_{0,k}^{-1/2}-\lambda_{N,k}^{-1/2}\right)$ $\displaystyle\quad\leq\frac{2LL_{\phi}d}{\sqrt{\lambda}},$
+
+where the last step uses $\mathbf{V}_{0}=\lambda\mathbf{I}_{d}$ .
+
+Combining the two bounds gives
+
+$\sum_{\tau=1}^{N}\sum_{j=m+1}^{m+L}\left\|\boldsymbol{\phi}_{j}(\mathbf{U}_{\tau})\right\|_{\mathbf{V}_{\tau-1}^{-1}}\leq\frac{2LL_{\phi}d}{\sqrt{\lambda}}+\sqrt{2Td\log\!\left(1+\frac{TL_{\phi}^{2}}{\lambda d}\right)}.$ (13)
+
+Substituting Eq. ( 13 ) into Eq. ( 12 ) yields
+
+$\mathcal{R}_{\mathrm{proxy}}\leq 2\gamma_{N}\left[\frac{2LL_{\phi}d}{\sqrt{\lambda}}+\sqrt{2Td\log\!\left(1+\frac{TL_{\phi}^{2}}{\lambda d}\right)}\right].$
+
+Finally, we relate the proxy regret to the cumulative regret. Using the finite-memory truncation and block decomposition argument from Proposition 1 , for the action sequence generated by Algorithm 1 ,
+
+$\mathcal{R}^{\mathrm{pseudo}}_{T}(\pi)\leq 2T\Delta_{m}+\frac{2Tm}{m+L}R_{m}+\mathcal{R}_{\mathrm{proxy}}\,.$
+
+This concludes the first part of theorem.
+
+For the second part, we simplify the regret bound under a specific choice of $m$ and $L$ . Under Assumption 1 , the lifted feature satisfies
+
+$\|\boldsymbol{\phi}_{j}(\mathbf{U})\|_{2}^{2}=\sum_{s=1}^{m}\|\mathbf{u}_{j-s}\otimes\mathbf{u}_{j}\|_{2}^{2}\leq\sum_{s=1}^{m}\|\mathbf{u}_{j-s}\|_{2}^{2}\|\mathbf{u}_{j}\|_{2}^{2}\leq m.$
+
+Hence, we may take $L_{\phi}\leq\sqrt{m}$ . Moreover, by Assumption 2 ,
+
+$S_{m}^{2}=\|\boldsymbol{\theta}_{m}^{*}\|_{2}^{2}=\sum_{h=0}^{m-1}\|\mathbf{G}_{h}\|_{F}^{2}=\sum_{h=0}^{m-1}\|\mathbf{C}\mathbf{A}^{h}\mathbf{B}\|_{F}^{2}\leq\|\mathbf{C}\|_{2}^{2}\|\mathbf{B}\|_{F}^{2}M_{\rho}^{2}\sum_{h=0}^{m-1}\rho^{2h}.$
+
+Thus,
+
+$S_{m}\leq\frac{\|\mathbf{C}\|_{2}\|\mathbf{B}\|_{F}M_{\rho}}{\sqrt{1-\rho^{2}}},$
+
+so $S_{m}$ is uniformly bounded in $m$ by a problem-dependent constant.
+
+Choose
+
+$m=-\frac{1}{2}\log_{\rho}T,\qquad L=\frac{\sqrt{mT}}{d^{3/4}}-m,\qquad d=p^{2}m,$
+
+up to integer rounding, and set $\lambda=L_{\phi}^{2}$ . Then $\rho^{m}=T^{-1/2}$ . Since
+
+$\Delta_{m}\leq\frac{\|\mathbf{C}\|_{2}\|\mathbf{B}\|_{2}M_{\rho}}{1-\rho}\rho^{m},$
+
+we have
+
+$T\Delta_{m}=\widetilde{\mathcal{O}}(\sqrt{T}).$
+
+Similarly, from the definition of $\bar{\Delta}_{m}(\delta)$ , we have
+
+$\bar{\Delta}_{m}(\delta)=\widetilde{\mathcal{O}}(T^{-1/2}).$
+
+We next bound the confidence radius. Using $NL\leq T$ , $L_{\phi}\leq\sqrt{m}$ , $\lambda=L_{\phi}^{2}$ , and the uniform bound on $S_{m}$ , we obtain
+
+$\gamma_{N}=\widetilde{\mathcal{O}}\left(\sqrt{d}+\sqrt{\lambda}S_{m}+\bar{\Delta}_{m}(\delta)\sqrt{Td}\right)=\widetilde{\mathcal{O}}(\sqrt{d}).$
+
+Indeed, $\sqrt{\lambda}S_{m}\leq\sqrt{m}\,S_{m}$ , which is dominated by $\sqrt{d}=p\sqrt{m}$ up to problem-dependent constants, and
+
+$\bar{\Delta}_{m}(\delta)\sqrt{Td}=\widetilde{\mathcal{O}}(\sqrt{d}).$
+
+The block-boundary term satisfies
+
+$\frac{Tm}{m+L}R_{m}=\widetilde{\mathcal{O}}\left(\frac{Tm}{L}\right)=\widetilde{\mathcal{O}}\left(d^{3/4}\sqrt{mT}\right),$
+
+where we used $R_{m}=\mathcal{O}(1)$ and $L\asymp\sqrt{mT}/d^{3/4}$ .
+
+Finally, the statistical term in Lemma 1 is bounded as
+
+$\displaystyle\gamma_{N}\left[\frac{LL_{\phi}d}{\sqrt{\lambda}}+\sqrt{Td\log\left(1+\frac{TL_{\phi}^{2}}{\lambda d}\right)}\right]$ $\displaystyle=\widetilde{\mathcal{O}}\left(\sqrt{d}\left[Ld+\sqrt{Td}\right]\right)$ $\displaystyle=\widetilde{\mathcal{O}}\left(d^{3/4}\sqrt{mT}+d\sqrt{T}\right).$
+
+Combining the truncation error, the block-boundary error, and the statistical term yields
+
+$\mathcal{R}^{\mathrm{pseudo}}_{T}(\pi)=\widetilde{\mathcal{O}}\left(d^{3/4}\sqrt{mT}+d\sqrt{T}\right).$
+
+Since $d=p^{2}m$ and $m=\frac{\log T}{2\log(1/\rho)},$ the above bound can also be written, up to logarithmic factors in $T$ , as
+
+$\mathcal{R}^{\mathrm{pseudo}}_{T}(\pi)=\widetilde{\mathcal{O}}\left(\left[\frac{p^{3/2}}{\{\log(1/\rho)\}^{5/4}}+\frac{p^{2}}{\log(1/\rho)}\right]\sqrt{T}\right),$
+
+where $\widetilde{\mathcal{O}}$ hides logarithmic factors in $T$ and $\delta^{-1}$ , as well as problem-dependent constants. In particular, for fixed $p$ and fixed stability parameter $\rho$ , this gives
+
+$\mathcal{R}^{\mathrm{pseudo}}_{T}(\pi)=\widetilde{\mathcal{O}}(\sqrt{T}).$
+
+∎
+
+B.4 Proof of Theorem 1
+
+See 1
+
+First, we introduce a lemma that shows, for block-committed policies, pseudo-regret and actual expected regret differ only by a boundary-noise term of order $T/(m+L)$ .
+
+Suppose Assumptions 1–3 hold, and assume for simplicity that $N:=T/(m+L)\in\mathbb{N}$ . Consider any $(m+L)$ -block-committed policy $\pi$ , i.e., a policy that chooses the whole block
+
+$\mathbf{U}_{\tau}=(\mathbf{u}_{\tau,1},\ldots,\mathbf{u}_{\tau,m+L})$
+
+measurably with respect to $\mathcal{H}_{\tau-1}:=\mathcal{F}_{(\tau-1)(m+L)}$ before any noise in block $\tau$ is revealed, and then plays the block without within-block adaptation. Then
+
+$\left|\mathrm{Regret}_{T}(\pi)-\mathbb{E}_{\pi}\!\left[\mathcal{R}^{\mathrm{pseudo}}_{T}(\pi)\right]\right|\leq\frac{\|\mathbf{C}\|_{2}M_{\rho}}{1-\rho}\sqrt{\frac{p\,\lambda_{\max}(\boldsymbol{\Sigma}_{w})}{1-\rho^{2}}}\frac{T}{m+L}\,.$
+
+Let $\mathcal{E}^{\mu}_{\delta}$ be the high-probability event from Lemma 1 . On $\mathcal{E}^{\mu}_{\delta}$ , we have
+
+$\mathcal{R}^{\mathrm{pseudo}}_{T}(\pi)\leq B_{T}(\delta).$
+
+Moreover, since $|\mu_{t}(\mathbf{u}_{1:t})|\leq\Delta_{0}$ for every action sequence,
+
+$0\leq\mathcal{R}^{\mathrm{pseudo}}_{T}(\pi)\leq 2T\Delta_{0}$
+
+deterministically. Therefore,
+
+$\mathbb{E}_{\pi}[\mathcal{R}^{\mathrm{pseudo}}_{T}(\pi)]\leq B_{T}(\delta)+2\delta T\Delta_{0}.$
+
+Combining this with Lemma 8 yields
+
+$\mathrm{Regret}_{T}(\pi)\leq B_{T}(\delta)+2\delta T\Delta_{0}+\frac{\|\mathbf{C}\|_{2}M_{\rho}}{1-\rho}\sqrt{\frac{p\,\lambda_{\max}(\boldsymbol{\Sigma}_{w})}{1-\rho^{2}}}\frac{T}{m+L}.$
+
+For the second claim, observe that
+
+$\Delta_{0}:=\sum_{h=0}^{\infty}\|\mathbf{G}_{h}\|_{2}\leq\frac{\|\mathbf{C}\|_{2}\|\mathbf{B}\|_{2}M_{\rho}}{1-\rho}.$
+
+The stated rate follows by taking $\delta=T^{-2}$ and substituting the choices of $m$ , $L$ , and $\lambda$ . In particular,
+
+$\frac{T}{m+L}\asymp\frac{d^{3/4}\sqrt{T}}{\sqrt{m}},$
+
+so the additional adaptation-gap term is dominated by the leading block-boundary and statistical terms up to logarithmic and problem-dependent factors. ∎
+
+B.5 Proof of Technical Lemmas
+
+B.5.1 Proof of Lemma 5
+
+Fix $\tau\in[N]$ , $\boldsymbol{\xi}=(\xi_{1},\ldots,\xi_{L})^{\top}\in\mathbb{R}^{L}$ , and $\alpha\in\mathbb{R}$ . For notational simplicity, write the informative position as $j=m+\ell$ , where $\ell\in[L]$ . By definition,
+
+$\epsilon_{\tau,m+\ell}=z_{t_{\tau,m+\ell}}+\sum_{h=0}^{m+\ell-2}\mathbf{u}_{\tau,m+\ell}^{\top}\mathbf{C}\mathbf{A}^{h}\mathbf{w}_{t_{\tau,m+\ell}-1-h}.$
+
+Hence,
+
+$\boldsymbol{\xi}^{\top}\boldsymbol{\epsilon}_{\tau}=\sum_{\ell=1}^{L}\xi_{\ell}z_{t_{\tau,m+\ell}}+\sum_{\ell=1}^{L}\sum_{h=0}^{m+\ell-2}\xi_{\ell}\mathbf{u}_{\tau,m+\ell}^{\top}\mathbf{C}\mathbf{A}^{h}\mathbf{w}_{t_{\tau,m+\ell}-1-h}.$
+
+We reindex the process-noise terms by the within-block noise index $q\in\{1,\ldots,m+L-1\}$ , where the corresponding global index is $(\tau-1)(m+L)+q$ . Then
+
+$\boldsymbol{\xi}^{\top}\boldsymbol{\epsilon}_{\tau}=\sum_{\ell=1}^{L}\xi_{\ell}z_{t_{\tau,m+\ell}}+\sum_{q=1}^{m+L-1}\left\langle\mathbf{g}_{\tau,q}(\boldsymbol{\xi}),\mathbf{w}_{(\tau-1)(m+L)+q}\right\rangle,$
+
+where
+
+$\mathbf{g}_{\tau,q}(\boldsymbol{\xi}):=\sum_{\ell=1}^{L}\mathbf{1}\{q\leq m+\ell-1\}\xi_{\ell}(\mathbf{A}^{m+\ell-1-q})^{\top}\mathbf{C}^{\top}\mathbf{u}_{\tau,m+\ell}\in\mathbb{R}^{n}\,.$
+
+Conditioned on $\mathcal{H}_{\tau-1}$ , the actions in $\mathbf{U}_{\tau}$ are fixed, and the noise variables in the current block are conditionally sub-Gaussian. The reward-noise part satisfies
+
+$\mathbb{E}\!\left[\exp\!\left(\alpha\sum_{\ell=1}^{L}\xi_{\ell}z_{t_{\tau,m+\ell}}\right)\middle|\mathcal{H}_{\tau-1}\right]\leq\exp\!\left(\frac{\alpha^{2}\sigma_{z}^{2}}{2}\|\boldsymbol{\xi}\|_{2}^{2}\right)\,.$
+
+For the process-noise part, Assumption 3 gives
+
+$\mathbb{E}\!\left[\exp\!\left(\alpha\left\langle\mathbf{g}_{\tau,q}(\boldsymbol{\xi}),\mathbf{w}_{(\tau-1)(m+L)+q}\right\rangle\right)\middle|\mathcal{H}_{\tau-1}\right]\leq\exp\!\left(\frac{\alpha^{2}}{2}\mathbf{g}_{\tau,q}(\boldsymbol{\xi})^{\top}\boldsymbol{\Sigma}_{w}\mathbf{g}_{\tau,q}(\boldsymbol{\xi})\right).$
+
+Therefore, the process-noise contribution has variance proxy at most
+
+$\lambda_{\max}(\boldsymbol{\Sigma}_{w})\sum_{q=1}^{m+L-1}\|\mathbf{g}_{\tau,q}(\boldsymbol{\xi})\|_{2}^{2}.$
+
+It remains to bound $\sum_{q=1}^{m+L-1}\|\mathbf{g}_{\tau,q}(\boldsymbol{\xi})\|_{2}^{2}$ . Using $\|\mathbf{u}_{\tau,m+\ell}\|_{2}\leq 1$ and $\|\mathbf{A}^{h}\|_{2}\leq M_{\rho}\rho^{h}$ , we obtain
+
+$\|\mathbf{g}_{\tau,q}(\boldsymbol{\xi})\|_{2}\leq\sum_{\ell=1}^{L}\mathbf{1}\{q\leq m+\ell-1\}|\xi_{\ell}|\|\mathbf{C}\|_{2}M_{\rho}\rho^{m+\ell-1-q}\,.$
+
+This is bounded by the convolution of $(|\xi_{\ell}|)_{\ell=1}^{L}$ with the nonnegative sequence
+
+$c_{a}:=\|\mathbf{C}\|_{2}M_{\rho}\rho^{a},\qquad a\geq 0.$
+
+By Young’s convolution inequality,
+
+$\sum_{q=1}^{m+L-1}\|\mathbf{g}_{\tau,q}(\boldsymbol{\xi})\|_{2}^{2}\leq\left(\sum_{a=0}^{\infty}c_{a}\right)^{2}\|\boldsymbol{\xi}\|_{2}^{2}=\frac{\|\mathbf{C}\|_{2}^{2}M_{\rho}^{2}}{(1-\rho)^{2}}\|\boldsymbol{\xi}\|_{2}^{2}.$
+
+Combining the reward-noise and process-noise bounds yields
+
+$\mathbb{E}\!\left[\exp\!\left(\alpha\boldsymbol{\xi}^{\top}\boldsymbol{\epsilon}_{\tau}\right)\,\middle|\,\mathcal{H}_{\tau-1}\right]\leq\exp\!\left(\frac{\alpha^{2}}{2}\left[\sigma_{z}^{2}+\lambda_{\max}(\boldsymbol{\Sigma}_{w})\frac{\|\mathbf{C}\|_{2}^{2}M_{\rho}^{2}}{(1-\rho)^{2}}\right]\|\boldsymbol{\xi}\|_{2}^{2}\right)\,.$
+
+∎
+
+B.5.2 Proof of Lemma 6
+
+Fix an arbitrary vector $\mathbf{v}\in\mathbb{R}^{d}$ . Since $\boldsymbol{\Phi}_{\tau}$ is $\mathcal{H}_{\tau-1}$ -measurable, the vector $\boldsymbol{\Phi}_{\tau}^{\top}\mathbf{v}\in\mathbb{R}^{L}$ is also $\mathcal{H}_{\tau-1}$ -measurable. By the conditional vector sub-Gaussianity assumption, applied with $\boldsymbol{\xi}=\boldsymbol{\Phi}_{\tau}^{\top}\mathbf{v}$ , we have
+
+$\mathbb{E}\!\left[\exp\!\left(\mathbf{v}^{\top}\boldsymbol{\Phi}_{\tau}\boldsymbol{\epsilon}_{\tau}\right)\,\middle|\,\mathcal{H}_{\tau-1}\right]\leq\exp\!\left(\frac{\sigma^{2}}{2}\|\boldsymbol{\Phi}_{\tau}^{\top}\mathbf{v}\|_{2}^{2}\right).$
+
+Equivalently,
+
+$\mathbb{E}\!\left[\exp\!\left(\mathbf{v}^{\top}\boldsymbol{\Phi}_{\tau}\boldsymbol{\epsilon}_{\tau}-\frac{\sigma^{2}}{2}\mathbf{v}^{\top}\boldsymbol{\Phi}_{\tau}\boldsymbol{\Phi}_{\tau}^{\top}\mathbf{v}\right)\,\middle|\,\mathcal{H}_{\tau-1}\right]\leq 1.$
+
+Define
+
+$\mathbf{S}_{\tau}:=\sum_{s=1}^{\tau}\boldsymbol{\Phi}_{s}\boldsymbol{\epsilon}_{s},\qquad\mathbf{V}_{\tau}:=\mathbf{V}_{0}+\sum_{s=1}^{\tau}\boldsymbol{\Phi}_{s}\boldsymbol{\Phi}_{s}^{\top}.$
+
+For each fixed $\mathbf{v}\in\mathbb{R}^{d}$ , define
+
+$M_{\tau}(\mathbf{v}):=\exp\!\left(\mathbf{v}^{\top}\mathbf{S}_{\tau}-\frac{\sigma^{2}}{2}\mathbf{v}^{\top}(\mathbf{V}_{\tau}-\mathbf{V}_{0})\mathbf{v}\right).$
+
+Then $(M_{\tau}(\mathbf{v}))_{\tau\geq 0}$ is a nonnegative supermartingale. Indeed,
+
+$\displaystyle\mathbb{E}\!\left[M_{\tau}(\mathbf{v})\,\middle|\,\mathcal{H}_{\tau-1}\right]$ $\displaystyle=M_{\tau-1}(\mathbf{v})\,\mathbb{E}\!\left[\exp\!\left(\mathbf{v}^{\top}\boldsymbol{\Phi}_{\tau}\boldsymbol{\epsilon}_{\tau}-\frac{\sigma^{2}}{2}\mathbf{v}^{\top}\boldsymbol{\Phi}_{\tau}\boldsymbol{\Phi}_{\tau}^{\top}\mathbf{v}\right)\,\middle|\,\mathcal{H}_{\tau-1}\right]$ $\displaystyle\leq M_{\tau-1}(\mathbf{v}).$
+
+Moreover, $M_{0}(\mathbf{v})=1$ .
+
+We now use the standard mixture argument of Abbasi-Yadkori et al. [1] . Let $\boldsymbol{\Lambda}$ be a Gaussian random vector, independent of all other randomness, with distribution
+
+$\boldsymbol{\Lambda}\sim\mathcal{N}\!\left({\bf 0}_{d},\,\sigma^{-2}\mathbf{V}_{0}^{-1}\right),$
+
+and let $\mu$ denote its distribution. Define the mixture process
+
+$M_{\tau}:=\mathbb{E}_{\boldsymbol{\Lambda}}\left[M_{\tau}(\boldsymbol{\Lambda})\right]=\int_{\mathbb{R}^{d}}M_{\tau}(\mathbf{v})\,\mu(d\mathbf{v}).$
+
+Since $M_{\tau}(\mathbf{v})\geq 0$ , Fubini’s theorem allows us to interchange the mixture integral and conditional expectation. Hence,
+
+$\displaystyle\mathbb{E}[M_{\tau}\mid\mathcal{H}_{\tau-1}]$ $\displaystyle=\mathbb{E}\!\left[\int_{\mathbb{R}^{d}}M_{\tau}(\mathbf{v})\,\mu(d\mathbf{v})\,\middle|\,\mathcal{H}_{\tau-1}\right]$ $\displaystyle=\int_{\mathbb{R}^{d}}\mathbb{E}[M_{\tau}(\mathbf{v})\mid\mathcal{H}_{\tau-1}]\,\mu(d\mathbf{v})$ $\displaystyle\leq\int_{\mathbb{R}^{d}}M_{\tau-1}(\mathbf{v})\,\mu(d\mathbf{v})=M_{\tau-1}.$
+
+Therefore, $(M_{\tau})_{\tau\geq 0}$ is a nonnegative supermartingale. Also, since $M_{0}(\mathbf{v})=1$ for every $\mathbf{v}$ , we have $M_{0}=1$ .
+
+We compute $M_{\tau}$ explicitly. The density of $\boldsymbol{\Lambda}$ is
+
+$f(\mathbf{v})=\frac{\det(\sigma^{2}\mathbf{V}_{0})^{1/2}}{(2\pi)^{d/2}}\exp\!\left(-\frac{\sigma^{2}}{2}\mathbf{v}^{\top}\mathbf{V}_{0}\mathbf{v}\right).$
+
+Hence,
+
+$\displaystyle M_{\tau}$ $\displaystyle=\int_{\mathbb{R}^{d}}\exp\!\left(\mathbf{v}^{\top}\mathbf{S}_{\tau}-\frac{\sigma^{2}}{2}\mathbf{v}^{\top}(\mathbf{V}_{\tau}-\mathbf{V}_{0})\mathbf{v}\right)f(\mathbf{v})\,d\mathbf{v}$ $\displaystyle=\frac{\det(\sigma^{2}\mathbf{V}_{0})^{1/2}}{(2\pi)^{d/2}}\int_{\mathbb{R}^{d}}\exp\!\left(\mathbf{v}^{\top}\mathbf{S}_{\tau}-\frac{\sigma^{2}}{2}\mathbf{v}^{\top}\mathbf{V}_{\tau}\mathbf{v}\right)d\mathbf{v}.$
+
+Completing the square gives
+
+$\mathbf{v}^{\top}\mathbf{S}_{\tau}-\frac{\sigma^{2}}{2}\mathbf{v}^{\top}\mathbf{V}_{\tau}\mathbf{v}=-\frac{\sigma^{2}}{2}\left\|\mathbf{v}-\sigma^{-2}\mathbf{V}_{\tau}^{-1}\mathbf{S}_{\tau}\right\|_{\mathbf{V}_{\tau}}^{2}+\frac{1}{2\sigma^{2}}\|\mathbf{S}_{\tau}\|_{\mathbf{V}_{\tau}^{-1}}^{2}.$
+
+Therefore,
+
+$\displaystyle M_{\tau}$ $\displaystyle=\frac{\det(\sigma^{2}\mathbf{V}_{0})^{1/2}}{\det(\sigma^{2}\mathbf{V}_{\tau})^{1/2}}\exp\!\left(\frac{1}{2\sigma^{2}}\|\mathbf{S}_{\tau}\|_{\mathbf{V}_{\tau}^{-1}}^{2}\right)$ $\displaystyle=\frac{\det(\mathbf{V}_{0})^{1/2}}{\det(\mathbf{V}_{\tau})^{1/2}}\exp\!\left(\frac{1}{2\sigma^{2}}\|\mathbf{S}_{\tau}\|_{\mathbf{V}_{\tau}^{-1}}^{2}\right).$
+
+By Ville’s inequality for nonnegative supermartingales,
+
+$\mathbb{P}\!\left(\exists\tau\geq 0:M_{\tau}\geq\frac{1}{\delta}\right)\leq\delta.$
+
+Thus, with probability at least $1-\delta$ , for all $\tau\geq 0$ ,
+
+$M_{\tau}<\frac{1}{\delta}.$
+
+Using the explicit expression for $M_{\tau}$ , this implies
+
+$\frac{\det(\mathbf{V}_{0})^{1/2}}{\det(\mathbf{V}_{\tau})^{1/2}}\exp\!\left(\frac{1}{2\sigma^{2}}\|\mathbf{S}_{\tau}\|_{\mathbf{V}_{\tau}^{-1}}^{2}\right)<\frac{1}{\delta}.$
+
+Equivalently,
+
+$\|\mathbf{S}_{\tau}\|_{\mathbf{V}_{\tau}^{-1}}^{2}\leq 2\sigma^{2}\log\left(\frac{\det(\mathbf{V}_{\tau})^{1/2}}{\det(\mathbf{V}_{0})^{1/2}\delta}\right).$
+
+Taking square roots gives
+
+$e\|\mathbf{S}_{\tau}\|_{\mathbf{V}_{\tau}^{-1}}\leq\sigma\sqrt{2\log\left(\frac{\det(\mathbf{V}_{\tau})^{1/2}}{\det(\mathbf{V}_{0})^{1/2}\delta}\right)}.$
+
+This holds simultaneously for all $\tau\geq 0$ , which completes the proof. ∎
+
+B.5.3 Proof of Lemma 7
+
+We first bound the action-tail bias $\eta_{\tau,j}$ . Since $\|\mathbf{u}_{\tau,j}\|_{2}\leq 1$ and $\|\mathbf{u}_{t_{\tau,j}-s}\|_{2}\leq 1$ , we have
+
+$\displaystyle|\eta_{\tau,j}|$ $\displaystyle=\left|\sum_{s=m+1}^{\infty}\mathbf{u}_{\tau,j}^{\top}\mathbf{G}_{s-1}\mathbf{u}_{t_{\tau,j}-s}\right|$ $\displaystyle\leq\sum_{s=m+1}^{\infty}\|\mathbf{u}_{\tau,j}\|_{2}\|\mathbf{G}_{s-1}\|_{2}\|\mathbf{u}_{t_{\tau,j}-s}\|_{2}$ $\displaystyle\leq\sum_{s=m+1}^{\infty}\|\mathbf{G}_{s-1}\|_{2}$ $\displaystyle=\sum_{h=m}^{\infty}\|\mathbf{G}_{h}\|_{2}$ $\displaystyle\leq\sum_{h=m}^{\infty}\|\mathbf{C}\|_{2}\|\mathbf{A}^{h}\|_{2}\|\mathbf{B}\|_{2}$ $\displaystyle\leq\frac{\|\mathbf{C}\|_{2}\|\mathbf{B}\|_{2}M_{\rho}}{1-\rho}\rho^{m}=:\Delta_{m}\,.$
+
+It remains to control the process-noise tail $\zeta_{\tau,j}$ . Because $\mathbf{u}_{\tau,j}$ may be chosen adaptively based on past rewards, we do not directly claim that $\zeta_{\tau,j}$ is centered sub-Gaussian after conditioning on the selected action. Instead, define the vector-valued tail
+
+$\mathbf{y}_{\tau,j}:=\sum_{h=j-1}^{\infty}\mathbf{C}\mathbf{A}^{h}\mathbf{w}_{t_{\tau,j}-1-h}\in\mathbb{R}^{p}.$
+
+Then, by $\|\mathbf{u}_{\tau,j}\|_{2}\leq 1$ ,
+
+$|\zeta_{\tau,j}|=|\mathbf{u}_{\tau,j}^{\top}\mathbf{y}_{\tau,j}|\leq\|\mathbf{y}_{\tau,j}\|_{2}.$
+
+Hence, it suffices to control $\|\mathbf{y}_{\tau,j}\|_{2}$ .
+
+Fix $(\tau,j)$ . For any unit vector $\mathbf{v}\in\mathbb{S}^{p-1}$ , we have
+
+$\mathbf{v}^{\top}\mathbf{y}_{\tau,j}=\sum_{h=j-1}^{\infty}\mathbf{v}^{\top}\mathbf{C}\mathbf{A}^{h}\mathbf{w}_{t_{\tau,j}-1-h}.$
+
+This is a centered sub-Gaussian random variable with variance proxy bounded by
+
+$\displaystyle\sum_{h=j-1}^{\infty}\lambda_{\max}(\boldsymbol{\Sigma}_{w})\left\|(\mathbf{A}^{h})^{\top}\mathbf{C}^{\top}\mathbf{v}\right\|_{2}^{2}$ $\displaystyle\leq\lambda_{\max}(\boldsymbol{\Sigma}_{w})\sum_{h=j-1}^{\infty}\|\mathbf{v}\|_{2}^{2}\|\mathbf{C}\|_{2}^{2}\|\mathbf{A}^{h}\|_{2}^{2}$ $\displaystyle\leq\lambda_{\max}(\boldsymbol{\Sigma}_{w})\|\mathbf{C}\|_{2}^{2}M_{\rho}^{2}\sum_{h=j-1}^{\infty}\rho^{2h}.$
+
+Since $j\geq m+1$ , we have $j-1\geq m$ , and therefore
+
+$\sum_{h=j-1}^{\infty}\rho^{2h}\leq\sum_{h=m}^{\infty}\rho^{2h}=\frac{\rho^{2m}}{1-\rho^{2}}.$
+
+Thus, every one-dimensional projection of $\mathbf{y}_{\tau,j}$ is sub-Gaussian with variance proxy at most
+
+$\sigma_{\mathrm{tail}}^{2}:=\lambda_{\max}(\boldsymbol{\Sigma}_{w})\,\frac{\|\mathbf{C}\|_{2}^{2}M_{\rho}^{2}}{1-\rho^{2}}\rho^{2m}.$
+
+In particular, for each fixed $\mathbf{v}\in\mathbb{S}^{p-1}$ and every $x>0$ ,
+
+$\mathbb{P}\left(|\mathbf{v}^{\top}\mathbf{y}_{\tau,j}|>x\right)\leq 2\exp\!\left(-\frac{x^{2}}{2\sigma_{\mathrm{tail}}^{2}}\right).$
+
+Let $\mathcal{N}_{1/2}$ be a $1/2$ -net of $\mathbb{S}^{p-1}$ with $|\mathcal{N}_{1/2}|\leq 5^{p}$ . Then,
+
+$\|\mathbf{y}_{\tau,j}\|_{2}\leq 2\max_{\mathbf{v}\in\mathcal{N}_{1/2}}|\mathbf{v}^{\top}\mathbf{y}_{\tau,j}|.$
+
+Indeed, if $\mathbf{y}_{\tau,j}=0$ , the claim is trivial. Otherwise, set
+
+$\mathbf{u}^{*}:=\frac{\mathbf{y}_{\tau,j}}{\|\mathbf{y}_{\tau,j}\|_{2}}.$
+
+By the definition of a $1/2$ -net, there exists $\mathbf{v}\in\mathcal{N}_{1/2}$ such that $\|\mathbf{u}^{*}-\mathbf{v}\|_{2}\leq 1/2$ . Hence,
+
+$\displaystyle\|\mathbf{y}_{\tau,j}\|_{2}$ $\displaystyle=\langle\mathbf{u}^{*},\mathbf{y}_{\tau,j}\rangle$ $\displaystyle=\langle\mathbf{v},\mathbf{y}_{\tau,j}\rangle+\langle\mathbf{u}^{*}-\mathbf{v},\mathbf{y}_{\tau,j}\rangle$ $\displaystyle\leq|\langle\mathbf{v},\mathbf{y}_{\tau,j}\rangle|+\|\mathbf{u}^{*}-\mathbf{v}\|_{2}\|\mathbf{y}_{\tau,j}\|_{2}$ $\displaystyle\leq\max_{\mathbf{v}^{\prime}\in\mathcal{N}_{1/2}}|\langle\mathbf{v}^{\prime},\mathbf{y}_{\tau,j}\rangle|+\frac{1}{2}\|\mathbf{y}_{\tau,j}\|_{2}.$
+
+Rearranging gives the claim.
+
+Now, using the projection tail bound and a union bound over $\mathcal{N}_{1/2}$ ,
+
+$\displaystyle\mathbb{P}\left(\|\mathbf{y}_{\tau,j}\|_{2}>\Delta^{\prime}_{m}(\delta)\right)$ $\displaystyle\leq\mathbb{P}\left(\max_{\mathbf{v}\in\mathcal{N}_{1/2}}|\mathbf{v}^{\top}\mathbf{y}_{\tau,j}|>\frac{\Delta^{\prime}_{m}(\delta)}{2}\right)$ $\displaystyle\leq\sum_{\mathbf{v}\in\mathcal{N}_{1/2}}\mathbb{P}\left(|\mathbf{v}^{\top}\mathbf{y}_{\tau,j}|>\frac{\Delta^{\prime}_{m}(\delta)}{2}\right)$ $\displaystyle\leq 2|\mathcal{N}_{1/2}|\exp\!\left(-\frac{(\Delta^{\prime}_{m}(\delta))^{2}}{8\sigma_{\mathrm{tail}}^{2}}\right).$
+
+Therefore, choosing
+
+$\Delta^{\prime}_{m}(\delta):=2\sigma_{\mathrm{tail}}\sqrt{2\log\frac{2\cdot 5^{p}T}{\delta}}$
+
+gives
+
+$\mathbb{P}\left(\|\mathbf{y}_{\tau,j}\|_{2}>\Delta^{\prime}_{m}(\delta)\right)\leq\frac{\delta}{T}.$
+
+Since $|\zeta_{\tau,j}|\leq\|\mathbf{y}_{\tau,j}\|_{2}$ , we also have
+
+$\mathbb{P}\left(|\zeta_{\tau,j}|>\Delta^{\prime}_{m}(\delta)\right)\leq\frac{\delta}{T}.$
+
+Since the number of informative indices is
+
+$NL=\frac{T}{m+L}L\leq T,$
+
+a union bound gives
+
+$\mathbb{P}\left(\exists\tau\in[N],\ \exists j\in\{m+1,\ldots,m+L\}:|\zeta_{\tau,j}|>\Delta^{\prime}_{m}(\delta)\right)\leq\delta.$
+
+On the complement of this event, for all $\tau\in[N]$ and $j\in\{m+1,\ldots,m+L\}$ ,
+
+$|\eta_{\tau,j}+\zeta_{\tau,j}|\leq|\eta_{\tau,j}|+|\zeta_{\tau,j}|\leq\Delta_{m}+\Delta^{\prime}_{m}(\delta)=\bar{\Delta}_{m}(\delta).$
+
+∎
+
+B.5.4 Proof of Lemma 8
+
+For any time $t$ , unrolling the latent dynamics gives
+
+$r_{t}=\mu_{t}(\mathbf{u}_{1:t})+z_{t}+\mathbf{u}_{t}^{\top}\mathbf{C}\sum_{h=0}^{\infty}\mathbf{A}^{h}\mathbf{w}_{t-1-h},$
+
+where we use the convention $\mathbf{w}_{s}={\bf 0}_{n}$ for $s\leq 0$ . Since $z_{t}$ is zero-mean and is revealed after $\mathbf{u}_{t}$ is chosen, $\mathbb{E}[z_{t}]=0$ . Therefore,
+
+$\mathrm{Regret}_{T}(\pi)-\mathbb{E}_{\pi}[\mathcal{R}^{\mathrm{pseudo}}_{T}(\pi)]=-\mathbb{E}_{\pi}\left[\sum_{t=1}^{T}\mathbf{u}_{t}^{\top}\mathbf{C}\sum_{h=0}^{\infty}\mathbf{A}^{h}\mathbf{w}_{t-1-h}\right].$
+
+It remains to bound the absolute value of the right-hand side.
+
+Let $t_{\tau,j}:=(\tau-1)(m+L)+j$ , where $\tau\in[N]$ and $j\in[m+L]$ . For the process-noise contribution at time $t_{\tau,j}$ , decompose
+
+$\mathbf{u}_{\tau,j}^{\top}\mathbf{C}\sum_{h=0}^{\infty}\mathbf{A}^{h}\mathbf{w}_{t_{\tau,j}-1-h}=\underbrace{\mathbf{u}_{\tau,j}^{\top}\mathbf{C}\sum_{h=0}^{j-2}\mathbf{A}^{h}\mathbf{w}_{t_{\tau,j}-1-h}}_{=:a_{\tau,j}}+\underbrace{\mathbf{u}_{\tau,j}^{\top}\mathbf{C}\sum_{h=j-1}^{\infty}\mathbf{A}^{h}\mathbf{w}_{t_{\tau,j}-1-h}}_{=:b_{\tau,j}}.$
+
+Here, $a_{\tau,j}$ is the contribution of process noises generated within the current block, whereas $b_{\tau,j}$ is the contribution of process noises generated before the current block. Because $\mathbf{U}_{\tau}$ is $\mathcal{H}_{\tau-1}$ -measurable, all actions $\mathbf{u}_{\tau,j}$ are fixed before the noises in block $\tau$ are revealed. By the martingale-difference property of the process noise and the tower property,
+
+$\mathbb{E}[a_{\tau,j}\mid\mathcal{H}_{\tau-1}]=0,\qquad\text{and hence}\qquad\mathbb{E}[a_{\tau,j}]=0.$
+
+It remains to control $b_{\tau,j}$ . Let
+
+$\mathbf{y}_{\tau,j}:=\mathbf{C}\sum_{h=j-1}^{\infty}\mathbf{A}^{h}\mathbf{w}_{t_{\tau,j}-1-h}.$
+
+Then $b_{\tau,j}=\mathbf{u}_{\tau,j}^{\top}\mathbf{y}_{\tau,j}$ . Using $\|\mathbf{u}_{\tau,j}\|_{2}\leq 1$ ,
+
+$|\mathbb{E}[b_{\tau,j}]|\leq\mathbb{E}\!\left[\|\mathbf{y}_{\tau,j}\|_{2}\right].$
+
+Since $\mathbf{w}_{t}$ is conditionally sub-Gaussian with variance proxy $\boldsymbol{\Sigma}_{w}$ , we have $\mathbb{E}[\mathbf{w}_{t}\mathbf{w}_{t}^{\top}\mid\mathcal{F}_{t-1}]\preceq\boldsymbol{\Sigma}_{w}$ . Moreover, cross terms between different time indices vanish by the martingale-difference property. Hence,
+
+$\mathbb{E}\!\left[\|\mathbf{y}_{\tau,j}\|_{2}^{2}\right]\leq\sum_{h=j-1}^{\infty}\mathbb{E}\!\left[\|\mathbf{C}\mathbf{A}^{h}\mathbf{w}_{t_{\tau,j}-1-h}\|_{2}^{2}\right].$
+
+For each $h$ , by the covariance bound and Assumption 2 ,
+
+$\mathbb{E}\!\left[\|\mathbf{C}\mathbf{A}^{h}\mathbf{w}_{t_{\tau,j}-1-h}\|_{2}^{2}\right]\leq\lambda_{\max}(\boldsymbol{\Sigma}_{w})\|\mathbf{C}\mathbf{A}^{h}\|_{F}^{2}\leq p\,\lambda_{\max}(\boldsymbol{\Sigma}_{w})\|\mathbf{C}\|_{2}^{2}M_{\rho}^{2}\rho^{2h}.$
+
+Therefore,
+
+$\mathbb{E}\!\left[\|\mathbf{y}_{\tau,j}\|_{2}^{2}\right]\leq p\,\lambda_{\max}(\boldsymbol{\Sigma}_{w})\|\mathbf{C}\|_{2}^{2}M_{\rho}^{2}\frac{\rho^{2(j-1)}}{1-\rho^{2}}.$
+
+By Jensen’s inequality,
+
+$\mathbb{E}\!\left[\|\mathbf{y}_{\tau,j}\|_{2}\right]\leq\|\mathbf{C}\|_{2}M_{\rho}\sqrt{\frac{p\,\lambda_{\max}(\boldsymbol{\Sigma}_{w})}{1-\rho^{2}}}\rho^{j-1}.$
+
+Summing over all positions in a block gives
+
+$\sum_{j=1}^{m+L}|\mathbb{E}[b_{\tau,j}]|\leq\|\mathbf{C}\|_{2}M_{\rho}\sqrt{\frac{p\,\lambda_{\max}(\boldsymbol{\Sigma}_{w})}{1-\rho^{2}}}\sum_{j=1}^{m+L}\rho^{j-1}\leq\frac{\|\mathbf{C}\|_{2}M_{\rho}}{1-\rho}\sqrt{\frac{p\,\lambda_{\max}(\boldsymbol{\Sigma}_{w})}{1-\rho^{2}}}.$
+
+Finally, summing over the $N=T/(m+L)$ blocks yields
+
+$\left|\mathrm{Regret}_{T}(\pi)-\mathbb{E}_{\pi}[\mathcal{R}^{\mathrm{pseudo}}_{T}(\pi)]\right|\leq\frac{\|\mathbf{C}\|_{2}M_{\rho}}{1-\rho}\sqrt{\frac{p\,\lambda_{\max}(\boldsymbol{\Sigma}_{w})}{1-\rho^{2}}}\frac{T}{m+L}.$
+
+∎
+
+Appendix C Auxiliary Lemmas
+
+Let $\{F_{t}\}_{t=0}^{\infty}$ be a filtration. Let $\{\eta_{t}\}_{t=1}^{\infty}$ be a real-valued stochastic process such that $\eta_{t}$ is $F_{t}$ -measurable and $\eta_{t}$ is conditionally $R$ -sub-Gaussian for some $R\geq 0$ . Let $\{X_{t}\}_{t=1}^{\infty}$ be an $\mathbb{R}^{d}$ -valued stochastic process such that $X_{t}$ is $F_{t-1}$ -measurable. Assume that $V$ is a $d\times d$ positive definite matrix. For any $t\geq 0$ , define
+
+$\overline{V}_{t}=V+\sum_{s=1}^{t}X_{s}X_{s}^{\top},\qquad S_{t}=\sum_{s=1}^{t}\eta_{s}X_{s}.$
+
+Then, for any $\delta>0$ , with probability at least $1-\delta$ , for all $t\geq 0$ ,
+
+$\|S_{t}\|_{\overline{V}_{t}^{-1}}^{2}\leq 2R^{2}\log\!\left(\frac{\det(\overline{V}_{t})^{1/2}\det(V)^{-1/2}}{\delta}\right).$
+
+Let $\{x_{s}\}_{s=1}^{\infty}$ be a sequence in $\mathbb{R}^{d}$ such that $\|x_{s}\|_{2}\leq X$ for all $s\in\mathbb{N}$ , and let $\lambda$ be a non-negative scalar. For $t\geq 1$ , define $V_{t}:=\sum_{s=1}^{t-1}x_{s}x_{s}^{\top}+\lambda I_{d}\,.$ The following inequality holds:
+
+$\sum_{t=1}^{T}\|x_{t}\|_{V_{t}^{-1}}^{2}\leq 2\max\left(1,\frac{X^{2}}{\lambda}\right)\log\frac{\det(V_{T+1})}{\lambda^{d}}\,.$
+
+Suppose $X_{1},\ldots,X_{t}\in\mathbb{R}^{d}$ and for any $1\leq s\leq t$ , $\|X_{s}\|_{2}\leq L$ , Let $\mathbf{V}_{t}=\lambda\mathbf{I}_{d}+\sum_{s=1}^{t}X_{s}X_{s}^{\top}$ for some $\lambda>0$ . Then,
+
+$\det(\mathbf{V}_{t})\leq(\lambda+tL^{2}/d)^{d}\,.$
+
+Let $A\in\mathbb{R}^{d\times d}$ be any symmetric positive definite matrix, and let $u_{1},u_{2},\ldots,u_{L}\in\mathbb{R}^{d}$ be any vectors. Let $\lambda_{1},\lambda_{2},\ldots,\lambda_{d}$ be the eigenvalues of $A$ , and let $\nu_{1},\nu_{2},\ldots,\nu_{d}$ be the eigenvalues of $A+\sum_{k=1}^{L}u_{k}u_{k}^{\top}$ . We have, for any $x\in\mathbb{R}^{d}$ such that $\|x\|_{2}=1$ ,
+
+$\sqrt{x^{\top}A^{-1}x}-\sqrt{x^{\top}\left(A+\sum_{k=1}^{L}u_{k}u_{k}^{\top}\right)^{-1}x}\leq\sum_{i=1}^{d}\frac{2}{\sqrt{\lambda_{i}}}-\sum_{i=1}^{d}\frac{2}{\sqrt{\nu_{i}}}.$
+
+Appendix D Experimental Details
+
+In this appendix, we provide details of the experiments reported in Section 4 .
+
+D.1 Implementation of Block-OFUL
+
+For the continuous hypercube $\mathcal{U}=[-1,1]^{p}$ , there exists an optimal open-loop action sequence whose actions all lie at vertices of the hypercube [ 11 ] . Motivated by this property and to enable a direct comparison with the ETC baseline, we restrict the experimental action set to $\mathcal{U}=\{-1,+1\}^{p}$ .
+
+Even with this restriction, exhaustive maximization of the block-UCB objective over all $2^{p(m+L)}$ candidate blocks is computationally prohibitive. We therefore implement the oracle using a multi-start local-search procedure. For each restart, we initialize a block by sampling its actions uniformly from $\mathcal{U}$ , and repeatedly apply single-coordinate sign flips whenever they improve the block-UCB objective. The local search terminates when no further improving flip is found. We repeat this procedure from multiple random initializations and select the locally optimized block with the largest UCB objective among all restarts.
+
+D.2 Additional Experiments
+
+Environment.
+
+We further evaluate Block-OFUL on a structured delayed latent-dynamics environment designed to isolate the effects of delayed action influence and persistent latent memory. The latent state is partitioned into $D$ blocks of dimension $p$ , with $n=pD$ , and the action set is $\mathcal{U}=\{-1,+1\}^{p}$ . The system matrices are constructed so that each action is injected into the first latent block, propagated sequentially through the latent state with decay factor $\rho$ , and affects the reward only after reaching the final block:
+
+$\mathbf{A}=\rho\begin{bmatrix}{\bf 0}&{\bf 0}&\cdots&{\bf 0}\\ \mathbf{I}_{p}&{\bf 0}&\cdots&{\bf 0}\\ {\bf 0}&\mathbf{I}_{p}&\ddots&\vdots\\ \vdots&\ddots&\ddots&{\bf 0}\\ {\bf 0}&\cdots&\mathbf{I}_{p}&{\bf 0}\end{bmatrix},\qquad\mathbf{B}=\begin{bmatrix}\mathbf{I}_{p}\\ {\bf 0}\\ \vdots\\ {\bf 0}\end{bmatrix},\qquad\mathbf{C}=\begin{bmatrix}{\bf 0}&{\bf 0}&\cdots&\mathbf{C}_{D}\end{bmatrix},$
+
+where
+
+$\mathbf{C}_{D}=c_{1}\mathbf{I}_{p}+\frac{c_{2}}{p-1}\left(\mathbf{1}\mathbf{1}^{\top}-\mathbf{I}_{p}\right),$
+
+with $c_{1}=1$ and $c_{2}=0.35$ . This construction creates an explicit delayed input–output dependence: increasing $D$ delays the reward-relevant effect of an action, while increasing $\rho$ makes this effect decay more slowly. We use $T=1000$ , $p=2$ , $D\in\{3,6\}$ , and $\rho\in\{0.3,0.95\}$ , with Gaussian reward and process noise.
+
+Figure 2 : Cumulative reward on delayed latent linear-dynamics bandit instances with different levels of stability and delay.
+
+Figure 2 shows that Block-OFUL consistently achieves higher cumulative reward than ETC and the random baseline in the delayed latent-dynamics environments. The advantage becomes more pronounced in the setting with larger $D$ and $\rho$ close to one, where useful reward information arrives only after a longer delay and the effects of past actions persist for longer. This regime is particularly challenging for ETC because the quality of the committed action sequence depends entirely on the dynamics estimate obtained during its initial exploration phase. In contrast, Block-OFUL continues to incorporate newly observed rewards and revise its block-level decisions throughout the horizon. These results complement the main experiments by showing that the benefit of adaptive block-level optimism persists in environments with explicitly delayed and long-lasting action effects.

@@ -1,0 +1,57 @@
+[
+  {
+    "anchor": "S2.Thmtheorem1",
+    "kind": "ltx_theorem ltx_theorem_definition",
+    "text": "Definition 2.1 (NC–C function classes) . Given $L,D_{\\mathcal{Y}}>0$ , consider continuously differentiable functions $f:\\mathcal{X}\\times\\mathcal{Y}\\to\\mathbb{R}$ , over all finite dimensions $d_{x},d_{y}\\in\\mathbb{N}$ , where $\\mathcal{X}\\subset\\mathbb{R}^{d_{x}}$ and $\\mathcal{Y}\\subset\\mathbb{R}^{d_{y}}$ are nonempty closed convex sets with $0\\in\\mathcal{X}$ and $0\\in\\mathcal{Y}$ , satisfying: 1. $f$ is jointly $L$ -smooth on $\\mathcal{X}\\times\\mathcal{Y}$ : $\\|\\nabla f(\\bm{x},\\bm{y})-\\nabla f(\\bm{x}^{\\prime},\\bm{y}^{\\prime})\\|\\leq L\\|(\\bm{x},\\bm{y})-(\\bm{x}^{\\prime},\\bm{y}^{\\prime})\\|,\\qquad\\forall(\\bm{x},\\bm{y}),(\\bm{x}^{\\prime},\\bm{y}^{\\prime})\\in\\mathcal{X}\\times\\mathcal{Y}.$ 2. For every $\\bm{x}\\in\\mathcal{X}$ , $f(\\bm{x},\\cdot)$ is concave. 3. The dual domain satisfies: $\\operatorname{diam}(\\mathcal{Y}):=\\sup_{\\bm{y},\\bm{y}^{\\prime}\\in\\mathcal{Y}}\\|\\bm{y}-\\bm{y}^{\\prime}\\|\\leq D_{\\mathcal{Y}}$ . 4. The initial scale is parameterized in either of the following two ways: (i) For $\\Delta_{\\Phi}>0$ , $\\mathcal{F}_{\\rm NCC}(L,\\Delta_{\\Phi},D_{\\mathcal{Y}})$ denotes the class of functions satisfying $\\Phi_{f}(\\bm{0})-\\inf_{\\bm{x}\\in\\mathcal{X}}\\Phi_{f}(\\bm{x})\\leq\\Delta_{\\Phi};$ (ii) For $\\mathcal{G}_{0}>0$ , $\\mathcal{F}_{\\rm NCC}^{\\rm pd}(L,\\mathcal{G}_{0},D_{\\mathcal{Y}})$ denotes the class of functions satisfying $\\max_{\\bm{y}\\in\\mathcal{Y}}f(0,\\bm{y})-\\inf_{\\bm{x}\\in\\mathcal{X}}f(\\bm{x},0)\\leq\\mathcal{G}_{0}.$"
+  },
+  {
+    "anchor": "S2.Thmtheorem3",
+    "kind": "ltx_theorem ltx_theorem_definition",
+    "text": "Definition 2.3 . Let $f\\in\\mathcal{F}_{\\rm NCC}(L,\\Delta_{\\Phi},D_{\\mathcal{Y}})\\cup\\mathcal{F}_{\\rm NCC}^{\\rm pd}(L,\\mathcal{G}_{0},D_{\\mathcal{Y}})$ . A point $\\bm{x}\\in\\mathcal{X}$ is $\\epsilon$ -stationary for the primal value function if $\\left\\lVert\\nabla(\\varphi_{f})_{1/(2L)}(\\bm{x})\\right\\rVert\\leq\\epsilon.$ A random output $\\bm{x}$ is expected $\\epsilon$ -stationary if $\\mathbb{E}\\left\\lVert\\nabla(\\varphi_{f})_{1/(2L)}(\\bm{x})\\right\\rVert\\leq\\epsilon.$"
+  },
+  {
+    "anchor": "S2.Thmtheorem4",
+    "kind": "ltx_theorem ltx_theorem_definition",
+    "text": "Definition 2.4 (Deterministic first-order oracle) . The deterministic first-order oracle of a differentiable function $f:\\mathcal{X}\\times\\mathcal{Y}\\rightarrow\\mathbb{R}$ is the mapping $\\mathcal{O}_{f}^{\\rm fo}(\\bm{x},\\bm{y})=(f(\\bm{x},\\bm{y}),\\nabla_{\\bm{x}}f(\\bm{x},\\bm{y}),\\nabla_{\\bm{y}}f(\\bm{x},\\bm{y})),\\qquad(\\bm{x},\\bm{y})\\in\\mathcal{X}\\times\\mathcal{Y}.$"
+  },
+  {
+    "anchor": "S2.Thmtheorem5",
+    "kind": "ltx_theorem ltx_theorem_definition",
+    "text": "Definition 2.5 (Stochastic first-order oracle) . The stochastic first-order oracle of a differentiable function $f:\\mathcal{X}\\times\\mathcal{Y}\\rightarrow\\mathbb{R}$ returns $\\mathcal{O}_{f}^{\\rm sfo}(\\bm{x},\\bm{y})=(f(\\bm{x},\\bm{y}),\\widehat{\\nabla}_{\\bm{x}}f(\\bm{x},\\bm{y};\\xi),\\widehat{\\nabla}_{\\bm{y}}f(\\bm{x},\\bm{y};\\xi)),\\qquad(\\bm{x},\\bm{y})\\in\\mathcal{X}\\times\\mathcal{Y},$ where $\\xi$ is a random variable satisfying $\\mathbb{E}_{\\xi}[\\widehat{\\nabla}f(\\bm{x},\\bm{y};\\xi)]=\\nabla f(\\bm{x},\\bm{y}),\\qquad\\mathbb{E}_{\\xi}\\left[\\|\\widehat{\\nabla}f(\\bm{x},\\bm{y};\\xi)-\\nabla f(\\bm{x},\\bm{y})\\|^{2}\\right]\\leq\\sigma^{2}.$"
+  },
+  {
+    "anchor": "S2.Thmtheorem6",
+    "kind": "ltx_theorem ltx_theorem_definition",
+    "text": "Definition 2.6 (Zero-respecting first-order algorithm) . A first-order algorithm is zero-respecting if, for every admissible function $f$ and every oracle transcript, the $(t+1)$ -th iterate $(\\bm{x}^{t+1},\\bm{y}^{t+1})$ satisfies $\\bm{x}^{t+1}\\in\\left\\{\\mathsf{P}_{\\mathcal{X}}(\\bm{u}):\\operatorname{supp}(\\bm{u})\\subseteq\\bigcup_{0\\leq i\\leq t}\\left(\\operatorname{supp}(\\bm{x}^{i})\\cup\\operatorname{supp}(\\nabla_{\\bm{x}}f(\\bm{x}^{i},\\bm{y}^{i}))\\right)\\right\\},$ and $\\bm{y}^{t+1}\\in\\left\\{\\mathsf{P}_{\\mathcal{Y}}(\\bm{v}):\\operatorname{supp}(\\bm{v})\\subseteq\\bigcup_{0\\leq i\\leq t}\\left(\\operatorname{supp}(\\bm{y}^{i})\\cup\\operatorname{supp}(\\nabla_{\\bm{y}}f(\\bm{x}^{i},\\bm{y}^{i}))\\right)\\right\\}.$ In the stochastic setting, the same condition is imposed pathwise with $\\nabla_{\\bm{x}}f(\\bm{x}^{i},\\bm{y}^{i})$ and $\\nabla_{\\bm{y}}f(\\bm{x}^{i},\\bm{y}^{i})$ replaced by the realized stochastic gradients $\\widehat{\\nabla}_{\\bm{x}}f(\\bm{x}^{i},\\bm{y}^{i};\\xi_{i})$ and $\\widehat{\\nabla}_{\\bm{y}}f(\\bm{x}^{i},\\bm{y}^{i};\\xi_{i})$ , respectively."
+  },
+  {
+    "anchor": "S2.Thmtheorem7",
+    "kind": "ltx_theorem ltx_theorem_definition",
+    "text": "Definition 2.7 (Zero-chain) . A differentiable function $f:\\mathcal{X}\\subseteq\\mathbb{R}^{d}\\to\\mathbb{R}$ is a first-order zero-chain if, for every $\\bm{x}\\in\\mathcal{X}$ , $\\operatorname{prog}_{0}(\\nabla f(\\bm{x}))\\leq\\min\\{\\operatorname{prog}_{0}(\\bm{x})+1,d\\}.$"
+  },
+  {
+    "anchor": "S2.Thmtheorem8",
+    "kind": "ltx_theorem ltx_theorem_definition",
+    "text": "Definition 2.8 (Probability- $p$ zero-chain) . Let $p\\in(0,1]$ , and let $f:\\mathcal{X}\\subseteq\\mathbb{R}^{d}\\to\\mathbb{R}$ be a differentiable function equipped with a stochastic first-order oracle $\\mathcal{O}_{f}^{\\rm sfo}(\\bm{x})=\\bigl(f(\\bm{x}),\\widehat{\\nabla}f(\\bm{x};\\xi)\\bigr)$ . We call $f$ a probability- $p$ zero-chain with respect to this oracle if, for every $\\bm{x}\\in\\mathcal{X}$ with $r:=\\operatorname{prog}_{0}(\\bm{x})<d$ , $\\mathbb{P}_{\\xi}\\!\\left(\\operatorname{prog}_{0}(\\widehat{\\nabla}f(\\bm{x};\\xi))=r+1\\right)\\leq p,\\qquad\\mathbb{P}_{\\xi}\\!\\left(\\operatorname{prog}_{0}(\\widehat{\\nabla}f(\\bm{x};\\xi))>r+1\\right)=0.$ Here, the probability is taken over the randomness of the oracle."
+  },
+  {
+    "anchor": "S4.Thmtheorem1",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 4.1 (Deterministic zero-respecting lower bound) . There exist universal constants $c_{0},c_{1}>0$ such that, for every $L,\\Delta_{\\Phi},D_{\\mathcal{Y}}>0$ and every $\\epsilon$ satisfying $0<\\epsilon\\leq c_{1}\\min\\{\\sqrt{L\\Delta_{\\Phi}},\\,LD_{\\mathcal{Y}}\\},$ (31) there is an instance $f\\in\\mathcal{F}_{\\rm NCC}(L,\\Delta_{\\Phi},D_{\\mathcal{Y}})$ on finite-dimensional closed convex sets $X_{0},Y_{0}$ , with $\\operatorname{diam}(Y_{0})=D_{\\mathcal{Y}}$ , for which the following lower bound holds. Let $\\Phi(\\bm{x}):=\\max_{\\bm{y}\\in Y_{0}}f(\\bm{x},\\bm{y})$ and $\\varphi:=\\Phi+\\iota_{X_{0}}$ . For any deterministic zero-respecting first-order algorithm, every zero-respecting primal output $\\bm{x}\\in X_{0}$ produced after $q$ joint oracle calls with $q<c_{0}L^{2}D_{\\mathcal{Y}}\\Delta_{\\Phi}\\,\\epsilon^{-3}$ (32) satisfies $\\left\\lVert\\nabla\\varphi_{1/(2L)}(\\bm{x})\\right\\rVert=\\left\\lVert G_{1/(2L)}(\\bm{x};\\bm{p})\\right\\rVert>\\epsilon,$ (33) where $\\bm{p}$ is the unique point in $\\mathcal{P}_{1/(2L)}(\\bm{x})$ . Consequently, the deterministic zero-respecting first-order oracle complexity of finding an $\\epsilon$ -stationary point is $\\Omega\\!\\left(L^{2}D_{\\mathcal{Y}}\\Delta_{\\Phi}\\,\\epsilon^{-3}\\right).$"
+  },
+  {
+    "anchor": "S4.Thmtheorem2",
+    "kind": "ltx_theorem ltx_theorem_corollary",
+    "text": "Corollary 4.2 . There exists a universal constant $c>0$ such that, for every $L,\\mathcal{G}_{0},D_{\\mathcal{Y}}>0$ and every $\\epsilon$ satisfying $0<\\epsilon\\leq c\\min\\{\\sqrt{L\\mathcal{G}_{0}},\\,LD_{\\mathcal{Y}}\\},$ there is an instance $f\\in\\mathcal{F}_{\\rm NCC}^{\\rm pd}(L,\\mathcal{G}_{0},D_{\\mathcal{Y}})$ on which every deterministic zero-respecting first-order algorithm requires $\\Omega\\!\\left(L^{2}D_{\\mathcal{Y}}\\mathcal{G}_{0}\\,\\epsilon^{-3}\\right)$ joint oracle evaluations to return an $\\epsilon$ -stationary point of the primal value function."
+  },
+  {
+    "anchor": "S5.Thmtheorem5",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 5.5 (Stochastic zero-respecting lower bound) . There exist universal constants $c_{\\rm d},c_{\\rm n},c_{1}>0$ such that, for every $L,\\Delta_{\\Phi},D_{\\mathcal{Y}}>0$ , every $\\sigma\\geq 0$ , and every $\\epsilon$ satisfying $0<\\epsilon\\leq c_{1}\\min\\{\\sqrt{L\\Delta_{\\Phi}},\\,LD_{\\mathcal{Y}}\\},$ (56) there is an instance $f^{\\rm sg}\\in\\mathcal{F}_{\\rm NCC}(L,\\Delta_{\\Phi},D_{\\mathcal{Y}})$ on finite-dimensional closed convex sets $X_{0},Y_{0}$ , with $\\operatorname{diam}(Y_{0})=D_{\\mathcal{Y}}$ , equipped with an unbiased stochastic first-order oracle whose mean-square error is at most $\\sigma^{2}$ . For this instance and oracle, every zero-respecting primal output $\\bm{x}\\in X_{0}$ produced by an adaptive stochastic zero-respecting algorithm after $q$ oracle calls with $q<c_{\\rm d}L^{2}D_{\\mathcal{Y}}\\Delta_{\\Phi}\\,\\epsilon^{-3}+c_{\\rm n}L^{3}D_{\\mathcal{Y}}^{2}\\Delta_{\\Phi}\\sigma^{2}\\,\\epsilon^{-6}$ (57) satisfies $\\mathbb{E}\\!\\left[\\left\\lVert\\nabla(\\varphi_{\\rm sg})_{1/(2L)}(\\bm{x})\\right\\rVert\\right]>\\epsilon.$ (58) Consequently, finding an expected $\\epsilon$ -stationary point requires $\\Omega\\!\\left(L^{2}D_{\\mathcal{Y}}\\Delta_{\\Phi}\\,\\epsilon^{-3}+L^{3}D_{\\mathcal{Y}}^{2}\\Delta_{\\Phi}\\sigma^{2}\\,\\epsilon^{-6}\\right)$ (59) stochastic first-order oracle evaluations."
+  },
+  {
+    "anchor": "S5.Thmtheorem6",
+    "kind": "ltx_theorem ltx_theorem_corollary",
+    "text": "Corollary 5.6 . There exists a universal constant $c>0$ such that, for every $L,\\mathcal{G}_{0},D_{\\mathcal{Y}}>0$ , every $\\sigma\\geq 0$ , and every $\\epsilon$ satisfying $0<\\epsilon\\leq c\\min\\{\\sqrt{L\\mathcal{G}_{0}},LD_{\\mathcal{Y}}\\},$ there is an instance $f^{\\rm sg}\\in\\mathcal{F}_{\\rm NCC}^{\\rm pd}(L,\\mathcal{G}_{0},D_{\\mathcal{Y}})$ equipped with a unbiased stochastic first-order oracle whose mean-square error is at most $\\sigma^{2}$ , for which every adaptive stochastic zero-respecting algorithm requires $\\Omega\\!\\left(L^{2}D_{\\mathcal{Y}}\\mathcal{G}_{0}\\,\\epsilon^{-3}+L^{3}D_{\\mathcal{Y}}^{2}\\mathcal{G}_{0}\\sigma^{2}\\,\\epsilon^{-6}\\right)$ oracle calls to return an expected $\\epsilon$ -stationary output."
+  }
+]

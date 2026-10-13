@@ -1,0 +1,1441 @@
+Content selection saved. Describe the issue below:
+
+Dynamic Regret in Online Convex Optimization with Indicator Switching Costs
+
+We study dynamic regret in online convex optimization with an indicator switching cost : a fixed penalty incurred whenever two consecutive decisions differ. This captures startup overheads such as server activation, model deployment, and cache updates, and on a bounded domain it recovers norm-based movement costs as a special case. Existing guarantees for indicator costs handle only static comparators. We show that a direct extension of these techniques to dynamic regret provably fails, motivating a different approach. We propose a meta-learning framework: a set of randomized lazy FTRL base learners restarted at dyadic time scales, aggregated by a movement-aware master that mixes their proposal densities and samples actions via maximal coupling of consecutive mixtures. The resulting algorithm satisfies, in expectation, $\mathcal{R}^{\mathbf{1}}_{T}\leq\tilde{\mathcal{O}}(\min\{\sqrt{T(S_{T}{+}1)},T^{2/3}(P_{T}+1)^{1/3}\})$ , where $\mathcal{R}^{\mathbf{1}}_{T}$ is the dynamic regret plus the cumulative indicator switching cost, $S_{T}$ counts comparator switches, and $P_{T}$ is the comparator path length. The bound holds simultaneously for all sequences and requires no prior knowledge of $S_{T}$ or $P_{T}$ : it is minimax-optimal (up to logarithmic factors) for tracking piecewise-constant comparators, and also captures frequently moving comparators with small total path length.
+
+1 Introduction
+
+We study Online Convex Optimization (OCO) in non-stationary environments. At each round $t\in[T]$ , a learner selects an action $\bm{x}_{t}\in\mathcal{X}$ before observing the convex loss $f_{t}(\cdot)$ , and incurs $f_{t}(\bm{x}_{t})$ . A central performance criterion in this setting is dynamic regret , which compares the learner against a time-varying comparator sequence $\{\bm{u}_{t}\}_{t=1}^{T}$ . To capture stability requirements, dynamic regret is often augmented with a switching cost $m_{t}(\bm{x}_{t},\bm{x}_{t-1})$ that penalizes changes between consecutive actions. The augmented formulation, known as smoothed OCO (SOCO), models the central tradeoff between responsiveness to non-stationarity and stability of the decision sequence. While this tradeoff is well understood for switching costs that are norm-based, the regime in which any reconfiguration incurs an overhead independent of the magnitude of the change remains underexplored.
+
+In many practical problems, the switching cost is modeled as an indicator switching cost [ 6 , 13 , 18 ] : $\lambda_{t}\,\mathbf{1}\{\bm{x}_{t}\neq\bm{x}_{t-1}\},$ which charges a (possibly time-varying) penalty $\lambda_{t}$ whenever $\bm{x}_{t}\neq\bm{x}_{t-1}$ , regardless of how large the change is. Such costs arise whenever any reconfiguration triggers a one-shot overhead: server activation in cloud scheduling, cache updates in networks, model redeployment in production ML pipelines, retraining-trigger costs in continual learning, and the per-iteration privacy budget in differentially private learning [ 3 ] . The indicator switching cost is, in fact, the more demanding primitive. Setting $\lambda_{t}=\|\bm{x}_{t}-\bm{x}_{t-1}\|$ recovers the norm-based switching cost as a special case, and on a bounded domain $\|\bm{x}_{t}-\bm{x}_{t-1}\|\leq D\,\mathbf{1}\{\bm{x}_{t}\neq\bm{x}_{t-1}\}$ where $D\doteq\mathrm{diam}(\mathcal{X})$ is the diameter of the set $\mathcal{X}$ , so any algorithm that controls the indicator switching cost automatically controls the norm-based one (up to the factor $D$ ), but not vice versa. In this sense indicator switching costs subsume norm-based ones and impose a strictly stronger notion of stability.
+
+In Learning with Expert Advice (LEA), where the decision set is the simplex and losses are linear, indicator switching costs admit a useful reduction. Under a maximal coupling 1 1 1 Specifically, under such a coupling, $\Pr(\bm{x}_{t}\neq\bm{x}_{t-1})=\tfrac{1}{2}\|\bm{x}_{t}-\bm{x}_{t-1}\|_{1}$ ; see, e.g., [ 10 , Sec. 5.2] . , the expected number of switches is exactly the $\ell_{1}$ movement of the played distributions, so the problem reduces to controlling $\ell_{1}$ norm on the simplex, and both static [ 4 ] and dynamic 2 2 2 In LEA, Dynamic regret is known as tracking regret. Also, strongly adaptive regret implies tracking regret [ 9 , Sec. 3] . [ 10 ] regret bounds follow from standard algorithms such as exponentiated gradient and fixed-share. In general OCO, a line of work has nevertheless made progress on this harder regime via the FTRL framework, obtaining minimax-optimal static regret under indicator switching costs [ 19 , 3 ] . These remain the only available results in OCO, because the other main framework, Online Mirror Descent (OMD), defines each iterate recursively from the previous one via a Bregman divergence term (see, e.g., [ 14 , Sec. 6] ). This recursive dependence of each action on its predecessor precludes a closed-form density that can be evaluated pointwise, which is necessary for the maximal coupling used to control indicator switches.
+
+The dynamic-regret case has thus remained open, and the difficulty traces back to the FTRL framework itself. Even without switching costs, vanilla FTRL is suboptimal for dynamic regret [ 12 ] ; prior work has recovered dynamic-regret guarantees through enhancements such as history pruning [ 15 , 16 ] , but these methods proceed by linearizing the FTRL objective, after which the iterate also becomes a recursive update, inheriting the same difficulty as OMD in deriving the density. Our first contribution shows that even when assisted with perturbations and fixed restarts (which can be viewed as the analogue of history pruning but without linearization) FTRL still fails to deliver (optimal) sublinear dynamic regret. A different architecture beyond a single FTRL run is therefore required.
+
+The natural question is thus: can one obtain dynamic regret guarantees in OCO when the learner pays indicator switching costs, and if so, against which comparator classes? We answer this in the affirmative for the two canonical comparator classes in the dynamic regret literature: piecewise-constant comparators that change at most $S_{T}$ times, and comparators whose total variation is bounded by $P_{T}$ . As we detail later in the contributions, the bounded-variation class is the larger of the two, and it further admits comparators that change at every round while moving only slightly, sequences against which the switch count $S_{T}$ is uninformative. Against the first class, we obtain order-optimal dynamic regret of $\tilde{\mathcal{O}}(\sqrt{(S_{T}+1)\,T})$ , matching the minimax rate up to logarithmic factors. Against the second, the same algorithm attains $\tilde{\mathcal{O}}(T^{2/3}P_{T}^{1/3})$ . A single comparator-oblivious algorithm thus handles both canonical forms of non-stationarity simultaneously. The approach section below details how this is achieved through a multiscale meta-learner over restarted lazy randomized FTRL experts.
+
+1.1 Contributions
+
+We first state the standing assumptions used throughout the paper.
+
+The set $\mathcal{X}\subset\mathbb{R}^{d}$ is convex and bounded with diameter $D\doteq\sup_{\bm{x},\bm{y}\in\mathcal{X}}\|\bm{x}-\bm{y}\|$ and radius $R\doteq\sup_{\bm{x}\in\mathcal{X}}\|\bm{x}\|$ .
+
+The loss $f_{t}:\mathcal{X}\to\mathbb{R}$ is twice differentiable, convex, $G$ -Lipschitz, and $\beta$ -smooth; i.e.,
+
+$\|\nabla f_{t}(\bm{x})\|\leq G,\qquad\nabla^{2}f_{t}(\bm{x})\preceq\beta I,\qquad\forall t\in[T],\bm{x}\in\mathcal{X}.$
+
+The switching coefficients $\{\lambda_{t}\}_{t=2}^{T}$ satisfy $0<\lambda_{t}\leq\lambda$ for a known constant $\lambda>0$ .
+
+There exists $M_{f}>0$ such that $0\leq f_{t}(\bm{x})\leq M_{f},\quad\forall t\in[T],\bm{x}\in\mathcal{X}$ .
+
+Our performance criterion is the dynamic regret with indicator switching cost $\mathcal{R}^{\mathbf{1}}_{T}$ , defined as:
+
+$\displaystyle\mathcal{R}^{\mathbf{1}}_{T}(\{\bm{u}_{t}\}_{t=1}^{T})\doteq\sum_{t=1}^{T}\bigl(f_{t}(\bm{x}_{t})-f_{t}(\bm{u}_{t})\bigr)+\sum_{t=2}^{T}\lambda_{t}\,\mathbf{1}\{\bm{x}_{t}\neq\bm{x}_{t-1}\},$
+
+When clear from context, we drop $\{\bm{u}_{t}\}_{t=1}^{T}$ from the argument. $\mathcal{R}^{\mathbf{1}}_{T}$ compares the learner against a time-varying comparator sequence $\{\bm{u}_{t}\}_{t=1}^{T}=(\bm{u}_{1},\ldots,\bm{u}_{T})$ while charging the learner for its own switches. We measure the complexity of the comparator sequence through two canonical quantities:
+
+$\displaystyle S_{T}(\{\bm{u}_{t}\}_{t=1}^{T})\doteq\sum_{t=2}^{T}\mathbf{1}\{\bm{u}_{t}\neq\bm{u}_{t-1}\},\qquad P_{T}(\{\bm{u}_{t}\}_{t=1}^{T})\doteq\sum_{t=2}^{T}\|\bm{u}_{t}-\bm{u}_{t-1}\|,$
+
+These measures induce two comparator classes,
+
+$\mathcal{U}_{S}(s)\doteq\{\{\bm{u}_{t}\}_{t=1}^{T}:S_{T}(\{\bm{u}_{t}\}_{t=1}^{T})\leq s\},\qquad\mathcal{U}_{P}(p)\doteq\{\{\bm{u}_{t}\}_{t=1}^{T}:P_{T}(\{\bm{u}_{t}\}_{t=1}^{T})\leq p\}.$
+
+These classes capture different forms of non-stationarity. $\mathcal{U}_{S}(s)$ allows the comparator to change at most $s$ times, regardless of the magnitude. $\mathcal{U}_{P}(p)$ instead places no limit on how often the comparator changes, only on the total magnitude of changes, which cannot exceed $p$ . Since any sequence with $s$ changes has total movement at most $Ds$ , we have $\mathcal{U}_{S}(s)\subseteq\mathcal{U}_{P}(Ds)$ ; but $\mathcal{U}_{P}$ also contains sequences that, e.g., move at every round by small amounts, for which $S_{T}$ becomes uninformative. Our guarantees are therefore stated simultaneously for every sequence as functions of $S_{T}$ and $P_{T}$ , with the algorithm itself oblivious to which complexity is smaller. The contributions are listed below.
+
+An impossibility for randomized FTRL. We first show that the existing machinery for indicator switching costs, known as FPRLL [ 18 , 19 , 3 ] 3 3 3 These works use different names for essentially the same algorithm: FTRL with perturbations and a barrier; see the Addendum section of [ 19 ] . , cannot deliver optimal dynamic regret:
+
+​​​​Without restarts, FPRLL suffers $\Omega(T)$ dynamic regret even on $\mathcal{U}_{S}(1)$ .
+
+​​​​With any fixed restart period $k$ , FPRLL $(k)$ suffers $\Omega\bigl(T^{2/3}\tau^{1/3}/\log T\bigr)$ dynamic regret on $\mathcal{U}_{S}(\tau)$ .
+
+Note that the same lower bounds remain valid for the larger class $\mathcal{U}_{P}(\cdot)$ .
+
+Strongly adaptive regret. We introduce a comparator-oblivious algorithm that combines restarted FPRLL base learners at all dyadic time scales, aggregated by the discounted-normal predictor of [ 10 ] . For every interval $I=[s,e]\subseteq[T]$ of length $L$ ,
+
+$\displaystyle\mathcal{R}^{\mathbf{1}}_{I}(\bm{u})\doteq\mathbb{E}\Biggl[\sum_{t\in I}\bigl(f_{t}(\bm{x}_{t})-f_{t}(\bm{u})\bigr)+\sum_{t=s+1}^{e}\lambda_{t}\,\mathbf{1}\{\bm{x}_{t}\neq\bm{x}_{t-1}\}\Biggr]\;\leq\;\tilde{\mathcal{O}}(\sqrt{L})$ ( Theorem 12 )
+
+uniformly in $\bm{u}\in\mathcal{X}$ and in the interval $I$ . To our knowledge, this is the first strongly adaptive regret guarantee under indicator switching costs for OCO, and may be of independent interest.
+
+Optimal dynamic regret for piecewise-constant comparators. A standard reduction along the time segmentation of $\{\bm{u}_{t}\}_{t=1}^{T}$ converts the strongly adaptive bound above into a dynamic regret guarantee:
+
+$\displaystyle\mathop{\mathbb{E}}\left[{\mathcal{R}^{\mathbf{1}}_{T}}\right]\;\leq\;\tilde{\mathcal{O}}\bigl(\sqrt{(S_{T}+1)\,T}\bigr),$ ( Corollary 13 )
+
+without prior knowledge of $S_{T}$ . This matches, up to logarithmic factors, the minimax rate for tracking moving comparators [ 24 ] , despite the learner incurring an additional cost for its indicator switches.
+
+Path-length refinement and a unified bound. The same algorithm is adaptive to path measure:
+
+$\displaystyle\mathbb{E}\bigl[\mathcal{R}^{\mathbf{1}}_{T}\bigr]\;\leq\;\tilde{\mathcal{O}}\!\left(\max\{P_{T}^{1/3}T^{2/3}\!\!,\;\sqrt{T}\}\right).$ ( Theorem 14 )
+
+Combining the two yields the unified guarantee
+
+$\displaystyle\mathbb{E}\bigl[\mathcal{R}^{\mathbf{1}}_{T}\bigr]\;\leq\;\tilde{\mathcal{O}}\!\left(\min\Bigl\{\sqrt{(S_{T}+1)\,T},\;\;(P_{T}+1)^{1/3}\,T^{2/3}\Bigr\}\right).$ (1)
+
+Limitation. In norm-based SOCO, the bound ${\mathcal{O}}(\sqrt{T(1+P_{T})})$ is attainable on the larger class $\mathcal{U}_{P}$ , and since $\mathcal{U}_{S}(s)\subseteq\mathcal{U}_{P}(Ds)$ , that single bound automatically yields the optimal ${\mathcal{O}}(\sqrt{T(1+S_{T})})$ on $\mathcal{U}_{S}$ . Under indicator switching costs we do not preserve this unification: we recover $\tilde{\mathcal{O}}(\sqrt{T(S_{T}+1)})$ on $\mathcal{U}_{S}$ , but on $\mathcal{U}_{P}$ our bound degrades to $\tilde{\mathcal{O}}(T^{2/3}P_{T}^{1/3})$ . Whether $\tilde{\mathcal{O}}(\sqrt{T(1+P_{T})})$ is achievable under indicator switching remains open. The difficulty is that the learner is charged per change, whereas the comparator is charged only by total movement $P_{T}$ .
+
+1.2 Overview of the approach
+
+To streamline presentation, we sketch here the algorithmic structure and analysis strategy. The algorithm has two layers: a base layer of restarted lazy randomized FTRL learners, one per dyadic scale, and a meta layer that aggregates them based on their expected loss and decision change.
+
+Base layer. For each dyadic scale $H\in\mathcal{H}\doteq\{1,2,4,\dots,2^{\lfloor\log_{2}T\rfloor}\}$ , we run a fresh copy of FPRLL that restarts at the beginning of every block of length $H$ . Each copy maintains a probability density $\mathcal{Q}_{t}^{(H)}$ over $\mathcal{X}$ , induced by a perturbed FTRL objective. Small scales adapt quickly but restart, and hence switch, often; large scales are stable but slow to respond to non-stationarity. The base layer thus spans the full tradeoff between responsiveness and switching control.
+
+Meta layer: At each round $t$ , the master maintains weights $\bm{v}_{t}\in\Delta_{\mathcal{H}}$ and forms the mixture density
+
+$\displaystyle{\mathcal{P}}_{t}\;\doteq\;\sum_{H\in\mathcal{H}}v_{t,H}\,\mathcal{Q}_{t}^{(H)}.$ (2)
+
+Action $\bm{x}_{t}$ is sampled from ${\mathcal{P}}_{t}$ via maximal coupling with ${\mathcal{P}}_{t-1}$ , so that $\Pr(\bm{x}_{t}\neq\bm{x}_{t-1})\!=\!\|{\mathcal{P}}_{t}\!-\!{\mathcal{P}}_{t-1}\|_{\mathrm{TV}}$ , where $\|\cdot\|_{\mathrm{TV}}$ is total variation distance. After observing $f_{t}$ , the master scores each scale $H$ by the surrogate loss $g_{t}^{(H)}\!\doteq\!\mathbb{E}_{\bm{x}\sim\mathcal{Q}_{t}^{(H)}}[f_{t}(\bm{x})]\!+\!\lambda\,\|\mathcal{Q}_{t}^{(H)}\!-\!\mathcal{Q}_{t-1}^{(H)}\|_{\mathrm{TV}},$ which charges each scale for both its expected loss and the switching cost it would have incurred had the learner followed it alone.
+
+We learn the mixing weights using the discounted-normal predictor of [ 10 ] . It achieves strongly adaptive regret, hence competing with every sub-interval, while also controlling the number of transitions between experts within it. In our setting, this ensures the master performs nearly as the best restart scale for that interval, without paying an uncontrolled cost for switching between scales.
+
+Analytically, at the base layer, we fix a dyadic scale $H$ and characterize the dynamic regret of FPRLL restarted every $H$ rounds ( Theorem 7 ). The resulting bound exposes the tradeoff between the cost of restarts and the cost of comparator variation. At the meta layer, a total-variation decomposition of the combined actions, and the surrogate loss design, enable a reduction to the “ $H$ -experts $\lambda/2$ -switching” problem on $\mathcal{H}$ ( Lemma 10 ), which is handled via the discounted-normal predictor to obtain a strongly adaptive guarantee at the meta level. Combining the two layers yields our two branches in ( 1 ): for $\mathcal{U}_{S}$ , we partition the horizon into piecewise-constant segments, cover each by its dyadic decomposition, and sum the base regret against the segment’s static comparator, giving $\tilde{\mathcal{O}}(\sqrt{(S_{T}+1)T})$ . For $\mathcal{U}_{P}$ , sparsity is uninformative, but some dyadic scale in $\mathcal{H}$ always matches the local rate of comparator drift; the master tracks it, yielding $\tilde{\mathcal{O}}(T^{2/3}P_{T}^{1/3})$ .
+
+2 The FPRLL base learner
+
+Setup. Let $\mathcal{X}\doteq\{\bm{x}\in\mathbb{R}^{d}:s_{c}(\bm{x})\geq 0,\ c=1,\dots,C\}$ with each $s_{c}$ concave (so $\mathcal{X}$ is convex). Without loss of generality, $\bm{0}$ is strictly feasible and $s_{c}(\bm{0})=1$ . For $\gamma\in(0,1)$ , we define the shrunk domain $\mathcal{X}^{\gamma}\doteq(1-\gamma)\mathcal{X}$ and the scaled log-barrier:
+
+$b_{\gamma}(\bm{x})\doteq\frac{b(\bm{x})}{M_{\gamma}},\qquad b(\bm{x})\doteq\sum_{c=1}^{C}\log\!\frac{\bar{s}_{c}}{s_{c}(\bm{x})},\qquad\bar{s}_{c}\doteq\sup_{\bm{z}\in\mathcal{X}}s_{c}(\bm{z}),\qquad M_{\gamma}\doteq\max\Bigl\{1,\,\sup_{\bm{z}\in\mathcal{X}^{\gamma}}b(\bm{z})\Bigr\}.$
+
+This is the standard logarithmic barrier, shifted to make $b\geq 0$ on $\mathcal{X}$ and scaled so that $b_{\gamma}\leq 1$ on $\mathcal{X}^{\gamma}$ , as in [ 19 ] . We let $G_{c}\!\doteq\!\sup_{\bm{x}\in\mathcal{X}^{\gamma}}\!\|\nabla s_{c}(\bm{x})\|,\forall c$ . Next, we define the $\sigma$ -strongly convex function $F_{t}$ :
+
+$\displaystyle F_{t}\doteq\sum_{\tau=0}^{t}f_{\tau},\quad\text{with}\quad f_{0}\doteq r+b_{\gamma},\quad r(\bm{x})\doteq\tfrac{\sigma}{2}\|\bm{x}\|^{2}.$ (3)
+
+Minimizers and their densities. Let $\bm{p}\sim\mathrm{Lap}(\mu)$ have density $\nu(\bm{p})=(2\mu)^{-d}\exp(-\|\bm{p}\|_{1}/\mu)$ . The fresh-perturbation minimizer at round $t$ is
+
+$\displaystyle\tilde{\bm{x}}_{t+1}\doteq\argmin_{\bm{x}\in\mathcal{X}}\bigl\{F_{t}(\bm{x})+\langle\bm{p}_{t},\bm{x}\rangle\bigr\},$ (4)
+
+with induced distribution $\mathcal{Q}_{t+1}$ . Strong convexity makes $\bm{x}\mapsto-\nabla F_{t}(\bm{x})$ a smooth bijection on $\mathrm{int}(\mathcal{X})$ , so the change-of-variables formula ( Lemma 15 ) gives
+
+$\displaystyle\mathcal{Q}_{t}(\bm{x})=\nu\bigl(-\nabla F_{t-1}(\bm{x})\bigr)\,\bigl|\det\bigl(-\nabla^{2}F_{t-1}(\bm{x})\bigr)\bigr|,\qquad\bm{x}\in\mathrm{int}(\mathcal{X}).$ (5)
+
+The closed form lets us evaluate $\mathcal{Q}_{t}$ pointwise , which the lazy coupling below exploits directly.
+
+Two perspectives. Algorithm 1 can be deployed in two ways. As a standalone algorithm, it lazy-samples an action $\bm{x}_{t}\sim\mathcal{Q}_{t}$ at each round (lines 5–12), maximally coupling consecutive draws so that $\Pr(\bm{x}_{t+1}\neq\bm{x}_{t})\;=\;\|\mathcal{Q}_{t}-\mathcal{Q}_{t+1}\|_{\mathrm{TV}}.$ Alternatively, the meta-algorithm of Section 3 consumes Algorithm 1 as a density oracle : it queries $\mathcal{Q}_{t}$ without invoking the sampler, and lazy-samples instead at the mixture level. Either way, the analysis below targets the same per-round quantity,
+
+$\displaystyle\mathbb{E}_{\bm{x}\sim\mathcal{Q}_{t}}[f_{t}(\bm{x})]\;+\;\|\mathcal{Q}_{t}-\mathcal{Q}_{t-1}\|_{\mathrm{TV}},$
+
+which is the expected regret-plus-switching cost when the algorithm is run standalone, and also the surrogate score charged to each base learner by the meta-algorithm.
+
+Algorithm 1 Follow the Perturbed Regularized Lazy Leader (FPRLL)
+
+Regret guarantees. The following statements characterize the performance of FPRLL and its restarted variants. The first statement describes dynamic-regret of FPRLL, explicit in all tunable parameters $(\sigma,\mu)$ and the comparator path budget $P_{T}$ .
+
+If $\mathrm{FPRLL}$ is run with $\gamma=\frac{1}{\sqrt{T}}$ , then for any $\sigma,\mu>0$ ,
+
+$\mathop{\mathbb{E}}\left[{\mathcal{R}^{\mathbf{1}}_{T}}\right]\leq\frac{G^{2}}{2\sigma}T+R\sqrt{2d}\,\mu+(TG+\sigma R)P_{T}+\bigl(CG_{c}P_{T}+GR\bigr)\sqrt{T}+\lambda T\Big(\frac{\beta d}{\sigma}{+}\frac{\sqrt{d}\,G}{\mu}\Big)+\frac{\sigma}{2}R^{2}+1.$
+
+In particular, choosing $\mu^{\star}=\sqrt{\frac{\lambda GT}{R\sqrt{2}}},\qquad\sigma^{\star}=\sqrt{\frac{(G^{2}+2\lambda\beta d)\,T}{R^{2}}},$ yields
+
+$\mathop{\mathbb{E}}\left[{\mathcal{R}^{\mathbf{1}}_{T}}\right]\leq(R+P_{T})\sqrt{(G^{2}+2\lambda\beta d)\,T}+3\sqrt{\lambda dRGT}+TG\,P_{T}+\bigl(CG_{c}P_{T}+GR\bigr)\sqrt{T}+1.$
+
+Specializing the above result to a fixed comparator on a length- $k$ block and optimizing $(\gamma,\sigma,\mu)$ accordingly yields an $\mathcal{O}(C_{\mathrm{base}}\sqrt{k})$ static-regret bound with indicator switching cost, which is a per-block primitive used throughout the multiscale analysis.
+
+Consider $\mathrm{FPRLL}$ , and let $I=\{(j-1)k+1,\dots,jk\}$ be any full restart block. On this block, the algorithm is restarted and run with $\gamma=\frac{1}{\sqrt{k}},\mu^{\star}_{k}=\sqrt{\frac{\lambda Gk}{R\sqrt{2}}},\sigma^{\star}_{k}=\frac{\sqrt{(G^{2}+2\lambda\beta d)\,k}}{R}.$ Then, for every fixed comparator $\bm{u}\in\mathcal{X}$ ,
+
+$\displaystyle\mathop{\mathbb{E}}\left[{\mathcal{R}^{\mathbf{1}}_{I}(\bm{u})}\right]$ $\displaystyle\doteq\mathbb{E}\Big[\sum_{t\in I}\bigl(f_{t}(\bm{x}_{t})-f_{t}(\bm{u})\bigr)+\lambda\sum_{t=(j-1)k+1}^{jk}\mathbf{1}\{x_{t}\neq x_{t-1}\}\Big]$ $\displaystyle\leq R\sqrt{(G^{2}+2\lambda\beta d)\,k}+3\sqrt{\lambda dRG\,k}+GR\sqrt{k}+\lambda+1=C_{\mathrm{base}}\sqrt{k},$
+
+where $C_{\mathrm{base}}\doteq R\sqrt{G^{2}+2\lambda\beta d}+3\sqrt{\lambda dRG}+GR+\lambda+1.$
+
+For each $k$ , let FPRLL $(k)$ denote the algorithm that restarts FPRLL every $k$ rounds, and let $\mathcal{R}^{\mathbf{1},{{k}}}\doteq\mathop{\mathbb{E}}\left[{\mathcal{R}^{\mathbf{1}}_{T}(\{\bm{u}_{t}\}_{t=1}^{T})}\right]$ be its expected dynamic regret against $\{\bm{u}_{t}\}_{t=1}^{T}$ . The following theorem shows that, among the dyadic restart periods $k\in\mathcal{H}$ , there always exists one that achieves a balance between laziness cost and tracking cost.
+
+Assume for simplicity that $T$ is a power of two, and let $\mathcal{H}\doteq\{1,2,4,\dots,T\}$ . For each $k\in\mathcal{H}$ , FPRLL $(k)$ uses within each block the tuning $\gamma=\frac{1}{\sqrt{k}},\ \mu^{\star}_{k}=\sqrt{\frac{\lambda Gk}{R\sqrt{2}}},\ \sigma^{\star}_{k}=\frac{\sqrt{(G^{2}+2\lambda\beta d)\,k}}{R}.$ Define the constants $A\doteq C_{\mathrm{base}}+\lambda,\ B\doteq\sqrt{G^{2}+2\lambda\beta d}+CG_{c}.$ Then there exists a dyadic restart scale $k^{\dagger}\in\mathcal{H}$ such that
+
+$\mathcal{R}^{\mathbf{1},{{k^{\dagger}}}}_{T}\;\leq\;\sqrt{2}\,\min_{1\leq k\leq T}\left(A\frac{T}{\sqrt{k}}+(B+G)P_{T}\,k\right).$
+
+In particular, for $P_{T}=\mathcal{O}(T^{\alpha})$ , $\alpha\in[0,1)$ , $\mathcal{R}^{\mathbf{1},{{k^{\dagger}}}}=\mathcal{O}\big(T^{2/3}P_{T}^{1/3}\big).$
+
+We complement Theorem 7 with a matching lower bound, up to logarithmic factors, for restarted randomized lazy learners of the form in Algorithm 1 . The lower bound exposes a tradeoff in the restart period $k$ between tracking ( $f_{t}(\bm{x}_{t})-f_{t}(\bm{u}_{t})$ ), and laziness costs $\mathbf{1}\{\bm{x}_{t}\neq\bm{x}_{t-1}\}$ .
+
+Tracking cost. A long restart period prevents the learner from reacting to comparator switches that occur inside a block. The next theorem captures this through a single oblivious distribution that is hard simultaneously for all $k$ .
+
+Consider online linear optimization on $\mathcal{X}=[-1,1]$ with losses $f_{t}(x)=g_{t}x$ , $g_{t}\in\{-1,+1\}$ . Let $\tau\geq 1$ and $T\geq 4\tau$ . There exists a distribution $\mathcal{D}$ over oblivious loss sequences such that, for every integer $k\in[4,\,T/\tau]$ , FPRLL $(k)$ run against $\mathcal{D}$ satisfies
+
+$\mathbb{E}\bigl[\mathcal{R}^{\mathbf{1}}_{T}(u_{1:T})\bigr]\;=\;\Omega\left(\frac{k\tau}{\log(T/\tau)}\right)$
+
+for the associated comparator sequence with $S_{T}(u_{1:T})=\tau$ and $P_{T}(u_{1:T})=2\tau$ .
+
+Thus the tracking term is $\Omega(k\tau/\log(T/\tau))$ , which worsens with $k$ .
+
+Laziness cost. A short restart period forces repeated starts from scratch. Adapting [ 19 , Thm. 4] , on a length- $k$ block, each algorithm that makes $O(\sqrt{k})$ expected switches must incur $\Omega(\sqrt{k})$ expected regret against a fixed comparator. Replaying this hard instance over the $T/k$ blocks gives $\Omega(T/\sqrt{k})$ regret against a stationary comparator with $S_{T}\!=\!P_{T}\!=\!0$ ; see Lemma 19 . This term improves with $k$ .
+
+For every fixed $k$ , mixing the tracking adversary with the laziness adversary tuned to that scale gives
+
+$\mathbb{E}\bigl[\mathcal{R}^{\mathbf{1}}_{T}\bigr]\;=\;\Omega\left(\frac{k\tau}{\log(T/\tau)}+\frac{T}{\sqrt{k}}\right).$ ( Proposition 20 )
+
+3 Meta-learning framework
+
+We now construct a meta-learner on top of a number of restarted base experts. First, we invoke a geometric cover fact that controls how intervals decompose across dyadic scales. Second, we model each scale $H\in\mathcal{H}$ as an expert that restarts every $H$ rounds. Third, we attach to each expert a surrogate loss that combines its expected loss with its switching cost, aggregate the experts into a mixture $\mathcal{P}_{t}$ , and sample via lazy coupling of the mixtures, reducing the master to online linear optimization on the simplex with an $\ell_{1}$ switching penalty. Finally, we solve this reduced problem with the strongly adaptive algorithm of [ 10 ] .
+
+Dyadic schedule and a geometric cover. For $j=0,1,\dots,\lfloor\log_{2}T\rfloor$ , define the family of level- $j$ dyadic intervals $\mathcal{G}_{j}\doteq\bigl\{[(i-1)2^{j}+1,\,i2^{j}]:i\in\mathbb{N},\ i2^{j}\leq T\bigr\}$ , and collect
+
+$\mathcal{G}\doteq\bigcup_{j=0}^{\lfloor\log_{2}T\rfloor}\mathcal{G}_{j},\qquad\mathcal{H}\doteq\{2^{j}:0\leq j\leq\lfloor\log_{2}T\rfloor\},\qquad K\doteq|\mathcal{H}|=\lfloor\log_{2}T\rfloor+1.$
+
+Thus $\mathcal{G}$ is the set of all dyadic intervals contained in $[T]$ , and $\mathcal{H}$ is the set of dyadic lengths . The following standard combinatorial fact shows that every interval in $[T]$ admits a short dyadic cover whose lengths sum to a term of the order $\sqrt{L}$ .
+
+For every interval $I=[s,e]\subseteq[T]$ of length $L=e-s+1$ , there exist consecutive dyadic intervals $J_{1},\dots,J_{m}\in\mathcal{G}$ partitioning $I$ such that
+
+$m\leq 2\lceil\log_{2}L\rceil+2\qquad\text{and}\qquad\sum_{r=1}^{m}\sqrt{|J_{r}|}\leq C_{\mathrm{gc}}\sqrt{L},\qquad C_{\mathrm{gc}}\doteq 2+\sqrt{2}.$ (6)
+
+Restarted FPRLL base at each dyadic scale. For each dyadic scale $H\in\mathcal{H}$ , we define a base expert $\mathcal{E}_{H}$ that runs a fresh FPRLL $(H)$ instance on every consecutive block of length $H$ , restarting at the beginning of each new block ( Corollary 6 ). Let $\mathcal{Q}_{t}^{(H)}$ denote the marginal law of $\mathcal{E}_{H}$ ’s action at round $t$ . We attach to each expert its instantaneous expected loss, TV movement, and surrogate loss:
+
+$\ell_{t}^{(H)}\doteq\mathbb{E}_{\bm{x}\sim\mathcal{Q}_{t}^{(H)}}[f_{t}(\bm{x})],\qquad c_{t}^{(H)}\doteq\|\mathcal{Q}_{t}^{(H)}-\mathcal{Q}_{t-1}^{(H)}\|_{\mathrm{TV}},\qquad g_{t}^{(H)}\doteq\ell_{t}^{(H)}+\lambda\,c_{t}^{(H)},$ (7)
+
+with the convention $c_{1}^{(H)}\doteq 0$ . We state the main analysis using the exact quantities $\ell_{t}^{(H)}$ and $c_{t}^{(H)}$ for clarity. In practice, these quantities need not be available in closed form; a practical implementation can therefore feed the meta-learner a sampled surrogate whose conditional mean is an easily computable upper bound on $g_{t}^{(H)}$ . Details are deferred to Appendix F .
+
+The surrogate $g_{t}^{(H)}$ is the natural expert loss for our problem: it already prices in the switching cost that the expert would incur if the master followed it exclusively. Indeed, if actions were sampled directly from $\mathcal{Q}_{t}^{(H)}$ under the lazy coupling of Lemma 16 , then $\Pr(\bm{x}_{t}\neq\bm{x}_{t-1})=c_{t}^{(H)}$ , and therefore for every comparator $\{\bm{u}_{t}\}_{t=1}^{T}\in\mathcal{X}^{T}$ ,
+
+$\mathbb{E}\left[\sum_{t=1}^{T}f_{t}(\bm{x}_{t})+\lambda\sum_{t=2}^{T}\mathbf{1}\{\bm{x}_{t}\neq\bm{x}_{t-1}\}\right]-\sum_{t=1}^{T}f_{t}(\bm{u}_{t})=\sum_{t=1}^{T}\bigl(g_{t}^{(H)}-f_{t}(\bm{u}_{t})\bigr)=\mathcal{R}^{\mathbf{1},{{H}}}_{T}.$ (8)
+
+Hence a meta-learner that competes with the best cumulative surrogate automatically inherits both the prediction and the switching guarantees of the corresponding expert.
+
+Density-mixture master and the reduction. At round $t$ , the meta-learner plays a weight vector $\bm{v}_{t}\in\Delta_{K}\doteq\Bigl\{\bm{v}\in\mathbb{R}_{+}^{\mathcal{H}}:\textstyle\sum_{H\in\mathcal{H}}v_{H}=1\Bigr\},$ and forms the mixture marginal as in Eq. 2 The played action $\bm{x}_{t}$ is then drawn from $\mathcal{P}_{t}$ via the lazy coupling with $\mathcal{P}_{t-1}$ , which guarantees $\bm{x}_{t}\sim\mathcal{P}_{t}$ and $\Pr(\bm{x}_{t}\neq\bm{x}_{t-1})=\|\mathcal{P}_{t}-\mathcal{P}_{t-1}\|_{\mathrm{TV}}$ . The full procedure is summarized in Algorithm 2 below.
+
+Algorithm 2 Density-mixture master (instantiation of the reduction)
+
+Algorithm 2 is also efficient. The meta-learner of Daniely and Mansour [10] has per-round complexity $\mathcal{O}(K\log T)$ for $K$ experts, and in our construction $K=|\mathcal{H}|=\mathcal{O}(\log T)$ . Thus the meta-level overhead is $\mathcal{O}(\log^{2}T)$ per round. The remaining cost is that of updating the $\mathcal{O}(\log T)$ base learners, each a copy of FPRLL. Although Algorithm 2 writes the exact surrogate losses for ease of presentation, in implementation we feed the meta-learner the sampled surrogate losses described in Appendix F . Thus the per-round cost is the cost of $\mathcal{O}(\log T)$ FPRLL updates, plus an additional $\mathcal{O}(\log^{2}T)$ meta-level overhead and the cost of computing the implementable surrogate losses.
+
+The next lemma is the structural backbone of the analysis: it decomposes the switching probability of the master into an expert-movement term (the average TV movement of the dyadic coordinates) and a weight-movement term (the $\ell_{1}$ movement of the meta weights).
+
+Let $\bm{g}_{t}\doteq(g_{t}^{(H)})_{H\in\mathcal{H}}$ . For every $t\geq 2$ ,
+
+$\|{\mathcal{P}}_{t}-{\mathcal{P}}_{t-1}\|_{\mathrm{TV}}\;\leq\;\sum_{H\in\mathcal{H}}v_{t,H}\,c_{t}^{(H)}+\tfrac{1}{2}\|\bm{v}_{t}-\bm{v}_{t-1}\|_{1},$ (9)
+
+$\displaystyle\text{and consequently}\qquad\mathbb{E}[f_{t}(\bm{x}_{t})]+\lambda\Pr(\bm{x}_{t}\neq\bm{x}_{t-1})\;\leq\;\langle\bm{v}_{t},\bm{g}_{t}\rangle+\tfrac{\lambda}{2}\|\bm{v}_{t}-\bm{v}_{t-1}\|_{1}.$ (10)
+
+The interpretation of Eq. 10 is immediate: the meta-learner sees expert losses $\bm{g}_{t}$ that already price in each expert’s own TV movement, and pays only for its own weight movement in $\ell_{1}$ . We have therefore reduced the master problem to an experts-with-switching-costs problem over the $K=\mathcal{O}(\log T)$ dyadic scales, with switching-cost parameter $\lambda/2$ .
+
+Strongly adaptive guarantee for the meta-learner. To realize the reduction, we feed the surrogate losses $\{\bm{g}_{t}\}$ into the strongly adaptive algorithm of [ 10 ] , which competes with the best expert on every interval while controlling switches among experts. Its guarantees require a bounded surrogate range, which is ensured by Assumption 4 and Assumption 3 . Hence, $g_{t}^{(H)}\leq M_{f}+\lambda\doteq M$ .
+
+There exists an online algorithm producing weights $\bm{v}_{t}\!\in\!\Delta_{K}$ such that for every interval $[s,e]\subseteq[T]$ of length $L\!=\!e\!-s\!+1$ , there is a universal constant $C_{\mathrm{dm}}>0$ for which:
+
+$\sum_{t=s}^{e}\langle\bm{v}_{t},\bm{g}_{t}\rangle+\tfrac{\lambda}{2}\sum_{t=s+1}^{e}\|\bm{v}_{t}-\bm{v}_{t-1}\|_{1}\;\leq\;\min_{H\in\mathcal{H}}\sum_{t=s}^{e}g_{t}^{(H)}+C_{\mathrm{dm}}\sqrt{M(M+\lambda)\,L\log(KT)},$ (11)
+
+4 Regret guarantees
+
+We now combine the base-learner analysis of Section 2 with the meta-learner of Section 3 to derive our main regret bounds. The argument exploits the meta-learner’s strongly adaptive property in two distinct ways. First, pairing it with the static -regret guarantee of the base learner on each restart block yields a strongly adaptive regret (SAR) bound, which in turn implies a dynamic-regret bound against piecewise-constant comparators. Second, pairing it with the dynamic -regret guarantee of the base learner at the best dyadic restart scale yields a path-length-based bound against arbitrary comparators.
+
+4.1 Piecewise-constant comparators via strongly adaptive regret
+
+The interval regret with indicator switching penalty on $I=[s,e]\subseteq[T]$ is
+
+$\displaystyle\mathrm{SAR}_{I}(\bm{u})\doteq\mathbb{E}\left[\sum_{t=s}^{e}f_{t}(\bm{x}_{t})+\lambda\sum_{t=s+1}^{e}\mathbf{1}\{\bm{x}_{t}\neq\bm{x}_{t-1}\}\right]-\sum_{t=s}^{e}f_{t}(\bm{u}).$ (12)
+
+Algorithm 2 attains $\mathrm{SAR}_{I}(\bm{u})=\tilde{\mathcal{O}}(\sqrt{L})$ simultaneously on all intervals of length $L$ .
+
+For every interval $I=[s,e]\subseteq[T]$ of length $L=e-s+1$ ,
+
+$\mathrm{SAR}_{I}(\bm{u})\leq C_{\mathrm{base}}C_{\mathrm{gc}}\sqrt{L}+C_{\mathrm{dm}}\,C_{\mathrm{gc}}\sqrt{M(M+\lambda)L\log(KT)}+\lambda\bigl(2\lceil\log_{2}L\rceil+1\bigr)=\tilde{\mathcal{O}}(\sqrt{L}).$ (13)
+
+The bound combines three ingredients already established: (i) Dyadic cover : Lemma 9 partitions $I$ into $m=\mathcal{O}(\log L)$ consecutive dyadic blocks $J_{1},\dots,J_{m}\in\mathcal{G}$ with $\sum_{r=1}^{m}\sqrt{|J_{r}|}\leq C_{\mathrm{gc}}\sqrt{L}$ . (ii) Meta-level interval regret : applied blockwise, Lemma 11 ensures that on each $J_{r}$ the meta-learner competes with the unique dyadic expert whose restart period equals $|J_{r}|$ , at an $\tilde{\mathcal{O}}(\sqrt{|J_{r}|})$ cost. (iii) Base-level static regret : on its matched restart block, that expert is by definition a fresh run of FPRLL on a horizon of length $|J_{r}|$ , which by Corollary 6 has static regret at most $C_{\mathrm{base}}\sqrt{|J_{r}|}$ .
+
+The one-step bound of Lemma 10 lifts the meta inner-product bound to the master cost, and boundary movement of $\bm{v}_{t}$ across blocks is controlled by the simplex bound $\|\bm{v}_{t}-\bm{v}_{t-1}\|_{1}\leq 2$ . Summing (i)–(iii) yields Eq. 13 ; the full argument is given in Section E.4 . ∎
+
+A SAR-to-dynamic-regret reduction based on segmenting the comparator at its switch points (paying a non-dominant $\lambda S_{T}$ term) yields the piecewise-constant branch of our guarantee (see Section E.5 ):
+
+For every comparator sequence, Algorithm 2 attains
+
+$\mathbb{E}\bigl[\mathcal{R}^{\mathbf{1}}_{T}(\{\bm{u}_{t}\}_{t=1}^{T})\bigr]\;\leq\;\tilde{\mathcal{O}}\left(\sqrt{(S_{T}+1)\,T}\right)+\lambda\,S_{T}.$
+
+4.2 Path-varying comparators
+
+For comparators with bounded path length, segmenting at switch points is no longer informative since $\bm{u}_{t}$ may drift by arbitrarily small amounts at every round. Instead, we invoke the base learner’s dynamic-regret characterization ( Theorem 7 ), which identifies the optimal dyadic restart scale $k^{\dagger}\in\mathcal{H}$ matching the comparator’s drift. For the meta-learner notation, this is the expert with scale $H=k^{\dagger}$ .
+
+For every comparator sequence, Algorithm 2 attains
+
+$\mathbb{E}\bigl[\mathcal{R}^{\mathbf{1}}_{T}(\{\bm{u}_{t}\}_{t=1}^{T})\bigr]\;\leq\;\min_{H\in\mathcal{H}}\left(\sum_{t=1}^{T}g_{t}^{(H)}-\sum_{t=1}^{T}f_{t}(\bm{u}_{t})\right)\;+\;C_{\mathrm{dm}}\sqrt{M(M+\lambda)\,T\log(KT)}.$ (14)
+
+In particular, for $H=k^{\dagger}$ from Theorem 7 , we obtain
+
+$\displaystyle\mathbb{E}\bigl[\mathcal{R}^{\mathbf{1}}_{T}(\{\bm{u}_{t}\}_{t=1}^{T})\bigr]\;=\;\tilde{\mathcal{O}}\left(\max\left\{T^{2/3}P_{T}^{1/3},\,\sqrt{T}\right\}\right).$ (15)
+
+The one-step bound ( Lemma 10 ), summed over $t=1,\dots,T$ , reduces the master cost to the meta inner-product loss plus a TV movement term. Applying Lemma 11 on the full interval $[1,T]$ yields Eq. 14 . Substituting $H=k^{\dagger}$ and invoking the base-level dynamic regret bound of Theorem 7 gives Eq. 15 . See Section E.6 for details. ∎
+
+5 Related work
+
+Our work connects two largely separate lines of research: algorithms with few learner decision changes , and algorithms with guarantees against moving comparators. Existing results typically provide one of these guarantees, but not both, for general OCO.
+
+Lazy OCO. A line of work studies online learners constrained to switch $o(T)$ times against a static comparator. [ 5 ] obtained $\sqrt{dT}+dT/S$ regret with $S$ expected switches. [ 13 ] studied this setting under the name “consistent” online optimization and used Poisson Process schedules, but obtained a weaker tradeoff in terms of $T$ . [ 18 ] and [ 3 ] improved the [ 5 ] guarantee to $\sqrt{T}+dT/S$ , and [ 2 ] sharpened this to $\sqrt{T}+\sqrt{d}T/S$ while removing smoothness assumptions via log-concave sampling. [ 20 ] obtained the same $T/S$ -type dependence for $S$ switches deterministically, but under a continuous norm-based switching constraint. These works typically present regret and switching count separately; we report their sum, which is equivalent via standard reductions [ 18 , Lem. 17] and directly captures the optimal joint tradeoff. For the strongly convex case, [ 18 ] obtains better bounds of order $\widetilde{\mathcal{O}}(T/S^{2})$ . Against adaptive adversaries, the problem is provably harder: [ 7 ] established a $\Theta(T/\sqrt{S})$ minimax rate for an expected $S$ switches. All of these results target a static comparator across the time horizon.
+
+Moving comparators and switching costs. A second line studies dynamic regret under norm-based movement penalties $\|\bm{x}_{t}-\bm{x}_{t-1}\|$ or other Lipschitz switching costs [ 8 , 27 , 22 , 16 ] . [ 22 ] achieved the optimal $\mathcal{O}(\sqrt{T(1+P_{T})})$ dynamic regret by incorporating switching cost into a meta-aggregation loss. Our approach is similar in spirit, but aggregates over total-variation distance and uses different meta- and base-learners. Most recently, [ 16 ] showed that FTRL itself can attain dynamic-regret guarantees with additional laziness properties such as staleness. Relatedly, [ 26 ] studies unbounded comparators, and [ 11 ] extends this setting to moving unbounded comparators with bounds adaptive to individual switching-cost parameters $\lambda_{t}$ . However, these costs remain norm-based, and the resulting algorithms may still change decisions every round. Strongly adaptive methods provide another route to dynamic or tracking regret: [ 9 ] introduced geometric-covering reductions from static regret to strongly adaptive regret, and [ 25 ] showed that strongly adaptive regret implies dynamic-regret bounds in OCO, typically with an additional function-variation term. [ 23 ] extends this perspective to OCO with switching costs, but again under norm-based costs.
+
+Beyond the two lines above, our framework draws on adjacent threads. Differentially private online learning naturally incentivizes few decision changes, since each update consumes privacy budget, and hence algorithms developed in one setting often transfer to the other [ 3 ] . On the algorithmic side, our master/base design follows the meta-learning-over-restarting-experts line of Follow-the-Leading-History and the sleeping-experts perspective [ 1 ] . Restarting a randomized (perturbed) leader to obtain dynamic and strongly adaptive regret was recently considered by [ 21 ] , but without switching costs of any kind (deterministic, indicator, or normed) and without accompanying lower bounds.
+
+References
+
+Appendix
+
+This appendix contains the technical details omitted from the main text. We first derive the change-of-variables formula underlying the fresh perturbed minimizer distribution and recall the lazy-sampling coupling used to preserve the correct marginals while controlling switches. We then prove the lower bounds, the base-learner guarantees, the dyadic restart and interval-covering results, and finally the meta-learner reductions leading to the strongly adaptive and dynamic-regret guarantees.
+
+Contents.
+
+Appendix A : change of variables and lazy sampling.
+
+Appendix B : lower bounds for restart-based FPRLL.
+
+Appendix C : proofs for the base learner.
+
+Appendix D : dyadic interval covering.
+
+Appendix E : proofs for the meta-learner and reductions.
+
+Appendix A Change of variable and lazy sampling
+
+A.1 Change of variable formula
+
+Let
+
+$\tilde{\bm{x}}_{t}~\doteq~\arg\min_{\bm{x}\in\mathcal{X}}\Bigl\{F_{t-1}(\bm{x})+\langle\bm{p}_{t},\bm{x}\rangle\Bigr\},\qquad\bm{p}_{t}\sim\mathrm{Lap}(\mu),$
+
+where
+
+$\nu(\bm{p})=\frac{1}{(2\mu)^{d}}\exp\left(-\frac{\|\bm{p}\|_{1}}{\mu}\right).$
+
+Then $\tilde{\bm{x}}_{t}$ has density
+
+$\displaystyle\mathcal{Q}_{t}(\bm{x})$ $\displaystyle=\nu\left(-\nabla F_{t-1}(\bm{x})\right)\,\left|\det\left(-\nabla^{2}F_{t-1}(\bm{x})\right)\right|,\qquad\bm{x}\in\mathrm{int}(\mathcal{X}).$ (16)
+
+By optimality of $\tilde{\bm{x}}_{t}$ ,
+
+$\nabla F_{t-1}(\tilde{\bm{x}}_{t})+\bm{p}_{t}=0,$
+
+hence
+
+$\bm{p}_{t}=-\nabla F_{t-1}(\tilde{\bm{x}}_{t}).$
+
+Define
+
+$T_{t}(\bm{x})\doteq-\nabla F_{t-1}(\bm{x}).$
+
+Since $F_{t-1}$ is strongly convex, its conjugate $F_{t-1}^{*}$ is differentiable and
+
+$\nabla F_{t-1}^{*}=(\nabla F_{t-1})^{-1}.$
+
+Therefore
+
+$T_{t}^{-1}(\bm{p})=\nabla F_{t-1}^{*}(-\bm{p}).$
+
+So $\tilde{\bm{x}}_{t}=T_{t}^{-1}(\bm{p}_{t})$ .
+
+Applying the change-of-variables formula to the map $T_{t}$ , the density of $\tilde{\bm{x}}_{t}$ is
+
+$\mathcal{Q}_{t}(\bm{x})=\nu(T_{t}(\bm{x}))\left|\det DT_{t}(\bm{x})\right|.$
+
+Using
+
+$T_{t}(\bm{x})=-\nabla F_{t-1}(\bm{x}),\qquad DT_{t}(\bm{x})=-\nabla^{2}F_{t-1}(\bm{x}),$
+
+we obtain
+
+$\mathcal{Q}_{t}(\bm{x})=\nu\left(-\nabla F_{t-1}(\bm{x})\right)\,\left|\det\left(-\nabla^{2}F_{t-1}(\bm{x})\right)\right|,$
+
+as claimed. ∎
+
+A.2 Lazy sampling
+
+We recall a standard lazy-sampling routine for realizing a maximal coupling between two distributions. We use it only through the marginal-preservation and switching identities in Lemma 16 ; the results (and their proof) are standard and can be found in [ 18 ] .
+
+Algorithm 3 LazySample
+
+Let $\bm{X}\sim\mathcal{Q}$ , and let
+
+$\bm{Y}\sim\textsc{LazySample}(\bm{X},\mathcal{Q},\mathcal{P}).$
+
+Then:
+
+$\displaystyle\bm{Y}$ $\displaystyle\sim\mathcal{P},$ (17) $\displaystyle\Pr(\bm{Y}\neq\bm{X})$ $\displaystyle=\|\mathcal{P}-\mathcal{Q}\|_{\mathrm{TV}}.$ (18)
+
+Correspondence with Algorithm 1 .
+
+Algorithm 1 is precisely LazySample instantiated with the consecutive FPRLL marginals $(\mathcal{Q}_{t},\mathcal{Q}_{t+1})$ . In this correspondence, the current state is $\bm{x}_{t}$ , the current and next distributions are $\mathcal{Q}_{t}$ and $\mathcal{Q}_{t+1}$ , and the output is $\bm{x}_{t+1}$ . The “keep” test in Algorithm 1 matches the first branch of Algorithm 3 . If that test fails, the algorithm must draw a fresh sample from $\mathcal{Q}_{t+1}$ ; in our setting this is implemented by drawing $\bm{p}\sim\mathrm{Lap}(\mu)$ and solving the perturbed optimization problem, whose minimizer has law $\mathcal{Q}_{t+1}$ by definition. Finally, Lemma 15 supplies a closed-form expression for these densities, so the comparisons involving $\mathcal{Q}_{t}(\cdot)$ and $\mathcal{Q}_{t+1}(\cdot)$ required by lazy sampling can be evaluated pointwise.
+
+Appendix B Lower bounds
+
+First, we need the following tool, which lower bounds FPRLL dynamic regret without restarts:
+
+Consider the one-dimensional problem on $\mathcal{X}=[-1,1]$ with linear losses
+
+$f_{t}(x)=g_{t}x,\qquad g_{t}\in\{-1,+1\}.$
+
+Let the learner predict at each round
+
+$\displaystyle x_{t}\doteq\argmin_{x\in(-1,1)}\Big\{F_{t}(x)+\langle{G_{0}+p_{t}},{x}\rangle\Big\}=\argmin_{x\in(-1,1)}\Big\{\langle{G_{t-1}+p_{t}},{x}\rangle+r_{t}(x)+b(x)\Big\},$ (19)
+
+where $G_{t-1}=G_{0}+\sum_{i=1}^{t-1}g_{i}$ , for an arbitrary $G_{0}\in\mathbb{R}$ ,
+
+$b(x)=-\frac{1}{M_{\gamma}}\log(1-x^{2})$
+
+is the logarithmic barrier for $\mathcal{X}$ , $r_{t}(x)=\frac{\sigma_{t}}{2}x^{2}$ with $\sigma_{t}\geq 0$ , and $p_{t}$ are arbitrary symmetric perturbations.
+
+Then, there exists an oblivious loss sequence and a one-switch comparator sequence such that
+
+$\mathbb{E}\left[\sum_{t=1}^{T}\bigl(f_{t}(x_{t})-f_{t}(u_{t})\bigr)\right]\;\geq\;\frac{T}{2}.$
+
+Fix $T=2n$ and consider the oblivious loss sequence
+
+$g_{t}=\begin{cases}+1,&t\leq n,\\ -1,&t>n,\end{cases}\qquad u_{t}=-g_{t}.$
+
+Define the cumulative gradients
+
+$G_{t}\doteq G_{0}+\sum_{i=1}^{t}g_{i}.$
+
+Step 1: Structure of the prediction.
+
+For each round $t$ , define
+
+$H_{t}(x)\doteq r_{t}^{\prime}(x)+b^{\prime}(x)=\sigma_{t}x+\frac{2x}{M_{\gamma}(1-x^{2})}=x\left(\sigma_{t}+\frac{2}{M_{\gamma}(1-x^{2})}\right),\qquad x\in(-1,1).$
+
+Since $\sigma_{t}\geq 0$ ,
+
+$H_{t}^{\prime}(x)=\sigma_{t}+\frac{2(1+x^{2})}{M_{\gamma}(1-x^{2})^{2}}>0,$
+
+so $H_{t}$ is strictly increasing. Moreover, $H_{t}$ is odd and satisfies
+
+$\lim_{x\to-1^{+}}H_{t}(x)=-\infty,\qquad\lim_{x\to 1^{-}}H_{t}(x)=+\infty.$
+
+Thus $H_{t}$ is a bijection from $(-1,1)$ onto $\mathbb{R}$ , and its inverse $H_{t}^{-1}$ is odd and strictly increasing.
+
+By first-order optimality of the FTRL objective,
+
+$H_{t}(x_{t})=-(G_{t-1}+p_{t}),$
+
+and therefore
+
+$x_{t}=-\,H_{t}^{-1}(G_{t-1}+p_{t}).$
+
+Step 2: Sign of the expectation.
+
+Define
+
+$m_{t}(c)\doteq\mathbb{E}\bigl[H_{t}^{-1}(c+p_{t})\bigr].$
+
+Since $H_{t}^{-1}$ is increasing, $m_{t}$ is increasing. Since $H_{t}^{-1}$ is odd and $p_{t}$ is symmetric, $m_{t}$ is odd:
+
+$m_{t}(-c)=-m_{t}(c).$
+
+Hence
+
+$c\geq 0\;\Rightarrow\;m_{t}(c)\geq 0,\qquad c\leq 0\;\Rightarrow\;m_{t}(c)\leq 0.$
+
+Using $x_{t}=-H_{t}^{-1}(G_{t-1}+p_{t})$ ,
+
+$\mathbb{E}[x_{t}]=-\,m_{t}(G_{t-1}),$
+
+which implies
+
+$G_{t-1}\geq 0\;\Rightarrow\;\mathbb{E}[x_{t}]\leq 0,\qquad G_{t-1}\leq 0\;\Rightarrow\;\mathbb{E}[x_{t}]\geq 0.$
+
+Step 3: Pairing argument.
+
+For each $k\in\{1,\dots,n\}$ , pair round $k$ with round $2n-k+1$ , and define
+
+$R_{k}\doteq(f_{k}(x_{k})-f_{k}(u_{k}))+(f_{2n-k+1}(x_{2n-k+1})-f_{2n-k+1}(u_{2n-k+1})).$
+
+Since $g_{k}=+1$ and $g_{2n-k+1}=-1$ ,
+
+$R_{k}=(1+x_{k})+(1-x_{2n-k+1}).$
+
+Both terms are nonnegative since $x_{t}\in[-1,1]$ .
+
+The cumulative gradients before the two rounds are
+
+$A_{k}\doteq G_{k-1}=G_{0}+k-1,\qquad B_{k}\doteq G_{2n-k}=G_{0}+k=A_{k}+1.$
+
+Step 4: Lower bounding each pair.
+
+We distinguish two cases.
+
+Case 1: $A_{k}\leq 0$ . Then $\mathbb{E}[x_{k}]\geq 0$ , so
+
+$\mathbb{E}[1+x_{k}]\geq 1,$
+
+and since $1-x_{2n-k+1}\geq 0$ ,
+
+$\mathbb{E}[R_{k}]\geq 1.$
+
+Case 2: $A_{k}>0$ . Then $B_{k}>0$ , so $\mathbb{E}[x_{2n-k+1}]\leq 0$ , and thus
+
+$\mathbb{E}[1-x_{2n-k+1}]\geq 1.$
+
+Since $1+x_{k}\geq 0$ ,
+
+$\mathbb{E}[R_{k}]\geq 1.$
+
+In all cases, $\mathbb{E}[R_{k}]\geq 1$ for every $k$ . Summing over $k=1,\dots,n$ ,
+
+$\mathbb{E}\left[\sum_{t=1}^{T}\bigl(f_{t}(x_{t})-f_{t}(u_{t})\bigr)\right]=\sum_{k=1}^{n}\mathbb{E}[R_{k}]\geq n=\frac{T}{2}.$
+
+∎ Note that starting with positive wave is not necessary, since what matters is the switch, as shown next.
+
+Under the assumptions of Theorem 17 , let $T=2n$ and consider the oblivious loss sequence
+
+$g_{t}=\begin{cases}-1,&t\leq n,\\ +1,&t>n,\end{cases}\qquad u_{t}=-g_{t}.$
+
+Then
+
+$\mathbb{E}\left[\sum_{t=1}^{T}\bigl(f_{t}(x_{t})-f_{t}(u_{t})\bigr)\right]\;\geq\;\frac{T}{2}.$
+
+The proof is identical to that of Theorem 17 , except that in the pairing step $3$ , we have
+
+$R_{k}\doteq(f_{k}(x_{k})-f_{k}(u_{k}))+(f_{2n-k+1}(x_{2n-k+1})-f_{2n-k+1}(u_{2n-k+1})).$
+
+Since now $g_{k}=-1$ and $g_{2n-k+1}=+1$ ,
+
+$R_{k}=(1-x_{k})+(1+x_{2n-k+1}).$
+
+The cumulative gradients before the two rounds are
+
+$A_{k}\doteq G_{k-1}=G_{0}-(k-1),\qquad B_{k}\doteq G_{2n-k}=G_{0}-k=A_{k}-1.$
+
+If $A_{k}\geq 0$ , then $\mathop{\mathbb{E}}\left[{x_{k}}\right]\leq 0$ , so $\mathop{\mathbb{E}}\left[{1-x_{k}}\right]\geq 1$ . If $A_{k}<0$ , then $B_{k}<0$ , so $\mathop{\mathbb{E}}\left[{x_{2n-k+1}}\right]\geq 0$ , and hence $\mathop{\mathbb{E}}\left[{1+x_{2n-k+1}}\right]\geq 1$ . Since both terms are always nonnegative, in either case $\mathop{\mathbb{E}}\left[{R_{k}}\right]\geq 1$ . Summing over $k=1,\dots,n$ yields the claim. ∎
+
+Now we are ready to prove Theorem 8 :
+
+The adversary samples a half-gadget length $h$ uniformly from $\mathcal{H}$ . It then builds the loss sequence by concatenating $\tau$ gadgets of length $2h$ , with alternating orientation: for odd $m\in\{1,\dots,\tau\}$ , the $m$ -th gadget is
+
+$(\underbrace{+1,\dots,+1}_{h\text{ rounds}},\underbrace{-1,\dots,-1}_{h\text{ rounds}}),$
+
+and for even $m\in\{1,\dots,\tau\}$ , the $m$ -th gadget is
+
+$(\underbrace{-1,\dots,-1}_{h\text{ rounds}},\underbrace{+1,\dots,+1}_{h\text{ rounds}}).$
+
+Since $h\leq\eta T/\tau$ and $\eta<1/2$ , the total length of these $\tau$ gadgets is at most
+
+$2h\tau\leq 2\eta T\leq T,$
+
+so the construction fits in the horizon. For the remaining rounds $t>2h\tau$ , define
+
+$g_{t}\doteq g_{2h\tau}.$
+
+Finally, set the comparator to oppose the losses (for each realized randomization):
+
+$u_{t}\doteq-g_{t}\qquad\text{for all }t=1,\dots,T.$
+
+Comparator path length.
+
+Inside each gadget, the comparator switches exactly once at the midpoint. The padded rounds are constant and create no further switches. Therefore
+
+$P_{T}(u)=2\tau.$
+
+Note that for every round $t$ , since $u_{t}=-g_{t}$ and $x_{t}\in[-1,1]$ ,
+
+$f_{t}(x_{t})-f_{t}(u_{t})=g_{t}x_{t}-g_{t}u_{t}=g_{t}x_{t}+1\geq 0.$
+
+Hence $\mathop{\mathbb{E}}\left[{\mathcal{R}_{T}}\right]\geq 0$ for every realization of the randomness.
+
+Choose the dyadic scale.
+
+Now fix any restart period $k$ satisfying $1/\eta\leq k\leq T/\tau$ , and define
+
+$h^{\star}\doteq 2^{\lfloor\log_{2}(\eta k)\rfloor}.$
+
+Since $\eta k\geq 1$ , we have $h^{\star}\geq 1$ , and since $\eta k\leq\eta T/\tau$ , we have $h^{\star}\in\mathcal{H}$ . By construction,
+
+$\frac{\eta k}{2}<h^{\star}\leq\eta k.$
+
+This is key: the gadget half-length is within a constant factor of (a fraction of) the restart period:
+
+$2h^{\star}\leq 2\eta k<k.$
+
+Thus each gadget is strictly shorter than one restart block.
+
+Let $A\doteq\{h=h^{\star}\}.$ Because $h$ is drawn uniformly from $\mathcal{H}$ ,
+
+$\Pr(A)=\frac{1}{J+1},\quad J\doteq\left\lfloor\log_{2}\left(\eta T/\tau\right)\right\rfloor.$
+
+Number of uncut gadgets
+
+Condition on the event $A$ . The active gadget region has total length
+
+$2h^{\star}\tau\leq 2\eta k\tau.$
+
+Since restart boundaries occur every $k$ rounds, the number of restart boundaries falling inside this active region is at most
+
+$\left\lfloor\frac{2h^{\star}\tau}{k}\right\rfloor\leq\frac{2h^{\star}\tau}{k}\leq 2\eta\tau.$
+
+Because every gadget has length $2h^{\star}<k$ , a single restart boundary can intersect the interior of at most one gadget, and a single gadget can contain at most one restart boundary. Therefore at most $2\eta\tau$ gadgets are cut by a restart, and at least
+
+$\tau-2\eta\tau=(1-2\eta)\tau$
+
+gadgets are fully contained in a single restart block.
+
+Regret from each uncut gadget.
+
+Consider any gadget that is not cut by a restart. Over that gadget, the learner runs continuously with no reset. Reindex the gadget as a fresh $2h^{\star}$ -round instance. The state at the beginning of the gadget simply becomes the initial gradient $G_{0}$ for that local instance.
+
+For an odd gadget, the loss sequence is precisely the two-phase sequence used in the proof of Thm. 17 . Hence that gadget contributes expected dynamic regret at least $\frac{2h^{\star}}{2}=h^{\star}.$ For an even gadget, the same lower bound follows from Corollary 18 .
+
+Summing over the at least $(1-2\eta)\tau$ uncut gadgets yields
+
+$\mathop{\mathbb{E}}\left[{\mathcal{R}_{T}\mid A}\right]\;\geq\;(1-2\eta)\tau\,h^{\star}\geq\frac{\eta(1-2\eta)}{2}\,k\tau.$
+
+We expand the unconditional expectation:
+
+$\mathop{\mathbb{E}}\left[{\mathcal{R}_{T}}\right]=\Pr(A)\,\mathop{\mathbb{E}}\left[{\mathcal{R}_{T}\mid A}\right]+\Pr(A^{c})\,\mathop{\mathbb{E}}\left[{\mathcal{R}_{T}\mid A^{c}}\right].$
+
+Since $\mathop{\mathbb{E}}\left[{\mathcal{R}_{T}}\right]\geq 0$ , both conditional expectations are nonnegative, and in particular
+
+$\Pr(A^{c})\,\mathop{\mathbb{E}}\left[{\mathcal{R}_{T}\mid A^{c}}\right]\geq 0.$
+
+Therefore we may drop this second term and obtain the lower bound
+
+$\mathop{\mathbb{E}}\left[{\mathcal{R}_{T}}\right]\;\geq\;\Pr(A)\,\mathop{\mathbb{E}}\left[{\mathcal{R}_{T}\mid A}\right].$
+
+Using $\Pr(A)=1/(J+1)$ and the conditional lower bound above gives
+
+$\mathop{\mathbb{E}}\left[{\mathcal{R}_{T}}\right]\;\geq\;\frac{1}{J+1}\cdot\frac{\eta(1-2\eta)}{2}\,k\tau.$
+
+Finally, since $\eta\in(0,1/2)$ is a fixed constant,
+
+$J+1=1+\left\lfloor\log_{2}\left(\eta\frac{T}{\tau}\right)\right\rfloor=\Theta(\log(T/\tau)).$
+
+Hence $\mathop{\mathbb{E}}\left[{\mathcal{R}_{T}}\right]=\Omega\left(\frac{k\tau}{\log(T/\tau)}\right).$ This completes the proof. ∎
+
+Suppose that a fresh run of FPRLL $(k)$ makes at most $C\sqrt{k}$ expected switches on each length- $k$ block, for a constant $C>0$ . Then there exists an oblivious distribution over $T$ -round loss sequences and a fixed comparator $u^{\star}\in[-1,1]$ such that
+
+$\mathop{\mathbb{E}}\left[{\mathcal{R}^{\mathbf{1}}_{T}(u^{\star},\ldots,u^{\star})}\right]=\Omega\left(\frac{T}{\sqrt{k}}\right).$
+
+We use the following consequence of Sherman and Koren [19, Thm. 4] : for a length- $k$ online linear problem on $[-1,1]$ , there exist a stochastic loss distribution $\mathcal{D}_{k}$ and a comparator $u^{\star}\in[-1,1]$ , fixed as a minimizer of the expected loss under $\mathcal{D}_{k}$ , such that any algorithm making $\mathcal{O}(\sqrt{k})$ expected switches incurs $\Omega(\sqrt{k})$ expected static regret against $u^{\star}$ .
+
+Construct the $T$ -round adversary by drawing, independently on each full restart block, a fresh length- $k$ sample from this same distribution $\mathcal{D}_{k}$ . Although the realized losses differ from block to block, the comparator remains the same $u^{\star}$ , since $u^{\star}$ is defined by $\mathcal{D}_{k}$ , not by the realized sample.
+
+Thus every full block contributes $\Omega(\sqrt{k})$ expected static regret. Since $\mathcal{R}^{\mathbf{1}}_{T}$ only adds the learner’s nonnegative indicator switching cost, the same lower bound holds for $\mathcal{R}^{\mathbf{1}}_{T}$ . Therefore
+
+$\mathop{\mathbb{E}}\left[{\mathcal{R}^{\mathbf{1}}_{T}(u^{\star},\ldots,u^{\star})}\right]\geq\left\lfloor\frac{T}{k}\right\rfloor\Omega(\sqrt{k})=\Omega\left(\frac{T}{\sqrt{k}}\right),$
+
+where $k\leq T$ . The comparator is stationary throughout, so $S_{T}=P_{T}=0$ . ∎
+
+Consider the following two full-horizon adversaries:
+
+the adversary from Theorem 8 , together with comparator sequence $u^{\mathrm{gad}}_{1:T}$ , for which
+
+$S_{T}(u^{\mathrm{gad}}_{1:T})=\tau,\qquad P_{T}(u^{\mathrm{gad}}_{1:T})=2\tau,$
+
+and
+
+$\mathop{\mathbb{E}}\left[{\mathcal{R}^{\mathbf{1}}_{T}(u^{\mathrm{gad}}_{1:T})}\right]=\Omega\left(\frac{k\tau}{\log(T/\tau)}\right);$
+
+the adversary from Lemma 19 , together with the stationary comparator sequence $u^{\mathrm{sh}}_{1:T}\equiv u^{\star}$ , for which
+
+$S_{T}(u^{\mathrm{sh}}_{1:T})=0,\qquad P_{T}(u^{\mathrm{sh}}_{1:T})=0,$
+
+and
+
+$\mathop{\mathbb{E}}\left[{\mathcal{R}^{\mathbf{1}}_{T}(u^{\mathrm{sh}}_{1:T})}\right]=\Omega\left(\frac{T}{\sqrt{k}}\right).$
+
+For the fixed restart period $k$ , define a mixed adversary that, at time $0$ , chooses one of these two branches uniformly at random and then plays the chosen branch for the entire horizon. The resulting mixed adversary may depend on $k$ through the Sherman branch. Let $u_{1:T}$ denote the comparator sequence associated with the realized branch. Then
+
+$\mathop{\mathbb{E}}\left[{\mathcal{R}^{\mathbf{1}}_{T}(u_{1:T})}\right]=\Omega\left(\frac{k\tau}{\log(T/\tau)}+\frac{T}{\sqrt{k}}\right).$
+
+Conditioning on the branch chosen by the adversary gives
+
+$\mathop{\mathbb{E}}\left[{\mathcal{R}^{\mathbf{1}}_{T}(u_{1:T})}\right]=\frac{1}{2}\mathop{\mathbb{E}}\left[{\mathcal{R}^{\mathbf{1}}_{T}(u^{\mathrm{gad}}_{1:T})}\right]+\frac{1}{2}\mathop{\mathbb{E}}\left[{\mathcal{R}^{\mathbf{1}}_{T}(u^{\mathrm{sh}}_{1:T})}\right].$
+
+Applying Theorem 8 to the first term and Lemma 19 to the second term yields the claim. ∎
+
+Condition on $C$ . The $C{=}0$ branch is $k_{0}$ -independent, and Theorem 8 gives $\Omega(k\tau/\log(T/\tau))$ . For $C{=}1$ , condition further on $k_{0}$ : on $\{k_{0}=k\}$ , Lemma 19 yields $\Omega(T/\sqrt{k})$ ; on $\{k_{0}\neq k\}$ , $\mathbb{E}[\mathcal{R}^{\mathbf{1}}_{T}]\geq 0$ since $u^{\star}_{k_{0}}$ is the per-round expected-loss minimizer of $\mathcal{D}^{\mathrm{sh}}_{k_{0}}$ . As $\Pr(k_{0}=k)=1/|\mathcal{H}|=\Theta(1/\log T)$ , the $C{=}1$ branch contributes $\Omega(T/(\sqrt{k}\log T))$ . ∎
+
+Appendix C Proofs for the base learner
+
+To prove Theorem 5 , we establish four intermediate lemmas and then combine them.
+
+Lemma 21 gives the main regret decomposition, splitting the expected dynamic regret into a static term $\mathbf{(I)}$ and a dynamic term $\mathbf{(II)}$ . This extends the decomposition in [ 15 ] to our perturbed, barrier-regularized setting.
+
+Lemma 22 bounds the static term $\mathbf{(I)}$ , explicitly accounting for the effect of the Laplace perturbations.
+
+Lemma 23 bounds the dynamic term $\mathbf{(II)}$ , capturing the dependence on comparator drift through the barrier geometry.
+
+Lemma 24 controls the total variation distance between consecutive sampling distributions, which we use to bound the switching-cost contribution.
+
+Among these ingredients, only the total-variation bound in Lemma 24 follows the general approach of [ 18 ] ; the other three lemmas are specific to our setting.
+
+Let $\{f_{t}(\cdot)\}_{t=1}^{T}$ be an arbitrary set of functions. Let $\bm{p}_{t}\sim\text{Lap}(\mu)$ . Assume that for all $t$ , the fresh perturbed minimizer
+
+$\tilde{\bm{x}}_{t+1}\doteq\argmin_{\bm{x}}F_{t}(\bm{x})+\langle{\bm{p}_{t}},{\bm{x}}\rangle$
+
+is well-defined. Define the loss part of $\mathcal{R}^{\mathbf{1}}_{T}(\{\bm{u}_{t}\}_{t=1}^{T})$ as
+
+$\mathcal{R}_{T}(\{\bm{u}_{t}\}_{t=1}^{T})=\sum_{t=1}^{T}\left(f_{t}(\bm{x}_{t})-f_{t}(\bm{u}_{t})\right)$
+
+, where $\bm{x}_{t}$ are the output of Algorithm 1 . Then, the algorithm that selects the actions $\tilde{\bm{x}}_{t+1},\forall t$ achieves the following dynamic regret bound:
+
+$\mathop{\mathbb{E}}\left[{\mathcal{R}_{T}}\right]\leq\overbrace{\sum_{t=1}^{T}F_{t}(\bm{\tilde{x}}_{t})-F_{t}(\bm{\tilde{x}}_{t+1})}^{\mathbf{(I)}}\ +\ \underbrace{\sum_{t=1}^{T-1}F_{t}(\bm{u}^{\gamma}_{t+1})-F_{t}(\bm{u}^{\gamma}_{t})}_{\mathbf{(II)}}\ +\ r(\bm{u}^{\gamma}_{1})+1+G\gamma R\,T.$ (20)
+
+$\displaystyle\sum_{t=1}^{T}f_{t}(\tilde{\bm{x}}_{t})-\sum_{t=1}^{T}f_{t}(\bm{u}_{t})-\langle{\bm{p}_{T}},{\bm{u}^{\gamma}_{T}}\rangle$ $\displaystyle=\sum_{t=1}^{T}f_{t}(\tilde{\bm{x}}_{t})-\sum_{t=1}^{T}f_{t}(\bm{u}^{\gamma}_{t})-\langle{\bm{p}_{T}},{\bm{u}^{\gamma}_{T}}\rangle\;+\;\sum_{t=1}^{T}\big(\overbrace{f_{t}(\bm{u}^{\gamma}_{t})-f_{t}(\bm{u}_{t})}^{\text{$a_{t}$}}\big)$ $\displaystyle=\sum_{t=1}^{T}\left(F_{t}(\tilde{\bm{x}}_{t})-F_{t-1}(\tilde{\bm{x}}_{t})\right)-\left(\sum_{t=1}^{T}\left(F_{t}(\bm{u}^{\gamma}_{t})-F_{t-1}(\bm{u}^{\gamma}_{t})\right)+\langle{\bm{p}_{T}},{\bm{u}^{\gamma}_{T}}\rangle\right)\,+\,a_{1:T}$ $\displaystyle=\sum_{t=1}^{T}F_{t}(\tilde{\bm{x}}_{t})-\sum_{t=1}^{T}F_{t-1}(\tilde{\bm{x}}_{t})-\left(\sum_{t=1}^{T}F_{t}(\bm{u}^{\gamma}_{t})+\langle{\bm{p}_{T}},{\bm{u}^{\gamma}_{T}}\rangle-\sum_{t=1}^{T}F_{t-1}(\bm{u}^{\gamma}_{t})\right)+a_{1:T}$ $\displaystyle=\sum_{t=1}^{T}F_{t}(\tilde{\bm{x}}_{t})-\sum_{t=0}^{T-1}F_{t}(\tilde{\bm{x}}_{t+1})-\left(F_{T}(\bm{u}^{\gamma}_{T})+\langle{\bm{p}_{T}},{\bm{u}^{\gamma}_{T}}\rangle+\sum_{t=1}^{T-1}F_{t}(\bm{u}^{\gamma}_{t})-\sum_{t=0}^{T-1}F_{t}(\bm{u}^{\gamma}_{t+1})\right)$ $\displaystyle\qquad+a_{1:T}$ $\displaystyle\leq\sum_{t=1}^{T}F_{t}(\tilde{\bm{x}}_{t})-\sum_{t=1}^{T-1}F_{t}(\tilde{\bm{x}}_{t+1})-\left(F_{T}(\bm{x}_{T+1})+\langle{\bm{p}_{T}},{\bm{x}_{T+1}}\rangle+\sum_{t=1}^{T-1}F_{t}(\bm{u}^{\gamma}_{t})-\sum_{t=1}^{T-1}F_{t}(\bm{u}^{\gamma}_{t+1})\right)$ $\displaystyle\qquad+a_{1:T}+f_{0}(\bm{u}^{\gamma}_{1})$ $\displaystyle\leq\sum_{t=1}^{T}F_{t}(\tilde{\bm{x}}_{t})-\sum_{t=1}^{T}F_{t}(\tilde{\bm{x}}_{t+1})-\left(\sum_{t=1}^{T-1}F_{t}(\bm{u}^{\gamma}_{t})-\sum_{t=1}^{T-1}F_{t}(\bm{u}^{\gamma}_{t+1})\right)-\langle{\bm{p}_{T}},{\bm{x}_{T+1}}\rangle+a_{1:T}+r(\bm{u}^{\gamma}_{1})+1.$
+
+The first inequality uses the update-rule optimality
+
+$F_{T}(\bm{x}_{T+1})+\langle{\bm{p}_{T}},{\bm{x}_{T+1}}\rangle\leq F_{T}(\bm{u}^{\gamma}_{T})+\langle{\bm{p}_{T}},{\bm{u}^{\gamma}_{T}}\rangle,$
+
+and $-F_{0}(\tilde{\bm{x}}_{1})\leq 0$ (since $r\geq 0$ and $b_{\gamma}\geq 0$ on $\mathcal{X}$ ). The second inequality uses $b_{\gamma}\leq 1$ on $\mathcal{X}^{\gamma}$ , giving $f_{0}(\bm{u}^{\gamma}_{1})\leq r(\bm{u}^{\gamma}_{1})+1$ . Overall
+
+$\displaystyle\sum_{t=1}^{T}$ $\displaystyle\left(f_{t}(\tilde{\bm{x}}_{t})-f_{t}(\bm{u}_{t})\right)-\langle{\bm{p}_{T}},{\bm{u}^{\gamma}_{T}}\rangle$ $\displaystyle\leq\sum_{t=1}^{T}\left(F_{t}(\tilde{\bm{x}}_{t})-F_{t}(\tilde{\bm{x}}_{t+1})\right)+\sum_{t=1}^{T-1}\left(F_{t}(\bm{u}^{\gamma}_{t+1})-F_{t}(\bm{u}^{\gamma}_{t})\right)+r(\bm{u}_{1})+1+a_{1:T}-\langle{\bm{p}_{T}},{\bm{x}_{T+1}}\rangle.$
+
+Since the terminal perturbation and terminal point are used only for analysis and are never played by the algorithm, we set $\bm{p}_{T}=\bm{0}$ and choose $\bm{x}_{T+1}=\argmin_{\bm{x}\in\mathcal{X}}F_{T}(\bm{x})$ . Then the preceding optimality inequality remains valid, and both terminal inner-product terms vanish. In addition, by Lipschitzness:
+
+$\displaystyle a_{1:T}=\sum_{t=1}^{T}f_{t}(\bm{u}^{\gamma}_{t})-f_{t}(\bm{u}_{t})\leq\sum_{t=1}^{T}G\|\bm{u}^{\gamma}_{t}-\bm{u}_{t}\|\leq G\gamma R\,T.$ (21)
+
+Finally: Note since $\bm{x}_{t}$ and $\tilde{\bm{x}}_{t}$ have the same density for all $t$ , we have
+
+$\displaystyle\mathop{\mathbb{E}}\left[{f_{t}(\bm{x}_{t})}\right]=\mathop{\mathbb{E}}\left[{f_{t}(\tilde{\bm{x}_{t}})}\right]$ (22)
+
+The above property is guaranteed by the lazy sampling procedure: the fresh minimizer and the (potentially) kept one share the same density.
+
+Hence
+
+$\displaystyle\mathop{\mathbb{E}}\left[{\mathcal{R}_{T}}\right]$ $\displaystyle=\mathop{\mathbb{E}}\left[{\sum_{t=1}^{T}f_{t}(\bm{x}_{t})-f_{t}(\bm{u}_{t})}\right]=\mathop{\mathbb{E}}\left[{\sum_{t=1}^{T}f_{t}(\tilde{\bm{x}}_{t})-f_{t}(\bm{u}_{t})}\right]$ $\displaystyle\leq\sum_{t=1}^{T}\mathop{\mathbb{E}}\left[{\left(F_{t}(\tilde{\bm{x}}_{t})-F_{t}(\tilde{\bm{x}}_{t+1})\right)}\right]\;+\;\sum_{t=1}^{T-1}\left(F_{t}(\bm{u}^{\gamma}_{t+1})-F_{t}(\bm{u}^{\gamma}_{t})\right)\;+\;r(\bm{u}_{1})+1+G\gamma R\,T.$
+
+∎
+
+Under the same conditions as Lemma 21 , if we further assume that $F_{t}$ is $\sigma$ -strongly convex for all $t$ , then
+
+$\mathbf{(I)}\leq\tfrac{G^{2}}{2\sigma}\,T\;+\;R\sqrt{2d}\,\mu.$
+
+, where $\mu$ is the scale parameter of the Laplace distribution.
+
+For each $t$ , define
+
+$\displaystyle\tilde{F}_{t}(\cdot)\doteq F_{t}(\cdot)+\langle{\bm{p}_{t-1}},{\cdot}\rangle.$ (23)
+
+Then,
+
+$\displaystyle F_{t}(\tilde{\bm{x}}_{t})-F_{t}(\tilde{\bm{x}}_{t+1})$ (24) $\displaystyle=F_{t}(\tilde{\bm{x}}_{t})+\langle{\bm{p}_{t-1}},{\tilde{\bm{x}}_{t}}\rangle-\Big(F_{t}(\tilde{\bm{x}}_{t+1})+\langle{\bm{p}_{t-1}},{\tilde{\bm{x}}_{t+1}}\rangle\Big)+\langle{\bm{p}_{t-1}},{\tilde{\bm{x}}_{t+1}-\tilde{\bm{x}}_{t}}\rangle$ (25) $\displaystyle=\tilde{F}_{t}(\tilde{\bm{x}}_{t})-\tilde{F}_{t}(\tilde{\bm{x}}_{t+1})+\langle{\bm{p}_{t-1}},{\tilde{\bm{x}}_{t+1}-\tilde{\bm{x}}_{t}}\rangle.$ (26)
+
+By strong convexity of $\tilde{F}_{t}$ , for
+
+$\bm{s}_{t}\doteq\nabla F_{t}(\tilde{\bm{x}}_{t})+\bm{p}_{t-1},$
+
+we have
+
+$\displaystyle\tilde{F}_{t}(\tilde{\bm{x}}_{t})-\tilde{F}_{t}(\tilde{\bm{x}}_{t+1})\;\leq\;\langle{\bm{s}_{t}},{\tilde{\bm{x}}_{t}-\tilde{\bm{x}}_{t+1}}\rangle-\frac{\sigma}{2}\delta_{t}^{2},$ (27)
+
+where
+
+$\delta_{t}\doteq\|\tilde{\bm{x}}_{t+1}-\tilde{\bm{x}}_{t}\|.$
+
+The optimality condition of the update step at $\tilde{\bm{x}}_{t}$ gives
+
+$0=\nabla F_{t-1}(\tilde{\bm{x}}_{t})+\bm{p}_{t-1},$
+
+and therefore
+
+$\nabla f_{t}(\tilde{\bm{x}}_{t})=\nabla F_{t}(\tilde{\bm{x}}_{t})+\bm{p}_{t-1}=\bm{s}_{t}.$
+
+Thus, substituting into ( 27 ) yields
+
+$\displaystyle\tilde{F}_{t}(\tilde{\bm{x}}_{t})-\tilde{F}_{t}(\tilde{\bm{x}}_{t+1})$ $\displaystyle\leq\langle{\bm{g}_{t}},{\tilde{\bm{x}}_{t}-\tilde{\bm{x}}_{t+1}}\rangle-\frac{\sigma}{2}\delta_{t}^{2}$ (28) $\displaystyle\leq G\delta_{t}-\frac{\sigma}{2}\delta_{t}^{2}\leq\frac{G^{2}}{2\sigma},$ (29)
+
+where $\bm{g}_{t}\doteq\nabla f_{t}(\tilde{\bm{x}}_{t})$ . The second inequality follows from Cauchy–Schwarz and Lipschitzness, and the third from the elementary inequality
+
+$ax-\frac{b}{2}x^{2}\leq\frac{a^{2}}{2b},\qquad a,b>0.$
+
+Combining ( 26 ) and ( 29 ), and summing over $t=1,\dots,T$ , we obtain the following pathwise bound:
+
+$\displaystyle\sum_{t=1}^{T}\Big(F_{t}(\tilde{\bm{x}}_{t})-F_{t}(\tilde{\bm{x}}_{t+1})\Big)\leq\frac{G^{2}}{2\sigma}T+\sum_{t=1}^{T}\langle{\bm{p}_{t-1}},{\tilde{\bm{x}}_{t+1}-\tilde{\bm{x}}_{t}}\rangle.$ (30)
+
+Now let $\mathcal{A}$ denote the original perturbation law, under which the vectors $\{\bm{p}_{t}\}_{t=0}^{T-1}$ are i.i.d. Laplace. Let $\mathcal{B}$ be any other law on the perturbations such that each $\bm{p}_{t}$ has the same marginal distribution as under $\mathcal{A}$ .
+
+Recall that $\tilde{\bm{x}}_{t}$ , by definition, depends only on the randomness of $\bm{p}_{t-1}$ . Therefore, as long as the perturbation marginals coincide, the induced marginal distribution of each $\tilde{\bm{x}}_{t}$ is identical under $\mathcal{A}$ and $\mathcal{B}$ . Hence,
+
+$\displaystyle\sum_{t=1}^{T}\mathop{\mathbb{E}}_{\mathcal{A}}\left[{F_{t}(\tilde{\bm{x}}_{t})-F_{t}(\tilde{\bm{x}}_{t+1})}\right]=\sum_{t=1}^{T}\mathop{\mathbb{E}}_{\mathcal{B}}\left[{F_{t}(\tilde{\bm{x}}_{t})-F_{t}(\tilde{\bm{x}}_{t+1})}\right].$ (31)
+
+We now choose $\mathcal{B}$ to simplify the perturbation term in ( 30 ). Namely, let $\mathcal{B}$ be the law defined by
+
+$\displaystyle\bm{p}_{0}\sim\mathrm{Lap}(\mu),\qquad\bm{p}_{t}=\bm{p}_{0}\quad\forall t\in[T{-}1].$ (32)
+
+This law matches the single-time marginal distribution of each $\bm{p}_{t}$ under $\mathcal{A}$ , since under $\mathcal{A}$ the perturbations $\bm{p}_{t}$ are i.i.d. Laplace.
+
+Taking expectation of ( 30 ) under $\mathcal{B}$ , and using ( 31 ), gives
+
+$\displaystyle\mathbf{(I)}$ $\displaystyle=\sum_{t=1}^{T}\mathop{\mathbb{E}}_{\mathcal{A}}\left[{F_{t}(\tilde{\bm{x}}_{t})-F_{t}(\tilde{\bm{x}}_{t+1})}\right]$ (33) $\displaystyle=\sum_{t=1}^{T}\mathop{\mathbb{E}}_{\mathcal{B}}\left[{F_{t}(\tilde{\bm{x}}_{t})-F_{t}(\tilde{\bm{x}}_{t+1})}\right]\leq\frac{G^{2}}{2\sigma}T+\sum_{t=1}^{T}\mathop{\mathbb{E}}_{\mathcal{B}}\left[{\langle{\bm{p}_{t-1}},{\tilde{\bm{x}}_{t+1}-\tilde{\bm{x}}_{t}}\rangle}\right].$ (34)
+
+To bound the remaining sum, we rewrite it as
+
+$\displaystyle\sum_{t=1}^{T}\langle{\bm{p}_{t-1}},{\tilde{\bm{x}}_{t+1}-\tilde{\bm{x}}_{t}}\rangle=\langle{\bm{p}_{T-1}},{\tilde{\bm{x}}_{T+1}}\rangle-\langle{\bm{p}_{0}},{\tilde{\bm{x}}_{1}}\rangle-\sum_{t=2}^{T}\langle{\bm{p}_{t-1}-\bm{p}_{t-2}},{\tilde{\bm{x}}_{t}}\rangle.$ (35)
+
+Under $\mathcal{B}$ , we have $\bm{p}_{t-1}-\bm{p}_{t-2}=0$ for all $t\geq 2$ , hence
+
+$\displaystyle\sum_{t=1}^{T}\mathop{\mathbb{E}}_{\mathcal{B}}\left[{\langle{\bm{p}_{t-1}},{\tilde{\bm{x}}_{t+1}-\tilde{\bm{x}}_{t}}\rangle}\right]$ $\displaystyle=\mathop{\mathbb{E}}_{\mathcal{B}}\left[{\langle{\bm{p}_{0}},{\tilde{\bm{x}}_{T+1}-\tilde{\bm{x}}_{1}}\rangle}\right].$ (36)
+
+Therefore,
+
+$\displaystyle\left|\sum_{t=1}^{T}\mathop{\mathbb{E}}_{\mathcal{B}}\left[{\langle{\bm{p}_{t-1}},{\tilde{\bm{x}}_{t+1}-\tilde{\bm{x}}_{t}}\rangle}\right]\right|$ $\displaystyle\leq\mathop{\mathbb{E}}_{\mathcal{B}}\left[{\|\bm{p}_{0}\|\,\|\tilde{\bm{x}}_{T+1}-\tilde{\bm{x}}_{1}\|}\right]$ (37) $\displaystyle\leq R\,\mathop{\mathbb{E}}\left[{\|\bm{p}_{0}\|}\right]$ (38) $\displaystyle\leq R\sqrt{2d}\,\mu,$ (39)
+
+where the last inequality follows from the bound on the first absolute moment,
+
+$\mathbb{E}\|\bm{p}_{0}\|\leq\sqrt{2d}\,\mu,$
+
+of a $d$ -dimensional Laplace distribution with scale parameter $\mu$ .
+
+Substituting this into ( 34 ) completes the proof. ∎
+
+Under the same conditions as Lemma 22 , we have that
+
+$\displaystyle\mathbf{(II)}\leq(TG+\sigma R+CG_{c}\sqrt{T})\;P_{T}$ (40)
+
+From strong convexity
+
+$\displaystyle F_{t}(\bm{u}^{\gamma}_{t+1})-F_{t}(\bm{u}^{\gamma}_{t})\leq\|\bm{q}_{t}\|\|\bm{u}^{\gamma}_{t+1}-\bm{u}^{\gamma}_{t}\|-\frac{\sigma}{2}\|\bm{u}^{\gamma}_{t+1}-\bm{u}^{\gamma}_{t}\|^{2},$ (41)
+
+where $\bm{q}_{t}=\nabla F_{t}(\bm{u}^{\gamma}_{t+1})$ .
+
+To bound $\|\bm{q}_{t}\|$ :
+
+$\displaystyle\nabla F_{t}(\bm{x})$ $\displaystyle=\nabla f_{1:t}(\bm{x})+\sigma\bm{x}+\nabla b_{\gamma}(\bm{x}).$ (42) $\displaystyle=\nabla f_{1:t}(\bm{x})+\sigma\bm{x}-\sum_{c=1}^{C}\frac{1}{M_{\gamma}s_{c}(\bm{x})}\nabla s_{c}(\bm{x}).$ (43)
+
+$\bullet$ For $\|\nabla b_{\gamma}(\bm{u}_{t+1}^{\gamma})\|$ :
+
+By definition, any $\bm{y}\in\mathcal{X}^{\gamma}$ can be written as $\bm{y}=(1-\gamma)\bm{x}$ for some $\bm{x}\in\mathcal{X}$ , hence $\bm{y}=(1-\gamma)\bm{x}+\gamma\bm{0}$ . Since $s_{c}$ is concave,
+
+$s_{c}(\bm{y})\geq(1-\gamma)s_{c}(\bm{x})+\gamma s_{c}(\bm{0})\geq\gamma,$
+
+where we used $s_{c}(\bm{x})\geq 0$ for $\bm{x}\in\mathcal{X}$ and the normalization $s_{c}(\bm{0})=1$ .
+
+The gradient of the scaled barrier is
+
+$\nabla b_{\gamma}(\bm{x})=-\frac{1}{M_{\gamma}}\sum_{c=1}^{C}\frac{1}{s_{c}(\bm{x})}\,\nabla s_{c}(\bm{x}).$
+
+Since $\|\nabla s_{c}(\bm{x})\|\leq G_{c}$ for all vectors in the shrunk set $\bm{x}\in\mathcal{X}^{\gamma}$ , then using $s_{c}(\bm{x})\geq\gamma$ on $\mathcal{X}^{\gamma}$ yields
+
+$\sup_{\bm{x}\in\mathcal{X}^{\gamma}}\|\nabla b_{\gamma}(\bm{x})\|\leq\frac{1}{M_{\gamma}}\sum_{c=1}^{C}\frac{G_{c}}{\gamma}=\frac{1}{\gamma M_{\gamma}}\sum_{c=1}^{C}G_{c}\leq\frac{CG_{c}}{\gamma}.$
+
+Finally, setting $\gamma=1/\sqrt{T}$ , we get $\|\nabla b_{\gamma}(\bm{u}_{t+1}^{\gamma})\|\leq CG_{c}\sqrt{T}$ .
+
+$\bullet$ For $\sigma\|\bm{u}_{t+1}^{\gamma}\|\leq(1-\gamma)\sigma R\leq\sigma R$
+
+$\bullet$ For $\|\nabla f_{1:t}(\bm{u}_{t+1}^{\gamma})\|$ , we can only do $\|\nabla f_{1:t}(\bm{u}_{t+1}^{\gamma})\|\leq tG\leq TG$ .
+
+Combining the three bounds gives
+
+$\|\bm{q}_{t}\|\leq TG+\sigma R+CG_{c}\sqrt{T}.$
+
+Substituting this into ( 41 ), dropping the negative quadratic term, and summing over $t=1,\dots,T-1$ , we obtain
+
+$\mathbf{(II)}\leq(TG+\sigma R+CG_{c}\sqrt{T})\sum_{t=1}^{T-1}\|\bm{u}_{t+1}^{\gamma}-\bm{u}_{t}^{\gamma}\|.$
+
+Since $\sum_{t=1}^{T-1}\|\bm{u}_{t+1}^{\gamma}-\bm{u}_{t}^{\gamma}\|\leq P_{T}$ , the result follows. ∎
+
+Suppose the loss sequence $\{f_{t}\}$ consists of convex, $G$ -Lipschitz, and $\beta$ -smooth functions. Then, the total variation distance between $\mathcal{Q}_{t}$ and $\mathcal{Q}_{t+1}$ is bounded by
+
+$\|\mathcal{Q}_{t+1}-\mathcal{Q}_{t}\|_{TV}\leq\frac{\beta d}{\sigma}+\frac{\sqrt{d}\,G}{\mu}.$
+
+By the change of variables formula, the density ratio satisfies
+
+$\frac{\mathcal{Q}_{t+1}(\bm{x})}{\mathcal{Q}_{t}(\bm{x})}=\frac{\nu(-\nabla F_{t}(\bm{x}))}{\nu(-\nabla F_{t-1}(\bm{x}))}\cdot\Big|\frac{\det(-\nabla^{2}F_{t}(\bm{x}))}{\det(-\nabla^{2}F_{t-1}(\bm{x}))}\Big|$
+
+We bound each component separately.
+
+Determinant ratio. Let $\lambda_{i,t}$ denote the $i$ -th largest eigenvalue of the symmetric matrix $\nabla^{2}F_{t}(\bm{x})$ . Because the newly revealed loss function $f_{t}$ is $\beta$ -smooth, the spectral norm (operator norm) of its Hessian is bounded by $\beta$ . By applying Weyl’s inequality, which bounds the change in eigenvalues by the spectral norm of the difference, we obtain
+
+$|\lambda_{i,t}-\lambda_{i,t-1}|\leq\|\nabla^{2}F_{t}(\bm{x})-\nabla^{2}F_{t-1}(\bm{x})\|_{\mathrm{op}}=\|\nabla^{2}f_{t}(\bm{x})\|_{\mathrm{op}}\leq\beta$
+
+Furthermore, since $F_{t}$ is also $\sigma$ -strongly convex, all eigenvalues satisfy $\lambda_{i,t}\geq\sigma>0,\forall t$ . Therefore,
+
+$\frac{\det(\nabla^{2}F_{t}(\bm{x}))}{\det(\nabla^{2}F_{t-1}(\bm{x}))}\leq\prod_{i=1}^{d}\left(\frac{\lambda_{i,t-1}+\beta}{\lambda_{i,t-1}}\right)\leq\prod_{i=1}^{d}\left(1+\frac{\beta}{\sigma}\right)=\left(1+\frac{\beta}{\sigma}\right)^{d}\leq\exp\left(\frac{\beta d}{\sigma}\right).$
+
+Density ratio. Using the $L_{1}$ structure of the Laplace distribution and the reverse triangle inequality,
+
+$\frac{\nu(-\nabla F_{t}(\bm{x}))}{\nu(-\nabla F_{t-1}(\bm{x}))}=\exp\left(\frac{\|\nabla F_{t-1}(\bm{x})\|_{1}-\|\nabla F_{t}(\bm{x})\|_{1}}{\mu}\right)\leq\exp\left(\frac{\|\nabla F_{t-1}(\bm{x})-\nabla F_{t}(\bm{x})\|_{1}}{\mu}\right)=\exp\left(\frac{\|\nabla f_{t}(\bm{x})\|_{1}}{\mu}\right).$
+
+Since $f_{t}$ is $G$ -Lipschitz,
+
+$\|\nabla f_{t}(\bm{x})\|_{1}\leq\sqrt{d}\,\|\nabla f_{t}(\bm{x})\|_{2}\leq\sqrt{d}\,G.$
+
+Thus,
+
+$\frac{\nu(-\nabla F_{t}(\bm{x}))}{\nu(-\nabla F_{t-1}(\bm{x}))}\leq\exp\left(\frac{\sqrt{d}\,G}{\mu}\right).$
+
+Combining both bounds,
+
+$\frac{\mathcal{Q}_{t+1}(\bm{x})}{\mathcal{Q}_{t}(\bm{x})}\leq\exp\left(\frac{\beta d}{\sigma}+\frac{\sqrt{d}\,G}{\mu}\right)=\exp(\epsilon),$
+
+where
+
+$\epsilon\doteq\frac{\beta d}{\sigma}+\frac{\sqrt{d}\,G}{\mu}.$
+
+Taking reciprocals gives
+
+$\frac{\mathcal{Q}_{t}(\bm{x})}{\mathcal{Q}_{t+1}(\bm{x})}\geq\exp(-\epsilon),$
+
+which implies
+
+$\mathcal{Q}_{t+1}(\bm{x})-\mathcal{Q}_{t}(\bm{x})\leq(1-e^{-\epsilon})\,\mathcal{Q}_{t+1}(\bm{x}).$
+
+Integrating over any measurable set $E$ yields
+
+$\mathcal{Q}_{t+1}(E)-\mathcal{Q}_{t}(E)\leq 1-e^{-\epsilon}\leq\epsilon.$
+
+To also get $\mathcal{Q}_{t}(E)-\mathcal{Q}_{t+1}(E)\leq\epsilon$ we start the proof again but with the reciprocal bound $\mathcal{Q}_{t}(\bm{x})/\mathcal{Q}_{t+1}(\bm{x})$ , and using $|\lambda_{i,t}-\lambda_{i,t-1}|\leq\beta$ , we get
+
+$\frac{\det(\nabla^{2}F_{t-1}(\bm{x}))}{\det(\nabla^{2}F_{t}(\bm{x}))}\leq\prod_{i=1}^{d}\left(\frac{\lambda_{i,t}+\beta}{\lambda_{i,t}}\right)\leq\exp\left(\frac{\beta d}{\sigma}\right).$
+
+The remaining proof steps are the same thereafter, and we get the same bound $\epsilon$ . Hence, we have
+
+$\|\mathcal{Q}_{t+1}-\mathcal{Q}_{t}\|_{TV}\leq\epsilon.$
+
+∎
+
+Now we are ready to prove the main theorem.
+
+By linearity of expectation,
+
+$\mathop{\mathbb{E}}\left[{\mathcal{R}^{\mathbf{1}}_{T}}\right]=\mathop{\mathbb{E}}\left[{\mathcal{R}_{T}}\right]+\lambda\sum_{t=2}^{T}\mathop{\mathbb{E}}\left[{\mathbf{1}\{\bm{x}_{t}\neq\bm{x}_{t-1}\}}\right].$
+
+The bound on $\mathop{\mathbb{E}}\left[{\mathcal{R}_{T}}\right]$ follows by combining Lemma 22 and Lemma 23 . For the second term, the lazy sampling procedure implies
+
+$\mathop{\mathbb{E}}\left[{\mathbf{1}\{\bm{x}_{t}\neq\bm{x}_{t-1}\}}\right]=\Pr(\bm{x}_{t}\neq\bm{x}_{t-1})=\|\mathcal{Q}_{t}-\mathcal{Q}_{t-1}\|_{\mathrm{TV}}.$
+
+Applying the bound on $\|\mathcal{Q}_{t}-\mathcal{Q}_{t-1}\|_{\mathrm{TV}}$ from Lemma 24 yields the claimed result. ∎
+
+C.1 Proof of Theorem 7
+
+Fix any dyadic scale $k\in\mathcal{H}$ , and partition the horizon into $m=T/k$ consecutive blocks
+
+$B_{i}=\{(i-1)k+1,\dots,ik\},\qquad i=1,\dots,m.$
+
+For each block, define the within-block path budget
+
+$P_{i}\doteq\sum_{t=(i-1)k+2}^{ik}\|\bm{u}_{t}-\bm{u}_{t-1}\|.$
+
+Applying Theorem 5 on each block with horizon $k$ and the given choices of $(\gamma,\mu,\sigma)$ , we obtain
+
+$\mathop{\mathbb{E}}\left[{\mathcal{R}^{\mathbf{1}}_{T}(\{\bm{u}_{t}\}_{t=1}^{T})}\right]\leq\sum_{i=1}^{m}\left[(R+P_{i})\sqrt{(G^{2}+2\lambda\beta d)\,k}+2^{5/4}\sqrt{\lambda dRG\,k}+GkP_{i}+\bigl(CG_{c}P_{i}+GR\bigr)\sqrt{k}+1\right]+\lambda(m-1),$
+
+where the $\lambda(m-1)$ term comes from the switching cost at the restart boundaries. Since $2^{5/4}<3$ , $\sum_{i=1}^{m}P_{i}\leq P_{T}$ , and $m=T/k$ , this implies
+
+$\mathop{\mathbb{E}}\left[{\mathcal{R}^{\mathbf{1}}_{T}(\{\bm{u}_{t}\}_{t=1}^{T})}\right]\leq A\,\frac{T}{\sqrt{k}}+B\,P_{T}\sqrt{k}+GP_{T}k.$
+
+Because $k\geq 1$ , we have $\sqrt{k}\leq k$ , and therefore
+
+$\mathop{\mathbb{E}}\left[{\mathcal{R}^{\mathbf{1}}_{T}(\{\bm{u}_{t}\}_{t=1}^{T})}\right]\leq\phi(k)\doteq A\,\frac{T}{\sqrt{k}}+(B+G)P_{T}\,k.$
+
+We now optimize $\phi$ over $k>0$ . Differentiating gives
+
+$\phi^{\prime}(k)=-\frac{1}{2}AT\,k^{-3/2}+(B+G)P_{T},$
+
+so the unique stationary point is
+
+$\bar{k}=\left(\frac{AT}{2(B+G)P_{T}}\right)^{2/3}.$
+
+After clipping to the admissible range $[1,T]$ , define
+
+$k^{\star}\doteq\min\{T,\max\{1,\bar{k}\}\}.$
+
+Since $\mathcal{H}$ is dyadic, there exists
+
+$k^{\dagger}\doteq 2^{\lfloor\log_{2}k^{\star}\rfloor}\in\mathcal{H}$
+
+such that
+
+$\frac{k^{\star}}{2}\leq k^{\dagger}\leq k^{\star}.$
+
+Hence
+
+$\phi(k^{\dagger})\leq\sqrt{2}\,A\,\frac{T}{\sqrt{k^{\star}}}+(B+G)P_{T}\,k^{\star},$
+
+which proves the first claim.
+
+It remains to simplify the three regimes. If $1\leq\bar{k}\leq T$ , then $k^{\star}=\bar{k}$ , and substituting $\bar{k}$ into the display above yields
+
+$\mathop{\mathbb{E}}\left[{\mathcal{R}^{\mathbf{1}}_{T}(\{\bm{u}_{t}\}_{t=1}^{T})}\right]=\mathcal{O}\left(A^{2/3}(B+G)^{1/3}T^{2/3}P_{T}^{1/3}\right).$
+
+If $\bar{k}<1$ , then $AT<2(B+G)P_{T}$ , so $k^{\star}=1$ and
+
+$\mathop{\mathbb{E}}\left[{\mathcal{R}^{\mathbf{1}}_{T}(\{\bm{u}_{t}\}_{t=1}^{T})}\right]\leq\sqrt{2}AT+(B+G)P_{T}=\mathcal{O}\left((B+G)P_{T}\right).$
+
+If $\bar{k}>T$ , then $AT>2(B+G)P_{T}T^{3/2}$ , so $k^{\star}=T$ and
+
+$(B+G)P_{T}T\leq\frac{A}{2}\sqrt{T}.$
+
+Therefore,
+
+$\mathbb{E}\left[\mathcal{R}_{T}^{\mathbf{1}}(u_{1:T})\right]\leq\sqrt{2}A\sqrt{T}+(B+G)P_{T}T=\mathcal{O}\left(A\sqrt{T}\right).$
+
+Finally, if $P_{T}=T^{\alpha}$ with $\alpha\in[0,1]$ , then
+
+$P_{T}=T^{\alpha}\leq T^{(2+\alpha)/3}\qquad\text{and}\qquad\sqrt{T}\leq T^{(2+\alpha)/3},$
+
+so both boundary branches are dominated by the interior rate
+
+$T^{(2+\alpha)/3}=T^{2/3}P_{T}^{1/3}.$
+
+This proves the final claim. ∎
+
+Appendix D Dyadic intervals
+
+D.1 Proof of Lemma 9
+
+To prove the given expression, we need the following geometric covering fact about intervals:
+
+Orabona [17, Thm. 15.9] Let $J=[q,r]\subseteq\mathbb{N}$ be an arbitrary interval. Then $J$ can be partitioned into two finite sequences of disjoint and consecutive intervals,
+
+$(J_{-k},\dots,J_{0})\subseteq\mathcal{I}|_{J},\qquad(J_{1},\dots,J_{p})\subseteq\mathcal{I}|_{J},$
+
+such that
+
+the intervals $J_{-k},\dots,J_{0},J_{1},\dots,J_{p}$ are consecutive and their union is $J$ ;
+
+$|J_{-i}|/|J_{-i+1}|\leq 1/2$ for every $i\geq 1$ ;
+
+$|J_{i}|/|J_{i-1}|\leq 1/2$ for every $i\geq 2$ .
+
+Apply Lemma 25 to $I=[s,e]$ . We obtain two sequences
+
+$(J_{-k},\dots,J_{0})\subseteq\mathcal{I}|_{I},\qquad(J_{1},\dots,J_{p})\subseteq\mathcal{I}|_{I},$
+
+whose union is $I$ . Relabeling from left to right gives a partition $J_{1},\dots,J_{m}\in\mathcal{G}$ , where $m=k+p+1$ .
+
+Since every interval in $\mathcal{I}$ has dyadic length, and the ratios in Lemma 25 are at most $1/2$ , the block lengths on each side lie on distinct dyadic scales. As every block has length at most $L$ , each side contains at most $\lceil\log_{2}L\rceil+1$ blocks. Therefore
+
+$m\leq 2\lceil\log_{2}L\rceil+2,$
+
+It remains to bound the sum of square roots. For the left side, write
+
+$a_{i}\doteq|J_{-i}|,\qquad i=0,\dots,k,$
+
+and define the tail sums
+
+$S_{i}\doteq\sum_{j=i}^{k}a_{j},\qquad i=0,\dots,k,\qquad S_{k+1}\doteq 0.$
+
+Because the lengths decrease geometrically,
+
+$S_{i+1}\leq\sum_{r\geq 1}\frac{a_{i}}{2^{r}}\leq a_{i}.$
+
+Hence
+
+$S_{i}=a_{i}+S_{i+1}\leq 2a_{i}$
+
+Therefore
+
+$\sqrt{S_{i}}+\sqrt{S_{i+1}}\leq(\sqrt{2}+1)\sqrt{a_{i}},$
+
+Multiplying both sides by $(\sqrt{S_{i}}-\sqrt{S_{i+1}})/\sqrt{a_{i}}$ allows us to bound $\sqrt{a_{i}}$ as follows:
+
+$\sqrt{a_{i}}\leq(1+\sqrt{2})\bigl(\sqrt{S_{i}}-\sqrt{S_{i+1}}\bigr).$
+
+Summing over $i=0,\dots,k$ yields
+
+$\sum_{i=0}^{k}\sqrt{|J_{-i}|}\leq(1+\sqrt{2})\sum_{i=0}^{k}\bigl(\sqrt{S_{i}}-\sqrt{S_{i+1}}\bigr)=(1+\sqrt{2})\sqrt{S_{0}}.$
+
+If we set
+
+$A\doteq\sum_{i=0}^{k}|J_{-i}|,\qquad B\doteq\sum_{i=1}^{p}|J_{i}|,$
+
+then $S_{0}=A$ , and the same argument on the right side gives
+
+$\sum_{i=1}^{p}\sqrt{|J_{i}|}\leq(1+\sqrt{2})\sqrt{B}.$
+
+Since $A+B=L$ , we conclude
+
+$\sum_{r=1}^{m}\sqrt{|J_{r}|}\leq(1+\sqrt{2})(\sqrt{A}+\sqrt{B})\leq(1+\sqrt{2})\sqrt{2(A+B)}=(2+\sqrt{2})\sqrt{L}.$
+
+∎
+
+Appendix E Proofs for meta-learner
+
+E.1 Proof for the one step
+
+Write
+
+$\mathcal{P}_{t}-\mathcal{P}_{t-1}=\sum_{H\in\mathcal{H}}v_{t,H}\bigl(\mathcal{Q}_{t}^{(H)}-\mathcal{Q}_{t-1}^{(H)}\bigr)+\sum_{H\in\mathcal{H}}(v_{t,H}-v_{t-1,H})\,\mathcal{Q}_{t-1}^{(H)}.$
+
+Taking total variation and using the triangle inequality yields
+
+$\left\lVert\mathcal{P}_{t}-\mathcal{P}_{t-1}\right\rVert_{\mathrm{TV}}\leq\sum_{H\in\mathcal{H}}v_{t,H}\left\lVert\mathcal{Q}_{t}^{(H)}-\mathcal{Q}_{t-1}^{(H)}\right\rVert_{\mathrm{TV}}+\left\lVert\sum_{H\in\mathcal{H}}(v_{t,H}-v_{t-1,H})\mathcal{Q}_{t-1}^{(H)}\right\rVert_{\mathrm{TV}}.$
+
+The first term is exactly
+
+$\sum_{H\in\mathcal{H}}v_{t,H}\,c_{t}^{(H)}.$
+
+For the second term, set
+
+$a_{H}\doteq v_{t,H}-v_{t-1,H},\qquad A_{+}\doteq\{H\in\mathcal{H}:a_{H}>0\},\qquad A_{-}\doteq\{H\in\mathcal{H}:a_{H}<0\}.$
+
+Since both $\bm{v}_{t}$ and $\bm{v}_{t-1}$ lie in the simplex, $\sum_{H\in\mathcal{H}}a_{H}=0$ . Hence
+
+$\alpha\doteq\sum_{H\in A_{+}}a_{H}=-\sum_{H\in A_{-}}a_{H}=\frac{1}{2}\|\bm{v}_{t}-\bm{v}_{t-1}\|_{1}.$
+
+If $\alpha=0$ , there is nothing to prove. Otherwise,
+
+$\sum_{H\in\mathcal{H}}a_{H}\mathcal{Q}_{t-1}^{(H)}=\alpha(\mu_{+}-\mu_{-}),$
+
+where
+
+$\mu_{+}\doteq\sum_{H\in A_{+}}\frac{a_{H}}{\alpha}\,\mathcal{Q}_{t-1}^{(H)},\qquad\mu_{-}\doteq\sum_{H\in A_{-}}\frac{-a_{H}}{\alpha}\,\mathcal{Q}_{t-1}^{(H)}$
+
+are probability distributions (convex combination of probability distributions). Therefore,
+
+$\left\lVert\sum_{H\in\mathcal{H}}a_{H}\mathcal{Q}_{t-1}^{(H)}\right\rVert_{\mathrm{TV}}=\alpha\,\left\lVert\mu_{+}-\mu_{-}\right\rVert_{\mathrm{TV}}\leq\alpha=\frac{1}{2}\|\bm{v}_{t}-\bm{v}_{t-1}\|_{1}.$
+
+This proves Eq. 9 .
+
+To pass from the meta dot product to the master expectation, define
+
+$\bm{\ell}_{t}\doteq\bigl(\ell_{t}^{(H)}\bigr)_{H\in\mathcal{H}}\;,\qquad\bm{c}_{t}\doteq\bigl(c_{t}^{(H)}\bigr)_{H\in\mathcal{H}}\;,\qquad\bm{g}_{t}=\bm{\ell}_{t}+\lambda\bm{c}_{t}.$
+
+By the lazy sampling properties ( Eq. 17 ), we have $\bm{x}_{t}\sim\mathcal{P}_{t}$ . Also, using linearity of integration gives:
+
+$\displaystyle\left\langle\bm{v}_{t},\bm{\ell}_{t}\right\rangle$ $\displaystyle=\sum_{H\in\mathcal{H}}v_{t,H}\,\ell_{t}^{(H)}\stackrel{{\scriptstyle(\text{LOTUS})}}{{=}}\sum_{H\in\mathcal{H}}v_{t,H}\int_{\mathcal{X}}f_{t}(\bm{x})\,d\mathcal{Q}_{t}^{(H)}(\bm{x})=\int_{\mathcal{X}}f_{t}(\bm{x})\,d\Bigl(\sum_{H\in\mathcal{H}}v_{t,H}\mathcal{Q}_{t}^{(H)}\Bigr)(\bm{x})$ (44) $\displaystyle\stackrel{{\scriptstyle\lx@cref{creftype~refnum}{eq:master-mixture}}}{{=}}\int_{\mathcal{X}}f_{t}(\bm{x})\,d\mathcal{P}_{t}(\bm{x})\stackrel{{\scriptstyle(\text{LOTUS})}}{{=}}\mathop{\mathbb{E}}_{\bm{x}_{t}\sim\mathcal{P}_{t}}\left[{f_{t}(\bm{x}_{t})}\right]$ (45)
+
+Also, again by the lazy coupling identity Eq. 18 ,
+
+$\Pr(\bm{x}_{t}\neq\bm{x}_{t-1})=\left\lVert\mathcal{P}_{t}-\mathcal{P}_{t-1}\right\rVert_{\mathrm{TV}}.$
+
+Combining these two identities with Eq. 9 yields
+
+$\mathbb{E}[f_{t}(\bm{x}_{t})]+\lambda\Pr(\bm{x}_{t}\neq\bm{x}_{t-1})\leq\left\langle\bm{v}_{t},\bm{\ell}_{t}\right\rangle+\lambda\left\langle\bm{v}_{t},\bm{c}_{t}\right\rangle+\frac{\lambda}{2}\|\bm{v}_{t}-\bm{v}_{t-1}\|_{1}=\left\langle\bm{v}_{t},\bm{g}_{t}\right\rangle+\frac{\lambda}{2}\|\bm{v}_{t}-\bm{v}_{t-1}\|_{1}.$
+
+This proves Eq. 10 . ∎
+
+E.2 The DM strongly adaptive regret result
+
+We use the following result from [ 10 ] :
+
+Fix a horizon $T$ , a number of experts $N$ , a switching cost $D\geq 0$ , and an oblivious loss sequence $l_{1},\dots,l_{T}\in[0,1]^{N}$ . Then there exists a randomized online algorithm choosing experts $I_{t}\in[N]$ such that for every interval $[s,e]\subseteq[T]$ of length $L=e-s+1$ ,
+
+$\mathbb{E}\left[\sum_{t=s}^{e}l_{t}(I_{t})+D\sum_{t=s+1}^{e}\mathbf{1}\{I_{t}\neq I_{t-1}\}\right]\leq\min_{i\in[N]}\sum_{t=s}^{e}l_{t}(i)+C_{\mathrm{dm}}\sqrt{(D+1)L\log(NT)},$ (46)
+
+where $C_{\mathrm{dm}}>0$ is universal.
+
+E.3 Algorithmic mechanism behind [ 10 , Thm. 1]
+
+We now review the algorithmic mechanism that yields the imported guarantee of [ 10 , Thm. 1] . Since our reduction works on the simplex, we state the construction in its simplex-valued OLO form.
+
+A minor terminology warning is that The Daniely-Mansour mechanism itself is already hierarchical: it has a family of scale-dependent learners, together with an internal combination procedure that merges them across scales. Thus, when we invoke the Daniely-Mansour learner as our meta learner, that meta learner has its own internal base/meta structure. We use the term scale learner below for the internal Daniely-Mansour components to avoid confusion.
+
+For simplicity, this section follows the constructive proof convention of Daniely and Mansour [10] : we describe the mechanism for $T=2^{J}$ and $D\geq 1$ . This restriction is only for the constructive review below; the imported guarantee in Lemma 26 is stated for all $D\geq 0$ , and the case $D<1$ is handled in Daniely and Mansour [10] by reduction to $D=1$ . The construction has three pieces:
+
+a scale learner for each dyadic scale $\tau$ ;
+
+a two-way combiner that softly interpolates between two simplex-valued algorithms;
+
+a multiscale wrapper that combines the dyadic-scale learners recursively.
+
+Intuitively, the scale- $\tau$ learner is tuned to intervals of length about $\tau$ , while the combiner ensures that passing from coarse to fine scales preserves control of the switching cost.
+
+Gate function.
+
+For parameters $\tau\geq 1$ and $Z\in(0,1/e]$ , let $\tilde{g}_{\tau,Z}$ solve
+
+$8\tilde{g}^{\prime}_{\tau,Z}(x)=\frac{x}{\tau}\tilde{g}_{\tau,Z}(x)+Z,\qquad\tilde{g}_{\tau,Z}(0)=0.$
+
+Define
+
+$g_{\tau,Z}(x):=\Pi_{[0,1]}(\tilde{g}_{\tau,Z}(x)),\qquad U_{\tau,Z}:=\tilde{g}_{\tau,Z}^{-1}(1),$
+
+where $\Pi_{[a,b]}$ denotes projection onto $[a,b]$ .
+
+Algorithm 4 Fixed-Share scale learner at scale $\tau$
+
+$z_{t+1}(i)=\frac{z_{t}(i)e^{-\eta\ell_{t}(i)}+\frac{1}{N\tau}}{\sum_{j=1}^{N}\left(z_{t}(j)e^{-\eta\ell_{t}(j)}+\frac{1}{N\tau}\right)},\qquad i=1,\dots,N$
+
+Algorithm 4 is the scale-dependent learner used in the proof of Theorem 2.1.
+
+Algorithm 5 Two-way combiner $\mathrm{Combine}_{\tau,Z}(P,Q)$
+
+$\widetilde{L}_{t}(P):=\frac{\langle\ell_{t},p_{t}\rangle+D\|p_{t+1}-p_{t}\|_{\mathrm{TV}}}{3},\qquad\widetilde{L}_{t}(Q):=\frac{\langle\ell_{t},q_{t}\rangle+D\|q_{t+1}-q_{t}\|_{\mathrm{TV}}}{3}$
+
+$b_{t}:=\frac{\widetilde{L}_{t}(P)-\widetilde{L}_{t}(Q)}{\sqrt{D}},\qquad x_{t+1}:=\Pi_{[-2,U_{\tau,Z}+2]}\left(\left(1-\frac{1}{\tau}\right)x_{t}+b_{t}\right)$
+
+Algorithm 5 is the key internal combination step. It mixes the two input algorithms using the gate value $g_{\tau,Z}(x_{t})$ , where the scalar state $x_{t}$ tracks the recent difference between their surrogate losses.
+
+Algorithm 6 Multiscale OLO algorithm underlying Daniely–Mansour Thm. 2.1
+
+Algorithm 6 maintains one scale learner for each dyadic scale
+
+$T,\ T/2,\ T/4,\ \dots,\ 2,$
+
+and combines them recursively from coarse to fine scales. On any interval $I$ , one of these scales is of the correct order of magnitude for $|I|$ , and the recursive combination guarantees that the final algorithm inherits that scale’s regret bound up to logarithmic overhead. Here $J$ denotes the logarithm of the DM horizon, whereas $N$ denotes the number of experts in the DM subproblem. In our meta-learning application, $N=K=|\mathcal{H}|$ .
+
+Remarks.
+
+All three algorithms share the same interface: when queried with $\ell_{t}\in[0,1]^{N}$ at round $t$ , each returns a weight vector $\bm{v}_{t}\in\Delta_{N}$ . Combine is a constructor that takes two such objects and produces a third. DM-Multiscale returns the root of the resulting recursion tree; querying it round by round on $(\bm{g}_{t}/M)$ is exactly what Algorithm 2 does.
+
+The denominator $3$ in Algorithm 5 is the specialization of their factor $(M{+}1)$ to the case $M=2$ , which is the value used in the proof of the multiscale combination theorem.
+
+The smallest dyadic scale is $2$ , not $1$ , since the construction uses $\tau_{u}=2^{-u}T$ for $u=0,\dots,J-1$ .
+
+The output of Algorithm 6 is a sequence $(p_{t})_{t=1}^{T}\subseteq\Delta_{N}$ . By the OLO/EXP equivalence in Daniely and Mansour [10, Sec 5.2] , this simplex-valued algorithm can be converted into a randomized experts algorithm with the same expected loss switching cost.
+
+Now, we can prove the exact statement of Lemma 11 based on Lemma 26 . We use Lemma 26 in its stated form for all $D\geq 0$ ; the algorithmic description in Section E.3 is included only to recall the constructive mechanism and follows the $D\geq 1$ proof convention of Daniely and Mansour [10] .
+
+We reduce our setting to the discrete expert problem by defining the number of experts $N\doteq|\mathcal{H}|$ . To accommodate the bounded surrogate range $M$ , we define the normalized oblivious loss sequence $l_{t}\doteq g_{t}/M\in[0,1]^{N}$ for all $t\in[T]$ , and set the switching cost parameter to $D\doteq\lambda/M$ .
+
+Let $I_{t}\in[N]$ be the randomized expert chosen by the algorithm from Lemma 26 . We define our meta-learner’s distribution over the simplex as $v_{t}(i)\doteq\Pr(I_{t}=i)$ for $i\in[N]$ . Because the losses are oblivious, $v_{t}$ is determined purely online from the past loss history and the algorithm’s internal randomness.
+
+For each step $t$ , the expected loss is exactly the inner product:
+
+$\mathbb{E}[l_{t}(I_{t})]=\sum_{i=1}^{N}v_{t}(i)l_{t}(i)=\langle v_{t},l_{t}\rangle.$
+
+Furthermore, the joint law of $(I_{t-1},I_{t})$ is a coupling of the marginal distributions $v_{t-1}$ and $v_{t}$ . For any coupling of two discrete distributions, the mismatch probability is lower bounded by their total variation distance. Therefore,
+
+$\Pr(I_{t}\neq I_{t-1})\geq\mathrm{TV}(v_{t},v_{t-1})=\frac{1}{2}\|v_{t}-v_{t-1}\|_{1}.$
+
+Substituting these expected loss and mismatch probability bounds into the expectation on the left-hand side of Eq. 46 yields a lower bound on the discrete algorithm’s cost:
+
+$\sum_{t=s}^{e}\langle v_{t},l_{t}\rangle+\frac{D}{2}\sum_{t=s+1}^{e}\|v_{t}-v_{t-1}\|_{1}\leq\mathbb{E}\left[\sum_{t=s}^{e}l_{t}(I_{t})+D\sum_{t=s+1}^{e}\mathbf{1}\{I_{t}\neq I_{t-1}\}\right].$
+
+By chaining this with the upper bound directly from Lemma 26 , we obtain the simplex formulation of the regret:
+
+$\sum_{t=s}^{e}\langle v_{t},l_{t}\rangle+\frac{D}{2}\sum_{t=s+1}^{e}\|v_{t}-v_{t-1}\|_{1}\leq\min_{i\in[N]}\sum_{t=s}^{e}l_{t}(i)+C_{\mathrm{dm}}\sqrt{(D+1)L\log(NT)}.$
+
+Finally, we substitute $l_{t}=g_{t}/M$ and $D=\lambda/M$ into the above inequality. Multiplying both sides by $M$ scales the square root term as follows:
+
+$M\cdot C_{\mathrm{dm}}\sqrt{\left(\frac{\lambda}{M}+1\right)L\log(NT)}=C_{\mathrm{dm}}\sqrt{M^{2}\left(\frac{\lambda+M}{M}\right)L\log(NT)}=C_{\mathrm{dm}}\sqrt{M(M+\lambda)L\log(NT)}.$
+
+This exactly recovers Eq. 11 and completes the proof. ∎
+
+E.4 Proof of the SAR guarantee
+
+Write $J_{r}=[a_{r},b_{r}]$ , so $a_{1}=s$ , $b_{m}=e$ , and $b_{r}+1=a_{r+1}$ for $r<m$ .
+
+By Eq. 45 :
+
+$\mathbb{E}[f_{s}(\bm{x}_{s})]=\left\langle\bm{v}_{s},\bm{\ell}_{s}\right\rangle\leq\left\langle\bm{v}_{s},\bm{g}_{s}\right\rangle.$
+
+Summing the one step bound in Lemma 10 over $t=s+1,\dots,e$ , and using the above inequality yields
+
+$\mathbb{E}\left[\sum_{t=s}^{e}f_{t}(\bm{x}_{t})+\lambda\sum_{t=s+1}^{e}\mathbf{1}\{\bm{x}_{t}\neq\bm{x}_{t-1}\}\right]\leq\sum_{t=s}^{e}\left\langle\bm{v}_{t},\bm{g}_{t}\right\rangle+\frac{\lambda}{2}\sum_{t=s+1}^{e}\|\bm{v}_{t}-\bm{v}_{t-1}\|_{1}.$ (47)
+
+Since Lemma 11 holds simultaneously for every interval under the single run that generates $(\bm{v}_{t})$ , we may apply it to each block $J_{r}$ using the same sequence $(\bm{v}_{t})$ .
+
+Since each $J_{r}$ is a dyadic block, define $H_{r}\doteq|J_{r}|\in\mathcal{H}$ . The expert with scale $H_{r}$ restarts at the beginning of $J_{r}$ , so on $J_{r}$ it is exactly a fresh FPRLL $(H_{r})$ run.
+
+Thus, for every $r$ ,
+
+$\sum_{t=a_{r}}^{b_{r}}\left\langle\bm{v}_{t},\bm{g}_{t}\right\rangle+\frac{\lambda}{2}\sum_{t=a_{r}+1}^{b_{r}}\|\bm{v}_{t}-\bm{v}_{t-1}\|_{1}\leq\sum_{t=a_{r}}^{b_{r}}g_{t}^{(H_{r})}+C_{\mathrm{dm}}\sqrt{M(M+\lambda)|J_{r}|\log(KT)}.$ (48)
+
+Summing Eq. 48 over $r=1,\dots,m$ gives
+
+$\displaystyle\sum_{r=1}^{m}\sum_{t=a_{r}}^{b_{r}}\left\langle v_{t},g_{t}\right\rangle+\frac{\lambda}{2}\sum_{r=1}^{m}\sum_{t=a_{r}+1}^{b_{r}}\|v_{t}-v_{t-1}\|_{1}$ (49) $\displaystyle\qquad\leq\sum_{r=1}^{m}\sum_{t\in J_{r}}g_{t}^{(H_{r})}+C_{\mathrm{dm}}\sqrt{M(M+\lambda)\log(KT)}\sum_{r=1}^{m}\sqrt{|J_{r}|}.$ (50)
+
+Because the blocks are consecutive,
+
+$\sum_{t=s+1}^{e}\|v_{t}-v_{t-1}\|_{1}=\sum_{r=1}^{m}\sum_{t=a_{r}+1}^{b_{r}}\|v_{t}-v_{t-1}\|_{1}+\sum_{r=1}^{m-1}\|v_{a_{r+1}}-v_{a_{r+1}-1}\|_{1}.$
+
+Therefore,
+
+$\displaystyle\sum_{t=s}^{e}\left\langle v_{t},g_{t}\right\rangle+\frac{\lambda}{2}\sum_{t=s+1}^{e}\|v_{t}-v_{t-1}\|_{1}$ (51) $\displaystyle\qquad\leq\sum_{r=1}^{m}\sum_{t\in J_{r}}g_{t}^{(H_{r})}+C_{\mathrm{dm}}\sqrt{M(M+\lambda)\log(KT)}\sum_{r=1}^{m}\sqrt{|J_{r}|}+\frac{\lambda}{2}\sum_{r=1}^{m-1}\|v_{a_{r+1}}-v_{a_{r+1}-1}\|_{1}.$ (52)
+
+Since $\bm{v}_{t},\bm{v}_{t-1}\in\Delta_{N}$ , one has $\|\bm{v}_{t}-\bm{v}_{t-1}\|_{1}\leq 2$ , so each boundary term is at most $\lambda$ . Thus
+
+$\sum_{t=s}^{e}\left\langle v_{t},g_{t}\right\rangle+\frac{\lambda}{2}\sum_{t=s+1}^{e}\|\bm{v}_{t}-\bm{v}_{t-1}\|_{1}\leq\sum_{r=1}^{m}\sum_{t\in J_{r}}g_{t}^{(H_{r})}+C_{\mathrm{dm}}\sqrt{M(M+\lambda)\log(KT)}\sum_{r=1}^{m}\sqrt{|J_{r}|}+\lambda(m-1).$ (53)
+
+Combining Eqs. 47 and 53 , we obtain
+
+$\displaystyle\mathbb{E}\left[\sum_{t=s}^{e}f_{t}(x_{t})+\lambda\sum_{t=s+1}^{e}\mathbf{1}\{x_{t}\neq x_{t-1}\}\right]$ (54) $\displaystyle\qquad\leq\sum_{r=1}^{m}\sum_{t\in J_{r}}g_{t}^{(H_{r})}+C_{\mathrm{dm}}\sqrt{M(M+\lambda)\log(KT)}\sum_{r=1}^{m}\sqrt{|J_{r}|}+\lambda(m-1).$ (55)
+
+By Corollary 6 , for any $\bm{u}\in\mathcal{X}$ and every $r$ ,
+
+$\displaystyle\sum_{t\in J_{r}}\bigl(g_{t}^{(H_{r})}-f_{t}(\bm{u})\bigr)\leq C_{\mathrm{base}}\sqrt{|J_{r}|}.$ (56)
+
+summing over all the dyadic intervals we obtain
+
+$\displaystyle\sum_{r=1}^{m}\sum_{t\in J_{r}}g_{t}^{(H_{r})}\leq\min_{u\in\mathcal{X}}\sum_{t=s}^{e}f_{t}(u)+C_{\text{base}}\sum_{r=1}^{m}\sqrt{|J_{r}|}.$ (57)
+
+Substituting Eq. 57 into Eq. 55 , subtracting the comparator term from both sides, and using:
+
+$\lambda(m-1)\leq\lambda(2\lceil\log_{2}L\rceil+1),\qquad\text{by the first part of \lx@cref{creftype~refnum}{eq:dyadic-cover}},$
+
+and
+
+$\sum_{r=1}^{m}\sqrt{|J_{r}|}\leq C_{\mathrm{gc}}\sqrt{L},\qquad\text{by the second part of \lx@cref{creftype~refnum}{eq:dyadic-cover}},$
+
+the lemma statement follows ∎
+
+E.5 Proof of Corollary 13
+
+Let $\{\bm{u}_{t}\}_{t=1}^{T}\in\mathcal{X}^{T}$ be an arbitrary comparator sequence, and let
+
+$S_{T}\;\doteq\;\sum_{t=2}^{T}\mathbf{1}\{\bm{u}_{t}\neq\bm{u}_{t-1}\}.$
+
+This sequence induces a partition of $[T]$ into $S_{T}+1$ maximal consecutive segments on which $\bm{u}_{t}$ is constant,
+
+$\mathcal{S}_{i}\;=\;[s_{i},e_{i}],\qquad i=1,\dots,S_{T}+1,$
+
+with $s_{1}=1$ , $e_{S_{T}+1}=T$ , and $e_{i}+1=s_{i+1}$ for $i=1,\dots,S_{T}$ . Writing $\bm{u}^{(i)}$ for the common value of $\bm{u}_{t}$ on $\mathcal{S}_{i}$ ,
+
+$\sum_{t=1}^{T}f_{t}(\bm{u}_{t})\;=\;\sum_{i=1}^{S_{T}+1}\sum_{t\in\mathcal{S}_{i}}f_{t}(\bm{u}^{(i)})\;\geq\;\sum_{i=1}^{S_{T}+1}\min_{\bm{u}\in\mathcal{X}}\sum_{t\in\mathcal{S}_{i}}f_{t}(\bm{u}).$ (58)
+
+Decomposing the switching cost along the partition.
+
+The total indicator switching cost splits into within-segment and boundary contributions:
+
+$\sum_{t=2}^{T}\mathbf{1}\{\bm{x}_{t}\neq\bm{x}_{t-1}\}\;=\;\underbrace{\sum_{i=1}^{S_{T}+1}\sum_{t=s_{i}+1}^{e_{i}}\mathbf{1}\{\bm{x}_{t}\neq\bm{x}_{t-1}\}}_{\text{within segments}}\;+\;\underbrace{\sum_{i=2}^{S_{T}+1}\mathbf{1}\{\bm{x}_{s_{i}}\neq\bm{x}_{s_{i}-1}\}}_{\text{$S_{T}$ boundary switches}}.$ (59)
+
+Combining Eqs. 58 and 59 and taking expectation,
+
+$\displaystyle\mathbb{E}\left[\mathcal{R}^{\mathbf{1}}_{T}(\{\bm{u}_{t}\}_{t=1}^{T})\right]$ $\displaystyle\;\leq\;\sum_{i=1}^{S_{T}+1}\left(\mathbb{E}\left[\sum_{t\in\mathcal{S}_{i}}f_{t}(\bm{x}_{t})+\lambda\sum_{t=s_{i}+1}^{e_{i}}\mathbf{1}\{\bm{x}_{t}\neq\bm{x}_{t-1}\}\right]-\min_{\bm{u}\in\mathcal{X}}\sum_{t\in\mathcal{S}_{i}}f_{t}(\bm{u})\right)$ $\displaystyle\qquad+\lambda\sum_{i=2}^{S_{T}+1}\Pr\left(\bm{x}_{s_{i}}\neq\bm{x}_{s_{i}-1}\right)$ $\displaystyle\;=\;\sum_{i=1}^{S_{T}+1}\mathrm{SAR}_{\mathcal{S}_{i}}(\bm{u}^{(i)})\;+\;\lambda\sum_{i=2}^{S_{T}+1}\Pr\left(\bm{x}_{s_{i}}\neq\bm{x}_{s_{i}-1}\right),$ (60)
+
+where the last equality uses the definition of $\mathrm{SAR}$ in Eq. 12 . Each boundary probability is at most one, so the second sum is bounded by $\lambda S_{T}$ .
+
+Applying the SAR guarantee.
+
+By Theorem 12 , for every segment $\mathcal{S}_{i}$ ,
+
+$\mathrm{SAR}_{\mathcal{S}_{i}}(\bm{u}^{(i)})\;=\;\tilde{\mathcal{O}}\left(\sqrt{|\mathcal{S}_{i}|}\right).$
+
+Summing over $i$ and applying Cauchy–Schwarz,
+
+$\sum_{i=1}^{S_{T}+1}\sqrt{|\mathcal{S}_{i}|}\;\leq\;\sqrt{S_{T}+1}\,\sqrt{\sum_{i=1}^{S_{T}+1}|\mathcal{S}_{i}|}\;=\;\sqrt{(S_{T}+1)\,T}.$ (61)
+
+Substituting into Eq. 60 ,
+
+$\mathbb{E}\left[\mathcal{R}^{\mathbf{1}}_{T}(\{\bm{u}_{t}\}_{t=1}^{T})\right]\;\leq\;\tilde{\mathcal{O}}\left(\sqrt{(S_{T}+1)\,T}\right)\;+\;\lambda S_{T},$
+
+which is the claimed bound. ∎
+
+E.6 Proof for the DR guarantee
+
+Fix any comparator sequence $\{\bm{u}_{t}\}_{t=1}^{T}\subseteq\mathcal{X}$ . By definition,
+
+$\mathop{\mathbb{E}}\left[{\mathcal{R}^{\mathbf{1}}_{T}(\{\bm{u}_{t}\}_{t=1}^{T})}\right]=\mathop{\mathbb{E}}\left[{\sum_{t=1}^{T}f_{t}(\bm{x}_{t})}\right]-\sum_{t=1}^{T}f_{t}(\bm{u}_{t})+\lambda\sum_{t=2}^{T}\Pr(\bm{x}_{t}\neq\bm{x}_{t-1}).$
+
+For $t=1$ , since $c_{1}^{(H)}=0$ for every $H\in\mathcal{H}$ , we have $g_{1}^{(H)}=\ell_{1}^{(H)}$ , and therefore
+
+$\mathop{\mathbb{E}}\left[{f_{1}(\bm{x}_{1})}\right]=\langle v_{1},g_{1}\rangle.$
+
+For each $t\geq 2$ , Lemma 10 gives
+
+$\mathop{\mathbb{E}}\left[{f_{t}(\bm{x}_{t})}\right]+\lambda\Pr(\bm{x}_{t}\neq\bm{x}_{t-1})\leq\langle v_{t},g_{t}\rangle+\frac{\lambda}{2}\|v_{t}-v_{t-1}\|_{1}.$
+
+Summing over $t=1,\dots,T$ , we obtain
+
+$\mathop{\mathbb{E}}\left[{\sum_{t=1}^{T}f_{t}(\bm{x}_{t})}\right]+\lambda\sum_{t=2}^{T}\Pr(\bm{x}_{t}\neq\bm{x}_{t-1})\leq\sum_{t=1}^{T}\langle v_{t},g_{t}\rangle+\frac{\lambda}{2}\sum_{t=2}^{T}\|v_{t}-v_{t-1}\|_{1}.$
+
+Subtracting $\sum_{t=1}^{T}f_{t}(\bm{u}_{t})$ , we get
+
+$\mathop{\mathbb{E}}\left[{\mathcal{R}^{\mathbf{1}}_{T}(\{\bm{u}_{t}\}_{t=1}^{T})}\right]\leq\sum_{t=1}^{T}\langle v_{t},g_{t}\rangle+\frac{\lambda}{2}\sum_{t=2}^{T}\|v_{t}-v_{t-1}\|_{1}-\sum_{t=1}^{T}f_{t}(\bm{u}_{t}).$ (62)
+
+Now fix any $H\in\mathcal{H}$ , and add and subtract $\sum_{t=1}^{T}g_{t}^{(H)}$ on the right-hand side of Eq. 62 . This yields
+
+$\displaystyle\mathop{\mathbb{E}}\left[{\mathcal{R}^{\mathbf{1}}_{T}(\{\bm{u}_{t}\}_{t=1}^{T})}\right]$ $\displaystyle\leq\left(\sum_{t=1}^{T}\langle v_{t},g_{t}\rangle+\frac{\lambda}{2}\sum_{t=2}^{T}\|v_{t}-v_{t-1}\|_{1}-\sum_{t=1}^{T}g_{t}^{(H)}\right)$ $\displaystyle+\left(\sum_{t=1}^{T}g_{t}^{(H)}-\sum_{t=1}^{T}f_{t}(\bm{u}_{t})\right).$
+
+We now control the two brackets separately. The first is the regret of the meta-learner relative to expert $H$ . Applying Lemma 11 on the full interval $[1,T]$ , whose length is $T$ , gives
+
+$\sum_{t=1}^{T}\langle v_{t},g_{t}\rangle+\frac{\lambda}{2}\sum_{t=2}^{T}\|v_{t}-v_{t-1}\|_{1}-\sum_{t=1}^{T}g_{t}^{(H)}\leq C_{\mathrm{dm}}\sqrt{M(M+\lambda)\,T\log(KT)}.$
+
+Hence, for every $H\in\mathcal{H}$ ,
+
+$\mathop{\mathbb{E}}\left[{\mathcal{R}^{\mathbf{1}}_{T}(\{\bm{u}_{t}\}_{t=1}^{T})}\right]\leq\sum_{t=1}^{T}g_{t}^{(H)}-\sum_{t=1}^{T}f_{t}(\bm{u}_{t})+C_{\mathrm{dm}}\sqrt{M(M+\lambda)\,T\log(KT)}.$
+
+Taking the minimum over $H\in\mathcal{H}$ proves Eq. 14 .
+
+It remains to instantiate the expert term. By Theorem 7 , there exists a dyadic restart scale $k^{\dagger}\in\mathcal{H}$ such that
+
+$\sum_{t=1}^{T}g_{t}^{(k^{\dagger})}-\sum_{t=1}^{T}f_{t}(\bm{u}_{t})=\mathcal{R}^{\mathbf{1},{{k^{\dagger}}}}_{T}\leq\sqrt{2}\,A\,\frac{T}{\sqrt{k^{\star}}}+(B+G)P_{T}\,k^{\star}.$
+
+Substituting $H=k^{\dagger}$ into Eq. 14 gives Eq. 15 . ∎
+
+Appendix F Estimating the surrogate
+
+The surrogate
+
+$g_{t}^{(H)}=\ell_{t}^{(H)}+\lambda c_{t}^{(H)}$
+
+in Eq. 7 is convenient for analysis but is not directly computable. Indeed,
+
+$\ell_{t}^{(H)}=\mathbb{E}_{\bm{x}\sim\mathcal{Q}_{t}^{(H)}}[f_{t}(\bm{x})]$
+
+is an expectation under the expert’s sampling distribution, while
+
+$c_{t}^{(H)}=\left\lVert\mathcal{Q}_{t}^{(H)}-\mathcal{Q}_{t-1}^{(H)}\right\rVert_{\mathrm{TV}}$
+
+is a total-variation distance between two high-dimensional densities. Neither quantity has a closed form in general. We therefore use the following implementable surrogate.
+
+Let
+
+$\epsilon_{H}\doteq\frac{\beta d}{\sigma_{H}}+\frac{\sqrt{d}\,G}{\mu_{H}}$
+
+be the within-block TV bound from Lemma 24 for the scale- $H$ parameters used by FPRLL(H). Define
+
+$\displaystyle\hat{c}_{t}^{(H)}$ $\displaystyle\doteq\begin{cases}0,&t=1,\\ \min\{\epsilon_{H},1\},&t,t-1\text{ lie in the same block of }\mathcal{E}_{H},\\ 1,&t\text{ is the first round of a new block of }\mathcal{E}_{H},\end{cases}$ (63) $\displaystyle\hat{\ell}_{t}^{(H)}$ $\displaystyle\doteq f_{t}(\bm{y}_{t}^{(H)}),\qquad\bm{y}_{t}^{(H)}\sim\mathcal{Q}_{t}^{(H)},$ (64) $\displaystyle\hat{g}_{t}^{(H)}$ $\displaystyle\doteq\hat{\ell}_{t}^{(H)}+\lambda\hat{c}_{t}^{(H)}.$ (65)
+
+The auxiliary samples $\bm{y}_{t}^{(H)}$ are drawn freshly for each round and scale, after $f_{t}$ is revealed, and independently of the current meta-action conditional on the current history. The meta-learner in Algorithm 2 is run with
+
+$\hat{\bm{g}}_{t}\doteq(\hat{g}_{t}^{(H)})_{H\in\mathcal{H}}$
+
+in place of the exact vector $\bm{g}_{t}$ .
+
+It is useful to separate the sampled surrogate from its conditional mean. Define
+
+$\bar{g}_{t}^{(H)}\doteq\ell_{t}^{(H)}+\lambda\hat{c}_{t}^{(H)}.$
+
+Then $\hat{g}_{t}^{(H)}$ is an unbiased estimate of $\bar{g}_{t}^{(H)}$ , not necessarily of $g_{t}^{(H)}$ . More precisely, conditional on the history after $f_{t}$ is revealed but before the auxiliary samples are drawn,
+
+$\mathbb{E}[\hat{g}_{t}^{(H)}]=\bar{g}_{t}^{(H)}.$
+
+Moreover, $\bar{g}_{t}^{(H)}$ upper-bounds the exact surrogate. Indeed, Lemma 24 gives $c_{t}^{(H)}\leq\epsilon_{H}$ inside a restart block, while at restart boundaries we use the trivial bound $c_{t}^{(H)}\leq 1$ . Hence
+
+$c_{t}^{(H)}\leq\hat{c}_{t}^{(H)}\qquad\text{and therefore}\qquad g_{t}^{(H)}\leq\bar{g}_{t}^{(H)}.$
+
+We now explain why using $\hat{\bm{g}}_{t}$ does not change the guarantees. The original analysis uses the surrogate vector in three places.
+
+1. The one-step master reduction.
+
+The original one-step bound is
+
+$\mathbb{E}[f_{t}(\bm{x}_{t})]+\lambda\Pr(\bm{x}_{t}\neq\bm{x}_{t-1})\leq\langle\bm{v}_{t},\bm{g}_{t}\rangle+\frac{\lambda}{2}\|\bm{v}_{t}-\bm{v}_{t-1}\|_{1}.$
+
+Since $g_{t}^{(H)}\leq\bar{g}_{t}^{(H)}$ for every $H$ and $\bm{v}_{t}\in\Delta_{K}$ ,
+
+$\langle\bm{v}_{t},\bm{g}_{t}\rangle\leq\langle\bm{v}_{t},\bar{\bm{g}}_{t}\rangle.$
+
+Taking expectation over the auxiliary samples gives
+
+$\mathbb{E}[\langle\bm{v}_{t},\hat{\bm{g}}_{t}\rangle]=\mathbb{E}[\langle\bm{v}_{t},\bar{\bm{g}}_{t}\rangle].$
+
+Therefore,
+
+$\mathbb{E}[f_{t}(\bm{x}_{t})]+\lambda\Pr(\bm{x}_{t}\neq\bm{x}_{t-1})\leq\mathbb{E}[\langle\bm{v}_{t},\hat{\bm{g}}_{t}\rangle]+\frac{\lambda}{2}\mathbb{E}[\|\bm{v}_{t}-\bm{v}_{t-1}\|_{1}].$
+
+Thus the real one-step cost of the master is still controlled, in expectation, by the sampled surrogate losses fed to the meta-learner.
+
+2. The meta-regret bound.
+
+The meta-regret lemma is applied directly to the realized sequence
+
+$\hat{\bm{g}}_{1},\ldots,\hat{\bm{g}}_{T}.$
+
+This sequence is valid full-information feedback for the meta-learner: $\hat{\bm{g}}_{t}$ is observed after the meta-action is chosen, and it is generated independently of the current meta-action conditional on the history. Also, by boundedness of the losses,
+
+$0\leq\hat{g}_{t}^{(H)}\leq M_{f}+\lambda\doteq M.$
+
+Therefore Lemma 11 applies with $\hat{\bm{g}}_{t}$ . For any interval $I=[s,e]$ of length $L$ ,
+
+$\sum_{t=s}^{e}\langle\bm{v}_{t},\hat{\bm{g}}_{t}\rangle+\frac{\lambda}{2}\sum_{t=s+1}^{e}\|\bm{v}_{t}-\bm{v}_{t-1}\|_{1}\leq\min_{H\in\mathcal{H}}\sum_{t=s}^{e}\hat{g}_{t}^{(H)}+C_{\mathrm{dm}}\sqrt{M(M+\lambda)L\log(KT)}.$
+
+Taking expectations and using
+
+$\mathbb{E}[\min_{H}Z_{H}]\leq\min_{H}\mathbb{E}[Z_{H}],$
+
+we obtain
+
+$\mathbb{E}\!\left[\sum_{t=s}^{e}\langle\bm{v}_{t},\hat{\bm{g}}_{t}\rangle+\frac{\lambda}{2}\sum_{t=s+1}^{e}\|\bm{v}_{t}-\bm{v}_{t-1}\|_{1}\right]\leq\min_{H\in\mathcal{H}}\sum_{t=s}^{e}\left(\ell_{t}^{(H)}+\lambda\hat{c}_{t}^{(H)}\right)+C_{\mathrm{dm}}\sqrt{M(M+\lambda)L\log(KT)}.$
+
+3. The best-expert term after the meta-regret bound.
+
+After applying the meta-regret bound, the remaining quantity is the cost of the best scale $H$ :
+
+$\sum_{t}\left(\ell_{t}^{(H)}+\lambda\hat{c}_{t}^{(H)}\right).$
+
+This differs from the original exact surrogate cost
+
+$\sum_{t}g_{t}^{(H)}=\sum_{t}\left(\ell_{t}^{(H)}+\lambda c_{t}^{(H)}\right)$
+
+only in the switching term. The replacement is harmless because $\hat{c}_{t}^{(H)}$ is chosen to match the switching upper bounds already used in the base-expert analysis. Inside each restart block,
+
+$\hat{c}_{t}^{(H)}=\min\{\epsilon_{H},1\}\leq\epsilon_{H},$
+
+which is the same within-block movement bound used in Corollary 6 and Theorem 7 . At a restart boundary,
+
+$\hat{c}_{t}^{(H)}=1,$
+
+so the contribution is at most $\lambda$ , which is absorbed by the existing restart-boundary terms.
+
+Consequently, the arguments of Corollary 6 and Theorem 7 give the same asymptotic bounds for
+
+$\sum_{t}\left(\ell_{t}^{(H)}+\lambda\hat{c}_{t}^{(H)}\right)-\sum_{t}f_{t}(\bm{u}_{t})$
+
+as for the original exact surrogate regret, up to universal constant changes in the existing restart-boundary terms.
+
+Combining the three observations, the guarantees of Theorem 12 , Corollary 13 , and Theorem 14 continue to hold in expectation for the algorithm using $\hat{\bm{g}}_{t}$ , with the same rates.

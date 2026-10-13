@@ -1,0 +1,1381 @@
+Content selection saved. Describe the issue below:
+
+Improved KKT Complexity for First-Order Bilevel Optimization under Weak Lower-Level Convexity
+
+We study deterministic first-order bilevel optimization under weak lower-level convexity, allowing nonconvex lower-level objectives and without assuming strong convexity, the Polyak–Łojasiewicz condition, or an error-bound property. We consider a $\delta$ -relaxed Moreau-gap constraint, with $\delta>0$ , for the lower-level stationarity condition and propose an inexact variable-smoothing penalty method (IVSP) for computing its approximate Karush–Kuhn–Tucker (KKT) points. For any fixed relaxation level $\delta$ , under a standard extended no-nonzero-abnormal-multiplier constraint qualification (ENNAMCQ), we prove finite stabilization of the adaptive penalty parameter and an overall $\widetilde{O}(\varepsilon^{-3})$ first-order complexity for computing an $\varepsilon$ -KKT point. Notably, we give verifiable sufficient conditions for ENNAMCQ covering convex lower-level objectives without nonconstant affine segments (including the strictly convex case), and a class of nonconvex sample-reweighting models. The positive relaxation avoids the intrinsic constraint-qualification degeneracy of the exact Moreau-gap constraint while achieving an $\mathcal{O}(\sqrt{\delta})$ lower-level near-stationarity guarantee. Numerical experiments on synthetic and real-world bilevel learning problems illustrate the practical performance of IVSP.
+
+1 Introduction
+
+Bilevel optimization has found broad applications in hyperparameter optimization [ 30 , 9 ] , meta-learning [ 9 , 31 ] , neural architecture search [ 24 ] , and data reweighting or hypercleaning [ 32 ] . We study bilevel problems of the form
+
+$\min_{x\in X,\,y\in Y}f(x,y)\qquad\text{s.t.}\qquad y\in\operatorname*{arg\,min}_{u\in Y}g(x,u).$
+
+In this paper, $X\subset\mathbb{R}^{n}$ and $Y\subset\mathbb{R}^{m}$ are nonempty closed convex sets, $f$ and $g$ are smooth, and $g(x,\cdot)$ is uniformly weakly convex. Thus, the lower-level (LL) problem may be nonconvex and need not be strongly convex, satisfy the Polyak–Łojasiewicz (PL) condition, or admit a unique solution.
+
+The modeling flexibility of bilevel optimization comes, however, with a substantial computational challenge: the upper-level (UL) objective depends implicitly on a solution of the lower-level problem. Classical hypergradient methods typically differentiate through the lower-level optimization process or use approximate implicit differentiation, which can require Hessian/Jacobian-vector products or linear-system solves [ 11 , 12 , 15 ] . These costs have motivated a growing line of Hessian-free and fully first-order methods [ 23 , 19 , 25 , 8 ] . Despite this progress, the strongest nonasymptotic guarantees remain concentrated in well-conditioned lower-level regimes, such as strong convexity, PL, or related error-bound conditions [ 19 , 14 , 8 ] .
+
+Much less is known once such lower-level regularity is removed. For convex, possibly nonsmooth lower-level problems, Lu and Mei [28] develop first-order penalty methods with approximate weak-KKT guarantees and a $\widetilde{O}(\varepsilon^{-4})$ complexity. For weakly convex/nonconvex lower levels, MEHA [ 25 ] and PNGBiO [ 41 ] develop deterministic first-order methods based on Moreau envelope penalty reformulations. Their guarantees concern stationarity of a penalized reformulation together with lower-level feasibility rather than the full KKT system of the corresponding constrained problem. Requiring both $O(\varepsilon)$ stationarity and $O(\varepsilon)$ Moreau-gap feasibility gives an $O(\varepsilon^{-4})$ complexity. TSP [ 27 ] instead directly targets approximate KKT points of a Moreau envelope constrained reformulation using a stochastic primal–dual method.
+
+A common route in the literature is to replace or relax the lower-level condition by nonlinear constraints, leading to a nonlinear-programming formulation of the bilevel problem. This viewpoint is particularly natural when the lower-level solution need not be unique, as may occur without strong convexity or PL-type regularity, so that a smooth reduced hyperobjective is generally unavailable. For such constrained formulations, the KKT conditions constitute the canonical first-order optimality system of nonlinear programming, encompassing stationarity, feasibility, and complementarity; see, e.g., Nocedal and Wright [29] . Existing bilevel methods nevertheless target several different solution notions, including stationarity of penalized reformulations, weak KKT-type conditions, and KKT systems of constrained reformulations; see Table 1 . These distinctions become particularly important in the weakly convex lower-level regime, where both the attainable solution guarantee and its deterministic first-order complexity remain substantially less understood.
+
+This motivates the following question:
+
+Can a deterministic first-order method achieve a genuine KKT guarantee for bilevel optimization with a weakly convex lower level at an improved complexity?
+
+1.1 Our approach and contributions
+
+Our approach is to replace the lower-level condition by a $\delta$ -relaxed Moreau-gap constraint, with $\delta>0$ , yielding a smooth nonlinear-programming relaxation whose KKT system is our target solution concept. The positive relaxation is essential to this KKT viewpoint: because the Moreau gap is nonnegative, the exact constraint is intrinsically degenerate and fails standard constraint qualifications at every feasible point. A fixed $\delta>0$ avoids this intrinsic degeneracy and permits a standard constraint-qualification-based KKT analysis, while retaining an $\mathcal{O}(\sqrt{\delta})$ lower-level near-stationarity guarantee; see Section 2.1 and Appendix A.4 .
+
+We solve the relaxed problem using a smoothed exact-penalty method with adaptive penalty updates and inexact Moreau evaluations. Our analysis is carried out under ENNAMCQ (Definition 3 ), which yields finite stabilization of the penalty parameter. We establish verifiable sufficient conditions for ENNAMCQ covering convex lower-level objectives without nonconstant affine segments (such as strictly and strongly convex cases) and a class of nonconvex sample-reweighting models; these conditions apply to our few-shot and data hyper-cleaning problems (Appendix B ). For a suitable proximal parameter, the Moreau subproblems are strongly convex even when the lower-level objective is nonconvex. Our analysis requires these subproblems to be solved only to polynomially decreasing accuracy, so linearly convergent first-order inner solves add only a logarithmic overhead.
+
+Our main contributions are as follows.
+
+A KKT-oriented deterministic first-order method. We develop the inexact variable-smoothing penalty method (IVSP), which uses only first-order information and projections, accommodates inexact Moreau evaluations, and admits either a fixed stepsize or an inexact backtracking scheme.
+
+Improved KKT complexity under weak lower-level convexity. For any fixed relaxation level $\delta>0$ , under ENNAMCQ, the adaptive penalty parameter stabilizes after finitely many updates (Lemma 5 ), and IVSP computes an $\varepsilon$ -KKT point of the $\delta$ -relaxed Moreau-gap formulation with an overall $\widetilde{O}(\varepsilon^{-3})$ first-order complexity (Corollary 7 ). These guarantees do not require strong convexity, PL, or an error-bound property of the lower-level problem.
+
+Empirical evaluation. We compare IVSP with representative deterministic first-order bilevel methods on synthetic and real-world learning problems and observe competitive numerical performance.
+
+1.2 Related works
+
+Table 1 : Comparison of representative deterministic first-order methods for bilevel optimization. The horizontal division separates methods relying on SC/PL lower-level regularity from those allowing convex or weakly convex lower-level problems without PL. SC/PL provides stronger control of lower-level errors and stability, while SC additionally guarantees uniqueness; such properties can be exploited to obtain sharper complexity guarantees. Complexity is reported using a norm-based $\varepsilon$ -stationarity/KKT criterion whenever applicable.
+
+SC/WC = strongly/weakly convex; PL = Polyak–Łojasiewicz; ME = Moreau envelope. $\widetilde{O}(\cdot)$ suppresses logarithmic factors. The target formulations, solution concepts, and rate conventions differ across methods; see Appendix E for details.
+
+Strong convexity, the Polyak–Łojasiewicz (PL) condition, and related error-bound properties provide quantitative control of lower-level optimization errors, which facilitates the approximation of lower-level responses and hypergradients. Under strong convexity, the lower-level solution is unique and classical approaches exploit implicit or iterative differentiation. More broadly, under SC/PL-type lower-level regularity, recent methods seek to avoid second-order computations through penalty, primal–dual, finite-difference, value-function, and other fully first-order constructions. Representative methods include BOME [ 23 ] , F 2 SA [ 19 ] , Prox-F 2 BA [ 18 ] , SLM [ 26 ] , HJFBiO [ 14 ] , F 2 BA [ 8 ] , PBGD-Free [ 16 ] , and SGHA [ 13 ] . In the strongly convex setting, fully first-order methods can attain the near-optimal $\widetilde{O}(\varepsilon^{-2})$ complexity for hyperobjective stationarity [ 8 ] . Our interest is in regimes where strong convexity, PL, and error-bound conditions are unavailable.
+
+Within this broader literature, relatively few methods directly target KKT or KKT-type solution concepts. BOME [ 23 ] introduces a KKT-type residual under the PL condition, although its criterion does not correspond to the full KKT system of a constrained bilevel reformulation. Lu and Mei [28] develop first-order penalty methods with approximate weak-KKT guarantees for convex, possibly nonsmooth lower-level problems. SLM [ 26 ] establishes KKT guarantees for a positive value-function-gap formulation under the PL condition and additional regularity assumptions, while TSP [ 27 ] directly targets approximate KKT points of a Moreau envelope constrained formulation using a stochastic primal–dual method.
+
+Turning specifically to weakly convex lower-level objectives, the Moreau envelope reformulation introduced by Gao et al. [10] has led to several first-order methods. MEHA [ 25 ] develops a single-loop Hessian-free method, while PNGBiO [ 41 ] extends this approach to generalized smoothness; both establish stationarity guarantees for penalized Moreau envelope reformulations together with lower-level feasibility. Our method instead combines a positive Moreau-gap constrained formulation with a smoothed exact penalty, allows inexact proximal computations, and establishes deterministic first-order complexity for computing approximate KKT points under weak lower-level convexity. Since the solution concepts in these works differ, Table 1 reports both the guarantee and its corresponding complexity.
+
+2 Proposed method
+
+2.1 Moreau-gap reformulation
+
+Let $g(x,\cdot)$ be $\sigma$ -weakly convex for every $x\in X$ , where $\sigma\geq 0$ . That is, $g(x,\cdot)+\frac{\sigma}{2}\left\|\cdot\right\|^{2}$ is convex for any $x\in X$ . Fix $\rho>0$ such that $\rho\sigma<1$ . Define
+
+$\psi_{\rho}(z;x,y):=g(x,z)+\frac{1}{2\rho}\|z-y\|^{2},\qquad g_{\rho}(x,y):=\min_{z\in Y}\psi_{\rho}(z;x,y),$
+
+and let $z_{\rho}(x,y)$ denote the unique minimizer. Following the Moreau envelope reformulation of Gao et al. [10] , we consider
+
+$\min_{w\in C}f(w)\qquad\text{s.t.}\qquad R(w):=g(w)-g_{\rho}(w)-\delta\leq 0,$ (1)
+
+where $w=(x,y)$ , $C:=X\times Y$ , and $\delta>0$ . Since $\psi_{\rho}(\cdot;w)$ is $(\rho^{-1}-\sigma)$ -strongly convex,
+
+$g(w)-g_{\rho}(w)\geq\frac{1-\rho\sigma}{2\rho}\|y-z_{\rho}(w)\|^{2},$
+
+and the optimality condition of the Moreau subproblem gives
+
+$g(w)-g_{\rho}(w)=0\iff y=z_{\rho}(w)\iff 0\in\nabla_{y}g(w)+N_{Y}(y),$
+
+where $N_{Y}$ denotes the normal cone to $Y$ . Thus, under weak convexity, the exact Moreau-gap constraint characterizes lower-level first-order stationarity [ 25 ] ; when $g(x,\cdot)$ is convex, it is equivalent to lower-level global optimality and recovers the original bilevel constraint [ 10 ] .
+
+As in [ 27 ] , we use a positive relaxation $\delta>0$ , which is important both for regularity and approximation. Since $g-g_{\rho}\geq 0$ , every feasible point of the exact constraint $g-g_{\rho}\leq 0$ is a minimizer of the gap over $C$ ; hence standard constraint qualifications such as MFCQ and NNAMCQ necessarily fail there [ 22 , 39 , 10 , 2 ] . On the other hand, every feasible point of ( 1 ) satisfies
+
+$\|y-z_{\rho}(w)\|\leq\sqrt{\frac{2\rho\delta}{1-\rho\sigma}}~\text{and}~\operatorname{dist}\!\left(0,\nabla_{y}g(x,z_{\rho}(w))+N_{Y}(z_{\rho}(w))\right)\leq\sqrt{\frac{2\delta}{\rho(1-\rho\sigma)}}.$
+
+Hence, $\delta$ directly controls lower-level near stationarity at order $O(\sqrt{\delta})$ . Further properties of the positive relaxation, including its behavior as $\delta\downarrow 0$ , are given in Appendix A.4 .
+
+2.2 Overview of the smoothed exact-penalty method
+
+Our approach to solving ( 1 ) begins with the exact-penalty model
+
+$\min_{w\in C}\;f(w)+\frac{1}{\gamma}[R(w)]_{+},$
+
+where $[t]_{+}:=\max\{t,0\}$ and $\gamma>0$ is the inverse penalty parameter. Thus, decreasing $\gamma$ strengthens the penalty. Under Assumption 1 and $\rho\sigma<1$ , the residual $R$ is continuously differentiable with
+
+$\nabla R(w)=\begin{pmatrix}\nabla_{x}g(x,y)-\nabla_{x}g(x,z_{\rho}(w))\\[2.84526pt] \nabla_{y}g(x,y)-\rho^{-1}(y-z_{\rho}(w))\end{pmatrix};$ (2)
+
+see Appendix A.1 . The exact-penalty model remains nonsmooth because of $[\cdot]_{+}$ . We therefore replace it by a smooth approximation $\phi_{\mu}$ with smoothing parameter $\mu>0$ and consider
+
+$\min_{w\in C}M_{\gamma,\mu}(w):=\gamma f(w)+G_{\mu}(w),\qquad G_{\mu}(w):=\phi_{\mu}(R(w)).$ (3)
+
+We use a standard family of smooth approximations satisfying the conditions in Appendix A.2 ; see [ 5 ] . In particular, $\phi_{\mu}$ approximates $[\cdot]_{+}$ to accuracy $O(\mu)$ , $0\leq\phi_{\mu}^{\prime}\leq 1$ , and $\phi_{\mu}^{\prime}$ is $O(\mu^{-1})$ -Lipschitz. A standard example is the softplus $\phi_{\mu}(t)=\mu\log(1+\exp(t/\mu))$ .
+
+By the chain rule, $\nabla G_{\mu}(w)=\phi_{\mu}^{\prime}(R(w))\nabla R(w),$ and $\nabla G_{\mu}$ is $O(\mu^{-1})$ -Lipschitz; see Appendix A.2 . Hence, an exact projected-gradient step for ( 3 ) takes the familiar form
+
+$w_{L}^{k}=P_{C}\!\left(w^{k}-\frac{\mu}{L}\big[\gamma\nabla f(w^{k})+\nabla G_{\mu}(w^{k})\big]\right),$
+
+where $P_{C}$ denotes the Euclidean projection onto $C$ . The difficulty is that computing this step requires the Moreau proximal point $z_{\rho}(w^{k})$ due to ( 2 ), which is generally unavailable exactly. This motivates an inexact Moreau evaluation together with explicit control of the resulting value and gradient errors.
+
+2.3 Inexact Moreau envelope evaluations
+
+For a prescribed accuracy $\zeta\geq 0$ , let $\widetilde{z}\in Y$ be an approximation of $z_{\rho}(w)$ satisfying
+
+$0\leq\psi_{\rho}(\widetilde{z};x,y)-g_{\rho}(x,y)\leq\zeta.$ (4)
+
+Define the corresponding inexact residual by $\widetilde{R}(w)\coloneqq g(x,y)-\psi_{\rho}(\widetilde{z};x,y)-\delta.$ Then
+
+$\widetilde{R}(w)\leq R(w)\leq\widetilde{R}(w)+\zeta.$ (5)
+
+Likewise, let $\widetilde{\nabla}R(w)$ be obtained from ( 2 ) by replacing $z_{\rho}(w)$ with $\widetilde{z}$ , and set $\widetilde{\nabla}G_{\mu}(w)\coloneqq\phi_{\mu}^{\prime}(\widetilde{R}(w))\widetilde{\nabla}R(w).$ Under Assumption 1 ,
+
+$\bigl\|\widetilde{\nabla}G_{\mu}(w)-\nabla G_{\mu}(w)\bigr\|=O\!\left(\sqrt{\zeta}+\frac{\zeta}{\mu}\right).$ (6)
+
+Explicit constants and detailed error estimates are given in Appendix A.3 . The bounds ( 5 )–( 6 ) are the only properties of the inexact Moreau evaluations needed in the outer method.
+
+Choice of inner solver. For a suitable proximal parameter, each Moreau subproblem is strongly convex. Standard first-order methods can therefore exploit strong convexity to obtain linear convergence. In particular, projected gradient [ 6 ] has this property under our assumptions and is the method used in our implementation. More generally, the complexity argument only requires an inner solver that computes a $\zeta$ -accurate solution in $O(\log(1/\zeta))$ iterations uniformly over the proximal subproblems. A computable residual-based stopping rule is given in Appendix C .
+
+2.4 Inexact variable-smoothing penalty method
+
+We now combine the inexact Moreau evaluations with projected-gradient steps for ( 3 ). The outer variable-smoothing and adaptive-penalty mechanism of IVSP is adapted from sESQM [ 38 ] , which was developed for single-level nonconvex optimization with nonlinear inequality constraints and applies one projected-gradient step to a smoothed exact penalty at each iteration while updating the smoothing and penalty parameters. In our bilevel setting, however, the Moreau-gap residual and its gradient depend on the generally unavailable proximal point $z_{\rho}(w)$ . IVSP therefore incorporates the inexact Moreau evaluations of Section 2.3 and controls the resulting value and gradient errors in the outer method.
+
+Let $\{\mu_{k}\}$ be a positive sequence with $\mu_{k}\downarrow 0$ , let $\{\zeta_{k}\}$ be the prescribed proximal accuracies, and let $\{\widehat{\gamma}_{t}\}_{t\geq 0}$ be a positive inverse-penalty grid with $\widehat{\gamma}_{t}\downarrow 0$ . We set $\gamma_{k}\coloneqq\widehat{\gamma}_{t_{k}}$ , where $\{t_{k}\}$ is nondecreasing. Given a $\zeta_{k}$ -accurate proximal point $\widetilde{z}^{k}$ at $w^{k}$ , form the corresponding $\widetilde{R}^{k}=\widetilde{R}(w^{k})$ and $\widetilde{\nabla}G^{k}\coloneqq\phi_{\mu_{k}}^{\prime}(\widetilde{R}^{k})\widetilde{\nabla}R(w^{k})$ . For a parameter $L>0$ , define
+
+$w_{L}^{k}=P_{C}\!\left(w^{k}-\frac{\mu_{k}}{L}\left[\gamma_{k}\nabla f(w^{k})+\widetilde{\nabla}G^{k}\right]\right).$ (7)
+
+The complete method is summarized in Algorithm 1 .
+
+Choice of $L$ and inexact line search. We consider two strategies for selecting $L$ . In Strategy I (fixed $L$ ), a sufficiently large constant $L$ is used throughout; a sufficient choice $L_{\rm safe}$ is given in Lemma 4 . This avoids line search but requires an a priori estimate of $L_{\rm safe}$ . Strategy II instead selects $L$ adaptively by backtracking and does not require $L_{\rm safe}$ to be known in advance. Specifically, starting from $L_{k,0}\in[L_{\min},L_{\max}]$ , we increase $L$ until an inexact Armijo condition is satisfied. For each trial $w_{L}^{k}$ , compute a $\zeta_{k+1}$ -accurate proximal point $\widetilde{z}_{k,L}^{+}$ and the corresponding residual $\widetilde{R}_{k,L}^{+}$ . We accept the trial if
+
+$\displaystyle\gamma_{k}f(w_{L}^{k})+\phi_{\mu_{k}}\bigl(\widetilde{R}_{k,L}^{+}+\zeta_{k+1}\bigr)\leq\gamma_{k}f(w^{k})+\phi_{\mu_{k}}(\widetilde{R}^{k})-\frac{c_{1}}{2\mu_{k}}\|w_{L}^{k}-w^{k}\|^{2}+\tau_{k,L},$ (8)
+
+where $\tau_{k,L}\geq 0$ is an explicit error allowance induced by the inexact Moreau evaluation, rather than an additional tuning parameter; its definition is given in Appendix D.1 . If the condition fails, we increase $L$ (e.g., $L\leftarrow 2L$ ) and recompute the trial point and its Moreau evaluation. In practice, $L_{k,0}$ may be initialized using a safeguarded Barzilai–Borwein spectral estimate [ 3 ] .
+
+Adaptive penalty update. After obtaining $w^{k+1}$ and $\widetilde{R}^{k+1}$ , we strengthen the penalty whenever
+
+$\widetilde{R}^{k+1}>2a_{\phi}\mu_{k}\qquad\text{and}\qquad\|w^{k+1}-w^{k}\|\leq c_{2}\mu_{k}\gamma_{k},$ (9)
+
+where $a_{\phi}>0$ is the smoothing-approximation constant defined in Appendix A.2 . The first condition detects violation beyond the smoothing scale, which cannot be caused by the inexact Moreau evaluation since $\widetilde{R}^{k+1}\leq R(w^{k+1})$ ; the second requires a small outer step. Thus, if a significant violation persists despite a small step, we move to the next value of the inverse-penalty grid $\{\widehat{\gamma}_{t}\}$ .
+
+Algorithm 1 Inexact Variable-Smoothing Penalty Method (IVSP)
+
+3 Theoretical guarantees
+
+3.1 Assumptions and stationarity measures
+
+We impose the following standard assumptions.
+
+The sets $X\subset\mathbb{R}^{n}$ and $Y\subset\mathbb{R}^{m}$ are nonempty, compact, and convex. The functions $f$ and $g$ are continuously differentiable on neighborhoods of their respective domains, and $\nabla f$ and $\nabla g$ are $L_{f}$ - and $L_{g}$ -Lipschitz continuous, respectively, on $C=X\times Y$ .
+
+By compactness, $f_{\inf}\coloneqq\min_{w\in C}f(w)$ is well defined and finite. The Lipschitz continuity of $\nabla g$ implies that $g(x,\cdot)$ is weakly convex uniformly over $x\in X$ ; see, e.g., Bauschke and Combettes [4, Lemma 2.64] . We denote by $\sigma\geq 0$ a uniform weak-convexity modulus (and one may always take $\sigma=L_{g}$ ), and fix $\rho>0$ such that $\rho\sigma<1$ . Since our target is the constrained relaxation ( 1 ), we measure convergence through its KKT residuals; cf. Lu [27] . This differs from penalty-stationarity criteria used, for example, in PBGD and MEHA [ 36 , 35 , 25 ] , whose stationary systems depend explicitly on a prescribed penalty weight. By contrast, the KKT multiplier is determined jointly with the primal variables, while stationarity, feasibility, and complementarity are controlled separately.
+
+For $w\in C$ and $\lambda\geq 0$ , define
+
+$\displaystyle\Phi_{\rho}^{\rm s}(w,\lambda)$ $\displaystyle\coloneqq\operatorname{dist}\!\left(0,\nabla f(w)+\lambda\nabla R{}(w)+N_{C}(w)\right),$ $\displaystyle\Phi_{\rho}^{\rm f}(w)$ $\displaystyle\coloneqq[R{}(w)]_{+},\qquad\Phi_{\rho}^{\rm c}(w,\lambda)\coloneqq|\lambda R{}(w)|.$
+
+We call $w$ an $(\varepsilon_{s},\varepsilon_{f},\varepsilon_{c})$ -KKT point of ( 1 ) if there exists $\lambda\geq 0$ such that $\Phi_{\rho}^{\rm s}(w,\lambda)\leq\varepsilon_{s}$ , $\Phi_{\rho}^{\rm f}(w)\leq\varepsilon_{f}$ , and $\Phi_{\rho}^{\rm c}(w,\lambda)\leq\varepsilon_{c}$ . When the three tolerances equal $\varepsilon$ , we simply call $w$ an $\varepsilon$ -KKT point. The case $\varepsilon=0$ gives the standard KKT conditions.
+
+To control the adaptive penalty parameter, we impose the extended no-nonzero-abnormal-multiplier constraint qualification (ENNAMCQ). Conditions of this type are standard in value-function reformulations of bilevel programs [ 22 , 39 , 1 ] , and have also been used for relaxed Moreau envelope reformulations; see, e.g., Gao et al. [10] . ENNAMCQ extends the classical NNAMCQ used in nonlinear programming [ 40 ] by imposing the same nonstationarity condition also at infeasible points. For the smooth single-constraint problem ( 1 ), it also coincides with the constraint qualification used in sESQM [ 38 ] . This condition is the key ingredient in proving finite stabilization of the penalty parameter, which in turn is essential for the complexity analysis.
+
+We say that ENNAMCQ holds for ( 1 ) if, for every $w\in C$ with $R{}(w)\geq 0$ , $0\notin\nabla R{}(w)+N_{C}(w).$
+
+By compactness, ENNAMCQ yields a uniform separation from constraint stationarity over all active or infeasible points; see Lemma 21 . We provide verifiable sufficient conditions in Appendix B under which ENNAMCQ holds automatically. For a positive Moreau-gap relaxation, Gao et al. [10] established automatic ENNAMCQ under strict lower-level convexity in a more general setting with an $x$ -dependent lower-level feasible set and additional joint weak-convexity assumptions. In our setting, strict convexity of $g(x,\cdot)$ over $Y$ guarantees ENNAMCQ. We further extend this sufficient condition beyond strict convexity: for a convex lower-level problem, it suffices that every affine segment of $g(x,\cdot)$ on $Y$ be constant. We further establish a sufficient condition for nonconvex sample-reweighting models, covering our few-shot and data hyper-cleaning settings.
+
+3.2 Basic convergence properties
+
+We first establish two properties underlying the complexity analysis: descent of the proposed step and finite stabilization of the adaptive penalty parameter. We define the Lyapunov function
+
+$Q_{k}\coloneqq\gamma_{k}\bigl(f(w^{k})-f_{\inf}\bigr)+G_{\mu_{k}}(w^{k})+c_{\phi}\mu_{k},$
+
+where $c_{\phi}$ is the constant in the smoothing bound ( 23 ).
+
+Under Assumption 1 , there exists a constant $L_{\rm safe}>0$ , independent of $k$ , such that the following hold.
+
+Every trial parameter $L\geq L_{\rm safe}$ satisfies the inexact Armijo condition ( 8 ). Consequently, any fixed $L\geq L_{\rm safe}$ is admissible under Strategy I, while the backtracking procedure in Strategy II terminates finitely at every iteration. Moreover, under Strategy II, the accepted parameters $L_{k}$ and the number of backtracking trials are uniformly bounded.
+
+Under either strategy, defining $L_{k}\coloneqq L$ for Strategy I, we have
+
+$Q_{k+1}\leq Q_{k}-\frac{c_{1}}{2\mu_{k}}\left\|d^{k}\right\|^{2}+\tau_{k,L_{k}},\quad\forall k\geq 0.$
+
+An explicit expression for $L_{\rm safe}$ , together with uniform bounds on $L_{k}$ and the number of backtracking trials, is given in Appendix D.1 .
+
+Suppose ENNAMCQ holds for ( 1 ), the proximal accuracies satisfy $\zeta_{k}=o(\mu_{k})$ , and the inverse-penalty grid satisfies $\widehat{\gamma}_{t}\leq M_{\gamma}\widehat{\gamma}_{t+1}$ for some $M_{\gamma}>1$ and every $t\geq 0$ . Then there exists $\underline{\gamma}>0$ such that $\gamma_{k}\geq\underline{\gamma}$ for all $k$ . Consequently, only finitely many penalty updates occur, and $\gamma_{k}$ is eventually constant.
+
+3.3 Complexity guarantees
+
+We now establish the convergence rates of the proposed method under polynomial smoothing and proximal-accuracy schedules.
+
+Suppose Assumption 1 and ENNAMCQ hold, and suppose that the inverse-penalty grid satisfies $\widehat{\gamma}_{t}\leq M_{\gamma}\widehat{\gamma}_{t+1}$ for some $M_{\gamma}>1$ and every $t\geq 0$ . Let $\{\mu_{k}\}$ be positive and nonincreasing with $\mu_{k}=\Theta((1+k)^{-r})$ for some $r\in(0,1)$ , and let $\{\zeta_{k}\}$ satisfy $\zeta_{k}\leq\bar{\zeta}\mu_{k}^{q}$ for some $\bar{\zeta}>0$ and $q>1/r$ . Let $\{w^{k}\}$ be generated by Algorithm 1 and, for each $k\geq 0$ , set $\widetilde{\lambda}_{k+1}\coloneqq\gamma_{k}^{-1}\phi_{\mu_{k}}^{\prime}(\widetilde{R}^{k+1})$ . Then, for every sufficiently large $K$ , there exists $\widehat{k}\in[\lceil K/2\rceil,K]$ such that
+
+$\displaystyle\Phi_{\rho}^{\rm s}(w^{\widehat{k}+1},\widetilde{\lambda}_{\widehat{k}+1})$ $\displaystyle=O\!\left(K^{-(1-r)/2}\right),\qquad\Phi_{\rho}^{\rm f}(w^{\widehat{k}+1})=O(K^{-r}),$ (10) $\displaystyle\Phi_{\rho}^{\rm c}(w^{\widehat{k}+1},\widetilde{\lambda}_{\widehat{k}+1})$ $\displaystyle=O(K^{-r}).$
+
+Consequently, within $K=O\!\left(\max\left\{\varepsilon_{s}^{-2/(1-r)},\varepsilon_{f}^{-1/r},\varepsilon_{c}^{-1/r}\right\}\right)$ outer iterations, we obtain an $(\varepsilon_{s},\varepsilon_{f},\varepsilon_{c})$ -KKT point of the $\delta$ -relaxed Moreau-gap formulation ( 1 ).
+
+The rates in ( 10 ) show that smaller $r$ favors stationarity, whereas larger $r$ favors feasibility and complementarity. Balancing $(1-r)/2=r$ gives $r=1/3$ . Thus, for any $q>3$ , Algorithm 1 reaches an $\varepsilon$ -KKT iterate within $O(\varepsilon^{-3})$ outer iterations. Accounting additionally for the logarithmic cost of the inexact Moreau evaluations yields the following overall first-order complexity.
+
+Suppose the conditions of Theorem 6 hold and, in addition, choose $\zeta_{k}=\Theta(\mu_{k}^{q})$ . Suppose each required Moreau subproblem is solved by projected gradient to objective-gap accuracy $\zeta_{k}$ . Let $B_{\rm ls}$ denote a uniform bound on the number of trial Moreau evaluations per outer iteration, with $B_{\rm ls}=1$ for Strategy I. Then the overall first-order/projection complexity of IVSP through outer iteration $K$ is $O\!\left(B_{\rm ls}\,K\log K\right).$ In particular, for the balanced choice $r=1/3$ , IVSP computes an $\varepsilon$ -KKT point of the $\delta$ -relaxed Moreau-gap formulation ( 1 ) with overall first-order/projection complexity $O\!\left(B_{\rm ls}\,\varepsilon^{-3}\log\frac{1}{\varepsilon}\right)=\widetilde{O}(\varepsilon^{-3}).$
+
+4 Experiments
+
+In this section, we evaluate IVSP on a synthetic nonconvex problem and two real-world bilevel learning tasks: data hyper-cleaning and few-shot learning. We compare IVSP with representative deterministic first-order bilevel methods, including PNGBiO [ 41 ] , MEHA [ 25 ] , SLM [ 26 ] , F 2 SA [ 19 ] , V-PBGD [ 35 ] , and BOME [ 23 ] . For IVSP, we use the blockwise smoothing schedule $\mu_{k}=\mu_{0}\bigl(1+\lfloor k/B\rfloor\bigr)^{-r}$ , which satisfies the smoothing condition of Theorem 6 . Detailed problem formulations, implementation settings, and algorithmic hyperparameter values, including $\mu_{0}$ , $B$ , and $r$ are provided in Appendix F .
+
+4.1 Synthetic numerical experiment
+
+We first consider the smooth nonconvex toy problem used in [ 25 ] :
+
+$\min_{\begin{subarray}{c}x\in[-100,100]\\ y\in[-100,100]^{n}\end{subarray}}\ (x-a)^{2}+\|y-ae-c\|^{2}\quad\text{s.t.}\quad y\in\operatorname*{arg\,min}_{z\in[-100,100]^{n}}\sum_{i=1}^{n}\sin(x+z_{i}-c_{i}),$
+
+where $e$ is the all-ones vector. The LL objective is smooth, nonconvex, and $1$ -weakly convex. We set $n=1000$ , $a=2$ , $c_{i}=2$ , $x^{0}=-6$ , and $y^{0}=0$ . The optimal solution is $x^{*}=((1-n)a+nC)/(1+n)$ and $y_{i}^{*}=C+c_{i}-x^{*}$ , where $C\in\operatorname*{arg\,min}_{c\in\{-\pi/2+2k\pi:\,k\in\mathbb{Z}\}}|c-2a|.$
+
+Figure 1 reports the normalized errors in $x$ and $y$ and the KKT residual $\max\{\Phi_{\rho}^{\rm s},\Phi_{\rho}^{\rm f},\Phi_{\rho}^{\rm c}\}$ for IVSP. Since the competing methods target different reformulations and solution concepts, we report the IVSP KKT measure only for IVSP. IVSP achieves the fastest reduction and smallest final errors in both variables.
+
+Figure 1 : Convergence comparison on the nonconvex problem with $n=1000$ measured by $\|x-x^{*}\|/\max\{\|x^{*}\|,1\}$ , $\|y-y^{*}\|/\max\{\|y^{*}\|,1\}$ , and the KKT residual $\max\{\Phi_{\rho}^{\mathrm{s}},\Phi_{\rho}^{\mathrm{f}},\Phi_{\rho}^{\mathrm{c}}\}$ .
+
+4.2 Real-world applications
+
+(a) Data hyper-cleaning: MNIST
+
+(b) Data hyper-cleaning: FashionMNIST
+
+Figure 2 : Comparison results for data hyper-cleaning on MNIST and FashionMNIST. The third panels report the estimated Moreau-gap constraint violation.
+
+Data hyper-cleaning. We consider data hyper-cleaning [ 26 , 25 , 41 ] on MNIST [ 21 ] and FashionMNIST [ 37 ] , where the UL variables assign weights to the training samples, half of which have corrupted labels, and the LL model is a two-layer fully connected network with sigmoid activation, yielding a smooth nonconvex LL problem. This problem falls within the sigmoid-reweighted classification model of Corollary 18 , so ENNAMCQ holds for our choice $\delta=10^{-3}$ .
+
+As shown in Figure 2 , IVSP reduces the validation loss more rapidly than the compared methods and attains the lowest validation loss and lowest test error on both datasets. The estimated Moreau-gap constraint violation, which estimates $[R(w)]_{+}$ , is driven essentially to zero on MNIST and remains small on FashionMNIST, although PNGBiO and MEHA reach zero violation there, consistent with their unrelaxed Moreau-gap feasibility target.
+
+Few-shot learning. We consider 10-way 1-shot classification on Omniglot [ 20 ] following the bilevel meta-learning setting of Liu et al. [25] , with the goal of assessing whether the learned representation transfers effectively to unseen tasks. The UL variable parameterizes a shared Conv-4 feature extractor, while the LL variables are task-specific linear classifiers, yielding a convex but not strongly convex LL problem. Proposition 16 shows that ENNAMCQ holds for every $\delta>0$ . Hyperparameters are selected using only meta-validation query loss.
+
+As shown in Figure 3 , IVSP attains the lowest validation and test query losses as well as the lowest test classification error. The similar validation and test behavior suggests that the selected configuration generalizes to the held-out test classes in this experiment.
+
+Figure 3 : Comparison results for few-shot learning on Omniglot.
+
+5 Conclusion
+
+We developed IVSP, a deterministic first-order method for bilevel optimization with weakly convex lower-level objectives, using a positive Moreau-gap relaxation and a smoothed exact-penalty approach. Under ENNAMCQ, IVSP achieves finite penalty stabilization and an overall $\widetilde{O}(\varepsilon^{-3})$ first-order complexity for computing an $\varepsilon$ -KKT point, without strong convexity, PL, or error-bound assumptions. Numerical experiments illustrate its competitive performance. Future work includes improving the complexity and further weakening the ENNAMCQ-type conditions required for finite penalty stabilization.
+
+AI Use Statement
+
+ChatGPT (OpenAI), using the GPT-5.5 and GPT-5.6 Sol models over the course of the project, was used as an auxiliary tool in parts of the theoretical and experimental workflow, as well as in manuscript preparation. In the theoretical work, ChatGPT was used to assist with checking calculations, derivations, proof arguments, and error terms arising from inexact computations. For the numerical experiments, it was used to assist with code implementation and debugging, as well as with developing parameter-tuning strategies. ChatGPT was also used to help identify potentially relevant literature and to assist with restructuring, editing, and polishing parts of the manuscript for clarity and readability. All AI-assisted mathematical arguments, references, code, parameter choices, and reported results were reviewed and verified by the authors. The authors take full responsibility for the final content of the manuscript.
+
+Appendix A Mathematical Preliminaries
+
+A.1 Moreau envelope properties
+
+We first collect some consequences of Assumption 1 that will be used throughout the analysis. Since $\nabla g$ is $L_{g}$ -Lipschitz continuous on $C=X\times Y$ , there exist finite constants $L_{yx},L_{xy},L_{yy}>0$ such that
+
+$\displaystyle\|\nabla_{y}g(x_{1},y)-\nabla_{y}g(x_{2},y)\|$ $\displaystyle\leq L_{yx}\|x_{1}-x_{2}\|,$ (11) $\displaystyle\|\nabla_{x}g(x,y_{1})-\nabla_{x}g(x,y_{2})\|$ $\displaystyle\leq L_{xy}\|y_{1}-y_{2}\|,$ (12) $\displaystyle\|\nabla_{y}g(x,y_{1})-\nabla_{y}g(x,y_{2})\|$ $\displaystyle\leq L_{yy}\|y_{1}-y_{2}\|.$ (13)
+
+In particular, one may take each of these constants no larger than $L_{g}$ . Recall that $\sigma\geq 0$ denotes a uniform weak-convexity modulus of $g(x,\cdot)$ and that $\rho\sigma<1$ . For convenience, define
+
+$m_{\rho}\coloneqq\rho^{-1}-\sigma>0,\qquad\kappa_{\rho}\coloneqq\frac{1}{1-\rho\sigma}.$ (14)
+
+Suppose that Assumption 1 holds, and let $m_{\rho},\kappa_{\rho}$ be given by ( 14 ). The following statements hold.
+
+For every $w=(x,y)\in C$ , the function $\psi_{\rho}(\cdot;x,y)$ is $m_{\rho}$ -strongly convex on $Y$ . Consequently, $z_{\rho}(w)$ is well defined and unique.
+
+The Moreau envelope $g_{\rho}$ is continuously differentiable on $C$ , with
+
+$\nabla_{x}g_{\rho}(x,y)=\nabla_{x}g(x,z_{\rho}(w)),\qquad\nabla_{y}g_{\rho}(x,y)=\rho^{-1}\bigl(y-z_{\rho}(w)\bigr).$ (15)
+
+For any $w_{i}=(x_{i},y_{i})\in C$ , $i=1,2$ ,
+
+$\|z_{\rho}(w_{1})-z_{\rho}(w_{2})\|\leq\kappa_{\rho}\left(\rho L_{yx}\|x_{1}-x_{2}\|+\|y_{1}-y_{2}\|\right).$ (16)
+
+In particular, $z_{\rho}$ is Lipschitz continuous on $C$ .
+
+The residual $R{}$ is continuously differentiable, with
+
+$\nabla R{}(w)=\begin{pmatrix}\nabla_{x}g(x,y)-\nabla_{x}g(x,z_{\rho}(w))\\[2.84526pt] \nabla_{y}g(x,y)-\rho^{-1}(y-z_{\rho}(w))\end{pmatrix}.$ (17)
+
+Moreover, there exist constants $L_{R},B_{R}>0$ such that
+
+$\|\nabla R{}(w_{1})-\nabla R{}(w_{2})\|\leq L_{R}\|w_{1}-w_{2}\|,\qquad\text{and}\qquad\|\nabla R{}(w)\|\leq B_{R}$ (18)
+
+for all $w,w_{1},w_{2}\in C$ .
+
+Fix $w=(x,y)\in C$ . Since $g(x,\cdot)$ is $\sigma$ -weakly convex, $z\mapsto g(x,z)+\frac{\sigma}{2}\|z\|^{2}$ is convex. Moreover,
+
+$\frac{1}{2\rho}\|z-y\|^{2}-\frac{\sigma}{2}\|z\|^{2}=\frac{m_{\rho}}{2}\|z\|^{2}-\rho^{-1}\langle y,z\rangle+\frac{1}{2\rho}\|y\|^{2}.$
+
+It follows that $\psi_{\rho}(\cdot;x,y)$ is $m_{\rho}$ -strongly convex on $Y$ . Since $Y$ is compact and $\psi_{\rho}(\cdot;x,y)$ is continuous, a minimizer exists, while strong convexity gives uniqueness; see [ 6 , Theorem 5.25] . This proves (i).
+
+The differentiability and gradient formulas in (ii) follow from Danskin’s theorem; see Bonnans and Shapiro [7, Theorem 4.13 and Remark 4.14] .
+
+We next prove (iii). Let $w_{i}=(x_{i},y_{i})$ and $z_{i}=z_{\rho}(w_{i})$ for $i=1,2$ . The optimality conditions of the two proximal subproblems give
+
+$\displaystyle\left\langle\nabla_{y}g(x_{1},z_{1})+\rho^{-1}(z_{1}-y_{1}),z_{2}-z_{1}\right\rangle$ $\displaystyle\geq 0,$ $\displaystyle\left\langle\nabla_{y}g(x_{2},z_{2})+\rho^{-1}(z_{2}-y_{2}),z_{1}-z_{2}\right\rangle$ $\displaystyle\geq 0.$
+
+Adding these inequalities yields
+
+$\displaystyle\rho^{-1}\langle y_{1}-y_{2},z_{1}-z_{2}\rangle\geq\left\langle\nabla_{y}g(x_{1},z_{1})-\nabla_{y}g(x_{2},z_{2}),z_{1}-z_{2}\right\rangle+\rho^{-1}\|z_{1}-z_{2}\|^{2}.$ (19)
+
+On the other hand,
+
+$\displaystyle\left\langle\nabla_{y}g(x_{1},z_{1})-\nabla_{y}g(x_{2},z_{2}),z_{1}-z_{2}\right\rangle$ $\displaystyle=\left\langle\nabla_{y}g(x_{1},z_{1})-\nabla_{y}g(x_{1},z_{2}),z_{1}-z_{2}\right\rangle$ $\displaystyle\qquad+\left\langle\nabla_{y}g(x_{1},z_{2})-\nabla_{y}g(x_{2},z_{2}),z_{1}-z_{2}\right\rangle$ $\displaystyle\quad\geq-\sigma\|z_{1}-z_{2}\|^{2}-L_{yx}\|x_{1}-x_{2}\|\|z_{1}-z_{2}\|.$
+
+For the first term above, we used the $\sigma$ -weak convexity of $g(x_{1},\cdot)$ . For the second term, we used Cauchy–Schwarz along with ( 11 ).
+
+Together with ( 19 ), we have
+
+$\displaystyle-\sigma\|z_{1}-z_{2}\|^{2}-L_{yx}\|x_{1}-x_{2}\|\|z_{1}-z_{2}\|+\rho^{-1}\|z_{1}-z_{2}\|^{2}\leq\rho^{-1}\langle y_{1}-y_{2},z_{1}-z_{2}\rangle.$
+
+Hence,
+
+$\displaystyle(\rho^{-1}-\sigma)\|z_{1}-z_{2}\|^{2}$ $\displaystyle\leq L_{yx}\|x_{1}-x_{2}\|\|z_{1}-z_{2}\|+\rho^{-1}\langle y_{1}-y_{2},z_{1}-z_{2}\rangle$ $\displaystyle\leq L_{yx}\|x_{1}-x_{2}\|\|z_{1}-z_{2}\|+\rho^{-1}\|y_{1}-y_{2}\|\|z_{1}-z_{2}\|,$
+
+where the last inequality again follows from Cauchy–Schwarz. If $z_{1}=z_{2}$ , the claim is immediate. Otherwise, dividing by $\|z_{1}-z_{2}\|$ yields
+
+$(\rho^{-1}-\sigma)\|z_{1}-z_{2}\|\leq L_{yx}\|x_{1}-x_{2}\|+\rho^{-1}\|y_{1}-y_{2}\|.$
+
+Therefore,
+
+$\displaystyle\|z_{1}-z_{2}\|$ $\displaystyle\leq\frac{L_{yx}\|x_{1}-x_{2}\|+\rho^{-1}\|y_{1}-y_{2}\|}{\rho^{-1}-\sigma}$ $\displaystyle=\frac{\rho L_{yx}\|x_{1}-x_{2}\|+\|y_{1}-y_{2}\|}{1-\rho\sigma}$ $\displaystyle=\kappa_{\rho}\left(\rho L_{yx}\|x_{1}-x_{2}\|+\|y_{1}-y_{2}\|\right),$
+
+which proves ( 16 ).
+
+Formula ( 17 ) follows directly from ( 15 ) and the definition of $R{}$ . We next verify the Lipschitz continuity of $\nabla R{}$ . By ( 16 ) and Cauchy–Schwarz, there exists $K_{z}>0$ such that
+
+$\|z_{\rho}(w_{1})-z_{\rho}(w_{2})\|\leq K_{z}\|w_{1}-w_{2}\|,\qquad w_{1},w_{2}\in C.$
+
+Hence, the map $T(w)\coloneqq(x,z_{\rho}(w))$ is Lipschitz on $C$ . Indeed,
+
+$\|T(w_{1})-T(w_{2})\|^{2}=\|x_{1}-x_{2}\|^{2}+\|z_{\rho}(w_{1})-z_{\rho}(w_{2})\|^{2}\leq(1+K_{z}^{2})\|w_{1}-w_{2}\|^{2}.$
+
+Since $\nabla g$ is $L_{g}$ -Lipschitz on $C$ , it follows that $w\mapsto\nabla g(x,z_{\rho}(w))$ is Lipschitz on $C$ . Therefore, each term in ( 17 ) is Lipschitz continuous in $w$ , and hence there exists $L_{R}>0$ such that
+
+$\|\nabla R{}(w_{1})-\nabla R{}(w_{2})\|\leq L_{R}\|w_{1}-w_{2}\|,\qquad w_{1},w_{2}\in C.$
+
+Finally, $C$ is compact and $\nabla R{}$ is continuous, so $B_{R}\coloneqq\max_{w\in C}\|\nabla R{}(w)\|<\infty.$ This completes the proof of (iv). ∎
+
+A.2 Smoothing estimates
+
+We use a standard family of smooth approximations of the plus function [ 5 ] . For every $\mu>0$ , let $\phi_{\mu}$ be convex, continuously differentiable, and nondecreasing, and suppose that there exist constants $a_{1},a_{2},b_{\phi},c_{\phi}\geq 0$ such that
+
+$\displaystyle 0$ $\displaystyle\leq\phi_{\mu}^{\prime}(t)\leq 1,$ (20) $\displaystyle[t]_{+}-a_{1}\mu$ $\displaystyle\leq\phi_{\mu}(t)\leq[t]_{+}+a_{2}\mu,$ (21) $\displaystyle|\phi_{\mu}^{\prime}(t)-\phi_{\mu}^{\prime}(s)|$ $\displaystyle\leq\frac{b_{\phi}}{\mu}|t-s|,$ (22) $\displaystyle\phi_{\mu_{1}}(t)$ $\displaystyle\leq\phi_{\mu_{0}}(t)+c_{\phi}(\mu_{0}-\mu_{1}),\qquad 0<\mu_{1}\leq\mu_{0}.$ (23) $\displaystyle a_{\phi}$ $\displaystyle\coloneqq a_{1}+a_{2}.$ (24)
+
+The next lemma makes precise the $O(1/\mu)$ smoothness property of $G_{\mu}$ used in Section 2.2 .
+
+Under Assumption 1 and the above conditions on $\phi_{\mu}$ , the function $G_{\mu}=\phi_{\mu}\circ R{}$ is continuously differentiable and $\nabla G_{\mu}(w)=\phi_{\mu}^{\prime}(R{}(w))\nabla R{}(w).$ Moreover, for every $\mu\in(0,\mu_{0}]$ ,
+
+$\|\nabla G_{\mu}(w)-\nabla G_{\mu}(\bar{w})\|\leq\frac{L_{G}}{\mu}\|w-\bar{w}\|,\qquad w,\bar{w}\in C,$
+
+where $L_{G}\coloneqq b_{\phi}B_{R}^{2}+\mu_{0}L_{R},$ with $B_{R}$ and $L_{R}$ given in ( 18 ). Furthermore, whenever $0<\mu_{1}\leq\mu_{0}$ ,
+
+$G_{\mu_{1}}(w)\leq G_{\mu_{0}}(w)+c_{\phi}(\mu_{0}-\mu_{1}),\qquad w\in C.$ (25)
+
+The gradient formula follows from the chain rule. The remaining estimates also follow as special cases of Xu et al. [38, Lemma 2.3(i),(iii)] ; we provide a direct proof here for completeness. For $w,\bar{w}\in C$ ,
+
+$\displaystyle\|\nabla G_{\mu}(w)-\nabla G_{\mu}(\bar{w})\|$ $\displaystyle\leq|\phi_{\mu}^{\prime}(R(w))-\phi_{\mu}^{\prime}(R(\bar{w}))|\|\nabla R(w)\|+|\phi_{\mu}^{\prime}(R(\bar{w}))|\|\nabla R(w)-\nabla R(\bar{w})\|.$
+
+By Proposition 8 , $\|\nabla R\|\leq B_{R}$ and $\nabla R$ is $L_{R}$ -Lipschitz. Hence $|R(w)-R(\bar{w})|\leq B_{R}\|w-\bar{w}\|.$ Using $0\leq\phi_{\mu}^{\prime}\leq 1$ by ( 20 ) and the $(b_{\phi}/\mu)$ -Lipschitz continuity of $\phi_{\mu}^{\prime}$ by ( 22 ) gives
+
+$\|\nabla G_{\mu}(w)-\nabla G_{\mu}(\bar{w})\|\leq\left(\frac{b_{\phi}B_{R}^{2}}{\mu}+L_{R}\right)\|w-\bar{w}\|.$
+
+Since $\mu\leq\mu_{0}$ , the right-hand side is bounded by $(L_{G}/\mu)\|w-\bar{w}\|$ .
+
+Finally, ( 23 ) directly gives
+
+$G_{\mu_{1}}(w)=\phi_{\mu_{1}}(R{}(w))\leq\phi_{\mu_{0}}(R{}(w))+c_{\phi}(\mu_{0}-\mu_{1}),$
+
+which proves ( 25 ). ∎
+
+The following estimates correspond to bounds used in the proof of Xu et al. [38, Lemma 3.2(ii)–(iii)] ; we give a direct proof under our notation for completeness.
+
+Let $a_{\phi}$ be given by ( 24 ) and let $\theta>1$ . For every $\mu>0$ and $t\in\mathbb{R}$ , the following hold:
+
+If $t>\theta a_{\phi}\mu$ , then $\phi_{\mu}^{\prime}(t)\geq\frac{\theta-1}{\theta};$
+
+If $t\leq\theta a_{\phi}\mu$ , then $|\phi_{\mu}^{\prime}(t)t|\leq\theta a_{\phi}\mu.$
+
+For (i), convexity of $\phi_{\mu}$ gives
+
+$t\phi_{\mu}^{\prime}(t)\geq\phi_{\mu}(t)-\phi_{\mu}(0).$ (26)
+
+For $t>0$ , the bound ( 21 ) yields $\phi_{\mu}(t)\geq t-a_{1}\mu,$ and $\phi_{\mu}(0)\leq a_{2}\mu.$ Therefore,
+
+$\phi_{\mu}^{\prime}(t)\geq 1-\frac{(a_{1}+a_{2})\mu}{t}=1-\frac{a_{\phi}\mu}{t}.$
+
+If $t>\theta a_{\phi}\mu$ , then $\frac{a_{\phi}\mu}{t}<\frac{1}{\theta},$ and hence the claim of part (i).
+
+For (ii), first suppose $0\leq t\leq\theta a_{\phi}\mu$ . Since $0\leq\phi_{\mu}^{\prime}(t)\leq 1$ , we have $|\phi_{\mu}^{\prime}(t)t|\leq t\leq\theta a_{\phi}\mu.$
+
+Now suppose $t<0$ . By ( 26 ), $(-t)\phi_{\mu}^{\prime}(t)\leq\phi_{\mu}(0)-\phi_{\mu}(t).$ Since $[t]_{+}=0$ for $t<0$ , ( 21 ) gives $\phi_{\mu}(0)\leq a_{2}\mu,$ and $\phi_{\mu}(t)\geq-a_{1}\mu.$ Consequently, $(-t)\phi_{\mu}^{\prime}(t)\leq(a_{1}+a_{2})\mu=a_{\phi}\mu.$ Since $t<0$ and $\phi_{\mu}^{\prime}(t)\geq 0$ ,
+
+$|\phi_{\mu}^{\prime}(t)t|=(-t)\phi_{\mu}^{\prime}(t)\leq a_{\phi}\mu\leq\theta a_{\phi}\mu.$
+
+This proves (ii). ∎
+
+A.3 Error bounds for inexact Moreau evaluations
+
+We next give the explicit error bounds underlying ( 6 ). Define
+
+$L_{a,\rho}\coloneqq\sqrt{L_{xy}^{2}+\rho^{-2}},\quad D_{\rho}(\zeta)\coloneqq L_{a,\rho}\sqrt{\frac{2\zeta}{m_{\rho}}},\quad\text{and}\quad E_{\mu,\rho}(\zeta)\coloneqq D_{\rho}(\zeta)+\frac{b_{\phi}B_{R}}{\mu}\zeta,$ (27)
+
+with $B_{R}$ given in ( 18 ).
+
+Let $w=(x,y)\in C$ , $\zeta\geq 0$ , and let $\widetilde{z}\in Y$ satisfy
+
+$0\leq\psi_{\rho}(\widetilde{z};w)-g_{\rho}(w)\leq\zeta.$ (28)
+
+Define
+
+$\widetilde{g}_{\rho}(w)\coloneqq\psi_{\rho}(\widetilde{z};w),\qquad\widetilde{R}{}(w)\coloneqq g(w)-\widetilde{g}_{\rho}(w)-\delta,$ (29)
+
+and
+
+$\widetilde{\nabla}R{}(w)\coloneqq\begin{pmatrix}\nabla_{x}g(x,y)-\nabla_{x}g(x,\widetilde{z})\\[2.84526pt] \nabla_{y}g(x,y)-\rho^{-1}(y-\widetilde{z})\end{pmatrix}.$ (30)
+
+Then the following estimates hold:
+
+$\|\widetilde{z}-z_{\rho}(w)\|\leq\sqrt{\frac{2\zeta}{m_{\rho}}}.$
+
+We have
+
+$\widetilde{R}{}(w)\leq R{}(w)\leq\widetilde{R}{}(w)+\zeta.$ (31)
+
+Consequently,
+
+$\phi_{\mu}(\widetilde{R}{}(w))\leq G_{\mu}(w)\leq\phi_{\mu}(\widetilde{R}{}(w)+\zeta)$ (32)
+
+and
+
+$0\leq\phi_{\mu}(\widetilde{R}{}(w)+\zeta)-\phi_{\mu}(\widetilde{R}{}(w))\leq\zeta.$ (33)
+
+$\|\widetilde{\nabla}R{}(w)-\nabla R{}(w)\|\leq D_{\rho}(\zeta),$ where $D_{\rho}(\zeta)$ is given in ( 27 ).
+
+With $\widetilde{\nabla}G_{\mu}(w)=\phi_{\mu}^{\prime}(\widetilde{R}{}(w))\widetilde{\nabla}R{}(w),$ we have $\|\widetilde{\nabla}G_{\mu}(w)-\nabla G_{\mu}(w)\|\leq E_{\mu,\rho}(\zeta),$ where $E_{\mu,\rho}(\zeta)$ is defined in ( 27 ).
+
+Since $\psi_{\rho}(\cdot;w)$ is $m_{\rho}$ -strongly convex and $z_{\rho}(w)$ is its minimizer, we have from [ 6 , Theorem 5.25] that
+
+$\psi_{\rho}(\widetilde{z};w)\geq\psi_{\rho}(z_{\rho}(w);w)+\frac{m_{\rho}}{2}\|\widetilde{z}-z_{\rho}(w)\|^{2}.$ (34)
+
+Combining this with ( 28 ) and noting that $\psi_{\rho}(z_{\rho}(w);w)=g_{\rho}(w)$ give (i).
+
+For part (ii), let $e\coloneqq\widetilde{g}_{\rho}(w)-g_{\rho}(w)$ . Note that $e\in[0,\zeta]$ due to ( 28 ) and that $e=R(w)-\widetilde{R}{}(w)$ by noting ( 29 ). Hence, ( 31 ) holds. Since $\phi_{\mu}$ is nondecreasing, this immediately yields ( 32 ). Moreover, $0\leq\phi_{\mu}^{\prime}\leq 1$ , and therefore $\phi_{\mu}$ is $1$ -Lipschitz. Hence ( 33 ) follows.
+
+For (iii), subtract ( 17 ) from ( 30 ):
+
+$\widetilde{\nabla}R{}(w)-\nabla R{}(w)=\begin{pmatrix}\nabla_{x}g(x,z_{\rho}(w))-\nabla_{x}g(x,\widetilde{z})\\[2.84526pt] \rho^{-1}(\widetilde{z}-z_{\rho}(w))\end{pmatrix}.$
+
+Using ( 12 ) and part (i),
+
+$\displaystyle\|\widetilde{\nabla}R{}(w)-\nabla R{}(w)\|$ $\displaystyle\leq\sqrt{L_{xy}^{2}+\rho^{-2}}\,\|\widetilde{z}-z_{\rho}(w)\|\leq L_{a,\rho}\sqrt{\frac{2\zeta}{m_{\rho}}}=D_{\rho}(\zeta),$
+
+which proves (iii).
+
+Finally, denote $\widetilde{R}=\widetilde{R}{}(w)$ and $R=R{}(w)$ . Then
+
+$\displaystyle\|\widetilde{\nabla}G_{\mu}(w)-\nabla G_{\mu}(w)\|$ $\displaystyle=\|\phi_{\mu}^{\prime}(\widetilde{R})\widetilde{\nabla}R{}(w)-\phi_{\mu}^{\prime}(R)\nabla R{}(w)\|$ $\displaystyle\quad\leq|\phi_{\mu}^{\prime}(\widetilde{R})|\|\widetilde{\nabla}R{}(w)-\nabla R{}(w)\|+|\phi_{\mu}^{\prime}(\widetilde{R})-\phi_{\mu}^{\prime}(R)|\|\nabla R{}(w)\|.$
+
+Together with $0\leq\phi_{\mu}^{\prime}\leq 1$ , the $(b_{\phi}/\mu)$ -Lipschitz continuity of $\phi_{\mu}^{\prime}$ , ( 31 ), and $\|\nabla R{}(w)\|\leq B_{R}$ , we obtain
+
+$\|\widetilde{\nabla}G_{\mu}(w)-\nabla G_{\mu}(w)\|\leq D_{\rho}(\zeta)+\frac{b_{\phi}B_{R}}{\mu}\zeta=E_{\mu,\rho}(\zeta).$
+
+This proves (iv). ∎
+
+A.4 Properties of the positive Moreau-gap relaxation
+
+This subsection clarifies the role of the positive relaxation parameter $\delta>0$ in ( 1 ) and the relation between the Moreau-gap constraint and lower-level stationarity.
+
+Lower-level interpretation of the relaxation.
+
+Define
+
+$H_{\rho}(x,y)\coloneqq g(x,y)-g_{\rho}(x,y),\qquad\mathcal{F}_{\delta}\coloneqq\{(x,y)\in C:H_{\rho}(x,y)\leq\delta\}.$ (35)
+
+Thus, $\mathcal{F}_{\delta}$ is the feasible set of ( 1 ), while $\mathcal{F}_{0}$ corresponds to the exact Moreau-gap constraint. We also define
+
+$\widetilde{S}(x)\coloneqq\left\{y\in Y:0\in\nabla_{y}g(x,y)+N_{Y}(y)\right\}$ (36)
+
+as the lower-level stationary-point mapping.
+
+The Moreau envelope reformulation was introduced by Gao et al. [10] . Under convexity of the lower-level problem, the exact Moreau-gap constraint is equivalent to lower-level global optimality [ 10 ] . For weakly convex lower-level objectives, the exact constraint instead characterizes lower-level first-order stationarity; see Liu et al. [25] . The proposition below recalls this equivalence and additionally gives quantitative bounds relating the Moreau gap to lower-level near-stationarity.
+
+Suppose that $g(x,\cdot)$ is $\sigma$ -weakly convex and $\rho\sigma<1$ . Let $H_{\rho}$ and $\mathcal{F}_{\delta}$ be given by ( 35 ). Then, for every $(x,y)\in C$ ,
+
+$H_{\rho}(x,y)\geq\frac{1-\rho\sigma}{2\rho}\|y-z_{\rho}(x,y)\|^{2}.$ (37)
+
+Moreover,
+
+$\operatorname{dist}\!\left(0,\nabla_{y}g(x,z_{\rho}(x,y))+N_{Y}(z_{\rho}(x,y))\right)\leq\frac{1}{\rho}\|y-z_{\rho}(x,y)\|\leq\sqrt{\frac{2H_{\rho}(x,y)}{\rho(1-\rho\sigma)}}.$ (38)
+
+In particular,
+
+$H_{\rho}(x,y)=0\quad\Longleftrightarrow\quad y=z_{\rho}(x,y)\quad\Longleftrightarrow\quad 0\in\nabla_{y}g(x,y)+N_{Y}(y).$ (39)
+
+Hence,
+
+$\mathcal{F}_{0}=\{(x,y)\in C:y\in\widetilde{S}(x)\},$ (40)
+
+where $\widetilde{S}$ is given by ( 36 ).
+
+By strong convexity of $\psi_{\rho}(\cdot;x,y)$ , as in ( 34 ), we have
+
+$\psi_{\rho}(y;x,y)-\psi_{\rho}(z_{\rho}(x,y);x,y)\geq\frac{m_{\rho}}{2}\|y-z_{\rho}(x,y)\|^{2}.$
+
+Since $\psi_{\rho}(y;x,y)=g(x,y)$ and $\psi_{\rho}(z_{\rho}(x,y);x,y)=g_{\rho}(x,y)$ , this gives ( 37 ).
+
+Since $z_{\rho}(x,y)$ minimizes $\psi_{\rho}(\cdot,x,y)=g(x,\cdot)+\frac{1}{2\rho}\left\|\cdot-y\right\|^{2},$ we have
+
+$\rho^{-1}(y-z_{\rho}(x,y))\in\nabla_{y}g(x,z_{\rho}(x,y))+N_{Y}(z_{\rho}(x,y)),$ (41)
+
+which proves the first inequality in ( 38 ); the second follows from ( 37 ).
+
+Finally, ( 37 ) implies that $H_{\rho}(x,y)=0$ only if $y=z_{\rho}(x,y)$ , while the converse is immediate since $g_{\rho}(x,y)=g(x,z_{\rho}(x,y))+\frac{1}{2\rho}\left\|z_{\rho}(x,y)-y\right\|^{2}$ . By the optimality condition of the proximal subproblem, $y=z_{\rho}(x,y)$ holds if and only if $0\in\nabla_{y}g(x,y)+N_{Y}(y)$ . Thus, ( 39 ) holds. ∎
+
+The preceding result also gives a direct interpretation of the feasibility residual used in our approximate KKT condition.
+
+Let $w=(x,y)\in C$ satisfy $[R(w)]_{+}\leq\varepsilon_{f},$ where $R(w)=H_{\rho}(w)-\delta.$ Then $H_{\rho}(w)\leq\delta+\varepsilon_{f},$ and consequently
+
+$\displaystyle\|y-z_{\rho}(x,y)\|$ $\displaystyle\leq\sqrt{\frac{2\rho(\delta+\varepsilon_{f})}{1-\rho\sigma}},$ $\displaystyle\operatorname{dist}\!\left(0,\nabla_{y}g(x,z_{\rho}(x,y))+N_{Y}(z_{\rho}(x,y))\right)$ $\displaystyle\leq\sqrt{\frac{2(\delta+\varepsilon_{f})}{\rho(1-\rho\sigma)}}.$
+
+Since $R(w)\leq[R(w)]_{+}$ , we obtain $H_{\rho}(w)=R(w)+\delta\leq\delta+\varepsilon_{f}.$ The two estimates then follow from Proposition 12 . ∎
+
+Why a positive relaxation is needed for KKT analysis.
+
+The exact Moreau-gap constraint has an inherent constraint-qualification degeneracy. Recall that, for a feasible point $w$ of a smooth inequality $R(w)\leq 0$ over the closed convex set $C$ , the no nonzero abnormal multiplier constraint qualification (NNAMCQ) requires that
+
+$0\notin\nabla R(w)+N_{C}(w),$
+
+whenever $R(w)=0$ . For a single smooth inequality, this condition is equivalent to the Mangasarian–Fromovitz constraint qualification (MFCQ) relative to $C$ [ 17 ] .
+
+Under Assumption 1 , NNAMCQ (equivalently, MFCQ), fails at every feasible point of the exact Moreau-gap formulation $H_{\rho}\leq 0$ . On the other hand, for every $\delta>0$ , the relaxed constraint $H_{\rho}\leq\delta$ admits a strictly feasible point.
+
+Since $H_{\rho}\geq 0$ on $C$ , every $w\in\mathcal{F}_{0}$ is a global minimizer of $H_{\rho}$ over $C$ . The first-order necessary condition therefore gives $0\in\nabla H_{\rho}(w)+N_{C}(w),$ so NNAMCQ, equivalently MFCQ, fails. For the second claim, fix any $x\in X$ and choose $y^{\star}\in\operatorname*{arg\,min}_{y\in Y}g(x,y)$ . Then $0\in\nabla_{y}g(x,y^{\star})+N_{Y}(y^{\star})$ , and Proposition 12 gives $H_{\rho}(x,y^{\star})=0<\delta$ . ∎
+
+Thus, the positive relaxation removes the unavoidable degeneracy of the exact formulation in the sense that strict feasibility becomes possible. Strict feasibility alone, however, does not guarantee the extended constraint qualification required in our convergence analysis. Sufficient conditions to guarantee ENNAMCQ are explored next in Appendix B .
+
+Behavior as $\delta\downarrow 0$ .
+
+The positive Moreau-gap relaxation is consistent with the exact constraint as the relaxation level vanishes. Indeed, since $H_{\rho}$ is continuous and $C$ is compact, the sets $\mathcal{F}_{\delta}=\{w\in C:H_{\rho}(w)\leq\delta\}$ are nonempty and compact, and
+
+$\mathcal{F}_{0}\subseteq\mathcal{F}_{\delta_{1}}\subseteq\mathcal{F}_{\delta_{2}}\qquad(0\leq\delta_{1}\leq\delta_{2}),\qquad\bigcap_{\delta>0}\mathcal{F}_{\delta}=\mathcal{F}_{0}.$
+
+Consequently, $d_{\rm H}(\mathcal{F}_{\delta},\mathcal{F}_{0})\to 0$ as $\delta\downarrow 0$ , where, for nonempty compact sets $A$ and $B$ ,
+
+$d_{\rm H}(A,B)\coloneqq\max\left\{\sup_{a\in A}\operatorname{dist}(a,B),\sup_{b\in B}\operatorname{dist}(b,A)\right\}.$
+
+By ( 40 ), $\mathcal{F}_{0}$ corresponds to lower-level stationary points and, in general, need not be the feasible set of the original bilevel problem. When $\widetilde{S}(x)=S(x)\coloneqq\operatorname*{arg\,min}_{y\in Y}g(x,y)$ for every $x\in X$ , in particular under lower-level convexity, the above Hausdorff convergence is to the original bilevel feasible set. This is consistent with the approximation result of Gao et al. [10, Proposition 2] , who show in the convex lower-level setting that sufficiently small positive relaxations admit local minimizers arbitrarily close to the bilevel solution set. Nevertheless, this geometric consistency does not imply uniform algorithmic complexity as $\delta\downarrow 0$ ; see Example 23 and the discussion following it. Accordingly, throughout our complexity analysis, $\delta>0$ is fixed, and the resulting bounds are not claimed to be uniform as $\delta\downarrow 0$ .
+
+Appendix B Sufficient conditions for ENNAMCQ
+
+This section gives several sufficient conditions under which the ENNAMCQ assumption used in the main text holds. These conditions cover lower-level problems arising in many important bilevel optimization problems.
+
+B.1 Convex lower-level problems without nonconstant affine segments
+
+For fixed $x\in X$ , define the extended-valued lower-level objective
+
+$h_{x}(y):=g(x,y)+\iota_{Y}(y),$ (42)
+
+where $\iota_{Y}$ denotes the indicator function of $Y$ .
+
+We consider the following property:
+
+$\begin{split}&\text{if }y_{0},y_{1}\in Y\text{ and }t\mapsto g\bigl(x,(1-t)y_{0}+ty_{1}\bigr)\text{ is affine on }[0,1],\\ &\text{then }g\bigl(x,(1-t)y_{0}+ty_{1}\bigr)\text{ is constant on }[0,1].\end{split}$ (43)
+
+In other words, affine segments are allowed, but only when the lower-level objective is constant along them. This condition is strictly weaker than strict convexity.
+
+Let $\delta>0$ , and suppose the standing smoothness assumptions hold. Fix $\bar{x}\in X$ . Suppose that $g(\bar{x},\cdot)$ is convex on $Y$ and satisfies ( 43 ). Then $0\notin\nabla R(\bar{x},y)+N_{C}(\bar{x},y)$ for every $y\in Y$ such that $R(\bar{x},y)\geq 0$ . Consequently, if ( 43 ) holds for every $x\in X$ , then ENNAMCQ holds on $X\times Y$ .
+
+In particular, if $g(x,\cdot)+\iota_{Y}$ is strictly convex for all $x\in X$ , then ENNAMCQ holds on $X\times Y$ .
+
+Fix $y\in Y$ with $R(\bar{x},y)\geq 0$ and suppose, to the contrary, that
+
+$0\in\nabla R(\bar{x},y)+N_{C}(\bar{x},y).$ (44)
+
+Let $z:=z_{\rho}(\bar{x},y),$ and $p:=\rho^{-1}(y-z).$ Since $C=X\times Y$ , taking the $y$ -component of ( 44 ) and using $\nabla_{y}R(\bar{x},y)=\nabla_{y}g(\bar{x},y)-\rho^{-1}(y-z)$ from ( 17 ) gives
+
+$p\in\nabla_{y}g(\bar{x},y)+N_{Y}(y)=\partial h_{\bar{x}}(y),$ (45)
+
+where $h_{\bar{x}}$ is defined as in ( 42 ). On the other hand, the optimality condition for the proximal subproblem defining $z$ gives $0\in\nabla_{y}g(\bar{x},z)+\rho^{-1}(z-y)+N_{Y}(z),$ and therefore
+
+$p\in\nabla_{y}g(\bar{x},z)+N_{Y}(z)=\partial h_{\bar{x}}(z).$ (46)
+
+Since $h_{\bar{x}}$ is convex, ( 45 )–( 46 ) yield
+
+$\displaystyle h_{\bar{x}}(z)$ $\displaystyle\geq h_{\bar{x}}(y)+\langle p,z-y\rangle,$ $\displaystyle h_{\bar{x}}(y)$ $\displaystyle\geq h_{\bar{x}}(z)+\langle p,y-z\rangle.$
+
+Thus, the two inequalities must both hold with equality. Hence
+
+$h_{\bar{x}}(z)=h_{\bar{x}}(y)+\langle p,z-y\rangle.$ (47)
+
+For $t\in[0,1]$ , let $y_{t}=(1-t)y+tz$ . By convexity,
+
+$h_{\bar{x}}(y_{t})\leq(1-t)h_{\bar{x}}(y)+th_{\bar{x}}(z).$ (48)
+
+Using $p\in\partial h_{\bar{x}}(y)$ and ( 47 ),
+
+$\begin{split}h_{\bar{x}}(y_{t})&\geq h_{\bar{x}}(y)+t\langle p,z-y\rangle=(1-t)h_{\bar{x}}(y)+th_{\bar{x}}(z).\end{split}$
+
+Together with ( 48 ), this shows that $h_{\bar{x}}$ , and hence $g(\bar{x},\cdot)$ , is affine on the segment $[y,z]$ . By assumption ( 43 ), it must therefore be constant on this segment, so $h_{\bar{x}}(y)=h_{\bar{x}}(z).$ Combining this with ( 47 ) gives
+
+$0=\langle p,y-z\rangle=\rho^{-1}\|y-z\|^{2},$
+
+and so $y=z$ . Therefore $H_{\rho}(\bar{x},y)=0$ and consequently $R(\bar{x},y)=-\delta<0,$ contradicting $R(\bar{x},y)\geq 0$ . This completes the proof. ∎
+
+We provide an application to a non-strictly-convex lower-level problem used in few-shot learning; see Appendix F .
+
+Let $T,m,p\in\mathbb{N}$ . For each task $i=1,\ldots,T$ , let $S_{i}=\{(u_{i,r},q_{i,r})\}_{r=1}^{n_{i}},$ with $q_{i,r}\in\{1,\ldots,m\}$ , be a finite support set. For fixed $x\in X$ and a finite dataset $D$ , let $F_{x,D}(u)\in\mathbb{R}^{p}$ denote the feature vector produced for $u$ by the shared feature extractor when its batch-dependent statistics are computed from $D$ . For each $i$ and $r$ , set $F_{i,r}(x)\coloneqq F_{x,S_{i}}(u_{i,r}).$ Let $(W_{i},b_{i})\in\mathbb{R}^{m\times p}\times\mathbb{R}^{m}$ be the task-specific linear classifier, and set $y=((W_{i},b_{i}))_{i=1}^{T}\in Y,$ where $Y\subseteq\prod_{i=1}^{T}(\mathbb{R}^{m\times p}\times\mathbb{R}^{m})$ is convex. Define $\ell(s,q):=\log\left(\sum_{j=1}^{m}e^{s_{j}}\right)-s_{q},$ for $s=(s_{1},\ldots,s_{m})\in\mathbb{R}^{m},$ and for all $y=((W_{i},b_{i}))_{i=1}^{T}\in Y,$
+
+$g(x,y):=\frac{1}{T}\sum_{i=1}^{T}\frac{1}{n_{i}}\sum_{r=1}^{n_{i}}\ell\bigl(W_{i}F_{i,r}(x)+b_{i},q_{i,r}\bigr).$
+
+Then, for every fixed $x\in X$ , $g(x,\cdot)$ is convex on $Y$ and satisfies ( 43 ). Consequently, ENNAMCQ holds for every $\delta>0$ .
+
+Fix $x$ and $y_{0},y_{1}\in Y$ . For $\nu=0,1$ , write $y_{\nu}=\bigl((W_{i}^{[\nu]},b_{i}^{[\nu]})\bigr)_{i=1}^{T},$ let $y_{t}=(1-t)y_{0}+ty_{1}=\bigl((W_{i}(t),b_{i}(t))\bigr)_{i=1}^{T}$ , where $W_{i}(t):=(1-t)W_{i}^{[0]}+tW_{i}^{[1]},$ and $b_{i}(t):=(1-t)b_{i}^{[0]}+tb_{i}^{[1]},$ and write $\Delta W_{i}:=W_{i}^{[1]}-W_{i}^{[0]}$ , $\Delta b_{i}:=b_{i}^{[1]}-b_{i}^{[0]}$ . For $(u,q)\in S_{i}$ , set $d_{i,r}:=\Delta W_{i}F_{i,r}(x)+\Delta b_{i}$ , and let $\varphi(t):=g(x,y_{t})$ .
+
+For the softmax vector $p_{j}(s):=e^{s_{j}}/\sum_{k=1}^{m}e^{s_{k}}$ , a direct calculation gives $\nabla^{2}\ell(s,q)=\operatorname{Diag}(p(s))-p(s)p(s)^{\top}$ and, for any $d\in\mathbb{R}^{m}$ ,
+
+$d^{\top}\nabla^{2}\ell(s,q)d=\sum_{j=1}^{m}p_{j}(s)\left(d_{j}-\sum_{k=1}^{m}p_{k}(s)d_{k}\right)^{2}\geq 0.$
+
+Since $p_{j}(s)>0$ for every $j$ , equality holds if and only if $d=\alpha\mathbf{1}$ for some $\alpha\in\mathbb{R}$ , where $\mathbf{1}$ is a vector of ones. Meanwhile, a direct calculation shows
+
+$\varphi^{\prime\prime}(t)=\frac{1}{T}\sum_{i=1}^{T}\frac{1}{n_{i}}\sum_{r=1}^{n_{i}}d_{i,r}^{\top}\nabla^{2}\ell\bigl(W_{i}(t)F_{i,r}(x)+b_{i}(t),q_{i,r}\bigr)d_{i,r}\geq 0,$
+
+so $g(x,\cdot)$ is convex. If $\varphi$ is affine on $[0,1]$ , then $\varphi^{\prime\prime}(t)=0$ on $(0,1)$ . From the equivalence noted above, we have for each $(u,q)\in S_{i}$ that $d_{i,r}=\alpha_{i,r}\mathbf{1}$ for some $\alpha_{i,r}\in\mathbb{R}$ . Thus,
+
+$W_{i}(t)F_{i,r}(x)+b_{i}(t)=W_{i}^{[0]}F_{i,r}(x)+b_{i}^{[0]}+t\alpha_{i,r}\mathbf{1}.$
+
+Moreover, for any $\beta\in\mathbb{R}$ , $\ell(s+\beta\mathbf{1},q)=\log(e^{\beta}\sum_{j}e^{s_{j}})-s_{q}-\beta=\ell(s,q).$ Therefore, taking $\beta=t\alpha_{i,r}$ ,
+
+$\ell\bigl(W_{i}(t)F_{i,r}(x)+b_{i}(t),q_{i,r}\bigr)=\ell\bigl(W_{i}^{[0]}F_{i,r}(x)+b_{i}^{[0]},q_{i,r}\bigr)$
+
+for every $t\in[0,1]$ , and hence
+
+$\varphi(t)=\frac{1}{T}\sum_{i=1}^{T}\frac{1}{n_{i}}\sum_{r=1}^{n_{i}}\ell\bigl(W_{i}^{[0]}F_{i,r}(x)+b_{i}^{[0]},q_{i,r}\bigr)=\varphi(0).$
+
+Thus ( 43 ) holds, and Proposition 15 yields ENNAMCQ. ∎
+
+B.2 Nonconvex lower level problem with sample reweighting
+
+We next give a sufficient condition for ENNAMCQ for a specific class of nonconvex smooth loss functions that does not require convexity of the lower-level objective.
+
+Suppose the standing assumptions hold. Let $X=[-M,M]^{n}$ and let $Y$ be a compact set. Suppose
+
+$g(x,y)=\frac{1}{n}\sum_{i=1}^{n}\omega(x_{i})\ell_{i}(y),\qquad\omega\geq 0,\quad\omega^{\prime}>0\ \text{on }[-M,M],$ (49)
+
+where each $\ell_{i}$ is continuous on $Y$ . Define $D_{\ell}:=\max_{1\leq i\leq n}\left(\max_{y\in Y}\ell_{i}(y)-\min_{y\in Y}\ell_{i}(y)\right).$ If $\delta>\omega(-M)D_{\ell},$ then ENNAMCQ holds on $X\times Y$ .
+
+Suppose ENNAMCQ fails at $(x,y)$ with $R(x,y)\geq 0$ , and let $z:=z_{\rho}(x,y)$ and $\Delta_{i}:=\ell_{i}(y)-\ell_{i}(z).$ From ( 49 ), we have $\frac{\partial R}{\partial x_{i}}(x,y)=\frac{\omega^{\prime}(x_{i})}{n}\Delta_{i}.$ Noting ( 17 ), the $x_{i}$ -component of $0\in\nabla R(x,y)+N_{X\times Y}(x,y)$ therefore gives
+
+$0\in\frac{\omega^{\prime}(x_{i})}{n}\Delta_{i}+N_{[-M,M]}(x_{i}).$
+
+Since $\omega^{\prime}(x_{i})>0$ , the above together with the definition of normal cone gives
+
+$\Delta_{i}=\begin{cases}0,&-M<x_{i}<M,\\ \geq 0,&x_{i}=-M,\\ \leq 0,&x_{i}=M.\end{cases}$
+
+Thus, using $\omega\geq 0$ ,
+
+$\displaystyle g(x,y)-g(x,z)$ $\displaystyle=\frac{1}{n}\sum_{i=1}^{n}\omega(x_{i})\Delta_{i}$ $\displaystyle=\frac{1}{n}\sum_{\{i:x_{i}=M\text{ or }-M\}}\omega(x_{i})\Delta_{i}$ $\displaystyle\leq\frac{\omega(-M)}{n}\sum_{\{i:x_{i}=-M\}}\Delta_{i}$ $\displaystyle\leq\omega(-M)D_{\ell}.$
+
+Consequently,
+
+$R(x,y)=g(x,y)-g(x,z)-\frac{1}{2\rho}\|z-y\|^{2}-\delta\leq\omega(-M)D_{\ell}-\delta<0,$
+
+where the last inequality holds from the choice of $\delta$ . Since $R(x,y)\geq 0$ , we arrived at a contradiction. This completes the proof. ∎
+
+A relevant specialization of Proposition 17 is obtained for sigmoid sample weights and multiclass cross-entropy loss. The data hyper-cleaning problems in our experiments are instances of this setting; see Appendix F .
+
+Let $M,B_{y}>0$ , $n,m,d,d_{h}\in\mathbb{N}$ , $X=[-M,M]^{n}$ , and let $u_{i}\in\mathbb{R}^{d}$ and $q_{i}\in\{1,\ldots,m\}$ , $i=1,\ldots,n$ . Let $\omega(t):=(1+e^{-t})^{-1}$ denote the sigmoid sample-weight function. For $y=(A,a,V,b)\in Y\subseteq\mathbb{R}^{d_{h}\times d}\times\mathbb{R}^{d_{h}}\times\mathbb{R}^{m\times d_{h}}\times\mathbb{R}^{m},$ define $h_{y}(u):=V\operatorname{sigm}(Au+a)+b,$ where $\operatorname{sigm}$ denotes the logistic sigmoid applied componentwise, and set $\ell_{i}(y):=\ell(h_{y}(u_{i}),q_{i}),$ where $\ell$ is defined in Proposition 16 . Suppose $Y$ is nonempty, compact and convex, and every component of $V$ and $b$ lies in $[-B_{y},B_{y}]$ , and let $g$ be given by ( 49 ). If $\delta>\bigl(2B_{y}(d_{h}+1)+\log m\bigr)/(1+e^{M}),$ then ENNAMCQ holds on $X\times Y$ .
+
+Since $\omega(t)>0$ and $\omega^{\prime}(t)=\omega(t)(1-\omega(t))>0$ , Proposition 17 applies. Since $0<\operatorname{sigm}(t)<1$ for every $t\in\mathbb{R}$ , for every $j=1,\ldots,m$ , $|[h_{y}(u)]_{j}|\leq\sum_{\ell=1}^{d_{h}}|V_{j\ell}|\,|\operatorname{sigm}(Au+a)_{\ell}|+|b_{j}|\leq d_{h}B_{y}+B_{y}=B_{y}(d_{h}+1).$ Hence, for every $q\in\{1,\ldots,m\}$ ,
+
+$0\leq\ell(h_{y}(u),q)\leq 2B_{y}(d_{h}+1)+\log m,$
+
+and therefore $D_{\ell}\leq 2B_{y}(d_{h}+1)+\log m.$ Moreover, $\omega(-M)=(1+e^{M})^{-1}$ , so
+
+$\omega(-M)D_{\ell}\leq\frac{2B_{y}(d_{h}+1)+\log m}{1+e^{M}}<\delta.$
+
+The conclusion follows from Proposition 17 . ∎
+
+Appendix C Complete algorithm
+
+We first describe the inexact Moreau evaluation used by IVSP. Since the proximal objective-gap condition ( 4 ) involves the unknown value $g_{\rho}(x,y)$ , we use projected gradient and terminate it using the computable residual criterion established below. The resulting routine is given in Algorithm 2 .
+
+Let $L_{\psi,\rho}\coloneqq L_{yy}+\rho^{-1},$ where $L_{yy}$ is the Lipschitz constant in ( 13 ). Given $w=(x,y)\in C$ , define $h(\cdot)\coloneqq\psi_{\rho}(\cdot;x,y).$ Let $u\in Y$ , let $0<\eta\leq 2/L_{\psi,\rho}$ , and define
+
+$z^{+}\coloneqq P_{Y}\!\left(u-\eta\nabla h(u)\right)\qquad\text{and}\qquad r_{\eta}(u)\coloneqq\frac{u-z^{+}}{\eta}.$
+
+Then $0\leq h(z^{+})-g_{\rho}(x,y)\leq\frac{1}{2m_{\rho}}\|r_{\eta}(u)\|^{2},$ where $m_{\rho}$ is given by ( 14 ) Consequently,
+
+$\|r_{\eta}(u)\|^{2}\leq 2m_{\rho}\zeta$ (50)
+
+guarantees that $z^{+}$ is $\zeta$ -accurate in the sense of ( 4 ).
+
+Let $z_{\rho}=z_{\rho}(w)$ . By the optimality condition for the projection defining $z^{+}$ and noting that $z_{\rho}\in Y$ ,
+
+$\langle\nabla h(u),z^{+}-z_{\rho}\rangle\leq\langle r_{\eta}(u),z^{+}-z_{\rho}\rangle.$ (51)
+
+By the $L_{\psi,\rho}$ -smoothness of $h$ , we have from [ 6 , Lemma 5.7] that
+
+$h(z^{+})\leq h(u)+\langle\nabla h(u),z^{+}-u\rangle+\frac{L_{\psi,\rho}}{2}\|z^{+}-u\|^{2}.$
+
+On the other hand, the $m_{\rho}$ -strong convexity of $h$ (Proposition 8 (i)) gives
+
+$h(z_{\rho})\geq h(u)+\langle\nabla h(u),z_{\rho}-u\rangle+\frac{m_{\rho}}{2}\|z_{\rho}-u\|^{2}.$
+
+Subtracting the latter inequality from the former and using ( 51 ) yields
+
+$h(z^{+})-h(z_{\rho})\leq\langle r_{\eta}(u),z^{+}-z_{\rho}\rangle+\frac{L_{\psi,\rho}}{2}\|z^{+}-u\|^{2}-\frac{m_{\rho}}{2}\|z_{\rho}-u\|^{2}.$ (52)
+
+Since $z^{+}=u-\eta r_{\eta}(u)$ , the right-hand side of ( 52 ) equals
+
+$\displaystyle\langle r_{\eta}(u),u-z_{\rho}\rangle-\eta\left(1-\frac{\eta L_{\psi,\rho}}{2}\right)\|r_{\eta}(u)\|^{2}-\frac{m_{\rho}}{2}\|u-z_{\rho}\|^{2}.$ (53)
+
+Meanwhile, Young’s inequality yields
+
+$\langle r_{\eta}(u),u-z_{\rho}\rangle\leq\frac{1}{2m_{\rho}}\|r_{\eta}(u)\|^{2}+\frac{m_{\rho}}{2}\|u-z_{\rho}\|^{2}.$ (54)
+
+Combining ( 54 ), ( 52 ), and ( 53 ), and using $\eta\leq 2/L_{\psi,\rho}$ , gives
+
+$0\leq h(z^{+})-h(z_{\rho})\leq\frac{1}{2m_{\rho}}\|r_{\eta}(u)\|^{2}.$
+
+Here, the lower bound follows from the optimality of $z_{\rho}$ , and $h(z_{\rho})=g_{\rho}(x,y)$ . ∎
+
+Algorithm 2 Inexact Moreau evaluation $\operatorname{ME}(w,z^{\rm init},\zeta)$
+
+Require. A point $w=(x,y)\in C$ , an initial point $z^{\rm init}\in Y$ , and a tolerance $\zeta>0$ . Set $\eta=L_{\psi,\rho}^{-1},$ $z^{0}=z^{\rm init},$ and $j=0$ .
+
+Step 1. Compute $z^{j+1}=P_{Y}\!\left(z^{j}-\eta\left[\nabla_{y}g(x,z^{j})+\rho^{-1}(z^{j}-y)\right]\right)$ and set $r^{j}\coloneqq\frac{z^{j}-z^{j+1}}{\eta}.$
+
+Step 2. If $\|r^{j}\|^{2}\leq 2m_{\rho}\zeta,$ set $\widetilde{z}\coloneqq z^{j+1}$ and go to Step 3 . Otherwise, set $j\leftarrow j+1$ and return to Step 1 .
+
+Step 3. Form $\widetilde{R}(w)=g(x,y)-g(x,\widetilde{z})-\frac{1}{2\rho}\|\widetilde{z}-y\|^{2}-\delta.$ Return $\widetilde{z}$ and $\widetilde{R}(w)$ .
+
+Let $\{z^{j}\}$ be generated by Algorithm 2 for a fixed $w=(x,y)\in C$ , and let $q_{\rho}\coloneqq 1-\frac{1}{\kappa_{\psi,\rho}},$ where $\kappa_{\psi,\rho}\coloneqq\frac{L_{\psi,\rho}}{m_{\rho}}\in[1,+\infty]$ . If $\kappa_{\psi,\rho}>1$ , then there exists a constant $C_{\rm ME}>0$ , independent of $\zeta$ , such that
+
+$\|r^{j}\|^{2}\leq C_{\rm ME}q_{\rho}^{\,j},\qquad j\geq 0.$ (55)
+
+Consequently, the stopping condition ( 50 ) is satisfied after $O\!\left(\kappa_{\psi,\rho}\log\frac{1}{\zeta}\right)$ iterations. Moreover, when $w$ ranges over $C$ and the initializations belong to $Y$ , $C_{\rm ME}$ can be chosen uniformly.
+
+Let $z_{\rho}=z_{\rho}(w)$ . Note that $h$ is $m_{\rho}$ -strongly convex with $L_{\psi,\rho}$ -Lipschitz continuous gradient. Applying Beck [6, Theorem 10.29(b)] to $h+\iota_{Y}$ , with the constant stepsize $\eta=L_{\psi,\rho}^{-1}$ , gives
+
+$\|z^{j}-z_{\rho}\|^{2}\leq q_{\rho}^{\,j}\|z^{\rm init}-z_{\rho}\|^{2},\qquad j\geq 0.$ (56)
+
+Since $r^{j}=\eta^{-1}(z^{j}-z^{j+1})$ and $\eta=L_{\psi,\rho}^{-1}$ , the triangle inequality and ( 56 ) yield
+
+$\displaystyle\|r^{j}\|$ $\displaystyle=L_{\psi,\rho}\|z^{j}-z^{j+1}\|$ $\displaystyle\leq L_{\psi,\rho}\bigl(\|z^{j}-z_{\rho}\|+\|z^{j+1}-z_{\rho}\|\bigr)$ $\displaystyle\leq L_{\psi,\rho}(1+\sqrt{q_{\rho}})q_{\rho}^{\,j/2}\|z^{\rm init}-z_{\rho}\|$ $\displaystyle\leq 2L_{\psi,\rho}q_{\rho}^{\,j/2}\|z^{\rm init}-z_{\rho}\|.$
+
+Hence, $\|r^{j}\|^{2}\leq 4L_{\psi,\rho}^{2}\|z^{\rm init}-z_{\rho}\|^{2}q_{\rho}^{\,j},$ which proves ( 55 ) with
+
+$C_{\rm ME}=4L_{\psi,\rho}^{2}\|z^{\rm init}-z_{\rho}\|^{2}.$
+
+For $\kappa_{\psi,\rho}>1$ , $q_{\rho}^{\,j}=\left(1-\frac{1}{\kappa_{\psi,\rho}}\right)^{j}\leq\exp\!\left(-\frac{j}{\kappa_{\psi,\rho}}\right).$ Therefore, $\|r^{j}\|^{2}\leq 2m_{\rho}\zeta$ after $O(\kappa_{\psi,\rho}\log(1/\zeta))$ iterations.
+
+Finally, let $D_{Y}\coloneqq\operatorname{diam}(Y)$ . Since $z^{\rm init},z_{\rho}\in Y$ , $\|z^{\rm init}-z_{\rho}\|\leq D_{Y}.$ Thus, $C_{\rm ME}\leq 4L_{\psi,\rho}^{2}D_{Y}^{2},$ which is independent of $w$ , $z^{\rm init}$ , and $\zeta$ . Consequently, $C_{\rm ME}$ can be chosen uniformly over all Moreau evaluations. ∎
+
+Combining Lemmas 19 and 20 , Algorithm 2 terminates after $O(\kappa_{\psi,\rho}\log(1/\zeta))$ projected-gradient iterations and returns a point satisfying ( 4 ). The complete implementation of IVSP using Algorithm 2 is given in Algorithm 3 .
+
+Algorithm 3 Detailed implementation of Algorithm 1
+
+Require. Constants $c_{1},c_{2},a_{\phi},\underline{\vartheta}>0$ , $\hat{\vartheta}\in(0,2)$ , an initial point $w^{0}\in C$ , an initial proximal point $z_{\rm init}^{0}\in Y$ , positive nonincreasing sequences $(\mu_{k})_{k\geq 0}$ and $(\zeta_{k})_{k\geq 0}$ , and a strictly decreasing positive inverse-penalty grid $(\widehat{\gamma}_{t})_{t\geq 0}$ . Choose either: Strategy I , a fixed parameter $L>0$ ; or Strategy II , constants $0<L_{\min}\leq L_{\max}<\infty$ for backtracking. Set $t_{0}=0$ and $k=0$ .
+
+Step 0. Compute the initial $\zeta_{0}$ -accurate Moreau evaluation $(\widetilde{z}_{0}^{0},\widetilde{R}_{0}^{0})=\operatorname{ME}(w^{0},z_{\rm init}^{0},\zeta_{0}).$ Form
+
+$\widetilde{\nabla}R^{0}_{0}=\begin{pmatrix}\nabla_{x}g(x^{0},y^{0})-\nabla_{x}g(x^{0},\widetilde{z}^{0}_{0})\\ \nabla_{y}g(x^{0},y^{0})-\rho^{-1}(y^{0}-\widetilde{z}^{0}_{0})\end{pmatrix}.$
+
+Step 1. Set $\gamma_{k}=\widehat{\gamma}_{t_{k}},$ $E_{k}^{0}\coloneqq E_{\mu_{k},\rho}(\zeta_{k}),$ and $\widetilde{\nabla}G_{k}^{0}\coloneqq\phi_{\mu_{k}}^{\prime}(\widetilde{R}_{k}^{0})\widetilde{\nabla}R_{k}^{0}.$ Under Strategy I, set $L$ to the prescribed fixed value. Under Strategy II, choose $L_{k,0}\in[L_{\min},L_{\max}]$ and set $L=L_{k,0}$ .
+
+Step 2. Compute the trial point
+
+$w_{L}^{k}=P_{C}\left(w^{k}-\frac{\mu_{k}}{L}\left[\gamma_{k}\nabla f(w^{k})+\widetilde{\nabla}G_{k}^{0}\right]\right).$ (57)
+
+Step 3. Using $\widetilde{z}_{k}^{0}$ as a warm start, compute a $\zeta_{k+1}$ -accurate Moreau evaluation at the trial point: $(\widetilde{z}_{k,L}^{+},\widetilde{R}_{k,L}^{+})=\operatorname{ME}(w_{L}^{k},\widetilde{z}_{k}^{0},\zeta_{k+1}).$ Under Strategy II, define
+
+$\tau_{k,L}\coloneqq\frac{\mu_{k}}{2\vartheta_{k,L}}(E_{k}^{0})^{2}+\zeta_{k}+\zeta_{k+1},$
+
+where $\vartheta_{k,L}\coloneqq\max\left\{\min\left\{\frac{\mu_{k}E_{k}^{0}}{\|w^{k}_{L}-w^{k}\|},\hat{\vartheta}L\right\},\underline{\vartheta}\right\}$ , where the ratio is interpreted as $+\infty$ when $w_{L}^{k}=w^{k}$ .
+
+Step 4. Under Strategy I, set $L_{k}\coloneqq L,$ $w^{k+1}\coloneqq w_{L}^{k},$ and go to Step 5 . Under Strategy II, if
+
+$\displaystyle\gamma_{k}f(w_{L}^{k})+\phi_{\mu_{k}}(\widetilde{R}_{k,L}^{+}+\zeta_{k+1})$ $\displaystyle\leq\gamma_{k}f(w^{k})+\phi_{\mu_{k}}(\widetilde{R}_{k}^{0})-\frac{c_{1}}{2\mu_{k}}\|w_{L}^{k}-w^{k}\|^{2}+\tau_{k,L}$ (58)
+
+does not hold, set $L\leftarrow 2L$ and return to Step 2 . Otherwise, set $L_{k}\coloneqq L,$ $w^{k+1}\coloneqq w_{L}^{k},$ and go to Step 5 .
+
+Step 5. Set $\widetilde{z}_{k}^{+}\coloneqq\widetilde{z}_{k,L_{k}}^{+},$ and $\widetilde{R}_{k}^{+}\coloneqq\widetilde{R}_{k,L_{k}}^{+}.$ Then form
+
+$\widetilde{\nabla}R_{k}^{+}=\begin{pmatrix}\nabla_{x}g(x^{k+1},y^{k+1})-\nabla_{x}g(x^{k+1},\widetilde{z}_{k}^{+})\\ \nabla_{y}g(x^{k+1},y^{k+1})-\rho^{-1}(y^{k+1}-\widetilde{z}_{k}^{+})\end{pmatrix}.$
+
+Set $d^{k}\coloneqq w^{k+1}-w^{k},$ and $\omega_{k+1}\coloneqq\frac{\|d^{k}\|}{\mu_{k}}.$
+
+Step 6. If
+
+$\widetilde{R}_{k}^{+}>2a_{\phi}\mu_{k}\hskip 18.49988pt\text{and}\hskip 18.49988pt\|d^{k}\|\leq c_{2}\mu_{k}\gamma_{k},$ (59)
+
+set $t_{k+1}=t_{k}+1$ ; otherwise, set $t_{k+1}=t_{k}$ .
+
+Step 7. Retain the accepted Moreau evaluation as the current evaluation for the next outer iteration:
+
+$\widetilde{z}_{k+1}^{0}\coloneqq\widetilde{z}_{k}^{+},\hskip 18.49988pt\widetilde{R}_{k+1}^{0}\coloneqq\widetilde{R}_{k}^{+},\hskip 18.49988pt\widetilde{\nabla}R_{k+1}^{0}\coloneqq\widetilde{\nabla}R_{k}^{+}.$
+
+Update $k\leftarrow k+1$ and return to Step 1 .
+
+Appendix D Proofs of the theoretical results
+
+We recall that our Lyapunov function introduced in Section 3.2 is given by
+
+$Q_{k}=\gamma_{k}(f(w^{k})-f_{\inf})+G_{\mu_{k}}(w^{k})+c_{\phi}\mu_{k}.$ (60)
+
+D.1 Lemma 4 : Well-definedness of line search and descent inequality
+
+The following is the complete statement of Lemma 4 , including the constants used in the analysis.
+
+Lemma 4 (complete statement). Suppose Assumption 1 holds. Let $\hat{\vartheta}\in(0,2)$ and $\underline{\vartheta}>0$ . For each iteration $k\geq 0$ and each trial parameter $L>0$ , define $d_{k,L}\coloneqq w_{L}^{k}-w^{k}$ , $E_{k}^{0}\coloneqq E_{\mu_{k},\rho}(\zeta_{k}),$ and set $\vartheta_{k,L}\coloneqq\max\left\{\min\left\{\frac{\mu_{k}E_{k}^{0}}{\|d_{k,L}\|},\hat{\vartheta}L\right\},\underline{\vartheta}\right\},$ where the ratio is interpreted as $+\infty$ when $d_{k,L}=0$ . Define $\tau_{k,L}\coloneqq\frac{\mu_{k}}{2\vartheta_{k,L}}(E_{k}^{0})^{2}+\zeta_{k}+\zeta_{k+1}.$ Furthermore, let
+
+$L_{\rm safe}\coloneqq\max\left\{\frac{\underline{\vartheta}}{\hat{\vartheta}},\frac{c_{1}+\widehat{\gamma}_{0}\mu_{0}L_{f}+L_{G}}{2-\hat{\vartheta}}\right\}.$
+
+Then, for every $k\geq 0$ , the following hold.
+
+Every trial parameter $L\geq L_{\rm safe}$ satisfies ( 58 ), i.e.,
+
+$\displaystyle\gamma_{k}f(w_{L}^{k})+\phi_{\mu_{k}}\bigl(\widetilde{R}_{k,L}^{+}+\zeta_{k+1}\bigr)$ $\displaystyle\leq\gamma_{k}f(w^{k})+\phi_{\mu_{k}}(\widetilde{R}_{k}^{0})$ $\displaystyle\quad-\frac{c_{1}}{2\mu_{k}}\|w_{L}^{k}-w^{k}\|^{2}+\tau_{k,L}.$ (61)
+
+Consequently, any fixed $L\geq L_{\rm safe}$ is admissible under Strategy I. Under Strategy II, the backtracking procedure terminates finitely, and the accepted parameter satisfies
+
+$L_{k}\leq\overline{L}\coloneqq\max\{L_{\max},2L_{\rm safe}\}.$ (62)
+
+Furthermore, the number of trial evaluations at each iteration is bounded by
+
+$B_{\rm ls}\coloneqq 1+\max\left\{0,\left\lceil\log_{2}\frac{L_{\rm safe}}{L_{\min}}\right\rceil\right\}.$ (63)
+
+Let $L_{k}=L$ under Strategy I, and let $L_{k}$ denote the accepted parameter under Strategy II. Set $w^{k+1}\coloneqq w_{L_{k}}^{k},$ $d^{k}\coloneqq w^{k+1}-w^{k},$ and $\omega_{k+1}\coloneqq\frac{\|d^{k}\|}{\mu_{k}}$ . Moreover, let $\vartheta_{k}\coloneqq\vartheta_{k,L_{k}}$ and $\tau_{k}\coloneqq\tau_{k,L_{k}}.$ Then, under either strategy,
+
+$Q_{k+1}\leq Q_{k}-\frac{c_{1}}{2}\mu_{k}\omega_{k+1}^{2}+\tau_{k}.$ (64)
+
+Fix an iteration $k$ and a trial parameter $L>0$ , and let $d\coloneqq d_{k,L}=w_{L}^{k}-w^{k}.$ Using the optimality condition for the projected step ( 57 ) and noting that $w^{k}\in C$ , we obtain
+
+$\gamma_{k}\langle\nabla f(w^{k}),d\rangle+\langle\widetilde{\nabla}G_{k}^{0},d\rangle\leq-\frac{L}{\mu_{k}}\|d\|^{2}.$
+
+Adding and subtracting $\nabla G_{\mu_{k}}(w^{k})$ yields
+
+$\displaystyle\gamma_{k}\langle\nabla f(w^{k}),d\rangle+\langle\nabla G_{\mu_{k}}(w^{k}),d\rangle\leq-\frac{L}{\mu_{k}}\|d\|^{2}+\left\langle\nabla G_{\mu_{k}}(w^{k})-\widetilde{\nabla}G_{k}^{0},d\right\rangle.$ (65)
+
+Meanwhile, by the Cauchy–Schwarz inequality, Lemma 11 (iv), and Young’s inequality,
+
+$\displaystyle\left\langle\nabla G_{\mu_{k}}(w^{k})-\widetilde{\nabla}G_{k}^{0},d\right\rangle$ $\displaystyle\leq\left\|\nabla G_{\mu_{k}}(w^{k})-\widetilde{\nabla}G_{k}^{0}\right\|\|d\|$ $\displaystyle\leq E_{k}^{0}\|d\|$ $\displaystyle\leq\frac{\vartheta_{k,L}}{2\mu_{k}}\|d\|^{2}+\frac{\mu_{k}}{2\vartheta_{k,L}}(E_{k}^{0})^{2}.$ (66)
+
+Since $\nabla f$ is $L_{f}$ -Lipschitz and, by Lemma 9 , $\nabla G_{\mu_{k}}$ is $(L_{G}/\mu_{k})$ -Lipschitz, we have (see [ 6 , Lemma 5.7] )
+
+$\displaystyle f(w^{k}+d)$ $\displaystyle\leq f(w^{k})+\langle\nabla f(w^{k}),d\rangle+\frac{L_{f}}{2}\|d\|^{2},$ $\displaystyle G_{\mu_{k}}(w^{k}+d)$ $\displaystyle\leq G_{\mu_{k}}(w^{k})+\langle\nabla G_{\mu_{k}}(w^{k}),d\rangle+\frac{L_{G}}{2\mu_{k}}\|d\|^{2}.$
+
+Multiplying the first inequality by $\gamma_{k}$ , adding the second, and using ( 65 )–( 66 ) gives
+
+$\displaystyle\gamma_{k}f(w^{k}+d)+G_{\mu_{k}}(w^{k}+d)$ $\displaystyle\quad\leq\gamma_{k}f(w^{k})+G_{\mu_{k}}(w^{k})-\frac{2L-\gamma_{k}\mu_{k}L_{f}-L_{G}-\vartheta_{k,L}}{2\mu_{k}}\|d\|^{2}+\chi_{k,L},$ (67)
+
+where $\chi_{k,L}\coloneqq\frac{\mu_{k}}{2\vartheta_{k,L}}(E_{k}^{0})^{2}.$
+
+Now, suppose that $L\geq L_{\rm safe}$ . By the definition of $L_{\rm safe}$ , we have $L\geq\frac{\underline{\vartheta}}{\hat{\vartheta}},$ and therefore $\underline{\vartheta}\leq\hat{\vartheta}L.$ Since $\min\left\{\frac{\mu_{k}E_{k}^{0}}{\|d_{k,L}\|},\hat{\vartheta}L\right\}$ is also bounded above by $\hat{\vartheta}L$ , it follows that $\vartheta_{k,L}\leq\hat{\vartheta}L$ . Since $\gamma_{k}\leq\widehat{\gamma}_{0}$ and $\mu_{k}\leq\mu_{0}$ , we obtain
+
+$\displaystyle 2L-\gamma_{k}\mu_{k}L_{f}-L_{G}-\vartheta_{k,L}$ $\displaystyle\geq(2-\hat{\vartheta})L-\widehat{\gamma}_{0}\mu_{0}L_{f}-L_{G}$ $\displaystyle\geq c_{1},$
+
+where the last inequality follows from the definition of $L_{\rm safe}$ . Hence, using ( 67 ), we have for all $L\geq L_{\rm safe}$ that
+
+$\gamma_{k}f(w_{L}^{k})+G_{\mu_{k}}(w_{L}^{k})\leq\gamma_{k}f(w^{k})+G_{\mu_{k}}(w^{k})-\frac{c_{1}}{2\mu_{k}}\|w_{L}^{k}-w^{k}\|^{2}+\chi_{k,L}.$ (68)
+
+We next relate the exact values in ( 68 ) to the quantities used in the inexact Armijo test. At the trial point $w_{L}^{k}$ , we obtain the $\zeta_{k+1}$ -accurate minimizer of $\psi_{\rho}(\cdot,w_{L}^{k})$ . Applying ( 33 ) and ( 32 ) in Lemma 11 , respectively, we obtain
+
+$\displaystyle\gamma_{k}f(w_{L}^{k})+\phi_{\mu_{k}}\bigl(\widetilde{R}_{k,L}^{+}+\zeta_{k+1}\bigr)\leq\gamma_{k}f(w_{L}^{k})+G_{\mu_{k}}(w_{L}^{k})+\zeta_{k+1}.$ (69)
+
+On the other hand, at the current point $w^{k}$ , the $\zeta_{k}$ -accurate solution gives
+
+$\gamma_{k}f(w^{k})+G_{\mu_{k}}(w^{k})\leq\gamma_{k}f(w^{k})+\phi_{\mu_{k}}(\widetilde{R}_{k}^{0})+\zeta_{k},$ (70)
+
+by using ( 32 ) and ( 33 ), respectively. Combining ( 68 ), ( 69 ), and ( 70 ), and noting that $\tau_{k,L}=\chi_{k,L}+\zeta_{k}+\zeta_{k+1},$ yields ( 61 ). Thus every $L\geq L_{\rm safe}$ satisfies the inexact Armijo condition.
+
+Under Strategy I, the prescribed fixed parameter is therefore valid whenever $L\geq L_{\rm safe}$ . Under Strategy II, $L$ is doubled until the inexact Armijo condition holds, so the backtracking procedure terminates finitely. Since $L_{k,0}\in[L_{\min},L_{\max}]$ , every accepted parameter satisfies ( 62 ). Moreover, the number of trial evaluations at any iteration is at most $B_{\rm ls}$ as given in ( 63 ). This completes the proof of (i).
+
+We next prove (ii). Note from ( 32 ) that
+
+$\phi_{\mu_{k}}(\widetilde{R}_{k}^{0})\leq G_{\mu_{k}}(w^{k})\qquad\text{and}\qquad G_{\mu_{k}}(w^{k+1})\leq\phi_{\mu_{k}}\bigl(\widetilde{R}_{k}^{+}+\zeta_{k+1}\bigr).$
+
+Together with ( 61 ), we obtain 1 1 1 We note that under Strategy I, ( 71 ) follows directly from ( 68 ); in fact, in this case the stronger estimate with $\chi_{k}\coloneqq\frac{\mu_{k}}{2\vartheta_{k}}(E_{k}^{0})^{2}$ in place of $\tau_{k}$ holds.
+
+$\gamma_{k}f(w^{k+1})+G_{\mu_{k}}(w^{k+1})\leq\gamma_{k}f(w^{k})+G_{\mu_{k}}(w^{k})-\frac{c_{1}}{2\mu_{k}}\|d^{k}\|^{2}+\tau_{k}.$ (71)
+
+Meanwhile, since $\gamma_{k+1}\leq\gamma_{k}$ and $f(w^{k+1})-f_{\inf}\geq 0$ ,
+
+$\gamma_{k+1}\bigl(f(w^{k+1})-f_{\inf}\bigr)\leq\gamma_{k}\bigl(f(w^{k+1})-f_{\inf}\bigr).$ (72)
+
+Moreover, inequality ( 25 ) in Lemma 9 gives
+
+$G_{\mu_{k+1}}(w^{k+1})+c_{\phi}\mu_{k+1}\leq G_{\mu_{k}}(w^{k+1})+c_{\phi}\mu_{k}.$ (73)
+
+Combining ( 72 ) and ( 73 ) with ( 71 ), and using $\|d^{k}\|=\mu_{k}\omega_{k+1}$ and the definition of $Q_{k}$ in ( 60 ), we obtain ( 64 ). ∎
+
+D.2 Lemma 5 : Finite penalty stabilization
+
+To prove Lemma 5 , we need the following two lemmas.
+
+Suppose that $C$ is nonempty, compact, and convex, and that $R{}$ is continuously differentiable on $C$ . If ENNAMCQ holds for ( 1 ) and $\{w\in C:R{}(w)\geq 0\}\neq\varnothing,$ then
+
+$\eta_{\delta}\coloneqq\min_{\begin{subarray}{c}w\in C\\ R{}(w)\geq 0\end{subarray}}\operatorname{dist}\!\left(0,\nabla R{}(w)+N_{C}(w)\right)>0.$ (74)
+
+Let $\eta\coloneqq\inf_{\begin{subarray}{c}w\in C\\ R(w)\geq 0\end{subarray}}\operatorname{dist}\!\left(0,\nabla R(w)+N_{C}(w)\right).$ Since $R$ is continuous, the set $\{w\in C:R(w)\geq 0\}$ is compact. Choose a sequence $\{w^{j}\}$ in this set and $n^{j}\in N_{C}(w^{j})$ such that $\|\nabla R(w^{j})+n^{j}\|\to\eta.$ By compactness, we may assume without loss of generality that $w^{j}\to\bar{w},$ where $\bar{w}\in C$ and $R(\bar{w})\geq 0$ . It follows that
+
+$\eta\leq\operatorname{dist}\!\left(0,\nabla R(\bar{w})+N_{C}(\bar{w})\right)$ (75)
+
+Meanwhile, since $\nabla R$ is continuous and $C$ is compact, $\{\nabla R(w^{j})\}$ is bounded. Moreover, since $\{\nabla R(w^{j})+n^{j}\}$ is bounded, $\{n^{j}\}$ is also bounded. Therefore, there exists a subsequence $\{j_{r}\}$ and some $\bar{n}$ such that $n^{j_{r}}\to\bar{n}.$ Since $C$ is closed and convex, the normal cone mapping $N_{C}$ has closed graph by Rockafellar and Wets [33, Proposition 6.6] , and therefore $\bar{n}\in N_{C}(\bar{w}).$ Consequently,
+
+$\operatorname{dist}\!\left(0,\nabla R(\bar{w})+N_{C}(\bar{w})\right)\leq\|\nabla R(\bar{w})+\bar{n}\|=\lim_{r\to\infty}\|\nabla R(w^{j_{r}})+n^{j_{r}}\|=\eta,$
+
+where the first equality holds by continuity of $\nabla R$ . Together with ( 75 ), we have
+
+$\eta=\operatorname{dist}\!\left(0,\nabla R(\bar{w})+N_{C}(\bar{w})\right).$
+
+Thus the infimum is attained at $\bar{w}$ so that $\eta_{\delta}=\eta$ . Finally, ENNAMCQ at $\bar{w}$ implies that $\operatorname{dist}\!\left(0,\nabla R(\bar{w})+N_{C}(\bar{w})\right)>0$ , and so $\eta_{\delta}>0$ . ∎
+
+Let $\overline{L}>0$ be given by
+
+$\overline{L}=\begin{cases}L,&\text{under Strategy I},\\[2.84526pt] \max\{L_{\max},2L_{\rm safe}\},&\text{under Strategy II},\end{cases}$ (76)
+
+with $L\geq L_{\rm safe}$ . Define $E_{k}^{0}\coloneqq E_{\mu_{k},\rho}(\zeta_{k})$ , $E_{k}^{+}\coloneqq E_{\mu_{k},\rho}(\zeta_{k+1}),$ $D_{k}^{+}\coloneqq D_{\rho}(\zeta_{k+1}),$ and $A_{0}\coloneqq M_{f}+c_{2}(\overline{L}+L_{G}),$ where $M_{f}\coloneqq\max_{w\in C}\left\|\nabla f(w)\right\|$ . If a penalty update is triggered at iteration $k$ , then
+
+$\displaystyle R{}(w^{k+1})$ $\displaystyle>0,\qquad\text{and}$ (77) $\displaystyle\operatorname{dist}\!\left(0,\nabla R{}(w^{k+1})+N_{C}(w^{k+1})\right)$ $\displaystyle\leq 2A_{0}\gamma_{k}+2(E_{k}^{0}+E_{k}^{+})+D_{k}^{+}.$ (78)
+
+Since a penalty update is triggered, we have from the first condition in ( 59 ) that $\widetilde{R}_{k}^{+}>2a_{\phi}\mu_{k}>0.$ Thus, by ( 31 ), we have $R{}(w^{k+1})\geq\widetilde{R}_{k}^{+}>0.$ This proves ( 77 ).
+
+From the optimality condition of ( 57 ) with $L=L_{k}$ , there exists $n^{k+1}\in N_{C}(w^{k+1})$ such that
+
+$0=\gamma_{k}\nabla f(w^{k})+\widetilde{\nabla}G_{k}^{0}+\frac{L_{k}}{\mu_{k}}d^{k}+n^{k+1}.$ (79)
+
+At the accepted point, let $\widetilde{s}_{k}^{+}\coloneqq\phi_{\mu_{k}}^{\prime}(\widetilde{R}_{k}^{+}),$ and $\widetilde{\nabla}G_{k}^{+}\coloneqq\widetilde{s}_{k}^{+}\widetilde{\nabla}R_{k}^{+}.$ Then ( 79 ) gives
+
+$\displaystyle\widetilde{s}_{k}^{+}\widetilde{\nabla}R_{k}^{+}+n^{k+1}$ $\displaystyle=-\gamma_{k}\nabla f(w^{k})-\frac{L_{k}}{\mu_{k}}d^{k}+\widetilde{\nabla}G_{k}^{+}-\widetilde{\nabla}G_{k}^{0}.$ (80)
+
+Meanwhile, by the triangle inequality,
+
+$\displaystyle\|\widetilde{\nabla}G_{k}^{+}-\widetilde{\nabla}G_{k}^{0}\|$ $\displaystyle\leq\|\widetilde{\nabla}G_{k}^{+}-\nabla G_{\mu_{k}}(w^{k+1})\|+\|\nabla G_{\mu_{k}}(w^{k+1})-\nabla G_{\mu_{k}}(w^{k})\|$ $\displaystyle\quad+\|\nabla G_{\mu_{k}}(w^{k})-\widetilde{\nabla}G_{k}^{0}\|.$
+
+Using Lemma 11 (iv) to bound the first and third terms, and using Lemma 9 to bound the second term, we obtain
+
+$\|\widetilde{\nabla}G_{k}^{+}-\widetilde{\nabla}G_{k}^{0}\|\leq L_{G}\omega_{k+1}+E_{k}^{0}+E_{k}^{+}.$
+
+Hence, together with ( 80 ) and noting that $L_{k}\leq\overline{L}$ ,
+
+$\|\widetilde{s}_{k}^{+}\widetilde{\nabla}R_{k}^{+}+n^{k+1}\|\leq M_{f}\gamma_{k}+(\overline{L}+L_{G})\omega_{k+1}+E_{k}^{0}+E_{k}^{+}.$
+
+Since $N_{C}(w^{k+1})$ is a cone and $\widetilde{s}_{k}^{+}\geq 1/2$ by Lemma 10 (i) with $\theta=2$ ,
+
+$\displaystyle\operatorname{dist}\!\left(0,\widetilde{\nabla}R_{k}^{+}+N_{C}(w^{k+1})\right)$ $\displaystyle\leq 2M_{f}\gamma_{k}+2(\overline{L}+L_{G})\omega_{k+1}+2(E_{k}^{0}+E_{k}^{+}).$
+
+The second condition in ( 59 ) gives $\omega_{k+1}\leq c_{2}\gamma_{k}$ , and therefore
+
+$\operatorname{dist}\!\left(0,\widetilde{\nabla}R_{k}^{+}+N_{C}(w^{k+1})\right)\leq 2A_{0}\gamma_{k}+2(E_{k}^{0}+E_{k}^{+}).$ (81)
+
+Finally, Lemma 11 (iii) gives $\|\widetilde{\nabla}R_{k}^{+}-\nabla R(w^{k+1})\|\leq D_{k}^{+}.$ Moreover, for every $n\in N_{C}(w^{k+1})$ , the triangle inequality gives
+
+$\displaystyle\|\nabla R(w^{k+1})+n\|$ $\displaystyle\leq\|\nabla R(w^{k+1})-\widetilde{\nabla}R_{k}^{+}\|+\|\widetilde{\nabla}R_{k}^{+}+n\|.$
+
+Taking the infimum over $n\in N_{C}(w^{k+1})$ and using ( 81 ), we have
+
+$\displaystyle\operatorname{dist}\!\left(0,\nabla R(w^{k+1})+N_{C}(w^{k+1})\right)$ $\displaystyle\quad\leq\|\nabla R(w^{k+1})-\widetilde{\nabla}R_{k}^{+}\|+\operatorname{dist}\!\left(0,\widetilde{\nabla}R_{k}^{+}+N_{C}(w^{k+1})\right)$ $\displaystyle\quad\leq 2A_{0}\gamma_{k}+2(E_{k}^{0}+E_{k}^{+})+D_{k}^{+},$
+
+which proves ( 78 ). ∎
+
+We now give the complete statement of Lemma 5 , including the explicit constant appearing in the lower bound on the inverse penalty parameter.
+
+Lemma 5 (complete statement). Suppose ENNAMCQ holds for ( 1 ), $\zeta_{k}=o(\mu_{k})$ , and there exists $M_{\gamma}>1$ such that
+
+$\widehat{\gamma}_{t}\leq M_{\gamma}\widehat{\gamma}_{t+1}\qquad\forall t\geq 0.$ (82)
+
+Let $\overline{L}$ be given by ( 76 ), and define $A_{0}\coloneqq M_{f}+c_{2}(\overline{L}+L_{G}).$
+
+If $\{w\in C:R(w)\geq 0\}=\varnothing,$ then no penalty update occurs, and $\gamma_{k}=\underline{\gamma}\coloneqq\widehat{\gamma}_{0}$ for all $k\geq 0.$
+
+If $\{w\in C:R(w)\geq 0\}\neq\varnothing,$ let $\eta_{\delta}>0$ be defined by ( 74 ). Then there exists $k_{0}\geq 0$ such that
+
+$2\!\left[E_{\mu_{k},\rho}(\zeta_{k})+E_{\mu_{k},\rho}(\zeta_{k+1})\right]+D_{\rho}(\zeta_{k+1})\leq\frac{\eta_{\delta}}{2}\qquad\forall k\geq k_{0}.$
+
+Moreover,
+
+$\gamma_{k}\geq\underline{\gamma}\coloneqq\min\left\{\widehat{\gamma}_{k_{0}},\frac{\eta_{\delta}}{4M_{\gamma}A_{0}}\right\}>0\qquad\forall k\geq 0.$
+
+In either case, the penalty parameter is updated only finitely many times, and $\gamma_{k}$ is eventually constant.
+
+If $\{w\in C:R(w)\geq 0\}=\varnothing,$ then $R(w)<0$ for every $w\in C$ . Since $\widetilde{R}(w)\leq R(w)$ , the first condition in ( 59 ) can never hold. Hence no penalty update is ever triggered, so $t_{k}=0$ and $\gamma_{k}=\widehat{\gamma}_{0}$ for every $k$ . Thus the conclusion holds with $\underline{\gamma}=\widehat{\gamma}_{0}$ .
+
+Suppose now that $\{w\in C:R(w)\geq 0\}\neq\varnothing.$ By Lemma 21 , $\eta_{\delta}>0$ is well defined. Since $\zeta_{k}=o(\mu_{k})$ and $\mu_{k}\leq\mu_{0}$ , we have $\zeta_{k}/\mu_{k}\to 0$ and $\zeta_{k}\to 0$ . Together with ( 27 ), we have
+
+$D_{k}^{+}=L_{a,\rho}\sqrt{\frac{2\zeta_{k+1}}{m_{\rho}}}\to 0\qquad\text{and}\qquad E_{k}^{0}=L_{a,\rho}\sqrt{\frac{2\zeta_{k}}{m_{\rho}}}+b_{\phi}B_{R}\frac{\zeta_{k}}{\mu_{k}}\to 0.$
+
+Moreover, since $\mu_{k+1}\leq\mu_{k}$ , $\zeta_{k+1}/\mu_{k}\leq\zeta_{k+1}/\mu_{k+1}\to 0,$ and therefore
+
+$E_{k}^{+}=L_{a,\rho}\sqrt{\frac{2\zeta_{k+1}}{m_{\rho}}}+b_{\phi}B_{R}\frac{\zeta_{k+1}}{\mu_{k}}\to 0.$
+
+Hence, there exists $k_{0}$ such that
+
+$2(E_{k}^{0}+E_{k}^{+})+D_{k}^{+}\leq\frac{\eta_{\delta}}{2}\qquad\forall k\geq k_{0}.$ (83)
+
+Let $k\geq k_{0}$ be an iteration at which a penalty update is triggered. By Lemma 22 , $R(w^{k+1})>0$ , and hence the definition of $\eta_{\delta}$ gives
+
+$\eta_{\delta}\leq\operatorname{dist}\!\left(0,\nabla R(w^{k+1})+N_{C}(w^{k+1})\right).$
+
+Combining this with ( 78 ) and ( 83 ), we obtain $\eta_{\delta}\leq 2A_{0}\gamma_{k}+\eta_{\delta}/2.$ Thus, $\gamma_{k}\geq\frac{\eta_{\delta}}{4A_{0}}.$ Since an update is triggered, $t_{k+1}=t_{k}+1$ . By ( 82 ), $\gamma_{k}=\widehat{\gamma}_{t_{k}}\leq M_{\gamma}\widehat{\gamma}_{t_{k}+1}=M_{\gamma}\gamma_{k+1}.$ Hence
+
+$\gamma_{k+1}\geq\frac{\eta_{\delta}}{4M_{\gamma}A_{0}}.$ (84)
+
+Since $t_{k}\leq k$ , we have for $k\leq k_{0}$ that $\gamma_{k}=\widehat{\gamma}_{t_{k}}\geq\widehat{\gamma}_{k_{0}}\geq\underline{\gamma}.$ For $k\geq k_{0}$ , $\gamma_{k}$ changes only when a penalty update is triggered. If no update occurs at iteration $k$ , then $\gamma_{k+1}=\gamma_{k}$ . If an update is triggered, then ( 84 ) gives $\gamma_{k+1}\geq\eta_{\delta}/(4M_{\gamma}A_{0})\geq\underline{\gamma}.$ Therefore, $\gamma_{k}\geq\underline{\gamma}$ for all $k\geq 0$ . This proves (ii).
+
+Finally, since $\widehat{\gamma}_{t}\downarrow 0$ , there are only finitely many indices $t$ such that $\widehat{\gamma}_{t}\geq\underline{\gamma}$ . Since every penalty update increases $t_{k}$ by one, only finitely many penalty updates can occur. Hence $t_{k}$ , and therefore $\gamma_{k}$ , is eventually constant. ∎
+
+The dependence of Lemma 5 on the relaxation level is worth noting. Although ENNAMCQ may hold for every fixed $\delta>0$ , the margin $\eta_{\delta}$ need not remain bounded away from zero as $\delta\downarrow 0$ .
+
+Let $X$ be any nonempty compact convex set, $Y=[-1,1]$ , and $g(x,y)=\frac{1}{2}y^{2}.$ Then $g$ is independent of $x$ , and for every $\rho>0$ ,
+
+$z_{\rho}(y)=\frac{y}{1+\rho},\qquad H_{\rho}(y)=\frac{\rho}{2(1+\rho)}y^{2}.$
+
+Thus, for $0<\delta<\rho/(2(1+\rho))$ , the region $R(y)=H_{\rho}(y)-\delta\geq 0$ is characterized by $|y|\geq\sqrt{\frac{2(1+\rho)\delta}{\rho}}.$ Moreover, $\nabla H_{\rho}(y)=\frac{\rho}{1+\rho}y.$ Since the two points satisfying $|y|=\sqrt{\frac{2(1+\rho)\delta}{\rho}}$ lie in the interior of $Y$ due to the choice of $\delta$ , their normal cones are $\{0\}$ . Consequently, the minimum in Lemma 21 is attained at these points, and $\eta_{\delta}=\sqrt{\frac{2\rho}{1+\rho}}\sqrt{\delta}.$ Hence $\eta_{\delta}=\Theta(\sqrt{\delta})\to 0$ as $\delta\downarrow 0$ .
+
+Since the lower-level objective in Example 23 is strictly convex, ENNAMCQ holds for every fixed $\delta>0$ by Proposition 15 . Nevertheless, the corresponding $\eta_{\delta}$ may deteriorate as $\delta\downarrow 0$ . Consequently, the lower bound $\underline{\gamma}$ in Lemma 5 may approach zero, and the stabilization index and constants entering the subsequent KKT estimates may also deteriorate. Accordingly, the complexity results below are stated for a fixed positive relaxation level and are not uniform in $\delta$ as $\delta\downarrow 0$ .
+
+D.3 Theorem 6 and Corollary 7 : Complexity guarantees
+
+We first establish the stationarity and feasibility estimates used in the complexity analysis.
+
+Let $E_{k}^{0}\coloneqq E_{\mu_{k},\rho}(\zeta_{k})$ and $E_{k}^{+}\coloneqq E_{\mu_{k},\rho}(\zeta_{k+1}),$ and define
+
+$\widetilde{\lambda}_{k+1}\coloneqq\gamma_{k}^{-1}\phi_{\mu_{k}}^{\prime}(\widetilde{R}_{k}^{+}).$ (85)
+
+Then, for every $k\geq 0$ ,
+
+$\Phi_{\rho}^{\rm s}(w^{k+1},\widetilde{\lambda}_{k+1})\leq\gamma_{k}^{-1}\left(M_{1}\omega_{k+1}+E_{k}^{0}+E_{k}^{+}\right),$ (86)
+
+where $\overline{L}$ is given by ( 76 ), $M_{1}\coloneqq\widehat{\gamma}_{0}\mu_{0}L_{f}+\overline{L}+L_{G},$ and $\Phi_{\rho}^{\rm s}$ is given in Definition 2 .
+
+From the proof of Lemma 5 in Appendix D.2 , there exists $n^{k+1}\in N_{C}(w^{k+1})$ such that ( 79 ) holds. Then using the definition of $\widetilde{\lambda}_{k+1}$ in ( 85 ),
+
+$\displaystyle\gamma_{k}\nabla f(w^{k+1})+\gamma_{k}\widetilde{\lambda}_{k+1}\nabla R(w^{k+1})+n^{k+1}$ $\displaystyle\quad=\gamma_{k}\bigl(\nabla f(w^{k+1})-\nabla f(w^{k})\bigr)-\frac{L_{k}}{\mu_{k}}d^{k}+\left[\phi_{\mu_{k}}^{\prime}(\widetilde{R}_{k}^{+})\nabla R(w^{k+1})-\nabla G_{\mu_{k}}(w^{k+1})\right]$ $\displaystyle\qquad+\left[\nabla G_{\mu_{k}}(w^{k+1})-\nabla G_{\mu_{k}}(w^{k})\right]+\left[\nabla G_{\mu_{k}}(w^{k})-\widetilde{\nabla}G_{k}^{0}\right].$ (87)
+
+For the first bracketed term, since $\nabla G_{\mu_{k}}(w^{k+1})=\phi_{\mu_{k}}^{\prime}(R(w^{k+1}))\nabla R(w^{k+1}),$ we have
+
+$\displaystyle\left\|\phi_{\mu_{k}}^{\prime}(\widetilde{R}_{k}^{+})\nabla R(w^{k+1})-\nabla G_{\mu_{k}}(w^{k+1})\right\|$ $\displaystyle=\left|\phi_{\mu_{k}}^{\prime}(\widetilde{R}_{k}^{+})-\phi_{\mu_{k}}^{\prime}(R(w^{k+1}))\right|\|\nabla R(w^{k+1})\|$ $\displaystyle\quad\leq\frac{b_{\phi}B_{R}}{\mu_{k}}\left|\widetilde{R}_{k}^{+}-R(w^{k+1})\right|$ $\displaystyle\quad\leq\frac{b_{\phi}B_{R}}{\mu_{k}}\zeta_{k+1}\leq E_{k}^{+},$ (88)
+
+where we used ( 20 ), ( 18 ), and ( 31 ).
+
+Taking norms in ( 87 ), applying the triangle inequality, and using ( 88 ),
+
+$\displaystyle\left\|\gamma_{k}\nabla f(w^{k+1})+\gamma_{k}\widetilde{\lambda}_{k+1}\nabla R(w^{k+1})+n^{k+1}\right\|$ $\displaystyle\leq\gamma_{k}L_{f}\|d^{k}\|+\frac{L_{k}}{\mu_{k}}\|d^{k}\|+E_{k}^{+}+\frac{L_{G}}{\mu_{k}}\|d^{k}\|+E_{k}^{0}$ $\displaystyle\quad=\gamma_{k}L_{f}\|d^{k}\|+\frac{L_{k}+L_{G}}{\mu_{k}}\|d^{k}\|+E_{k}^{0}+E_{k}^{+}.$
+
+where we also used $L_{f}$ -Lipschitz continuity of $\nabla f$ , Lemma 9 , and Lemma 11 (iv). Since $\|d^{k}\|=\mu_{k}\omega_{k+1}$ , $\gamma_{k}\leq\widehat{\gamma}_{0}$ , $\mu_{k}\leq\mu_{0}$ , and $L_{k}\leq\overline{L}$ , we obtain
+
+$\left\|\gamma_{k}\nabla f(w^{k+1})+\gamma_{k}\widetilde{\lambda}_{k+1}\nabla R{}(w^{k+1})+n^{k+1}\right\|\leq M_{1}\omega_{k+1}+E_{k}^{0}+E_{k}^{+}.$
+
+Dividing by $\gamma_{k}$ , noting that $\frac{n^{k+1}}{\gamma_{k}}\in N_{C}(w^{k+1})$ and by the definition of the distance function, we obtain ( 86 ). ∎
+
+Suppose that, at iteration $k$ , no penalty update occurs but the second condition in ( 59 ) is satisfied. Then
+
+$\displaystyle\Phi_{\rho}^{\rm f}(w^{k+1})$ $\displaystyle\leq 2a_{\phi}\mu_{k}+\zeta_{k+1},$ (89) $\displaystyle\Phi_{\rho}^{\rm c}(w^{k+1},\widetilde{\lambda}_{k+1})$ $\displaystyle\leq\gamma_{k}^{-1}\left(2a_{\phi}\mu_{k}+\zeta_{k+1}\right),$ (90)
+
+where $\Phi_{\rho}^{\rm f}$ and $\Phi_{\rho}^{\rm c}$ are given in Definition 2
+
+By the hypothesis, we have $\widetilde{R}_{k}^{+}\leq 2a_{\phi}\mu_{k}.$ Thus, by ( 31 ), we have
+
+$R{}(w^{k+1})\leq\widetilde{R}_{k}^{+}+\zeta_{k+1}\leq 2a_{\phi}\mu_{k}+\zeta_{k+1}.$
+
+Consequently,
+
+$\Phi_{\rho}^{\rm f}(w^{k+1})=[R(w^{k+1})]_{+}\leq[2a_{\phi}\mu_{k}+\zeta_{k+1}]_{+}=2a_{\phi}\mu_{k}+\zeta_{k+1},$
+
+proving ( 89 ).
+
+For complementarity, write $R{}(w^{k+1})=\widetilde{R}_{k}^{+}+e_{k}^{+},$ where $0\leq e_{k}^{+}\leq\zeta_{k+1}.$ Then
+
+$\displaystyle\left|\widetilde{\lambda}_{k+1}R{}(w^{k+1})\right|$ $\displaystyle\leq\gamma_{k}^{-1}\left|\phi_{\mu_{k}}^{\prime}(\widetilde{R}_{k}^{+})\widetilde{R}_{k}^{+}\right|+\gamma_{k}^{-1}\phi_{\mu_{k}}^{\prime}(\widetilde{R}_{k}^{+})e_{k}^{+}$ $\displaystyle\leq\gamma_{k}^{-1}\left|\phi_{\mu_{k}}^{\prime}(\widetilde{R}_{k}^{+})\widetilde{R}_{k}^{+}\right|+\gamma_{k}^{-1}\zeta_{k+1}$ $\displaystyle\leq\gamma_{k}^{-1}(2a_{\phi}\mu_{k})+\gamma_{k}^{-1}\zeta_{k+1},$
+
+where the second inequality holds by ( 20 ), and the last inequality holds by noting that $\widetilde{R}_{k}^{+}\leq 2a_{\phi}\mu_{k}$ and invoking Lemma 10 (ii) with $\theta=2$ . By the definition of $\Phi_{\rho}^{\rm c}$ , we get ( 90 ). ∎
+
+Suppose $\Xi_{\infty}\coloneqq\sum_{k=0}^{\infty}\tau_{k}<\infty,$ and let $\underline{\gamma}>0$ be the lower bound from Lemma 5 . Define
+
+$t_{*}\coloneqq\max\{t\geq 0:\widehat{\gamma}_{t}\geq\underline{\gamma}\},$
+
+For $K\geq 0$ , let $m\coloneqq\lceil K/2\rceil$ and define
+
+$\displaystyle S_{K}$ $\displaystyle\coloneqq\sum_{k=m}^{K}\mu_{k},\qquad\widetilde{S}_{K}\coloneqq S_{K}-t_{*}\mu_{m}.$ (91) $\displaystyle\mathcal{E}_{K}$ $\displaystyle\coloneqq\max_{m\leq j\leq K}(E_{j}^{0}+E_{j}^{+}),$ (92) $\displaystyle\mathcal{Z}_{K}$ $\displaystyle\coloneqq\max_{m\leq j\leq K}\zeta_{j+1}.$ (93)
+
+If
+
+$\widetilde{S}_{K}>0\qquad\text{and}\qquad\widetilde{S}_{K}^{-1}\leq\frac{(c_{2}\underline{\gamma})^{2}}{M_{2}},$ (94)
+
+where $M_{2}\coloneqq\frac{2(Q_{0}+a_{1}\mu_{0}+\Xi_{\infty})}{c_{1}},$ then there exists an index $\widehat{k}\in[m,K]$ at which no penalty update occurs and such that
+
+$\displaystyle\Phi_{\rho}^{\rm s}(w^{\widehat{k}+1},\widetilde{\lambda}_{\widehat{k}+1})$ $\displaystyle\leq\underline{\gamma}^{-1}\left(M_{1}\sqrt{\frac{M_{2}}{\widetilde{S}_{K}}}+\mathcal{E}_{K}\right),$ (95) $\displaystyle\Phi_{\rho}^{\rm f}(w^{\widehat{k}+1})$ $\displaystyle\leq 2a_{\phi}\mu_{m}+\mathcal{Z}_{K},$ (96) $\displaystyle\Phi_{\rho}^{\rm c}(w^{\widehat{k}+1},\widetilde{\lambda}_{\widehat{k}+1})$ $\displaystyle\leq\underline{\gamma}^{-1}\left(2a_{\phi}\mu_{m}+\mathcal{Z}_{K}\right).$ (97)
+
+Since $\gamma_{k}\geq\underline{\gamma}$ for every $k$ and $\widehat{\gamma}_{t}\downarrow 0$ , the integer $t_{*}$ is finite. Moreover, $t_{0}=0$ and every penalty update increases $t_{k}$ by one. Since $\gamma_{k}=\widehat{\gamma}_{t_{k}}\geq\underline{\gamma}$ , we have $t_{k}\leq t_{*}$ for every $k$ . Hence, the total number of penalty updates is at most $t_{*}$ .
+
+Let $\mathcal{I}\coloneqq\{k\geq 0:t_{k+1}=t_{k}+1\}$ be the set of penalty-update iterations, and define $\mathcal{N}_{K}\coloneqq\{m,\ldots,K\}\setminus\mathcal{I}.$ Thus, $\mathcal{N}_{K}$ consists of the non-update iterations in the second half of the first $K+1$ iterations.
+
+Summing ( 64 ) from $k=m$ to $K$ gives
+
+$\frac{c_{1}}{2}\sum_{k=m}^{K}\mu_{k}\omega_{k+1}^{2}\leq Q_{m}-Q_{K+1}+\sum_{k=m}^{K}\tau_{k}.$ (98)
+
+On the other hand, summing ( 64 ) $k=0$ to $m-1$ yields
+
+$Q_{m}\leq Q_{0}+\sum_{k=0}^{m-1}\tau_{k}-\frac{c_{1}}{2}\sum_{k=0}^{m-1}\mu_{k}\omega_{k+1}^{2}\leq Q_{0}+\sum_{k=0}^{m-1}\tau_{k}.$ (99)
+
+Meanwhile, because $f(w)-f_{\inf}\geq 0$ , $G_{\mu}(w)\geq-a_{1}\mu$ by ( 21 ) and $\{\mu_{k}\}$ is nonincreasing, we have $Q_{k}\geq-a_{1}\mu_{0}$ for all $k\geq 0$ . Thus, combining ( 99 ) and ( 98 ) yields
+
+$\frac{c_{1}}{2}\sum_{k=m}^{K}\mu_{k}\omega_{k+1}^{2}\leq Q_{0}+a_{1}\mu_{0}+\sum_{k=0}^{K}\tau_{k}\leq Q_{0}+a_{1}\mu_{0}+\Xi_{\infty}.$
+
+Hence, by the definition of $M_{2}$ , we have
+
+$\sum_{k\in\mathcal{N}_{K}}\mu_{k}\omega_{k+1}^{2}\leq M_{2}.$ (100)
+
+Since $\{\mu_{k}\}$ is nonincreasing and $|\mathcal{I}|\leq t_{*}$ , we have from the definition of $S_{K}$ and $\widetilde{S}_{K}$ in ( 91 )
+
+$\displaystyle\sum_{k\in\mathcal{N}_{K}}\mu_{k}$ $\displaystyle=S_{K}-\sum_{k\in\mathcal{I}\cap\{m,\ldots,K\}}\mu_{k}$ $\displaystyle\geq S_{K}-|\mathcal{I}\cap\{m,\ldots,K\}|\mu_{m}$ $\displaystyle\geq S_{K}-t_{*}\mu_{m}=\widetilde{S}_{K}.$ (101)
+
+Since $\widetilde{S}_{K}>0$ by ( 94 ), the set $\mathcal{N}_{K}$ is nonempty. Combining ( 100 ) and ( 101 ), there exists $\widehat{k}\in\mathcal{N}_{K}$ such that
+
+$\omega_{\widehat{k}+1}^{2}\leq\frac{\sum_{k\in\mathcal{N}_{K}}\mu_{k}\omega_{k+1}^{2}}{\sum_{k\in\mathcal{N}_{K}}\mu_{k}}\leq\frac{M_{2}}{\widetilde{S}_{K}}.$ (102)
+
+By ( 94 ) and $\gamma_{\widehat{k}}\geq\underline{\gamma}$ ,
+
+$\omega_{\widehat{k}+1}\leq\sqrt{\frac{M_{2}}{\widetilde{S}_{K}}}\leq c_{2}\underline{\gamma}\leq c_{2}\gamma_{\widehat{k}}.$
+
+Since $\omega_{\widehat{k}+1}=\frac{\left\|d^{\widehat{k}}\right\|}{\mu_{\widehat{k}}}$ , it follows from the above inequality that the second condition in ( 59 ) holds. Meanwhile, $\widehat{k}\in\mathcal{N}_{K}$ so that no penalty update occurs at iteration $\widehat{k}$ . Hence, Lemma 25 implies that
+
+$\Phi_{\rho}^{\rm f}(w^{\widehat{k}+1})\leq 2a_{\phi}\mu_{\widehat{k}}+\zeta_{\widehat{k}+1}.$
+
+Since $\widehat{k}\geq m$ , the monotonicity of $\{\mu_{k}\}$ and the definition of $\mathcal{Z}_{K}$ in ( 93 ) imply $\mu_{\widehat{k}}\leq\mu_{m}$ and $\zeta_{\widehat{k}+1}\leq\mathcal{Z}_{K}$ . Hence, ( 96 ) immediately follows. By a similar argument and noting that $\gamma_{\widehat{k}}\geq\underline{\gamma}$ , we obtain ( 97 ).
+
+Finally, Lemma 24 , ( 102 ) and ( 92 ) yield
+
+$\displaystyle\Phi_{\rho}^{\rm s}(w^{\widehat{k}+1},\widetilde{\lambda}_{\widehat{k}+1})$ $\displaystyle\leq\gamma_{\widehat{k}}^{-1}\left(M_{1}\omega_{\widehat{k}+1}+E_{\widehat{k}}^{0}+E_{\widehat{k}}^{+}\right)$ $\displaystyle\leq\underline{\gamma}^{-1}\left(M_{1}\sqrt{\frac{M_{2}}{\widetilde{S}_{K}}}+\mathcal{E}_{K}\right),$
+
+which proves ( 95 ). ∎
+
+To convert the preceding estimate into explicit polynomial rates, we record the following elementary consequences of the smoothing condition.
+
+Let $\{\mu_{k}\}$ be positive and nonincreasing and satisfy $\mu_{k}=\Theta((1+k)^{-r}),$ with $r\in(0,1)$ , and define $S_{K}$ as in ( 91 ) with $m=\lceil K/2\rceil$ . Then
+
+$S_{K}=\Theta(K^{1-r}),\qquad\mu_{m}=\Theta(K^{-r}).$ (103)
+
+Consequently, for $\widetilde{S}_{K}$ given in ( 91 ) with any fixed $t_{*}\geq 0$ , we have
+
+$\widetilde{S}_{K}=\Theta(K^{1-r}).$ (104)
+
+In particular, $\widetilde{S}_{K}>0$ for all sufficiently large $K$ .
+
+Since $K-m+1=\lfloor K/2\rfloor+1$ , for $K\geq 2$ ,
+
+$\frac{K}{2}\leq K-m+1\leq K$ (105)
+
+By $\mu_{k}=\Theta((1+k)^{-r})$ , there exist constants $c_{\mu},C_{\mu}>0$ such that, for all sufficiently large $k$ ,
+
+$c_{\mu}(1+k)^{-r}\leq\mu_{k}\leq C_{\mu}(1+k)^{-r}.$
+
+Hence, for all sufficiently large $K$ and $k=m,\ldots,K$ ,
+
+$c_{\mu}(K+1)^{-r}\leq\mu_{k}\leq C_{\mu}(m+1)^{-r}.$
+
+Hence, summing from $k=m$ to $k=K$ and noting ( 105 ),
+
+${\frac{K}{2}c_{\mu}(K+1)^{-r}}\leq S_{K}\leq{KC_{\mu}(m+1)^{-r}}.$
+
+Using $K+1\leq 2K$ and $m+1\geq K/2$ gives
+
+${\frac{c_{\mu}}{2^{r+1}}}K^{1-r}\leq S_{K}\leq{2^{r}C_{\mu}}K^{1-r},$ (106)
+
+and therefore $S_{K}=\Theta(K^{1-r})$ . Similarly, since $c_{\mu}(m+1)^{-r}\leq\mu_{m}\leq C_{\mu}(m+1)^{-r},$ and $K/2\leq m+1\leq K$ for $K\geq 2$ , we have
+
+${c_{\mu}}K^{-r}\leq\mu_{m}\leq{2^{r}C_{\mu}}K^{-r}.$ (107)
+
+Thus, $\mu_{\lceil K/2\rceil}=\Theta(K^{-r})$ . Hence, both the estimates in ( 103 ) hold.
+
+Finally, using ( 106 ) and ( 107 ),
+
+$\frac{t_{*}\mu_{m}}{S_{K}}\leq\frac{{t_{*}2^{r}C_{\mu}}K^{-r}}{{(c_{\mu}/2^{r+1})}K^{1-r}}={\frac{2^{2r+1}t_{*}C_{\mu}}{c_{\mu}K}},$ (108)
+
+Since
+
+$\frac{\widetilde{S}_{K}}{S_{K}}=1-\frac{t_{*}\mu_{m}}{S_{K}}\longrightarrow 1$
+
+by ( 108 ), we have $\widetilde{S}_{K}\sim S_{K}$ . In particular, $\widetilde{S}_{K}=\Theta(S_{K})$ , and since $S_{K}=\Theta(K^{1-r})$ , ( 104 ) holds. ∎
+
+For instance, for any fixed integer $B\geq 1$ , the blockwise schedule $\mu_{k}=\mu_{0}(1+\lfloor k/B\rfloor)^{-r}$ satisfies $\mu_{k}=\Theta((1+k)^{-r})$ ; the standard choice $\mu_{k}=\mu_{0}(1+k)^{-r}$ corresponds to $B=1$ .
+
+We now give the complete statement of Theorem 6 , including the explicit estimates from which the rates in the main text follow.
+
+Theorem 6 (complete statement). Suppose Assumption 1 and ENNAMCQ hold, and suppose that the inverse-penalty grid satisfies ( 82 ). Let $\{\mu_{k}\}$ be positive and nonincreasing with $\mu_{k}=\Theta((1+k)^{-r})$ for some $r\in(0,1)$ , and let $\{\zeta_{k}\}$ satisfy $\zeta_{k}\leq\bar{\zeta}\mu_{k}^{q}$ for some $\bar{\zeta}>0$ and $q>1/r$ . Let $\{w^{k}\}$ be generated by Algorithm 1 and, for each $k\geq 0$ , set $\widetilde{\lambda}_{k+1}\coloneqq\gamma_{k}^{-1}\phi_{\mu_{k}}^{\prime}(\widetilde{R}^{k+1})$ . Then, for every sufficiently large $K$ , there exists $\widehat{k}\in[\lceil K/2\rceil,K]$ such that
+
+$\displaystyle\Phi_{\rho}^{\rm s}(w^{\widehat{k}+1},\widetilde{\lambda}_{\widehat{k}+1})$ $\displaystyle=O\!\left(K^{-(1-r)/2}\right),$ (109) $\displaystyle\Phi_{\rho}^{\rm f}(w^{\widehat{k}+1})$ $\displaystyle=O(K^{-r}),$ (110) $\displaystyle\Phi_{\rho}^{\rm c}(w^{\widehat{k}+1},\widetilde{\lambda}_{\widehat{k}+1})$ $\displaystyle=O(K^{-r}).$ (111)
+
+Consequently, an $(\varepsilon_{s},\varepsilon_{f},\varepsilon_{c})$ -KKT point is obtained within
+
+$K=O\!\left(\max\left\{\varepsilon_{s}^{-2/(1-r)},\varepsilon_{f}^{-1/r},\varepsilon_{c}^{-1/r}\right\}\right)$ (112)
+
+outer iterations.
+
+We verify the conditions required to invoke Lemma 26 . Since $\zeta_{k}\leq\bar{\zeta}\mu_{k}^{q}$ with $q>1/r>1$ , we have $\zeta_{k}/\mu_{k}\leq\bar{\zeta}\mu_{k}^{q-1}\to 0$ . Hence $\zeta_{k}=o(\mu_{k})$ , and Lemma 5 yields $\gamma_{k}\geq\underline{\gamma}>0$ for all $k\geq 0$ and finite stabilization of the penalty parameter.
+
+Next, we verify the summability condition on $\{\tau_{k}\}$ . From ( 27 ), we have $E_{k}^{0}\leq c_{D}\mu_{k}^{q/2}+c_{E}\mu_{k}^{q-1},$ where $c_{D}\coloneqq L_{a,\rho}\sqrt{2\bar{\zeta}/m_{\rho}}$ and $c_{E}\coloneqq b_{\phi}B_{R}\bar{\zeta}.$ Moreover, since $\mu_{k+1}\leq\mu_{k}$ , $\zeta_{k+1}\leq\bar{\zeta}\mu_{k+1}^{q}\leq\bar{\zeta}\mu_{k}^{q}$ , and therefore the same bound holds for $E_{k}^{+}$ :
+
+$E_{k}^{0}+E_{k}^{+}\leq 2c_{D}\mu_{k}^{q/2}+2c_{E}\mu_{k}^{q-1}.$ (113)
+
+Using $(a+b)^{2}\leq 2a^{2}+2b^{2}$ , $\zeta_{k+1}\leq\bar{\zeta}\mu_{k}^{q}$ , and $\vartheta_{k}\geq\underline{\vartheta}$ by definition, we obtain
+
+$\displaystyle\tau_{k}=\tau_{k,L_{k}}$ $\displaystyle=\frac{\mu_{k}}{2\vartheta_{k}}(E_{k}^{0})^{2}+\zeta_{k}+\zeta_{k+1}$ $\displaystyle\leq\frac{c_{D}^{2}}{\underline{\vartheta}}\mu_{k}^{q+1}+\frac{c_{E}^{2}}{\underline{\vartheta}}\mu_{k}^{2q-1}+2\bar{\zeta}\mu_{k}^{q}.$
+
+Since $rq>1$ , we also have $r(q+1)>1$ and $r(2q-1)=2rq-r>2-r>1$ . Hence all three series on the above right-hand side are summable, and therefore $\Xi_{\infty}\coloneqq\sum_{k=0}^{\infty}\tau_{k}<\infty$ . In particular, the constant $M_{2}$ in Lemma 26 is finite.
+
+Let $m=\lceil K/2\rceil$ . By Lemma 27 , $S_{K}=\Theta(K^{1-r}),$ $\mu_{m}=\Theta(K^{-r}),$ and $\widetilde{S}_{K}=\Theta(K^{1-r}).$ Thus $\widetilde{S}_{K}>0$ for all sufficiently large $K$ and $\widetilde{S}_{K}^{-1}=O(K^{-(1-r)})\to 0$ . Hence ( 94 ) holds for all sufficiently large $K$ . At this point, for all sufficiently large $K$ , the conditions of Lemma 26 are satisfied.
+
+We derive the complexity of the right-hand sides of ( 95 )–( 97 ) in Lemma 26 . For $m\leq j\leq K$ , ( 113 ) and the monotonicity of $\mu_{j}$ give
+
+$E_{j}^{0}+E_{j}^{+}\leq 2c_{D}\mu_{m}^{q/2}+2c_{E}\mu_{m}^{q-1}.$
+
+Using $\mu_{m}=\Theta(K^{-r})$ from ( 103 ), we obtain
+
+$\mathcal{E}_{K}=O\!\left(K^{-rq/2}+K^{-r(q-1)}\right).$ (114)
+
+Because $rq>1$ , we have $rq/2>1/2>(1-r)/2$ and $r(q-1)=rq-r>1-r>(1-r)/2.$ Therefore, together with ( 114 ),
+
+$\mathcal{E}_{K}=o\!\left(K^{-(1-r)/2}\right).$ (115)
+
+Similarly, for $m\leq j\leq K$ , $\zeta_{j+1}\leq\bar{\zeta}\mu_{j+1}^{q}\leq\bar{\zeta}\mu_{m}^{q}$ , and thus $\mathcal{Z}_{K}\leq\bar{\zeta}\mu_{m}^{q}=O(K^{-rq}).$ Since $q>1$ ,
+
+$\mathcal{Z}_{K}=o(K^{-r}).$ (116)
+
+Lemma 26 therefore yields, for every sufficiently large $K$ , an index $\widehat{k}\in[m,K]$ satisfying ( 95 )–( 97 ). Since $\widetilde{S}_{K}^{-1/2}=O(K^{-(1-r)/2})$ from ( 104 ), ( 115 ) shows that the right-hand side of ( 95 ) is
+
+$O(K^{-(1-r)/2})+o(K^{-(1-r)/2})=O(K^{-(1-r)/2}).$
+
+Likewise, $\mu_{m}=\Theta(K^{-r})$ and ( 116 ) show that the right-hand sides of ( 96 ) and ( 97 ) are
+
+$O(K^{-r})+o(K^{-r})=O(K^{-r}).$
+
+This proves ( 109 )–( 111 ). Finally, solving the three rate bounds for $K$ gives ( 112 ), which proves the claimed outer-iteration complexity. ∎
+
+The feasibility estimate ( 110 ) in Theorem 6 , together with Corollary 13 , shows that the returned iterate $w^{\widehat{k}+1}=(x^{\widehat{k}+1},y^{\widehat{k}+1})$ satisfies $H_{\rho}(w^{\widehat{k}+1})\leq\delta+O(K^{-r}),$ and consequently, its associated Moreau proximal point $z_{\rho}(w^{\widehat{k}+1})$ satisfies
+
+$\|y^{\widehat{k}+1}-z_{\rho}(w^{\widehat{k}+1})\|=O\!\left(\sqrt{\delta+K^{-r}}\right),$
+
+and
+
+$\operatorname{dist}\!\left(0,\,\nabla_{y}g\!\left(x^{\widehat{k}+1},z_{\rho}(w^{\widehat{k}+1})\right)+N_{Y}\!\left(z_{\rho}(w^{\widehat{k}+1})\right)\right)=O\!\left(\sqrt{\delta+K^{-r}}\right).$
+
+Thus, the returned $y$ -iterate is close to a point that is near-stationary for the lower-level problem. In particular, with $r=1/3$ and $K=O(\varepsilon^{-3})$ , both errors are $O(\sqrt{\delta+\varepsilon})$ .
+
+We next give the explicit oracle complexity obtained when the Moreau subproblems are solved by Algorithm 2 . The argument is unchanged for any first-order inner method that computes a $\zeta$ -accurate Moreau evaluation in $O(\log(1/\zeta))$ iterations uniformly over the proximal subproblems; only the problem-dependent constant in the complexity bound changes.
+
+Corollary 7 (Overall first-order complexity). Suppose the conditions of Theorem 6 hold and, in addition, choose $\zeta_{k}=\Theta(\mu_{k}^{q})$ . Suppose Algorithm 2 is used for each required Moreau evaluation. Let $B_{\rm ls}$ denote a uniform bound on the number of trial Moreau evaluations per outer iteration, with $B_{\rm ls}=1$ for Strategy I. Then the overall first-order/projection complexity of IVSP through outer iteration $K$ is
+
+$O\!\left(B_{\rm ls}\kappa_{\psi,\rho}\,K\log K\right).$ (117)
+
+In particular, for the balanced choice $r=1/3$ , IVSP computes an $\varepsilon$ -KKT point with overall first-order/projection complexity
+
+$O\!\left(B_{\rm ls}\kappa_{\psi,\rho}\,\varepsilon^{-3}\log\frac{1}{\varepsilon}\right)=\widetilde{O}(\varepsilon^{-3}).$ (118)
+
+By Lemma 20 , each call to Algorithm 2 with tolerance $\zeta$ requires $O\!\left(\kappa_{\psi,\rho}\log\frac{1}{\zeta}\right)$ first-order/projection iterations for the Moreau subproblem. The implicit constant is uniform over the outer iterates and line-search trials.
+
+At outer iteration $k$ , every new trial-point Moreau evaluation is required to be $\zeta_{k+1}$ -accurate. Since $\zeta_{k}=\Theta(\mu_{k}^{q})$ and $\mu_{k}=\Theta((1+k)^{-r})$ , we have $\zeta_{k+1}=\Theta((k+2)^{-rq}),$ and hence $\log(1/\zeta_{k+1})=O(\log(k+2)).$ Thus, each new trial-point proximal solve at outer iteration $k$ requires $O\!\left(\kappa_{\psi,\rho}\log(k+2)\right)$ first-order/projection iterations.
+
+After the initial $\zeta_{0}$ -accurate Moreau evaluation, Strategy I requires one new proximal solve per outer iteration. Under Strategy II, every line-search trial requires one new proximal solve, and Lemma 4 bounds the number of trials per outer iteration by $B_{\rm ls}$ . The Moreau evaluation associated with an accepted trial is retained for the next outer iteration, so no additional current-point proximal solve is required. Therefore, the total first-order/projection work used by the Moreau subproblems through outer iteration $K$ is
+
+$\displaystyle O\!\left(\kappa_{\psi,\rho}\log\frac{1}{\zeta_{0}}\right)+O\!\left(B_{\rm ls}\kappa_{\psi,\rho}\sum_{k=0}^{K-1}\log(k+2)\right)=O\!\left(B_{\rm ls}\kappa_{\psi,\rho}\,K\log K\right).$
+
+The outer method itself requires only a constant number of first-order evaluations per accepted iteration and at most $B_{\rm ls}$ projections onto $C$ per iteration. Its first-order/projection work is therefore $O(B_{\rm ls}K)$ , which is dominated by ( 117 ). This proves the first claim.
+
+For the balanced choice $r=1/3$ , Theorem 6 gives $K=O(\varepsilon^{-3})$ . Substituting this into ( 117 ) gives ( 118 ). ∎
+
+Appendix E Details on the complexity comparison
+
+Table 1 compares representative deterministic first-order bilevel methods under a common norm-based $\varepsilon$ convention whenever possible. Since the methods target different reformulations and solution concepts, the reported rates should be interpreted together with the “Guarantee” column rather than as complexities for an identical stopping criterion.
+
+Solution criteria.
+
+For methods assuming a unique lower-level solution, hyperobjective stationarity refers to $\|\nabla\Phi(x)\|\leq\varepsilon$ , where $\Phi(x)=f(x,y^{\star}(x))$ . Penalty stationarity refers to $\varepsilon$ -stationarity of the penalized or smoothed surrogate used by the corresponding method. A KKT guarantee controls stationarity, constraint feasibility, and complementarity for the relevant constrained reformulation. BOME’s KKT ∗ criterion is instead based on the value-gap residual
+
+$\min_{\lambda\geq 0}\|\nabla f+\lambda\nabla q\|^{2}+q,\qquad q=g-g^{\star},$
+
+and is not the classical KKT residual. The weak-KKT notion of Lu–Mei [ 28 ] combines stationarity of their minimax reformulation with lower-level value-gap feasibility.
+
+Rate conventions.
+
+When a method controls several residuals, the complexity displayed in Table 1 is the number of iterations required for all quantities indicated in the “Guarantee” column to be $O(\varepsilon)$ . Rates originally stated using squared residuals are converted to this norm-based convention. For V-PBGD [ 35 ] , the reported $\widetilde{O}(\varepsilon^{-2})$ rate treats its prescribed penalty coefficient as fixed. For SLM [ 26 ] , we report the $O(\varepsilon^{-2})$ rate with its relaxation parameter treated as fixed, consistent with the fixed-relaxation setting of IVSP; the hidden constant depends polynomially on that relaxation level. For MEHA [ 25 ] , stationarity of a fixed penalized problem admits the $\mathcal{O}(\nu\epsilon^{-2})$ rate reported in Lu [27] , whereas requiring both $\mathcal{O}(\epsilon)$ stationarity and $\mathcal{O}(\epsilon)$ unrelaxed Moreau-gap feasibility in its increasing-penalty analysis gives $\mathcal{O}(\epsilon^{-4})$ . PNGBiO [ 41 ] obtains an $\mathcal{O}(T^{-1/4})$ rate for both its stationarity measure and unrelaxed Moreau-gap violation, yielding the same $\mathcal{O}(\epsilon^{-4})$ joint criterion.
+
+For IVSP, the relaxation level $\delta>0$ is prescribed and fixed. The $\mathcal{O}(\epsilon^{-3})$ outer-iteration bound controls stationarity, feasibility, and complementarity for the KKT system of the relaxed constraint $g(x,y)-g_{\rho}(x,y)-\delta\leq 0.$ Thus, the IVSP rate and the above MEHA/PNGBiO rates do not correspond to an identical feasibility target: the latter drive the unrelaxed Moreau-gap violation to $\mathcal{O}(\epsilon)$ , whereas IVSP drives $[g(x,y)-g_{\rho}(x,y)-\delta]_{+}$ to $\mathcal{O}(\epsilon)$ for fixed $\delta$ . Including the logarithmic work required by the inexact Moreau subproblems gives $\widetilde{\mathcal{O}}(\epsilon^{-3})$ first-order/projection complexity for this fixed-relaxation KKT target. Similar to SLM [ 26 ] , the constants in the IVSP bound are not claimed to be uniform as $\delta\downarrow 0$ ; see Appendix A.4 .
+
+Per-iteration oracle costs.
+
+The complexity rates in Table 1 should not be interpreted as assuming identical per-iteration oracle costs. In particular, the iterations of MEHA [ 25 ] and PNGBiO [ 41 ] are formed from first-order information without requiring lower-level objective-value evaluations. IVSP additionally requires such values to estimate the Moreau-gap residual. Under Strategy I, each outer iteration requires one new inexact Moreau solve and, after this solve, two evaluations of $g$ to form $\widetilde{R}_{k+1}$ . Thus, although its lower-level first-order/projection complexity is $O(\varepsilon^{-3}\log(1/\varepsilon))$ , it also incurs $O(\varepsilon^{-3})$ lower-level value evaluations.
+
+Under Strategy II, if $B_{k}$ backtracking trials are performed at iteration $k$ , each trial requires a new inexact Moreau solve, two lower-level value evaluations to form the trial residual, and an upper-level value evaluation for the Armijo test. Hence these trial-point costs scale by $B_{k}\leq B_{\rm ls}$ , whereas current-point first-order quantities are computed only once or retained from the preceding accepted iteration. Consequently, the corresponding value-oracle costs are $O(B_{\rm ls}\varepsilon^{-3})$ , while Corollary 7 accounts separately for the $O(B_{\rm ls}\varepsilon^{-3}\log(1/\varepsilon))$ lower-level first-order/projection work.
+
+Appendix F Experimental Details
+
+This section provides the complete problem formulations and implementation details for the numerical experiments in Section 4 .
+
+We conducted all experiments on an Ubuntu 20.04 workstation equipped with an AMD EPYC 7413 24-Core Processor, 512 GB of system memory, and an NVIDIA RTX A5000 GPU with 24 GB of GPU memory. We used Python 3.10.12 and PyTorch 2.6.0 with CUDA 12.4.
+
+All optimization runs are deterministic after fixing the problem instances, data splits, and initializations. In the real-world experiments, we use fixed training, validation, and test sets for all methods, and no stochastic mini-batching is used during optimization. The test set is used only for evaluation. All compared methods are run under the same wall-clock budget within each problem: 1 second for the synthetic experiment, 60 seconds for both MNIST and FashionMNIST hyper-cleaning, and 600 seconds for Omniglot few-shot learning. Wall-clock time includes all optimization computations, including inner-loop computations, but excludes data loading and offline metric evaluation. The main hyperparameters of all compared methods are tuned separately for each problem using method-specific candidate values. For the real-world tasks, we use the same validation-based tuning protocol and comparable tuning budgets for all methods within each problem. Test performance is not used for hyperparameter selection.
+
+Implementation details.
+
+We make two practical implementation choices for Algorithm 3 : a finite-precision relaxation of the inexact Armijo test and a safeguarded Barzilai–Borwein initialization of the backtracking parameter.
+
+First, in finite-precision arithmetic, we use the following numerically relaxed version of the inexact Armijo condition ( 8 ):
+
+$\displaystyle\gamma_{k}f(w_{L}^{k})+\phi_{\mu_{k}}\bigl(\widetilde{R}_{k,L}^{+}+\zeta_{k+1}\bigr)$ (119) $\displaystyle\qquad\leq\gamma_{k}f(w^{k})+\phi_{\mu_{k}}(\widetilde{R}^{k})-\frac{c_{1}}{2\mu_{k}}\|w_{L}^{k}-w^{k}\|^{2}+\tau_{k,L}+10^{-12}.$ (120)
+
+The additive tolerance $10^{-12}$ is used only to prevent numerical stalling due to floating-point roundoff when the two sides of ( 8 ) are nearly identical, and is not part of the theoretical algorithm or convergence analysis.
+
+Second, for the backtracking variant of IVSP, we initialize the line-search parameter using a safeguarded Barzilai–Borwein (BB) estimate [ 3 ] , similarly to the implementation of Xu et al. [38] . Specifically, define
+
+$\Delta w_{k}:=w^{k}-w^{k-1},\qquad\Delta v_{k}:=\gamma_{k}\bigl(\nabla f(w^{k})-\nabla f(w^{k-1})\bigr)+\widetilde{\nabla}G_{k}-\widetilde{\nabla}G_{k-1},\qquad k\geq 1.$
+
+We form
+
+$L_{k}^{\mathrm{BB}}=\mu_{k}\frac{\|\Delta v_{k}\|^{2}}{|\langle\Delta w_{k},\Delta v_{k}\rangle|}.$ (121)
+
+We set $L_{0,0}=L_{\mathrm{init}}$ . For $k\geq 1$ , if $|\langle\Delta w_{k},\Delta v_{k}\rangle|>10^{-24}$ and $L_{k}^{\mathrm{BB}}\in[L_{\min},L_{\max}]$ , we set $L_{k,0}=L_{k}^{\mathrm{BB}}$ ; otherwise, $L_{k,0}=\min\left\{L_{\max},\max\left\{L_{\min},L_{k-1,0}/2\right\}\right\}.$ Starting from $L=L_{k,0}$ , we repeatedly replace $L$ by $2L$ until ( 120 ) is satisfied.
+
+Evaluation of the Moreau-gap violation.
+
+For reporting the estimated Moreau-gap constraint violation, we compute an independent approximation $\widehat{z}$ of the proximal point $z_{\rho}(x,y)$ by applying projected gradient with monotone backtracking to the full lower-level Moreau subproblem, initialized at $z=y$ . For each task, we use the same proximal parameter $\rho$ as IVSP and apply it to all compared methods. The proximal solve is terminated when the norm of the projected-gradient mapping is at most $10^{-3}$ . Using the resulting $\widehat{z}$ , we compute $\widehat{H}_{\rho}(x,y)=g(x,y)-g(x,\widehat{z})-\frac{1}{2\rho}\|\widehat{z}-y\|^{2}$ and report $\widehat{\Phi}_{\rho}^{\rm f}(x,y):=[\widehat{H}_{\rho}(x,y)-\delta]_{+},$ which estimates the feasibility residual $\Phi_{\rho}^{\rm f}$ in Definition 2 . This independent proximal solve is used only for evaluation.
+
+Common IVSP settings.
+
+For IVSP, following Xu et al. [38] , we use the centered-Huber smoothing of the plus function,
+
+$\phi_{\mu}(t)=\begin{cases}0,&t\leq-\mu/2,\\[2.84526pt] \dfrac{(t+\mu/2)^{2}}{2\mu},&|t|<\mu/2,\\[5.69054pt] t,&t\geq\mu/2.\end{cases}$ (122)
+
+This is the optimal inner $1/\mu$ -smoothing of $[\cdot]_{+}$ in the sense of Samakhoana and Grimmer [34] , with uniform approximation error $\mu/8$ . Accordingly, the constants in ( 24 ) and ( 22 ) are $a_{\phi}=1/8$ and $b_{\phi}=1$ , respectively.
+
+Across all experiments, we use $\mu_{k}=\mu_{0}(\lfloor k/B\rfloor+1)^{-r}$ , $\widehat{\gamma}_{t}=\gamma_{0}(t+1)^{-1/2}$ , and $\zeta_{k}=\bar{\zeta}\mu_{k}^{q}$ , with $r=1/3$ and $q=1/r+0.01$ . The common parameter settings are $L_{\min}=10^{-11}$ , $L_{\max}=10^{11}$ , $\delta=10^{-3}$ , $c_{1}=10^{-4}$ , $c_{2}=1$ , $\underline{\vartheta}=10^{-24}$ , $\hat{\vartheta}=1.99$ , and $B_{R}=10^{3}$ .
+
+Synthetic nonconvex problem.
+
+For the synthetic experiment, we use the nonconvex bilevel problem described in Section 4.1 , with $n=1000$ , $a=2$ , $c_{i}=2$ , $x^{0}=-6$ , and $y^{0}=0$ .
+
+For IVSP, we additionally use $\sigma=1$ , $L_{\rm init}=1$ , $L_{xy}=\sqrt{1000}$ , and $L_{yy}=1$ . The main method-specific hyperparameters are summarized in Table 2 .
+
+Table 2 : Main hyperparameter settings for the synthetic nonconvex experiment.
+
+Data hyper-cleaning.
+
+For data hyper-cleaning [ 32 , 25 , 41 ] , let $\mathcal{D}_{\rm tr}=\{(u_{i},\widetilde{q}_{i})\}_{i=1}^{n}$ denote the corrupted training set and let $\mathcal{D}_{\rm val}$ denote the clean validation set. The UL variable $x\in[-100,100]^{n}$ assigns the weight $\omega(x_{i})$ to training example $i$ , where $\omega(t)=1/(1+e^{-t})$ is the sigmoid function.
+
+The bilevel formulation is
+
+$\displaystyle\min_{\begin{subarray}{c}x\in[-100,100]^{5000}\\ \,y\in[-100,100]^{25450}\end{subarray}}\quad\frac{1}{|\mathcal{D}_{\rm val}|}\sum_{(u,q)\in\mathcal{D}_{\rm val}}\ell(h_{y}(u),q)$ (123) $\displaystyle\text{s.t.}\quad y\in$ $\displaystyle\operatorname*{arg\,min}_{\widetilde{y}\in[-100,100]^{25450}}\frac{1}{|\mathcal{D}_{\rm tr}|}\sum_{i=1}^{n}\omega(x_{i})\ell(h_{\widetilde{y}}(u_{i}),\widetilde{q}_{i}).$
+
+The classifier $h_{y}$ is a two-layer fully connected neural network with 784 input units, 32 sigmoid hidden units, and 10 output units. It therefore contains $784\times 32+32+32\times 10+10=25{,}450$ parameters. The sigmoid activation makes the LL objective smooth, while the neural-network parameterization makes it nonconvex. This problem is an instance of the sigmoid-reweighted classification model in Corollary 18 . Indeed, with $M=B_{y}=100$ , $d_{h}=32$ , and $m=10$ ,
+
+$\frac{2B_{y}(d_{h}+1)+\log m}{1+e^{M}}<2.5\times 10^{-40}<10^{-3}=\delta.$
+
+Hence, ENNAMCQ holds for both hyper-cleaning experiments.
+
+For both MNIST [ 21 ] and FashionMNIST [ 37 ] , we use 5,000 training, 5,000 validation, and 10,000 test examples. We randomly corrupt 50% of the training labels by replacing each selected label with an incorrect class label, while the validation and test sets remain clean. The same corrupted training set is used for all compared methods. The variables are initialized with $x^{0}=0$ and $y^{0}=0.01\,\varepsilon$ , where $\varepsilon$ has independent standard normal entries. We report validation loss, test error, and the Moreau-gap constraint violation as functions of wall-clock time.
+
+We additionally use $L_{\rm init}=1$ , $L_{xy}=1$ , $\sigma=1$ for both hyper-cleaning tasks, with $L_{yy}=1$ on MNIST and $L_{yy}=20$ on FashionMNIST. The main method-specific hyperparameters are summarized in Table 3 .
+
+Table 3 : Main hyperparameter settings for data hyper-cleaning.
+
+Few-shot learning.
+
+Table 4 : Main hyperparameter settings for few-shot learning on Omniglot.
+
+We consider episodic few-shot classification on Omniglot [ 20 ] , following the bilevel meta-learning formulation used in Liu et al. [25] . The 1,623 character classes are randomly partitioned into 1,100 training, 100 validation, and 423 test classes using a fixed class split. The three class sets are mutually disjoint. We consider the 10-way 1-shot setting with five query examples per class. We generate 128 fixed training episodes, 100 validation episodes, and 100 test episodes.
+
+For each training episode $i\in\{1,\ldots,T\}$ , where $T=128$ , let $\mathcal{S}_{i}$ and $\mathcal{Q}_{i}$ denote its support and query sets, respectively. Each support set contains one example from each of 10 classes, and each query set contains five examples from each class.
+
+The UL variable $x$ parameterizes a shared four-block convolutional feature extractor. Each block consists of a $3\times 3$ convolution with 64 output channels, ReLU activation, $2\times 2$ max pooling, and batch normalization. For Omniglot, the successive spatial resolutions are $28\to 14\to 7\to 3\to 1$ , resulting in a 64-dimensional feature vector. Batch-normalization statistics are computed separately for each task from the image set being processed.
+
+For an episode dataset $\mathcal{D}=\{(u_{j},q_{j})\}_{j=1}^{|\mathcal{D}|}$ , let $F_{x,\mathcal{D}}(u_{j})\in\mathbb{R}^{64}$ denote the feature vector of $u_{j}$ produced by the shared feature extractor, with the batch-normalization statistics computed from $\mathcal{D}$ . For each training episode $i$ , the LL variable is a linear softmax classifier $y_{i}=(W_{i},b_{i})$ , where $W_{i}\in\mathbb{R}^{10\times 64}$ and $b_{i}\in\mathbb{R}^{10}$ . We define
+
+$\mathcal{L}_{\mathcal{D}}(x,y_{i})=\frac{1}{|\mathcal{D}|}\sum_{j=1}^{|\mathcal{D}|}\ell\!\left(W_{i}F_{x,\mathcal{D}}(u_{j})+b_{i},q_{j}\right),$
+
+where $\ell$ denotes the 10-class cross-entropy loss. The corresponding bilevel problem is
+
+$\displaystyle\min_{\begin{subarray}{c}x\in[-5,5]^{111936}\\ y\in[-20,20]^{83200}\end{subarray}}$ $\displaystyle\frac{1}{T}\sum_{i=1}^{T}\mathcal{L}_{\mathcal{Q}_{i}}(x,y_{i})$ (124) $\displaystyle\text{s.t.}\quad y\in\operatorname*{arg\,min}_{\widetilde{y}\in[-20,20]^{83200}}$ $\displaystyle\frac{1}{T}\sum_{i=1}^{T}\mathcal{L}_{\mathcal{S}_{i}}(x,\widetilde{y}_{i}).$
+
+For fixed $x$ , the LL objective in ( 124 ) is convex in $y$ , since each task-specific model is a linear softmax classifier. It is not strongly convex: in particular, the softmax cross-entropy is invariant under a common shift of all class logits, which induces nontrivial flat directions in the LL objective. As established in Proposition 16 , this structure nevertheless satisfies ENNAMCQ for every $\delta>0$ . Thus, this experiment provides a large-scale convex but non-strongly-convex LL instance for which the constraint qualification required by our analysis holds.
+
+For each validation and test episode, we initialize a fresh linear classifier at zero and adapt it for 10 gradient steps on the support set with stepsize $0.1$ , while keeping the feature extractor fixed. We then evaluate query loss and classification error using the adapted classifier.
+
+All training episodes are fixed before optimization and are shared across all compared methods. The optimization is therefore deterministic after fixing the dataset, episode construction, and initialization. The convolutional parameters are initialized according to the standard PyTorch convolutional initialization, the batch-normalization scale and bias are initialized to one and zero, respectively, and all task-specific linear classifiers are initialized at zero. We use data seed 42, initialization seed 43, and class-split seed 0.
+
+For IVSP, we additionally use $\sigma=0$ , $L_{\rm init}=0.1$ , $L_{xy}=1$ , and $L_{yy}=15$ . The main method-specific hyperparameters are summarized in Table 4 .
+
+References

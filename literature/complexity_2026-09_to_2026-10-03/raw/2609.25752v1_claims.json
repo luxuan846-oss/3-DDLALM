@@ -1,0 +1,87 @@
+[
+  {
+    "anchor": "Thmassumption1",
+    "kind": "ltx_theorem ltx_theorem_assumption",
+    "text": "Assumption 1 . (i) $p:\\mathbb{R}^{m}\\to(-\\infty,+\\infty]$ and $q:\\mathbb{R}^{n}\\to(-\\infty,+\\infty]$ are proper closed convex functions, and the proximal operator of $p$ and $q$ can be exactly evaluated. (ii) The set $\\mathcal{Y}$ is bounded, namely, we have $\\|y\\|\\leq D_{\\mathbf{y}}$ for some $D_{\\mathbf{y}}\\geq 1$ . (iii) $h:\\mathbb{R}^{m+n}\\to\\mathbb{R}$ is $L_{\\nabla h}$ -smooth on $\\mathcal{X}\\times\\mathcal{Y}$ for some $L_{\\nabla h}>0$ . For any $x\\in\\mathcal{X}$ , $h(x,\\cdot)$ is concave on $\\mathcal{Y}$ . (iv) Problem ( 1 ) has at least one optimal solution with finite optimal value $H^{*}=\\min_{x}\\max_{y}H(x,y)$ ."
+  },
+  {
+    "anchor": "Thmdefinition1",
+    "kind": "ltx_theorem ltx_theorem_definition",
+    "text": "Definition 1 . For $\\epsilon\\geq 0$ , a point $(x,y)\\in\\mathcal{X}\\times\\mathcal{Y}$ is called an $\\epsilon$ -stationary point of the minimax problem ( 1 ) if $\\mathrm{dist}(0,\\nabla_{x}h(x,y)+\\partial p(x))\\leq\\epsilon,\\qquad\\mathrm{dist}(0,\\nabla_{y}h(x,y)-\\partial q(y))\\leq\\epsilon.$ We use the same definition for other composite minimax problems, with $h$ replaced by the corresponding smooth coupling."
+  },
+  {
+    "anchor": "Thmassumption2",
+    "kind": "ltx_theorem ltx_theorem_assumption",
+    "text": "Assumption 2 . The function $f$ is $\\mu_{x}$ -strongly convex in $x$ , $\\mu_{y}$ -strongly concave in $y$ , and $L_{\\nabla f}$ -smooth on $\\mathcal{X}\\times\\mathcal{Y}$ , where $0<\\mu_{y}\\leq\\mu_{x}\\leq L_{\\nabla f}$ ."
+  },
+  {
+    "anchor": "Thmremark1",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 1 . The ordering $\\mu_{y}\\leq\\mu_{x}$ entails no loss of generality. If $\\mu_{x}<\\mu_{y}$ , exchanging the two variable blocks and reversing the objective sign yields the equivalent saddle-point with the curvature bounds and proximal mappings interchanged."
+  },
+  {
+    "anchor": "Thmassumption3",
+    "kind": "ltx_theorem ltx_theorem_assumption",
+    "text": "Assumption 3 . There exist an algorithm $\\mathcal{A}(F,B,u^{0},L_{F},\\mu)$ and constants $\\mathcal{C}_{\\mathcal{A}}>0$ and $N_{\\mathcal{A}}\\in\\mathbb{N}$ , with $N_{\\mathcal{A}}\\geq 1$ , such that the following holds. From any $u^{0}\\in\\dom B$ , one run of $\\mathcal{A}$ generates, for every $\\vartheta>0$ , a computed pair $(u,r)$ with $r\\in(F+B)(u),\\qquad\\|r\\|\\leq\\vartheta\\|u^{0}-u^{*}\\|,$ using at most $N_{\\mathcal{A}}+\\lceil\\mathcal{C}_{\\mathcal{A}}L_{F}/\\vartheta\\rceil$ evaluations of $F$ and of the resolvent of $B$ , respectively. Every evaluation of $F$ is at a point of $\\dom B$ . Both counts include initialization and computation of $r$ . The constants depend only on $\\mathcal{A}$ , not on the inclusion, its parameters, or its initial point. Neither $u^{*}$ nor its distance from $u^{0}$ is an input."
+  },
+  {
+    "anchor": "Thmremark2",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 2 . For the subdifferential operator $B$ used here, the EAG and past-EAG methods in [ 45 , Corollary 3.1] , with one forward–backward initialization step, satisfy Assumption 3 . With $\\tau_{k}=1/(k+2)$ , one may take $(N_{\\mathcal{A}},\\mathcal{C}_{\\mathcal{A}})=(4,22)$ for EAG with stepsize $1/(2L_{F})$ , and $(N_{\\mathcal{A}},\\mathcal{C}_{\\mathcal{A}})=(4,28)$ for past-EAG with stepsize $1/(3L_{F})$ ."
+  },
+  {
+    "anchor": "Thmremark3",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 3 . It can be observed from ( 8 )–( 10 ) that $e^{k+1}$ is the original KKT residual, $\\tilde{u}^{k+1}$ is an inexact proximal point for $\\Phi$ , and $c^{k+1}$ is the next extrapolation center. Moreover, the inner test ( 7 ) controls the proximal inexactness, while ( 11 ) determines when the algorithm returns. The decreasing parameter $\\gamma_{k}$ is used only in the initialization resolvent."
+  },
+  {
+    "anchor": "Thmtheorem1",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 1 . Suppose Assumptions 2 and 3 hold. Then Algorithm 1 is well-defined and terminates within $\\lceil 128\\sqrt{\\mu_{x}/\\mu_{y}}\\rceil$ iterations. If it terminates at iteration $k$ , its output satisfies $e^{k+1}\\in(F+B)(u^{k+1})$ and $\\|u^{k+1}-u^{*}\\|\\leq\\frac{1}{8}\\|u^{0}-u^{*}\\|,\\qquad\\|e^{k+1}\\|\\leq\\frac{\\mu_{x}}{8}\\|u^{0}-u^{*}\\|.$ (12) The numbers of evaluations of $\\nabla f$ , $\\prox_{p}$ , and $\\prox_{q}$ are bounded, respectively, by $1+\\left\\lceil 128\\sqrt{\\frac{\\mu_{x}}{\\mu_{y}}}\\right\\rceil\\left(1+N_{\\mathcal{A}}+\\left\\lceil\\frac{128\\mathcal{C}_{\\mathcal{A}}(L_{\\nabla f}+\\mu_{x})}{\\mu_{x}}\\right\\rceil\\right)=O\\!\\left(\\frac{L_{\\nabla f}}{\\sqrt{\\mu_{x}\\mu_{y}}}\\right).$ (13) The hidden constant depends only on $N_{\\mathcal{A}}$ and $\\mathcal{C}_{\\mathcal{A}}$ ."
+  },
+  {
+    "anchor": "Thmremark4",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 4 . The preliminary call determines $\\lambda_{1}$ from the computed displacement. At each regularized iteration, $r^{k+1}$ is the residual of the regularized subproblem, and step 4 converts it to the original residual $e^{k+1}$ used in the stopping test."
+  },
+  {
+    "anchor": "Thmtheorem2",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 2 . Suppose Assumptions 2 and 3 hold. Then Algorithm 2 is well-defined and terminates. Its output $(u^{k+1},e^{k+1})$ , with $k=0$ for a return in step 1, satisfies $e^{k+1}\\in(F+B)(u^{k+1})$ and $\\|e^{k+1}\\|\\leq\\epsilon$ . The numbers of evaluations of $\\nabla f$ , $\\prox_{p}$ , and $\\prox_{q}$ are bounded, respectively, by $\\displaystyle 2^{11}(N_{\\mathcal{A}}+256\\mathcal{C}_{\\mathcal{A}}+3)\\frac{L_{\\nabla f}}{\\sqrt{\\mu_{x}\\mu_{y}}}\\left(1+\\log_{4}\\!\\left(1+\\frac{\\mu_{y}\\|u^{0}-u^{*}\\|}{\\epsilon}\\right)\\right)$ (14) $\\displaystyle=O\\!\\left(\\frac{L_{\\nabla f}}{\\sqrt{\\mu_{x}\\mu_{y}}}\\left(1+\\log\\!\\left(1+\\frac{\\mu_{y}\\|u^{0}-u^{*}\\|}{\\epsilon}\\right)\\right)\\right),$ where $u^{*}$ is the saddle point of ( 2 ) and the hidden constant depends only on $N_{\\mathcal{A}}$ and $\\mathcal{C}_{\\mathcal{A}}$ ."
+  },
+  {
+    "anchor": "Thmremark5",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 5 . For the update of $(i_{t+1},j_{t+1},k_{t+1})$ in step 11, one may choose $(i,j,k)$ lexicographically among triples with the same value of $2i+j+k$ . The resulting list $\\mathcal{I}$ starts with $(0,0,0),(0,0,1),(0,0,2),(0,1,1),(1,0,0),\\ldots$ . A successful trial retains the current triple, while an unsuccessful trial advances to the next triple and retains the current point and residual."
+  },
+  {
+    "anchor": "Thmtheorem3",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 3 . Suppose Assumption 2 holds, and $\\mathcal{A}$ satisfies Assumption 3 and the additional execution requirements in this subsection. Then Algorithm 3 is well-defined and terminates with an $\\epsilon$ -stationary point of ( 2 ) for every input satisfying its requirements. The numbers of evaluations of $\\nabla f$ , $\\prox_{p}$ , and $\\prox_{q}$ are bounded, respectively, by $\\displaystyle 3+4(\\widetilde{\\mathcal{C}}_{\\mathcal{A}}+1)\\frac{L_{\\nabla f}}{\\sqrt{\\mu_{x}\\mu_{y}}}\\left((2+\\sqrt{2})\\left(2\\log_{2}\\frac{L_{\\nabla f}}{\\sqrt{\\mu_{x}\\mu_{y}}}+6\\right)^{2}+\\left\\lceil\\log_{2}\\!\\left(1+\\frac{4L_{\\nabla f}^{2}\\|u^{0}-u^{*}\\|}{\\mu_{x}\\epsilon}\\right)\\right\\rceil\\right)$ (15) $\\displaystyle=O\\!\\left(\\frac{L_{\\nabla f}}{\\sqrt{\\mu_{x}\\mu_{y}}}\\left(\\log^{2}\\!\\left(2+\\frac{L_{\\nabla f}}{\\sqrt{\\mu_{x}\\mu_{y}}}\\right)+\\log\\!\\left(1+\\frac{\\mu_{y}\\|u^{0}-u^{*}\\|}{\\epsilon}\\right)\\right)\\right),$ where $u^{*}$ is the saddle point of ( 2 ) and $\\widetilde{\\mathcal{C}}_{\\mathcal{A}}$ is defined in step 6 of Algorithm 3 ."
+  },
+  {
+    "anchor": "Thmremark6",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 6 . (i) A successful trial verifies residual reduction, not the validity of its global parameter estimates. The parameter search contributes the first term in ( 15 ), which is additive to the accuracy term. (ii) The logarithmic term in ( 15 ) satisfies $\\left\\lceil\\log_{2}\\!\\left(1+\\frac{4L_{\\nabla f}^{2}\\|u^{0}-u^{*}\\|}{\\mu_{x}\\epsilon}\\right)\\right\\rceil\\leq 3+2\\log_{2}\\frac{L_{\\nabla f}}{\\sqrt{\\mu_{x}\\mu_{y}}}+\\log_{2}\\!\\left(1+\\frac{\\mu_{y}\\|u^{0}-u^{*}\\|}{\\epsilon}\\right).$ Since $L_{\\nabla f}/\\sqrt{\\mu_{x}\\mu_{y}}\\geq 1$ , the constant and the additional logarithm of $L_{\\nabla f}/\\sqrt{\\mu_{x}\\mu_{y}}$ are absorbed into the squared logarithm in ( 15 ). This yields the stated $O(\\cdot)$ expression, whose hidden constant depends only on $N_{\\mathcal{A}}$ and $\\mathcal{C}_{\\mathcal{A}}$ ."
+  },
+  {
+    "anchor": "Thmtheorem4",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 4 . Suppose Assumption 1 holds, and $\\mathcal{A}$ satisfies Assumption 3 and the additional execution requirements in Subsection 2.3 . Let $0<\\epsilon<32L_{\\nabla h}$ . Then Algorithm 4 with $D=2D_{\\mathbf{y}}$ is well-defined and terminates with an $\\epsilon$ -stationary point $(x,y)$ of ( 1 ). The numbers of evaluations of $h$ , $\\nabla h$ , $\\prox_{p}$ , and $\\prox_{q}$ , including all unsuccessful trials, are bounded, respectively, by $\\displaystyle 2+2^{13}(1+\\sqrt{2})\\widetilde{\\mathcal{C}}_{\\mathcal{A}}\\sqrt{\\frac{L_{\\nabla h}D_{\\mathbf{y}}}{\\epsilon}}\\left(1+\\frac{L_{\\nabla h}\\Delta_{0}}{\\epsilon^{2}}+\\frac{L_{\\nabla h}D_{\\mathbf{y}}}{\\epsilon}\\right)$ (19) $\\displaystyle=O\\!\\left(1+\\sqrt{\\frac{L_{\\nabla h}D_{\\mathbf{y}}}{\\epsilon}}\\left(1+\\frac{L_{\\nabla h}\\Delta_{0}}{\\epsilon^{2}}+\\frac{L_{\\nabla h}D_{\\mathbf{y}}}{\\epsilon}\\right)\\right),$ where $\\Delta_{0}=\\max_{y}H(x^{0},y)-H^{*}$ , and $D_{\\mathbf{y}}$ and $L_{\\nabla h}$ are given in Assumption 1 (ii) and (iii), respectively."
+  },
+  {
+    "anchor": "Thmremark7",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 7 . The first primal center is $x^{0}$ , so $\\Delta_{0}$ is the original objective gap. The pair $(\\hat{x},\\hat{y})$ is used only as the initial point for the inner calls and is updated after each accepted trial. Algorithm 4 uses the radius bound $D_{\\mathbf{y}}$ , but does not require $L_{\\nabla h}$ or $\\Delta_{0}$ . Its radius test cannot return failure when $D=2D_{\\mathbf{y}}$ ."
+  },
+  {
+    "anchor": "Thmtheorem5",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 5 . Suppose Assumption 1 holds, and $\\mathcal{A}$ satisfies Assumption 3 and the additional execution requirements in Subsection 2.3 . Let $0<\\epsilon<32L_{\\nabla h}$ . Then Algorithm 5 is well-defined and terminates with an $\\epsilon$ -stationary point $(x,y)$ of ( 1 ). The numbers of evaluations of $h$ , $\\nabla h$ , $\\prox_{p}$ , and $\\prox_{q}$ , including all calls to Algorithm 4 , are bounded, respectively, by $O\\!\\left(1+\\sqrt{\\frac{L_{\\nabla h}D_{\\mathbf{y}}}{\\epsilon}}\\left(1+\\frac{L_{\\nabla h}\\Delta_{0}}{\\epsilon^{2}}+\\frac{L_{\\nabla h}D_{\\mathbf{y}}}{\\epsilon}\\right)\\right),$ (20) where $\\Delta_{0}$ is defined in Theorem 4 , and $D_{\\mathbf{y}}$ and $L_{\\nabla h}$ are given in Assumption 1 (ii) and (iii), respectively."
+  },
+  {
+    "anchor": "Thmremark8",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 8 . It can be observer from the above theorem that ALgorithm 5 enjoys a $O(\\epsilon^{-5/2})$ operation complexity for finding an $\\epsilon$ -stationary point $(x,y)$ of ( 1 ). To the best of our knowledge, this improves the best known complexity be a logarithmic factor for the first time. Moreover, our method is parameter-free and equipped with a verifiable termination criterion."
+  }
+]

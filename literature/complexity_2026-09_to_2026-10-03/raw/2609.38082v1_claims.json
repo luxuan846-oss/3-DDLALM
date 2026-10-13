@@ -1,0 +1,47 @@
+[
+  {
+    "anchor": "S2.Thmtheorem2",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 2.2 (Accuracy-dependent query complexity lower bound) . Let $d\\geq 3$ , $L,\\Delta>0$ , $\\mathbf{x}_{0}\\in\\mathbb{R}^{d}$ , and $0<\\delta<\\frac{\\Delta}{L},\\qquad 0<\\epsilon<\\frac{L}{3}.$ For every integer $T\\geq 1$ satisfying $T+1\\leq\\left(\\frac{L-\\epsilon}{2\\epsilon}\\right)^{(d-2)/2},$ (2.10) and every deterministic algorithm $A$ in the local-oracle model above, there exists a fixed $f\\in\\mathcal{F}_{d}(L,\\Delta;\\mathbf{x}_{0})$ with $\\tau_{A}(f;\\mathbf{x}_{0},\\delta,\\epsilon)>T$ . Every point actually queried among the first $T$ calls, and the output if $A$ returns within $T$ calls, satisfies $\\mathrm{dist}(\\mathbf{0},\\partial_{\\delta}f(\\mathbf{q}))>\\epsilon.$ Moreover, $f(\\mathbf{x}_{0})=0$ , $\\inf f=-\\Delta$ , and $\\mathrm{int}(\\arg\\min f)\\neq\\varnothing$ ."
+  },
+  {
+    "anchor": "S2.Thmtheorem3",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 2.3 (Deterministic zeroth-order query bound) . Let $d\\geq 1$ , $L,\\Delta,\\delta>0$ , $\\mathbf{x}_{0}\\in\\mathbb{R}^{d}$ , and $0<\\epsilon<L$ . A deterministic algorithm using only function values returns a $(\\delta,\\epsilon)$ -Goldstein stationary point of every $f\\in\\mathcal{F}_{d}(L,\\Delta;\\mathbf{x}_{0})$ within $1+\\left(\\frac{2\\Delta}{\\delta\\epsilon}+1\\right)\\left(1+\\frac{4L}{\\epsilon}\\right)^{d}$ (2.11) total calls. If $\\epsilon\\geq L$ , the initial point is already valid and the prescribed initial call suffices."
+  },
+  {
+    "anchor": "S2.Thmtheorem4",
+    "kind": "ltx_theorem ltx_theorem_corollary",
+    "text": "Corollary 2.4 (Fixed-accuracy exponential dimension dependence) . For every $d\\geq 4$ and $\\mathbf{x}_{0}\\in\\mathbb{R}^{d}$ , $\\left\\lfloor\\left(\\frac{7}{2}\\right)^{(d-2)/2}\\right\\rfloor\\leq\\mathcal{T}_{\\rm det}\\left(d,1,1,\\tfrac{1}{2},\\tfrac{1}{8};\\mathbf{x}_{0}\\right)\\leq 1+33^{d+1}.$ Consequently, the fixed-accuracy complexity is $\\exp(\\Theta(d))$ . There is no uniform deterministic bound that is a joint polynomial in $(d,\\delta^{-1},\\epsilon^{-1})$ for the full function class, even with $L=\\Delta=1$ ."
+  },
+  {
+    "anchor": "S3.Thmtheorem3",
+    "kind": "ltx_theorem ltx_theorem_proposition",
+    "text": "Proposition 3.3 (Consistency with affine oracle responses) . Let $d\\geq 3$ and $S=\\{\\mathbf{q}_{1},\\ldots,\\mathbf{q}_{N}\\}\\subset\\mathbb{R}^{d}$ be a nonempty finite set of distinct points. Fix $0<\\alpha<\\gamma<1$ satisfying ( 3.1 ), choose $\\beta>1/c_{\\gamma}$ , and define $L_{F}$ by ( 3.6 ). Given $L,\\Delta>0$ and $0<\\delta<\\Delta/L$ , there exist a fixed function $f:\\mathbb{R}^{d}\\to\\mathbb{R}$ , a unit vector $\\mathbf{u}$ , and a common radius $\\rho>0$ such that: (i) $\\Lip(f)\\leq L$ , $\\inf f=-\\Delta$ , and $\\mathrm{int}(\\arg\\min f)\\neq\\varnothing$ ; (ii) for every $i$ and $\\mathbf{x}\\in\\mathbb{B}_{\\rho}^{\\circ}(\\mathbf{q}_{i})$ , $f(\\mathbf{x})=\\frac{L}{L_{F}}\\mathbf{e}_{1}^{\\top}(\\mathbf{x}-\\mathbf{q}_{i}),\\qquad\\bigl(f(\\mathbf{q}_{i}),\\partial f(\\mathbf{q}_{i})\\bigr)=(0,\\{L\\mathbf{e}_{1}/L_{F}\\});$ (3.14) (iii) for every $i$ and $\\mathbf{g}\\in\\partial_{\\delta}f(\\mathbf{q}_{i})$ , $\\left\\langle\\mathbf{g},\\mathbf{u}\\right\\rangle=\\frac{L\\alpha}{L_{F}},$ (3.15) and consequently $\\mathrm{dist}(\\mathbf{0},\\partial_{\\delta}f(\\mathbf{q}_{i}))\\geq\\frac{L\\alpha}{L_{F}}.$ (3.16) If $\\mathbf{x}_{0}\\in S$ , then $f\\in\\mathcal{F}_{d}(L,\\Delta;\\mathbf{x}_{0})$ , $f(\\mathbf{x}_{0})=0$ , and its initial gap is exactly $\\Delta$ ."
+  },
+  {
+    "anchor": "S5.Thmtheorem3",
+    "kind": "ltx_theorem ltx_theorem_proposition",
+    "text": "Proposition 5.3 (Dimension-free first-order query bound) . Let $d\\geq 1$ , $L,\\Delta,\\delta>0$ , $\\mathbf{x}_{0}\\in\\mathbb{R}^{d}$ , and $L/\\sqrt{2}<\\epsilon<L$ . Algorithm 2 returns a $(\\delta,\\epsilon)$ -Goldstein stationary point of every $f\\in\\mathcal{F}_{d}(L,\\Delta;\\mathbf{x}_{0})$ within $2+\\frac{\\Delta L}{\\delta(2\\epsilon^{2}-L^{2})}$ (5.6) first-order oracle calls."
+  },
+  {
+    "anchor": "A1.Thmtheorem1",
+    "kind": "ltx_theorem ltx_theorem_proposition",
+    "text": "Proposition A.1 (Transfer to an algorithm-chosen initial point) . Consider a deterministic algorithm that chooses its initial point from $(d,L,\\Delta,\\delta,\\epsilon)$ before seeing any oracle information, makes its first query there, and counts that call. A uniform $T$ -call guarantee under that convention induces a uniform $T$ -call guarantee in the fixed-initial-point model at the particular initial point it chooses. Consequently, Theorem 2.2 , which holds for every prescribed $\\mathbf{x}_{0}$ , transfers to that convention without losing a query."
+  },
+  {
+    "anchor": "A3.Thmtheorem1",
+    "kind": "ltx_theorem ltx_theorem_proposition",
+    "text": "Proposition C.1 (The finite hard instance is DC) . Every finite hard instance produced by Proposition 3.3 is DC. If $N=1$ , then the construction is $F(\\mathbf{x})=\\mathbf{e}_{1}^{\\top}(\\mathbf{x}-\\mathbf{q}_{1}),\\qquad f(\\mathbf{x})=\\max\\left\\{\\frac{L}{L_{F}}\\mathbf{e}_{1}^{\\top}(\\mathbf{x}-\\mathbf{q}_{1}),-\\Delta\\right\\},$ and $f$ is convex. Taking $p=f$ and $q=0$ gives $\\Lip(q)=0=L(N-1),\\qquad\\Lip(p)\\leq L=LN.$ If $N\\geq 2$ , let $F_{1},\\ldots,F_{N}$ be the branches in ( 3.11 ), let $F=\\min_{i}F_{i}$ , and define $H(\\mathbf{x})=\\sum_{i=1}^{N}F_{i}(\\mathbf{x}),\\qquad K(\\mathbf{x})=\\max_{1\\leq i\\leq N}\\sum_{j\\neq i}F_{j}(\\mathbf{x}).$ Then $H$ and $K$ are convex and $F=H-K$ . Moreover, with $p(\\mathbf{x})=\\max\\left\\{\\frac{L}{L_{F}}H(\\mathbf{x}),\\frac{L}{L_{F}}K(\\mathbf{x})-\\Delta\\right\\},\\qquad q(\\mathbf{x})=\\frac{L}{L_{F}}K(\\mathbf{x}),$ the functions $p,q$ are convex and satisfy $f=p-q$ . The displayed decomposition satisfies $\\Lip(q)\\leq L(N-1),\\qquad\\Lip(p)\\leq LN.$"
+  },
+  {
+    "anchor": "A3.Thmtheorem2",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark C.2 (Comparison with the Kong–Lewis modulus) . Using the notation and DC comparison in Section 6 , the correction in Proposition C.1 gives $\\Lambda(\\delta)\\leq M_{\\rm DC}(f)\\leq\\Lip(q)\\leq L(N-1).$ This is an upper bound only; it does not establish a lower bound proportional to $N$ for either intrinsic quantity. For $N\\geq 2$ , the translation identity gives $K(\\mathbf{x}+t\\mathbf{u})=K(\\mathbf{x})+(N-1)\\alpha t$ for the maximum of the branch sums defining $K$ . The displayed correction $q=(L/L_{F})K$ therefore satisfies $q(\\mathbf{x}+t\\mathbf{u})-q(\\mathbf{x})=\\frac{L\\alpha(N-1)}{L_{F}}t.$ Because $\\|\\mathbf{u}\\|=1$ , this gives $\\frac{L\\alpha(N-1)}{L_{F}}\\leq\\Lip(q)\\leq L(N-1).$ For the parameter choice in Lemma 4.1 , $\\alpha/L_{F}>\\epsilon/L$ . Thus, for $N\\geq 2$ and a fixed ratio $\\epsilon/L>0$ , the Lipschitz constant of this correction is bounded above and below by positive constants times $LN$ . These constants can depend on $\\epsilon/L$ , but not on $d$ or $N$ . The lower bound concerns only the displayed correction and does not compare it with all other admissible corrections. Estimating $M_{\\rm DC}(f)$ over all corrections, or estimating $\\Lambda(\\delta)$ , requires a separate argument."
+  },
+  {
+    "anchor": "A4.Thmtheorem1",
+    "kind": "ltx_theorem ltx_theorem_proposition",
+    "text": "Proposition D.1 (A two-branch function that is not weakly convex) . The interpolation formula ( 3.12 ), followed by the truncation ( 3.17 ), can define a function that is not $\\varrho$ -weakly convex for any finite $\\varrho\\geq 0$ ."
+  }
+]

@@ -1,0 +1,1591 @@
+Content selection saved. Describe the issue below:
+
+Lower Bounds for Nonconvex-Concave Minimax Optimization
+
+We study lower bounds on the first-order oracle complexity of smooth nonconvex–concave minimax optimization. We consider objectives $f$ that are jointly $L$ -smooth in the primal and dual variables $(\bm{x},\bm{y})$ , concave in $\bm{y}$ , and whose primal value function $\Phi(\bm{x}):=\max_{\bm{y}\in\mathcal{Y}}f(\bm{x},\bm{y})$ satisfies the initial-gap condition $\Phi(\bm{0})-\inf_{\bm{x}\in\mathcal{X}}\Phi(\bm{x})\leq\Delta_{\Phi}$ , with a bounded dual domain satisfying $\operatorname{diam}(\mathcal{Y})\leq D_{\mathcal{Y}}$ . We measure stationarity by the norm of the gradient of the Moreau envelope of $\Phi+\iota_{\mathcal{X}}$ with parameter $1/(2L)$ . We prove that any deterministic zero-respecting first-order algorithm requires $\Omega\!\left(L^{2}D_{\mathcal{Y}}\Delta_{\Phi}\,\epsilon^{-3}\right)$ oracle evaluations to find an $\epsilon$ -stationary point. Under an unbiased stochastic first-order oracle with bounded variance, any stochastic zero-respecting algorithm requires $\Omega\!\left(L^{3}D_{\mathcal{Y}}^{2}\Delta_{\Phi}\,\epsilon^{-6}\right)$ oracle evaluations. The same lower bounds hold when $\Delta_{\Phi}$ is replaced by the initial primal–dual gap $\mathcal{G}_{0}$ . These deterministic and stochastic lower bounds match the corresponding upper bounds of [ 14 ] and [ 29 ] , respectively, up to a logarithmic factor in the deterministic setting.
+
+1 Introduction
+
+Minimax optimization provides a common formulation for a broad range of problems in machine learning, statistics, and robust decision making. Such problems arise in applications including two-player zero-sum games [ 24 ] , generative modeling [ 8 ] , reinforcement learning [ 21 , 27 ] , robust and adversarial machine learning [ 15 , 22 ] , and robust optimization [ 2 ] . Optimization of pointwise maxima of nonconvex losses can also be written as a minimax problem through a dual representation [ 30 ] . A canonical formulation is
+
+$\min_{\bm{x}\in\mathcal{X}}\max_{\bm{y}\in\mathcal{Y}}f(\bm{x},\bm{y}),$ (1)
+
+where $\bm{x}$ denotes the model or decision variable and $\bm{y}$ represents an adversary, perturbation, or dual variable. A substantial part of the recent complexity theory has focused on the nonconvex–strongly-concave (NC–SC) setting, for which the first-order complexity is now relatively well understood: near-optimal algorithms and matching lower bounds, up to logarithmic factors, are known under standard smoothness assumptions [ 14 , 11 , 28 ] .
+
+The strong-concavity assumption, however, can be restrictive in applications. In many adversarial and robust formulations, the inner problem is naturally concave but has no intrinsic strongly concave curvature. This motivates the more general nonconvex–concave (NC–C) setting, where $f(\bm{x},\cdot)$ is assumed only concave and the dual geometry is typically controlled through a bounded feasible set $\mathcal{Y}$ , for example with $\operatorname{diam}(\mathcal{Y})\leq D_{\mathcal{Y}}$ . Define the primal value function
+
+$\Phi(\bm{x}):=\max_{\bm{y}\in\mathcal{Y}}f(\bm{x},\bm{y}),$
+
+and its extended value function $\varphi:=\Phi+\iota_{\mathcal{X}}$ . Under $L$ -Lipschitz smoothness assumption on $f$ , $\varphi$ is $L$ -weakly convex. A standard stationarity measure for NC–C minimax optimization is based on the Moreau envelope of $\varphi$ , defined by
+
+$\varphi_{\lambda}(\bm{x}):=\min_{\bm{z}\in\mathbb{R}^{d_{x}}}\left\{\varphi(\bm{z})+\frac{1}{2\lambda}\|\bm{z}-\bm{x}\|^{2}\right\},\qquad 0<\lambda<L^{-1}.$ (2)
+
+The envelope $\varphi_{\lambda}$ is continuously differentiable for such $\lambda$ , even when $\Phi$ itself is not. The literature has focused on finding an $\epsilon$ -stationary point $\bm{x}$ satisfying
+
+$\|\nabla\varphi_{\lambda}(\bm{x})\|\leq\epsilon,$ (3)
+
+or the corresponding expected stationarity criterion in the stochastic setting [ 6 , 23 , 14 , 25 , 10 , 29 ] .
+
+Despite substantial progress on algorithms for NC–C minimax optimization, considerably less is known about its fundamental oracle complexity. The best-known first-order methods achieve $\widetilde{O}(\epsilon^{-3})$ gradient evaluations in the deterministic setting [ 14 ] and $O(\epsilon^{-6})$ stochastic gradient evaluations under a bounded-variance oracle [ 29 ] . In contrast, general lower bounds for NC–C minimax optimization remain much less developed. Since the NC–C class contains smooth nonconvex minimization and NC–SC minimax optimization as special cases, lower bounds for these problems immediately carry over to the NC–C setting. However, such inherited lower bounds do not match the best-known NC–C upper bounds. Existing lower-bound results tailored specifically to NC–C problems are instead largely algorithm-specific: they establish tight complexity guarantees for particular update rules, such as GDA, OGDA, extragradient, and perturbed or smoothed variants of GDA [ 16 , 12 ] , rather than for a broad class of zero-respecting first-order methods.
+
+Table 1: Upper and lower bounds for $\Phi$ -Moreau stationarity under standard normalization. The function classes and the primal-value-gap and primal–dual-gap parameterizations are defined in Definition 2.1 . Universal constants, logarithmic factors, and the small- $\epsilon$ regime are suppressed.
+
+1.1 Our Contributions and Main Results
+
+We establish oracle lower bounds for zero-respecting first-order algorithms. These bounds match the best-known upper bounds [ 14 , 29 ] , up to a logarithmic factor in the deterministic setting. Table 1 summarizes the resulting complexity landscape. Our main contributions are as follows:
+
+Oracle lower bounds for NC–C minimax optimization. We establish oracle lower bounds of $\Omega(L^{2}D_{\mathcal{Y}}\epsilon^{-3})$ in the deterministic setting and $\Omega(L^{3}D_{\mathcal{Y}}^{2}\epsilon^{-6})$ in the stochastic setting. Both bounds hold under either of two standard initial-gap conditions: a bounded initial primal–dual gap or a bounded initial gap measured through the Moreau envelope of the primal value function. The deterministic lower bound matches the upper bound of [ 14 ] up to logarithmic factors, while the stochastic lower bound tightly matches the upper bound of [ 29 ] . These results characterize its intrinsic difficulty relative to smooth nonconvex minimization and NC–SC minimax optimization.
+
+A bounded zero-chain construction. The deterministic lower bound is based on a sequence of primal coordinates coupled through dual blocks: each successive primal coordinate can become nonzero only after first-order information has propagated through the intervening dual block. The construction is scaled so that the unconstrained dual maximizer lies in the interior of the prescribed bounded dual domain and the primal value function admits an exact representation. Moreover, the joint gradient is Lipschitz continuous with a constant independent of the chain dimensions, while the norm of the Moreau-envelope gradient remains bounded away from zero whenever the terminal primal coordinate is zero. Thus, the construction combines the standard nonconvex zero-chain obstruction with the additional oracle cost required for first-order information to propagate through the dual variables.
+
+A stochastic dual-gate mechanism. For the stochastic lower bound, we replace the quadratic difference terms $(y_{k}-y_{k+1})^{2}$ along each dual block with clipped quadratic terms. This modification preserves both the primal value function and the dual maximizers, while uniformly bounding the gradient components corresponding to $y_{2}^{(i)},\ldots,y_{N}^{(i)}$ in each dual block. We apply Bernoulli randomization only to these coordinates, leaving $y_{1}^{(i)}$ and all primal coordinates deterministic. After contracting the deterministic transitions, the progress analysis reduces to a probability- $p$ zero-chain over randomized dual coordinates. This yields the stochastic lower bound without imposing a uniform bound on the full dual gradient.
+
+1.2 Related Work
+
+Lower bounds for smooth nonconvex optimization.
+
+Lower bounds for first-order optimization have a long history dating back to the information-based complexity framework of Nemirovski and Yudin [ 17 ] . In the noiseless convex setting, oracle complexity is well understood for a broad range of smooth [ 18 ] and nonsmooth [ 17 ] problems. A common approach is to construct high-dimensional instances for which each oracle call reveals only limited information about the solution. This idea appears in several forms, including resisting-oracle arguments, linear-span restrictions, and zero-respecting constructions. Zero-respecting constructions are particularly useful for nonconvex problems, where the hard instance can be organized as a chain whose coordinates must be revealed sequentially.
+
+For smooth high-dimensional nonconvex optimization, Carmon et al. [ 3 , 4 ] establish essentially tight first-order lower bounds for finding stationary points. For an $L$ -smooth function with initial function gap at most $\Delta$ , their results imply that $\Omega\!\left(L\Delta\epsilon^{-2}\right)$ first-order oracle evaluations are necessary in the worst case to find an $\bm{x}$ satisfying $\|\nabla F(\bm{x})\|\leq\epsilon$ . This bound matches the complexity of gradient descent up to constants under the standard normalization. Their construction has a sequential zero-chain structure: before the algorithm reveals a given coordinate, the oracle provides no information about subsequent coordinates. This zero-respecting framework has become a standard tool for proving lower bounds in high-dimensional nonconvex optimization and is also the starting point of the hard instance developed in this paper. In stochastic nonconvex optimization, Arjevani et al. [ 1 ] combine deterministic nonconvex zero-chains with stochastic oracle constructions to obtain sharp lower bounds under bounded-variance and mean-squared-smoothness assumptions. Under a bounded-variance stochastic gradient oracle, the worst-case complexity can scale as $\Omega(\epsilon^{-4})$ , whereas mean-squared smoothness leads to the characteristic $\epsilon^{-3}$ dependence. These results show that the zero-chain framework applies to both deterministic and stochastic oracle models.
+
+Lower bounds for minimax optimization.
+
+For convex–concave saddle-point problems, lower complexity bounds were established using primal–dual hard instances in which information propagates alternately between the two variable blocks [ 19 , 26 ] . For nonconvex–strongly-concave (NC–SC) minimax optimization, Zhang et al. [ 28 ] established lower bounds of $\Omega\!\left(L\Delta\sqrt{\kappa}\,\epsilon^{-2}\right)$ in the deterministic setting and $\Omega\!\left(L\Delta\sqrt{\kappa}\,\epsilon^{-2}+\kappa^{1/3}\sigma^{2}\epsilon^{-4}\right)$ in the stochastic setting. Although NC–SC problems form a subclass of NC–C problems, the lower bounds in [ 11 , 28 ] cannot be directly extended to the NC–C setting by simply letting the strong-concavity parameter $\mu$ tend to zero. In particular, increasing the condition number alone does not ensure that the dual maximizers remain within a domain of prescribed diameter. Imposing such a restriction on the dual domain may alter the induced primal value function and thereby invalidate the gradient lower bound established for the original construction. Likewise, rescaling the instance to enforce the diameter constraint changes both the smoothness and stationarity scales, leading to a weaker complexity lower bound than the one established here.
+
+Upper bounds for NC–C minimax optimization.
+
+We next review existing upper bounds for NC–C minimax optimization under the stationarity measure adopted in this paper, namely, the norm of the gradient of a Moreau envelope of the primal value function. In the deterministic setting, existing first-order methods achieve an essentially $\widetilde{O}(\epsilon^{-3})$ complexity under this stationarity criterion. This rate was first attained by Thekumparampil et al. [ 23 ] using an inexact proximal-point method. It was subsequently achieved by several other approaches, including accelerated inexact proximal-point methods [ 14 , 10 ] , Catalyst-type schemes [ 25 ] , and primal–dual smoothing methods for max-structured nonconvex optimization [ 30 ] . In the stochastic setting, Zhang et al. [ 29 ] proposed SAPD+, which achieves an $O(\epsilon^{-6})$ stochastic oracle complexity under a bounded-variance stochastic gradient oracle. Accordingly, the relevant upper-bound benchmarks are $\widetilde{O}(\epsilon^{-3})$ in the deterministic setting and $O(\epsilon^{-6})$ in the stochastic setting.
+
+Notation.
+
+For a vector $\bm{z}\in\mathbb{R}^{d}$ , $z_{i}$ is its $i$ th coordinate, $\operatorname{supp}(\bm{z}):=\{i\in[d]:z_{i}\neq 0\}$ is its support, and $\left\lVert\bm{z}\right\rVert$ and $\left\lVert\bm{z}\right\rVert_{\infty}$ are its Euclidean and $\ell_{\infty}$ norms. For a matrix $M$ , $\left\lVert M\right\rVert_{\rm op}$ is its Euclidean operator norm and $M^{\top}$ is its transpose. We write $\bm{e}_{i}$ for the $i$ th standard basis vector, $\mathbb{B}_{2}^{d}$ for the Euclidean unit ball in $\mathbb{R}^{d}$ , and $\mathsf{P}_{C}$ for Euclidean projection onto a nonempty closed convex set $C$ . For a nonempty closed convex set $C$ , its indicator function is denoted by $\iota_{C}$ , where
+
+$\iota_{C}(\bm{z}):=\begin{cases}0,&\bm{z}\in C,\\ +\infty,&\bm{z}\notin C,\end{cases}$
+
+and its normal cone is $N_{C}(\bm{z}):=\{\bm{v}:\langle\bm{v},\bm{u}-\bm{z}\rangle\leq 0\text{ for every }\bm{u}\in C\}$ . For $f:\mathcal{X}\times\mathcal{Y}\to\mathbb{R}$ , we write $\nabla f=(\nabla_{\bm{x}}f,\nabla_{\bm{y}}f)$ for the joint gradient. All unspecified norms are Euclidean.
+
+2 Problem Setup
+
+In this section, we first formalize the problem class, the stationarity measure, and the oracle model. We then introduce the two components used in both the deterministic and stochastic hard instances: the tridiagonal path matrix $B_{\alpha,N}$ , which defines the dual chain, and the smooth functions $\nu$ and $r$ , which are used to construct the primal relay.
+
+2.1 Function Class and Stationarity Measure
+
+For a $f:\mathcal{X}\times\mathcal{Y}\to\mathbb{R}$ , define its primal value function by
+
+$\Phi_{f}(\bm{x}):=\max_{\bm{y}\in\mathcal{Y}}f(\bm{x},\bm{y}),\qquad\bm{x}\in\mathcal{X},$
+
+and its extended-valued version by $\varphi_{f}:=\Phi_{f}+\iota_{\mathcal{X}}$ on the ambient primal space.
+
+We first introduce the function classes for smooth nonconvex–concave minimax problems. The two classes differ in how the initial optimality gap is measured. The first bounds the initial gap of the primal value function, whereas the second bounds the primal–dual gap at the reference point $(0,0)$ . The former is used in [ 14 ] , while the latter is used in [ 29 ] .
+
+Given $L,D_{\mathcal{Y}}>0$ , consider continuously differentiable functions $f:\mathcal{X}\times\mathcal{Y}\to\mathbb{R}$ , over all finite dimensions $d_{x},d_{y}\in\mathbb{N}$ , where $\mathcal{X}\subset\mathbb{R}^{d_{x}}$ and $\mathcal{Y}\subset\mathbb{R}^{d_{y}}$ are nonempty closed convex sets with $0\in\mathcal{X}$ and $0\in\mathcal{Y}$ , satisfying:
+
+$f$ is jointly $L$ -smooth on $\mathcal{X}\times\mathcal{Y}$ :
+
+$\|\nabla f(\bm{x},\bm{y})-\nabla f(\bm{x}^{\prime},\bm{y}^{\prime})\|\leq L\|(\bm{x},\bm{y})-(\bm{x}^{\prime},\bm{y}^{\prime})\|,\qquad\forall(\bm{x},\bm{y}),(\bm{x}^{\prime},\bm{y}^{\prime})\in\mathcal{X}\times\mathcal{Y}.$
+
+For every $\bm{x}\in\mathcal{X}$ , $f(\bm{x},\cdot)$ is concave.
+
+The dual domain satisfies: $\operatorname{diam}(\mathcal{Y}):=\sup_{\bm{y},\bm{y}^{\prime}\in\mathcal{Y}}\|\bm{y}-\bm{y}^{\prime}\|\leq D_{\mathcal{Y}}$ .
+
+The initial scale is parameterized in either of the following two ways:
+
+For $\Delta_{\Phi}>0$ , $\mathcal{F}_{\rm NCC}(L,\Delta_{\Phi},D_{\mathcal{Y}})$ denotes the class of functions satisfying
+
+$\Phi_{f}(\bm{0})-\inf_{\bm{x}\in\mathcal{X}}\Phi_{f}(\bm{x})\leq\Delta_{\Phi};$
+
+For $\mathcal{G}_{0}>0$ , $\mathcal{F}_{\rm NCC}^{\rm pd}(L,\mathcal{G}_{0},D_{\mathcal{Y}})$ denotes the class of functions satisfying
+
+$\max_{\bm{y}\in\mathcal{Y}}f(0,\bm{y})-\inf_{\bm{x}\in\mathcal{X}}f(\bm{x},0)\leq\mathcal{G}_{0}.$
+
+No convexity is imposed on $f(\cdot,\bm{y})$ . Since $\mathcal{Y}$ is closed and has finite diameter in a finite-dimensional space, it is compact. The continuity of $f$ therefore ensures that the maximum defining $\Phi_{f}$ is attained for every $\bm{x}\in\mathcal{X}$ . These two quantities satisfy
+
+$\Phi_{f}(\bm{0})-\inf_{\bm{x}\in\mathcal{X}}\Phi_{f}(\bm{x})\leq\max_{\bm{y}\in\mathcal{Y}}f(0,\bm{y})-\inf_{\bm{x}\in\mathcal{X}}f(\bm{x},0),$
+
+because $\Phi_{f}(\bm{x})\geq f(\bm{x},0)$ for every $\bm{x}\in\mathcal{X}$ . Thus, a bound on the initial primal–dual gap also bounds the initial primal value gap. We will present the lower bounds for both classes.
+
+For $\lambda>0$ and $\bm{x}\in\mathbb{R}^{d_{x}}$ , define the constrained proximal set by
+
+$\mathcal{P}_{\lambda}(\bm{x}):=\arg\min_{\bm{p}\in\mathcal{X}}\left\{\Phi_{f}(\bm{p})+\frac{1}{2\lambda}\left\lVert\bm{p}-\bm{x}\right\rVert^{2}\right\},\quad G_{\lambda}(\bm{x};\bm{p}):=\lambda^{-1}(\bm{x}-\bm{p}),\quad\bm{p}\in\mathcal{P}_{\lambda}(\bm{x}).$ (4)
+
+The initial-gap condition implies that $\Phi_{f}$ is bounded below on $\mathcal{X}$ . Equivalently, the set $\mathcal{P}_{\lambda}(\bm{x})$ is the proximal set of the extended-value function $\varphi_{f}$ at $\bm{x}$ with parameter $\lambda$ on $\mathbb{R}^{d_{x}}$ . Although $f$ is smooth, the primal value function $\Phi_{f}$ need not be differentiable because the dual maximizer may be nonunique. Nevertheless, joint $L$ -smoothness of $f$ implies that $f(\cdot,\bm{y})$ is $L$ -weakly convex for every $\bm{y}\in\mathcal{Y}$ . Consequently, $\varphi_{f}$ is a proper, lower semicontinuous, and $L$ -weakly convex function. We next recall the standard Moreau-envelope regularity result for this class of functions.
+
+Let $\varphi:\mathbb{R}^{d_{x}}\to\mathbb{R}\cup\{+\infty\}$ be proper, lower semicontinuous, and $L$ -weakly convex. For every $0<\lambda<L^{-1}$ and every $\bm{x}\in\mathbb{R}^{d_{x}}$ , the proximal problem has a unique minimizer, denoted by $\bm{p}_{\lambda}^{\varphi}(\bm{x})$ :
+
+$\arg\min_{\bm{p}\in\mathbb{R}^{d_{x}}}\left\{\varphi(\bm{p})+\frac{1}{2\lambda}\left\lVert\bm{p}-\bm{x}\right\rVert^{2}\right\}=\{\bm{p}_{\lambda}^{\varphi}(\bm{x})\}.$
+
+Moreover, the Moreau envelope
+
+$\varphi_{\lambda}(\bm{x}):=\min_{\bm{p}\in\mathbb{R}^{d_{x}}}\left\{\varphi(\bm{p})+\frac{1}{2\lambda}\left\lVert\bm{p}-\bm{x}\right\rVert^{2}\right\}$
+
+is continuously differentiable, and
+
+$\nabla\varphi_{\lambda}(\bm{x})=\lambda^{-1}\bigl(\bm{x}-\bm{p}_{\lambda}^{\varphi}(\bm{x})\bigr).$ (5)
+
+Applying Lemma 2.2 to $\varphi_{f}=\Phi_{f}+\iota_{\mathcal{X}}$ , we write $\bm{p}_{\lambda}(\bm{x}):=\bm{p}_{\lambda}^{\varphi_{f}}(\bm{x})$ . For $0<\lambda<L^{-1}$ , this gives
+
+$\mathcal{P}_{\lambda}(\bm{x})=\{\bm{p}_{\lambda}(\bm{x})\},\qquad\nabla(\varphi_{f})_{\lambda}(\bm{x})=G_{\lambda}\bigl(\bm{x};\bm{p}_{\lambda}(\bm{x})\bigr).$
+
+For both function classes, we measure stationarity using the gradient of the Moreau envelope of the value function, as defined below. This is a standard stationarity measure for weakly convex optimization [ 6 , 7 ] and nonconvex–concave minimax optimization [ 29 ] . By Lemma 2.2 , the corresponding stationarity conditions can equivalently be expressed in terms of $G_{1/(2L)}\bigl(\bm{x};\bm{p}_{1/(2L)}(\bm{x})\bigr).$
+
+Let $f\in\mathcal{F}_{\rm NCC}(L,\Delta_{\Phi},D_{\mathcal{Y}})\cup\mathcal{F}_{\rm NCC}^{\rm pd}(L,\mathcal{G}_{0},D_{\mathcal{Y}})$ . A point $\bm{x}\in\mathcal{X}$ is $\epsilon$ -stationary for the primal value function if
+
+$\left\lVert\nabla(\varphi_{f})_{1/(2L)}(\bm{x})\right\rVert\leq\epsilon.$
+
+A random output $\bm{x}$ is expected $\epsilon$ -stationary if
+
+$\mathbb{E}\left\lVert\nabla(\varphi_{f})_{1/(2L)}(\bm{x})\right\rVert\leq\epsilon.$
+
+2.2 Oracle and Algorithm Classes
+
+We consider deterministic and stochastic first-order algorithms for nonconvex–concave minimax optimization. We begin by specifying the corresponding first-order oracle models.
+
+The deterministic first-order oracle of a differentiable function $f:\mathcal{X}\times\mathcal{Y}\rightarrow\mathbb{R}$ is the mapping
+
+$\mathcal{O}_{f}^{\rm fo}(\bm{x},\bm{y})=(f(\bm{x},\bm{y}),\nabla_{\bm{x}}f(\bm{x},\bm{y}),\nabla_{\bm{y}}f(\bm{x},\bm{y})),\qquad(\bm{x},\bm{y})\in\mathcal{X}\times\mathcal{Y}.$
+
+The stochastic first-order oracle of a differentiable function $f:\mathcal{X}\times\mathcal{Y}\rightarrow\mathbb{R}$ returns
+
+$\mathcal{O}_{f}^{\rm sfo}(\bm{x},\bm{y})=(f(\bm{x},\bm{y}),\widehat{\nabla}_{\bm{x}}f(\bm{x},\bm{y};\xi),\widehat{\nabla}_{\bm{y}}f(\bm{x},\bm{y};\xi)),\qquad(\bm{x},\bm{y})\in\mathcal{X}\times\mathcal{Y},$
+
+where $\xi$ is a random variable satisfying
+
+$\mathbb{E}_{\xi}[\widehat{\nabla}f(\bm{x},\bm{y};\xi)]=\nabla f(\bm{x},\bm{y}),\qquad\mathbb{E}_{\xi}\left[\|\widehat{\nabla}f(\bm{x},\bm{y};\xi)-\nabla f(\bm{x},\bm{y})\|^{2}\right]\leq\sigma^{2}.$
+
+We restrict attention to zero-respecting first-order algorithms. Informally, such an algorithm can update only coordinates that have been revealed by previous first-order oracle responses. This class includes many standard first-order methods, including gradient descent–ascent, extragradient, and their standard momentum and stochastic variants [ 3 , 11 ] .
+
+A first-order algorithm is zero-respecting if, for every admissible function $f$ and every oracle transcript, the $(t+1)$ -th iterate $(\bm{x}^{t+1},\bm{y}^{t+1})$ satisfies
+
+$\bm{x}^{t+1}\in\left\{\mathsf{P}_{\mathcal{X}}(\bm{u}):\operatorname{supp}(\bm{u})\subseteq\bigcup_{0\leq i\leq t}\left(\operatorname{supp}(\bm{x}^{i})\cup\operatorname{supp}(\nabla_{\bm{x}}f(\bm{x}^{i},\bm{y}^{i}))\right)\right\},$
+
+and
+
+$\bm{y}^{t+1}\in\left\{\mathsf{P}_{\mathcal{Y}}(\bm{v}):\operatorname{supp}(\bm{v})\subseteq\bigcup_{0\leq i\leq t}\left(\operatorname{supp}(\bm{y}^{i})\cup\operatorname{supp}(\nabla_{\bm{y}}f(\bm{x}^{i},\bm{y}^{i}))\right)\right\}.$
+
+In the stochastic setting, the same condition is imposed pathwise with $\nabla_{\bm{x}}f(\bm{x}^{i},\bm{y}^{i})$ and $\nabla_{\bm{y}}f(\bm{x}^{i},\bm{y}^{i})$ replaced by the realized stochastic gradients $\widehat{\nabla}_{\bm{x}}f(\bm{x}^{i},\bm{y}^{i};\xi_{i})$ and $\widehat{\nabla}_{\bm{y}}f(\bm{x}^{i},\bm{y}^{i};\xi_{i})$ , respectively.
+
+Throughout, all algorithms are initialized at $(\bm{x}^{0},\bm{y}^{0})=(0,0)$ , and the final primal output is also required to satisfy the same zero-respecting condition as the primal iterates. Since Euclidean projection onto each feasible set constructed in Section 3 preserves coordinate support, Definition 2.6 implies that every query is supported only on coordinates revealed by previous gradient evaluations. In the stochastic setting, the zero-respecting condition is imposed pathwise with respect to the realized stochastic gradients.
+
+2.3 Zero-chain Framework
+
+Zero-chain constructions are a standard tool for establishing first-order oracle lower bounds [ 3 , 4 , 1 , 11 , 9 , 5 ] . To describe the sequential revelation of coordinates, for $\bm{v}\in\mathbb{R}^{d}$ and $\theta\geq 0$ , define
+
+$\operatorname{prog}_{\theta}(\bm{v}):=\max\Bigl(\{j\in\{1,\ldots,d\}:|v_{j}|>\theta\}\cup\{0\}\Bigr).$
+
+Thus, $\operatorname{prog}_{\theta}(\bm{v})$ is the largest index of a coordinate whose magnitude exceeds $\theta$ , or zero if no such coordinate exists. In particular, $\operatorname{prog}_{0}(\bm{v})$ is the largest index in the support of $\bm{v}$ , with $\operatorname{prog}_{0}(0)=0$ .
+
+A differentiable function $f:\mathcal{X}\subseteq\mathbb{R}^{d}\to\mathbb{R}$ is a first-order zero-chain if, for every $\bm{x}\in\mathcal{X}$ ,
+
+$\operatorname{prog}_{0}(\nabla f(\bm{x}))\leq\min\{\operatorname{prog}_{0}(\bm{x})+1,d\}.$
+
+This condition ensures that a gradient evaluation reveals no coordinate with index greater than $\operatorname{prog}_{0}(\bm{x})+1$ . The following stochastic analogue additionally bounds the probability of revealing that next coordinate.
+
+Let $p\in(0,1]$ , and let $f:\mathcal{X}\subseteq\mathbb{R}^{d}\to\mathbb{R}$ be a differentiable function equipped with a stochastic first-order oracle $\mathcal{O}_{f}^{\rm sfo}(\bm{x})=\bigl(f(\bm{x}),\widehat{\nabla}f(\bm{x};\xi)\bigr)$ . We call $f$ a probability- $p$ zero-chain with respect to this oracle if, for every $\bm{x}\in\mathcal{X}$ with $r:=\operatorname{prog}_{0}(\bm{x})<d$ ,
+
+$\mathbb{P}_{\xi}\!\left(\operatorname{prog}_{0}(\widehat{\nabla}f(\bm{x};\xi))=r+1\right)\leq p,\qquad\mathbb{P}_{\xi}\!\left(\operatorname{prog}_{0}(\widehat{\nabla}f(\bm{x};\xi))>r+1\right)=0.$
+
+Here, the probability is taken over the randomness of the oracle.
+
+Thus, the stochastic gradient has no nonzero coordinate with index greater than $r+1$ almost surely, and its $(r+1)$ st coordinate is nonzero with probability at most $p$ .
+
+When Euclidean projection onto each feasible set preserves coordinate support, a zero-respecting algorithm initialized at the origin can reveal at most one new coordinate per oracle call on a deterministic zero-chain. After $t$ oracle calls, its next query and any admissible output are therefore supported on the first $t$ coordinates. After $t$ oracle calls, its next query and any admissible output are therefore supported on the first $t$ coordinates. To establish a deterministic lower bound, it thus suffices to construct a zero-chain in the target function class for which the stationarity measure exceeds $\epsilon$ at every feasible point $\bm{x}$ satisfying $\operatorname{prog}_{0}(\bm{x})<T$ . Any zero-respecting algorithm must then make at least $T$ oracle calls to obtain an $\epsilon$ -stationary point. For a probability- $p$ zero-chain, each oracle call reveals a new coordinate with conditional probability at most $p$ , given the preceding oracle transcript and the current query. Consequently, revealing the first $T$ coordinates requires $\Omega(T/p)$ oracle calls in expectation.
+
+2.4 Component Functions
+
+We now introduce several functions that will serve as building blocks for the hard instance constructed later. We also establish some of their key properties, which provide intuition for how these functions are used in the construction.
+
+Quadratic chain.
+
+Following [ 18 , 4 ] , for $\alpha>0$ and an integer $N\geq 2$ , define the tridiagonal matrix
+
+$B_{\alpha,N}:=\begin{bmatrix}1+\alpha^{2}&-1&&&\\ -1&2&-1&&\\ &\ddots&\ddots&\ddots&\\ &&-1&2&-1\\ &&&-1&1\end{bmatrix}\in\mathbb{R}^{N\times N}.$ (6)
+
+The associated quadratic function is
+
+$f_{\alpha,N}(\bm{x}):=\frac{1}{2}\bm{x}^{\top}B_{\alpha,N}\bm{x}=\frac{\alpha^{2}}{2}x_{1}^{2}+\frac{1}{2}\sum_{k=1}^{N-1}(x_{k}-x_{k+1})^{2}.$ (7)
+
+Each difference term couples two neighboring coordinates, while the term $\alpha^{2}x_{1}^{2}/2$ ensures that $B_{\alpha,N}$ is positive definite. The tridiagonal structure implies that each gradient component depends only on the corresponding coordinate and its immediate neighbors. Our later construction includes the negative of this quadratic function in the dual variable, which is a concave term. Its structure restricts the propagation of first-order information along the dual path and allows the dual maximizer to be computed explicitly.
+
+Scalar component functions.
+
+For nonconvex optimization, Carmon et al. [ 4 ] construct zero-chains using the smooth functions
+
+$\bar{\Psi}(t):=\begin{cases}0,&t\leq\frac{1}{2},\\ \exp\left(1-\frac{1}{(2t-1)^{2}}\right),&t>\frac{1}{2},\end{cases}\qquad\bar{\Phi}(t):=\sqrt{e}\int_{-\infty}^{t}e^{-s^{2}/2}\,ds.$ (8)
+
+The function $\bar{\Psi}$ vanishes below a fixed threshold, which restricts when one coordinate can affect the gradient of the next. In our minimax instance construction, we want the dual maximizers to remain within a prescribed bounded domain while retaining a stationarity lower bound for the value function that is independent of the chain length. A direct rescaling of an unconstrained zero-chain from [ 4 ] does not guarantee both properties. We therefore introduce two continuously differentiable functions:
+
+$\nu(t):=\begin{cases}0,&t\leq 0,\\ 3t^{2}-2t^{3},&0<t<1,\\ 1,&t\geq 1,\end{cases}\qquad r(t):=\begin{cases}t,&t\leq 0,\\ t(1-t),&0<t<1,\\ 1-t,&t\geq 1.\end{cases}$ (9)
+
+The function $\nu$ is the cubic transition function used in previous zero-chain constructions [ 20 ] . It takes values in $[0,1]$ , equals zero on $(-\infty,0]$ , and equals one on $[1,\infty)$ . We use it to couple successive primal coordinates without introducing a direct gradient contribution at a coordinate equal to zero, since $\nu^{\prime}(0)=0$ .
+
+The function $r$ has zeros at $0$ and $1$ , and satisfies $r^{\prime}(0)=1$ . In the hard instance, this nonzero derivative allows an auxiliary variable to produce a nonzero gradient at the next primal coordinate even when that coordinate is zero. The following lemma summarizes the key properties of these two functions. Its proof is deferred to Appendix A.1 .
+
+The functions $\nu$ and $r$ are $C^{1,1}$ and satisfy
+
+$|\nu^{\prime}|\leq\frac{3}{2},\qquad|\nu^{\prime\prime}|\leq 6,\qquad|r^{\prime}|\leq 1,\qquad|r^{\prime\prime}|\leq 2,$ (10)
+
+where the second-derivative bounds hold almost everywhere. Moreover,
+
+$\nu(0)=\nu^{\prime}(0)=r(0)=0,\qquad r^{\prime}(0)=1,\qquad\nu^{\prime}(t)=6r(t),\quad 0<t<1.$ (11)
+
+For every $\kappa\in(0,1/8)$ , if $t\leq 2\kappa$ , then
+
+$\nu(t)\leq 2|r(t)|,\qquad r^{\prime}(t)\geq 1-4\kappa,$
+
+and if $t\geq 1-2\kappa$ , then
+
+$1-\nu(t)\leq 2|r(t)|.$
+
+The derivative bounds are used to establish smoothness of the hard instance. The remaining inequalities relate the values and derivatives of the component functions near the two thresholds $0$ and $1$ ; they are used to prove the stationarity lower bound before the terminal primal coordinate is revealed.
+
+Normalized coupling between primal coordinates.
+
+Fix an integer $T\geq 2$ . For $\bm{u}\in\mathbb{R}^{T}$ , define $\bm{q}(\bm{u})=(q_{1}(\bm{u}),\ldots,q_{T-1}(\bm{u}))$ by
+
+$q_{i}(\bm{u}):=\nu(u_{i})\bigl(1-\nu(u_{i+1})\bigr),\qquad i=1,\ldots,T-1.$ (12)
+
+Each component depends only on two successive coordinates. In particular, $q_{i}(\bm{u})=0$ if $u_{i}\leq 0$ or $u_{i+1}\geq 1$ , whereas $q_{i}(\bm{u})=1$ if $u_{i}\geq 1$ and $u_{i+1}\leq 0$ . Thus, $\bm{q}$ identifies transitions from a coordinate above the upper threshold to a subsequent coordinate below the lower threshold. Such a transition is central to the stationarity argument when the first primal coordinate is near or above $1$ but the terminal coordinate is still zero.
+
+Although each component of $\bm{q}$ is bounded by one, its Euclidean norm can grow with $T$ . We therefore define
+
+$\bm{\rho}(\bm{u}):=\frac{\bm{q}(\bm{u})}{\sqrt{1+\left\lVert\bm{q}(\bm{u})\right\rVert^{2}}},$
+
+so that
+
+$\left\lVert\bm{\rho}(\bm{u})\right\rVert\leq 1,\qquad\bm{u}\in\mathbb{R}^{T}.$ (13)
+
+This uniform bound allows $\bm{\rho}$ to be coupled to auxiliary primal variables whose feasible radius is independent of $T$ . The normalization preserves the zero coordinates of $\bm{q}$ . Moreover, if $u_{j}=0$ , then $\nu^{\prime}(u_{j})=0$ , so the $j$ th column of $D\bm{q}(\bm{u})$ , and hence of $D\bm{\rho}(\bm{u})$ , vanishes. This property is used to verify that the normalized coupling preserves the required zero-chain structure.
+
+The next lemma gives uniform bounds on the Jacobians of $\bm{q}$ and $\bm{\rho}$ , where $D$ denotes the Jacobian. All constants are independent of $T$ , which is essential for obtaining a smoothness bound independent of the dimensions of the hard instance. The proof is given in Appendix A.2 .
+
+For all $\bm{u},\bm{v}\in\mathbb{R}^{T}$ ,
+
+$\left\lVert D\bm{q}(\bm{u})\right\rVert_{\rm op}\leq 3,\qquad\left\lVert D\bm{q}(\bm{u})-D\bm{q}(\bm{v})\right\rVert_{\rm op}\leq 17\left\lVert\bm{u}-\bm{v}\right\rVert,$
+
+and
+
+$\left\lVert D\bm{\rho}(\bm{u})\right\rVert_{\rm op}\leq 3,\qquad\left\lVert D\bm{\rho}(\bm{u})-D\bm{\rho}(\bm{v})\right\rVert_{\rm op}\leq 71\left\lVert\bm{u}-\bm{v}\right\rVert.$
+
+3 The Hard Instance
+
+In this section, we first construct the deterministic hard instance and then establish the properties needed to prove both the deterministic and stochastic lower bounds.
+
+3.1 Construction of the Hard Instance
+
+The hard instance is constructed as the sum of primal and dual components. The primal component depends only on the primal variables and forms a chain along the primal coordinates. The dual component depends on both the primal and dual variables; it forms a chain along the dual coordinates while coupling the dual part to the primal chain [ 11 , 9 , 5 ] .
+
+Primal components.
+
+Fix $T,N\geq 2$ . The primal variables are $\tilde{\bm{u}}\in\mathbb{R}^{T},\,\,\tilde{\bm{a}},\tilde{\bm{b}}\in\mathbb{R}^{T-1}$ , with feasible domain
+
+$C_{0}:=\mathbb{R}^{T}\times\left\{(\tilde{\bm{a}},\tilde{\bm{b}})\in\mathbb{R}^{T-1}\times\mathbb{R}^{T-1}:\|\tilde{\bm{a}}\|^{2}+\|\tilde{\bm{b}}\|^{2}\leq R^{2}\right\},$ (14)
+
+where $R>0$ is a universal constant. Using the relay function $r$ defined in ( 9 ), define $\bar{\bm{r}}(\tilde{\bm{u}}):=(r(\tilde{u}_{2}),\ldots,r(\tilde{u}_{T}))$ . Then, the primal component function $\Psi_{0}:\mathbb{R}^{T}\times\mathbb{R}^{T-1}\times\mathbb{R}^{T-1}\rightarrow\mathbb{R}$ is defined as
+
+$\displaystyle\Psi_{0}(\tilde{\bm{u}},\tilde{\bm{a}},\tilde{\bm{b}}):=$ $\displaystyle H(\tilde{\bm{u}})+\frac{1}{2}\left\lVert\tilde{\bm{a}}-\bm{\rho}(\tilde{\bm{u}})\right\rVert^{2}+\frac{1}{2}\left\lVert\tilde{\bm{b}}-\bar{\bm{r}}(\tilde{\bm{u}})\right\rVert^{2}+\frac{1}{2}\bigl(\|\tilde{\bm{a}}\|^{2}+\|\tilde{\bm{b}}\|^{2}\bigr),$ (15)
+
+where $c_{\eta}>0$ is a universal constant. The function $H:\mathbb{R}^{T}\rightarrow\mathbb{R}$ is defined as
+
+$H(\tilde{\bm{u}}):=-c_{\eta}\tilde{u}_{1}-c_{\eta}\sum_{j=2}^{T}\nu(\tilde{u}_{j})+\frac{c_{\eta}}{2}\sum_{j=1}^{T}r(\tilde{u}_{j})^{2}.$
+
+As illustrated in Figure 1 , the two quadratic coupling terms connect successive primal coordinates through the auxiliary variables $\tilde{u}_{i}$ . The term $\frac{1}{2}\|\tilde{\bm{a}}-\bm{\rho}(\tilde{\bm{u}})\|^{2}$ couples $\tilde{u}_{i}$ to $\tilde{a}_{i}$ through $\rho_{i}(\tilde{\bm{u}})$ , while $\frac{1}{2}\|\tilde{\bm{b}}-\bar{\bm{r}}(\tilde{\bm{u}})\|^{2}$ couples $\tilde{b}_{i}$ to $\tilde{u}_{i+1}$ . In particular, when $\tilde{u}_{i+1}=0$ , the latter term contributes $-\tilde{b}_{i}$ to the partial derivative with respect to $\tilde{u}_{i+1}$ , since $r(0)=0$ and $r^{\prime}(0)=1$ . The shifted coordinates in the definition of $\bar{\bm{r}}(\tilde{\bm{u}})$ therefore ensure that each auxiliary variable $\tilde{b}_{i}$ is coupled to the next primal coordinate.
+
+The function $H(\tilde{\bm{u}})$ ensures that this sequential dependence leads to a stationarity lower bound. Its linear term $-c_{\eta}\tilde{u}_{1}$ produces a nonzero gradient in the first primal coordinate at the origin. The terms involving $\nu$ and $r^{2}$ are used to show that, at a point with sufficiently small constrained stationarity residual, each coordinate of $\tilde{\bm{u}}$ must lie either near zero or above a threshold close to one. The first coordinate must lie above this threshold. If the terminal coordinate remains zero, there must therefore be a transition between the two regions. The coupling terms rule out a small stationarity residual at such a transition, yielding the required lower bound before the terminal primal coordinate is revealed.
+
+Dual components.
+
+The dual variable consists of $T-1$ path blocks $\bm{y}^{(i)}\in\mathbb{R}^{N}$ . Set $\alpha:=N^{-1/2}$ . The matrix $B_{\alpha,N}$ in ( 6 ) satisfies the positive-definite identity in ( 7 ). For $a,b\in\mathbb{R}$ , the function $h_{N}:(\mathbb{R}\times\mathbb{R})\times\mathbb{R}^{N}\rightarrow\mathbb{R}$ is defined as
+
+$h_{N}(a,b;\bm{y}):=\ell_{0}\left[-\frac{1}{2}\bm{y}^{\top}B_{\alpha,N}\bm{y}+\left(\alpha a\bm{e}_{1}-\frac{\alpha}{2}b\bm{e}_{N}\right)^{\top}\bm{y}-\frac{\alpha^{2}(N-1)}{8}b^{2}\right],$ (16)
+
+where $\ell_{0}>0$ is a scaling parameter to be specified in the lower-bound theorems.
+
+The tridiagonal matrix $B_{\alpha,N}$ couples neighboring dual coordinates, while the linear terms couple $a$ to $y_{1}$ and $b$ to $y_{N}$ . Thus, first-order information propagates from one endpoint to the other through the intervening dual coordinates. Together with the primal coupling terms in $\Psi_{0}$ , these dependencies give the zero-chain structure shown in Figure 1 : a zero-respecting algorithm must reveal a block of $N$ dual coordinates before it can proceed to the next primal coordinate.
+
+Rescaling and coupling the two components.
+
+For a scaling parameter $s>0$ , define the primal and dual feasible sets by
+
+$X_{0}:=\mathbb{R}^{T}\times\left\{(\bm{a},\bm{b})\in\mathbb{R}^{T-1}\times\mathbb{R}^{T-1}:\left\lVert\bm{a}\right\rVert^{2}+\left\lVert\bm{b}\right\rVert^{2}\leq(Rs)^{2}\right\},\qquad Y_{0}:=\frac{D_{\mathcal{Y}}}{2}\mathbb{B}_{2}^{(T-1)N}.$ (17)
+
+The variables $\bm{u}$ are unconstrained, whereas the auxiliary variables $(\bm{a},\bm{b})$ lie in a Euclidean ball of radius $Rs$ . This bound controls the norms of the unconstrained dual maximizers of the path blocks. With the parameter choices specified below, their concatenation lies in the interior of $Y_{0}$ for every feasible primal point. Consequently, restricting the dual maximization to $Y_{0}$ does not change its value.
+
+For $\bm{x}=(\bm{u},\bm{a},\bm{b})\in X_{0}$ , define the scaled variables
+
+$\tilde{\bm{u}}:=\bm{u}/s,\qquad\tilde{\bm{a}}:=\bm{a}/s,\qquad\tilde{\bm{b}}:=\bm{b}/s.$ (18)
+
+Then $(\tilde{\bm{u}},\tilde{\bm{a}},\tilde{\bm{b}})\in C_{0}$ , so the scaled primal domain is independent of $s$ . The parameters $\ell_{0}$ and $s$ will be chosen to obtain the required smoothness and stationarity bounds while satisfying the dual feasibility condition.
+
+We now define the hard instance $f:\bigl(\mathbb{R}^{T}\times\mathbb{R}^{T-1}\times\mathbb{R}^{T-1}\bigr)\times\mathbb{R}^{(T-1)N}\to\mathbb{R}$ by
+
+$f(\bm{x},\bm{y}):=\ell_{0}s^{2}\Psi_{0}(\tilde{\bm{u}},\tilde{\bm{a}},\tilde{\bm{b}})+\sum_{i=1}^{T-1}h_{N}(a_{i},b_{i};\bm{y}^{(i)}).$ (19)
+
+The minimax problem is defined by restricting $f$ to $X_{0}\times Y_{0}$ , and its primal value function is
+
+$\Phi(\bm{x}):=\max_{\bm{y}\in Y_{0}}f(\bm{x},\bm{y}),\qquad\bm{x}\in X_{0}.$ (20)
+
+For this instance, $\mathcal{P}_{\lambda}$ and $G_{\lambda}$ denote the proximal set and scaled proximal displacement defined in ( 4 ), with primal value function $\Phi$ and feasible set $\mathcal{X}=X_{0}$ .
+
+Coordinate ordering.
+
+We order the joint coordinates according to the dependencies shown in Figure 1 . Starting from $u_{1}$ , each stage passes through $a_{i}$ , the dual coordinates $y_{1}^{(i)},\ldots,y_{N}^{(i)}$ , and $b_{i}$ before reaching $u_{i+1}$ . The total number of coordinates is
+
+$K=1+(T-1)(N+3).$ (21)
+
+Let $\bm{\pi}=(\pi_{1},\ldots,\pi_{K})$ denote this ordering of the coordinate labels. Explicitly,
+
+$\pi_{1+(i-1)(N+3)}=u_{i},\qquad i=1,\ldots,T,$
+
+and, for $i=1,\ldots,T-1$ and $j=1,\ldots,N$ ,
+
+$\pi_{2+(i-1)(N+3)}=a_{i},\qquad\pi_{2+(i-1)(N+3)+j}=y_{j}^{(i)},\qquad\pi_{N+3+(i-1)(N+3)}=b_{i}.$
+
+The corresponding ordering is also used for the normalized primal coordinates. Since $s>0$ , normalization preserves their support.
+
+For a joint vector $\bm{v}$ , let $[\bm{v}]_{\pi_{r}}$ denote its coordinate at position $r$ in the ordering $\bm{\pi}$ illustrated in Figure 1 . For $\theta\geq 0$ , define
+
+$\operatorname{prog}^{\bm{\pi}}_{\theta}(\bm{v}):=\max\Bigl(\{r\in\{1,\ldots,K\}:|[\bm{v}]_{\pi_{r}}|>\theta\}\cup\{0\}\Bigr).$ (22)
+
+For a primal vector, we apply this definition after adjoining zero dual components, retaining the same joint coordinate ordering.
+
+Figure 1: Zero-chain structure of the hard instance in ( 19 ). The primal coordinates $\tilde{u}_{i},\tilde{a}_{i},\tilde{b}_{i}$ are connected through dual path blocks $y^{(i)}_{1},\ldots,y^{(i)}_{N}$ , so information must propagate sequentially through each dual path before the next primal relay coordinate can be revealed.
+
+3.2 Structural Properties
+
+We next establish the properties of the hard instance needed for the lower-bound analysis. These include an exact expression for the primal value function and its initial gap, a smoothness bound independent of the problem dimensions, and a stationarity lower bound when the terminal primal coordinate is zero.
+
+We first analyze the dual maximization problem and the resulting primal value function. To state the value-function formula, define $\Psi:\mathbb{R}^{T}\times\mathbb{R}^{T-1}\times\mathbb{R}^{T-1}\to\mathbb{R}$ by
+
+$\displaystyle\Psi(\tilde{\bm{u}},\tilde{\bm{a}},\tilde{\bm{b}}):=\Psi_{0}(\tilde{\bm{u}},\tilde{\bm{a}},\tilde{\bm{b}})+\frac{1}{2}\left\lVert\tilde{\bm{a}}-\frac{1}{2}\tilde{\bm{b}}\right\rVert^{2}.$ (23)
+
+The following lemma shows that, under the stated feasibility condition, the unconstrained dual maximizer is unique and lies in the interior of $Y_{0}$ for every feasible primal point. Thus, restricting the dual maximization to $Y_{0}$ leaves its value unchanged. The lemma expresses $\Phi$ as a scaled version of $\Psi$ and computes the exact initial value gap, which will be used to choose parameters satisfying the gap bound of the target function class. The proof is given in Appendix A.3 .
+
+Assume $2N^{2}R^{2}s^{2}\leq(D_{\mathcal{Y}}/4)^{2}$ . Then the hard instance ( 19 ) satisfies:
+
+For every $\bm{x}\in X_{0}$ , the function $f(\bm{x},\bm{y})$ is strictly concave in $\bm{y}$ , and its unconstrained maximizer belongs to the interior of $Y_{0}$ .
+
+The constrained value function has the exact representation
+
+$\Phi(\bm{u},\bm{a},\bm{b})=\ell_{0}s^{2}\Psi(\bm{u}/s,\bm{a}/s,\bm{b}/s).$ (24)
+
+The initial gap is
+
+$\Phi(0)-\inf_{\bm{x}\in X_{0}}\Phi(\bm{x})=c_{\eta}\left(T+\frac{1}{2}\right)\ell_{0}s^{2}.$ (25)
+
+We next verify joint smoothness of the hard instance. The following lemma bounds the Lipschitz constant of $\nabla f$ by $C_{\ell}\ell_{0}$ , independently of the chain lengths $T,N$ and the scaling parameter $s$ . Thus, choosing $\ell_{0}=L/C_{\ell}$ ensures that $f$ is jointly $L$ -smooth, while leaving $T,N$ and $s$ available to satisfy the remaining requirements of the construction. The proof is given in Appendix A.4 .
+
+For every $T,N\geq 2$ , every $s>0$ , and every $\ell_{0}>0$ , the hard instance ( 19 ) satisfies
+
+$\left\lVert\nabla f(\bm{z})-\nabla f(\bm{z}^{\prime})\right\rVert\leq C_{\ell}\ell_{0}\left\lVert\bm{z}-\bm{z}^{\prime}\right\rVert\qquad\text{for all }\bm{z},\bm{z}^{\prime}\in X_{0}\times Y_{0},$ (26)
+
+for a universal constant $C_{\ell}>0$ .
+
+The remaining step is to relate the zero-chain structure to stationarity of the primal value function. Specifically, we show that the norm of the Moreau-envelope gradient remains bounded away from zero whenever the terminal primal coordinate is zero. To establish this bound, we first analyze the normalized primal function $\Psi$ on $C_{0}$ . Define its constrained stationarity residual by
+
+$\mathcal{R}_{C_{0}}(\tilde{\bm{u}},\tilde{\bm{a}},\tilde{\bm{b}}):=\operatorname{dist}\Bigl(0,\nabla\Psi(\tilde{\bm{u}},\tilde{\bm{a}},\tilde{\bm{b}})+N_{C_{0}}(\tilde{\bm{u}},\tilde{\bm{a}},\tilde{\bm{b}})\Bigr).$ (27)
+
+This residual measures the violation of the first-order optimality condition for minimizing $\Psi$ over $C_{0}$ .
+
+The following lemma first verifies that $f$ is a first-order zero-chain with respect to the ordering $\bm{\pi}$ mentioned in Section 3.1 . It then establishes a uniform positive lower bound on $\mathcal{R}_{C_{0}}$ whenever $\tilde{u}_{T}\leq 1/4$ . Using the optimality conditions for the proximal problem, this bound yields a lower bound on the Moreau-envelope gradient norm at every feasible primal point with $u_{T}=0$ . Since $u_{T}$ is the last coordinate in the ordering, the zero-chain property ensures that the same bound applies to every deterministic zero-respecting output produced in fewer than $K$ oracle calls. The proof is given in Appendix A.5 .
+
+Assume $2N^{2}R^{2}s^{2}\leq(D_{\mathcal{Y}}/4)^{2}$ , and set
+
+$\bar{L}:=C_{\ell}\ell_{0}.$ (28)
+
+Then the hard instance has the following properties.
+
+The function $f$ is a first-order zero-chain with respect to the coordinate ordering $\bm{\pi}$ .
+
+For every $(\tilde{\bm{u}},\tilde{\bm{a}},\tilde{\bm{b}})\in C_{0}$ with $\tilde{u}_{T}\leq 1/4$ ,
+
+$\mathcal{R}_{C_{0}}(\tilde{\bm{u}},\tilde{\bm{a}},\tilde{\bm{b}})\geq C_{\delta},$ (29)
+
+for a universal constant $C_{\delta}>0$ .
+
+For every primal point $\bm{x}=(\bm{u},\bm{a},\bm{b})\in X_{0}$ with $u_{T}=0$ and every $\bm{p}\in\mathcal{P}_{1/(2\bar{L})}(\bm{x})$ ,
+
+$\left\lVert G_{1/(2\bar{L})}(\bm{x};\bm{p})\right\rVert>\frac{C_{\delta}}{2}\ell_{0}s.$ (30)
+
+Consequently, the same bound holds for every deterministic zero-respecting output produced in fewer than $K$ oracle calls.
+
+4 Lower Bound for Deterministic NC-C Minimax Optimization
+
+We now derive the deterministic first-order oracle lower bound by specifying the parameters of the hard instance in ( 19 ). Using Lemmas 3.1 – 3.3 , we choose $\ell_{0},s,T,N$ so that the instance satisfies the prescribed smoothness, initial-gap, and dual-diameter bounds, while the norm of the Moreau-envelope gradient exceeds $\epsilon$ at every feasible primal point with $u_{T}=0$ . The zero-chain property then implies that a zero-respecting algorithm must reveal the terminal primal coordinate before returning an $\epsilon$ -stationary point. Counting the oracle calls required to reach this coordinate gives the following theorem. Its proof is given in Appendix B.1 .
+
+There exist universal constants $c_{0},c_{1}>0$ such that, for every $L,\Delta_{\Phi},D_{\mathcal{Y}}>0$ and every $\epsilon$ satisfying
+
+$0<\epsilon\leq c_{1}\min\{\sqrt{L\Delta_{\Phi}},\,LD_{\mathcal{Y}}\},$ (31)
+
+there is an instance $f\in\mathcal{F}_{\rm NCC}(L,\Delta_{\Phi},D_{\mathcal{Y}})$ on finite-dimensional closed convex sets $X_{0},Y_{0}$ , with $\operatorname{diam}(Y_{0})=D_{\mathcal{Y}}$ , for which the following lower bound holds. Let $\Phi(\bm{x}):=\max_{\bm{y}\in Y_{0}}f(\bm{x},\bm{y})$ and $\varphi:=\Phi+\iota_{X_{0}}$ . For any deterministic zero-respecting first-order algorithm, every zero-respecting primal output $\bm{x}\in X_{0}$ produced after $q$ joint oracle calls with
+
+$q<c_{0}L^{2}D_{\mathcal{Y}}\Delta_{\Phi}\,\epsilon^{-3}$ (32)
+
+satisfies
+
+$\left\lVert\nabla\varphi_{1/(2L)}(\bm{x})\right\rVert=\left\lVert G_{1/(2L)}(\bm{x};\bm{p})\right\rVert>\epsilon,$ (33)
+
+where $\bm{p}$ is the unique point in $\mathcal{P}_{1/(2L)}(\bm{x})$ . Consequently, the deterministic zero-respecting first-order oracle complexity of finding an $\epsilon$ -stationary point is
+
+$\Omega\!\left(L^{2}D_{\mathcal{Y}}\Delta_{\Phi}\,\epsilon^{-3}\right).$
+
+Theorem 4.1 expresses the lower bound in terms of the initial primal value gap. For the hard instance constructed in its proof, this gap equals the initial primal–dual gap. Therefore, replacing $\Delta_{\Phi}$ by $\mathcal{G}_{0}$ in the same construction gives the corresponding lower bound for $\mathcal{F}_{\rm NCC}^{\rm pd}(L,\mathcal{G}_{0},D_{\mathcal{Y}})$ . The proof of the following corollary is given in Appendix B.2 .
+
+There exists a universal constant $c>0$ such that, for every $L,\mathcal{G}_{0},D_{\mathcal{Y}}>0$ and every $\epsilon$ satisfying
+
+$0<\epsilon\leq c\min\{\sqrt{L\mathcal{G}_{0}},\,LD_{\mathcal{Y}}\},$
+
+there is an instance
+
+$f\in\mathcal{F}_{\rm NCC}^{\rm pd}(L,\mathcal{G}_{0},D_{\mathcal{Y}})$
+
+on which every deterministic zero-respecting first-order algorithm requires
+
+$\Omega\!\left(L^{2}D_{\mathcal{Y}}\mathcal{G}_{0}\,\epsilon^{-3}\right)$
+
+joint oracle evaluations to return an $\epsilon$ -stationary point of the primal value function.
+
+5 Lower Bound for Stochastic NC-C Minimax Optimization
+
+We extend the deterministic construction to establish a lower bound under unbiased stochastic first-order oracles with bounded variance. The construction retains the same primal value function and the stationarity lower bound at points with $u_{T}=0$ . We modify the dual blocks so that the gradient components corresponding to $y_{2}^{(i)},\ldots,y_{N}^{(i)}$ are uniformly bounded, and apply Bernoulli randomization only to these coordinates. The coordinates $y_{1}^{(i)}$ and all primal coordinates are returned deterministically.
+
+To reach the terminal primal coordinate, a zero-respecting algorithm must cross $M=(T-1)(N-1)$ randomized dual coordinates. Each such coordinate requires a successful Bernoulli trial, while the intervening deterministic transitions can be treated as free in the progress analysis. Combining this progress bound with the stationarity obstruction yields the stochastic oracle lower bound.
+
+Throughout this section, we retain the notation and universal constants introduced in Section 3 . In particular, we use the same primal functions $\Psi_{0},\Psi$ , feasible sets $C_{0},X_{0},Y_{0}$ , coordinate ordering $\bm{\pi}$ , and chain length $K$ . We take $\alpha=N^{-1/2}$ and $\ell_{0}=L/C_{\ell}$ , using the same universal constant $C_{\ell}$ fixed in Appendix A.4 . Only the dual blocks are modified.
+
+Figure 2: The functions $r$ and $\chi_{\tau}$ , together with their derivatives. The function $r$ couples auxiliary primal variables to subsequent primal coordinates. The clipping in $\chi_{\tau}$ provides the uniform gradient bound needed for the randomized dual coordinates $y_{2}^{(i)},\ldots,y_{N}^{(i)}$ .
+
+5.1 Clipping the Dual Quadratic Terms
+
+The stochastic oracle will randomize only the dual coordinates $y_{2}^{(i)},\ldots,y_{N}^{(i)}$ . To control the variance of this oracle, we need a uniform bound on the corresponding gradient components. In the deterministic construction, the quadratic difference terms produce gradients whose magnitude depends on the neighboring dual coordinates, and the diameter bound on $Y_{0}$ alone does not provide the required dependence on $N$ . We therefore replace these terms with clipped quadratics.
+
+For $\tau>0$ , define
+
+$\chi_{\tau}(t):=\begin{cases}\frac{1}{2}t^{2},&|t|\leq\tau,\\[5.69054pt] \tau|t|-\frac{1}{2}\tau^{2},&|t|>\tau,\end{cases}\qquad\chi_{\tau}^{\prime}(t)=\begin{cases}-\tau,&t<-\tau,\\ t,&|t|\leq\tau,\\ \tau,&t>\tau.\end{cases}$ (34)
+
+The function $\chi_{\tau}$ is convex and continuously differentiable, and its derivative satisfies
+
+$|\chi_{\tau}^{\prime}(t)|\leq\tau,\qquad|\chi_{\tau}^{\prime}(t)-\chi_{\tau}^{\prime}(t^{\prime})|\leq|t-t^{\prime}|,\qquad t,t^{\prime}\in\mathbb{R}.$ (35)
+
+The first bound controls the gradient contribution of each difference term, while the second provides the regularity needed for a smoothness bound independent of the problem dimensions. The function and its derivative are shown in Figure 2 .
+
+We choose the clipping threshold as
+
+$\tau_{N}:=R\alpha s.$ (36)
+
+For the deterministic maximizer of a block with feasible endpoint parameters $a_{i},b_{i}$ , every difference between neighboring dual coordinates equals $\alpha b_{i}/2$ . Since $|b_{i}|\leq Rs$ , its magnitude is at most $\tau_{N}/2$ . Thus, every such difference lies strictly inside the quadratic region of $\chi_{\tau_{N}}$ . The lemma below verifies that this choice preserves both the maximizer and the maximum value of each feasible block.
+
+For scalar parameters $a,b\in\mathbb{R}$ , we define the clipped dual block as
+
+$h_{N}^{\rm clip}(a,b;\bm{y}):=\ell_{0}\left[-\sum_{k=1}^{N-1}\chi_{\tau_{N}}(y_{k}-y_{k+1})-\frac{\alpha^{2}}{2}y_{1}^{2}+\bm{c}(a,b)^{\top}\bm{y}-\frac{\alpha^{2}(N-1)}{8}b^{2}\right].$ (37)
+
+where $\bm{c}(a,b):=\alpha a\bm{e}_{1}-\frac{\alpha}{2}b\bm{e}_{N}$ . Replacing each deterministic dual block by this function gives
+
+$f^{\rm sg}(\bm{x},\bm{y}):=\ell_{0}s^{2}\Psi_{0}(\tilde{\bm{u}},\tilde{\bm{a}},\tilde{\bm{b}})+\sum_{i=1}^{T-1}h_{N}^{\rm clip}(a_{i},b_{i};\bm{y}^{(i)}),\qquad\tilde{\bm{u}}=\frac{\bm{u}}{s},\quad\tilde{\bm{a}}=\frac{\bm{a}}{s},\quad\tilde{\bm{b}}=\frac{\bm{b}}{s}.$ (38)
+
+We use the same feasible sets as in the deterministic construction:
+
+$X_{0}=\mathbb{R}^{T}\times\left\{(\bm{a},\bm{b})\in\mathbb{R}^{T-1}\times\mathbb{R}^{T-1}:\left\lVert\bm{a}\right\rVert^{2}+\left\lVert\bm{b}\right\rVert^{2}\leq(Rs)^{2}\right\},\qquad Y_{0}=\frac{D_{\mathcal{Y}}}{2}\mathbb{B}_{2}^{(T-1)N}.$
+
+Define the primal value function by
+
+$\Phi_{\rm sg}(\bm{x}):=\max_{\bm{y}\in Y_{0}}f^{\rm sg}(\bm{x},\bm{y}),\qquad\bm{x}\in X_{0},$ (39)
+
+and let $\varphi_{\rm sg}:=\Phi_{\rm sg}+\iota_{X_{0}}$ denote its extended-valued version.
+
+The following lemma establishes the properties needed for the stochastic construction. In addition to preserving the primal value function, clipping retains concavity, joint smoothness, and the zero-chain property. It also gives a uniform bound on the gradient components corresponding to $y_{j}^{(i)}$ , $j=2,\ldots,N$ , which are precisely the coordinates randomized by the stochastic oracle. The proof is given in Appendix C.1 .
+
+Assume $T,N\geq 2$ , $\alpha=N^{-1/2}$ , and
+
+$2N^{2}R^{2}s^{2}\leq(D_{\mathcal{Y}}/4)^{2}.$ (40)
+
+Then the instance ( 38 ) has the following properties.
+
+For every $\bm{x}=(\bm{u},\bm{a},\bm{b})\in X_{0}$ and every $i=1,\ldots,T-1$ , the vector $\bm{y}^{*}(a_{i},b_{i})$ with components
+
+$y_{k}^{*}(a_{i},b_{i})=\frac{a_{i}}{\alpha}-\frac{b_{i}}{2\alpha}-\frac{\alpha b_{i}}{2}(k-1),\qquad k=1,\ldots,N,$ (41)
+
+is the unique maximizer of $h_{N}^{\rm clip}(a_{i},b_{i};\cdot)$ over $\mathbb{R}^{N}$ , and
+
+$\max_{\bm{y}\in\mathbb{R}^{N}}h_{N}^{\rm clip}(a_{i},b_{i};\bm{y})=\frac{\ell_{0}}{2}\left(a_{i}-\frac{b_{i}}{2}\right)^{2}.$ (42)
+
+The concatenation of these block maximizers lies in the interior of $Y_{0}$ . Consequently, the constrained primal value function equals that of the deterministic instance:
+
+$\Phi_{\rm sg}(\bm{u},\bm{a},\bm{b})=\ell_{0}s^{2}\Psi(\bm{u}/s,\bm{a}/s,\bm{b}/s).$ (43)
+
+In particular,
+
+$\Phi_{\rm sg}(0)-\inf_{\bm{x}\in X_{0}}\Phi_{\rm sg}(\bm{x})=c_{\eta}\left(T+\frac{1}{2}\right)\ell_{0}s^{2}.$ (44)
+
+For every $\bm{x}\in X_{0}$ , the function $f^{\rm sg}(\bm{x},\cdot)$ is concave on $Y_{0}$ .
+
+The hard instance $f^{\rm sg}(\bm{x},\bm{y})$ is differentiable and satisfies
+
+$\left\lVert\nabla f^{\rm sg}(\bm{z})-\nabla f^{\rm sg}(\bm{z}^{\prime})\right\rVert\leq C_{\ell}\ell_{0}\left\lVert\bm{z}-\bm{z}^{\prime}\right\rVert,\qquad\bm{z},\bm{z}^{\prime}\in X_{0}\times Y_{0}.$ (45)
+
+In particular, with $\ell_{0}=L/C_{\ell}$ , the function $f^{\rm sg}$ is $L$ -smooth.
+
+The function $f^{\rm sg}$ is a first-order zero-chain with respect to the ordering $\bm{\pi}$ :
+
+$\operatorname{prog}^{\bm{\pi}}_{0}\bigl(\nabla f^{\rm sg}(\bm{z})\bigr)\leq\min\{\operatorname{prog}^{\bm{\pi}}_{0}(\bm{z})+1,K\},\qquad\bm{z}\in X_{0}\times Y_{0}.$ (46)
+
+Moreover, for every $\bm{z}\in X_{0}\times Y_{0}$ , we have
+
+$\left|\nabla_{y_{j}^{(i)}}f^{\rm sg}(\bm{z})\right|\leq G_{N},\qquad i=1,\ldots,T-1,\quad j=2,\ldots,N.$ (47)
+
+where $G_{N}=2\ell_{0}\tau_{N}$ .
+
+5.2 A Probability- $p$ Dual Zero-chain
+
+We first recall two standard results for stochastic zero-chains.
+
+Let $f:\mathcal{X}\to\mathbb{R}$ be a zero-chain on $\mathcal{X}\subset\mathbb{R}^{T}$ . For $\bm{x}\in\mathcal{X}$ , let $i^{*}(\bm{x}):=\inf\{i\in[T]:x_{i}=0\}$ denote the next coordinate to be discovered. For $p\in(0,1]$ , define
+
+$[\widehat{\nabla}f(\bm{x},\xi)]_{i}:=\begin{cases}\dfrac{\xi}{p}\nabla_{i}f(\bm{x}),&i=i^{*}(\bm{x}),\\[4.30554pt] \nabla_{i}f(\bm{x}),&\text{otherwise},\end{cases}$
+
+where $\xi\sim\mathrm{Bernoulli}(p)$ . Suppose $\|\nabla f(\bm{x})\|_{\infty}\leq G$ for every $\bm{x}\in\mathcal{X}$ . Then $O:\bm{x}\mapsto\bigl(f(\bm{x}),\widehat{\nabla}f(\bm{x},\xi)\bigr)$ is a stochastic first-order oracle with variance bounded by $\sigma^{2}\leq G^{2}\frac{1-p}{p}$ . Moreover, $f$ equipped with $O$ is a probability- $p$ zero-chain.
+
+Let $f:\mathcal{X}\to\mathbb{R}$ , where $\mathcal{X}\subset\mathbb{R}^{T}$ satisfies $\operatorname{supp}(P_{\mathcal{X}}(\bm{x}))=\operatorname{supp}(\bm{x}),\,\,\forall\,\bm{x}\in\mathbb{R}^{T}$ , and suppose that $f$ is a probability- $p$ zero-chain equipped with a stochastic first-order oracle. Then, for any first-order algorithm, with probability at least $1-\delta$ ,
+
+$x_{T}^{t}=0,\qquad\forall\,t\leq\frac{T-\log(1/\delta)}{2p}.$
+
+We now apply the same Bernoulli randomization to the clipped construction. We randomize only the dual coordinates $y_{j}^{(i)},\,\,i=1,\ldots,T-1,\,\,j=2,\ldots,N$ . The coordinates $y_{1}^{(i)}$ and all primal coordinates are left deterministic. By Part 5 of Lemma 5.1 , every randomized coordinate satisfies, for every feasible $\bm{z}$ ,
+
+$\left|\nabla_{y_{j}^{(i)}}f^{\rm sg}(\bm{z})\right|\leq G_{N},\qquad G_{N}:=2\ell_{0}\tau_{N},\qquad j=2,\ldots,N.$ (48)
+
+At an oracle call, if the next coordinate in the zero-chain ordering is one of the randomized dual coordinates, we multiply only that gradient component by $\xi/p_{N}$ , where $\xi\sim\mathrm{Bernoulli}(p_{N})$ . All remaining gradient components are returned exactly. If the next coordinate is not randomized, the exact gradient is returned.
+
+Since all nonrandomized gradient components are returned exactly, the difference $\widehat{\nabla}f^{\rm sg}(\bm{z};\xi)-\nabla f^{\rm sg}(\bm{z})$ is supported only on the randomized dual coordinate. Therefore, the bound in ( 48 ) and the Bernoulli calculation in Lemma 5.2 give
+
+$\mathbb{E}_{\xi}\left[\widehat{\nabla}f^{\rm sg}(\bm{z};\xi)\right]=\nabla f^{\rm sg}(\bm{z}),$ (49)
+
+and
+
+$\mathbb{E}_{\xi}\left[\left\|\widehat{\nabla}f^{\rm sg}(\bm{z};\xi)-\nabla f^{\rm sg}(\bm{z})\right\|^{2}\right]\leq G_{N}^{2}\frac{1-p_{N}}{p_{N}}.$ (50)
+
+For a prescribed variance bound $\sigma^{2}$ , choose
+
+$p_{N}:=\begin{cases}1,&\sigma=0,\\[4.30554pt] \min\{1,G_{N}^{2}/\sigma^{2}\},&\sigma>0.\end{cases}$ (51)
+
+Then
+
+$G_{N}^{2}\frac{1-p_{N}}{p_{N}}\leq\sigma^{2},$
+
+so the resulting oracle is unbiased with mean-square error at most $\sigma^{2}$ .
+
+We next consider the progress of a stochastic zero-respecting algorithm. Each dual block contains $N-1$ randomized coordinates,
+
+$y_{2}^{(i)},\ldots,y_{N}^{(i)},$
+
+so the total number of randomized dual coordinates that must be crossed before the terminal primal coordinate $u_{T}$ can be activated is
+
+$M:=(T-1)(N-1).$ (52)
+
+The transitions through $u_{i}$ , $a_{i}$ , $y_{1}^{(i)}$ , and $b_{i}$ are deterministic. Treating these deterministic transitions as free can only accelerate the algorithm. Hence, after suppressing them, progress is measured through the ordered sequence
+
+$y_{2}^{(1)},\ldots,y_{N}^{(1)},y_{2}^{(2)},\ldots,y_{N}^{(2)},\ldots,y_{2}^{(T-1)},\ldots,y_{N}^{(T-1)}.$
+
+By the zero-chain property in Lemma 5.1 , these coordinates cannot be skipped, while each next randomized coordinate is revealed only after a successful Bernoulli trial with probability $p_{N}$ . Therefore the progress bound of Lemma 5.3 applies to this contracted sequence.
+
+Taking $\delta=1/4$ and replacing the chain length in Lemma 5.3 by $M$ gives
+
+$q\leq\frac{M-\log 4}{2p_{N}}$ (53)
+
+and consequently
+
+$\mathbb{P}(u_{T}=0)\geq\frac{3}{4}.$ (54)
+
+Since
+
+$M=(T-1)(N-1)=\Theta(TN),$
+
+contracting the deterministic transitions changes only universal constants in the final oracle-complexity bound.
+
+By Lemma 5.1 , the clipped construction has the same primal value function, and hence the same proximal mapping, as the deterministic construction. Therefore the stationarity lower bound in Lemma 3.3 also applies to $f^{\rm sg}$ . Choose
+
+$s:=\frac{8\epsilon}{3C_{\delta}\ell_{0}}.$ (55)
+
+Since $C_{\ell}\ell_{0}=L$ , Part 3 of Lemma 3.3 gives
+
+$\left\|\nabla(\varphi_{\rm sg})_{1/(2L)}(\bm{x})\right\|>\frac{C_{\delta}}{2}\ell_{0}s=\frac{4}{3}\epsilon$
+
+whenever $u_{T}=0$ . Under ( 53 ), this event has probability at least $3/4$ . Taking expectations therefore yields the following lemma.
+
+Assume ( 40 ), the scale ( 55 ), and the progress budget ( 53 ). Let $\bm{x}$ be any zero-respecting primal output produced after $q$ oracle calls to the stochastic oracle defined above, and let
+
+$\bm{p}=p_{1/(2L)}(\bm{x})$
+
+denote the unique proximal point of $\varphi_{\rm sg}$ at scale $1/(2L)$ . Then
+
+$\mathbb{E}\left\|G_{1/(2L)}(\bm{x};\bm{p})\right\|>\epsilon.$
+
+5.3 The Stochastic Lower Bound
+
+We now choose the chain lengths to satisfy the prescribed initial-gap and dual-diameter bounds. With $\ell_{0}=L/C_{\ell}$ and $s$ given by ( 55 ), these choices have the orders
+
+$T=\Theta\!\left(L\Delta_{\Phi}\,\epsilon^{-2}\right),\qquad N=\Theta\!\left(LD_{\mathcal{Y}}\,\epsilon^{-1}\right).$
+
+The number of randomized dual coordinates is therefore
+
+$M=(T-1)(N-1)=\Theta(TN).$
+
+The probability $p_{N}$ is chosen as in ( 51 ) to satisfy the variance bound. Combining the resulting progress bound with Lemma 5.4 gives the following theorem.
+
+There exist universal constants $c_{\rm d},c_{\rm n},c_{1}>0$ such that, for every $L,\Delta_{\Phi},D_{\mathcal{Y}}>0$ , every $\sigma\geq 0$ , and every $\epsilon$ satisfying
+
+$0<\epsilon\leq c_{1}\min\{\sqrt{L\Delta_{\Phi}},\,LD_{\mathcal{Y}}\},$ (56)
+
+there is an instance $f^{\rm sg}\in\mathcal{F}_{\rm NCC}(L,\Delta_{\Phi},D_{\mathcal{Y}})$ on finite-dimensional closed convex sets $X_{0},Y_{0}$ , with $\operatorname{diam}(Y_{0})=D_{\mathcal{Y}}$ , equipped with an unbiased stochastic first-order oracle whose mean-square error is at most $\sigma^{2}$ . For this instance and oracle, every zero-respecting primal output $\bm{x}\in X_{0}$ produced by an adaptive stochastic zero-respecting algorithm after $q$ oracle calls with
+
+$q<c_{\rm d}L^{2}D_{\mathcal{Y}}\Delta_{\Phi}\,\epsilon^{-3}+c_{\rm n}L^{3}D_{\mathcal{Y}}^{2}\Delta_{\Phi}\sigma^{2}\,\epsilon^{-6}$ (57)
+
+satisfies
+
+$\mathbb{E}\!\left[\left\lVert\nabla(\varphi_{\rm sg})_{1/(2L)}(\bm{x})\right\rVert\right]>\epsilon.$ (58)
+
+Consequently, finding an expected $\epsilon$ -stationary point requires
+
+$\Omega\!\left(L^{2}D_{\mathcal{Y}}\Delta_{\Phi}\,\epsilon^{-3}+L^{3}D_{\mathcal{Y}}^{2}\Delta_{\Phi}\sigma^{2}\,\epsilon^{-6}\right)$ (59)
+
+stochastic first-order oracle evaluations.
+
+The dependence on the problem parameters follows from the gradient bound $G_{N}$ and the number $M$ of randomized dual coordinates. Since
+
+$G_{N}=2\ell_{0}\tau_{N},\qquad\tau_{N}=R\alpha s,\qquad\alpha^{2}N=1,$
+
+we have, under ( 55 ),
+
+$G_{N}^{2}N=4R^{2}\ell_{0}^{2}s^{2}=\Theta(\epsilon^{2}).$
+
+With the choice of $p_{N}$ in ( 51 ), including $p_{N}=1$ when $\sigma=0$ ,
+
+$\displaystyle\frac{M}{p_{N}}$ $\displaystyle=\Theta\!\left(TN+TN\,\frac{\sigma^{2}}{G_{N}^{2}}\right)$ $\displaystyle=\Theta\!\left(TN+TN^{2}\sigma^{2}\epsilon^{-2}\right)$ $\displaystyle=\Theta\!\left(L^{2}D_{\mathcal{Y}}\Delta_{\Phi}\,\epsilon^{-3}+L^{3}D_{\mathcal{Y}}^{2}\Delta_{\Phi}\sigma^{2}\,\epsilon^{-6}\right).$
+
+For the parameter choices in the proof, $T,N\geq 4$ , and hence $M\geq 9$ . Therefore
+
+$qp_{N}\leq\frac{M}{4}$
+
+implies
+
+$q\leq\frac{M-\log 4}{2p_{N}},$
+
+which is precisely the progress condition ( 53 ). Lemma 5.4 then rules out expected $\epsilon$ -stationarity. This yields the stated oracle lower bound. The full proof, including the choices of integer chain lengths and verification of the function-class conditions, is given in Appendix C.3 .
+
+The same construction gives a lower bound under the primal–dual-gap parameterization. Clipping preserves both the primal value function and the function values at $\bm{y}=0$ , so the initial primal–dual gap still equals the initial primal value gap. Applying Theorem 5.5 with $\Delta_{\Phi}=\mathcal{G}_{0}$ therefore yields the following corollary. Its proof is given in Appendix C.4 .
+
+There exists a universal constant $c>0$ such that, for every $L,\mathcal{G}_{0},D_{\mathcal{Y}}>0$ , every $\sigma\geq 0$ , and every $\epsilon$ satisfying
+
+$0<\epsilon\leq c\min\{\sqrt{L\mathcal{G}_{0}},LD_{\mathcal{Y}}\},$
+
+there is an instance
+
+$f^{\rm sg}\in\mathcal{F}_{\rm NCC}^{\rm pd}(L,\mathcal{G}_{0},D_{\mathcal{Y}})$
+
+equipped with a unbiased stochastic first-order oracle whose mean-square error is at most $\sigma^{2}$ , for which every adaptive stochastic zero-respecting algorithm requires
+
+$\Omega\!\left(L^{2}D_{\mathcal{Y}}\mathcal{G}_{0}\,\epsilon^{-3}+L^{3}D_{\mathcal{Y}}^{2}\mathcal{G}_{0}\sigma^{2}\,\epsilon^{-6}\right)$
+
+oracle calls to return an expected $\epsilon$ -stationary output.
+
+6 Conclusion and Future Work
+
+We established first-order oracle lower bounds for smooth nonconvex–concave minimax optimization within the class of zero-respecting algorithms. Under the primal-value-gap and primal–dual-gap parameterizations, the deterministic lower bounds are $\Omega(L^{2}D_{\mathcal{Y}}\Delta_{\Phi}\,\epsilon^{-3})$ and $\Omega(L^{2}D_{\mathcal{Y}}\mathcal{G}_{0}\,\epsilon^{-3})$ , respectively. In the stochastic setting, the corresponding lower bounds are $\Omega(L^{3}D_{\mathcal{Y}}^{2}\Delta_{\Phi}\sigma^{2}\,\epsilon^{-6})$ and $\Omega(L^{3}D_{\mathcal{Y}}^{2}\mathcal{G}_{0}\sigma^{2}\,\epsilon^{-6})$ . In their dependence on $L$ , $D_{\mathcal{Y}}$ , and $\epsilon$ , these bounds match the deterministic upper bound of [ 14 ] up to a logarithmic factor and the stochastic upper bound of [ 29 ] .
+
+Several questions remain open:
+
+Beyond zero-respecting algorithms.
+
+Our lower bounds are proved for first-order zero-respecting methods. A natural next step is to determine whether the same rates hold for arbitrary, possibly randomized, first-order algorithms. In classical nonconvex optimization, zero-chain lower bounds can often be extended using random rotations or resisting-oracle arguments. Establishing an analogous reduction while preserving the primal–dual structure of the present construction is an important open problem.
+
+Separate oracle complexities.
+
+Our lower bounds concern the joint first-order oracle, where each query returns both $\nabla_{x}f$ and $\nabla_{y}f$ . It remains open whether the primal and dual gradient complexities differ when counted separately. The structure of our hard instance suggests possible primal and dual gradient complexities scaling as $\epsilon^{-2}$ and $\epsilon^{-3}$ , respectively, in the deterministic setting, and as $\epsilon^{-2}$ and $\epsilon^{-6}$ in the bounded-variance stochastic setting. The best-known existing algorithms, however, require the same order of primal and dual gradient evaluations. Resolving this question may require new lower-bound constructions tailored to separate primal and dual first-order oracles, new algorithms with improved primal or dual gradient complexity, or both. Such results would clarify whether existing joint-oracle methods are individually optimal in their use of primal and dual gradients.
+
+$f$ -stationarity versus $\Phi$ -stationarity.
+
+Recent algorithmic results have demonstrated that game stationarity and optimization stationarity may exhibit genuinely different complexity behavior [ 13 , 12 ] . Our lower bounds concern stationarity of the value function $\Phi(\bm{x})=\max_{\bm{y}\in\mathcal{Y}}f(\bm{x},\bm{y})$ . It remains open whether comparable lower bounds hold for stationarity notions defined directly in terms of the saddle function $f$ , such as $\|\nabla f\|$ . Since an $f$ -stationary pair need not correspond to a nearly maximizing dual variable, the complexity of $f$ -stationarity may differ substantially from that of $\Phi$ -stationarity. Determining the tight complexity of the two notions, and whether a genuine separation exists between them, is an interesting open question.
+
+NC–C Bilevel Optimization.
+
+An important direction for future research is to extend the present lower-bound framework to NC–C bilevel optimization, for which general first-order complexity lower bounds remain open. A natural question is whether the primal–dual information propagation mechanism developed here can be transferred to this setting and used to establish lower bounds for NC–C bilevel problems.
+
+AI Disclosure
+
+The hard-instance construction was developed through iterative collaboration with OpenAI’s GPT-5.6 Sol Ultra. The authors provided the model with an independently developed proof draft that already contained the central dual-chain construction, the $\ell_{2}$ constraint on the auxiliary primal variables, and the scaling argument underlying the $\epsilon^{-3}$ deterministic lower bound. The model was then used to help identify and refine several composite functions in the primal component, which addressed a key obstacle in the original construction. For the stochastic lower bound, the authors independently introduced the stochastic dual zero-chain mechanism used in the final proof. Building on these ingredients, the model assisted in refining the construction and in developing several technical arguments, including parts of the clipping mechanism. The authors subsequently simplified and independently verified the resulting arguments and take full responsibility for the correctness and presentation of the paper. A Lean formalization, developed with Codex and available at https://github.com/Wu-Qilong/Lower-Bounds-for-Nonconvex-Concave-Minimax-Optimization , provides a formal verification.
+
+References
+
+Appendix A Proofs for the Setup and Hard Instance
+
+A.1 Proof of Lemma 2.9
+
+The formulas in ( 9 ) agree in value and first derivative at $0$ and $1$ , so both functions are $C^{1}$ . On $(0,1)$ ,
+
+$\nu^{\prime}(t)=6t(1-t)=6r(t),\qquad\nu^{\prime\prime}(t)=6-12t,\qquad r^{\prime}(t)=1-2t.$
+
+Outside $(0,1)$ , $\nu^{\prime}$ is zero and $r^{\prime}$ is constant with magnitude one. This gives ( 10 ) and ( 11 ).
+
+It remains to verify the two transition estimates. If $t\leq 0$ , then $\nu(t)=0$ ; if $0<t\leq 2\kappa<1/4$ , then
+
+$\frac{\nu(t)}{r(t)}=\frac{t(3-2t)}{1-t}\leq 2,\qquad r^{\prime}(t)=1-2t\geq 1-4\kappa.$
+
+Similarly, if $t\geq 1$ , then $1-\nu(t)=0$ ; while for $1-2\kappa\leq t<1$ ,
+
+$\frac{1-\nu(t)}{r(t)}=\frac{(1-t)(1+2t)}{t}\leq 2.$
+
+The claimed implications follow. ∎
+
+A.2 Proof of Lemma 2.10
+
+Differentiating ( 12 ),
+
+$Dq_{i}(\bm{u})[\bm{h}]=\nu^{\prime}(u_{i})(1-\nu(u_{i+1}))h_{i}-\nu(u_{i})\nu^{\prime}(u_{i+1})h_{i+1}.$
+
+Every row and every column of $D\bm{q}(\bm{u})$ has at most two nonzero entries, each with magnitude at most $3/2$ . Therefore
+
+$\left\lVert D\bm{q}(\bm{u})\right\rVert_{\rm op}\leq\sqrt{\left\lVert D\bm{q}(\bm{u})\right\rVert_{1}\left\lVert D\bm{q}(\bm{u})\right\rVert_{\infty}}\leq 3.$
+
+Set
+
+$A_{i}(\bm{u}):=\nu^{\prime}(u_{i})(1-\nu(u_{i+1})),\qquad B_{i}(\bm{u}):=\nu(u_{i})\nu^{\prime}(u_{i+1}).$
+
+Using ( 10 ),
+
+$|A_{i}(\bm{u})-A_{i}(\bm{v})|\leq 6|u_{i}-v_{i}|+\frac{9}{4}|u_{i+1}-v_{i+1}|,$
+
+and
+
+$|B_{i}(\bm{u})-B_{i}(\bm{v})|\leq\frac{9}{4}|u_{i}-v_{i}|+6|u_{i+1}-v_{i+1}|.$
+
+The same two-row/two-column sparsity argument gives
+
+$\left\lVert D\bm{q}(\bm{u})-D\bm{q}(\bm{v})\right\rVert_{\rm op}\leq 17\left\lVert\bm{u}-\bm{v}\right\rVert.$
+
+Let $\bm{n}(\bm{z}):=\bm{z}/\sqrt{1+\left\lVert\bm{z}\right\rVert^{2}}$ , so that $\bm{\rho}=\bm{n}\circ\bm{q}$ . Direct differentiation yields
+
+$D\bm{n}(\bm{z})=\frac{I}{\sqrt{1+\left\lVert\bm{z}\right\rVert^{2}}}-\frac{\bm{z}\bm{z}^{\top}}{(1+\left\lVert\bm{z}\right\rVert^{2})^{3/2}},$
+
+hence $\left\lVert D\bm{n}(\bm{z})\right\rVert_{\rm op}\leq 1$ and $\left\lVert D\bm{n}(\bm{z})-D\bm{n}(\bm{z}^{\prime})\right\rVert_{\rm op}\leq 6\left\lVert\bm{z}-\bm{z}^{\prime}\right\rVert$ . Since $\bm{q}$ is $3$ -Lipschitz,
+
+$\displaystyle\left\lVert D\bm{\rho}(\bm{u})-D\bm{\rho}(\bm{v})\right\rVert_{\rm op}$ $\displaystyle\leq\left\lVert D\bm{n}(\bm{q}(\bm{u}))-D\bm{n}(\bm{q}(\bm{v}))\right\rVert_{\rm op}\left\lVert D\bm{q}(\bm{u})\right\rVert_{\rm op}$ $\displaystyle\quad+\left\lVert D\bm{n}(\bm{q}(\bm{v}))\right\rVert_{\rm op}\left\lVert D\bm{q}(\bm{u})-D\bm{q}(\bm{v})\right\rVert_{\rm op}$ $\displaystyle\leq 6\cdot 3\cdot 3\left\lVert\bm{u}-\bm{v}\right\rVert+17\left\lVert\bm{u}-\bm{v}\right\rVert$ $\displaystyle=71\left\lVert\bm{u}-\bm{v}\right\rVert.$
+
+The bound $\left\lVert D\bm{\rho}(\bm{u})\right\rVert_{\rm op}\leq 3$ follows from $\left\lVert D\bm{n}\right\rVert_{\rm op}\leq 1$ and $\left\lVert D\bm{q}\right\rVert_{\rm op}\leq 3$ . ∎
+
+A.3 Proof of Lemma 3.1
+
+We first compute the inverse of $B_{\alpha,N}$ . Define
+
+$G_{ij}:=\alpha^{-2}+\min\{i,j\}-1,\qquad i,j=1,\ldots,N.$
+
+For each fixed $j$ , the $j$ th column of $G$ increases by one at each index up to $j$ and remains constant after index $j$ . Since the interior rows of $B_{\alpha,N}$ act as a discrete second-difference operator, we have
+
+$\displaystyle(1+\alpha^{2})G_{1j}-G_{2j}=\mathbf{1}_{\{j=1\}},$ $\displaystyle-G_{i-1,j}+2G_{ij}-G_{i+1,j}=\mathbf{1}_{\{i=j\}},\qquad 2\leq i\leq N-1,$ $\displaystyle-G_{N-1,j}+G_{Nj}=\mathbf{1}_{\{j=N\}}.$
+
+Thus $B_{\alpha,N}G=I$ , and hence
+
+$(B_{\alpha,N}^{-1})_{ij}=\alpha^{-2}+\min\{i,j\}-1.$ (60)
+
+Now let $\bm{c}(a,b):=\alpha a\bm{e}_{1}-\frac{\alpha}{2}b\bm{e}_{N}$ . The first-order condition for maximizing $h_{N}(a,b;\cdot)$ is
+
+$B_{\alpha,N}\bm{y}=\bm{c}(a,b).$
+
+Using ( 60 ), its unique solution is
+
+$y_{k}^{*}(a,b)=\frac{a}{\alpha}-\frac{b}{2\alpha}-\frac{\alpha b}{2}(k-1),\qquad k=1,\ldots,N.$ (61)
+
+Since $B_{\alpha,N}$ is positive definite,
+
+$h_{N}(a,b;\bm{y}^{*})-h_{N}(a,b;\bm{y})=\frac{\ell_{0}}{2}(\bm{y}-\bm{y}^{*})^{\top}B_{\alpha,N}(\bm{y}-\bm{y}^{*})\geq 0,$
+
+with equality only at $\bm{y}=\bm{y}^{*}$ . Thus $\bm{y}^{*}$ is the unique unconstrained maximizer.
+
+From ( 60 ),
+
+$(B_{\alpha,N}^{-1})_{11}=(B_{\alpha,N}^{-1})_{1N}=\alpha^{-2},\qquad(B_{\alpha,N}^{-1})_{NN}=\alpha^{-2}+N-1.$
+
+Since $\alpha^{2}=1/N$ ,
+
+$\bm{c}(a,b)^{\top}B_{\alpha,N}^{-1}\bm{c}(a,b)=a^{2}-ab+\frac{b^{2}}{4}\left(2-\frac{1}{N}\right).$
+
+Substituting $\bm{y}^{*}$ into $h_{N}$ , we obtain
+
+$\max_{\bm{y}\in\mathbb{R}^{N}}h_{N}(a,b;\bm{y})=\frac{\ell_{0}}{2}\left(a-\frac{b}{2}\right)^{2}.$ (62)
+
+We next verify that the unconstrained maximizer lies in $Y_{0}$ . Rewrite ( 61 ) as
+
+$y_{k}^{*}(a,b)=\frac{a-c_{k}b}{\alpha},\qquad c_{k}:=\frac{1}{2}\left(1+\frac{k-1}{N}\right)\in[0,1].$
+
+Therefore
+
+$|y_{k}^{*}(a,b)|^{2}\leq 2N(a^{2}+b^{2}),$
+
+and, summing over $k=1,\ldots,N$ and $i=1,\ldots,T-1$ ,
+
+$\sum_{i=1}^{T-1}\|\bm{y}^{*}(a_{i},b_{i})\|^{2}\leq 2N^{2}\bigl(\|\bm{a}\|^{2}+\|\bm{b}\|^{2}\bigr)\leq 2N^{2}R^{2}s^{2}.$
+
+By assumption, the right-hand side is at most $(D_{\mathcal{Y}}/4)^{2}$ . Since $Y_{0}$ is the Euclidean ball of radius $D_{\mathcal{Y}}/2$ , the concatenated unconstrained maximizer lies in the interior of $Y_{0}$ . Moreover, each $h_{N}(a_{i},b_{i};\cdot)$ has $\bm{y}$ -Hessian $-\ell_{0}B_{\alpha,N}\prec 0$ , so $f(\bm{x},\cdot)$ is strictly concave. This proves the first claim.
+
+We now compute the value function. Since the unconstrained maximizer of the dual variables lies in $Y_{0}$ , ( 62 ) gives
+
+$\displaystyle\Phi(\bm{u},\bm{a},\bm{b})$ $\displaystyle=\ell_{0}s^{2}\Psi_{0}(\tilde{\bm{u}},\tilde{\bm{a}},\tilde{\bm{b}})+\frac{\ell_{0}}{2}\sum_{i=1}^{T-1}\left(a_{i}-\frac{b_{i}}{2}\right)^{2}$ (63) $\displaystyle=\ell_{0}s^{2}\left[\Psi_{0}(\tilde{\bm{u}},\tilde{\bm{a}},\tilde{\bm{b}})+\frac{1}{2}\left\|\tilde{\bm{a}}-\frac{1}{2}\tilde{\bm{b}}\right\|^{2}\right]$ $\displaystyle=\ell_{0}s^{2}\Psi(\tilde{\bm{u}},\tilde{\bm{a}},\tilde{\bm{b}}).$
+
+This proves the second claim.
+
+It remains to compute the initial gap. Every squared term in $\Psi$ is nonnegative. For $j\geq 2$ ,
+
+$-c_{\eta}\nu(t)+\frac{c_{\eta}}{2}r(t)^{2}\geq-c_{\eta},$
+
+while for the first coordinate,
+
+$-c_{\eta}t+\frac{c_{\eta}}{2}r(t)^{2}\geq-\frac{3}{2}c_{\eta}.$
+
+Hence
+
+$\Psi(\tilde{\bm{u}},\tilde{\bm{a}},\tilde{\bm{b}})\geq-c_{\eta}\left(T+\frac{1}{2}\right).$
+
+Equality is attained at
+
+$\tilde{\bm{u}}^{*}=(2,1,\ldots,1),\qquad\tilde{\bm{a}}=\tilde{\bm{b}}=\bm{0},$
+
+for which $\bm{\rho}(\tilde{\bm{u}}^{*})=\bar{\bm{r}}(\tilde{\bm{u}}^{*})=0$ . Since $\Psi(\bm{0},\bm{0},\bm{0})=0$ , ( 63 ) yields
+
+$\Phi(\bm{0})-\inf_{\bm{x}\in X_{0}}\Phi(\bm{x})=c_{\eta}\left(T+\frac{1}{2}\right)\ell_{0}s^{2}.$
+
+This proves the third claim. ∎
+
+A.4 Proof of Lemma 3.2
+
+Fix
+
+$\tilde{\bm{z}}=(\tilde{\bm{u}},\tilde{\bm{a}},\tilde{\bm{b}})\in C_{0},\qquad\tilde{\bm{z}}^{\prime}=(\tilde{\bm{u}}^{\prime},\tilde{\bm{a}}^{\prime},\tilde{\bm{b}}^{\prime})\in C_{0}.$
+
+In particular,
+
+$\|\tilde{\bm{a}}\|,\|\tilde{\bm{a}}^{\prime}\|,\|\tilde{\bm{b}}\|,\|\tilde{\bm{b}}^{\prime}\|\leq R.$
+
+We first bound the Lipschitz constant of the gradient of the normalized primal component $\Psi_{0}$ . We define
+
+$\displaystyle F_{a}(\tilde{\bm{u}},\tilde{\bm{a}})=\frac{1}{2}\|\tilde{\bm{a}}-\bm{\rho}(\tilde{\bm{u}})\|^{2},$ $\displaystyle F_{b}(\tilde{\bm{u}},\tilde{\bm{b}})=\frac{1}{2}\|\tilde{\bm{b}}-\bar{\bm{r}}(\tilde{\bm{u}})\|^{2},$ $\displaystyle Q(\tilde{\bm{a}},\tilde{\bm{b}})=\frac{1}{2}\bigl(\|\tilde{\bm{a}}\|^{2}+\|\tilde{\bm{b}}\|^{2}\bigr),$
+
+and thus $\Psi_{0}=H+F_{a}+F_{b}+Q$ . By Lemma 2.9 , $\nu^{\prime}$ is $6$ -Lipschitz and $t\mapsto r(t)r^{\prime}(t)$ is $2$ -Lipschitz. Hence
+
+$\|\nabla H(\tilde{\bm{u}})-\nabla H(\tilde{\bm{u}}^{\prime})\|\leq 8c_{\eta}\|\tilde{\bm{u}}-\tilde{\bm{u}}^{\prime}\|.$ (64)
+
+For $F_{a}$ , we have
+
+$\nabla_{\tilde{\bm{a}}}F_{a}=\tilde{\bm{a}}-\bm{\rho}(\tilde{\bm{u}}),\qquad\nabla_{\tilde{\bm{u}}}F_{a}=-D\bm{\rho}(\tilde{\bm{u}})^{\top}\bigl(\tilde{\bm{a}}-\bm{\rho}(\tilde{\bm{u}})\bigr).$
+
+Then, we define $d_{u}:=\|\tilde{\bm{u}}-\tilde{\bm{u}}^{\prime}\|$ , $d_{a}:=\|\tilde{\bm{a}}-\tilde{\bm{a}}^{\prime}\|$ , and $d_{b}:=\|\tilde{\bm{b}}-\tilde{\bm{b}}^{\prime}\|$ . Using Lemma 2.10 , $\|\bm{\rho}(\tilde{\bm{u}})\|\leq 1$ , and $\|\tilde{\bm{a}}\|,\|\tilde{\bm{a}}^{\prime}\|\leq R$ , we obtain
+
+$\left\|\nabla_{\tilde{\bm{a}}}F_{a}(\tilde{\bm{u}},\tilde{\bm{a}})-\nabla_{\tilde{\bm{a}}}F_{a}(\tilde{\bm{u}}^{\prime},\tilde{\bm{a}}^{\prime})\right\|\leq d_{a}+3d_{u},$
+
+and
+
+$\left\|\nabla_{\tilde{\bm{u}}}F_{a}(\tilde{\bm{u}},\tilde{\bm{a}})-\nabla_{\tilde{\bm{u}}}F_{a}(\tilde{\bm{u}}^{\prime},\tilde{\bm{a}}^{\prime})\right\|\leq 3d_{a}+\bigl(9+71(R+1)\bigr)d_{u}.$
+
+Thus, since $R$ is a constant, there exists a constant $C_{a}=\sqrt{(80+71R)^{2}+19}$ such that
+
+$\|\nabla F_{a}(\tilde{\bm{u}},\tilde{\bm{a}})-\nabla F_{a}(\tilde{\bm{u}}^{\prime},\tilde{\bm{a}}^{\prime})\|\leq C_{a}\sqrt{d_{u}^{2}+d_{a}^{2}}.$ (65)
+
+For $F_{b}$ , it suffices to consider $\vartheta(t,b):=\frac{1}{2}(b-r(t))^{2}$ . Wherever the Hessian exists,
+
+$\nabla^{2}\vartheta(t,b)=\begin{pmatrix}r^{\prime}(t)^{2}-(b-r(t))r^{\prime\prime}(t)&-r^{\prime}(t)\\ -r^{\prime}(t)&1\end{pmatrix}.$
+
+Although $r$ is unbounded on $\mathbb{R}$ , we have $r^{\prime\prime}(t)=0$ for $t\notin[0,1]$ , while $|r(t)|\leq 1/4$ for $t\in[0,1]$ . Together with $|r^{\prime}(t)|\leq 1$ , $|r^{\prime\prime}(t)|\leq 2$ almost everywhere, and $|b|\leq R$ , this gives
+
+$\left|r^{\prime}(t)^{2}-(b-r(t))r^{\prime\prime}(t)\right|\leq 2R+\frac{3}{2}$
+
+wherever the Hessian exists. Consequently,
+
+$\|\nabla^{2}\vartheta(t,b)\|_{\rm op}\leq C_{b},\qquad C_{b}:=\sqrt{\left(2R+\frac{3}{2}\right)^{2}+3}.$
+
+Since $\nabla\vartheta$ is continuous across $t=0,1$ , integrating along line segments in $\mathbb{R}\times[-R,R]$ shows that $\nabla\vartheta$ is $C_{b}$ -Lipschitz on this set. Applying this bound to the disjoint coordinate pairs in $F_{b}$ yields
+
+$\|\nabla F_{b}(\tilde{\bm{u}},\tilde{\bm{b}})-\nabla F_{b}(\tilde{\bm{u}}^{\prime},\tilde{\bm{b}}^{\prime})\|\leq C_{b}\sqrt{d_{u}^{2}+d_{b}^{2}}.$ (66)
+
+Finally, $\nabla Q$ is $1$ -Lipschitz. Therefore there exists a constant $C_{\Psi}=8c_{\eta}+C_{a}+C_{b}+1>0$ such that
+
+$\|\nabla\Psi_{0}(\tilde{\bm{z}})-\nabla\Psi_{0}(\tilde{\bm{z}}^{\prime})\|\leq C_{\Psi}\|\tilde{\bm{z}}-\tilde{\bm{z}}^{\prime}\|.$ (67)
+
+For $\bm{x}=(\bm{u},\bm{a},\bm{b})\in X_{0}$ and $\bm{x}^{\prime}=(\bm{u}^{\prime},\bm{a}^{\prime},\bm{b}^{\prime})\in X_{0}$ , the first term of the hard instance depends only on the primal variables and is given by $\ell_{0}s^{2}\Psi_{0}(\bm{x}/s)$ . By the chain rule and ( 67 ), we have
+
+$\left\|\nabla\left[\ell_{0}s^{2}\Psi_{0}(\bm{x}/s)\right]-\nabla\left[\ell_{0}s^{2}\Psi_{0}(\bm{x}^{\prime}/s)\right]\right\|\leq C_{\Psi}\ell_{0}\|\bm{x}-\bm{x}^{\prime}\|.$ (68)
+
+It remains to bound the dual component terms. For one block $h_{N}$ , in the coordinate order $(a,\bm{y},b)$ , the Hessian divided by $\ell_{0}$ is
+
+$\begin{pmatrix}0&\alpha\bm{e}_{1}^{\top}&0\\ \alpha\bm{e}_{1}&-B_{\alpha,N}&-(\alpha/2)\bm{e}_{N}\\ 0&-(\alpha/2)\bm{e}_{N}^{\top}&-\alpha^{2}(N-1)/4\end{pmatrix}.$
+
+Since $N\geq 2$ and $\alpha=N^{-1/2}\leq 1$ , every absolute row sum of this symmetric matrix is at most $4$ . Hence its operator norm is at most $4$ , and therefore
+
+$\|\nabla h_{N}(a,b;\bm{y})-\nabla h_{N}(a^{\prime},b^{\prime};\bm{y}^{\prime})\|\leq 4\ell_{0}\|(a,b,\bm{y})-(a^{\prime},b^{\prime},\bm{y}^{\prime})\|.$ (69)
+
+The different path blocks act on disjoint coordinates, so the same bound holds for their sum.
+
+Combining ( 68 ) and ( 69 ), we obtain
+
+$\|\nabla f(\bm{z})-\nabla f(\bm{z}^{\prime})\|\leq(C_{\Psi}+4)\ell_{0}\|\bm{z}-\bm{z}^{\prime}\|.$
+
+Fix a universal constant $C_{\ell}$ satisfying
+
+$C_{\ell}\geq\max\{C_{\Psi}+6,C_{\delta}+1\},$
+
+where $C_{\delta}$ is the universal constant in Lemma 3.3 . This choice proves the claim and will also be used for the stochastic construction. ∎
+
+A.5 Proof of Lemma 3.3
+
+Part 1: zero-chain property. Fix $\bm{z}=(\bm{x},\bm{y})\in X_{0}\times Y_{0}$ , where $\bm{x}=(\bm{u},\bm{a},\bm{b})$ , and set $m:=\operatorname{prog}^{\bm{\pi}}_{0}(\bm{z})$ . The desired inequality is immediate if $m\geq K-1$ . Otherwise, all coordinates at positions greater than $m$ are zero. We show that
+
+$[\nabla f(\bm{z})]_{\pi_{k}}=0,\qquad k=m+2,\ldots,K.$
+
+Since $s>0$ , normalization preserves the support of the primal variables.
+
+We first record two properties of the normalized coupling. The definition of $\bm{q}$ and $\nu(0)=0$ imply
+
+$\tilde{u}_{i}=0\quad\Longrightarrow\quad q_{i}(\tilde{\bm{u}})=\rho_{i}(\tilde{\bm{u}})=0.$
+
+Moreover, every potentially nonzero entry in the $j$ th column of $D\bm{q}(\tilde{\bm{u}})$ contains the factor $\nu^{\prime}(\tilde{u}_{j})$ . Thus, $\nu^{\prime}(0)=0$ and the chain rule give
+
+$\tilde{u}_{j}=0\quad\Longrightarrow\quad D\bm{q}(\tilde{\bm{u}})\bm{e}_{j}=0,\qquad D\bm{\rho}(\tilde{\bm{u}})\bm{e}_{j}=0.$
+
+Fix $k\geq m+2$ . We distinguish the four possible types of $\pi_{k}$ in the ordering $\bm{\pi}$ .
+
+Case 1: $\pi_{k}=u_{j}$ . Then $j\geq 2$ . Since $b_{j-1}$ immediately precedes $u_{j}$ , both coordinates are zero. At $\tilde{u}_{j}=0$ , the derivative of $H$ with respect to $\tilde{u}_{j}$ vanishes, as does the contribution involving $D\bm{\rho}(\tilde{\bm{u}})\bm{e}_{j}$ . The dual blocks do not depend on $\bm{u}$ . Hence
+
+$\partial_{u_{j}}f(\bm{z})=-\ell_{0}s\bigl(\tilde{b}_{j-1}-r(0)\bigr)r^{\prime}(0)=-\ell_{0}b_{j-1}=0.$
+
+Case 2: $\pi_{k}=a_{i}$ . The adjacent coordinates are $u_{i}$ and $y_{1}^{(i)}$ , so $u_{i}=a_{i}=y_{1}^{(i)}=0$ . In particular, $\rho_{i}(\tilde{\bm{u}})=0$ , and
+
+$\partial_{a_{i}}f(\bm{z})=\ell_{0}s\bigl(2\tilde{a}_{i}-\rho_{i}(\tilde{\bm{u}})\bigr)+\ell_{0}\alpha y_{1}^{(i)}=0.$
+
+Case 3: $\pi_{k}=y_{j}^{(i)}$ . Differentiating the dual block gives
+
+$\ell_{0}^{-1}\partial_{y_{j}^{(i)}}f(\bm{z})=\begin{cases}\alpha a_{i}-(1+\alpha^{2})y_{1}^{(i)}+y_{2}^{(i)},&j=1,\\[2.84526pt] y_{j-1}^{(i)}-2y_{j}^{(i)}+y_{j+1}^{(i)},&2\leq j\leq N-1,\\[2.84526pt] y_{N-1}^{(i)}-y_{N}^{(i)}-\dfrac{\alpha}{2}b_{i},&j=N.\end{cases}$
+
+Each expression involves only coordinates at positions $k-1$ , $k$ , and $k+1$ , all greater than $m$ . Thus $\partial_{y_{j}^{(i)}}f(\bm{z})=0$ .
+
+Case 4: $\pi_{k}=b_{i}$ . The adjacent coordinates are $y_{N}^{(i)}$ and $u_{i+1}$ , so $y_{N}^{(i)}=b_{i}=u_{i+1}=0$ . Therefore
+
+$\partial_{b_{i}}f(\bm{z})=\ell_{0}s\bigl(2\tilde{b}_{i}-r(\tilde{u}_{i+1})\bigr)-\frac{\ell_{0}\alpha}{2}y_{N}^{(i)}-\frac{\ell_{0}\alpha^{2}(N-1)}{4}b_{i}=0.$
+
+Consequently,
+
+$\operatorname{prog}^{\bm{\pi}}_{0}\bigl(\nabla f(\bm{z})\bigr)\leq\min\{\operatorname{prog}^{\bm{\pi}}_{0}(\bm{z})+1,K\},\qquad\bm{z}\in X_{0}\times Y_{0}.$
+
+This proves part 1.
+
+Part 2: normalized stationarity obstruction. For the second claim, fix $(\tilde{\bm{u}},\tilde{\bm{a}},\tilde{\bm{b}})\in C_{0}$ with $\tilde{u}_{T}\leq 1/4$ . We argue by contradiction. Suppose that $\mathcal{R}_{C_{0}}(\tilde{\bm{u}},\tilde{\bm{a}},\tilde{\bm{b}})<C_{\delta}$ . Then there exists $\bm{n}=(\bm{n}_{u},\bm{n}_{ab})\in N_{C_{0}}(\tilde{\bm{u}},\tilde{\bm{a}},\tilde{\bm{b}})$ such that
+
+$\|\nabla\Psi(\tilde{\bm{u}},\tilde{\bm{a}},\tilde{\bm{b}})+\bm{n}\|<C_{\delta}.$ (70)
+
+Since
+
+$C_{0}=\mathbb{R}^{T}\times\left\{(\tilde{\bm{a}},\tilde{\bm{b}}):\|\tilde{\bm{a}}\|^{2}+\|\tilde{\bm{b}}\|^{2}\leq R^{2}\right\},$
+
+we have $\bm{n}_{u}=0$ . Hence
+
+$\|\nabla_{\tilde{\bm{u}}}\Psi(\tilde{\bm{u}},\tilde{\bm{a}},\tilde{\bm{b}})\|<C_{\delta}.$ (71)
+
+We first derive the implications of ( 71 ) for the coordinates of $\tilde{\bm{u}}$ . Partition the tail coordinates as
+
+$I_{\rm out}:=\{j\in\{2,\ldots,T\}:\tilde{u}_{j}\notin(0,1)\},\qquad I_{\rm mid}:=\{j\in\{2,\ldots,T\}:0<\tilde{u}_{j}<1\}.$
+
+For $j\in I_{\rm out}$ , $\nu^{\prime}(\tilde{u}_{j})=0$ and the $j$ th column of $D\bm{\rho}(\tilde{\bm{u}})$ vanishes. Moreover, $|r^{\prime}(\tilde{u}_{j})|=1$ , and therefore
+
+$(\nabla_{\tilde{\bm{u}}}\Psi)_{j}=r^{\prime}(\tilde{u}_{j})\bigl((c_{\eta}+1)r(\tilde{u}_{j})-\tilde{b}_{j-1}\bigr).$
+
+Using ( 71 ) and $\|\tilde{\bm{b}}\|\leq R$ gives
+
+$(c_{\eta}+1)\left(\sum_{j\in I_{\rm out}}r(\tilde{u}_{j})^{2}\right)^{1/2}\leq C_{\delta}+R.$ (72)
+
+For $j\in I_{\rm mid}$ , let $t=\tilde{u}_{j}$ . Since $\nu^{\prime}(t)=6r(t)$ and $r^{\prime}(t)=1-2t$ ,
+
+$(\nabla_{\tilde{\bm{u}}}\Psi)_{j}=-\gamma_{j}r(t)-\tilde{b}_{j-1}r^{\prime}(t)-\left\langle\tilde{\bm{a}}-\bm{\rho}(\tilde{\bm{u}}),D\bm{\rho}(\tilde{\bm{u}})\bm{e}_{j}\right\rangle,$
+
+where
+
+$\gamma_{j}:=c_{\eta}(5+2t)-r^{\prime}(t)\geq 5c_{\eta}-1.$
+
+Using ( 71 ), Lemma 2.10 , $\|\tilde{\bm{a}}\|,\|\tilde{\bm{b}}\|\leq R$ , and $\|\bm{\rho}(\tilde{\bm{u}})\|\leq 1$ , we obtain
+
+$(5c_{\eta}-1)\left(\sum_{j\in I_{\rm mid}}r(\tilde{u}_{j})^{2}\right)^{1/2}\leq 4R+3+C_{\delta}.$ (73)
+
+Since $I_{\rm out}$ and $I_{\rm mid}$ partition $\{2,\ldots,T\}$ , ( 72 ) and ( 73 ) imply
+
+$\displaystyle\|\bar{\bm{r}}(\tilde{\bm{u}})\|$ $\displaystyle=\left(\sum_{j\in I_{\rm out}}r(\tilde{u}_{j})^{2}+\sum_{j\in I_{\rm mid}}r(\tilde{u}_{j})^{2}\right)^{1/2}$ $\displaystyle\leq\left(\sum_{j\in I_{\rm out}}r(\tilde{u}_{j})^{2}\right)^{1/2}+\left(\sum_{j\in I_{\rm mid}}r(\tilde{u}_{j})^{2}\right)^{1/2}$ $\displaystyle\leq\frac{R+C_{\delta}}{c_{\eta}+1}+\frac{4R+3+C_{\delta}}{5c_{\eta}-1}.$ (74)
+
+Define
+
+$\kappa:=\frac{R+C_{\delta}}{c_{\eta}+1}+\frac{4R+3+C_{\delta}}{5c_{\eta}-1}.$ (75)
+
+Then
+
+$\|\bar{\bm{r}}(\tilde{\bm{u}})\|\leq\kappa.$ (76)
+
+We choose the universal construction constants $R\geq 1$ , $C_{\delta}>0$ , and $c_{\eta}>0$ so that
+
+$0<\kappa<\frac{1}{8},\qquad\frac{3}{4}c_{\eta}-3(R+1)>C_{\delta},$ (77)
+
+and
+
+$12\kappa\left(\frac{17}{26}+\frac{\kappa}{13}+C_{\delta}\right)+\frac{7}{13}\kappa+2C_{\delta}<\frac{1-4\kappa}{13}\frac{(1-4\kappa)^{2}}{1+(1-4\kappa)^{2}+4\kappa^{2}}.$ (78)
+
+Such universal choices exist: for fixed $R\geq 1$ and sufficiently small $C_{\delta}$ , taking $c_{\eta}$ sufficiently large makes $\kappa$ arbitrarily small, while the right-hand side of ( 78 ) converges to $1/26$ .
+
+We now show that every tail coordinate is either close to zero or close to one. In fact,
+
+$|\tilde{u}_{j}|\leq 2\kappa\quad\text{or}\quad\tilde{u}_{j}\geq 1-2\kappa,\qquad j=2,\ldots,T.$ (79)
+
+Indeed, ( 76 ) gives $|r(\tilde{u}_{j})|\leq\kappa$ . If $\tilde{u}_{j}\leq 0$ , then $|\tilde{u}_{j}|=|r(\tilde{u}_{j})|\leq\kappa$ , while $\tilde{u}_{j}\geq 1$ satisfies the second alternative immediately. If $0<\tilde{u}_{j}<1$ , then
+
+$\tilde{u}_{j}(1-\tilde{u}_{j})\leq\kappa.$
+
+If both $\tilde{u}_{j}>2\kappa$ and $\tilde{u}_{j}<1-2\kappa$ , one of $\tilde{u}_{j}$ and $1-\tilde{u}_{j}$ is at least $1/2$ and the other is larger than $2\kappa$ , giving $\tilde{u}_{j}(1-\tilde{u}_{j})>\kappa$ , a contradiction.
+
+We next show that the first coordinate satisfies the second alternative:
+
+$\tilde{u}_{1}\geq 1-2\kappa.$ (80)
+
+Otherwise $\tilde{u}_{1}<1-2\kappa<1$ . Since $r(t)r^{\prime}(t)\leq 1/4$ for $t\leq 1$ , Lemma 2.10 gives
+
+$\displaystyle\partial_{\tilde{u}_{1}}\Psi$ $\displaystyle=-c_{\eta}+c_{\eta}r(\tilde{u}_{1})r^{\prime}(\tilde{u}_{1})-\left\langle\tilde{\bm{a}}-\bm{\rho}(\tilde{\bm{u}}),D\bm{\rho}(\tilde{\bm{u}})\bm{e}_{1}\right\rangle$ $\displaystyle\leq-\frac{3}{4}c_{\eta}+3(R+1)$ $\displaystyle<-C_{\delta},$
+
+contradicting ( 71 ).
+
+We refer to the two alternatives in ( 79 ) as low and high, respectively. Since $\tilde{u}_{1}$ is high and $\tilde{u}_{T}\leq 1/4<1-2\kappa$ , the terminal coordinate is low. Thus there must be a high-to-low transition. Define
+
+$J:=\left\{i\in\{1,\ldots,T-1\}:\tilde{u}_{i}\geq 1-2\kappa,\;|\tilde{u}_{i+1}|\leq 2\kappa\right\}.$ (81)
+
+Then $J\neq\varnothing$ . Let
+
+$J^{c}:=\{1,\ldots,T-1\}\setminus J,$
+
+and for any $I\subseteq\{1,\ldots,T-1\}$ , let $\bm{q}_{I}(\tilde{\bm{u}})$ and $\bm{\rho}_{I}(\tilde{\bm{u}})$ denote the corresponding subvectors.
+
+We next lower bound the coupling across these transitions. For $i\in J$ , the definition of $\nu$ gives
+
+$\nu(\tilde{u}_{i})\geq 1-2\kappa,\qquad 1-\nu(\tilde{u}_{i+1})\geq 1-2\kappa,$
+
+and hence
+
+$q_{i}(\tilde{\bm{u}})\geq(1-2\kappa)^{2}\geq 1-4\kappa.$ (82)
+
+For $i\notin J$ , either $\tilde{u}_{i}$ is low or $\tilde{u}_{i+1}$ is high. Lemma 2.9 then gives, respectively,
+
+$q_{i}(\tilde{\bm{u}})\leq 2|r(\tilde{u}_{i})|\qquad\text{or}\qquad q_{i}(\tilde{\bm{u}})\leq 2|r(\tilde{u}_{i+1})|.$
+
+Assigning $i$ to the corresponding tail coordinate gives an injective assignment, since no coordinate can be both low and high. Therefore
+
+$\|\bm{q}_{J^{c}}(\tilde{\bm{u}})\|\leq 2\|\bar{\bm{r}}(\tilde{\bm{u}})\|\leq 2\kappa.$ (83)
+
+Since $J\neq\varnothing$ , ( 82 )–( 83 ) imply
+
+$\|\bm{\rho}_{J}(\tilde{\bm{u}})\|^{2}\geq\frac{(1-4\kappa)^{2}}{1+(1-4\kappa)^{2}+4\kappa^{2}}.$ (84)
+
+The residual bound also controls the auxiliary variables. For fixed $\tilde{\bm{u}}$ , the partial gradients with respect to $(\tilde{\bm{a}},\tilde{\bm{b}})$ are
+
+$\displaystyle\bm{g}_{a}$ $\displaystyle=3\tilde{\bm{a}}-\frac{1}{2}\tilde{\bm{b}}-\bm{\rho}(\tilde{\bm{u}}),$ (85) $\displaystyle\bm{g}_{b}$ $\displaystyle=-\frac{1}{2}\tilde{\bm{a}}+\frac{9}{4}\tilde{\bm{b}}-\bar{\bm{r}}(\tilde{\bm{u}}).$
+
+Their unique common zero is
+
+$\displaystyle\tilde{\bm{a}}^{*}$ $\displaystyle=\frac{9}{26}\bm{\rho}(\tilde{\bm{u}})+\frac{1}{13}\bar{\bm{r}}(\tilde{\bm{u}}),$ (86) $\displaystyle\tilde{\bm{b}}^{*}$ $\displaystyle=\frac{1}{13}\bm{\rho}(\tilde{\bm{u}})+\frac{6}{13}\bar{\bm{r}}(\tilde{\bm{u}}).$
+
+For $\bm{d}_{a}=\tilde{\bm{a}}-\tilde{\bm{a}}^{\prime}$ and $\bm{d}_{b}=\tilde{\bm{b}}-\tilde{\bm{b}}^{\prime}$ , direct calculation gives
+
+$\displaystyle\left\langle\bm{g}_{a}(\tilde{\bm{a}},\tilde{\bm{b}})-\bm{g}_{a}(\tilde{\bm{a}}^{\prime},\tilde{\bm{b}}^{\prime}),\bm{d}_{a}\right\rangle+\left\langle\bm{g}_{b}(\tilde{\bm{a}},\tilde{\bm{b}})-\bm{g}_{b}(\tilde{\bm{a}}^{\prime},\tilde{\bm{b}}^{\prime}),\bm{d}_{b}\right\rangle=2\bigl(\|\bm{d}_{a}\|^{2}+\|\bm{d}_{b}\|^{2}\bigr)+\left\|\bm{d}_{a}-\frac{1}{2}\bm{d}_{b}\right\|^{2}.$
+
+Thus the $(\tilde{\bm{a}},\tilde{\bm{b}})$ -gradient is $2$ -strongly monotone.
+
+By ( 76 ) and $\|\bm{\rho}(\tilde{\bm{u}})\|\leq 1$ ,
+
+$\|\tilde{\bm{a}}^{*}\|\leq\frac{9}{26}+\frac{\kappa}{13},\qquad\|\tilde{\bm{b}}^{*}\|\leq\frac{1}{13}+\frac{6\kappa}{13}.$
+
+Since $\kappa<1/8$ and $R\geq 1$ , these bounds imply
+
+$\|\tilde{\bm{a}}^{*}\|^{2}+\|\tilde{\bm{b}}^{*}\|^{2}<R^{2},$
+
+so $(\tilde{\bm{a}}^{*},\tilde{\bm{b}}^{*})$ lies in the interior of the radius- $R$ ball.
+
+Define
+
+$\bm{d}:=\bigl(\tilde{\bm{a}}-\tilde{\bm{a}}^{*},\tilde{\bm{b}}-\tilde{\bm{b}}^{*}\bigr).$
+
+Since $(\tilde{\bm{a}}^{*},\tilde{\bm{b}}^{*})$ is feasible, the normal-cone condition gives
+
+$\langle\bm{n}_{ab},\bm{d}\rangle\geq 0.$
+
+Let $\bm{e}:=(\bm{g}_{a},\bm{g}_{b})+\bm{n}_{ab}$ . By ( 70 ), $\|\bm{e}\|<C_{\delta}$ . Strong monotonicity therefore yields
+
+$2\|\bm{d}\|^{2}\leq\langle(\bm{g}_{a},\bm{g}_{b}),\bm{d}\rangle=\langle\bm{e},\bm{d}\rangle-\langle\bm{n}_{ab},\bm{d}\rangle\leq C_{\delta}\|\bm{d}\|,$
+
+and hence
+
+$\|\bm{d}\|\leq\frac{C_{\delta}}{2}.$ (87)
+
+Let $\bm{e}_{a}:=\tilde{\bm{a}}-\tilde{\bm{a}}^{*}$ , and $\bm{e}_{b}:=\tilde{\bm{b}}-\tilde{\bm{b}}^{*}$ . Then ( 86 ) gives
+
+$\displaystyle\tilde{\bm{a}}-\bm{\rho}(\tilde{\bm{u}})$ $\displaystyle=-\frac{17}{26}\bm{\rho}(\tilde{\bm{u}})+\frac{1}{13}\bar{\bm{r}}(\tilde{\bm{u}})+\bm{e}_{a},$ (88) $\displaystyle\tilde{\bm{b}}-\bar{\bm{r}}(\tilde{\bm{u}})$ $\displaystyle=\frac{1}{13}\bm{\rho}(\tilde{\bm{u}})-\frac{7}{13}\bar{\bm{r}}(\tilde{\bm{u}})+\bm{e}_{b},$
+
+where $\|\bm{e}_{a}\|,\|\bm{e}_{b}\|\leq C_{\delta}$ .
+
+We now use the high-to-low transitions to construct a direction that contradicts ( 71 ). Define $\bm{v}\in\mathbb{R}^{T}$ by
+
+$v_{1}:=0,\qquad v_{i+1}:=\begin{cases}\rho_{i}(\tilde{\bm{u}}),&i\in J,\\ 0,&i\notin J,\end{cases}\qquad i=1,\ldots,T-1.$ (89)
+
+By ( 84 ),
+
+$\|\bm{v}\|^{2}=\|\bm{\rho}_{J}(\tilde{\bm{u}})\|^{2}\geq\frac{(1-4\kappa)^{2}}{1+(1-4\kappa)^{2}+4\kappa^{2}},\qquad\|\bm{v}\|\leq 1.$ (90)
+
+The indices in $J$ are pairwise nonadjacent. Moreover, for each $i\in J$ , the coordinate $\tilde{u}_{i+1}$ is low, so the $(i+1)$ st column of $D\bm{q}(\tilde{\bm{u}})$ has at most two nonzero entries, each with magnitude at most $6\kappa$ . The supports of these columns are disjoint for distinct $i\in J$ . Since $\bm{v}$ is supported on the coordinates $i+1$ with $i\in J$ ,
+
+$D\bm{q}(\tilde{\bm{u}})\bm{v}=\sum_{i\in J}v_{i+1}D\bm{q}(\tilde{\bm{u}})\bm{e}_{i+1}.$
+
+Hence, by the disjointness of the supports,
+
+$\displaystyle\|D\bm{q}(\tilde{\bm{u}})\bm{v}\|^{2}$ $\displaystyle=\sum_{i\in J}v_{i+1}^{2}\|D\bm{q}(\tilde{\bm{u}})\bm{e}_{i+1}\|^{2}$ $\displaystyle\leq 2(6\kappa)^{2}\sum_{i\in J}v_{i+1}^{2}=2(6\kappa)^{2}\|\bm{v}\|^{2}.$
+
+Therefore, $\|D\bm{q}(\tilde{\bm{u}})\bm{v}\|\leq 6\sqrt{2}\,\kappa\|\bm{v}\|$ . Since
+
+$\bm{\rho}(\tilde{\bm{u}})=\frac{\bm{q}(\tilde{\bm{u}})}{\sqrt{1+\|\bm{q}(\tilde{\bm{u}})\|^{2}}}$
+
+and the Jacobian of the normalization map $\bm{z}\mapsto\bm{z}/\sqrt{1+\|\bm{z}\|^{2}}$ has operator norm at most one,
+
+$\|D\bm{\rho}(\tilde{\bm{u}})\bm{v}\|\leq 6\sqrt{2}\,\kappa\|\bm{v}\|\leq 12\kappa\|\bm{v}\|.$ (91)
+
+We finally evaluate the directional derivative along $\bm{v}$ . For every $j$ in the support of $\bm{v}$ , we have $j\geq 2$ , $\tilde{u}_{j}\leq 2\kappa<1$ , and $v_{j}\geq 0$ . Moreover,
+
+$\partial_{\tilde{u}_{j}}H(\tilde{\bm{u}})=\begin{cases}c_{\eta}\tilde{u}_{j},&\tilde{u}_{j}\leq 0,\\ -c_{\eta}(5+2\tilde{u}_{j})r(\tilde{u}_{j}),&0<\tilde{u}_{j}\leq 2\kappa.\end{cases}$
+
+Both expressions are nonpositive. Therefore $DH(\tilde{\bm{u}})[\bm{v}]\leq 0$ . Using ( 88 ), ( 76 ), ( 84 ), ( 91 ), and $r^{\prime}(\tilde{u}_{i+1})\geq 1-4\kappa$ for $i\in J$ , we obtain
+
+$\displaystyle D_{\tilde{\bm{u}}}\Psi(\tilde{\bm{u}},\tilde{\bm{a}},\tilde{\bm{b}})[\bm{v}]$ $\displaystyle\leq 12\kappa\left(\frac{17}{26}+\frac{\kappa}{13}+C_{\delta}\right)-\frac{1-4\kappa}{13}\|\bm{\rho}_{J}(\tilde{\bm{u}})\|^{2}+\frac{7}{13}\kappa+C_{\delta}$ $\displaystyle\leq 12\kappa\left(\frac{17}{26}+\frac{\kappa}{13}+C_{\delta}\right)+\frac{7}{13}\kappa+C_{\delta}-\frac{1-4\kappa}{13}\frac{(1-4\kappa)^{2}}{1+(1-4\kappa)^{2}+4\kappa^{2}}$ $\displaystyle<-C_{\delta},$
+
+where the last inequality follows from ( 78 ). On the other hand, ( 71 ) and $\|\bm{v}\|\leq 1$ imply
+
+$\displaystyle\left|D_{\tilde{\bm{u}}}\Psi(\tilde{\bm{u}},\tilde{\bm{a}},\tilde{\bm{b}})[\bm{v}]\right|$ $\displaystyle\leq\|\nabla_{\tilde{\bm{u}}}\Psi(\tilde{\bm{u}},\tilde{\bm{a}},\tilde{\bm{b}})\|\,\|\bm{v}\|$ $\displaystyle<C_{\delta},$
+
+a contradiction. Therefore,
+
+$\mathcal{R}_{C_{0}}(\tilde{\bm{u}},\tilde{\bm{a}},\tilde{\bm{b}})\geq C_{\delta},$
+
+which proves the second claim.
+
+Part 3: Moreau-envelope obstruction. Fix any $\bm{x}=(\bm{u},\bm{a},\bm{b})\in X_{0}$ with $u_{T}=0$ .
+
+By Lemma 3.1 , $\Phi$ is continuous and bounded below on $X_{0}$ . Hence, for this $\bm{x}$ , the function
+
+$\bm{p}\longmapsto\Phi(\bm{p})+\bar{L}\left\lVert\bm{p}-\bm{x}\right\rVert^{2}$
+
+is coercive on the closed set $X_{0}$ , so $\mathcal{P}_{1/(2\bar{L})}(\bm{x})$ is nonempty. Fix $\bm{p}\in\mathcal{P}_{1/(2\bar{L})}(\bm{x})$ and set
+
+$\bm{g}:=G_{1/(2\bar{L})}(\bm{x};\bm{p})=2\bar{L}(\bm{x}-\bm{p}).$ (92)
+
+By the exact value identity in Lemma 3.1 , $\Phi$ is the restriction to $X_{0}$ of the $C^{1}$ function $\bm{x}\mapsto\ell_{0}s^{2}\Psi(\bm{x}/s)$ . Hence first-order optimality of $\bm{p}$ on the closed convex set $X_{0}$ gives
+
+$\bm{g}\in\nabla\Phi(\bm{p})+N_{X_{0}}(\bm{p}).$ (93)
+
+Suppose, toward a contradiction, that
+
+$\left\lVert\bm{g}\right\rVert\leq\frac{C_{\delta}}{2}\ell_{0}s.$ (94)
+
+Write
+
+$\bm{p}=s\bar{\bm{p}},\qquad\bar{\bm{p}}=(\bar{\bm{u}},\bar{\bm{a}},\bar{\bm{b}})\in C_{0}.$
+
+Since $u_{T}=0$ ,
+
+$\displaystyle|\bar{u}_{T}|$ $\displaystyle=\frac{|p_{u_{T}}-x_{u_{T}}|}{s}\leq\frac{\left\lVert\bm{p}-\bm{x}\right\rVert}{s}=\frac{\left\lVert\bm{g}\right\rVert}{2\bar{L}s}\leq\frac{C_{\delta}\ell_{0}}{4\bar{L}}=\frac{C_{\delta}}{4C_{\ell}}<\frac{1}{4}.$ (95)
+
+The last inequality follows from the fixed choice $C_{\ell}>C_{\delta}$ .
+
+The value identity gives
+
+$\Phi(s\bar{\bm{p}})=\ell_{0}s^{2}\Psi(\bar{\bm{p}}),\qquad\nabla\Phi(s\bar{\bm{p}})=\ell_{0}s\nabla\Psi(\bar{\bm{p}}).$ (96)
+
+Moreover, $X_{0}=sC_{0}$ implies $N_{X_{0}}(s\bar{\bm{p}})=N_{C_{0}}(\bar{\bm{p}})$ , and the latter is a cone. Therefore
+
+$\displaystyle\operatorname{dist}\bigl(0,\nabla\Phi(\bm{p})+N_{X_{0}}(\bm{p})\bigr)$ $\displaystyle=\operatorname{dist}\bigl(0,\ell_{0}s\nabla\Psi(\bar{\bm{p}})+N_{C_{0}}(\bar{\bm{p}})\bigr)$ $\displaystyle=\ell_{0}s\,\operatorname{dist}\bigl(0,\nabla\Psi(\bar{\bm{p}})+N_{C_{0}}(\bar{\bm{p}})\bigr)$ $\displaystyle=\ell_{0}s\,\mathcal{R}_{C_{0}}(\bar{\bm{p}}).$ (97)
+
+By ( 95 ), part 2 applies to $\bar{\bm{p}}$ , and hence $\mathcal{R}_{C_{0}}(\bar{\bm{p}})\geq C_{\delta}$ . Combining this with ( 93 ) and ( 97 ) yields
+
+$\left\lVert\bm{g}\right\rVert\geq\operatorname{dist}\bigl(0,\nabla\Phi(\bm{p})+N_{X_{0}}(\bm{p})\bigr)\geq C_{\delta}\ell_{0}s,$
+
+contradicting ( 94 ). Therefore
+
+$\left\lVert G_{1/(2\bar{L})}(\bm{x};\bm{p})\right\rVert>\frac{C_{\delta}}{2}\ell_{0}s,$
+
+which is exactly ( 30 ). This proves part 3 and completes the lemma. ∎
+
+Appendix B Proofs for the Deterministic Lower Bound
+
+B.1 Proof of Theorem 4.1
+
+We apply the hard instance constructed in Section 3 . By Lemma 3.2 , its gradient is $C_{\ell}\ell_{0}$ -Lipschitz. Moreover, Lemma 3.3 , with $\bar{L}=C_{\ell}\ell_{0}$ , shows that every zero-respecting output obtained before the terminal coordinate is activated satisfies
+
+$\left\|G_{1/(2\bar{L})}(\bm{x};\bm{p})\right\|>\frac{C_{\delta}}{2}\ell_{0}s.$
+
+Thus, the smoothness and stationarity requirements are satisfied if
+
+$C_{\ell}\ell_{0}=L,\qquad\frac{C_{\delta}}{2}\ell_{0}s=\epsilon.$ (98)
+
+It remains to choose the two chain lengths so that the hard instance belongs to $\mathcal{F}_{\rm NCC}(L,\Delta_{\Phi},D_{\mathcal{Y}})$ . By Lemma 3.1 , the dual maximizer is feasible whenever
+
+$2N^{2}R^{2}s^{2}\leq\left(\frac{D_{\mathcal{Y}}}{4}\right)^{2}.$ (99)
+
+Under this feasibility condition, Lemma 3.1 gives the exact initial value gap. We therefore impose the additional requirement
+
+$\Phi(\bm{0})-\inf_{\bm{x}\in X_{0}}\Phi(\bm{x})=c_{\eta}\left(T+\frac{1}{2}\right)\ell_{0}s^{2}\leq\Delta_{\Phi}.$ (100)
+
+We now choose the parameters to satisfy ( 98 )–( 100 ). Set
+
+$\ell_{0}:=\frac{L}{C_{\ell}},\qquad s:=\frac{2\epsilon}{C_{\delta}\ell_{0}}=\frac{2C_{\ell}\epsilon}{C_{\delta}L},$
+
+and choose
+
+$T:=\left\lfloor\frac{C_{\delta}^{2}L\Delta_{\Phi}}{16c_{\eta}C_{\ell}\epsilon^{2}}\right\rfloor,\qquad N:=\left\lfloor\frac{C_{\delta}LD_{\mathcal{Y}}}{16RC_{\ell}\epsilon}\right\rfloor,\qquad\alpha:=N^{-1/2}.$
+
+For a sufficiently small universal constant $c_{1}$ , the assumption
+
+$\epsilon\leq c_{1}\min\{\sqrt{L\Delta_{\Phi}},LD_{\mathcal{Y}}\}$
+
+ensures that $T,N\geq 2$ and
+
+$T-1\geq\frac{C_{\delta}^{2}L\Delta_{\Phi}}{64c_{\eta}C_{\ell}\epsilon^{2}},\qquad N\geq\frac{C_{\delta}LD_{\mathcal{Y}}}{32RC_{\ell}\epsilon}.$ (101)
+
+By the choice of $N$ ,
+
+$NRs\leq\frac{D_{\mathcal{Y}}}{8},$
+
+which implies ( 99 ). Moreover, since $T\geq 2$ , the choice of $T$ gives
+
+$c_{\eta}\left(T+\frac{1}{2}\right)\ell_{0}s^{2}\leq\frac{5}{4}c_{\eta}T\ell_{0}s^{2}\leq\frac{5}{16}\Delta_{\Phi}\leq\Delta_{\Phi}.$
+
+Thus, ( 100 ) also holds. Hence, by Lemmas 3.1 and 3.2 ,
+
+$f\in\mathcal{F}_{\rm NCC}(L,\Delta_{\Phi},D_{\mathcal{Y}}).$
+
+Finally, the zero-chain has length $K=1+(T-1)(N+3)\geq(T-1)N$ . Using ( 101 ),
+
+$K\geq c_{0}\frac{L^{2}D_{\mathcal{Y}}\Delta_{\Phi}}{\epsilon^{3}},\qquad c_{0}:=\frac{C_{\delta}^{3}}{2048c_{\eta}RC_{\ell}^{2}}.$
+
+Hence, if
+
+$q<c_{0}\frac{L^{2}D_{\mathcal{Y}}\Delta_{\Phi}}{\epsilon^{3}},$
+
+then $q<K$ . Lemma 3.3 therefore gives, for every $\bm{p}\in\mathcal{P}_{1/(2L)}(\bm{x})$ ,
+
+$\left\|G_{1/(2L)}(\bm{x};\bm{p})\right\|>\frac{C_{\delta}}{2}\ell_{0}s=\epsilon.$
+
+By Lemma 2.2 ,
+
+$\left\|\nabla\varphi_{1/(2L)}(\bm{x})\right\|>\epsilon.$
+
+This proves the result. ∎
+
+B.2 Proof of Corollary 4.2
+
+Take $c=c_{1}$ from Theorem 4.1 and apply that theorem with the value-gap budget $\Delta_{\Phi}=\mathcal{G}_{0}$ . We only need to verify that the same hard instance also satisfies the primal–dual-gap budget. For this construction, $\max_{\bm{y}\in Y_{0}}f(0,\bm{y})=\Phi_{f}(\bm{0})=0$ . Write
+
+$H(\tilde{\bm{u}}):=-c_{\eta}\tilde{u}_{1}-c_{\eta}\sum_{j=2}^{T}\nu(\tilde{u}_{j})+\frac{c_{\eta}}{2}\sum_{j=1}^{T}r(\tilde{u}_{j})^{2}.$
+
+At $\bm{y}=0$ , the hard instance satisfies
+
+$\frac{f(\bm{x},0)}{\ell_{0}s^{2}}=H(\tilde{\bm{u}})+\frac{1}{2}\|\tilde{\bm{a}}-\bm{\rho}(\tilde{\bm{u}})\|^{2}+\frac{1}{2}\|\tilde{\bm{b}}-\bar{\bm{r}}(\tilde{\bm{u}})\|^{2}+\frac{1}{2}\|\tilde{\bm{a}}\|^{2}+\left(\frac{1}{2}-\frac{\alpha^{2}(N-1)}{8}\right)\|\tilde{\bm{b}}\|^{2}.$
+
+Since $\alpha^{2}=1/N$ ,
+
+$\frac{1}{2}-\frac{\alpha^{2}(N-1)}{8}=\frac{3N+1}{8N}>0.$
+
+The lower bound on $H$ established in the proof of Lemma 3.1 gives
+
+$H(\tilde{\bm{u}})\geq-c_{\eta}\left(T+\frac{1}{2}\right),$
+
+and equality is attained at $\tilde{\bm{u}}^{*}=(2,1,\ldots,1)$ with $\tilde{\bm{a}}=\tilde{\bm{b}}=0$ . Consequently,
+
+$\inf_{\bm{x}\in X_{0}}f(\bm{x},0)=-c_{\eta}\left(T+\frac{1}{2}\right)\ell_{0}s^{2}=\inf_{\bm{x}\in X_{0}}\Phi_{f}(\bm{x}),$
+
+where the last equality follows from Lemma 3.1 and $\Phi_{f}(\bm{0})=0$ . Therefore the initial primal–dual gap equals the value-function gap:
+
+$\max_{\bm{y}\in Y_{0}}f(0,\bm{y})-\inf_{\bm{x}\in X_{0}}f(\bm{x},0)=\Phi_{f}(\bm{0})-\inf_{\bm{x}\in X_{0}}\Phi_{f}(\bm{x})\leq\mathcal{G}_{0}.$
+
+Thus the hard instance belongs to $\mathcal{F}_{\rm NCC}^{\rm pd}(L,\mathcal{G}_{0},D_{\mathcal{Y}})$ . Applying the query lower bound of Theorem 4.1 with $\Delta_{\Phi}=\mathcal{G}_{0}$ gives the claimed $\Omega(L^{2}D_{\mathcal{Y}}\mathcal{G}_{0}\epsilon^{-3})$ bound. ∎
+
+Appendix C Proofs for the Stochastic Lower Bound
+
+C.1 Proof of Lemma 5.1
+
+Part 1: maximizer and optimal value of the clipped dual block. Fix $\bm{x}=(\bm{u},\bm{a},\bm{b})\in X_{0}$ and a block index $i\in\{1,\ldots,T-1\}$ . For this part of the proof, abbreviate $a=a_{i}$ and $b=b_{i}$ .
+
+Let $\bm{y}^{*}$ denote the unique maximizer of the deterministic quadratic block obtained in Lemma 3.1 . Its explicit form in ( 41 ) gives
+
+$y_{k}^{*}-y_{k+1}^{*}=\frac{\alpha b}{2},\qquad k=1,\ldots,N-1.$
+
+Thus all successive-coordinate differences of $\bm{y}^{*}$ are equal. For convenience, denote their common value by
+
+$d:=\frac{\alpha b}{2}.$
+
+Since the primal variables satisfy $|b|\leq Rs$ and $\tau_{N}=R\alpha s$ , we have
+
+$|d|\leq\frac{R\alpha s}{2}=\frac{\tau_{N}}{2}<\tau_{N}.$ (102)
+
+Hence all neighboring-coordinate differences of $\bm{y}^{*}$ lie in the quadratic branch of $\chi_{\tau_{N}}$ .
+
+To verify that $\bm{y}^{*}$ remains optimal after clipping, define
+
+$D_{\tau}(d,t):=\chi_{\tau}(t)-\chi_{\tau}(d)-d(t-d).$ (103)
+
+Because $|d|<\tau$ , we have $\chi_{\tau}^{\prime}(d)=d$ . By convexity of $\chi_{\tau}$ ,
+
+$D_{\tau}(d,t)\geq 0,$ (104)
+
+with equality only when $t=d$ . Indeed, $\chi_{\tau}$ is strictly convex on $(-\tau,\tau)$ , while its two affine pieces have slopes $\pm\tau$ , which are different from $d$ . For convenience, write
+
+$e_{k}(\bm{y}):=y_{k}-y_{k+1},\qquad k=1,\ldots,N-1.$
+
+Since $\bm{y}^{*}$ satisfies $B_{\alpha,N}\bm{y}^{*}=\bm{c}(a,b)$ and $e_{k}(\bm{y}^{*})=d$ , the first-order condition of the deterministic quadratic block gives
+
+$\bm{c}(a,b)^{\top}(\bm{y}-\bm{y}^{*})=\alpha^{2}y_{1}^{*}(y_{1}-y_{1}^{*})+d\sum_{k=1}^{N-1}\bigl(e_{k}(\bm{y})-d\bigr).$ (105)
+
+Using this identity to compare the clipped objective at $\bm{y}$ and $\bm{y}^{*}$ yields
+
+$\displaystyle h_{N}^{\rm clip}(a,b;\bm{y}^{*})-h_{N}^{\rm clip}(a,b;\bm{y})=\ell_{0}\left[\sum_{k=1}^{N-1}D_{\tau_{N}}\bigl(d,e_{k}(\bm{y})\bigr)+\frac{\alpha^{2}}{2}(y_{1}-y_{1}^{*})^{2}\right].$ (106)
+
+The right-hand side is nonnegative, and hence $\bm{y}^{*}$ is a global maximizer. Moreover, equality in ( 106 ) requires
+
+$y_{1}=y_{1}^{*},\qquad e_{k}(\bm{y})=d\quad\text{for all }k=1,\ldots,N-1.$
+
+These relations determine all coordinates recursively, and therefore $\bm{y}=\bm{y}^{*}$ . Thus the maximizer is unique.
+
+Finally, ( 102 ) shows that every successive-coordinate difference of $\bm{y}^{*}$ lies in the quadratic region of $\chi_{\tau_{N}}$ . Hence the clipped block and the deterministic quadratic block agree at $\bm{y}^{*}$ , and Lemma 3.1 gives
+
+$h_{N}^{\rm clip}(a,b;\bm{y}^{*})=\frac{\ell_{0}}{2}\left(a-\frac{b}{2}\right)^{2}.$
+
+This proves the first claim.
+
+Part 2: value function and initial gap. By Part 1, the clipped and deterministic dual blocks have the same unique maximizers and optimal values. Let $\bm{y}^{*}(\bm{x})$ denote the concatenation of the block maximizers $\bm{y}^{*}(a_{i},b_{i})$ , $i=1,\ldots,T-1$ . The range estimate in Lemma 3.1 therefore remains valid:
+
+$\|\bm{y}^{*}(\bm{x})\|^{2}\leq 2N^{2}R^{2}s^{2}.$
+
+Under ( 40 ), the blockwise maximizer lies in $\operatorname{int}(Y_{0})$ and hence is also the constrained maximizer. Consequently,
+
+$\Phi_{\rm sg}(\bm{x})=\ell_{0}s^{2}\Psi(\tilde{\bm{u}},\tilde{\bm{a}},\tilde{\bm{b}}),$
+
+which is ( 43 ). Since this is exactly the same value function as in the deterministic construction, the initial-gap identity ( 44 ) follows immediately from Lemma 3.1 .
+
+Part 3: dual concavity. For each edge, $\bm{y}\mapsto e_{k}(\bm{y})$ is affine and $\chi_{\tau_{N}}$ is convex, hence $-\chi_{\tau_{N}}(e_{k}(\bm{y}))$ is concave. The anchor $-(\alpha^{2}/2)y_{1}^{2}$ is concave, the endpoint source is affine, and the $b^{2}$ correction is independent of $\bm{y}$ . Thus every clipped path block is concave on the entire dual space. The outer relay term is independent of $\bm{y}$ , proving part 3.
+
+Part 4: dimension-free smoothness. Fix $\bm{z},\bm{z}^{\prime}\in X_{0}\times Y_{0}$ . The primal component is unchanged from the deterministic construction, so it remains to control the smoothness of the clipped dual blocks. Let $E_{N}:\mathbb{R}^{N}\to\mathbb{R}^{N-1}$ be the forward difference operator,
+
+$(E_{N}\bm{y})_{k}=y_{k}-y_{k+1},\qquad k=1,\ldots,N-1.$
+
+Since $\|E_{N}\|_{\rm op}\leq 2$ and $\chi^{\prime}_{\tau_{N}}$ is $1$ -Lipschitz, where $\chi^{\prime}_{\tau_{N}}$ is applied coordinatewise, we have
+
+$\displaystyle\left\|E_{N}^{\top}\left(\chi^{\prime}_{\tau_{N}}(E_{N}\bm{y})-\chi^{\prime}_{\tau_{N}}(E_{N}\bm{v})\right)\right\|$ $\displaystyle\leq\|E_{N}\|_{\rm op}\left\|\chi^{\prime}_{\tau_{N}}(E_{N}\bm{y})-\chi^{\prime}_{\tau_{N}}(E_{N}\bm{v})\right\|$ $\displaystyle\leq\|E_{N}\|_{\rm op}^{2}\|\bm{y}-\bm{v}\|$ $\displaystyle\leq 4\|\bm{y}-\bm{v}\|.$
+
+Thus the clipped squared-difference terms have a Lipschitz gradient with a constant independent of $N$ .
+
+Consider two points $(a,b,\bm{y})$ and $(a^{\prime},b^{\prime},\bm{v})$ in one dual block, and write
+
+$d_{a}:=|a-a^{\prime}|,\qquad d_{b}:=|b-b^{\prime}|,\qquad d_{y}:=\|\bm{y}-\bm{v}\|.$
+
+From the definition of $h_{N}^{\rm clip}$ ,
+
+$\nabla_{a}h_{N}^{\rm clip}(a,b;\bm{y})=\ell_{0}\alpha y_{1},$
+
+$\nabla_{b}h_{N}^{\rm clip}(a,b;\bm{y})=\ell_{0}\left(-\frac{\alpha}{2}y_{N}-\frac{\alpha^{2}(N-1)}{4}b\right),$
+
+and
+
+$\nabla_{\bm{y}}h_{N}^{\rm clip}(a,b;\bm{y})=\ell_{0}\left[-E_{N}^{\top}\chi^{\prime}_{\tau_{N}}(E_{N}\bm{y})-\alpha^{2}y_{1}\bm{e}_{1}+\alpha a\bm{e}_{1}-\frac{\alpha}{2}b\bm{e}_{N}\right].$
+
+Since $\alpha\leq 1$ and $\alpha^{2}(N-1)\leq 1$ , the preceding estimate gives
+
+$\frac{1}{\ell_{0}}\left|\nabla_{a}h_{N}^{\rm clip}(a,b;\bm{y})-\nabla_{a}h_{N}^{\rm clip}(a^{\prime},b^{\prime};\bm{v})\right|\leq d_{y},$
+
+$\frac{1}{\ell_{0}}\left|\nabla_{b}h_{N}^{\rm clip}(a,b;\bm{y})-\nabla_{b}h_{N}^{\rm clip}(a^{\prime},b^{\prime};\bm{v})\right|\leq\frac{1}{2}d_{y}+\frac{1}{4}d_{b},$
+
+and
+
+$\frac{1}{\ell_{0}}\left\|\nabla_{\bm{y}}h_{N}^{\rm clip}(a,b;\bm{y})-\nabla_{\bm{y}}h_{N}^{\rm clip}(a^{\prime},b^{\prime};\bm{v})\right\|\leq d_{a}+\frac{1}{2}d_{b}+5d_{y}.$
+
+Consequently, taking $C_{\rm dual}:=6$ , we obtain
+
+$\left\|\nabla h_{N}^{\rm clip}(a,b;\bm{y})-\nabla h_{N}^{\rm clip}(a^{\prime},b^{\prime};\bm{v})\right\|\leq C_{\rm dual}\ell_{0}\sqrt{d_{a}^{2}+d_{b}^{2}+d_{y}^{2}}.$ (107)
+
+Let $f_{\rm dual}^{\rm sg}$ denote the sum of the $T-1$ clipped dual blocks. Since these blocks involve disjoint coordinate groups, ( 107 ) yields
+
+$\left\|\nabla f_{\rm dual}^{\rm sg}(\bm{z})-\nabla f_{\rm dual}^{\rm sg}(\bm{z}^{\prime})\right\|\leq C_{\rm dual}\ell_{0}\|\bm{z}-\bm{z}^{\prime}\|.$ (108)
+
+Let $f_{\rm outer}(\bm{x},\bm{y}):=\ell_{0}s^{2}\Psi_{0}(\bm{x}/s)$ . The primal component is the same as in Lemma 3.2 . Hence, with $C_{\rm primal}:=C_{\Psi}$ as defined in Appendix A.4 ,
+
+$\left\|\nabla f_{\rm outer}(\bm{z})-\nabla f_{\rm outer}(\bm{z}^{\prime})\right\|\leq C_{\rm primal}\ell_{0}\|\bm{z}-\bm{z}^{\prime}\|.$ (109)
+
+Combining ( 108 ) and ( 109 ) gives
+
+$\left\|\nabla f^{\rm sg}(\bm{z})-\nabla f^{\rm sg}(\bm{z}^{\prime})\right\|\leq(C_{\rm primal}+C_{\rm dual})\ell_{0}\|\bm{z}-\bm{z}^{\prime}\|.$
+
+By the fixed choice of $C_{\ell}$ in Appendix A.4 ,
+
+$C_{\rm primal}+C_{\rm dual}=C_{\Psi}+6\leq C_{\ell}.$
+
+Therefore,
+
+$\left\|\nabla f^{\rm sg}(\bm{z})-\nabla f^{\rm sg}(\bm{z}^{\prime})\right\|\leq C_{\ell}\ell_{0}\|\bm{z}-\bm{z}^{\prime}\|.$
+
+Since $\ell_{0}=L/C_{\ell}$ , this further gives
+
+$\left\|\nabla f^{\rm sg}(\bm{z})-\nabla f^{\rm sg}(\bm{z}^{\prime})\right\|\leq L\|\bm{z}-\bm{z}^{\prime}\|,$
+
+which proves ( 45 ) and completes part 4.
+
+Part 5: zero-chain property and dual gradient bound. The clipped quadratic coincides with the original quadratic in a neighborhood of the origin and still involves only neighboring dual coordinates. In particular, $\chi^{\prime}_{\tau_{N}}(0)=0$ , so the same coordinate-local argument as in Lemma 3.3 gives
+
+$\operatorname{prog}^{\bm{\pi}}_{0}\bigl(\nabla f^{\rm sg}(\bm{z})\bigr)\leq\min\left\{\operatorname{prog}^{\bm{\pi}}_{0}(\bm{z})+1,K\right\}.$
+
+It remains to prove ( 47 ). For every dual block $i\in\{1,\ldots,T-1\}$ and every $j\in\{2,\ldots,N-1\}$ ,
+
+$\nabla_{y_{j}^{(i)}}f^{\rm sg}(\bm{z})=\ell_{0}\left[\chi^{\prime}_{\tau_{N}}\bigl(y_{j-1}^{(i)}-y_{j}^{(i)}\bigr)-\chi^{\prime}_{\tau_{N}}\bigl(y_{j}^{(i)}-y_{j+1}^{(i)}\bigr)\right].$
+
+Since $|\chi^{\prime}_{\tau_{N}}(t)|\leq\tau_{N},\,\forall t\in\mathbb{R}$ , we have
+
+$\left|\nabla_{y_{j}^{(i)}}f^{\rm sg}(\bm{z})\right|\leq 2\ell_{0}\tau_{N},\qquad j=2,\ldots,N-1.$
+
+For $j=N$ ,
+
+$\nabla_{y_{N}^{(i)}}f^{\rm sg}(\bm{z})=\ell_{0}\left[\chi^{\prime}_{\tau_{N}}\bigl(y_{N-1}^{(i)}-y_{N}^{(i)}\bigr)-\frac{\alpha}{2}b_{i}\right].$
+
+Using $|b_{i}|\leq Rs$ and $\tau_{N}=R\alpha s$ ,
+
+$\left|\nabla_{y_{N}^{(i)}}f^{\rm sg}(\bm{z})\right|\leq\ell_{0}\left(\tau_{N}+\frac{\alpha}{2}|b_{i}|\right)\leq\frac{3}{2}\ell_{0}\tau_{N}\leq 2\ell_{0}\tau_{N}.$
+
+Therefore, for every feasible $\bm{z}$ ,
+
+$\left|\nabla_{y_{j}^{(i)}}f^{\rm sg}(\bm{z})\right|\leq 2\ell_{0}\tau_{N},\qquad i=1,\ldots,T-1,\quad j=2,\ldots,N.$ (110)
+
+This proves part 5. ∎
+
+C.2 Proof of Lemma 5.4
+
+By ( 54 ), $\mathbb{P}(u_{T}=0)\geq\frac{3}{4}$ . Let
+
+$\mathcal{E}:=\{u_{T}=0\}.$
+
+By Lemma 5.1 , the clipped construction has the same primal value function as the deterministic construction. Hence the two instances have the same proximal mapping. Since $C_{\ell}\ell_{0}=L$ , Part 3 of Lemma 3.3 and ( 55 ) give, on $\mathcal{E}$ ,
+
+$\left\|G_{1/(2L)}\bigl(\bm{x};p_{1/(2L)}(\bm{x})\bigr)\right\|>\frac{C_{\delta}}{2}\ell_{0}s=\frac{4}{3}\epsilon.$
+
+Therefore,
+
+$\displaystyle\mathbb{E}\left\|G_{1/(2L)}\bigl(\bm{x};p_{1/(2L)}(\bm{x})\bigr)\right\|$ $\displaystyle\geq\mathbb{E}\left[\left\|G_{1/(2L)}\bigl(\bm{x};p_{1/(2L)}(\bm{x})\bigr)\right\|\mathbf{1}_{\mathcal{E}}\right]$ $\displaystyle>\frac{4}{3}\epsilon\,\mathbb{P}(\mathcal{E})$ $\displaystyle\geq\frac{4}{3}\epsilon\cdot\frac{3}{4}=\epsilon.$
+
+This proves the claim. ∎
+
+C.3 Proof of Theorem 5.5
+
+We apply the clipped hard instance constructed in Section 5.1. Set
+
+$\ell_{0}=\frac{L}{C_{\ell}},\qquad s=\frac{8\epsilon}{3C_{\delta}\ell_{0}},$
+
+and choose
+
+$T:=\left\lfloor\frac{9C_{\delta}^{2}L\Delta_{\Phi}}{256c_{\eta}C_{\ell}\epsilon^{2}}\right\rfloor,\qquad N:=\left\lfloor\frac{3C_{\delta}LD_{\mathcal{Y}}}{64RC_{\ell}\epsilon}\right\rfloor,\qquad\alpha:=N^{-1/2}.$
+
+For a sufficiently small universal constant $c_{1}$ , the assumption ( 56 ) ensures that $T,N\geq 4$ and
+
+$T-1\geq\frac{9C_{\delta}^{2}L\Delta_{\Phi}}{1024c_{\eta}C_{\ell}\epsilon^{2}},\qquad N\geq\frac{3C_{\delta}LD_{\mathcal{Y}}}{128RC_{\ell}\epsilon}.$ (111)
+
+We first verify that the clipped instance belongs to the required function class. By the choice of $N$ ,
+
+$NRs\leq\frac{D_{\mathcal{Y}}}{8},$
+
+and hence
+
+$2N^{2}R^{2}s^{2}\leq\frac{D_{\mathcal{Y}}^{2}}{32}<\left(\frac{D_{\mathcal{Y}}}{4}\right)^{2}.$
+
+Thus the dual-feasibility condition in Lemma 5.1 is satisfied. By the choice of $T$ ,
+
+$c_{\eta}T\ell_{0}s^{2}\leq\frac{\Delta_{\Phi}}{4}.$
+
+Moreover, since the quantity inside the floor defining $T$ is at least $4$ ,
+
+$c_{\eta}\ell_{0}s^{2}\leq\frac{\Delta_{\Phi}}{16}.$
+
+Therefore, Lemma 5.1 gives
+
+$\displaystyle\Phi_{\rm sg}(0)-\inf\Phi_{\rm sg}$ $\displaystyle=c_{\eta}\left(T+\frac{1}{2}\right)\ell_{0}s^{2}$ $\displaystyle\leq\frac{\Delta_{\Phi}}{4}+\frac{\Delta_{\Phi}}{32}$ $\displaystyle=\frac{9\Delta_{\Phi}}{32}<\Delta_{\Phi}.$
+
+Together with the dual concavity, $L$ -smoothness, and $\operatorname{diam}(Y_{0})=D_{\mathcal{Y}}$ , this shows that $f^{\rm sg}\in\mathcal{F}_{\rm NCC}(L,\Delta_{\Phi},D_{\mathcal{Y}})$ . The oracle constructed in Section 5.2 , with $p_{N}$ chosen as in ( 51 ), is unbiased and has mean-square error at most $\sigma^{2}$ .
+
+We next estimate the number of oracle calls required to cross the randomized dual coordinates. Recall that $M=(T-1)(N-1)$ . Since $N\geq 4$ , we have $N-1\geq N/2$ . Combining this with ( 111 ) gives
+
+$M\geq c_{M}\frac{L^{2}D_{\mathcal{Y}}\Delta_{\Phi}}{\epsilon^{3}},\qquad c_{M}:=\frac{27C_{\delta}^{3}}{262144\,c_{\eta}RC_{\ell}^{2}}.$ (112)
+
+We also have
+
+$N\geq c_{N}\frac{LD_{\mathcal{Y}}}{\epsilon},\qquad c_{N}:=\frac{3C_{\delta}}{128RC_{\ell}}.$ (113)
+
+On the other hand, since
+
+$G_{N}=2\ell_{0}\tau_{N},\qquad\tau_{N}=R\alpha s,\qquad\alpha^{2}N=1,$
+
+we have
+
+$G_{N}^{2}N=4R^{2}\ell_{0}^{2}s^{2}=c_{G}\epsilon^{2},\qquad c_{G}:=\frac{256R^{2}}{9C_{\delta}^{2}}.$ (114)
+
+The choice ( 51 ) gives
+
+$p_{N}^{-1}=\max\left\{1,\frac{\sigma^{2}}{G_{N}^{2}}\right\}\geq\frac{1}{2}\left(1+\frac{\sigma^{2}}{G_{N}^{2}}\right).$
+
+Consequently,
+
+$\displaystyle\frac{M}{p_{N}}\geq\frac{M}{2}+\frac{M\sigma^{2}}{2G_{N}^{2}}=\frac{M}{2}+\frac{MN\sigma^{2}}{2G_{N}^{2}N}.$
+
+Using ( 112 ), ( 113 ), and ( 114 ), we obtain
+
+$\frac{M}{p_{N}}\geq c_{\rm d}^{\prime}L^{2}D_{\mathcal{Y}}\Delta_{\Phi}\,\epsilon^{-3}+c_{\rm n}^{\prime}L^{3}D_{\mathcal{Y}}^{2}\Delta_{\Phi}\sigma^{2}\,\epsilon^{-6},$ (115)
+
+where $c_{\rm d}^{\prime}:=\frac{c_{M}}{2},\,\,c_{\rm n}^{\prime}:=\frac{c_{M}c_{N}}{2c_{G}}$ are universal positive constants. Since $T,N\geq 4$ , we have $M\geq 9$ , and therefore
+
+$\frac{M}{4}\leq\frac{M-\log 4}{2}.$
+
+Choose $c_{\rm d}:=\frac{c_{\rm d}^{\prime}}{4},\,\,c_{\rm n}:=\frac{c_{\rm n}^{\prime}}{4}$ . Then every $q$ satisfying ( 57 ) obeys
+
+$\displaystyle q$ $\displaystyle<\frac{1}{4}\left(c_{\rm d}^{\prime}L^{2}D_{\mathcal{Y}}\Delta_{\Phi}\,\epsilon^{-3}+c_{\rm n}^{\prime}L^{3}D_{\mathcal{Y}}^{2}\Delta_{\Phi}\sigma^{2}\,\epsilon^{-6}\right)$ $\displaystyle\leq\frac{M}{4p_{N}}$ $\displaystyle\leq\frac{M-\log 4}{2p_{N}}.$
+
+Thus the progress condition ( 53 ) is satisfied.
+
+Lemma 5.4 therefore yields, for the unique proximal point
+
+$\bm{p}=p_{1/(2L)}(\bm{x}),$
+
+that
+
+$\mathbb{E}\left\lVert G_{1/(2L)}(\bm{x};\bm{p})\right\rVert>\epsilon.$
+
+By Lemma 2.2 ,
+
+$G_{1/(2L)}\bigl(\bm{x};p_{1/(2L)}(\bm{x})\bigr)=\nabla(\varphi_{\rm sg})_{1/(2L)}(\bm{x}),$
+
+and hence
+
+$\mathbb{E}\left\lVert\nabla(\varphi_{\rm sg})_{1/(2L)}(\bm{x})\right\rVert>\epsilon.$
+
+This proves ( 58 ). Consequently, any stochastic zero-respecting algorithm that returns an expected $\epsilon$ -stationary point requires
+
+$\Omega\!\left(L^{2}D_{\mathcal{Y}}\Delta_{\Phi}\,\epsilon^{-3}+L^{3}D_{\mathcal{Y}}^{2}\Delta_{\Phi}\sigma^{2}\,\epsilon^{-6}\right)$
+
+oracle calls. ∎
+
+C.4 Proof of Corollary 5.6
+
+Consider the stochastic hard instance used in Theorem 5.5 . By Lemma 5.1 , the clipped construction has the same primal value function as the deterministic construction:
+
+$\Phi_{\rm sg}(\bm{x})=\Phi_{f}(\bm{x}).$
+
+Moreover, since $\chi_{\tau_{N}}(0)=0$ , clipping does not change the objective at $\bm{y}=\bm{0}$ :
+
+$f^{\rm sg}(\bm{x},\bm{0})=f(\bm{x},\bm{0}).$
+
+Therefore the argument in the proof of Corollary 4.2 applies verbatim and gives
+
+$\displaystyle\max_{\bm{y}\in Y_{0}}f^{\rm sg}(\bm{0},\bm{y})-\inf_{\bm{x}\in X_{0}}f^{\rm sg}(\bm{x},\bm{0})$ $\displaystyle=\Phi_{\rm sg}(\bm{0})-\inf_{\bm{x}\in X_{0}}\Phi_{\rm sg}(\bm{x}).$
+
+Now apply Theorem 5.5 with $\Delta_{\Phi}=\mathcal{G}_{0}$ . The common gap is at most $\mathcal{G}_{0}$ , so the resulting instance belongs to $\mathcal{F}_{\rm NCC}^{\rm pd}(L,\mathcal{G}_{0},D_{\mathcal{Y}})$ . The claimed oracle lower bound follows directly. ∎

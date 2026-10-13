@@ -1,0 +1,555 @@
+Content selection saved. Describe the issue below:
+
+A Stochastic Riemannian Alternating Descent Ascent Method for Nonsmooth Composite Expectation Optimization on Riemannian Manifolds Thanks: Submitted to the editors DATE.
+
+In this paper, we consider a class of Riemannian nonsmooth composite expectation optimization problems, which arises in various machine learning, signal processing, and statistics applications. Noting that these problems admit structured minimax reformulations, we propose an efficient algorithm, named stochastic Riemannian alternating descent ascent method with recursive momentum (StoRADA-RM), to tackle them. StoRADA-RM performs one or multiple Riemannian stochastic gradient descent steps and then a proximal gradient ascent step at each iteration. To compute the Riemannian stochastic gradient, we propose a vector transport-free recursive momentum estimator that requires only $\mathcal{O}(1)$ stochastic gradient evaluations per iteration. We prove that StoRADA-RM returns an $\epsilon$ -Riemannian-stochastic-stationary point of a given problem in the said class in $\mathcal{O}(\epsilon^{-3})$ iterations while making $\mathcal{O}(\epsilon^{-3})$ calls to a stochastic first-order oracle (SFO). Both the iteration complexity and SFO complexity bounds are the best known in the literature for the said class of problems. The latter even matches the optimal lower bound for smooth nonconvex optimization with stochastic first-order algorithms. We then present numerical results on sparse principal component analysis and coordinate-independent sparse estimation to demonstrate the superior performance of our proposed method.
+
+1 Introduction
+
+In this paper, we consider Riemannian nonsmooth expectation optimization problems of the form
+
+$\min_{x\in\mathcal{M}}\left\{\Phi(x):=f(x)+h(\mathcal{A}(x))\right\},\quad f(x):=\mathbb{E}_{\omega\sim\mathcal{D}}[f(x;\omega)],$ (1.1)
+
+where $\omega$ is a random vector with probability distribution $\mathcal{D}$ , $\mathcal{M}$ is a Riemannian manifold embedded in a finite-dimensional Euclidean space $\mathcal{E}_{1}$ , $f(\cdot;\theta):\mathcal{E}_{1}\to\mathbb{R}$ is a continuously differentiable function for each $\theta$ in the range of $\omega$ , $h:\mathcal{E}_{2}\to\mathbb{R}$ with $\mathcal{E}_{2}$ being another finite-dimensional Euclidean space is a convex and $L_{h}$ -Lipschitz continuous function, and $\mathcal{A}:\mathcal{E}_{1}\to\mathcal{E}_{2}$ is a smooth map. When the range of $\omega$ is finite and given by $\{\theta_{1},\theta_{2},\ldots,\theta_{N}\}$ , and $\omega$ has the uniform distribution, the function $f$ reduces to the finite-sum form $f(x)=\tfrac{1}{N}\sum_{i=1}^{N}f(x;\theta_{i})$ . Many applications in machine learning, signal processing, and statistics give rise to instances of problem ( 1.1 ), such as sparse principal component analysis (PCA) [ 52 , 24 ] , coordinate-independent sparse estimation (CISE) [ 11 , 42 ] , and robust low rank matrix completion [ 20 ] .
+
+A variety of deterministic algorithms can be applied to solve problem ( 1.1 ) in the finite-sum setting, including Riemannian subgradient-type methods [ 6 , 18 , 17 , 30 , 19 ] , Riemannian proximal gradient-type methods [ 9 , 21 , 22 , 41 , 10 , 31 ] , Riemannian smoothing-type algorithms [ 3 , 33 , 47 ] , Riemannian splitting-type methods [ 27 , 26 , 15 , 29 , 51 , 13 , 43 ] , and Riemannian minimax algorithms [ 45 , 44 ] . Despite the growing interest in developing stochastic algorithms for tackling problem ( 1.1 ), existing works on this topic remain limited. In this paper, we focus on the case where the full gradient of $f$ is inaccessible as in the online setting, or intractable due to the extremely large number of component functions as in the finite-sum setting. Our goal is to develop an efficient stochastic algorithm for tackling problem ( 1.1 ).
+
+1.1 Related Works
+
+When the nonsmooth term $h\equiv 0$ , problem ( 1.1 ) reduces to a smooth expectation optimization problem. A typical method for tackling such a problem is Riemannian stochastic gradient descent (SGD) [ 5 ] , which is an extension of the classical Euclidean SGD method for the manifold setting. To further improve practical performance and theoretical guarantees, variance reduction techniques have been extensively studied in both Euclidean and Riemannian settings. Notable Riemannian stochastic algorithms with variance reduction include Riemannian stochastic variance-reduced gradient (RSVRG) methods [ 48 , 23 , 37 ] , the Riemannian stochastic recursive gradient (RSRG) method [ 25 ] , Riemannian stochastic path-integrated differential estimator (RSPIDER) methods [ 49 , 50 ] , and the Riemannian stochastic recursive momentum (RSTORM) method [ 16 ] . It should be noted that RSVRG and RSRG are designed for finite-sum minimization problems, and they require computing the full gradient once in every fixed number of iterations. As such, they are not applicable to the setting of our interest, where full gradients are inaccessible. Although RSPIDER can avoid computing the full gradient and achieve the optimal $\mathcal{O}(\epsilon^{-3})$ stochastic first-order oracle (SFO) complexity for finding an $\epsilon$ -Riemannian-stochastic-stationary ( $\epsilon$ -RSS) point of problem ( 1.1 ), it still needs to compute a large-batch gradient of size $\mathcal{O}(\epsilon^{-2})$ in each epoch and a mini-batch size of $\mathcal{O}(\epsilon^{-1})$ at each inner iteration. To address these limitations, Han and Gao [ 16 ] proposed RSTORM, which only requires $\mathcal{O}(1)$ stochastic gradient evaluations per iteration and avoids computing full or large-batch gradients. They further established that RSTORM achieves a near-optimal $\widetilde{\mathcal{O}}(\epsilon^{-3})$ SFO complexity for finding $\epsilon$ -RSS points of smooth expectation optimization problems on Riemannian manifolds. 1 1 1 Here and in what follows, we use $\widetilde{\mathcal{O}}(\cdot)$ to hide poly-logarithmic factors.
+
+When the nonsmooth term $h\not=0$ , various efforts on developing stochastic algorithms for tackling problem ( 1.1 ) have focused on the Euclidean setting, where $\mathcal{M}\subseteq\mathcal{E}_{1}$ is a closed convex set. Of particular interest are stochastic proximal gradient methods with variance-reduced gradient estimators, which are motivated by the success of variance reduction techniques in improving both numerical performance and SFO complexity. Specifically, when $\mathcal{M}=\mathcal{E}_{1}$ and $\mathcal{A}=\mathcal{I}$ with $\mathcal{I}$ being the identity map, Pham et al. proposed Prox-SARAH [ 34 ] and Wang et al. proposed SpiderBoost [ 40 ] , both achieving an SFO complexity of $\mathcal{O}(\epsilon^{-3})$ for finding an $\epsilon$ -stochastic-stationary point of problem ( 1.1 ). However, these methods require computing a large-batch gradient of size $\mathcal{O}(\epsilon^{-2})$ once in every fixed number of iterations and a mini-batch size of $\mathcal{O}(\epsilon^{-1})$ at other iterations, similar to their smooth counterparts. Tran-Dinh et al. [ 38 ] proposed Hybrid-SGD and showed that it achieves the same $\mathcal{O}(\epsilon^{-3})$ complexity for finding an $\epsilon$ -stochastic-stationary point of problem ( 1.1 ), provided that the initial batch size is chosen as $\mathcal{O}(\epsilon^{-1})$ . Without this large initial batch, however, Hybrid-SGD can only guarantee a near-optimal $\widetilde{\mathcal{O}}(\epsilon^{-3})$ complexity. More recently, Xu and Xu [ 46 ] proposed ProxSTORM, which incorporates the variance-reduced gradient estimator from STORM [ 12 ] to avoid computing large-batch gradients and achieves an SFO complexity of $\mathcal{O}(\epsilon^{-3})$ for finding an $\epsilon$ -stochastic-stationary point of problem ( 1.1 ).
+
+Recently, there has been growing interest in developing stochastic algorithms for tackling problem ( 1.1 ) when $h\not=0$ and $\mathcal{M}$ is a compact submanifold of $\mathcal{E}_{1}$ . For the setting where $\mathcal{A}=\mathcal{I}$ , Li et al. [ 30 ] proposed a Riemannian stochastic subgradient (RSSG) method when $h$ is a weakly convex function and showed that it has an iteration complexity of $\mathcal{O}(\epsilon^{-4})$ for driving a certain stationarity measure of problem ( 1.1 ) to below $\epsilon$ . Wang et al. [ 39 ] proposed two Riemannian stochastic proximal gradient methods, R-ProxSGD and R-ProxSPB, when $h$ is a convex function. These two methods are the Riemannian counterparts of the Euclidean proximal SGD [ 36 ] and proximal SpiderBoost [ 40 ] methods, respectively. To obtain an $\epsilon$ -RSS point of problem ( 1.1 ), R-ProxSGD and R-ProxSPB require $\mathcal{O}(\epsilon^{-4})$ and $\mathcal{O}(\epsilon^{-3})$ SFO calls, respectively. For the setting where $\mathcal{A}$ is a linear map, Peng et al. [ 33 ] proposed a Riemannian stochastic smoothing method when $h$ is a weakly convex function, which has an SFO complexity of $\mathcal{O}(\epsilon^{-5})$ for finding a so-called generalized $\epsilon$ -stationary point of problem ( 1.1 ). Using a splitting technique, Deng et al. [ 13 ] proposed a stochastic manifold inexact augmented Lagrangian (StoManIAL) framework when $h$ is a convex function. By employing the Riemannian recursive momentum method as a subroutine, StoManIAL achieves an SFO complexity of $\widetilde{\mathcal{O}}(\epsilon^{-3.5})$ for finding an $\epsilon$ -RSS point of problem ( 1.1 ). Although R-ProxSPB and StoManIAL achieve good complexity results, both of them are nested-loop algorithms that require solving a subproblem at each iteration. Specifically, R-ProxSPB requires solving each subproblem exactly, while StoManIAL requires either finding an $\epsilon_{k}$ -RSS point of the AL subproblem (which is difficult to verify) or performing $\mathcal{O}(2^{k})$ Riemannian stochastic gradient steps (which may result in unnecessary but expensive computation in practice) at the $k$ -th iteration.
+
+In view of the above developments, it is naturally of interest to develop simple yet efficient single-loop stochastic algorithms for tackling problem ( 1.1 ) that achieve the optimal SFO complexity. Very recently, Deng et al. [ 14 ] proposed a single-loop Riemannian stochastic smoothing method (RSSM), which makes use of the variance-reduced gradient estimator of RSTORM [ 16 ] , and showed that it has an SFO complexity of $\mathcal{O}(\epsilon^{-3})$ for finding an $\epsilon$ -RSS point of problem ( 1.1 ). Despite their theoretical guarantees, the numerical performance of smoothing-based methods is highly sensitive to the choices of the smoothing parameter and stepsizes and can be unsatisfactory even in the deterministic setting. Moreover, RSSM employs a Riemannian recursive momentum estimator that combines tangent vectors at different iterates. As such, it requires vector transport operations, which introduces additional computational cost.
+
+Table 1: Summary of stochastic algorithms with SFO complexity results for tackling problem ( 1.1 ). Here, “LB” denotes the largest required batch size; “wcvx” and “cvx” denote weakly convex and convex, respectively; “P-Free” represents that the algorithmic parameters are independent of problem parameters (e.g., Lipschitz constants); and “VT-Free” means that the algorithm does not require vector transport operations.
+
+1.2 Our Contributions
+
+We summarize the main contributions of this paper as follows.
+
+We reformulate problem ( 1.1 ) as a Riemannian minimax problem and propose an efficient stochastic Riemannian alternating descent ascent method with recursive momentum (StoRADA-RM) to tackle it. At each iteration, the proposed method performs one or multiple Riemannian stochastic gradient descent steps to approximately minimize a value function associated with the inner maximization problem, followed by a proximal gradient ascent step on a regularized version of the objective function of the minimax problem. Since full gradient information is often inaccessible or too expensive to compute in our setting, we adopt a Euclidean momentum-based variance-reduced gradient estimator that requires only $\mathcal{O}(1)$ SFO calls per iteration. With such an estimator, our proposed method does not need to perform any vector transport operations, which is in sharp contrast to the method proposed in [ 14 ] . Our proposed StoRADA-RM is obtained by adapting our earlier RADA-RGD [ 44 ] , which is developed for a deterministic setting, to a stochastic setting. Still, even when specialized to the setting where $\mathcal{M}$ is a closed convex set in a Euclidean space, StoRADA-RM remains new.
+
+We establish the convergence of StoRADA-RM and show that both its iteration complexity and SFO complexity for finding an $\epsilon$ -RSS point of problem ( 1.1 ) are $\mathcal{O}(\epsilon^{-3})$ . The iteration complexity matches the best known in the literature for deterministic Riemannian nonsmooth composite optimization; see, e.g., [ 3 , 13 , 43 ] . Remarkably, the SFO complexity of StoRADA-RM not only matches the state-of-the-art in the literature for Riemannian nonsmooth composite expectation optimization (see, e.g., [ 39 , 14 ] ) but also attains the optimal lower bound established in [ 2 ] for smooth nonconvex optimization with stochastic first-order algorithms. To obtain the said complexity results, we develop new techniques to (i) control the estimation error of the recursive momentum estimator in the presence of a nonsmooth composite term in the objective function, thus extending the results in [ 28 ] ; and (ii) analyze the progress made at each iteration of our proposed method in the absence of a sufficient decrease property of the iterates generated by the Riemannian stochastic gradient steps, thus bypassing a key requirement in the analysis of RADA-RGD in [ 44 ] .
+
+We present numerical results on sparse PCA and CISE problems to demonstrate the efficiency of our proposed StoRADA-RM. The proposed method consistently returns solutions with lower objective values and has significantly lower computational cost compared with existing state-of-the-art methods, including R-ProxSPB [ 39 ] , StoManIAL [ 13 ] , and RSSM [ 14 ] . In particular, although both StoRADA-RM and RSSM are single-loop algorithms with the same SFO complexity of $\mathcal{O}(\epsilon^{-3})$ , StoRADA-RM is substantially more efficient in practice.
+
+A comparison of existing methods for tackling problem ( 1.1 ) is summarized in Table 1 .
+
+1.3 Organization
+
+The rest of the paper is organized as follows. We first introduce the notation and cover some preliminaries on Riemannian optimization and convex analysis in Section 2 . We then present our proposed algorithm in Section 3 , followed by its convergence analysis in Section 4 . Then, we present numerical results on sparse PCA and CISE to illustrate the efficiency of the proposed algorithms in Section 5 . Finally, we draw some conclusions in Section 6 .
+
+2 Notation and Preliminaries
+
+We first introduce the notation and some basic concepts in Riemannian optimization [ 1 , 8 ] . We use $\langle\,\!\cdot\,,\cdot\rangle$ and $\|\cdot\|$ to denote the standard inner product and its induced norm on the Euclidean space $\mathcal{E}$ , respectively. For a subset $\mathcal{X}\subseteq\mathcal{E}$ and a point $y\in\mathcal{E}$ , we define the distance from $y$ to $\mathcal{X}$ as $\mathrm{dist}(y,\,\mathcal{X}):=\inf_{x\in\mathcal{X}}\|y-x\|$ , and we denote by $\mathrm{conv}\,\mathcal{X}$ the convex hull of $\mathcal{X}$ . For a linear map $\mathcal{A}:\mathcal{E}_{1}\to\mathcal{E}_{2}$ , its adjoint is denoted by $\mathcal{A}^{\top}:\mathcal{E}_{2}\to\mathcal{E}_{1}$ . Let $\mathcal{M}$ be a submanifold embedded in $\mathcal{E}$ and $\mathrm{T}_{x}\mathcal{M}$ denote the tangent space to $\mathcal{M}$ at $x\in\mathcal{M}$ . Throughout this paper, we take the standard inner product $\langle\cdot,\cdot\rangle$ on the Euclidean space $\mathcal{E}$ as the Riemannian metric on $\mathcal{M}$ . Then, for a smooth function $f:\mathcal{E}\rightarrow\mathbb{R}$ and a point $x\in\mathcal{M}$ , the Riemannian gradient of $f$ at $x$ is given by $\mathrm{grad}\,f(x)=\mathrm{proj}_{\mathrm{T}_{x}\mathcal{M}}(\nabla f(x))$ , where $\mathrm{proj}_{\mathcal{X}}(\cdot)$ is the Euclidean projection operator onto a closed set $\mathcal{X}$ and $\nabla f(x)$ is the Euclidean gradient of $f$ at $x$ . A retraction at $x\in\mathcal{M}$ is a smooth map $\mathrm{R}_{x}:\mathrm{T}_{x}\mathcal{M}\to\mathcal{M}$ satisfying (i) $\mathrm{R}_{x}(\mathbf{0}_{x})=x$ , where $\mathbf{0}_{x}$ is the zero element in $\mathrm{T}_{x}\mathcal{M}$ ; (ii) $\frac{\mathrm{d}}{\mathrm{d}t}\mathrm{R}_{x}(tv)|_{t=0}=v$ for all $v\in\mathrm{T}_{x}\mathcal{M}$ . Throughout this paper, we assume that the retraction is globally defined, namely, $\mathrm{R}_{x}(v)$ is well defined for every $x\in\mathcal{M}$ and $v\in\mathrm{T}_{x}\mathcal{M}$ . For a sampling set $S=\{\theta_{1},\,\theta_{2},\ldots,\,\theta_{b}\}$ with cardinality $|S|=b$ , where each $\theta_{i}$ is sampled independently according to the distribution $\mathcal{D}$ , we define the stochastic Euclidean gradient as
+
+$\nabla f_{S}(x):=\frac{1}{|S|}\sum_{i=1}^{|S|}\nabla f(x;\theta_{i}).$
+
+Now, we review some basic notions in convex analysis [ 35 , 4 ] . Let $g:\mathcal{E}\to(-\infty,+\infty]$ be a proper closed convex function whose domain is given by $\mathrm{dom}\ g:=\{x\in\mathcal{E}\mid g(x)<+\infty\}$ . Its conjugate function is defined as $g^{*}(y):=\sup_{x\in\mathcal{E}}\left\{\langle y,\,x\rangle-g(x)\right\}.$ For a given constant $\lambda>0$ , the proximal map and the Moreau envelope of $g$ are defined as
+
+$\mathrm{prox}_{\lambda g}(x)=\argmin_{u\in\mathcal{E}}\left\{g(u)+\frac{1}{2\lambda}\|x-u\|^{2}\right\}$
+
+and
+
+$M_{{\lambda g}}(x)=\min_{u\in\mathcal{E}}\left\{g(u)+\frac{1}{2\lambda}\|x-u\|^{2}\right\},$
+
+respectively. For any $x\in\mathcal{E}$ , we have the following so-called Moreau decomposition:
+
+$x=\mathrm{prox}_{\lambda g}(x)+\lambda\mathrm{prox}_{{g^{*}/\lambda}}\left(\frac{x}{\lambda}\right).$ (2.1)
+
+The following theorem characterizes the smoothness of the Moreau envelope.
+
+( [ 4 , Theorems 6.60 and 6.39 ] ) Let $g:\mathcal{E}\to(-\infty,+\infty]$ be a proper closed convex function and $\lambda>0$ . Then, for any $x\in\mathcal{E}$ ,
+
+$\nabla M_{\lambda g}(x)=\frac{1}{\lambda}(x-\mathrm{prox}_{\lambda g}(x))=\mathrm{prox}_{g^{*}/\lambda}\left(\frac{x}{\lambda}\right)\in\partial g(\mathrm{prox}_{\lambda g}(x)),$
+
+where $\partial g$ is the subdifferential of $g$ .
+
+Moreover, the following theorem shows the equivalence between Lipschitz continuity and boundedness of the domain of the conjugate of a convex function.
+
+( [ 4 , Theorem 4.23] ) Let $g:\mathcal{E}\to\mathbb{R}$ be a convex function. Then, $g$ is $L$ -Lipschitz continuous (i.e., $|g(x)-g(x^{\prime})|\leq L\|x-x^{\prime}\|$ for all $x,x^{\prime}\in\mathcal{E}$ ) if and only if $\mathrm{sup}_{y\in\mathrm{dom}\,g^{*}}\|y\|\leq L$ .
+
+3 Proposed StoRADA-RM
+
+In this section, we propose an efficient algorithm for tackling the Riemannian nonsmooth expectation optimization problem ( 1.1 ).
+
+Main framework
+
+First, we reformulate problem ( 1.1 ) as the Riemannian minimax problem
+
+$\min_{x\in\mathcal{M}}\,\max_{y\in\mathcal{E}_{2}}\,\left\{F(x,y):=f(x)+\langle\mathcal{A}(x),y\rangle-h^{*}(y)\right\}.$ (3.1)
+
+In the original formulation ( 1.1 ), the composite term $h(\mathcal{A}(\cdot))$ is nonsmooth and nonconvex, which makes the problem difficult to handle directly. By contrast, the reformulation ( 3.1 ) decouples the nonsmoothness and nonconvexity: Its objective function is smooth but nonconvex in $x$ and concave but nonsmooth in $y$ . One approach to tackling the Riemannian minimax problem ( 3.1 ) is to apply the algorithmic framework RADA that we developed in [ 44 ] . Specifically, at the $k$ -th iteration, where $k\geq 1$ , we approximately solve the following problem to compute the next iterate $x_{k+1}$ :
+
+$\min_{x\in\mathcal{M}}\left\{\Phi_{k}(x):=\max_{y\in\mathcal{E}_{2}}\left\{F(x,y)-\frac{\lambda_{k}}{2}\|y\|^{2}-\frac{\beta_{k}}{2}\|y-y_{k}\|^{2}\right\}\right\}.$ (3.2)
+
+Here, $\lambda_{k}>0$ is the regularization parameter, $y_{k}\in\mathrm{dom}\,h^{*}$ is the proximal center, and $\beta_{k}\geq 0$ is the proximal parameter. We compute the update
+
+$\displaystyle y_{k+1}$ $\displaystyle=\argmax_{y\in\mathcal{E}_{2}}\left\{F(x_{k+1},y)-\frac{\lambda_{k}}{2}\|y\|^{2}-\frac{\beta_{k}}{2}\|y-y_{k}\|^{2}\right\}$ (3.3) $\displaystyle=\mathrm{prox}_{{h^{*}/(\lambda_{k}+\beta_{k})}}\left(\frac{\mathcal{A}(x_{k+1})+\beta_{k}y_{k}}{\lambda_{k}+\beta_{k}}\right),$
+
+which can be regarded as performing a proximal gradient ascent step on the regularized function $F(x_{k+1},\cdot)-\frac{\lambda_{k}}{2}\|\cdot\|^{2}$ .
+
+Riemannian stochastic gradient descent
+
+To approximately solve the subproblem ( 3.2 ) for a given $k\geq 1$ , we leverage the differentiability of value function $\Phi_{k}$ . Specifically, observe that $\Phi_{k}$ can be written as
+
+$\displaystyle\Phi_{k}(x)=$ $\displaystyle f(x)+M_{{(\lambda_{k}+\beta_{k})h}}\left(\mathcal{A}(x)+\beta_{k}y_{k}\right)-\frac{\beta_{k}}{2}\|y_{k}\|^{2}.$ (3.4)
+
+As shown in [ 44 , Section 3.1] , the function $\Phi_{k}$ is differentiable with
+
+$\nabla\Phi_{k}(x)=\nabla f(x)+\nabla\mathcal{A}(x)^{\top}\mathrm{prox}_{{h^{*}}/(\lambda_{k}+\beta_{k})}\left(\frac{\mathcal{A}(x)+\beta_{k}y_{k}}{\lambda_{k}+\beta_{k}}\right),$ (3.5)
+
+where $\nabla\mathcal{A}$ denotes the Jacobian of $\mathcal{A}$ . Unlike in the setting considered in [ 44 ] , the full gradient $\nabla f$ in ( 3.5 ) is intractable in our current setting. Thus, instead of performing Riemannian gradient steps on the value function $\Phi_{k}$ as in [ 44 , Algorithm 3] , we perform Riemannian stochastic gradient steps. Specifically, let $T\geq 1$ be the number of Riemannian stochastic gradient steps to be performed on $\Phi_{k}$ . Let $x_{k,1}=x_{k}$ and $x_{k,t}$ be the iterate at the $t$ -th inner iteration for $t\in\{1,2,\ldots,T\}$ . In view of ( 3.5 ), we define the Riemannian stochastic gradient of $\Phi_{k}$ at $x_{k,t}$ as
+
+$D_{k,t}^{R}=\mathrm{proj}_{\mathrm{T}_{x_{k,t}}\mathcal{M}}\left(d_{k,t}+\nabla\mathcal{A}(x_{k,t})^{\top}\mathrm{prox}_{{h^{*}}/(\lambda_{k}+\beta_{k})}\left(\frac{\mathcal{A}(x_{k,t})+\beta_{k}y_{k}}{\lambda_{k}+\beta_{k}}\right)\right).$ (3.6)
+
+Here, $d_{k,t}$ is a stochastic estimator of $\nabla f(x_{k,t})$ , which will be specified in ( 3.8 ). We then choose a stepsize $\zeta_{k,t}>0$ and compute the update
+
+$x_{k,t+1}=\mathrm{R}_{x_{k,t}}(-\zeta_{k,t}D_{k,t}^{R})$ (3.7)
+
+for $t=1,2,\ldots,T$ to obtain $x_{k+1}=x_{k+1,1}=x_{k,T+1}$ .
+
+Recursive momentum estimator
+
+To construct the stochastic estimator $d_{k,t}$ for $t=1,2,\ldots,T$ , we adopt the recursive momentum approach proposed in [ 12 , 28 ] . The approach relies on the following standard assumption.
+
+The function $f$ is equipped with an SFO, which is a map that, when queried at the point $x\in\mathcal{M}$ , returns an unbiased estimate $f(x;\theta)$ of the function value $f(x)$ and an unbiased estimate $\nabla f(x;\theta)$ of the gradient $\nabla f(x)$ .
+
+Given the initial stochastic estimator $d_{k,1}$ of $\nabla f(x_{k,1})$ , the stochastic estimator $d_{k,t+1}$ for $t=1,2,\ldots,T$ is constructed via
+
+$d_{k,t+1}=\nabla f_{S_{k,t+1}}(x_{k,t+1})+(1-\alpha_{k,t})(d_{k,t}-\nabla f_{S_{k,t+1}}(x_{k,t})).$ (3.8)
+
+Here, $\alpha_{k,t}\in(0,1]$ is a given weight and $S_{k,t+1}$ is a sampling set of size $|S_{k,t+1}|=b$ , where $b\geq 1$ is given. We assume that the initial sampling set $S_{1}$ and the mini-batches $\{S_{k,t+1}\mid k\geq 1,1\leq t\leq T\}$ are mutually independent. By convention, we set $d_{k,T+1}=d_{k+1,1}$ .
+
+Choice of parameters
+
+To obtain an efficient instantiation of the above algorithmic framework, we need to choose the parameters $\{\lambda_{k}\}$ , $\{\beta_{k}\}$ , $\{\alpha_{k,t}\}$ , and $\{\zeta_{k,t}\}$ judiciously, so as to simultaneously control the errors of the stochastic estimators $\{d_{k,t}\}$ and ensure sufficient progress towards stationarity is made when the value functions $\{\Phi_{k}\}$ in successive iterations are approximately minimized. First, for $k\geq 1$ and $t=1,2,\ldots,T$ , we set the momentum weight $\alpha_{k,t}$ and stepsize $\zeta_{k,t}$ as
+
+$\alpha_{k,t}=((k-1)T+t)^{-2/3}$ (3.9)
+
+and
+
+$\zeta_{k,t}=\xi_{k}\alpha_{k,t}^{1/3}\left({{\color[rgb]{0,0,0}{\delta_{0}+}}}\sum_{i=1}^{k-1}\sum_{j=1}^{T}\|D_{i,j}^{R}\|^{2}+\sum_{j=1}^{t}\|D_{k,j}^{R}\|^{2}\right)^{-1/3},$ (3.10)
+
+respectively, where $\delta_{0}>0$ and $\xi_{k}\in[\xi_{\min},\xi_{k-1}]$ with $\xi_{0}\geq\xi_{\min}>0$ to ensure that the stepsize is nonzero even when all the Riemannian stochastic gradients are zero. These choices are motivated by the parameter balancing mechanism in STORM+ [ 28 , 14 ] . The underlying idea is to coordinate the use of past gradient information with the movement of the iterates. On one hand, the momentum weight $\alpha_{k,t}$ is used to induce a variance reduction effect through the correction term $(1-\alpha_{k,t})(d_{k,t}-\nabla f_{S_{k,t+1}}(x_{k,t}))$ in ( 3.8 ); cf. [ 28 ] . To accommodate the $T$ inner updates in StoRADA-RM, we index $\alpha_{k,t}$ by the total number of inner updates, i.e., $(k-1)T+t$ . On the other hand, the stepsize $\zeta_{k,t}$ uses the momentum weight $\alpha_{k,t}$ and the Riemannian stochastic gradients $\{D_{k^{\prime},t^{\prime}}^{R}\}$ computed so far to control the progress made between two successive outer iterations.
+
+Next, let $\lambda_{1}>0$ , $\beta_{1}\geq 0$ , and $\rho>1$ be fixed. For $k\geq 1$ , we set the regularization parameter $\lambda_{k}$ and the proximal parameter $\beta_{k}$ in the subproblem ( 3.2 ) as
+
+$\lambda_{k}=\frac{\lambda_{1}}{k^{1/3}}\quad\mbox{and}\quad 0\leq\beta_{k}\leq\frac{\beta_{1}}{(k)^{\rho}},$ (3.11)
+
+respectively. Unlike in the deterministic setting considered in [ 44 ] , where $\{\lambda_{k}\}$ is chosen to be a constant sequence, we choose a decreasing sequence $\{\lambda_{k}\}$ whose rate of decay is compatible with that of $\{\zeta_{k,t}\}$ . Moreover, we impose a summability condition on $\{\beta_{k}\}$ . These choices allow us to bound the accumulated change in values of the different value functions that arise in the course of our proposed method and show that in expectation, both the norm of the Riemannian gradient of the value function and the regularization error decay at the same rate; see Theorem 11 .
+
+The proposed StoRADA-RM method is formally presented in Algorithm 1 .
+
+Algorithm 1 StoRADA-RM for solving problem ( 1.1 )
+
+Several remarks on StoRADA-RM are in order. First, although the method is a natural instantiation of the RADA framework in the stochastic setting, the use of the recursive momentum estimator only yields an approximation of the full gradient of the value function. The approximation error at each inner iteration accumulates, which leads to difficulty in establishing the sufficient decrease property needed in the analysis of RADA (see [ 44 , displayed eqn. (13)] ). To circumvent this difficulty, we need to choose the momentum weights, the stepsizes, and the regularization parameters carefully so that the gradient estimation errors and the progress made between two successive outer iterations can be controlled simultaneously. This presents a significant challenge in the analysis of StoRADA-RM that is not seen in the analyses of RADA [ 44 ] and the recursive momentum estimator-based methods in [ 12 , 28 ] .
+
+Second, StoRADA-RM is simple to implement while retaining the optimal SFO complexity. It can be regarded as a single-loop method since $T$ is fixed (and can even be set to one). By contrast, the stochastic Riemannian AL method in [ 13 ] requires solving a subproblem either to $\epsilon_{k}$ -stochastic stationarity or by performing $\mathcal{O}(2^{k})$ inner updates at the $k$ -th iteration, both of which are computationally prohibitive. On the other hand, the batch size $b$ in StoRADA-RM can be taken as $\mathcal{O}(1)$ . This makes StoRADA-RM easier to implement and potentially more efficient than R-ProxSPB [ 39 ] , as the latter requires computing the full gradient or a large-batch gradient of size $\mathcal{O}(\epsilon^{-2})$ once in every fixed number of iterations. Moreover, the stepsizes $\{\zeta_{k,t}\}$ are independent of the problem parameters, such as the Lipschitz constant of $\nabla f$ . This makes the stepsize scheme of StoRADA-RM more flexible than those of not only the stochastic R-ProxSPB [ 39 ] and StoManIAL [ 13 ] but also the deterministic RADA-RGD [ 44 ] .
+
+Finally, we compare StoRADA-RM with the recently proposed RSSM [ 14 ] , which is also single-loop and employs the recursive momentum estimator. Specifically, RSSM performs a single Riemannian stochastic gradient step to approximately solve the smoothed subproblem
+
+$\min_{x\in\mathcal{M}}\left\{f(x)+M_{\lambda_{k}h}(\mathcal{A}(x))\right\},$
+
+which can be viewed as a special case of our subproblem ( 3.2 ) with $\beta_{k}\equiv 0$ for all $k\geq 1$ . Despite this connection, the two methods differ fundamentally in their design philosophies. StoRADA-RM exploits the intrinsic minimax structure of the original problem to decouple the nonsmoothness and nonconvexity. Moreover, it allows multiple Riemannian stochastic gradient steps. Although such a flexibility complicates the convergence analysis of the method, it yields more accurate solutions to the subproblems and contributes to the favorable numerical performance of the method; see Section 5 . Lastly, StoRADA-RM adopts the Euclidean recursive momentum estimator ( 3.8 ), which, unlike RSSM, avoids the need to perform vector transport operations, thereby further improving its computational efficiency.
+
+4 Complexity Analysis of StoRADA-RM
+
+In this section, we study the convergence behavior of StoRADA-RM (Algorithm 1 ).
+
+4.1 Assumptions and Useful Lemmas
+
+We begin with the assumptions used in our analysis.
+
+The manifold $\mathcal{M}\subseteq\mathcal{E}_{1}$ is compact.
+
+The function $f:\mathcal{E}_{1}\to\mathbb{R}$ is continuously differentiable and satisfies the descent property
+
+$f(x^{\prime})\leq f(x)+\langle\nabla f(x),\,x^{\prime}-x\rangle+\frac{L_{f}}{2}\|x^{\prime}-x\|^{2},\quad\forall\,x,x^{\prime}\in\mathcal{M}.$
+
+The map $\mathcal{A}:\mathcal{E}_{1}\to\mathcal{E}_{2}$ and its Jacobian $\nabla\mathcal{A}$ are $L_{\mathcal{A}}^{0}$ -Lipschitz and $L_{\mathcal{A}}^{1}$ -Lipschitz over $\mathrm{conv}\,\mathcal{M}$ , respectively. In other words, for any $x,x^{\prime}\in\mathrm{conv}\,\mathcal{M}$ , we have
+
+$\displaystyle\|\mathcal{A}(x)-\mathcal{A}(x^{\prime})\|\leq L_{\mathcal{A}}^{0}\|x-x^{\prime}\|,$ $\displaystyle\|\nabla\mathcal{A}(x)-\nabla\mathcal{A}(x^{\prime})\|\leq L_{\mathcal{A}}^{1}\|x-x^{\prime}\|.$
+
+Moreover, the Jacobian $\nabla\mathcal{A}$ is bounded over $\mathrm{conv}\,\mathcal{M}$ , i.e.,
+
+$\rho_{\mathcal{A}}:=\sup_{x\,\in\,\mathrm{conv}\,\mathcal{M}}\,\|\nabla\mathcal{A}(x)\|<+\infty.$
+
+The unbiased gradient estimate $\nabla f(x;\theta)$ has bounded variance and satisfies a so-called mean-squared smoothness property, i.e., there exist $\sigma>0$ and $\tilde{L}_{f}>0$ such that for all $x,\,x^{\prime}\in\mathcal{M}$ , we have
+
+$\displaystyle\mathbb{E}_{\omega\sim\mathcal{D}}[\nabla f(x;\omega)]=\nabla f(x),$ (4.2) $\displaystyle\mathbb{E}_{\omega\sim\mathcal{D}}[\|\nabla f(x;\omega)-\nabla f(x)\|^{2}]\leq\sigma^{2},$ (4.3) $\displaystyle\mathbb{E}_{\omega\sim\mathcal{D}}[\|\nabla f(x;\omega)-\nabla f(x^{\prime};\omega)\|^{2}]\leq\tilde{L}_{f}^{2}\|x-x^{\prime}\|^{2}.\quad$ (4.4)
+
+Assumptions 4.1 and 4.2 are standard in the context of Riemannian nonsmooth composite optimization; see, e.g., [ 10 , 9 , 21 , 22 , 43 , 14 ] . Assumption 4.3 is standard in the context of Riemannian stochastic optimization; see, e.g., [ 16 , 14 , 39 , 46 ] .
+
+The following lemma, which is extracted from [ 7 , Appendix B] , shows that the retraction satisfies first- and second-order boundedness conditions on $\mathcal{M}$ .
+
+Suppose that Assumption 4.1 holds. Then, there exist $\kappa_{1},\kappa_{2}>0$ such that
+
+$\|\mathrm{R}_{x}(v)-x\|\leq\kappa_{1}\|v\|\quad\text{{and}}\quad\|\mathrm{R}_{x}(v)-x-v\|\leq\kappa_{2}\|v\|^{2}$
+
+for any $x\in\mathcal{M},\,v\in\mathrm{T}_{x}\mathcal{M}$ .
+
+Based on Lemma 3 , we have the following descent property of the value function $\Phi_{k}$ for $k\geq 1$ .
+
+( [ 44 , Lemma 3] ) Suppose that Assumption 4.2 holds. Then, for all $k\geq 1$ , the value function $\Phi_{k}$ in ( 3.2 ) satisfies the following properties:
+
+Euclidean descent. For any $x,x^{\prime}\in\mathcal{M}$ , we have
+
+${\Phi_{k}}(x^{\prime})\leq{\Phi_{k}}(x)+\langle\nabla{\Phi_{k}}(x),\,x^{\prime}-x\rangle+\frac{\ell_{k}}{2}\|x^{\prime}-x\|^{2},$
+
+where
+
+$\ell_{k}=L_{f}+L_{h}L_{\mathcal{A}}^{1}+\frac{{\rho_{\mathcal{A}}}L_{\mathcal{A}}^{0}}{\lambda_{k}+\beta_{k}}.$ (4.5)
+
+Riemannian descent. For any $x\in\mathcal{M}$ and $v\in\mathrm{T}_{x}\mathcal{M}$ , we have
+
+${\Phi_{k}}(\mathrm{R}_{x}(v))\leq{\Phi_{k}}(x)+\langle\mathrm{grad}\,{\Phi_{k}}(x),\,v\rangle+\frac{L_{k}}{2}\|v\|^{2},$ (4.6)
+
+where
+
+$\displaystyle L_{k}$ $\displaystyle=\ell_{k}\kappa_{1}^{2}+2M_{G}\kappa_{2}\quad\text{and}\quad{M_{G}=\max_{x\in\mathcal{M}}\|\nabla f(x)\|+\rho_{\mathcal{A}}L_{h}}.$ (4.7)
+
+From ( 3.11 ), ( 4.5 ) and ( 4.7 ), we have the upper bound
+
+$L_{k}\leq\frac{L_{c}}{\lambda_{k}+\beta_{k}},$ (4.8)
+
+where $L_{c}=\rho_{\mathcal{A}}L_{\mathcal{A}}^{0}\kappa_{1}^{2}+(\lambda_{1}+\beta_{1})((L_{f}+L_{h}L_{\mathcal{A}}^{1})\kappa_{1}^{2}+2M_{G}\kappa_{2}).$ Lastly, we need the following technical lemma, which concerns the behavior of nonzero nonnegative vectors.
+
+( [ 28 , Lemma 3] ) Let $a_{1}>0,a_{2},\ldots,a_{n}\geq 0$ and $p\in(0,1)$ . Then,
+
+$\displaystyle\sum_{i=1}^{n}\frac{a_{i}}{\left(\sum_{j=1}^{i}a_{j}\right)^{p}}\leq\frac{1}{1-p}\left(\sum_{i=1}^{n}a_{i}\right)^{1-p}.$
+
+It follows from Lemma 5 that, for any $\delta_{0}>0$ , $a_{1},\ldots,a_{n}\geq 0$ , and $p\in(0,1)$ ,
+
+$\sum_{i=1}^{n}\frac{a_{i}}{\left(\delta_{0}+\sum_{j=1}^{i}a_{j}\right)^{p}}\leq\frac{1}{1-p}\left(\sum_{i=1}^{n}a_{i}\right)^{1-p}.$ (4.9)
+
+4.2 Preliminary Estimates
+
+To set the stage for our convergence analysis of Algorithm 1 , we define
+
+$\displaystyle\overline{\Phi}:=\sup_{x\in\mathcal{M}}\Phi(x),$ $\displaystyle\underline{\Phi}:=\inf_{x\in\mathcal{M}}\Phi(x),\quad e_{k,t}:=d_{k,t}-\nabla f(x_{k,t}),$ (4.10) $\displaystyle\Upsilon_{g}:=\sum_{k=1}^{K}\sum_{t=1}^{T}\|\mathrm{grad}\,\Phi_{k}(x_{k,t})\|^{2},$ $\displaystyle\Upsilon_{d}:=\sum_{k=1}^{K}\sum_{t=1}^{T}\|D_{k,t}^{R}\|^{2},\quad\Upsilon_{e}:=\sum_{k=1}^{K}\sum_{t=1}^{T}\|e_{k,t}\|^{2}.$
+
+We begin with the following estimates of the value functions $\{\Phi_{k}\}$ .
+
+Let $\{x_{k}\}$ be the sequence generated by Algorithm 1 . Then, we have
+
+$\Phi_{k+1}(x_{k+1})-\Phi_{k}(x_{k+1})\leq\left(2\beta_{k}+\frac{\lambda_{k}-\lambda_{k+1}}{2}\right)L_{h}^{2},\quad\forall k\geq 1.$ (4.11)
+
+Moreover, for any $x\in\mathcal{M}$ , we have
+
+$\Phi_{k}(x)\geq\underline{\Phi}-\frac{\lambda_{1}}{2}L_{h}^{2}-2\beta_{1}L_{h}^{2},\quad\forall k\geq 1.$ (4.12)
+
+For simplicity, denote
+
+$\displaystyle F_{k}(x,y):=$ $\displaystyle\,F(x,y)-\frac{\lambda_{k}}{2}\|y\|^{2}-\frac{\beta_{k}}{2}\|y-y_{k}\|^{2},$ (4.13) $\displaystyle y_{k+\frac{1}{2}}:=$ $\displaystyle\,\mathrm{prox}_{h^{*}/(\lambda_{k}+\beta_{k})}\left(\frac{\mathcal{A}(x_{k})+\beta_{k}y_{k}}{\lambda_{k}+\beta_{k}}\right),$ (4.14)
+
+where $k\geq 1$ . By the definition of the proximal operator, we know that $y_{k},\,y_{k+\frac{1}{2}}\in\mathrm{dom}\,h^{*}$ for all $k\geq 1$ . Since $h$ is assumed to be convex and $L_{h}$ -Lipschitz continuous, it follows from Theorem 2 that
+
+$\displaystyle\|y_{k}\|\leq L_{h}\quad\text{and}\quad\|y_{k+\frac{1}{2}}\|\leq L_{h},\quad\forall\,k\geq 1.$ (4.15)
+
+Then, we have
+
+$\displaystyle{}\Phi_{k+1}(x_{k+1})-\Phi_{k}(x_{k+1})={}$ $\displaystyle F_{k+1}(x_{k+1},y_{k+\frac{3}{2}})-F_{k}(x_{k+1},y_{k+1})$ $\displaystyle\overset{(\text{a})}{\leq}{}$ $\displaystyle F_{k+1}(x_{k+1},y_{k+\frac{3}{2}})-F_{k}(x_{k+1},y_{k+\frac{3}{2}})$ $\displaystyle\overset{(\text{b})}{=}{}$ $\displaystyle F(x_{k+1},y_{k+\frac{3}{2}})-\frac{\lambda_{k+1}}{2}\|y_{k+\frac{3}{2}}\|^{2}-\frac{\beta_{k+1}}{2}\|y_{k+\frac{3}{2}}-y_{k+1}\|^{2}$ $\displaystyle-F(x_{k+1},y_{k+\frac{3}{2}})+\frac{\lambda_{k}}{2}\|y_{k+\frac{3}{2}}\|^{2}+\frac{\beta_{k}}{2}\|y_{k+\frac{3}{2}}-y_{k}\|^{2}$ $\displaystyle\overset{(\text{c})}{\leq}{}$ $\displaystyle\,\left(2\beta_{k}+\frac{\lambda_{k}-\lambda_{k+1}}{2}\right)L_{h}^{2},$
+
+where $y_{k+\frac{3}{2}}$ is a shorthand for $y_{(k+1)+\frac{1}{2}}$ , (a) comes from the optimality of $y_{k+1}$ in ( 3.3 ), (b) holds by the definition of $F_{k}$ in ( 4.13 ), and (c) is due to ( 4.15 ).
+
+On the other hand, for any $x\in\mathcal{M}$ , we deduce from ( 3.2 ) that
+
+$\displaystyle\Phi_{k}(x)$ $\displaystyle=\max_{y\in\mathcal{E}_{2}}\left\{f(x)+\langle\mathcal{A}(x),y\rangle-h^{*}(y)-\frac{\lambda_{k}}{2}\|y\|^{2}-\frac{\beta_{k}}{2}\|y-y_{k}\|^{2}\right\}$ $\displaystyle\overset{\text{(a)}}{\geq}\max_{y\in\mathcal{E}_{2}}\left\{f(x)+\langle\mathcal{A}(x),y\rangle-h^{*}(y)-\frac{\lambda_{k}}{2}L_{h}^{2}-2\beta_{k}L_{h}^{2}\right\}$ $\displaystyle=f(x)+h(\mathcal{A}(x))-\frac{\lambda_{k}}{2}L_{h}^{2}-2\beta_{k}L_{h}^{2}\geq\underline{\Phi}-\frac{\lambda_{1}}{2}L_{h}^{2}-2\beta_{1}L_{h}^{2},$
+
+where (a) is due to the fact that $y\in\mathrm{dom}\,h^{*}$ and Theorem 2 , and the last inequality follows from the definition of $\Phi$ and $\underline{\Phi}$ in ( 1.1 ) and ( 4.10 ), respectively, together with the parameter bounds in ( 3.11 ).
+
+Based on Lemma 6 , we now prove the following lemma, which shows how the accumulated squared Riemannian gradient norm $\Upsilon_{g}$ associated with the value functions $\{\Phi_{k}\}$ can be controlled by the accumulated squared Riemannian stochastic gradient norm $\Upsilon_{d}$ and the accumulated squared gradient estimation error $\Upsilon_{e}$ .
+
+Suppose that Assumptions 4.1 and 4.2 hold. Let $\{x_{k,t}\}$ be the sequence generated by Algorithm 1 . Then, we have
+
+$\displaystyle\Upsilon_{g}\overset{}{\leq}$ $\displaystyle\,\frac{2(\Upsilon+\Delta_{\Phi})}{\xi_{\min}}(TK)^{2/9}{{\color[rgb]{0,0,0}{(\delta_{0}+\Upsilon_{d})^{1/3}}}}+\frac{3\xi_{0}L_{c}}{2\lambda_{1}}K^{1/9}\Upsilon_{d}^{2/3}+\Upsilon_{e},$ (4.16)
+
+where
+
+$\displaystyle\Delta_{\Phi}=\,\overline{\Phi}-\underline{\Phi}+\frac{\lambda_{1}L_{h}^{2}}{2}+2\beta_{1}L_{h}^{2}\quad\text{and}\quad\Upsilon=\,{{\color[rgb]{0,0,0}{2\max\{L_{h},L_{h}^{2}\}}}}\sum_{k=1}^{\infty}\beta_{k}+\frac{\lambda_{1}L_{h}^{2}}{2}.$ (4.17)
+
+We start by analyzing the descent property at each inner iteration of Algorithm 1 to obtain a bound on $\Upsilon_{g}$ . Let $k\in\{1,2,\ldots,K\}$ and $t\in\{1,2,\ldots,T\}$ be fixed. Using $x_{k,t+1}=\mathrm{R}_{x_{k,t}}(-\zeta_{k,t}D_{k,t}^{R})$ and ( 4.6 ), we get
+
+$\displaystyle\Phi_{k}(x_{k,t+1})-\Phi_{k}(x_{k,t})\leq-\zeta_{k,t}\langle\mathrm{grad}\,\Phi_{k}(x_{k,t}),D_{k,t}^{R}\rangle+\frac{\zeta_{k,t}^{2}L_{k}}{2}\|D_{k,t}^{R}\|^{2}.$ (4.18)
+
+Note that
+
+$\displaystyle-2\langle\mathrm{grad}\,\Phi_{k}(x_{k,t}),D_{k,t}^{R}\rangle\leq$ $\displaystyle\,\|D_{k,t}^{R}-\text{grad}\,\Phi_{k}(x_{k,t})\|^{2}-\|\text{grad}\,\Phi_{k}(x_{k,t})\|^{2}$ $\displaystyle\leq$ $\displaystyle\,\|e_{k,t}\|^{2}-\|\text{grad}\,\Phi_{k}(x_{k,t})\|^{2},$
+
+where the last inequality follows from the expression of $D^{R}_{k,t}$ in ( 3.6 ), the expression of $\nabla\Phi_{k}(x_{k,t})$ in ( 3.5 ), the relation $\mathrm{grad}\,\Phi_{k}(x_{k,t})=\mathrm{proj}_{\mathrm{T}_{x_{k,t}}\mathcal{M}}(\nabla\Phi_{k}(x_{k,t}))$ , the definition of $e_{k,t}$ in ( 4.10 ), and the nonexpansiveness of the projection operator. Substituting this bound into ( 4.18 ), applying ( 4.8 ), and rearranging terms, we obtain
+
+$\displaystyle\|\mathrm{grad}\,\Phi_{k}(x_{k,t})\|^{2}\leq\frac{2}{\zeta_{k,t}}(\Phi_{k}(x_{k,t})-\Phi_{k}(x_{k,t+1}))+\|e_{k,t}\|^{2}+\frac{L_{c}\zeta_{k,t}}{\lambda_{k}+\beta_{k}}\|D_{k,t}^{R}\|^{2}.$ (4.19)
+
+Denote $\Delta_{k,t}:=(\Phi_{k}(x_{k,t})-\Phi_{k}(x_{k,t+1}))/\zeta_{k,t}$ . Summing ( 4.19 ) over $k$ and $t$ and recalling ( 4.10 ), we have
+
+$\Upsilon_{g}\leq{{\color[rgb]{0,0,0}{2}}}\sum_{k=1}^{K}\sum_{t=1}^{T}\Delta_{k,t}+L_{c}\sum_{k=1}^{K}\sum_{t=1}^{T}\frac{\zeta_{k,t}}{\lambda_{k}+\beta_{k}}\|D_{k,t}^{R}\|^{2}+\Upsilon_{e}.$ (4.20)
+
+Next, we bound the first term on the right-hand side, i.e., $\sum_{k=1}^{K}\sum_{t=1}^{T}\Delta_{k,t}$ . Observe that for $k=1,2,\ldots,K$ ,
+
+$\displaystyle\sum_{t=1}^{T}\Delta_{k,t}=\,$ $\displaystyle\frac{\Phi_{k}(x_{k,1})}{\zeta_{k,1}}-\frac{\Phi_{k}(x_{k,T+1})}{\zeta_{k,T}}+\sum_{t=1}^{T-1}\left(\frac{1}{\zeta_{k,t+1}}-\frac{1}{\zeta_{k,t}}\right)\Phi_{k}(x_{k,t+1})$ $\displaystyle\leq\,$ $\displaystyle\frac{\Phi_{k}(x_{k,1})}{\zeta_{k,1}}-\frac{\Phi_{k}(x_{k,T+1})}{\zeta_{k,T}}+\left(\frac{1}{\zeta_{k,T}}-\frac{1}{\zeta_{k,1}}\right)\overline{\Phi},$ (4.21)
+
+where the last inequality is due to $\zeta_{k,t+1}\leq\zeta_{k,t}$ for $t=1,2,\ldots,T$ and
+
+$\Phi_{k}(x)\leq\Phi(x)\leq\overline{\Phi},\quad\forall\,x\in\mathcal{M}.$ (4.22)
+
+It follows from ( 4.21 ) that
+
+$\displaystyle\sum_{k=1}^{K}\sum_{t=1}^{T}\Delta_{k,t}\leq$ $\displaystyle\sum_{k=1}^{K}\left(\frac{\Phi_{k}(x_{k,1})}{\zeta_{k,1}}-\frac{\Phi_{k}(x_{k,T+1})}{\zeta_{k,T}}+\left(\frac{1}{\zeta_{k,T}}-\frac{1}{\zeta_{k,1}}\right)\overline{\Phi}\right)$ (4.23) $\displaystyle=$ $\displaystyle\sum_{k=1}^{K-1}\left(\frac{\Phi_{k+1}(x_{k+1,1})}{\zeta_{k+1,1}}-\frac{\Phi_{k}(x_{k,T+1})}{\zeta_{k,T}}\right)+\sum_{k=1}^{K}\left(\frac{1}{\zeta_{k,T}}-\frac{1}{\zeta_{k,1}}\right)\overline{\Phi}$ $\displaystyle+\frac{\Phi_{1}(x_{1,1})}{\zeta_{1,1}}-\frac{\Phi_{K}(x_{K,T+1})}{\zeta_{K,T}}.$
+
+Note that
+
+$\displaystyle\,\sum_{k=1}^{K-1}\left(\frac{\Phi_{k+1}(x_{k+1,1})}{\zeta_{k+1,1}}-\frac{\Phi_{k}(x_{k,T+1})}{\zeta_{k,T}}\right)$ $\displaystyle=$ $\displaystyle\,\sum_{k=1}^{K-1}\left(\frac{\Phi_{k+1}(x_{k+1,1})}{\zeta_{k+1,1}}-\frac{\Phi_{k}(x_{k,T+1})}{\zeta_{k+1,1}}+\frac{\Phi_{k}(x_{k,T+1})}{\zeta_{k+1,1}}-\frac{\Phi_{k}(x_{k,T+1})}{\zeta_{k,T}}\right)$ $\displaystyle\leq$ $\displaystyle\,\frac{\Upsilon}{\zeta_{K,1}}+\sum_{k=1}^{K-1}\left(\frac{1}{\zeta_{k+1,1}}-\frac{1}{\zeta_{k,T}}\right)\overline{\Phi},$
+
+where the last inequality is due to the convention $x_{k+1}=x_{k+1,1}=x_{k,T+1}$ ; the bound ( 4.11 ); the definitions of $\Upsilon$ and $\overline{\Phi}$ in ( 4.17 ) and ( 4.22 ), respectively; and the properties $\zeta_{k+1,1}\leq\zeta_{k,T}$ and $\xi_{k}\leq\xi_{k-1}$ . Substituting the above into ( 4.23 ), we have
+
+$\displaystyle\sum_{k=1}^{K}\sum_{t=1}^{T}\Delta_{k,t}\leq$ $\displaystyle\,\frac{\Upsilon}{\zeta_{K,1}}+\frac{\overline{\Phi}}{\zeta_{K,T}}-\frac{\overline{\Phi}}{\zeta_{1,1}}+\frac{\Phi_{1}(x_{1,1})}{\zeta_{1,1}}-\frac{\Phi_{K}(x_{K,T+1})}{\zeta_{K,T}}{\leq}\frac{\Upsilon+\Delta_{\Phi}}{\zeta_{K,T}},$ (4.24)
+
+where the last inequality holds due to ( 4.22 ), the definition of $\Delta_{\Phi}$ in ( 4.17 ), and the lower bound on $\Phi_{k}$ in ( 4.12 ).
+
+Moreover, by the definitions of $\alpha_{k,t}$ and $\zeta_{k,t}$ in ( 3.9 ) and ( 3.10 ), respectively, we know that
+
+$\displaystyle\sum_{k=1}^{K}\sum_{t=1}^{T}\frac{\zeta_{k,t}\|D^{R}_{k,t}\|^{2}}{\lambda_{k}+\beta_{k}}\overset{\text{(a)}}{\leq}$ $\displaystyle\,\frac{\xi_{0}}{\lambda_{1}}K^{1/9}\sum_{k=1}^{K}\sum_{t=1}^{T}\frac{\|D_{k,t}^{R}\|^{2}}{{{\color[rgb]{0,0,0}{(\delta_{0}+\sum_{i=1}^{k-1}\sum_{j=1}^{T}\|D_{i,j}^{R}\|^{2}+\sum_{j=1}^{t}\|D_{k,j}^{R}\|^{2})^{1/3}}}}}$ $\displaystyle\overset{\text{(b)}}{\leq}$ $\displaystyle\,\frac{3\xi_{0}}{2\lambda_{1}}K^{1/9}\Upsilon_{d}^{2/3},$ (4.25)
+
+where (a) uses $\alpha_{k,t}^{1/3}/(\lambda_{k}+\beta_{k})\leq k^{-2/9}/(\lambda_{1}k^{-1/3})=k^{1/9}/\lambda_{1}\leq K^{1/9}/\lambda_{1}$ and $\xi_{k}\leq\xi_{0}$ ; (b) follows from ( 4.9 ) with $p=1/3$ and the definition of $\Upsilon_{d}$ in ( 4.10 ). Plugging ( 4.24 ) and ( 4.25 ) into ( 4.20 ), and using the fact that
+
+${{\color[rgb]{0,0,0}{\frac{1}{\zeta_{K,T}}\leq\frac{1}{\xi_{\min}}(TK)^{2/9}(\delta_{0}+\Upsilon_{d})^{1/3}}}},$
+
+which follows from ( 3.10 ) and ( 4.10 ), we obtain the desired inequality ( 4.16 ).
+
+4.3 Bound on $\Upsilon_{e}$
+
+Next, we bound the accumulated gradient estimation error $\Upsilon_{e}$ . To do this, we introduce the following lemma, which controls the estimation error of the recursive momentum in a single update.
+
+Suppose that Assumptions 4.1 , 4.2 , and 4.3 hold. Let $\{x_{k,t}\}$ be the sequence generated by Algorithm 1 . Then, for all $k\in\{1,2,\ldots,K\}$ and $t\in\{1,2,\ldots,T\}$ , we have
+
+$\displaystyle\mathbb{E}[\|e_{k,t+1}\|^{2}]\leq$ $\displaystyle\,(1-\alpha_{k,t})\mathbb{E}[\|e_{k,t}\|^{2}]+\frac{2}{b}\alpha_{k,t}^{2}\sigma^{2}+\frac{2}{b}\tilde{L}_{f}^{2}\kappa_{1}^{2}{{\color[rgb]{0,0,0}{\mathbb{E}[\zeta_{k,t}^{2}\|D_{k,t}^{R}\|^{2}]}}},$ (4.26)
+
+where the expectation $\mathbb{E}[\cdot]$ is taken over all randomness in the course of Algorithm 1 .
+
+Let $k\in\{1,2,\ldots,K\}$ be fixed. For $t=1,\ldots,T$ , let
+
+$\mathcal{F}_{k,t+1}:=\{S_{1}\}\cup\{S_{i,j+1}\mid 1\leq i\leq k-1,\ 1\leq j\leq T\}\cup\{S_{k,j+1}\mid 1\leq j\leq t-1\}$
+
+be the sampling history before $S_{k,t+1}$ is generated. By construction, $S_{k,t+1}$ is independent of $\mathcal{F}_{k,t+1}$ and
+
+$\mathbb{E}[\|e_{k,t+1}\|^{2}]=\mathbb{E}[\mathbb{E}[\|e_{k,t+1}\|^{2}|\mathcal{F}_{k,t+1}]].$
+
+For simplicity, we omit the subscript “ $k$ ” in the following proof. Recalling the definition of $e_{t}$ in ( 4.10 ) and using ( 3.8 ), we have
+
+$\displaystyle\,\mathbb{E}[\|e_{t+1}\|^{2}|\mathcal{F}_{t+1}]$ $\displaystyle=$ $\displaystyle\,\mathbb{E}[\|(1-\alpha_{t})(d_{t}-\nabla f_{S_{t+1}}(x_{t}))+\nabla f_{S_{t+1}}(x_{t+1})-\nabla f(x_{t+1})\|^{2}|\mathcal{F}_{t+1}]$ $\displaystyle=$ $\displaystyle\,\mathbb{E}[\|(1-\alpha_{t})e_{t}+\alpha_{t}(\nabla f_{S_{t+1}}(x_{t+1})-\nabla f(x_{t+1}))$ $\displaystyle+(1-\alpha_{t})(\nabla f_{S_{t+1}}(x_{t+1})-\nabla f_{S_{t+1}}(x_{t})+\nabla f(x_{t})-\nabla f(x_{t+1}))\|^{2}|\mathcal{F}_{t+1}]$ $\displaystyle\overset{(\text{a})}{=}$ $\displaystyle\,(1-\alpha_{t})^{2}\|e_{t}\|^{2}+\mathbb{E}[\|\alpha_{t}(\nabla f_{S_{t+1}}(x_{t+1})-\nabla f(x_{t+1}))$ $\displaystyle+(1-\alpha_{t})(\nabla f_{S_{t+1}}(x_{t+1})-\nabla f_{S_{t+1}}(x_{t})+\nabla f(x_{t})-\nabla f(x_{t+1}))\|^{2}|\mathcal{F}_{t+1}]$ $\displaystyle\overset{(\text{b})}{=}$ $\displaystyle\,(1-\alpha_{t})^{2}\|e_{t}\|^{2}+\frac{1}{b}\mathbb{E}_{\omega\sim\mathcal{D}}[\|\alpha_{t}(\nabla f(x_{t+1};\omega)-\nabla f(x_{t+1}))$ $\displaystyle+(1-\alpha_{t})(\nabla f(x_{t+1};\omega)-\nabla f(x_{t};\omega)+\nabla f(x_{t})-\nabla f(x_{t+1}))\|^{2}]$ $\displaystyle\overset{\text{(c)}}{\leq}$ $\displaystyle\,(1-\alpha_{t})^{2}\|e_{t}\|^{2}+\frac{2}{b}\alpha_{t}^{2}\mathbb{E}_{\omega\sim\mathcal{D}}[\|\nabla f(x_{t+1};\omega)-\nabla f(x_{t+1})\|^{2}]$ $\displaystyle+\frac{2}{b}(1-\alpha_{t})^{2}\mathbb{E}_{\omega\sim\mathcal{D}}[\|\nabla f(x_{t+1};\omega)-\nabla f(x_{t};\omega)+\nabla f(x_{t})-\nabla f(x_{t+1})\|^{2}],$ (4.27)
+
+where (a) and (b) are due to ( 4.2 ), and (c) uses the fact that $\|u+v\|^{2}\leq 2\|u\|^{2}+2\|v\|^{2}$ for any $u,v\in\mathbb{R}^{n}$ . Since $\mathbb{E}[\|z-\mathbb{E}[z]\|^{2}]\leq\mathbb{E}[\|z\|^{2}]$ for any random variable $z$ , it follows that
+
+$\displaystyle\,\mathbb{E}_{\omega\sim\mathcal{D}}[\|\nabla f(x_{t+1};\omega)-\nabla f(x_{t};\omega)+\nabla f(x_{t})-\nabla f(x_{t+1})\|^{2}]$ $\displaystyle\leq$ $\displaystyle\,\mathbb{E}_{\omega\sim\mathcal{D}}[\|\nabla f(x_{t+1};\omega)-\nabla f(x_{t};\omega)\|^{2}]\leq\tilde{L}_{f}^{2}\kappa_{1}^{2}\zeta_{k,t}^{2}\|D_{t}^{R}\|^{2},$
+
+where the second inequality is from ( 4.4 ) and Lemma 3 . Then, substituting the above into ( 4.27 ) and using ( 4.3 ) lead to
+
+$\displaystyle\mathbb{E}[\|e_{t+1}\|^{2}|\mathcal{F}_{t+1}]\leq(1-\alpha_{t})^{2}\|e_{t}\|^{2}+\frac{2}{b}\alpha_{t}^{2}\sigma^{2}+\frac{2}{b}(1-\alpha_{t})^{2}\tilde{L}_{f}^{2}\kappa_{1}^{2}\zeta_{k,t}^{2}\|D_{t}^{R}\|^{2}.$
+
+Taking full expectation and noting that $(1-\alpha_{t})^{2}\leq\min\{1-\alpha_{t},1\}$ , we obtain the desired result.
+
+Equipped with Lemma 8 , we can establish the desired bound on $\Upsilon_{e}$ .
+
+Suppose that Assumptions 4.1 , 4.2 , and 4.3 hold. Let $\{x_{k,t}\}$ be a sequence generated by Algorithm 1 . Then, we have
+
+$\displaystyle\mathbb{E}\left[\Upsilon_{e}\right]\leq\sigma^{2}+\frac{18}{b}\sigma^{2}(TK)^{1/3}+\frac{18c_{1}}{b}(TK)^{2/9}\mathbb{E}\left[\Upsilon_{d}^{1/3}\right],$ (4.28)
+
+where $c_{1}=\tilde{L}_{f}^{2}\kappa_{1}^{2}\xi_{0}^{2}$ and the expectation $\mathbb{E}[\cdot]$ is taken over all randomness in the course of Algorithm 1 .
+
+First, we deduce from ( 4.26 ) that
+
+$\displaystyle\,\sum_{k=1}^{K}\sum_{t=1}^{T}\frac{\mathbb{E}[\|e_{k,t+1}\|^{2}]}{\alpha_{k,t}}$ $\displaystyle\leq$ $\displaystyle\,\sum_{k=1}^{K}\sum_{t=1}^{T}\left(\frac{1}{\alpha_{k,t}}-1\right)\mathbb{E}[\|e_{k,t}\|^{2}]+\frac{2\tilde{L}^{2}_{f}\kappa_{1}^{2}}{b}{{\color[rgb]{0,0,0}{\mathbb{E}\!\left[\sum_{k=1}^{K}\sum_{t=1}^{T}\frac{\zeta_{k,t}^{2}}{\alpha_{k,t}}\|D_{k,t}^{R}\|^{2}\right]}}}+\frac{2}{b}\sigma^{2}\sum_{k=1}^{K}\sum_{t=1}^{T}\alpha_{k,t}.$
+
+Rearranging terms results in
+
+$\displaystyle$ $\displaystyle\mathbb{E}[\Upsilon_{e}]$ (4.29) $\displaystyle{{\color[rgb]{0,0,0}{\leq}}}$ $\displaystyle\sum_{k=1}^{K-1}\sum_{t=1}^{T}\left(\frac{1}{\alpha_{k,t+1}}-\frac{1}{\alpha_{k,t}}\right)\mathbb{E}[\|e_{k,t+1}\|^{2}]+\sum_{t=1}^{T-1}\left(\frac{1}{\alpha_{K,t+1}}-\frac{1}{\alpha_{K,t}}\right)\mathbb{E}[\|{{\color[rgb]{0,0,0}{e_{K,t+1}}}}\|^{2}]$ $\displaystyle+\frac{\mathbb{E}[\|e_{1,1}\|^{2}]}{\alpha_{1,1}}-\frac{\mathbb{E}[\|{{\color[rgb]{0,0,0}{e_{K,T+1}}}}\|^{2}]}{\alpha_{K,T}}+\frac{2\tilde{L}_{f}^{2}\kappa_{1}^{2}}{b}{{\color[rgb]{0,0,0}{\mathbb{E}\!\left[\sum_{k=1}^{K}\sum_{t=1}^{T}\frac{\zeta_{k,t}^{2}}{\alpha_{k,t}}\|D_{k,t}^{R}\|^{2}\right]}}}+\frac{2}{b}\sigma^{2}\sum_{k=1}^{K}\sum_{t=1}^{T}\alpha_{k,t}.$
+
+Since the function $s\mapsto s^{2/3}$ is concave on $[0,+\infty)$ , for $k=1,2,\ldots,K$ and $t=1,2,\ldots,T$ , we have
+
+$\displaystyle\frac{1}{\alpha_{k,t+1}}-\frac{1}{\alpha_{k,t}}=$ $\displaystyle\,((k-1)T+t+1)^{2/3}-((k-1)T+t)^{2/3}$ $\displaystyle\leq$ $\displaystyle\,\frac{2}{3}\frac{1}{((k-1)T+t)^{1/3}}\leq\frac{2}{3}.$
+
+Using the fact that $\alpha_{k,T+1}=\alpha_{k+1,1}$ and $e_{k,T+1}=e_{k+1,1}$ for $k=1,2,\ldots,K-1$ and the definition of $\Upsilon_{e}$ in ( 4.10 ), we have
+
+$\displaystyle\,\sum_{k=1}^{K-1}\sum_{t=1}^{T}\left(\frac{1}{\alpha_{k,t+1}}-\frac{1}{\alpha_{k,t}}\right)\mathbb{E}[\|e_{k,t+1}\|^{2}]+\sum_{t=1}^{T-1}\left(\frac{1}{\alpha_{K,t+1}}-\frac{1}{\alpha_{K,t}}\right)\mathbb{E}[\|{{\color[rgb]{0,0,0}{e_{K,t+1}}}}\|^{2}]$ $\displaystyle\leq$ $\displaystyle\,\frac{2}{3}\sum_{k=1}^{K-1}\sum_{t=1}^{T}\mathbb{E}[\|e_{k,t+1}\|^{2}]+\frac{2}{3}\sum_{t=1}^{T-1}\mathbb{E}[\|{{\color[rgb]{0,0,0}{e_{K,t+1}}}}\|^{2}]\leq\,\frac{2}{3}\mathbb{E}[\Upsilon_{e}]-\frac{2}{3}\mathbb{E}[\|e_{1,1}\|^{2}].$
+
+Substituting the above into ( 4.29 ) and noting that $\alpha_{1,1}=1$ , we obtain
+
+$\displaystyle\mathbb{E}[\Upsilon_{e}]\leq$ $\displaystyle\frac{2}{3}\mathbb{E}[\Upsilon_{e}]+\frac{1}{3}\mathbb{E}[\|e_{1,1}\|^{2}]-\frac{\mathbb{E}[\|{{\color[rgb]{0,0,0}{e_{K,T+1}}}}\|^{2}]}{\alpha_{K,T}}$ $\displaystyle+\frac{2\tilde{L}_{f}^{2}\kappa_{1}^{2}}{b}{{\color[rgb]{0,0,0}{\mathbb{E}\!\left[\sum_{k=1}^{K}\sum_{t=1}^{T}\frac{\zeta_{k,t}^{2}}{\alpha_{k,t}}\|D_{k,t}^{R}\|^{2}\right]}}}+\frac{2}{b}\sigma^{2}\sum_{k=1}^{K}\sum_{t=1}^{T}\alpha_{k,t}.$
+
+It follows that
+
+$\displaystyle\mathbb{E}[\Upsilon_{e}]\leq$ $\displaystyle\mathbb{E}[\|e_{1,1}\|^{2}]+\frac{6\tilde{L}_{f}^{2}\kappa_{1}^{2}}{b}\mathbb{E}\!\left[\sum_{k=1}^{K}\sum_{t=1}^{T}\frac{\zeta_{k,t}^{2}}{\alpha_{k,t}}\|D_{k,t}^{R}\|^{2}\right]+\frac{6}{b}\sigma^{2}\sum_{k=1}^{K}\sum_{t=1}^{T}\alpha_{k,t}.$ (4.30)
+
+Next, we bound the second term on the right-hand side of the above inequality. Let $k\in\{1,2,\ldots,K\}$ and $t\in\{1,2,\ldots,T\}$ be fixed. From ( 3.10 ), we get
+
+$\displaystyle\frac{\zeta_{k,t}^{2}}{\alpha_{k,t}}=$ $\displaystyle\,\alpha_{k,t}^{-1/3}\xi_{k}^{2}{{\color[rgb]{0,0,0}{\left(\delta_{0}+\sum_{i=1}^{k-1}\sum_{j=1}^{T}\|D_{i,j}^{R}\|^{2}+\sum_{j=1}^{t}\|D_{k,j}^{R}\|^{2}\right)^{-2/3}}}}$ $\displaystyle\leq$ $\displaystyle\,\xi_{0}^{2}(TK)^{2/9}{{\color[rgb]{0,0,0}{\left(\delta_{0}+\sum_{i=1}^{k-1}\sum_{j=1}^{T}\|D_{i,j}^{R}\|^{2}+\sum_{j=1}^{t}\|D_{k,j}^{R}\|^{2}\right)^{-2/3}}}},$
+
+where the inequality is due to $\xi_{k}\leq\xi_{0}$ and $\alpha_{k,t}\geq(TK)^{-2/3}$ . Therefore,
+
+$\displaystyle\sum_{k=1}^{K}\sum_{t=1}^{T}\frac{\zeta_{k,t}^{2}}{\alpha_{k,t}}\|D_{k,t}^{R}\|^{2}\leq{}$ $\displaystyle\sum_{k=1}^{K}\sum_{t=1}^{T}\frac{(TK)^{2/9}\xi_{0}^{2}\|D_{k,t}^{R}\|^{2}}{{{\color[rgb]{0,0,0}{(\delta_{0}+\sum_{i=1}^{k-1}\sum_{j=1}^{T}\|D_{i,j}^{R}\|^{2}+\sum_{j=1}^{t}\|D_{k,j}^{R}\|^{2})^{2/3}}}}}$ (4.31) $\displaystyle\overset{\text{(a)}}{\leq}{}$ $\displaystyle{\displaystyle 3\xi_{0}^{2}(TK)^{2/9}}\Upsilon_{d}^{1/3},$
+
+where (a) follows from ( 4.9 ) with $p=2/3$ and the definition of $\Upsilon_{d}$ in ( 4.10 ) . Additionally, we have
+
+$\displaystyle\sum_{k=1}^{K}\sum_{t=1}^{T}\alpha_{k,t}=\sum_{k=1}^{K}\sum_{t=1}^{T}\frac{1}{((k-1)T+t)^{2/3}}\leq{3}(TK)^{1/3}.$ (4.32)
+
+Substituting ( 4.31 ), ( 4.32 ) into ( 4.30 ) and noting that $\mathbb{E}[\|e_{1,1}\|^{2}]\leq\sigma^{2}$ , we obtain the desired inequality ( 4.28 ).
+
+4.4 Complexity Bounds
+
+Our goal now is to derive the iteration complexity and SFO complexity of Algorithm 1 for computing an approximate Riemannian-stochastic-stationary point of problem ( 1.1 ), which is defined as follows.
+
+Given $\epsilon>0$ , the point $x\in\mathcal{M}$ is an $\epsilon$ -Riemannian-stochastic-stationary ( $\epsilon$ -RSS) point of problem ( 1.1 ) if there exists a point $p\in\mathcal{E}_{2}$ such that
+
+$\max\!\left\{\mathbb{E}\left[\mathrm{dist}\left(0,\,\mathrm{grad}\,f(x)+\mathrm{proj}_{\mathrm{T}_{x}\mathcal{M}}\left(\nabla\mathcal{A}(x)^{\top}\partial h(p)\right)\right)\right],\,\mathbb{E}[\left\|p-\mathcal{A}(x)\right\|]\right\}\leq\epsilon,$
+
+where the expectation $\mathbb{E}[\cdot]$ is taken over all randomness in the course of generating $x$ .
+
+We remark that the above stationarity notion is generalized from those introduced in [ 13 , 3 , 29 ] for deterministic settings.
+
+With the above preparations, we are ready to prove the main result of this paper.
+
+Suppose that Assumptions 4.1 , 4.2 , and 4.3 hold. Given $\epsilon>0$ , let $\{x_{k}\}$ be the sequence generated by Algorithm 1 . Then, Algorithm 1 returns an $\epsilon$ -RSS point of problem ( 1.1 ) in at most ${\mathcal{O}}(\epsilon^{-3})$ iterations while making at most ${\mathcal{O}}(\epsilon^{-3})$ SFO calls.
+
+Let $\hat{k}$ be uniformly sampled from $\{1,2,\ldots,K\}$ . We first prove that
+
+$\mathbb{E}[\|\mathrm{grad}\,\Phi_{\hat{k}}(x_{\hat{k}})\|^{2}]=\mathcal{O}(K^{-2/3}).$
+
+For each $k\in\{1,2,\ldots,K\}$ and $t\in\{1,2,\ldots,T\}$ , upon recalling the definitions of $D^{R}_{k,t}$ in ( 3.6 ) and $e_{k,t}$ in ( 4.10 ), and using $\mathrm{grad}\,\Phi_{k}(x_{k,t})=\mathrm{proj}_{\mathrm{T}_{x_{k,t}}\mathcal{M}}(\nabla\Phi_{k}(x_{k,t}))$ together with ( 3.5 ), we obtain
+
+$\displaystyle\|D^{R}_{k,t}\|^{2}=$ $\displaystyle\,\|\mathrm{proj}_{\mathrm{T}_{x_{k,t}}\mathcal{M}}(e_{k,t})+\mathrm{grad}\,\Phi_{k}(x_{k,t})\|^{2}$ $\displaystyle\leq$ $\displaystyle\,\big\|e_{k,t}+\mathrm{grad}\,\Phi_{k}(x_{k,t})\big\|^{2}$ $\displaystyle\leq$ $\displaystyle\,2\|e_{k,t}\|^{2}+2\|\mathrm{grad}\,\Phi_{k}(x_{k,t})\|^{2},$
+
+where the first inequality follows from the nonexpansiveness of the projection operator. It follows from the definitions of $\Upsilon_{d}$ , $\Upsilon_{g}$ , and $\Upsilon_{e}$ in ( 4.10 ) that
+
+$\mathbb{E}[\Upsilon_{d}]\leq 2(\mathbb{E}[\Upsilon_{e}]+\mathbb{E}[\Upsilon_{g}]).$ (4.33)
+
+Taking full expectation in ( 4.16 ) and using Jensen’s inequality, we obtain
+
+$\displaystyle\mathbb{E}[\Upsilon_{g}]\leq\frac{2(\Upsilon+\Delta_{\Phi})}{\xi_{\min}}(TK)^{2/9}\,(\delta_{0}+\mathbb{E}[\Upsilon_{d}])^{1/3}+\frac{3\xi_{0}L_{c}}{2\lambda_{1}}K^{1/9}\,(\mathbb{E}[\Upsilon_{d}])^{2/3}+\mathbb{E}[\Upsilon_{e}].$ (4.34)
+
+Substituting ( 4.28 ), ( 4.34 ) into ( 4.33 ) and using $(\delta_{0}+z)^{1/3}\leq\delta_{0}^{1/3}+z^{1/3}$ , $(TK)^{2/9}\leq(TK)^{1/3}$ , we get
+
+$\displaystyle\mathbb{E}[\Upsilon_{d}]\leq c_{2}(TK)^{2/9}\,(\mathbb{E}[\Upsilon_{d}])^{1/3}+c_{3}K^{1/9}\,(\mathbb{E}[\Upsilon_{d}])^{2/3}+c_{4}(TK)^{1/3}+4\sigma^{2},$ (4.35)
+
+where
+
+$c_{2}=\frac{4(\Upsilon+\Delta_{\Phi})}{\xi_{\min}}+\frac{72}{b}c_{1},\quad c_{3}=\frac{3\xi_{0}L_{c}}{\lambda_{1}},\quad c_{4}=\frac{72}{b}{\sigma^{2}}{{\color[rgb]{0,0,0}{+\frac{4(\Upsilon+\Delta_{\Phi})}{\xi_{\min}}\delta_{0}^{1/3}}}}.$
+
+Note that given $c>0$ and $\gamma\in(0,1)$ , the function $z\mapsto p(z):=cz^{\gamma}$ is concave. This implies that
+
+$p(z)\leq p(z_{0})+p^{\prime}(z_{0})(z-z_{0}),\quad\forall\,z>0.$
+
+Choosing $z_{0}=(4c\gamma)^{1/(1-\gamma)}$ , we have $p^{\prime}(z_{0})=\tfrac{1}{4}$ , which gives
+
+$cz^{\gamma}\leq(1-\gamma)(4\gamma)^{\frac{\gamma}{1-\gamma}}c^{\frac{1}{1-\gamma}}+\tfrac{1}{4}z,\quad\forall\,z>0.$ (4.36)
+
+Applying ( 4.36 ) with $c=c_{2}(TK)^{2/9}$ , $z=\mathbb{E}[\Upsilon_{d}]$ , and $\gamma=1/3$ yields
+
+$c_{2}(TK)^{2/9}(\mathbb{E}[\Upsilon_{d}])^{1/3}\leq\frac{4}{3\sqrt{3}}c_{2}^{3/2}(TK)^{1/3}+\frac{1}{4}\mathbb{E}[\Upsilon_{d}].$
+
+Applying ( 4.36 ) again with $c=c_{3}(K)^{1/9}$ , $z=\mathbb{E}[\Upsilon_{d}]$ , and $\gamma=2/3$ yields
+
+$c_{3}K^{1/9}\,(\mathbb{E}[\Upsilon_{d}])^{2/3}\leq\frac{64}{27}\,c_{3}^{3}K^{1/3}+\frac{1}{4}\mathbb{E}[\Upsilon_{d}].$
+
+Substituting these two bounds into ( 4.35 ) and rearranging give
+
+$\mathbb{E}[\Upsilon_{d}]\leq\left(\frac{8}{3\sqrt{3}}c_{2}^{3/2}T^{1/3}+2c_{4}T^{1/3}+{{\color[rgb]{0,0,0}{\frac{128}{27}c_{3}^{3}}}}\right)K^{1/3}+8\sigma^{2},$
+
+which implies that $\mathbb{E}[\Upsilon_{d}]=\mathcal{O}(K^{1/3}).$ Together with ( 4.28 ), this yields $\mathbb{E}[\Upsilon_{e}]=\mathcal{O}(K^{1/3})$ . Thus, we obtain from ( 4.34 ) that
+
+$\displaystyle\mathbb{E}[\Upsilon_{g}]=\mathcal{O}(K^{1/3}).$
+
+Upon recalling the definition of $\Upsilon_{g}$ in ( 4.10 ) and the fact that $\hat{k}$ is uniformly sampled from $\{1,2,\ldots,K\}$ , we have
+
+$\mathbb{E}[\|\mathrm{grad}\,\Phi_{\hat{k}}(x_{\hat{k}})\|^{2}]\leq\mathbb{E}[\Upsilon_{g}]/K=\mathcal{O}(K^{-2/3}).$ (4.37)
+
+Next, let $p_{k}:=\mathrm{prox}_{(\lambda_{k}+\beta_{k})h}(\mathcal{A}(x_{k})+\beta_{k}y_{k})$ for $k=1,2,\ldots,K$ . We show that $\mathbb{E}[\|p_{\hat{k}}-\mathcal{A}(x_{\hat{k}})\|]=\mathcal{O}(K^{-1/3})$ . From ( 3.5 ) and Theorem 1 , we have
+
+$\displaystyle\mathrm{grad}\,\Phi_{k}(x_{k})$ $\displaystyle=\mathrm{grad}\,f(x_{k})+\mathrm{proj}_{\mathrm{T}_{x_{k}}\mathcal{M}}\left(\nabla\mathcal{A}(x_{k})^{\top}y_{k+\frac{1}{2}}\right),$ (4.38) $\displaystyle y_{k+\frac{1}{2}}$ $\displaystyle\in\partial h(p_{k}),$ (4.39)
+
+where $y_{k+\frac{1}{2}}$ is defined in ( 4.14 ). Therefore, it follows from ( 4.37 ), ( 4.38 ), ( 4.39 ), and the inequality $\mathbb{E}[z]^{2}\leq\mathbb{E}[z^{2}]$ that
+
+$\displaystyle$ $\displaystyle\mathbb{E}\left[\mathrm{dist}\left(0,\,\mathrm{grad}\,f(x_{\hat{k}})+\mathrm{proj}_{\mathrm{T}_{x_{\hat{k}}}\mathcal{M}}\left(\nabla\mathcal{A}(x_{\hat{k}})^{\top}\partial h(p_{\hat{k}})\right)\right)\right]^{2}$ (4.40) $\displaystyle\leq$ $\displaystyle\mathbb{E}[\|\mathrm{grad}\,\Phi_{\hat{k}}(x_{\hat{k}})\|^{2}]=\mathcal{O}(K^{-2/3}).$
+
+Moreover, for all $k\geq 1$ , we have
+
+$\displaystyle\|p_{k}-\mathcal{A}(x_{k})\|=$ $\displaystyle\,\left\|\mathrm{prox}_{(\lambda_{k}+\beta_{k})h}(\mathcal{A}(x_{k})+\beta_{k}y_{k})-\mathcal{A}(x_{k})\right\|$ $\displaystyle\overset{(\text{a})}{=}$ $\displaystyle\,\left\|\beta_{k}y_{k}-(\lambda_{k}+\beta_{k})\mathrm{prox}_{h^{*}/(\lambda_{k}+\beta_{k})}\left(\frac{\mathcal{A}(x_{k})+\beta_{k}y_{k}}{\lambda_{k}+\beta_{k}}\right)\right\|$ $\displaystyle\overset{(\text{b})}{\leq}$ $\displaystyle\,(\lambda_{k}+2\beta_{k})L_{h},$
+
+where (a) is from ( 2.1 ) and (b) is due to the $L_{h}$ -Lipschitz continuity of $h$ . Therefore, since $\hat{k}$ is uniformly sampled from $\{1,2,\ldots,K\}$ , we have
+
+$\displaystyle\mathbb{E}[\|p_{\hat{k}}-\mathcal{A}(x_{\hat{k}})\|]\leq$ $\displaystyle\,\frac{L_{h}}{K}\sum_{k=1}^{K}(\lambda_{k}+2\beta_{k})$ $\displaystyle=$ $\displaystyle\,\frac{L_{h}}{K}\sum_{k=1}^{K}\left(\frac{\lambda_{1}}{k^{1/3}}+2\beta_{k}\right)$ $\displaystyle\overset{\text{(a)}}{\leq}$ $\displaystyle\,\frac{\Upsilon}{K}+\frac{3L_{h}\lambda_{1}(K+1)^{2/3}}{2K}=\mathcal{O}(K^{-1/3}),$ (4.41)
+
+where (a) is due to the definition of $\Upsilon$ in ( 4.17 ). Combining ( 4.40 ) and ( 4.41 ), we conclude that $x_{\hat{k}}$ is an $\epsilon$ -RSS point of problem ( 1.1 ) with $\hat{k}\leq K=\mathcal{O}(\epsilon^{-3})$ . Since Algorithm 1 only requires $\mathcal{O}(1)$ SFO calls at each iteration, the total number of SFO calls is also $\mathcal{O}(\epsilon^{-3})$ .
+
+Theorem 11 shows that both the iteration complexity and SFO complexity of the proposed StoRADA-RM are $\mathcal{O}(\epsilon^{-3})$ . It is worth noting that the iteration complexity coincides with the best known in the literature for deterministic Riemannian nonsmooth composite optimization (see, e.g., [ 3 , 13 , 43 ] ), while the SFO complexity not only matches the best known for Riemannian nonsmooth composite expectation optimization (see, e.g., [ 14 , 39 ] ) but also attains the optimal lower bound established in [ 2 ] for smooth nonconvex optimization with stochastic first-order algorithms under the mean-squared smoothness assumption ( 4.4 ).
+
+It is also worth emphasizing that the strategy for establishing the iteration complexity of the proposed StoRADA-RM is significantly different from that for its deterministic counterpart RADA-RGD [ 44 ] . In particular, the sufficient decrease property that is central to the complexity analysis of RADA no longer holds due to gradient estimation errors, which accumulate across the inner iterations of StoRADA-RM. To address this challenge, we characterize the impact of the accumulated gradient estimation errors on the progress made by StoRADA-RM towards stationarity. Furthermore, our analysis allows for considerable flexibility in the choice of stepsizes $\{\zeta_{k,t}\}$ . Unlike RADA-RGD, where $\{\zeta_{k,t}\}$ must satisfy a line-search condition requiring extra objective function evaluations, StoRADA-RM avoids this cost while preserving the same iteration complexity guarantee.
+
+5 Numerical Results
+
+In this section, we report numerical results of our proposed StoRADA-RM for solving sparse PCA and CISE problems. The corresponding experiments were implemented in MATLAB 2023b and evaluated on Apple M2 Pro CPU.
+
+We begin by specifying the default parameter settings used in our experiments. For StoRADA-RM, we adopt the update scheme for $\{\beta_{k}\}$ from RADA-RGD [ 44 ] to improve practical performance. Given constants $\tau_{1}\in(0,1)$ and $\tau_{2}\in(0,1)$ , we set
+
+$\beta_{k+1}=\frac{\beta_{1}^{(k+1)}}{(k+1)^{\rho}}\quad\mbox{with}\quad\beta_{1}^{(k+1)}=\left\{\begin{aligned} \tau_{2}\beta_{1}^{(k)},&\quad\text{if }\delta_{k+1}\geq\tau_{1}\delta_{k};\\ \beta_{1}^{(k)},&\quad\text{if }\delta_{k+1}<\tau_{1}\delta_{k},\end{aligned}\right.$ (5.1)
+
+for $k\geq 1$ , where $\beta_{1}^{(1)}=\beta_{1}$ and $\delta_{k+1}$ is defined as
+
+${\delta_{k+1}}:=\|(\lambda_{k}+\beta_{k})y_{k+1}-\beta_{k}y_{k}\|_{\infty},\quad\forall\,k\geq 0.$ (5.2)
+
+Here, we adopt the convention that $\lambda_{0}=\lambda_{1}$ , $\beta_{0}=\beta_{1}$ , and $y_{0}=y_{1}$ when computing $\delta_{1}$ . For our tests, we set $\rho=1.5$ , $\tau_{1}=0.999$ , and $\tau_{2}=0.9$ . We initialize $\lambda_{1}=10^{-6}$ and use $\lambda_{k}=\lambda_{1}k^{-1/3}$ for $k\geq 2$ . We choose $\xi_{k}=\max\{\xi_{0}/k^{1/2},0.01\}$ for $k\geq 1$ , where $\xi_{0}$ is tuned for each application problem. We adopt the same smoothing parameters $\{\lambda_{k}\}$ and stepsizes $\{\zeta_{k}\}$ for RSSM [ 14 ] to improve its practical performance. For StoManIAL, we set the penalty parameter of the AL function as $\sigma_{k}=1000\cdot 2^{2k/7}$ , the dual stepsize as
+
+$\beta_{k}=1000\min\left\{\frac{\|\mathcal{A}(x_{1})-y_{1}\|\log^{2}2}{\|\mathcal{A}(x_{k+1})-y_{k+1}\|(k+1)^{2}\log(k+2)},1\right\},$
+
+and the maximum number of inner iterations as $T_{k}=\min\{2^{k},5000\}$ , where $k\geq 1$ . Compared with the original settings $\sigma_{k}=2^{2k/7}$ and $T_{k}=2^{k}$ of StoManIAL [ 13 ] , introducing the coefficient 1000 enables StoManIAL to generate sparser solutions in fewer iterations, while the cap 5000 prevents the algorithm from taking too much time in one outer iteration, especially when $k$ is large. Finally, we terminate StoRADA-RM, StoManIAL, and R-ProxSPB when $\|x_{k+1}-x_{k}\|\leq\text{tol}_{1}$ with $\text{tol}_{1}>0$ . Note that these three algorithms all perform multiple Riemannian stochastic gradient steps to generate $x_{k+1}$ , while RSSM only performs a single such step. Thus, the gap $\|x_{k+1}-x_{k}\|$ generated by the former can be relatively larger than the latter. To ensure fairness in comparison, we terminate RSSM when $\|x_{k+1}-x_{k}\|\leq\text{tol}_{2}$ with $\text{tol}_{2}<\text{tol}_{1}$ .
+
+5.1 Sparse PCA
+
+In this subsection, we compare the proposed StoRADA-RM with RSSM [ 14 ] , R-ProxSPB [ 39 ] , and StoManIAL [ 13 ] on the sparse PCA problem.
+
+Let $a\in\mathbb{R}^{d}$ represent a random data point following a certain distribution $\mathcal{D}$ . To achieve a good balance between dimension reduction and interpretability, sparse PCA seeks principal components with few nonzero components. This motivates the following formulation of sparse PCA [ 24 ] :
+
+$\min_{X\in\mathcal{S}(d,r)}\left\{\mathbb{E}_{a\sim\mathcal{D}}[\|a-XX^{\top}a\|^{2}]+\mu\|X\|_{1}\right\}.$ (5.3)
+
+Here, $\mathcal{S}(d,r)=\{X\in\mathbb{R}^{d\times r}\mid X^{\top}X=I_{r}\}$ is the Stiefel manifold with $I_{r}$ being the $r$ -by- $r$ identity matrix, $\mu>0$ is the weighting parameter, and $\|X\|_{1}=\sum_{i,j}|X_{ij}|$ is the $\ell_{1}$ -norm of the matrix $X$ . When the support $\Omega=\{a_{1},a_{2},\ldots,a_{N}\}$ is finite and $a$ is uniformly distributed on $\Omega$ , the expectation term $\mathbb{E}_{a\sim\mathcal{D}}[\|a-XX^{\top}a\|^{2}]$ reduces to the finite-sum $\frac{1}{N}\sum_{i=1}^{N}\|a_{i}-XX^{\top}a_{i}\|^{2}$ .
+
+We first consider the finite-sum case of problem ( 5.3 ) and perform tests on synthetic datasets and the real dataset coil-100 [ 32 ] , which contains 7200 image samples of 100 objects taken from different angles with $d=1024$ . For the synthetic data, we generate the data matrix $A=[a_{1},a_{2},\ldots,a_{N}]$ with $N=10000$ and $d\in\{400,600,800,1000\}$ as in [ 51 ] . For StoRADA-RM, we set $\beta_{1}=1$ , $T=10$ , $\xi_{0}=1$ , and $\delta_{0}=1$ . For the inner subproblem solver of StoManIAL, we fine-tuned the parameters and found the following settings worked well in our tests:
+
+$\zeta_{k,t}={\zeta_{k}}{\left(1+\sum_{i=1}^{t}\sum_{a\in S_{k,i}}\|\mathrm{grad}\,\mathcal{L}_{k}(x_{k,i};a)\|/b\right)^{-{1}/{3}}},\quad\zeta_{k}={0.05}\cdot{2^{-{k}/{3}}},$ (5.4)
+
+and $\alpha_{k,t}=100\zeta_{k,t}^{2}/k^{1/2}$ , where $k\geq 1$ and $t=1,2,\ldots,T$ . For R-ProxSPB, we set $\gamma=1/{L}_{f}$ and $\eta=0.1$ after fine-tuning to enhance its practical performance. Note that these values violate the theoretical requirements of R-ProxSPB, where $\gamma$ is required to be 0.4 and $\eta$ depends on problem-specific parameters, $\kappa_{2}$ , $L_{h}$ , and a uniform Hessian bound for $f$ . We set the batch size $b=100$ for StoRADA-RM, StoManIAL, and RSSM. For R-ProxSPB, we set the large-batch size to $N$ in every 100 iterations and use a small-batch size of 100 in the other iterations. For the stopping criteria, we set $\text{tol}_{1}=10^{-3}$ and $\text{tol}_{2}=0.2\text{tol}_{1}$ .
+
+Table 2: Average performance comparison on sparse PCA in the finite-sum case.
+
+The average results of 20 runs with different data matrices and initial points are presented in Table 2 , where $\Phi$ denotes the objective value of problem ( 5.3 ), “cpu” represents the cpu time in seconds, and “iter” denotes the outer iteration number. We also compare the reconstruction loss value (denoted by “loss”), defined as $\frac{1}{N}\sum_{i=1}^{N}\|a_{i}-XX^{\top}a_{i}\|^{2}$ , and the sparsity of $X$ (denoted by “spar”), measured as the percentage of entries with absolute value less than $10^{-5}$ . From Table 2 , we observe that the proposed single-loop StoRADA-RM algorithm always returns the best solutions in terms of the objective value $\Phi$ and is the most efficient among the compared algorithms. In particular, although both StoRADA-RM and RSSM are single-loop algorithms with the same optimal SFO complexity, the former produces solutions with higher sparsity and lower reconstruction loss and does so in significantly less time. The superior performance stems from its ability to perform multiple Riemannian stochastic gradient steps when solving the subproblems, thereby yielding more accurate $x$ -updates and substantially reducing the number of outer iterations. Moreover, when compared with the two nested-loop algorithms StoManIAL and R-ProxSPB, the efficiency of StoRADA-RM becomes even more pronounced, particularly in high-dimensional settings with large $d$ and $r$ .
+
+Figure 1: Objective value $\Phi$ versus runtime comparison on sparse PCA in the general case.
+
+Next, we consider the general case of problem ( 5.3 ), where the data point $a$ is randomly generated at each update. Specifically, we first generate an auxiliary dataset $\{a_{i}\}_{i=1}^{N_{0}}$ with $N_{0}=200$ , following the same procedure used for the finite-sum case, and set
+
+$\bar{a}=\frac{1}{N_{0}}\sum_{i=1}^{N_{0}}a_{i},\quad\text{and}\quad\Sigma=\frac{1}{N_{0}-1}\sum_{i=1}^{N_{0}}(a_{i}-\bar{a})(a_{i}-\bar{a})^{\top}+10^{-6}I_{d}.$
+
+At each stochastic gradient evaluation, the required data samples are then drawn independently from $\mathcal{N}(\mathbf{0},\Sigma)$ . For R-ProxSPB, we set the large-batch size to $40000$ in every 200 iterations and use a small-batch size of 200 in the other iterations. All compared algorithms are executed for 20 seconds, and the other parameter settings remain the same as in the finite-sum case. We plot the objective value $\Phi$ against the runtime for two representative instances in Figure 1 . As shown in the figure, our proposed StoRADA-RM reduces the objective value significantly faster than the other compared algorithms and can find the best solution in terms of the objective value.
+
+5.2 Results on CISE
+
+In this subsection, we compare the proposed StoRADA-RM with RSSM [ 14 ] , R-ProxSPB [ 39 ] , and StoManIAL [ 13 ] on the CISE problem. The CISE problem, which aims at simultaneously achieving sparse sufficient dimension reduction and screening out irrelevant and redundant variables efficiently, admits the following formulation [ 11 ] :
+
+$\min_{X\in\mathcal{S}(d,r)}\left\{\mathbb{E}_{a\sim\mathcal{D}}[\|a-XX^{\top}a\|^{2}]+\hat{\mu}\|X\|_{2,1}\right\}.$ (5.5)
+
+Here, $\|X\|_{2,1}:=\sum_{i=1}^{d}\sqrt{\sum_{j=1}^{r}X_{ij}^{2}}$ is the $\ell_{2,1}$ -norm of the matrix $X$ , which can shrink the corresponding row vectors of irrelevant variables to zero. We set $\hat{\mu}=\mu\sqrt{r+\ln(d)}$ as [ 42 ] , where the constant $\mu>0$ controls the sparsity.
+
+Table 3: Average performance comparison on CISE in the finite-sum case.
+
+We consider both the finite-sum and general cases of problem ( 5.5 ) as in Section 5.1 and conduct experiments following the setup therein. For StoRADA-RM, we set $T=50$ and $\xi_{0}=0.5$ . For the inner subproblem solver of StoManIAL, namely RSTORM, we fine-tuned the parameters and adopted the scheme ( 5.4 ) with $\zeta_{k}=0.5\cdot 2^{-k/3}$ . For R-ProxSPB, we set $\eta=0.2$ after careful tuning. For the finite-sum case, the stopping criteria are set as $\text{tol}_{1}=10^{-3}$ and $\text{tol}_{2}=0.4\text{tol}_{1}$ . The other parameter settings are identical to those in Section 5.1 . The average results of 20 runs with different data matrices and initial points for the finite-sum case are presented in Table 3 , where “spar” is now defined as the percentage of rows with the $\ell_{2}$ -norm less than $10^{-5}$ . From Table 3 , we see that our proposed StoRADA-RM consistently returns the best solutions in terms of the objective value $\Phi$ while requiring the least computational time. In particular, StoRADA-RM and R-ProxSPB can obtain solutions with similar sparsity level and loss value, while RSSM has difficulty producing a sparse solution. We also plot the objective value $\Phi$ against the runtime for two representative instances of the general case in Figure 2 . As illustrated in the figure, our proposed StoRADA-RM is still the most efficient in reducing the objective value $\Phi$ .
+
+Figure 2: Objective value $\Phi$ versus runtime comparison on CISE in the general case.
+
+6 Concluding Remarks
+
+In this paper, we proposed an efficient algorithm called StoRADA-RM to tackle a class of Riemannian nonsmooth composite expectation optimization problems. Our proposed method exploits the intrinsic minimax structure of these problems by performing one or multiple Riemannian stochastic gradient descent steps and then a proximal gradient ascent step at each iteration. To compute the Riemannian stochastic gradient, we proposed a vector transport-free recursive momentum estimator that requires only $\mathcal{O}(1)$ SFO calls at each iteration. Theoretically, we proved that both the iteration complexity and SFO complexity of StoRADA-RM for finding an $\epsilon$ -RSS point of a given problem in the said class are $\mathcal{O}(\epsilon^{-3})$ , which is the best known in the literature. The SFO complexity bound also matches the optimal lower bound for smooth nonconvex optimization with stochastic first-order algorithms. Computationally, we presented numerical results on sparse PCA and CISE to demonstrate the superiority of StoRADA-RM over existing state-of-the-art algorithms. An interesting direction for future work is to extend the proposed algorithm to handle the setting where $f$ is also nonsmooth.
+
+References

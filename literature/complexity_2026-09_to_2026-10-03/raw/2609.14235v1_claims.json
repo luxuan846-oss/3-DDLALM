@@ -1,0 +1,102 @@
+[
+  {
+    "anchor": "Thmdefinition1",
+    "kind": "ltx_theorem ltx_theorem_definition",
+    "text": "1 NC-C function class. Given $\\ell,D_{\\mathcal{Y}},\\Delta>0$ , let $\\mathcal{F}(\\ell,D_{\\mathcal{Y}},\\Delta)$ be the union, over all $m,n\\in\\mathbb{N}$ and all nonempty closed convex sets $\\mathcal{X}\\subseteq\\mathbb{R}^{m}$ and $\\mathcal{Y}\\subseteq\\mathbb{R}^{n}$ satisfying $(\\mathbf{0}_{m},\\mathbf{0}_{n})\\in\\mathcal{X}\\times\\mathcal{Y}\\mbox{ and }\\operatorname{diam}(\\mathcal{Y})\\leq D_{\\mathcal{Y}},$ of the class of functions $f:\\mathcal{X}\\times\\mathcal{Y}\\to\\mathbb{R}$ satisfying the following properties. For each such function, define $\\Phi(\\bm{x}):=\\max_{\\bm{y}\\in\\mathcal{Y}}f(\\bm{x};\\bm{y})+\\iota_{\\mathcal{X}}(\\bm{x})$ . 1. ( $\\ell$ -smoothness) $f$ is jointly $\\ell$ -smooth on $\\mathcal{X}\\times\\mathcal{Y}$ , i.e., for all $(\\bm{x}_{1},\\bm{y}_{1}),(\\bm{x}_{2},\\bm{y}_{2})\\in\\mathcal{X}\\times\\mathcal{Y}$ , $\\left\\lVert\\nabla f(\\bm{x}_{1};\\bm{y}_{1})-\\nabla f(\\bm{x}_{2};\\bm{y}_{2})\\right\\rVert\\leq\\ell\\left\\lVert(\\bm{x}_{1},\\bm{y}_{1})-(\\bm{x}_{2},\\bm{y}_{2})\\right\\rVert.$ 2. (Dual concavity) For every fixed $\\bm{x}\\in\\mathcal{X}$ , $f(\\bm{x};\\cdot)$ is concave on $\\mathcal{Y}$ . 3. (Initial gap) The initialization satisfies $\\Phi(\\mathbf{0})-\\inf_{\\bm{x}\\in\\mathcal{X}}\\Phi(\\bm{x})\\leq\\Delta.$"
+  },
+  {
+    "anchor": "Thmdefinition2",
+    "kind": "ltx_theorem ltx_theorem_definition",
+    "text": "2 Optimization-stationary point. Given $\\epsilon>0$ , a point $\\bm{x}\\in\\mathcal{X}$ is an $\\epsilon$ -optimization-stationary point ( $\\epsilon$ -OS) of Problem ( P ) if $\\left\\lVert\\nabla\\Phi_{\\frac{1}{2\\ell}}(\\bm{x})\\right\\rVert\\leq\\epsilon,$ where $\\Phi_{1/(2\\ell)}(\\bm{x}):=\\min_{\\bm{z}\\in\\mathbb{R}^{m}}\\{\\Phi(\\bm{z})+\\ell\\lVert\\bm{x}-\\bm{z}\\rVert^{2}\\}$ is the Moreau envelope of $\\Phi$ with parameter $1/(2\\ell)$ ."
+  },
+  {
+    "anchor": "Thmdefinition3",
+    "kind": "ltx_theorem ltx_theorem_definition",
+    "text": "3 First-order saddle oracle. For a differentiable function $f:\\mathcal{X}\\times\\mathcal{Y}\\to\\mathbb{R}$ , the first-order saddle oracle at $(\\bm{x},\\bm{y})\\in\\mathcal{X}\\times\\mathcal{Y}$ returns $\\mathbb{O}_{f}(\\bm{x};\\bm{y}):=\\bigl(f(\\bm{x};\\bm{y}),\\nabla_{\\bm{x}}f(\\bm{x};\\bm{y}),\\nabla_{\\bm{y}}f(\\bm{x};\\bm{y})\\bigr).$"
+  },
+  {
+    "anchor": "Thmdefinition4",
+    "kind": "ltx_theorem ltx_theorem_definition",
+    "text": "4 Zero-respecting first-order algorithm. A first-order algorithm $\\mathsf{A}$ is zero-respecting if, for each such $f$ , it starts from $(\\mathsf{A}_{\\bm{x}}^{(0)}[f],\\mathsf{A}_{\\bm{y}}^{(0)}[f])=\\mathbf{0}$ and its query sequence satisfies $\\operatorname{supp}\\bigl(\\mathsf{A}_{\\bm{x}}^{(t)}[f],\\mathsf{A}_{\\bm{y}}^{(t)}[f]\\bigr)\\subseteq\\bigcup_{s<t}\\operatorname{supp}\\Bigl(\\nabla_{\\bm{x}}f\\bigl(\\mathsf{A}_{\\bm{x}}^{(s)}[f];\\mathsf{A}_{\\bm{y}}^{(s)}[f]\\bigr),\\nabla_{\\bm{y}}f\\bigl(\\mathsf{A}_{\\bm{x}}^{(s)}[f];\\mathsf{A}_{\\bm{y}}^{(s)}[f]\\bigr)\\Bigr),\\qquad\\forall t\\geq 1.$ We denote the class of such algorithms by $\\mathcal{A}_{\\mathrm{zr}}$ ."
+  },
+  {
+    "anchor": "Thmdefinition5",
+    "kind": "ltx_theorem ltx_theorem_definition",
+    "text": "5 Deterministic first-order algorithm. A first-order algorithm $\\mathsf{A}$ is deterministic if there exists a sequence of maps $\\{\\Gamma_{t}\\}_{t\\geq 1}$ such that, for every such $f$ , it starts from $(\\mathsf{A}_{\\bm{x}}^{(0)}[f],\\mathsf{A}_{\\bm{y}}^{(0)}[f])=\\mathbf{0}$ and its query sequence satisfies $\\bigl(\\mathsf{A}_{\\bm{x}}^{(t)}[f],\\mathsf{A}_{\\bm{y}}^{(t)}[f]\\bigr)=\\Gamma_{t}\\left(\\Bigl(\\mathbb{O}_{f}\\bigl(\\mathsf{A}_{\\bm{x}}^{(s)}[f];\\mathsf{A}_{\\bm{y}}^{(s)}[f]\\bigr)\\Bigr)_{s<t}\\right),\\qquad\\forall t\\geq 1.$ We denote the class of such algorithms by $\\mathcal{A}_{\\det}$ ."
+  },
+  {
+    "anchor": "Thmdefinition6",
+    "kind": "ltx_theorem ltx_theorem_definition",
+    "text": "6 Oracle Complexity. Fix $\\epsilon>0$ . Let $\\mathcal{A}\\subseteq\\mathcal{A}_{\\det}$ be any nonempty subclass of deterministic first-order algorithms, and let $\\mathcal{F}$ be a nonempty class of such saddle functions. The oracle complexity of $\\mathcal{A}$ over $\\mathcal{F}$ is defined by $\\mathcal{T}_{\\epsilon}(\\mathcal{A},\\mathcal{F}):=\\inf_{\\mathsf{A}\\in\\mathcal{A}}\\sup_{f\\in\\mathcal{F}}\\inf\\left\\{t\\in\\mathbb{N}_{0}\\;\\middle|\\;\\mathsf{A}_{\\bm{x}}^{(t)}[f]\\;{\\text{is an }\\epsilon\\text{-OS for }f}\\right\\}.$"
+  },
+  {
+    "anchor": "Thmdefinition7",
+    "kind": "ltx_theorem ltx_theorem_definition",
+    "text": "7 First-order saddle zero-chain. Let $f:\\mathcal{X}\\times\\mathcal{Y}\\subseteq\\mathbb{R}^{m}\\times\\mathbb{R}^{n}\\to\\mathbb{R}$ be differentiable, and let $\\bm{\\pi}=(\\pi_{1},\\ldots,\\pi_{m+n})$ be a coordinate ordering of $(\\bm{x},\\bm{y})$ . We say that $f$ is a first-order saddle zero-chain with respect to $\\bm{\\pi}$ if, for every $i\\in[m+n]$ and every $(\\bm{x},\\bm{y})\\in\\mathcal{X}\\times\\mathcal{Y}$ , $\\operatorname{supp}_{\\bm{\\pi}}(\\bm{x},\\bm{y})\\subseteq[i-1]\\quad\\Longrightarrow\\quad\\operatorname{supp}_{\\bm{\\pi}}\\bigl(\\nabla_{\\bm{x}}f(\\bm{x};\\bm{y}),\\nabla_{\\bm{y}}f(\\bm{x};\\bm{y})\\bigr)\\subseteq[i].$"
+  },
+  {
+    "anchor": "Thmtheorem1",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "1 Zero-respecting lower bound. There are numerical constants $c_{0},c_{1}>0$ such that, for every $\\ell,D_{\\mathcal{Y}},\\Delta,\\epsilon>0$ satisfying $\\epsilon\\leq c_{0}\\min\\{\\ell D_{\\mathcal{Y}},\\sqrt{\\ell\\Delta}\\},$ there exists an instance $f\\in\\mathcal{F}(\\ell,D_{\\mathcal{Y}},\\Delta)$ for which $\\mathcal{T}_{\\epsilon}\\bigl(\\mathcal{A}_{\\rm zr}\\cap\\mathcal{A}_{\\rm det},\\{f\\}\\bigr)\\geq c_{1}\\frac{\\ell^{2}D_{\\mathcal{Y}}\\Delta}{\\epsilon^{3}}.$"
+  },
+  {
+    "anchor": "Thmtheorem2",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "2 Deterministic lower bound. There are numerical constants $c_{0},c_{1}>0$ such that, for every $\\ell,D_{\\mathcal{Y}},\\Delta,\\epsilon>0$ satisfying $\\epsilon\\leq c_{0}\\min\\{\\ell D_{\\mathcal{Y}},\\sqrt{\\ell\\Delta}\\},$ one has $\\mathcal{T}_{\\epsilon}\\bigl(\\mathcal{A}_{\\rm det},\\mathcal{F}(\\ell,D_{\\mathcal{Y}},\\Delta)\\bigr)\\geq c_{1}\\frac{\\ell^{2}D_{\\mathcal{Y}}\\Delta}{\\epsilon^{3}}.$"
+  },
+  {
+    "anchor": "Thmremark1",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "1 Arbitrary deterministic output. Theorem 2 also covers a deterministic point computed from the final transcript but not previously queried. Indeed, append that primal point, paired with the feasible dual origin, as the algorithm’s next query and apply the lower bound for queried points to the augmented deterministic algorithm."
+  },
+  {
+    "anchor": "Thmtheorem3",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "3 Oracle complexity of Tracked-FOAM . Let $\\ell,D_{\\mathcal{Y}},\\Delta>0$ and $f\\in\\mathcal{F}(\\ell,D_{\\mathcal{Y}},\\Delta)$ . For any $\\epsilon>0$ , Algorithm 1 , initialized at $\\bm{z}^{0}=\\mathbf{0}$ , returns an $\\epsilon$ -OS point using $\\mathcal{O}\\left(\\left(\\frac{\\ell\\Delta}{\\epsilon^{2}}+1\\right)\\max\\left\\{1,\\frac{\\ell D_{\\mathcal{Y}}}{\\epsilon}\\right\\}\\right)$ (3) first-order saddle-oracle calls."
+  },
+  {
+    "anchor": "Thmremark2",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "2 . In the regime of Theorem 2 , the upper bound in ( 3 ) simplifies to $\\mathcal{O}(\\ell^{2}D_{\\mathcal{Y}}\\Delta/\\epsilon^{3})$ . Thus, Tracked-FOAM is optimal among deterministic first-order methods up to universal constants in this regime."
+  },
+  {
+    "anchor": "Thmremark3",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "3 Extensions to other stationarity notions and NC-SC problems. With suitable parameter choices and initialization, Tracked-FOAM also finds an $\\epsilon$ -game-stationary point for NC-C problems, as defined in Li et al. (2026, Definition 2.1 (ii)) , with oracle complexity $\\mathcal{O}(\\epsilon^{-5/2})$ . This improves the oracle complexity in Li et al. (2026) by removing the multiplicative $\\log(1/\\epsilon)$ factor. For NC-SC problems, where $f$ is $\\mu$ -strongly concave in $\\bm{y}$ , Tracked-FOAM can be configured to find either an $\\epsilon$ -OS point or an $\\epsilon$ -GS point with oracle complexity $\\mathcal{O}(\\sqrt{\\kappa}\\epsilon^{-2})$ , where $\\kappa:=\\ell/\\mu$ . Zhang et al. (2021) removed the polylogarithmic factors in $1/\\epsilon$ from the bound of Lin et al. (2020a) . Our extension further removes the remaining logarithmic factors in the problem parameters, matching the lower bounds of Li et al. (2021) ; Zhang et al. (2021) in its dependence on $\\epsilon$ and $\\kappa$ ."
+  },
+  {
+    "anchor": "Thmcondition1",
+    "kind": "ltx_theorem ltx_theorem_condition",
+    "text": "1 Unscaled hard instance properties. There exist numerical constants $\\ell_{0},g_{0},c_{\\Delta},c_{D}>0$ , independent of $M,N,D$ , such that, for every admissible pair $(M,N)$ and every $D>0$ , the corresponding unscaled hard instance $\\bar{f}$ and coordinate ordering $\\bm{\\pi}$ satisfy the following properties: (C1) The function $\\bar{f}$ is jointly $\\ell_{0}$ -smooth and strongly concave in $\\bm{y}$ , and its value function $\\bar{\\Phi}$ is differentiable. (C2) The function $\\bar{f}$ is a first-order saddle zero-chain with respect to $\\bm{\\pi}$ . (C3) The $\\pi_{L}$ -th coordinate of $(\\bm{x},\\bm{y})$ is $s_{M}$ . Moreover, whenever $N\\leq c_{D}D$ , $s_{M}\\leq\\frac{1}{5}\\quad\\Longrightarrow\\quad\\left\\lVert\\nabla\\bar{\\Phi}(\\bm{s},\\bm{\\nu})\\right\\rVert\\geq g_{0}.$ (C4) The initial gap of the value function satisfies $\\bar{\\Phi}(\\mathbf{0},\\mathbf{0})-\\inf_{(\\bm{s},\\bm{\\nu})\\in\\mathbb{R}^{3M}}\\bar{\\Phi}(\\bm{s},\\bm{\\nu})\\leq c_{\\Delta}M.$"
+  },
+  {
+    "anchor": "Thmproposition1",
+    "kind": "ltx_theorem ltx_theorem_proposition",
+    "text": "1 . For every $\\bm{z},\\bm{z}^{\\prime}\\in\\mathcal{X}$ with $\\bm{z}^{\\prime}=\\bm{z}+\\bm{d}$ and every state $S$ with $\\mathcal{L}_{\\bm{z},r_{\\bm{y}}}(S)<\\infty$ , the translated state in ( 20 ) satisfies $\\mathcal{L}_{\\bm{z}^{\\prime},r_{\\bm{y}}}(\\widetilde{S})\\leq 2\\mathcal{L}_{\\bm{z},r_{\\bm{y}}}(S)+24\\ell\\left\\lVert\\bm{d}\\right\\rVert^{2}.$ (21) Consequently, for every $\\rho\\in(0,1)$ , $\\mathcal{L}_{\\bm{z}^{\\prime},r_{\\bm{y}}}\\left(\\textnormal{{FOAM}}_{\\bm{z}^{\\prime},r_{\\bm{y}}}(\\widetilde{S};\\rho)\\right)\\leq\\rho\\left(2\\mathcal{L}_{\\bm{z},r_{\\bm{y}}}(S)+24\\ell\\left\\lVert\\bm{d}\\right\\rVert^{2}\\right).$ (22)"
+  },
+  {
+    "anchor": "Thmproposition2",
+    "kind": "ltx_theorem ltx_theorem_proposition",
+    "text": "2 Warm-start initialization. Let $\\bm{z}^{0}=\\mathbf{0}$ . The initialization constructs a dual regularization parameter $r_{\\bm{y}}$ and a FOAM state $S^{0}$ satisfying $\\displaystyle\\mathcal{L}_{\\bm{z}^{0},r_{\\bm{y}}}(S^{0})\\leq 15\\left(\\Delta+r_{\\bm{y}}D_{\\mathcal{Y}}^{2}\\right)\\quad\\mbox{and}\\quad\\frac{r_{\\bm{y},\\epsilon}}{4}<r_{\\bm{y}}\\leq r_{\\bm{y},\\epsilon}.$ (26) The construction requires $\\mathcal{O}(\\sqrt{\\ell/r_{\\bm{y}}})$ first-order saddle-oracle calls."
+  },
+  {
+    "anchor": "Thmproposition3",
+    "kind": "ltx_theorem ltx_theorem_proposition",
+    "text": "3 . There is a numerical constant $\\ell_{0}>0$ , independent of $M,N,D$ , such that $\\bar{f}$ is jointly $\\ell_{0}$ -smooth and $N^{-2}$ -strongly concave in $\\bm{y}$ . For every $D>0$ , the value function $\\bar{\\Phi}$ is differentiable. Moreover, whenever $\\lVert\\bm{y}^{\\star}(\\bm{\\nu})\\rVert\\leq D/2$ , $\\bar{\\Phi}(\\bm{s},\\bm{\\nu})=\\bar{\\Phi}_{\\infty}(\\bm{s},\\bm{\\nu}),\\qquad\\mbox{and}\\qquad\\nabla\\bar{\\Phi}(\\bm{s},\\bm{\\nu})=\\nabla\\bar{\\Phi}_{\\infty}(\\bm{s},\\bm{\\nu}).$ (27) Thus Condition 1 (C1) holds."
+  },
+  {
+    "anchor": "Thmproposition4",
+    "kind": "ltx_theorem ltx_theorem_proposition",
+    "text": "4 . The objective $\\bar{f}$ is a first-order saddle zero-chain with respect to the ordering $\\bm{\\pi}$ in ( 4 ). Thus Condition 1 (C2) holds."
+  },
+  {
+    "anchor": "Thmproposition5",
+    "kind": "ltx_theorem ltx_theorem_proposition",
+    "text": "5 . There are numerical constants $g_{0},c_{D}>0$ , independent of $M,N,D$ , such that, for every admissible pair $(M,N)$ , every $D>0$ , and every $(\\bm{s},\\bm{\\nu})\\in\\mathbb{R}^{3M}$ , $N\\leq c_{D}D,\\qquad s_{M}\\leq\\frac{1}{5}\\quad\\Longrightarrow\\quad\\left\\lVert\\nabla\\bar{\\Phi}(\\bm{s},\\bm{\\nu})\\right\\rVert\\geq g_{0}.$ Since $s_{M}$ is the final coordinate in ( 4 ), this verifies Condition 1 (C3) ."
+  },
+  {
+    "anchor": "Thmproposition6",
+    "kind": "ltx_theorem ltx_theorem_proposition",
+    "text": "6 . There is a numerical constant $c_{\\Delta}>0$ , independent of $M,N,D$ , such that, for every admissible pair $(M,N)$ and every $D>0$ , $\\bar{\\Phi}(\\mathbf{0},\\mathbf{0})-\\inf_{(\\bm{s},\\bm{\\nu})\\in\\mathbb{R}^{3M}}\\bar{\\Phi}(\\bm{s},\\bm{\\nu})\\leq c_{\\Delta}M.$ This verifies Condition 1 (C4) ."
+  }
+]

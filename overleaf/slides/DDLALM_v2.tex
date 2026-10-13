@@ -1,0 +1,1265 @@
+% Initial research-talk deck based on overleaf/main_linear.tex.
+% Remove `handout` to enable overlays when presenting.
+\documentclass[handout,compress,9pt]{beamer}
+
+\usefonttheme[onlymath]{serif}
+\usepackage[english]{babel}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{bm}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc}
+
+\usetheme{Boadilla}
+\useoutertheme{infolines}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{theorems}[numbered]
+\setbeamertemplate{caption}[numbered]
+
+\definecolor{ddlblue}{RGB}{0,78,140}
+\definecolor{ddlred}{RGB}{176,34,34}
+\definecolor{ddlgreen}{RGB}{32,120,82}
+\newcommand{\blue}[1]{\textcolor{ddlblue}{#1}}
+\newcommand{\red}[1]{\textcolor{ddlred}{#1}}
+\newcommand{\green}[1]{\textcolor{ddlgreen}{#1}}
+
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\zero}{\bm{0}}
+\newcommand{\bx}{\bm{x}}
+\newcommand{\by}{\bm{y}}
+\newcommand{\bz}{\bm{z}}
+\newcommand{\bw}{\bm{w}}
+\newcommand{\br}{\bm{r}}
+\newcommand{\bq}{\bm{q}}
+\newcommand{\bmu}{\bm{\mu}}
+\newcommand{\blmbd}{\bm{\lambda}}
+\newcommand{\calA}{\mathcal{A}}
+\newcommand{\calL}{\mathcal{L}}
+\newcommand{\calO}{\mathcal{O}}
+\newcommand{\calS}{\mathcal{S}}
+\newcommand{\prox}{\operatorname{prox}}
+\newcommand{\dist}{\operatorname{dist}}
+\newcommand{\st}{\textnormal{s.t.}}
+\newcommand{\eps}{\varepsilon}
+
+\setbeamertemplate{footline}{%
+  \leavevmode%
+  \hbox{%
+    \begin{beamercolorbox}[wd=.23\paperwidth,ht=2.25ex,dp=1ex,center]{author in head/foot}%
+      \usebeamerfont{author in head/foot}\insertshortauthor~(\insertshortinstitute)
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[wd=.54\paperwidth,ht=2.25ex,dp=1ex,center]{title in head/foot}%
+      \usebeamerfont{title in head/foot}\insertshorttitle
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[wd=.23\paperwidth,ht=2.25ex,dp=1ex,right]{date in head/foot}%
+      \usebeamerfont{date in head/foot}\insertshortdate{}\hspace*{1.4em}\insertframenumber{} / \inserttotalframenumber\hspace*{1ex}
+    \end{beamercolorbox}%
+  }%
+  \vskip0pt%
+}
+
+\title[Moving-Center DDLALM]{Anytime Moving-Center DDLALM\\for Nonsmooth Composite Optimization}
+\author[L. Li et al.]{Luxuan Li\inst{1}}
+%  \and Kangkang Deng\inst{2} \and Chunfeng Cui\inst{1} \and Jiang Hu\inst{3}}
+\institute[Beihang]{\inst{1} Beihang University}
+%  \and \inst{2} National University of Defense Technology \and \inst{3} Tsinghua University}
+\date[Research update]{Research update, August 2026}
+
+% Insert a standalone divider slide before every section.
+\AtBeginSection[]{
+  \begin{frame}[plain,noframenumbering]
+    \centering
+    \vfill
+    {\usebeamerfont{section title}\usebeamercolor[fg]{section title}%
+      \Roman{section}.\enspace\insertsectionhead\par}
+    \vfill
+  \end{frame}
+}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Outline}
+  \tableofcontents
+\end{frame}
+
+\section{Problem Setting}
+
+\begin{frame}{Structured Nonsmooth Composite Optimization}
+We consider
+\begin{equation*}
+  \min_{\bx\in\RR^n}\quad F(\bx):=f(\bx)+h\bigl(\calA(\bx)\bigr).
+  \tag{P0}
+\end{equation*}
+\begin{itemize}
+  \item $f:\RR^n\to\RR$ is continuously differentiable and may be nonconvex.
+  \item $\calA:\RR^n\to\RR^m$ is continuously differentiable and may be nonlinear.
+  \item $h:\RR^m\to\RR$ is convex, Lipschitz continuous, and possibly nonsmooth.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Approximate KKT Point}
+  \begin{itemize}
+  \item Introduce $\by=\calA(\bx)$:
+  \begin{equation}
+    \label{Prob:split}
+    \min_{\bx,\by}\quad f(\bx)+h(\by)
+    \qquad \st\qquad \calA(\bx)-\by=\zero.   \tag{P}
+  \end{equation}
+  
+  \item The split KKT system is
+  \begin{equation*}
+    \nabla f(\bx)+J_{\calA}(\bx)^\top\bq=\zero,
+    \qquad \bq\in\partial h(\by),
+    \qquad \calA(\bx)-\by=\zero.
+  \end{equation*}
+
+  \item \textbf{approximate $\eps$-KKT point.}
+  Find $(\bx,\by,\bq)$ such that
+  \begin{equation*}
+    \|\nabla f(\bx)+J_{\calA}(\bx)^\top\bq\|\leq\eps,
+    \quad \blue{\bq\in\partial h(\by)},
+    \quad \|\calA(\bx)-\by\|\leq\eps.
+  \end{equation*}
+  We denote the maximum of these three residuals by
+  $\mathcal R_{\rm split}(\bx,\by,\bq)$.
+
+  \item The exact $\by$-proximal step makes the subdifferential condition \blue{exact}.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Main Result}
+\small
+The Candidate method uses the four-block order
+\begin{equation*}
+  \boxed{\bx\ \longrightarrow\ \blmbd\ \longrightarrow\ \bz\ \longrightarrow\ \bmu}
+\end{equation*}
+and the anytime schedule
+\begin{equation*}
+  r_k:=s_k^{-1}=\Theta(k^{-1/3}),
+  \qquad
+  \beta_k=\Theta(k^{-1/3}),
+  \qquad
+  \gamma_k=\Theta(k^{-1}).
+\end{equation*}
+Under the stated smoothness, lower-boundedness, and global Lipschitz
+assumptions, one tail iterate satisfies
+\begin{equation*}
+  \mathcal R_{\rm split}
+  (\bx^{\kappa+1},\by_\kappa^{\rm out},\bq_\kappa^{\rm out})
+  =O(K^{-1/3}).
+\end{equation*}
+\begin{block}{Candidate guarantee}
+Single loop, no algorithmic projection, no inner solve, fixed base penalty
+$\rho$, two $\prox_{h/\rho}$ evaluations per iteration, and
+$O(\eps^{-3})$ split-KKT complexity.
+\end{block}
+\end{frame}
+
+\begin{frame}{Research Problems}
+% 模仿
+
+ Q1: Fixed penalty, if single-loop ?
+  Q1: For single-loop first-order algorithms, if $\rho$ is fixed, to acclerate the rate?
+
+  Q2: Can combinng the dual and smoothin improves the iterative complexity?
+\end{frame}
+
+\section{Reduced-Dual Reformulation}
+
+\begin{frame}{Smoothed Augmented Lagrangian}
+
+The smoothed augmented Lagrangian used in our method is
+\[
+{\mathcal P}(x,y,\lambda;z,\mu)
+:=
+\mathcal L_\rho(x,y,\lambda)
++\frac{r}{2}\|x-z\|^2
+-\frac{1}{2s}\|\lambda-\mu\|^2.
+\]
+% We define the value function obtained by minimizing over the $\by$-block:
+
+% \[
+% F(\bx,\blmbd;\bz,\bmu)
+% :=\min\limits_{\by}\mathcal P(\bx,\by,\blmbd;\bz,\bmu)
+% \]
+% \[
+% \begin{aligned}
+% F(\bx,\blmbd;\bz,\bmu)
+% ={}&f(\bx)
+% +\frac{r}{2}\|\bx-\bz\|^2
+% -\frac{1}{2s}\|\blmbd-\bmu\|^2 \\
+% &+\min\limits_{\by}
+% \left\{
+% h(\by)
+% +\left\langle\blmbd,\calA(\bx)-\by\right\rangle
+% +\frac{\rho}{2}\|\calA(\bx)-\by\|^2
+% \right\}.
+% \end{aligned}
+% \]
+
+\end{frame}
+
+
+\begin{frame}{Value Function}
+\small
+1. From original problem to minmax problem;
+2. Froem 
+The value function
+\begin{itemize}
+  \item[\blue{$\triangleright$}]
+  \textbf{Eliminate the $\by$-block through the $\rho$-prox:}
+  \begin{equation*}
+    d_s(\bx,\blmbd;\bmu)
+    :=\min_{\by}\mathcal P_s(\bx,\by,\blmbd;\bmu),
+    \qquad
+    \red{\by(\blmbd;\bx)}
+    =\operatorname{prox}_{h/\rho}
+    \left(\calA(\bx)+\frac{\blmbd}{\rho}\right).
+  \end{equation*}
+
+  \item[\blue{$\triangleright$}]
+  \textbf{Obtain an exact subdifferential certificate:}
+  \begin{equation*}
+    \blmbd+\rho\bigl[\calA(\bx)-\by(\blmbd;\bx)\bigr]
+    \in\partial h\bigl(\by(\blmbd;\bx)\bigr).
+  \end{equation*}
+
+  \item[\blue{$\triangleright$}]
+  \textbf{Apply Danskin's theorem:}
+  \hfill
+  \hyperlink{appendix:candidate-geometry}{%
+    \beamergotobutton{Danskin derivation $\rightarrow$}%
+  }
+  \begin{equation*}
+    \nabla_{\bx}d_s
+    =\nabla f(\bx)+J_{\calA}(\bx)^\top
+    \left\{\blmbd+\rho\bigl[\calA(\bx)-\by(\blmbd;\bx)\bigr]\right\},
+  \end{equation*}
+  \begin{equation*}
+    \nabla_{\blmbd}d_s
+    =\calA(\bx)-\by(\blmbd;\bx)-\frac{\blmbd-\bmu}{s},
+    \qquad
+    \nabla_{\bmu}d_s
+    =\frac{\blmbd-\bmu}{s}.
+  \end{equation*}
+\end{itemize}
+
+
+% \begin{block}{Moving-center identity}
+% \begin{equation*}
+%   \blue{\boxed{
+%   \calA(\bx)-\by(\blmbd;\bx)
+%   =\nabla_{\blmbd}d_s(\bx,\blmbd;\bmu)
+%   +\nabla_{\bmu}d_s(\bx,\blmbd;\bmu)}}
+% \end{equation*}
+% The $\bmu$-gradient exactly complements the regularization term in the
+% $\blmbd$-gradient.
+% \end{block}
+
+Under the strongly convex and strongly concave, it holds that:
+
+\[
+\boxed{
+\max_\lambda d(\lambda,z,\mu)
+=
+p(z,\mu)
+=
+\min_x\max_\lambda\mathcal F(x,\lambda;z,\mu)
+}
+\]
+\end{frame}
+
+\section{Candidate Algorithm}
+
+\begin{frame}{Candidate Algorithm: Four-Block Single Loop}
+\footnotesize
+Set $r_k:=1/s_k$ and use only the fixed-parameter mapping
+\begin{equation*}
+  \by(\blmbd;\bx)
+  :=\prox_{h/\rho}\left(\calA(\bx)+\frac{\blmbd}{\rho}\right),
+  \qquad
+  \bq(\blmbd;\bx)
+  :=\blmbd+\rho\bigl[\calA(\bx)-\by(\blmbd;\bx)\bigr].
+\end{equation*}
+\noindent\textit{Candidate notation: $\bq$ is the split-KKT multiplier and
+$\bz$ is the primal center.}
+
+Given $(\bx^k,\blmbd^k,\bz^k,\bmu^k)$, perform
+\begin{equation*}
+\begin{aligned}
+  \by^k&=\by(\blmbd^k;\bx^k),
+  \qquad \bq^k=\bq(\blmbd^k;\bx^k),\\
+  \bx^{k+1}
+  &=\bx^k-c\left[
+  \nabla f(\bx^k)+J_{\calA}(\bx^k)^\top\bq^k
+  +r_x(\bx^k-\bz^k)\right],\\
+  \widehat\by^{k+1}
+  &=\by(\blmbd^k;\bx^{k+1}),\\
+  \blmbd^{k+1}
+  &=\blmbd^k+\alpha\left[
+  \calA(\bx^{k+1})-\widehat\by^{k+1}
+  -r_k(\blmbd^k-\bmu^k)\right].
+\end{aligned}
+\end{equation*}
+\begin{block}{Interpretation}
+The first two blocks are one primal descent step and one explicit
+reduced-dual gradient ascent step.
+\end{block}
+\end{frame}
+
+\begin{frame}{Candidate Algorithm: Center Updates and Cost}
+\footnotesize
+Complete the iteration in the order
+\begin{equation*}
+  \boxed{\bx\ \longrightarrow\ \blmbd\ \longrightarrow\ \bz\ \longrightarrow\ \bmu}
+\end{equation*}
+with
+\begin{equation*}
+\begin{aligned}
+  \bz^{k+1}
+  &=\bz^k+\beta_k(\bx^{k+1}-\bz^k),\\
+  \bmu^{k+1}
+  &=\bmu^k+\gamma_k(\blmbd^{k+1}-\bmu^k).
+\end{aligned}
+\end{equation*}
+Use the anytime schedules
+\begin{equation*}
+  r_k=c_r(k+k_0)^{-1/3},
+  \qquad s_k=r_k^{-1},
+\end{equation*}
+\begin{equation*}
+  \beta_k=\frac{\theta_z}{\ell_\rho}r_k,
+  \qquad
+  \gamma_k=\frac{\theta_\mu}{k+k_0},
+  \qquad
+  c,\alpha=\Theta(1/\ell_\rho).
+\end{equation*}
+Here $k_0\ge1$, $c_r>0$, $0<\theta_\mu\le1$, and $\theta_z>0$.
+\begin{block}{Algorithmic properties}
+No projection, no inner loop, and two evaluations of the same
+$\prox_{h/\rho}$ mapping per iteration.
+\end{block}
+\end{frame}
+
+\section{Complexity Result}
+
+\begin{frame}{Candidate Assumptions and Step-Size Conditions}
+\scriptsize
+\begin{itemize}
+  \setlength{\itemsep}{0.10cm}
+  \item[(i)] $h$ is proper, closed, convex, finite-valued, and globally
+  $L_h$-Lipschitz.
+  \item[(ii)] $f$ and $\calA$ are continuously differentiable;
+  $\nabla f$ and $J_{\calA}$ are globally Lipschitz, and
+  $\|J_{\calA}(\bx)\|\le G_{\calA}$.
+  \item[(iii)] $F_{\inf}:=\inf_{\bx}\{f(\bx)+h(\calA(\bx))\}>-\infty$.
+\end{itemize}
+Define
+\begin{equation*}
+  a_\rho:=L_f+L_{\calA}L_h+\rho G_{\calA}^2,
+  \qquad
+  \ell_\rho:=a_\rho+2G_{\calA}+\rho^{-1}.
+\end{equation*}
+Choose $r_x>3\ell_\rho$, $r_0\le\ell_\rho$, and fixed $c,\alpha>0$ such that
+\begin{equation*}
+  c<\frac{1}{r_x+\ell_\rho+r_0},
+\end{equation*}
+\begin{equation*}
+  \alpha\le\min\left\{
+  \frac{1}{11(\ell_\rho+r_0)},
+  \frac{c^2m_0^2}{4(\ell_\rho+r_0)(1+cm_0)^2},
+  \frac{1}{\rho^{-1}+r_0}
+  \right\},
+  \quad m_0:=r_x-\ell_\rho-r_0.
+\end{equation*}
+Choose $\theta_z>0$ sufficiently small so that every $\beta_k$ satisfies all
+three caps stated in Lemma C4.2.  This choice is uniform in $k$, $K$, and
+$\eps$; moreover $0<\gamma_k\le1$ follows from $k_0\ge1$ and
+$0<\theta_\mu\le1$.
+\end{frame}
+
+\begin{frame}{Candidate Theorem: $O(\eps^{-3})$ Split-KKT Complexity}
+\small
+For each $k$, define the post-primal output
+\begin{equation*}
+  \by_k^{\rm out}:=\widehat\by^{k+1},
+  \qquad
+  \bq_k^{\rm out}:=\blmbd^k
+  +\rho\bigl[\calA(\bx^{k+1})-\by_k^{\rm out}\bigr].
+\end{equation*}
+Under the preceding assumptions and parameter conditions, for every $K\ge4$
+there exists one index
+\begin{equation*}
+  \kappa\in\{\lceil K/2\rceil,\ldots,K-1\}
+\end{equation*}
+such that
+\begin{equation*}
+  \bq_\kappa^{\rm out}\in\partial h(\by_\kappa^{\rm out}),
+\end{equation*}
+\begin{equation*}
+  \left\|\nabla f(\bx^{\kappa+1})
+  +J_{\calA}(\bx^{\kappa+1})^\top\bq_\kappa^{\rm out}\right\|
+  \le C_{\rm stat}K^{-1/3},
+\end{equation*}
+\begin{equation*}
+  \left\|\calA(\bx^{\kappa+1})-\by_\kappa^{\rm out}\right\|
+  \le C_{\rm feas}K^{-1/3}.
+\end{equation*}
+\begin{block}{Complexity}
+$K=O(\eps^{-3})$ iterations and $2O(\eps^{-3})$ fixed-parameter
+$h$-prox evaluations; the result is tail-best-iterate.
+\end{block}
+\end{frame}
+
+\section{Proof Sketch}
+
+\begin{frame}{Proof Sketch I: Reduced Game and Frozen Descent}
+\footnotesize
+\begin{itemize}
+  \setlength{\itemsep}{0.18cm}
+  \item[\red{$\blacktriangleright$}]
+  \textbf{Module 1: reduced geometry and bounded dual orbit.}
+  Eliminating $\by$ gives a smooth nonconvex-concave payoff and an exact
+  split-KKT multiplier:
+  \begin{equation*}
+    \nabla_{\blmbd}\mathcal D_\rho=\calA(\bx)-\by(\blmbd;\bx),
+    \qquad
+    \bq(\blmbd;\bx)\in\partial h(\by(\blmbd;\bx)).
+  \end{equation*}
+  The $\blmbd$- and $\bmu$-updates are convex combinations, hence the actual
+  dual orbit is bounded without algorithmic projection.
+  \hfill\hyperlink{appendix:candidate-geometry}{\beamergotobutton{Lemmas C1--C2}}
+
+  \item[\red{$\blacktriangleright$}]
+  \textbf{Module 2: frozen three-value descent.}
+  Freeze $(r_k,\bmu^k)$ and identify the $(\bx,\blmbd,\bz)$ steps with
+  Perturbed Smoothed GDA.  Its three-value Lyapunov satisfies
+  \begin{equation*}
+  \begin{aligned}
+    \Delta\Psi_k\le{}&-c_x\|\Delta\bx^{k+1}\|^2
+    -c_\lambda e_{\lambda,k}^2
+    -c_z\beta_k\|\bz^k-\bx^{k+1}\|^2.
+  \end{aligned}
+  \end{equation*}
+  \hfill\hyperlink{appendix:candidate-frozen}{\beamergotobutton{Lemmas C3--C4}}
+\end{itemize}
+\begin{block}{Core mechanism}
+The three-value Lyapunov controls an ideal dual step directly and avoids the
+$s_k^3\|\Delta\bx^{k+1}\|^2$ loss caused by exact-target tracking.
+\end{block}
+\end{frame}
+
+\begin{frame}{Proof Sketch II: Moving Parameters and Rate Extraction}
+\footnotesize
+\begin{itemize}
+  \setlength{\itemsep}{0.16cm}
+  \item[\red{$\blacktriangleright$}]
+  \textbf{Module 3: summable transport and master budget.}
+  Moving $\bmu^k$ and varying $r_k$ contribute only
+  $O(r_k\gamma_k)$ and $O(|r_{k+1}-r_k|)$.  Both sequences are summable, so
+  frozen descent telescopes to
+  \begin{equation*}
+    \sum_{k=0}^{\infty}\left[
+    \|\Delta\bx^{k+1}\|^2+e_{\lambda,k}^2
+    +\beta_k\|\bz^k-\bx^{k+1}\|^2\right]<\infty.
+  \end{equation*}
+  \hfill\hyperlink{appendix:candidate-transport}{\beamergotobutton{Lemmas C5--C6}}
+
+  \item[\red{$\blacktriangleright$}]
+  \textbf{Module 4: split-KKT reconstruction and tail balance.}
+  At one common $\kappa\in\{\lceil K/2\rceil,\ldots,K-1\}$,
+  \begin{equation*}
+    \|\Delta\bx^{\kappa+1}\|+e_{\lambda,\kappa}=O(K^{-1/2}),
+    \qquad
+    \|\bz^\kappa-\bx^{\kappa+1}\|
+    +r_\kappa\|\blmbd^\kappa-\bmu^\kappa\|=O(K^{-1/3}).
+  \end{equation*}
+  The update identities convert these quantities into stationarity and
+  feasibility residuals of order $O(K^{-1/3})$.
+  \hfill\hyperlink{appendix:candidate-residual}{\beamergotobutton{Lemmas C7--C8}}
+\end{itemize}
+\begin{block}{Final rate}
+The exact subgradient residual is zero; the other two split-KKT residuals are
+$O(K^{-1/3})$.  Therefore $K=O(\eps^{-3})$.
+\end{block}
+\end{frame}
+
+\begin{frame}{Candidate Proof Status and Scope}
+\small
+\begin{itemize}
+  \setlength{\itemsep}{0.18cm}
+  \item The four-block algorithm on the slides is exactly the algorithm used
+  in the varying-$s_k$ proof.
+  \item The frozen-center step is the translated fixed-perturbation instance
+  of Li--Nagarajan--Pan--Zhang's Perturbed Smoothed GDA
+  three-value analysis~{\normalfont[4]}.
+  \item The moving-$\bmu$ transport, varying-$r_k$ drift, no-projection
+  boundedness, and split-KKT reconstruction are proved separately in
+  the complete-proof appendix.
+  \item The theorem requires globally Lipschitz $h$ and gives a
+  deterministic tail-best-iterate split-KKT result.
+  \item The result does not establish the stronger constant-$s$ route and
+  does not claim last-iterate complexity.
+\end{itemize}
+\end{frame}
+
+\section{References}
+
+\begin{frame}{References}
+\footnotesize
+\begin{enumerate}
+  \item[{[1]}] H. Zhang, N. Marumo, T. K. Pong, and A. Takeda,
+  ``Complexity and Convergence Analysis of a Single-Loop SDCAM for
+  Lipschitz Composite Optimization and Beyond,'' arXiv:2512.24059, 2025.
+
+  \item[{[2]}] K. Sun and X. A. Sun,
+  ``Dual Descent Augmented Lagrangian Method and Alternating Direction
+  Method of Multipliers,'' \emph{SIAM Journal on Optimization},
+  34(2):1679--1707, 2024.
+
+  \item[{[3]}] J. M. Danskin,
+  ``The Theory of Max--Min, with Applications,''
+  \emph{SIAM Journal on Applied Mathematics},
+  14(4):641--664, 1966.
+
+  \item[{[4]}] J. Li, M. Nagarajan, S. Pan, and N. Zhang,
+  ``Smoothing Meets Perturbation: Unified and Tight Analysis for
+  Nonconvex--Concave Minimax Optimization,'' arXiv:2602.14185v2, 2026.
+\end{enumerate}
+\end{frame}
+
+\appendix
+
+\begin{frame}{Appendix: Complete Proofs}
+\hypertarget{appendix:contents}{}
+\small
+\begin{enumerate}
+  \item \hyperlink{appendix:candidate-geometry}{Lemmas C1--C2: reduced geometry and bounded dual orbit}
+  \item \hyperlink{appendix:candidate-frozen}{Lemmas C3--C4: three-value Lyapunov and frozen descent}
+  \item \hyperlink{appendix:candidate-transport}{Lemmas C5--C6: moving-parameter transport and master budget}
+  \item \hyperlink{appendix:candidate-residual}{Lemmas C7--C8: residual reconstruction and tail extraction}
+  \item \hyperlink{appendix:candidate-main-theorem}{Main Theorem: complete complexity proof}
+\end{enumerate}
+\begin{block}{Detail level}
+Every appendix result includes its assumptions, full derivation, and the exact point where it enters the main theorem.
+\end{block}
+\end{frame}
+
+\begin{frame}{Appendix: Lemma C1.1---Reduced-Payoff Calculus
+\hfill\hyperlink{appendix:contents}{\beamerreturnbutton{Contents}}}
+\hypertarget{appendix:candidate-geometry}{}
+\scriptsize
+Define
+\begin{equation*}
+  \by(\blmbd;\bx):=\prox_{h/\rho}
+  \left(\calA(\bx)+\frac{\blmbd}{\rho}\right),
+  \qquad
+  \bq(\blmbd;\bx):=\blmbd+\rho[\calA(\bx)-\by(\blmbd;\bx)],
+\end{equation*}
+and
+\begin{equation*}
+  \mathcal D_\rho(\bx,\blmbd)
+  :=\min_{\by}\left\{f(\bx)+h(\by)
+  +\langle\blmbd,\calA(\bx)-\by\rangle
+  +\frac{\rho}{2}\|\calA(\bx)-\by\|^2\right\}.
+\end{equation*}
+Then
+\begin{equation*}
+  \nabla_{\bx}\mathcal D_\rho
+  =\nabla f(\bx)+J_{\calA}(\bx)^\top\bq(\blmbd;\bx),
+  \qquad
+  \nabla_{\blmbd}\mathcal D_\rho
+  =\calA(\bx)-\by(\blmbd;\bx),
+\end{equation*}
+and
+\begin{equation*}
+  \bq(\blmbd;\bx)\in\partial h(\by(\blmbd;\bx)),
+  \qquad \|\bq(\blmbd;\bx)\|\le L_h.
+\end{equation*}
+\noindent\textbf{Proof.}
+Completing the square gives
+\begin{equation*}
+  h(\by)+\frac{\rho}{2}
+  \left\|\by-\calA(\bx)-\frac{\blmbd}{\rho}\right\|^2
+  -\frac{1}{2\rho}\|\blmbd\|^2.
+\end{equation*}
+Thus the minimizer is unique.  Its optimality condition is
+\begin{equation*}
+  0\in\partial h(\by)+\rho[\by-\calA(\bx)]-\blmbd,
+\end{equation*}
+which gives the exact certificate.  Global Lipschitz continuity of $h$ gives
+$\|\bq\|\le L_h$.  Danskin's theorem applied to the unique minimizer gives
+the two displayed gradients.
+\end{frame}
+
+\begin{frame}{Appendix: Lemma C1.2---Joint Smoothness
+\hfill\hyperlink{appendix:contents}{\beamerreturnbutton{Contents}}}
+\scriptsize
+Moreau decomposition yields
+\begin{equation*}
+  \bq(\blmbd;\bx)=\prox_{\rho h^*}
+  (\blmbd+\rho\calA(\bx)).
+\end{equation*}
+Hence nonexpansiveness gives
+\begin{equation*}
+  \|\bq(\blmbd;\bx)-\bq(\blmbd';\bx')\|
+  \le \|\blmbd-\blmbd'\|+\rho G_{\calA}\|\bx-\bx'\|.
+\end{equation*}
+Using $\|\bq\|\le L_h$, $\|J_{\calA}\|\le G_{\calA}$, and the Lipschitz
+constants of $\nabla f$ and $J_{\calA}$,
+\begin{equation*}
+\begin{aligned}
+  &\|\nabla_{\bx}\mathcal D_\rho(\bx,\blmbd)
+  -\nabla_{\bx}\mathcal D_\rho(\bx',\blmbd')\|\\
+  &\quad\le
+  (L_f+L_{\calA}L_h+\rho G_{\calA}^2)\|\bx-\bx'\|
+  +G_{\calA}\|\blmbd-\blmbd'\|.
+\end{aligned}
+\end{equation*}
+Moreover,
+\begin{equation*}
+  \calA(\bx)-\by(\blmbd;\bx)
+  =\rho^{-1}[\bq(\blmbd;\bx)-\blmbd].
+\end{equation*}
+Firm nonexpansiveness makes $I-\prox_{\rho h^*}$ nonexpansive.  Therefore
+\begin{equation*}
+  \|\nabla_{\blmbd}\mathcal D_\rho(\bx,\blmbd)
+  -\nabla_{\blmbd}\mathcal D_\rho(\bx',\blmbd')\|
+  \le G_{\calA}\|\bx-\bx'\|+\rho^{-1}\|\blmbd-\blmbd'\|.
+\end{equation*}
+Thus $\mathcal D_\rho$ is jointly $\ell_\rho$-smooth for
+$\ell_\rho:=L_f+L_{\calA}L_h+\rho G_{\calA}^2+2G_{\calA}+\rho^{-1}$.
+\end{frame}
+
+\begin{frame}{Appendix: Lemma C1.3---Concavity and Exact Maximum
+\hfill\hyperlink{appendix:contents}{\beamerreturnbutton{Contents}}}
+\scriptsize
+For fixed $\bx$, $\mathcal D_\rho(\bx,\cdot)$ is the pointwise infimum of
+affine functions of $\blmbd$, hence it is concave.  It also satisfies
+\begin{equation*}
+  \max_{\blmbd\in\RR^m}\mathcal D_\rho(\bx,\blmbd)
+  =f(\bx)+h(\calA(\bx)).
+\end{equation*}
+\noindent\textbf{Proof.}
+Taking $\by=\calA(\bx)$ in the inner minimization gives, for every $\blmbd$,
+\begin{equation*}
+  \mathcal D_\rho(\bx,\blmbd)
+  \le f(\bx)+h(\calA(\bx)).
+\end{equation*}
+Because $h$ is finite-valued and convex, choose
+$\bar\blmbd\in\partial h(\calA(\bx))$.  Then $\by=\calA(\bx)$ satisfies
+\begin{equation*}
+  0\in\partial h(\by)-\bar\blmbd
+  +\rho[\by-\calA(\bx)],
+\end{equation*}
+so it is the inner minimizer and equality holds at $\bar\blmbd$.  Global
+Lipschitz continuity gives $\|\bar\blmbd\|\le L_h$.  Consequently, every
+maximization needed later may select a maximizer in the $L_h$-ball.
+\begin{block}{Use in the proof}
+This exact maximum identity supplies the uniform lower bound for the
+three-value Lyapunov function in Lemma C6.
+\end{block}
+\end{frame}
+
+\begin{frame}{Appendix: Lemma C2---No-Projection Boundedness
+\hfill\hyperlink{appendix:contents}{\beamerreturnbutton{Contents}}}
+\hypertarget{appendix:candidate-bounded}{}
+\scriptsize
+Let $M:=\max\{\|\blmbd^0\|,\|\bmu^0\|,L_h\}$.  If
+$\alpha\le(\rho^{-1}+r_0)^{-1}$ and $0\le\gamma_k\le1$, then
+\begin{equation*}
+  \|\blmbd^k\|\le M,
+  \qquad \|\bmu^k\|\le M,
+  \qquad k\ge0.
+\end{equation*}
+\noindent\textbf{Proof.}
+Set
+\begin{equation*}
+  \widehat\bq^{k+1}:=\blmbd^k
+  +\rho[\calA(\bx^{k+1})-\widehat\by^{k+1}].
+\end{equation*}
+Lemma C1 gives $\|\widehat\bq^{k+1}\|\le L_h$.  Substitution into the
+$\blmbd$-update yields
+\begin{equation*}
+  \blmbd^{k+1}
+  =[1-\alpha(\rho^{-1}+r_k)]\blmbd^k
+  +\frac{\alpha}{\rho}\widehat\bq^{k+1}
+  +\alpha r_k\bmu^k.
+\end{equation*}
+Since $0<r_k\le r_0$, the three coefficients are nonnegative and sum to one.
+Thus, whenever $\|\blmbd^k\|,\|\bmu^k\|\le M$,
+\begin{equation*}
+  \|\blmbd^{k+1}\|\le M.
+\end{equation*}
+The update
+$\bmu^{k+1}=(1-\gamma_k)\bmu^k+\gamma_k\blmbd^{k+1}$ then gives
+$\|\bmu^{k+1}\|\le M$.  The base case follows from the definition of $M$,
+so induction proves the claim.  Define $B_M:=\{v:\|v\|\le M\}$.  Choose $R>M$ and
+$Y:=\{\blmbd:\|\blmbd\|\le R\}$.  The actual iterates lie strictly inside
+$Y$; projection onto $Y$ is used only in the proof.
+\end{frame}
+
+\begin{frame}{Appendix: Lemma C3.1---Three Value Functions
+\hfill\hyperlink{appendix:contents}{\beamerreturnbutton{Contents}}}
+\hypertarget{appendix:candidate-frozen}{}
+\scriptsize
+For fixed $r\in(0,r_0]$, $\bmu\in B_M$, and $\bz\in\RR^n$, define
+\begin{equation*}
+  \mathcal F_{r,\bmu}(\bx,\blmbd,\bz)
+  :=\mathcal D_\rho(\bx,\blmbd)
+  +\frac{r_x}{2}\|\bx-\bz\|^2
+  -\frac r2\|\blmbd-\bmu\|^2,
+\end{equation*}
+\begin{equation*}
+  d_{r,\bmu}(\blmbd,\bz)
+  :=\min_{\bx}\mathcal F_{r,\bmu}(\bx,\blmbd,\bz),
+  \qquad
+  p_{r,\bmu}(\bz)
+  :=\min_{\bx}\max_{\blmbd\in Y}\mathcal F_{r,\bmu}(\bx,\blmbd,\bz).
+\end{equation*}
+The minima exist, and the minimizer defining $d_{r,\bmu}$ is unique.
+\noindent\textbf{Proof.}
+Joint $\ell_\rho$-smoothness implies that
+$\mathcal D_\rho(\cdot,\blmbd)$ is $\ell_\rho$-weakly convex.  Therefore
+\begin{equation*}
+  \mathcal F_{r,\bmu}(\cdot,\blmbd,\bz)
+  \text{ is }(r_x-\ell_\rho)\text{-strongly convex}.
+\end{equation*}
+It is finite and coercive, so its unique minimizer exists.  For each
+$\blmbd\in Y$, the same strong-convexity modulus holds.  The pointwise maximum
+over compact $Y$ preserves strong convexity, finiteness, and coercivity.
+Hence the minimum defining $p_{r,\bmu}$ also exists.
+\end{frame}
+
+\begin{frame}{Appendix: Lemma C3.2---Three-Value Lyapunov
+\hfill\hyperlink{appendix:contents}{\beamerreturnbutton{Contents}}}
+\scriptsize
+Define
+\begin{equation*}
+  \Psi_{r,\bmu}(\bx,\blmbd,\bz)
+  :=\mathcal F_{r,\bmu}(\bx,\blmbd,\bz)
+  -2d_{r,\bmu}(\blmbd,\bz)+2p_{r,\bmu}(\bz).
+\end{equation*}
+Its exact decomposition is
+\begin{equation*}
+  \Psi_{r,\bmu}
+  =(\mathcal F_{r,\bmu}-d_{r,\bmu})
+  +(p_{r,\bmu}-d_{r,\bmu})+p_{r,\bmu}.
+\end{equation*}
+The first two bracketed terms are nonnegative because $d$ is a pointwise
+minimum and
+\begin{equation*}
+  p_{r,\bmu}(\bz)
+  =\min_{\bx}\max_{\blmbd'\in Y}\mathcal F_{r,\bmu}(\bx,\blmbd',\bz)
+  \ge d_{r,\bmu}(\blmbd,\bz).
+\end{equation*}
+Let
+\begin{equation*}
+  \bx_{r,\bmu}(\blmbd,\bz)
+  :=\operatorname*{arg\,min}_{\bx}\mathcal F_{r,\bmu}(\bx,\blmbd,\bz)
+\end{equation*}
+and define the ideal dual step
+\begin{equation*}
+  \blmbd_+(\bz):=\operatorname{proj}_Y\left[
+  \blmbd+\alpha\nabla_{\blmbd}\mathcal F_{r,\bmu}
+  (\bx_{r,\bmu}(\blmbd,\bz),\blmbd,\bz)\right].
+\end{equation*}
+The three terms of $\Psi$ respectively measure primal suboptimality, dual
+ascent error, and the proximal-center value.
+\end{frame}
+
+\begin{frame}{Appendix: Lemma C4.1---Frozen-Center Transfer
+\hfill\hyperlink{appendix:contents}{\beamerreturnbutton{Contents}}}
+\scriptsize
+Fix $(r,\bmu)$ and set
+\begin{equation*}
+  \boldsymbol\nu:=\blmbd-\bmu,
+  \qquad
+  \widetilde D_{\bmu}(\bx,\boldsymbol\nu)
+  :=\mathcal D_\rho(\bx,\boldsymbol\nu+\bmu).
+\end{equation*}
+Then $\widetilde D_{\bmu}$ is $\ell_\rho$-smooth and concave in
+$\boldsymbol\nu$.  The translated dual set $Y-\bmu$ is compact and convex,
+contains the origin because $\bmu\in B_M\subset Y$, and has the same diameter
+as $Y$.  Moreover,
+\begin{equation*}
+  \mathcal F_{r,\bmu}
+  =\widetilde D_{\bmu}(\bx,\boldsymbol\nu)
+  +\frac{r_x}{2}\|\bx-\bz\|^2-\frac r2\|\boldsymbol\nu\|^2.
+\end{equation*}
+Thus the frozen $(\bx,\blmbd,\bz)$ update is exactly Perturbed Smoothed GDA
+on the translated problem.  Li--Nagarajan--Pan--Zhang~{\normalfont[4]},
+Lemmas 4.4--4.5, give
+\begin{equation*}
+\begin{aligned}
+  \Psi^+-\Psi\le{}&-\frac1{8c}\|\bx^+-\bx\|^2
+  -\frac1{8\alpha}\|\blmbd-\blmbd_+(\bz)\|^2
+  -\frac{r_x\beta}{8}\|\bz-\bx^+\|^2\\
+  &+24r_x\beta
+  \|\bx_r^*(\bz)-\bx_r(\blmbd_+(\bz),\bz)\|^2,
+\end{aligned}
+\end{equation*}
+and
+\begin{equation*}
+  \|\bx_r^*(\bz)-\bx_r(\blmbd_+(\bz),\bz)\|
+  \le\Omega(r)\|\blmbd-\blmbd_+(\bz)\|.
+\end{equation*}
+The perturbation-change term in their Lemma 4.4 is zero because $r$ is frozen.
+\end{frame}
+
+\begin{frame}{Appendix: Lemma C4.2---Parameter Map and Absorption
+\hfill\hyperlink{appendix:contents}{\beamerreturnbutton{Contents}}}
+\scriptsize
+The parameter map to Condition 3.2 of~{\normalfont[4]} is
+\begin{equation*}
+  (\ell,r_x,c,\alpha,\beta,r_y)
+  \longmapsto(\ell_\rho,r_x,c,\alpha,\beta,r).
+\end{equation*}
+Its dual error coefficient becomes
+\begin{equation*}
+  \Omega(r)
+  :=\frac1{\sqrt r}
+  \frac{(r_x-\ell_\rho-r)
+  +\alpha(\ell_\rho+r)(3r_x-2\ell_\rho-2r)}
+  {\alpha(r_x-\ell_\rho-r)^{3/2}}.
+\end{equation*}
+Assume $r_x>3\ell_\rho$, $0<r\le r_0\le\ell_\rho$, the stated bounds on
+$c$ and $\alpha$, and
+\begin{equation*}
+  0<\beta\le\min\left\{
+  \frac1{36},
+  \frac{(r_x-\ell_\rho-r)^2}
+  {384r_x(r_x+\ell_\rho+r)^2},
+  \frac1{384r_x\alpha\Omega(r)^2}
+  \right\}.
+\end{equation*}
+Then
+\begin{equation*}
+  24r_x\beta\Omega(r)^2\le\frac1{16\alpha}.
+\end{equation*}
+Substitution in Lemma C4.1 gives the complete frozen descent inequality
+\begin{equation*}
+\begin{aligned}
+  \Psi^+-\Psi\le{}&-\frac1{8c}\|\bx^+-\bx\|^2
+  -\frac1{16\alpha}\|\blmbd-\blmbd_+(\bz)\|^2
+  -\frac{r_x\beta}{8}\|\bz-\bx^+\|^2.
+\end{aligned}
+\end{equation*}
+Since $\Omega(r)\le C_\Omega/\sqrt r$, choosing
+$\beta_k=(\theta_z/\ell_\rho)r_k$ with sufficiently small fixed $\theta_z$
+makes these bounds uniform in $k$.
+\end{frame}
+
+\begin{frame}{Appendix: Lemma C5.1---Moving-Center Transport
+\hfill\hyperlink{appendix:contents}{\beamerreturnbutton{Contents}}}
+\hypertarget{appendix:candidate-transport}{}
+\scriptsize
+For $\|\bmu\|,\|\bmu'\|\le M$, $\blmbd\in Y$, and
+$u=(\bx,\blmbd,\bz)$,
+\begin{equation*}
+\begin{aligned}
+  |\Psi_{r,\bmu'}(u)-\Psi_{r,\bmu}(u)|
+  \le{}&5r(R+M)\|\bmu'-\bmu\|\\
+  &+\frac{5r}{2}\|\bmu'-\bmu\|^2.
+\end{aligned}
+\end{equation*}
+\noindent\textbf{Proof.}
+Let $\delta\bmu:=\bmu'-\bmu$.  The only center-dependent term satisfies
+\begin{equation*}
+  -\frac r2\|\blmbd-\bmu'\|^2
+  +\frac r2\|\blmbd-\bmu\|^2
+  =r\langle\blmbd-\bmu,\delta\bmu\rangle
+  -\frac r2\|\delta\bmu\|^2.
+\end{equation*}
+Because $\|\blmbd\|\le R$ and $\|\bmu\|\le M$,
+\begin{equation*}
+  \sup_{\bx,\blmbd,\bz}
+  |\mathcal F_{r,\bmu'}-\mathcal F_{r,\bmu}|
+  \le r(R+M)\|\delta\bmu\|+\frac r2\|\delta\bmu\|^2=:\delta.
+\end{equation*}
+Uniform perturbation by $\delta$ changes each minimum, maximum, and min--max
+value by at most $\delta$.  Since
+$\Psi=\mathcal F-2d+2p$, the total change is at most $5\delta$.
+For the algorithm,
+\begin{equation*}
+  \|\bmu^{k+1}-\bmu^k\|
+  =\gamma_k\|\blmbd^{k+1}-\bmu^k\|
+  \le2M\gamma_k.
+\end{equation*}
+Using $\gamma_k\le1$, the transport is bounded by $C_\mu r_k\gamma_k$.
+\end{frame}
+
+\begin{frame}{Appendix: Lemma C5.2---Perturbation-Scale Drift
+\hfill\hyperlink{appendix:contents}{\beamerreturnbutton{Contents}}}
+\scriptsize
+For fixed $\bmu$ and any $r,r'>0$,
+\begin{equation*}
+  |\Psi_{r',\bmu}(u)-\Psi_{r,\bmu}(u)|
+  \le C_r|r'-r|,
+  \qquad C_r:=\frac52(R+M)^2.
+\end{equation*}
+\noindent\textbf{Proof.}
+The surrogate difference is exactly
+\begin{equation*}
+  \mathcal F_{r',\bmu}(u)-\mathcal F_{r,\bmu}(u)
+  =-\frac{r'-r}{2}\|\blmbd-\bmu\|^2.
+\end{equation*}
+Therefore its uniform magnitude is at most
+$\frac12(R+M)^2|r'-r|$.  Applying the same value-perturbation argument as in
+Lemma C5.1 and the coefficient sum $1+2+2=5$ proves the claim.
+
+For
+\begin{equation*}
+  r_k=c_r(k+k_0)^{-1/3},
+  \qquad
+  \gamma_k=\frac{\theta_\mu}{k+k_0},
+\end{equation*}
+$r_k$ is decreasing to zero, hence
+\begin{equation*}
+  \sum_{k=0}^{\infty}|r_{k+1}-r_k|=r_0.
+\end{equation*}
+Also
+\begin{equation*}
+  r_k\gamma_k=c_r\theta_\mu(k+k_0)^{-4/3},
+  \qquad
+  \sum_{k=0}^{\infty}r_k\gamma_k<\infty.
+\end{equation*}
+Thus both moving-parameter errors are summable with constants independent of
+$K$ and $\eps$.
+\end{frame}
+
+\begin{frame}{Appendix: Lemma C6.1---Master One-Step Inequality
+\hfill\hyperlink{appendix:contents}{\beamerreturnbutton{Contents}}}
+\hypertarget{appendix:candidate-budget}{}
+\scriptsize
+Let
+\begin{equation*}
+  u^k:=(\bx^k,\blmbd^k,\bz^k),
+  \quad V_k:=\Psi_{r_k,\bmu^k}(u^k),
+  \quad e_{\lambda,k}:=\|\blmbd^k-\blmbd_{+,k}(\bz^k)\|.
+\end{equation*}
+Insert two intermediate values:
+\begin{equation*}
+\begin{aligned}
+  V_{k+1}-V_k
+  ={}&[\Psi_{r_k,\bmu^k}(u^{k+1})-\Psi_{r_k,\bmu^k}(u^k)]\\
+  &+[\Psi_{r_k,\bmu^{k+1}}(u^{k+1})
+  -\Psi_{r_k,\bmu^k}(u^{k+1})]\\
+  &+[\Psi_{r_{k+1},\bmu^{k+1}}(u^{k+1})
+  -\Psi_{r_k,\bmu^{k+1}}(u^{k+1})].
+\end{aligned}
+\end{equation*}
+Lemma C4 controls the first bracket.  Lemma C5.1 controls the second, and
+Lemma C5.2 controls the third.  Hence
+\begin{equation*}
+\begin{aligned}
+  V_{k+1}-V_k\le{}&-\frac1{8c}\|\Delta\bx^{k+1}\|^2
+  -\frac1{16\alpha}e_{\lambda,k}^2
+  -\frac{r_x\beta_k}{8}\|\bz^k-\bx^{k+1}\|^2\\
+  &+C_r|r_{k+1}-r_k|+C_\mu r_k\gamma_k.
+\end{aligned}
+\end{equation*}
+Every positive error on the right is summable by Lemma C5.2.
+\end{frame}
+
+\begin{frame}{Appendix: Lemma C6.2---Uniform Lower Bound
+\hfill\hyperlink{appendix:contents}{\beamerreturnbutton{Contents}}}
+\scriptsize
+For every $k$,
+\begin{equation*}
+  V_k\ge\underline V
+  :=F_{\inf}-\frac{r_0}{2}(L_h+M)^2.
+\end{equation*}
+\noindent\textbf{Proof.}
+Lemma C3 gives
+\begin{equation*}
+  \Psi_{r,\bmu}
+  =(\mathcal F-d)+(p-d)+p\ge p.
+\end{equation*}
+For each $\bx$, Lemma C1.3 provides
+$\bar\blmbd(\bx)\in\partial h(\calA(\bx))\subseteq Y$ such that
+\begin{equation*}
+  \mathcal D_\rho(\bx,\bar\blmbd(\bx))
+  =f(\bx)+h(\calA(\bx)),
+  \qquad \|\bar\blmbd(\bx)\|\le L_h.
+\end{equation*}
+Therefore
+\begin{equation*}
+\begin{aligned}
+  \max_{\blmbd\in Y}\mathcal F_{r,\bmu}(\bx,\blmbd,\bz)
+  &\ge f(\bx)+h(\calA(\bx))
+  +\frac{r_x}{2}\|\bx-\bz\|^2
+  -\frac r2\|\bar\blmbd(\bx)-\bmu\|^2\\
+  &\ge F_{\inf}-\frac{r_0}{2}(L_h+M)^2.
+\end{aligned}
+\end{equation*}
+Taking the minimum over $\bx$ proves the same lower bound for $p$, and hence
+for $V_k$.
+\end{frame}
+
+\begin{frame}{Appendix: Lemma C6.3---Finite Master Budget
+\hfill\hyperlink{appendix:contents}{\beamerreturnbutton{Contents}}}
+\scriptsize
+Sum Lemma C6.1 from $k=0$ to $N-1$.  After telescoping and applying
+Lemma C6.2,
+\begin{equation*}
+\begin{aligned}
+  &\sum_{k=0}^{N-1}\left[
+  \frac1{8c}\|\Delta\bx^{k+1}\|^2
+  +\frac1{16\alpha}e_{\lambda,k}^2
+  +\frac{r_x\beta_k}{8}\|\bz^k-\bx^{k+1}\|^2\right]\\
+  &\quad\le V_0-\underline V
+  +C_r\sum_{k=0}^{\infty}|r_{k+1}-r_k|
+  +C_\mu\sum_{k=0}^{\infty}r_k\gamma_k.
+\end{aligned}
+\end{equation*}
+The right-hand side is a finite constant independent of $N$, $K$, and
+$\eps$.  Letting $N\to\infty$ and absorbing the fixed positive coefficients
+gives a constant $B<\infty$ such that
+\begin{equation*}
+  \sum_{k=0}^{\infty}\left[
+  \|\Delta\bx^{k+1}\|^2+e_{\lambda,k}^2
+  +\beta_k\|\bz^k-\bx^{k+1}\|^2\right]\le B.
+\end{equation*}
+\begin{block}{Use in the proof}
+This horizon-independent budget is the sole averaging input in the tail-index
+argument.  No last-iterate claim is used.
+\end{block}
+\end{frame}
+
+\begin{frame}{Appendix: Lemma C7.1---Primal Target Error
+\hfill\hyperlink{appendix:contents}{\beamerreturnbutton{Contents}}}
+\hypertarget{appendix:candidate-residual}{}
+\scriptsize
+Let
+\begin{equation*}
+  \bx_k^*:=\operatorname*{arg\,min}_{\bx}
+  \mathcal F_{r_k,\bmu^k}(\bx,\blmbd^k,\bz^k),
+  \qquad m_x:=r_x-\ell_\rho>0.
+\end{equation*}
+Then
+\begin{equation*}
+  \|\bx^{k+1}-\bx_k^*\|
+  \le\left(1+\frac1{cm_x}\right)\|\Delta\bx^{k+1}\|.
+\end{equation*}
+\noindent\textbf{Proof.}
+The $\bx$-subproblem is $m_x$-strongly convex and
+$\nabla_{\bx}\mathcal F_{r_k,\bmu^k}(\bx_k^*,\blmbd^k,\bz^k)=0$.
+Strong monotonicity gives
+\begin{equation*}
+  m_x\|\bx^k-\bx_k^*\|
+  \le\|\nabla_{\bx}\mathcal F_{r_k,\bmu^k}
+  (\bx^k,\blmbd^k,\bz^k)\|.
+\end{equation*}
+The algorithmic $\bx$-step yields
+\begin{equation*}
+  \nabla_{\bx}\mathcal F_{r_k,\bmu^k}
+  (\bx^k,\blmbd^k,\bz^k)
+  =-c^{-1}\Delta\bx^{k+1}.
+\end{equation*}
+Thus
+$\|\bx^k-\bx_k^*\|\le(cm_x)^{-1}\|\Delta\bx^{k+1}\|$.
+The triangle inequality with
+$\bx^{k+1}-\bx_k^*=(\bx^{k+1}-\bx^k)+(\bx^k-\bx_k^*)$
+proves the claim.
+\end{frame}
+
+\begin{frame}{Appendix: Lemma C7.2---Actual Dual Increment
+\hfill\hyperlink{appendix:contents}{\beamerreturnbutton{Contents}}}
+\scriptsize
+Because Lemma C2 keeps the raw dual update in $B_M\subset Y$,
+\begin{equation*}
+  \blmbd^{k+1}=\operatorname{proj}_Y\left[
+  \blmbd^k+\alpha\nabla_{\blmbd}\mathcal F_{r_k,\bmu^k}
+  (\bx^{k+1},\blmbd^k,\bz^k)\right].
+\end{equation*}
+The ideal step is the same expression with $\bx^{k+1}$ replaced by
+$\bx_k^*$.  Projection nonexpansiveness and the cross-Lipschitz bound in
+Lemma C1 give
+\begin{equation*}
+\begin{aligned}
+  \|\blmbd^{k+1}-\blmbd_{+,k}(\bz^k)\|
+  &\le\alpha G_{\calA}\|\bx^{k+1}-\bx_k^*\|\\
+  &\le\alpha G_{\calA}
+  \left(1+\frac1{cm_x}\right)\|\Delta\bx^{k+1}\|.
+\end{aligned}
+\end{equation*}
+Adding and subtracting $\blmbd_{+,k}(\bz^k)$ yields
+\begin{equation*}
+  \|\blmbd^{k+1}-\blmbd^k\|
+  \le e_{\lambda,k}+C_{\lambda x}\|\Delta\bx^{k+1}\|,
+\end{equation*}
+where
+\begin{equation*}
+  C_{\lambda x}:=\alpha G_{\calA}
+  \left(1+\frac1{cm_x}\right).
+\end{equation*}
+This proves that the ideal dual error controlled by the Lyapunov budget also
+controls the actual multiplier increment.
+\end{frame}
+
+\begin{frame}{Appendix: Lemma C8.1---Exact Certificate and Stationarity
+\hfill\hyperlink{appendix:contents}{\beamerreturnbutton{Contents}}}
+\scriptsize
+Define
+\begin{equation*}
+  \by_k^{\rm out}:=\widehat\by^{k+1},
+  \qquad
+  \bq_k^{\rm out}:=\blmbd^k
+  +\rho[\calA(\bx^{k+1})-\by_k^{\rm out}].
+\end{equation*}
+Lemma C1 gives the exact relation
+\begin{equation*}
+  \bq_k^{\rm out}\in\partial h(\by_k^{\rm out}).
+\end{equation*}
+The $\bx$-step is equivalent to
+\begin{equation*}
+  \nabla_{\bx}\mathcal D_\rho(\bx^k,\blmbd^k)
+  +r_x(\bx^k-\bz^k)=-c^{-1}\Delta\bx^{k+1}.
+\end{equation*}
+Since
+\begin{equation*}
+  \nabla_{\bx}\mathcal D_\rho(\bx^{k+1},\blmbd^k)
+  =\nabla f(\bx^{k+1})
+  +J_{\calA}(\bx^{k+1})^\top\bq_k^{\rm out},
+\end{equation*}
+adding and subtracting the gradient at $\bx^k$, applying the fixed-$\blmbd$
+$a_\rho$-smoothness bound, and using
+$\bx^k-\bz^k=(\bx^{k+1}-\bz^k)-\Delta\bx^{k+1}$ give
+\begin{equation*}
+\begin{aligned}
+  &\|\nabla f(\bx^{k+1})
+  +J_{\calA}(\bx^{k+1})^\top\bq_k^{\rm out}\|\\
+  &\quad\le(c^{-1}+r_x+a_\rho)\|\Delta\bx^{k+1}\|
+  +r_x\|\bx^{k+1}-\bz^k\|.
+\end{aligned}
+\end{equation*}
+\end{frame}
+
+\begin{frame}{Appendix: Lemma C8.2---Feasibility Reconstruction
+\hfill\hyperlink{appendix:contents}{\beamerreturnbutton{Contents}}}
+\scriptsize
+The dual update gives the exact identity
+\begin{equation*}
+  \frac{\blmbd^{k+1}-\blmbd^k}{\alpha}
+  =\calA(\bx^{k+1})-\by_k^{\rm out}
+  -r_k(\blmbd^k-\bmu^k).
+\end{equation*}
+Rearranging and using Lemma C2,
+\begin{equation*}
+\begin{aligned}
+  \|\calA(\bx^{k+1})-\by_k^{\rm out}\|
+  &\le\alpha^{-1}\|\blmbd^{k+1}-\blmbd^k\|
+  +r_k\|\blmbd^k-\bmu^k\|\\
+  &\le\alpha^{-1}\|\blmbd^{k+1}-\blmbd^k\|+2Mr_k.
+\end{aligned}
+\end{equation*}
+Combining this inequality with Lemma C7.2 gives
+\begin{equation*}
+\begin{aligned}
+  \|\calA(\bx^{k+1})-\by_k^{\rm out}\|
+  \le{}&\alpha^{-1}e_{\lambda,k}
+  +\alpha^{-1}C_{\lambda x}\|\Delta\bx^{k+1}\|+2Mr_k.
+\end{aligned}
+\end{equation*}
+\begin{block}{Rate mechanism}
+The finite-time feasibility bias is controlled by $r_k\downarrow0$ and the
+bounded center gap.  The proof does not require a rate for
+$\|\blmbd^k-\bmu^k\|$.
+\end{block}
+\end{frame}
+
+\begin{frame}{Appendix: Lemma C8.3---Common Tail Index
+\hfill\hyperlink{appendix:contents}{\beamerreturnbutton{Contents}}}
+\scriptsize
+Let $I_K:=\{\lceil K/2\rceil,\ldots,K-1\}$.  For $K\ge4$,
+$|I_K|\ge K/4$.  Lemma C6.3 therefore provides one common
+$\kappa\in I_K$ such that
+\begin{equation*}
+  \|\Delta\bx^{\kappa+1}\|^2+e_{\lambda,\kappa}^2
+  +\beta_\kappa\|\bz^\kappa-\bx^{\kappa+1}\|^2
+  \le\frac{4B}{K}.
+\end{equation*}
+Consequently,
+\begin{equation*}
+  \|\Delta\bx^{\kappa+1}\|+e_{\lambda,\kappa}=O(K^{-1/2}).
+\end{equation*}
+Because $\beta_\kappa=\Theta(K^{-1/3})$ on the tail,
+\begin{equation*}
+  \|\bz^\kappa-\bx^{\kappa+1}\|
+  \le\sqrt{\frac{4B}{K\beta_\kappa}}=O(K^{-1/3}).
+\end{equation*}
+Lemma C7.2 gives
+\begin{equation*}
+  \|\blmbd^{\kappa+1}-\blmbd^\kappa\|=O(K^{-1/2}).
+\end{equation*}
+Finally, $r_\kappa=\Theta(K^{-1/3})$.  Lemmas C8.1--C8.2 now imply that
+stationarity and feasibility are both $O(K^{-1/3})$ at this same index.
+\end{frame}
+
+\begin{frame}{Appendix: Main Theorem---Statement
+\hfill\hyperlink{appendix:contents}{\beamerreturnbutton{Contents}}}
+\hypertarget{appendix:candidate-main-theorem}{}
+\small
+Assume the hypotheses on $f$, $\calA$, and $h$, and choose the parameters as
+stated in the Candidate algorithm.  Then for every $K\ge4$, there exists
+\begin{equation*}
+  \kappa\in\{\lceil K/2\rceil,\ldots,K-1\}
+\end{equation*}
+such that
+\begin{equation*}
+  \bq_\kappa^{\rm out}\in\partial h(\by_\kappa^{\rm out}),
+\end{equation*}
+\begin{equation*}
+  \|\nabla f(\bx^{\kappa+1})
+  +J_{\calA}(\bx^{\kappa+1})^\top\bq_\kappa^{\rm out}\|
+  \le C_{\rm stat}K^{-1/3},
+\end{equation*}
+and
+\begin{equation*}
+  \|\calA(\bx^{\kappa+1})-\by_\kappa^{\rm out}\|
+  \le C_{\rm feas}K^{-1/3}.
+\end{equation*}
+The constants are independent of $K$ and the requested tolerance $\eps$.
+\end{frame}
+
+\begin{frame}{Appendix: Main Theorem---Complete Proof
+\hfill\hyperlink{appendix:contents}{\beamerreturnbutton{Contents}}}
+\scriptsize
+\noindent\textbf{Proof.}
+Lemmas C1--C2 establish the exact output certificate and bounded dual orbit.
+Lemmas C3--C4 give frozen three-value descent.  Lemma C5 bounds both parameter
+changes by summable sequences.  Lemma C6 combines these estimates into a finite
+master budget.  Lemma C8.3 selects a single tail index $\kappa$ for every term
+in that budget.
+
+At this index, Lemma C8.1 and the bounds
+\begin{equation*}
+  \|\Delta\bx^{\kappa+1}\|=O(K^{-1/2}),
+  \qquad
+  \|\bz^\kappa-\bx^{\kappa+1}\|=O(K^{-1/3})
+\end{equation*}
+give the stationarity estimate.  Lemmas C7.2 and C8.2, together with
+\begin{equation*}
+  \|\blmbd^{\kappa+1}-\blmbd^\kappa\|=O(K^{-1/2}),
+  \qquad r_\kappa=O(K^{-1/3}),
+\end{equation*}
+give the feasibility estimate.  The subgradient relation is exact by
+Lemma C8.1.  Therefore the split-KKT residual is $O(K^{-1/3})$.
+
+Choosing $K$ so that $C K^{-1/3}\le\eps$ gives
+\begin{equation*}
+  K=O(\eps^{-3}).
+\end{equation*}
+Each iteration uses one gradient evaluation at $\bx^k$, one explicit dual
+gradient, two evaluations of $\prox_{h/\rho}$, and two center averages.  Hence
+the gradient and proximal-oracle complexities are both $O(\eps^{-3})$.
+\hfill$\square$
+\end{frame}
+
+\end{document}

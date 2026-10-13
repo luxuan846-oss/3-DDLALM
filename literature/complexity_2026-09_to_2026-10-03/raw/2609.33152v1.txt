@@ -1,0 +1,881 @@
+Content selection saved. Describe the issue below:
+
+Convergence of Practical Muon
+
+Muon is emerging as a promising alternative to AdamW for large-scale neural network training, yet theoretical understanding of its practical implementation remains incomplete, as existing analyses often simplify or omit two key components: (i) practical Newton–Schulz iterations with empirically tuned polynomial coefficients $(3.4445,-4.7750,2.0315)$ ; and (ii) decoupled weight decay for regularization. In this paper, we provide an optimization interpretation and establish convergence for practical Muon, jointly accounting for both components. Specifically, we interpret practical Muon as right-preconditioned optimization of the original loss with a dynamic weighted $\ell_{2}$ regularizer that vanishes as stationarity is approached, so that the optimization target remains the original objective. We then establish, to our best knowledge, the first convergence guarantee for practical Muon in the stochastic nonconvex setting, with an $\mathcal{O}(T^{-1/4})$ convergence rate in terms of the expected Frobenius norm of the gradient, improving the dimension dependence of the best known AdamW’s convergence rate by a factor of $\sqrt{d}$ , where $T$ is the iteration horizon and $d$ is the parameter dimension. Experiments further support the theoretical convergence results.
+
+1 Introduction
+
+By exploiting the matrix structure of model parameters, Muon ( Jordan et al., 2024 ) has been shown the potential to become a dominant optimizer for large-scale neural network training, displacing adaptive methods such as AdaGrad ( Duchi et al., 2011 ) , RMSProp ( Tieleman, 2012 ) , Adam ( Kingma and Ba, 2015 ) , and AdamW ( Loshchilov and Hutter, 2019 ) , which have dominated the field over the past decade, as well as classical SGD with momentum ( Robbins and Monro, 1951 ; Sutskever et al., 2013 ) . Remarkable empirical success has been reported for Muon and its variants in language modeling ( Liu et al., 2025 ; Shah et al., 2025 ; Team et al., 2025 ; Xu et al., 2026 ) , multimodal and agentic systems ( Team et al., 2026 ; Zeng et al., 2026 ; Hong et al., 2026 ) , and embodied intelligence ( Fan et al., 2026 ) . In particular, Liu et al. (2025) report roughly twice AdamW’s computational efficiency on 399M–1.5B dense models, while DeepSeek-V4-Pro demonstrates Muon’s scalability to 1.6 trillion parameters and 33 trillion training tokens ( Xu et al., 2026 ) .
+
+Despite the empirical success, convergence remains an open problem for practical Muon, which combines two key ingredients: (i) practical Newton–Schulz (NS) iterations that use matrix polynomials with empirically tuned coefficients $(3.4445,-4.7750,2.0315)$ to produce approximately orthogonalized momentum matrices as update directions; and (ii) decoupled weight decay (WD) to provide regularization and support stable training at scale ( Liu et al., 2025 ) . The convergence analysis faces two main challenges. First, practical NS is difficult to analyze directly, and existing studies often replace it with exact SVD-based orthogonalization ( Shen et al., 2026 ) , or standard NS using different polynomial coefficients ( Kim and Oh, 2026 ; Choudhury et al., 2026 ) which can yield poorer orthogonalization of ill-conditioned momentum matrices than practical NS ( Jordan et al., 2024 ) . To our best knowledge, neither alternative has been publicly validated in large-scale commercial model training ( Liu et al., 2025 ; Team et al., 2025 ; Xu et al., 2026 ; Team et al., 2026 ; Zeng et al., 2026 ; Hong et al., 2026 ) . As for practical NS without WD, Do et al. (2026) assume strong convexity and establish convergence to a neighborhood of the minimizer, while Qian and Richtárik (2026) establish an $\mathcal{O}(\sqrt{r}/T^{1/4})$ convergence rate for nuclear norm stationarity in the stochastic nonconvex setting, where $r$ is the smaller dimension of the matrix-valued parameter and $T$ is the iteration horizon.
+
+Table 1: Comparison of existing convergence results for Muon. The rate column uses $\mathbb{E}\|\nabla f\|_{\mathrm{F}}$ unless a KKT stationarity measure or expected objective gap (obj.) is indicated. $\dagger$ : The nuclear norm rates established in the original papers are converted to Frobenius norm rates under our assumptions. Std. and Pract. denote standard and practical NS, respectively.
+
+Second, WD further complicates the convergence analysis through its interaction with NS. Existing studies that account for WD typically replace NS with exact SVD-based orthogonalization, and show that Muon is equivalent to solving the following constrained optimization problem ( Pethick et al., 2025 ; Chen et al., 2026 ) :
+
+$\min\nolimits_{W\in\mathbb{R}^{m\times n}}f(W)\quad\text{s.t.}\quad\|W\|_{\mathrm{op}}\leq 1/\lambda,$
+
+where $f$ denotes the original loss function, $W$ is the matrix-valued parameter, $\lambda>0$ is the WD coefficient, and $\|\cdot\|_{\mathrm{op}}$ denotes the spectral norm. For stochastic nonconvex objectives, Pethick et al. (2025) establish an $\mathcal{O}(r/T^{1/4})$ convergence rate in terms of a KKT stationarity measure for the above constrained problem. When both NS and WD are considered, Qian and Richtárik (2026) provide the only convergence guarantee that we are aware of. Under star-convexity and with parameter choices that depend on the norm of an unknown global minimizer, they prove convergence to an optimal solution of the original problem.
+
+These observations naturally raise two questions about Muon with practical NS and WD in the stochastic nonconvex setting:
+
+Q1) What does Muon actually optimize when practical NS and WD are combined? Q2) Does it converge? If so, at what rate, and can the convergence rate be sharper than AdamW’s?
+
+Controbutions.
+
+We address these questions and make the following contributions:
+
+We interpret Muon with NS and WD as right-preconditioned optimization of $f$ with a dynamic weighted $\ell_{2}$ regularizer that vanishes as $\|\nabla f\|_{F}\to 0$ , indicating that Muon still targets the original objective. While this interpretation is exact when momentum in Muon and noise in stochastic gradient are omitted, our convergence guarantees remain valid in their presence. Thus we address Q1.
+
+To the best of our knowledge, we establish the first convergence guarantee for Muon with practical NS and WD in the stochastic nonconvex setting, as summarized in Table 1 , achieving
+
+$\frac{1}{T}\sum\nolimits_{t=0}^{T-1}\mathbb{E}\left\lVert\nabla f(W_{t})\right\rVert_{F}=\mathcal{O}\Big(\frac{\sqrt[4]{L(f(W_{0})-f_{\inf})\sigma^{2}/b_{\mathrm{mb}}}}{{T^{1/4}}}\Big).$
+
+Notably, the rate above has sharper dimension dependence than the best known AdamW’s rate ( Li et al., 2026 ) by a factor of $\sqrt{d}=\sqrt{mn}$ in the Frobenius norm, with AdamW satisfying
+
+$\displaystyle\frac{1}{T}\sum\nolimits_{t=0}^{T-1}\mathbb{E}\|\nabla f(W_{t})\|_{1}=\mathcal{O}\Big(\frac{\sqrt{d}\sqrt[4]{L(f(W_{0})-f_{\inf})\sigma^{2}/b_{\mathrm{mb}}}}{T^{1/4}}\Big),$ (1)
+
+where $\|A\|_{1}=\sum_{i,j}|A_{ij}|$ denotes the entrywise $\ell_{1}$ norm, and the Frobenius norm comparison follows from $\|A\|_{F}\leq\|A\|_{1}$ . Our rate also matches that of SGD in the Frobenius norm ( Ghadimi and Lan, 2013 ) and that of AdamW in the entrywise $\ell_{1}$ norm. Thus we address Q2.
+
+Outline.
+
+The rest of the paper is organized as follows. Section 2 presents the preliminaries. Then Sections 3 – 5 provide an optimization interpretation of practical Muon, its convergence results, and the corresponding proofs, respectively. Section 6 illustrates practical NS’s superiority over standard NS. Section 7 empirically supports Muon’s theoretical advantage. Finally, Section 8 concludes the paper, with additional related work in Appendix A and further details in the remaining appendices.
+
+2 Preliminaries
+
+We consider the following stochastic nonconvex matrix optimization problem:
+
+$\min\nolimits_{W\in\mathbb{R}^{m\times n}}f(W)=\mathbb{E}_{\xi\sim\mathcal{D}}[F(W,\xi)],$ (2)
+
+where $\xi\in\Xi$ is a data sample drawn from the distribution $\mathcal{D}$ , and $F:\mathbb{R}^{m\times n}\times\Xi\to\mathbb{R}$ is a differentiable sample loss with stochastic gradient $\nabla_{W}F(W,\xi)$ .
+
+2.1 Practical Muon algorithm
+
+To solve ( 2 ), we consider Muon (Algorithm 1 ), which combines Nesterov-style momentum, Newton–Schulz (NS) iterations, and decoupled weight decay (WD). The NS iterations approximately orthogonalize the momentum matrices through matrix polynomials, avoiding an explicit SVD. We consider two choices of the polynomial $p$ in Definition 1 , corresponding to practical and standard NS, and refer to Muon with practical NS as practical Muon.
+
+Algorithm 1 Muon (with Newton–Schulz iterations and decoupled weight decay)
+
+The practical NS polynomial is
+
+$p_{\mathrm{P}}(x)=a_{\mathrm{P}}+b_{\mathrm{P}}x+c_{\mathrm{P}}x^{2},\qquad(a_{\mathrm{P}},b_{\mathrm{P}},c_{\mathrm{P}})=(3.4445,-4.7750,2.0315).$
+
+For $k\in\mathbb{N}$ , the degree- $k$ standard NS polynomial is the Taylor polynomial of $x^{-1/2}$ at $x=1$ :
+
+$p_{\mathrm{S}}^{(k)}(x)=\sum\nolimits_{\ell=0}^{k}\frac{(2\ell)!}{4^{\ell}(\ell!)^{2}}(1-x)^{\ell}.$
+
+In particular, $p_{\mathrm{S}}^{(2)}(x)=a_{\mathrm{S}}+b_{\mathrm{S}}x+c_{\mathrm{S}}x^{2}$ with $(a_{\mathrm{S}},b_{\mathrm{S}},c_{\mathrm{S}})=(15/8,-5/4,3/8).$
+
+In Algorithm 1 , the NS polynomial is chosen as either $p_{\mathrm{P}}$ or $p_{\mathrm{S}}^{(k)}\hskip-3.00003pt.$ For notational simplicity, we denote either choice by $p$ , write $a,b,c$ for its coefficients of $1,x,x^{2}$ , respectively. Moreover, define $q(s)=sp(s^{2}),~q_{0}(s)=s,~q_{j+1}(s)=q(q_{j}(s)),~j=0,\ldots,4$ , and write $(q_{\mathrm{P}},q_{\mathrm{P},j})$ and $(q_{\mathrm{S}}^{(k)},q_{\mathrm{S},j}^{(k)})$ for $(q,q_{j})$ under practical and standard NS, respectively. The following lemma characterizes how these polynomials are used in NS iterations to approximate matrix orthogonalization.
+
+(i) NS output. In Algorithm 1 , write the compact SVD $M_{t}=U_{t}\operatorname{diag}(\sigma_{1,t},\ldots,\sigma_{r_{t},t})V_{t}^{\top}$ , with $r_{t}=\operatorname{rank}(M_{t})$ , and $s_{i,t}=\sigma_{i,t}/\tau_{t}\in(0,1]$ . The five NS steps preserve the left and right singular-vector matrices $U_{t}$ and $V_{t}$ , and yield
+
+$D_{t}=X_{t,5}=U_{t}\operatorname{diag}\bigl(q_{5}(s_{1,t}),\ldots,q_{5}(s_{r_{t},t})\bigr)V_{t}^{\top}.$
+
+(ii) Approximation error. The singular-value map $q_{\mathrm{P}}$ of one practical NS step is nonmonotone on $[0,1]$ and does not fix $1$ . Specifically,
+
+$q_{\mathrm{P}}^{\prime}(0)=3.4445>0,\qquad q_{\mathrm{P}}^{\prime}(1)=-0.7230<0,\qquad q_{\mathrm{P}}(1)=0.7010\neq 1.$
+
+In contrast, for every $k\geq 1$ , the singular-value map $q_{\mathrm{S}}^{(k)}$ of one standard NS step is nondecreasing on $[0,1]$ and fixes $1$ . These properties, together with the Taylor construction, yield
+
+$\|X_{t,j}-U_{t}V_{t}^{\top}\|_{\mathrm{op}}\leq(1-\min\nolimits_{1\leq i\leq r_{t}}s_{i,t}^{\,2})^{(k+1)^{j}},\qquad j=0,\ldots,5.$ (3)
+
+Thus, each standard NS step approximates exact orthogonalization with convergence order $k+1$ .
+
+Challenges in analyzing practical Muon.
+
+The role of NS in Muon is to approximate the orthogonalized momentum matrix $U_{t}V_{t}^{\top}$ without explicitly computing an SVD. This amounts to preserving the singular vectors while transforming each positive singular value toward $1$ . The normalization in Algorithm 1 places the initial singular values in $(0,1]$ . For standard NS, monotonicity and the fixed point at $1$ yield the superlinear error bound in ( 3 ). Practical NS lacks both properties, making its approximation error hard to control and Muon’s convergence difficult to analyze.
+
+2.2 Assumptions
+
+Our analysis is based on the following assumptions, which are standard in stochastic nonconvex optimization ( Ghadimi and Lan, 2013 ; Li et al., 2026 ; Shen et al., 2026 ; Choudhury et al., 2026 , e.g.,) .
+
+The objective satisfies $f_{\inf}=\inf_{W\in\mathbb{R}^{m\times n}}f(W)>-\infty.$
+
+There exists a constant $L>0$ such that, for all $X,Y\in\mathbb{R}^{m\times n}$ ,
+
+$\|\nabla f(X)-\nabla f(Y)\|_{F}\leq L\|X-Y\|_{F}.$
+
+There exists a constant $\sigma\hskip-1.00006pt\geq\hskip-1.00006pt0$ such that, for all $W\hskip-3.50006pt\in\hskip-1.99997pt\mathbb{R}^{\hskip-0.81949ptm\hskip-1.22911pt\times\hskip-0.81949ptn}$ ,
+
+$\mathbb{E}_{\xi}[\nabla F_{W}(W,\xi)]=\nabla f(W),\qquad\mathbb{E}_{\xi}\!\left[\|\nabla F_{W}(W,\xi)-\nabla f(W)\|_{F}^{2}\right]\leq\sigma^{2}.$
+
+For any mini-batch of size $b_{\mathrm{mb}}$ , the averaged gradient has variance at most $\sigma^{2}/b_{\mathrm{mb}}$ .
+
+3 Optimization interpretation
+
+Main viewpoint.
+
+We show that Muon with NS and WD, using either practical or standard NS, admits a unified interpretation as right-preconditioned optimization on a dynamic objective consisting of $f$ and a weighted $\ell_{2}$ regularizer, with exact equivalence when the momentum is omitted.
+
+Dynamic objective.
+
+We seek an objective for which the Muon update provides a descent direction. A natural idea is to examine the fixed point of Algorithm 1 (with $m=n=1$ for illustration , allowing us to write $D_{t}=q_{5}(M_{t}/\tau_{t})$ without an SVD representation), where $M_{t}=B_{t}=G_{t}$ and
+
+$D_{t}+\lambda W_{t}=q_{5}(G_{t}/\tau_{t})+\lambda W_{t}=0.$
+
+Inverting $\hskip-1.00006ptq_{5}\hskip-1.00006pt$ would allow us to isolate the gradient and identify a corresponding objective. For practical NS, however, both $\hskip-0.50003ptq_{\mathrm{P}}\hskip-0.50003pt$ and $\hskip-0.50003ptq_{\mathrm{P},5}\hskip-0.50003pt$ are nonmonotone, so the latter admits no global inverse, obstructing this direct approach. Motivated by the preconditioning interpretation of Muon with exact orthogonalization ( Ma et al., 2026 ) , beyond fixed points, we seek a right preconditioner $P_{t}$ such that
+
+$D_{t}=M_{t}P_{t},~~\text{i.e.,}~~U_{t}\operatorname{diag}\bigl(q_{5}(\sigma_{1,t}/\tau_{t}),\ldots,q_{5}(\sigma_{r_{t},t}/\tau_{t})\bigr)V_{t}^{\top}\hskip-1.99997pt=\hskip-1.00006ptU_{t}\operatorname{diag}\bigl(\sigma_{1,t},\ldots,\sigma_{r_{t},t})V_{t}^{\top}P_{t}.$
+
+This determines $P_{t}$ on the span of $V_{t}\hskip-0.50003pt$ , while the WD term $\lambda W_{t}$ suggests a $\hskip-0.50003ptP_{t}^{\hskip-0.2048pt-\hskip-0.81949pt1}\hskip-1.00006pt$ weighted $\ell_{2}$ regularizer, which requires $P_{t}$ to be invertible. Thus, we extend $P_{t}$ positively to the nullspace of $M_{t}$ and define
+
+$\displaystyle P_{t}$ $\displaystyle=V_{t}\operatorname{diag}\Big(\frac{\chi_{5}(s_{1,t})}{\tau_{t}},\ldots,\frac{\chi_{5}(s_{r_{t},t})}{\tau_{t}}\Big)V_{t}^{\top}\ +\frac{\chi_{5}(0)}{\tau_{t}}(I_{n}-V_{t}V_{t}^{\top}),$ (4)
+
+where $s_{i,t}\in(0,1]$ , and $\chi_{5}(s)=q_{5}(s)/s>0$ for $s\in(0,1]$ , with the continuous extension $\chi_{5}(0)=a^{5}$ . The resulting dynamic objective is
+
+$\Phi_{t}(W)=f(W)+\mathcal{R}_{t}(W),\qquad\mathcal{R}_{t}(W)=\frac{\lambda}{2}\operatorname{tr}(WP_{t}^{-1}W^{\top}).$ (5)
+
+Here, $P_{t}$ is treated as a fixed matrix when differentiating $\Phi_{t}$ in $W$ . The following proposition establishes the exact equivalence between the Muon update and right-preconditioned optimization of the dynamic objective $\Phi_{t}$ .
+
+(i) Properties of the right preconditioner and regularizer. For both practical and standard NS, the preconditioner $P_{t}$ in ( 4 ) satisfies
+
+$\displaystyle P_{t}\succ 0,\qquad D_{t}=M_{t}P_{t},\qquad\langle M_{t},D_{t}\rangle_{F}=\|M_{t}P_{t}^{1/2}\|_{F}^{2}\geq 0.$
+
+Thus, $D_{t}$ is positively aligned with the momentum direction $M_{t}$ whenever $M_{t}\neq 0$ . Moreover, for $\lambda>0$ , the regularizer $\mathcal{R}_{t}$ in ( 5 ) is $\lambda\tau_{t}/C_{1}$ -strongly convex, where $C_{1}=\max_{s\in[0,1]}\chi_{5}(s)>0$ .
+
+(ii) Exact right-preconditioned equivalence. Ignore the momentum by setting $\beta=0$ , Muon update in Algorithm 1 is exactly one right-preconditioned stochastic gradient descent step on the dynamic objective ( 5 ), i.e.,
+
+$W_{t+1}=W_{t}-\eta\widehat{\nabla}\Phi_{t}(W_{t})P_{t},\qquad\widehat{\nabla}\Phi_{t}(W_{t})=G_{t}+\lambda W_{t}P_{t}^{-1}.$
+
+If Assumption 3 futher holds, we have $\mathbb{E}[\widehat{\nabla}\Phi_{t}(W_{t})-\nabla\Phi_{t}(W_{t})]=0.$
+
+Recall that $q_{0}(s)=s$ and $q_{j+1}(s)=q(q_{j}(s))=q_{j}(s)p(q_{j}(s)^{2})$ for $j=0,\ldots,4$ . For practical NS, $p_{\mathrm{P}}(x)>0$ for all $x\in\mathbb{R}$ , since $c_{\mathrm{P}}\hskip-1.00006pt>\hskip-1.00006pt0$ and $b_{\mathrm{P}}^{2}\hskip-1.00006pt-\hskip-1.00006pt4a_{\mathrm{P}}c_{\mathrm{P}}\hskip-1.00006pt<\hskip-1.00006pt0\hskip-0.50003pt$ . For standard NS, whenever $s\in[0,1]$ , Lemma 1 gives $q_{\mathrm{S}}^{(k)}(s)\in[0,1]$ , $p_{\mathrm{S}}^{(k)}(s)=1+\sum_{\ell=1}^{k}\frac{(2\ell)!}{4^{\ell}(\ell!)^{2}}(1-s)^{\ell}>0$ , and hence $p(q_{\mathrm{S}}^{(k)}(s))\hskip-1.00006pt>\hskip-1.00006pt0$ . As a result, for either NS choice, applying the recurrence over all five NS steps gives
+
+$\chi_{5}(s)=\prod\nolimits_{j=0}^{4}p(q_{j}(s)^{2})>0,\qquad s\in(0,1].$
+
+The eigenvalues of $P_{t}$ are either $\chi_{5}(s_{i,t})/\tau_{t}$ with $s_{i,t}\in(0,1]$ , or $\chi_{5}(0)/\tau_{t}$ , giving
+
+$\frac{C_{2}}{\tau_{t}}I_{n}\preceq P_{t}\preceq\frac{C_{1}}{\tau_{t}}I_{n},\qquad C_{2}=\min_{s\in[0,1]}\chi_{5}(s)>0.$ (6)
+
+Thus $P_{t}\succ 0$ , and the strong convexity of $\mathcal{R}_{t}$ follows from $P_{t}^{-1}\succeq(\tau_{t}/C_{1})I_{n}$ . By Lemma 1 and $V_{t}^{\top}(I_{n}-V_{t}V_{t}^{\top})=0$ , we have
+
+$D_{t}=U_{t}\operatorname{diag}\!\left(q_{5}(s_{1,t}),\ldots,q_{5}(s_{r_{t},t})\right)V_{t}^{\top}=M_{t}P_{t},$
+
+which implies $\langle M_{t},D_{t}\rangle_{F}=\|M_{t}P_{t}^{1/2}\|_{F}^{2}\geq 0$ . When $\beta=0$ , we have $M_{t}=G_{t}$ , and
+
+$\widehat{\nabla}\Phi_{t}(W_{t})P_{t}=G_{t}P_{t}+\lambda W_{t}=D_{t}+\lambda W_{t}=H_{t},$
+
+proving the update identities. Holding $P_{t}$ fixed when differentiating gives $\nabla\mathcal{R}_{t}(W)=\lambda WP_{t}^{-1}$ , and Assumption 3 directly implies $\mathbb{E}~[\widehat{\nabla}\Phi_{t}(W_{t})-\nabla\Phi_{t}(W_{t})]=0.$ ∎
+
+Recovery of the original problem.
+
+Consider the deterministic setting where $G_{t}=\nabla f(W_{t})$ . By the definition of $\mathcal{R}_{t}$ in ( 5 ) and the bounds ( 6 ), we have
+
+$0\leq\mathcal{R}_{t}(W)\leq\frac{\lambda\tau_{t}}{2C_{2}}\left\lVert W\right\rVert_{F}^{2},\qquad\left\lVert\nabla\mathcal{R}_{t}(W)\right\rVert_{F}\leq\frac{\lambda\tau_{t}}{C_{2}}\left\lVert W\right\rVert_{F}.$ (7)
+
+If $\left\lVert\nabla f(W_{t})\right\rVert_{F}\to 0$ , then $\left\lVert M_{t}\right\rVert_{F}\to 0$ and hence $\tau_{t}=\max\{\left\lVert M_{t}\right\rVert_{F},\varepsilon\}\to\varepsilon$ , where $\varepsilon$ is chosen to be very small in practice, e.g., $10^{-7}$ in the official PyTorch implementation. Together with the boundedness of $\{W_{t}\}$ , which WD naturally promotes, inequalities ( 7 ) show that both $\mathcal{R}_{t}(W_{t})$ and $\left\lVert\nabla\mathcal{R}_{t}(W_{t})\right\rVert_{F}$ are $\mathcal{O}(10^{-7})$ , and the dynamic objective reduces to the original objective up to numerical precision. Independently of this interpretation, our main theorem in the next section allows for stochastic setting and directly establishes stationarity for the original stochastic nonconvex problem.
+
+4 Main results
+
+For Muon with practical or standard NS and WD, we establish the following convergence guarantees in the stochastic nonconvex setting.
+
+Under Assumptions 1 – 3 , consider the iterates of Algorithm 1 with
+
+$\eta=\frac{c_{1}}{T^{3/4}},~1-\beta=\frac{c_{2}}{T^{1/2}},~\varepsilon\in\left(0,\frac{c_{3}}{T^{1/4}}\right],~\lambda=\frac{C_{2}}{2\bigl(\left\lVert W_{0}\right\rVert_{F}+C_{3}c_{1}T^{1/4}\bigr)},~T\geq\max\{1,c_{2}^{2}\},$ (8)
+
+where $c_{1},c_{2},c_{3}$ are $\mathcal{O}(1)$ constants defined in ( 20 ), and $C_{3}$ is an $\mathcal{O}(1)$ constant defined in ( 11 ). Then
+
+$\displaystyle\frac{1}{T}\sum\nolimits_{t=0}^{T-1}\mathbb{E}\left\lVert\nabla f(W_{t})\right\rVert_{F}=\mathcal{O}\Big(\frac{\sqrt[4]{L(f(W_{0})-f_{\inf})\sigma^{2}/b_{\mathrm{mb}}}}{{T^{1/4}}}\Big).$ (9)
+
+Discussion: practical NS with WD.
+
+Convergence guarantee. To the best of our knowledge, Theorem 1 provides the first convergence guarantee for practical Muon in the stochastic nonconvex setting, based on a direct analysis of the practical NS iteration and its interaction with WD. While Qian and Richtárik (2026) also cover practical NS with WD, their guarantees rely on star-convexity and parameter choices that depend on the unknown norm $\|W^{*}\|$ of a global minimizer $W^{*}$ . Other analyses either use exact orthogonalization when accounting for WD ( Pethick et al., 2025 ; Chen et al., 2026 ) , or omit WD while studying practical NS ( Do et al., 2026 ; Qian and Richtárik, 2026 ) , standard NS ( Kim and Oh, 2026 ; Choudhury et al., 2026 ) , or exact orthogonalization ( Shen et al., 2026 ) .
+
+Comparison with AdamW and SGD. The theoretical convergence rate in ( 9 ) improves dimension dependence by a factor of $\sqrt{d}$ over the Frobenius norm guarantee implied by the best-known AdamW result given by ( 1 ) ( Li et al., 2026 ) in the stochastic nonconvex setting. Specifically, AdamW’s entrywise $\ell_{1}$ guarantee contains an additional $\sqrt{d}$ factor that persists after conversion to the Frobenius norm. Moreover, our rate matches that of SGD in the Frobenius norm ( Ghadimi and Lan, 2013 ) , and that of AdamW in the entrywise $\ell_{1}$ norm.
+
+Parameter choices. The choice $\lambda\hskip-1.00006pt=\hskip-1.00006pt\mathcal{O}(T^{-1/4})$ is reasonable for practical training horizons. For example, Moonlight pretraining with Muon takes approximately $1.76\times 10^{5}$ updates ( Liu et al., 2025 ) , giving $T^{-1/4}\approx 0.05$ . This mild dependence on $T$ permits a non-negligible WD coefficient that retains its regularization role. The theoretical condition on $\varepsilon$ is also mild, since commonly used values, such as the PyTorch default $10^{-7}$ , are far below the corresponding scale $T^{-1/4}$ . Moreover, the condition on $T$ imposes only an $\mathcal{O}(1)$ lower threshold. Small stepsize $\eta$ and momentum coefficient $\beta$ close to one are common in stochastic nonconvex convergence analyses ( Ghadimi and Lan, 2013 ; Li et al., 2026 ) . Finally, the problem dependent choices of $c_{1},c_{2},c_{3}$ only improve the multiplicative factor in the convergence rate, and any positive values retain the $\mathcal{O}(T^{-1/4})$ rate.
+
+Discussion: standard NS with WD.
+
+The comparisons with AdamW and SGD and the discussion of parameter choices above also apply to standard NS with WD.
+
+Convergence guarantee. To the best of our knowledge, Theorem 1 provides the first convergence guarantee for Muon with standard NS and WD in the stochastic nonconvex setting. In contrast, the existing analysis requires both star-convexity and parameter choices that depend on the norm $\|W^{*}\|$ of an unknown global minimizer ( Qian and Richtárik, 2026 ) , while the proof of Proposition 3.3 in Sato et al. (2025) contains an error identified by Apte (2026) . The counterexample in Apte’s Proposition 3.2 also invalidates Sato et al.’s Proposition 3.3 when standard NS is used.
+
+Convergence rate. By analyzing practical and standard NS in a unified framework, we obtain the rate in ( 9 ) independent of the orthogonalization error of standard NS, which can lead to a very large multiplicative factor in existing convergence rates ( Kim and Oh, 2026 ; Choudhury et al., 2026 ) . For example, Kim and Oh (2026) obtain the factor $(1\hskip-1.00006pt-\hskip-1.00006pt\epsilon_{5})^{-1}$ for standard NS without WD, where
+
+$\epsilon_{t,5}=\|X_{t,5}-U_{t}V_{t}^{\top}\|_{\mathrm{op}}=1-q_{5}\big(\min\nolimits_{1\leq i\leq r_{t}}s_{i,t}\big),\qquad\epsilon_{5}=\max\nolimits_{0\leq t<T}\epsilon_{t,5}.$
+
+Despite the superlinear decay in ( 3 ), this factor can be large for small normalized singular values. For a quantitative illustration, Wu et al. (2026, Figure 1(c)) show a Muon momentum spectrum in a LLaMA attention layer spanning roughly eight or more orders of magnitude. For such an NS input, five degree- $2$ standard NS steps would give $(1-\epsilon_{5})^{-1}>10^{6}$ .
+
+The following corollary gives the corresponding convergence guarantee without WD.
+
+Under Assumptions 1 – 3 , consider the iterates of Algorithm 1 with
+
+$\eta=\frac{c_{1}}{T^{3/4}},\quad 1-\beta=\frac{c_{2}}{T^{1/2}},\quad\varepsilon\in\left(0,\frac{c_{3}}{T^{1/4}}\right],\quad\lambda=0,\quad T\geq\max\{1,c_{2}^{2}\},$
+
+where $c_{1},c_{2},c_{3}$ are defined in ( 20 ) with $(C_{2}/2+C_{3})$ replaced by $C_{3}$ . Then
+
+$\frac{1}{T}\sum\nolimits_{t=0}^{T-1}\mathbb{E}\left\lVert\nabla f(W_{t})\right\rVert_{F}=\mathcal{O}\Big(\frac{\sqrt[4]{L(f(W_{0})-f_{\inf})\sigma^{2}/b_{\mathrm{mb}}}}{{T^{1/4}}}\Big).$ (10)
+
+Discussion: practical and standard NS without WD.
+
+Corollary 1 yields a convergence rate similar to that with WD. The Muon rate ( 10 ) improves dimension dependence by a factor of $\sqrt{d}$ over the AdamW Frobenius norm rate implied by the best-known result ( 1 ), and does not depend on the worst-case orthogonalization error. Regarding the choice of NS polynomial, the corollary does not reveal a clear difference in convergence behavior between practical and standard NS.
+
+5 Convergence analysis
+
+We first state the key insight for our analysis: quantifying the alignment of NS directions, particularly those produced by practical NS, with the momentum direction, which supports their use as effective descent directions. We then prove convergence, with a few routine details deferred to Appendix B .
+
+5.1 Key insight
+
+The favorable alignment of practical and standard NS directions with the momentum is key to Muon’s convergence, and is quantified in the following lemma.
+
+For both practical and standard NS, the momentum $M_{t}$ and the resulting direction $D_{t}$ in Algorithm 1 satisfy
+
+$\langle M_{t},D_{t}\rangle_{F}\geq C_{2}\left\lVert M_{t}\right\rVert_{F}-C_{2}\varepsilon/4,\qquad\left\lVert D_{t}\right\rVert_{F}\leq C_{3},$
+
+where $C_{2}\hskip-1.00006pt=\hskip-1.00006pt\min_{s\in[0,1]}\chi_{5}(s)\hskip-1.00006pt>\hskip-1.00006pt0,~C_{1}\hskip-1.00006pt=\hskip-1.00006pt\max_{s\in[0,1]}\chi_{5}(s)\hskip-1.00006pt>\hskip-1.00006pt0$ , recalled here for convenience, and
+
+$\displaystyle C_{3}=\min\{C_{1},q_{\max}\sqrt{r}\},\qquad q_{\max}=\max\nolimits_{s\in[0,1]}q_{5}(s),\qquad r=\min\{m,n\}.$ (11)
+
+In particular,
+
+$\displaystyle(C_{2},C_{1},q_{\max})=\begin{cases}(0.6964\ldots,\,484.8762\ldots,\,1.2023\ldots),&\text{practical NS},\\ (1,\,a^{5},\,1),&\text{standard NS}.\end{cases}$ (12)
+
+The proof of Proposition 1 ensures that $\chi_{5}$ , $C_{1}$ , $C_{2}$ , and $q_{\max}$ are well defined. By definition,
+
+$\displaystyle C_{2}s\leq q_{5}(s)\leq C_{1}s,\qquad 0\leq q_{5}(s)\leq q_{\max},\qquad s\in[0,1].$ (13)
+
+We then prove the bounds in Lemma 2 , with sharp constants $C_{1}$ , $C_{2}$ , and $q_{\max}$ determined in Appendix B . By Lemma 1 , $D_{t}=U\operatorname{diag}(q_{5}(s_{i,t}),\ldots,q_{5}(s_{r_{t},t})V^{\top}$ . Then ( 13 ) yields
+
+$\langle M_{t},D_{t}\rangle_{F}=\tau_{t}\textstyle\sum\nolimits_{i}s_{i,t}q_{5}(s_{i,t})\geq C_{2}\tau_{t}\textstyle\sum\nolimits_{i}s_{i,t}^{2}=C_{2}\left\lVert M_{t}\right\rVert_{F}^{2}/\tau_{t},$
+
+where $\left\lVert M_{t}\right\rVert_{F}^{2}/\tau_{t}\geq\left\lVert M_{t}\right\rVert_{F}-\varepsilon/4$ , since for $\left\lVert M_{t}\right\rVert_{F}\leq\varepsilon$ the inequality reduces to $(\left\lVert M_{t}\right\rVert_{F}-\varepsilon/2)^{2}/\varepsilon\geq 0$ , whereas for $\left\lVert M_{t}\right\rVert_{F}\geq\varepsilon$ , the left-hand side equals $\left\lVert M_{t}\right\rVert_{F}$ . Moreover, ( 13 ) together with $\sum_{i}s_{i,t}^{2}=\left\lVert M_{t}\right\rVert_{F}^{2}/\tau_{t}^{2}\leq 1$ gives
+
+$\left\lVert D_{t}\right\rVert_{F}=\sqrt{\textstyle\sum\nolimits_{i}q_{5}(s_{i,t})^{2}}\leq\min\Big\{C_{1}\sqrt{\textstyle\sum\nolimits_{i}s_{i,t}^{2}},q_{\max}\sqrt{r}\Big\}\leq C_{3}.\qed$
+
+Discussion.
+
+Lemma 2 establishes favorable alignment of both practical and standard NS directions with the momentum, up to a small $\hskip-0.50003ptO(\hskip 0.0pt\varepsilon\hskip-0.50003pt)\hskip-0.50003pt$ term, with $\varepsilon\hskip-2.5pt=\hskip-2.74994pt10^{\hskip-0.40974pt-\hskip-0.40974pt7}$ by default in PyTorch. This estimate is independent of the orthogonalization error, which is particularly useful for practical NS since its singular-value map is nonmonotone and does not fix $1$ , precluding asymptotically exact orthogonalization, let alone superlinear convergence of standard NS. Moreover, the lemma establishes a uniform bound on the Frobenius norm of the NS direction, $\hskip-1.00006pt\|D_{t}\|_{F}\hskip-1.00006pt\leq\hskip-1.00006ptC_{3}\hskip-1.00006pt\leq\hskip-1.00006ptC_{1}\hskip-1.00006pt=\hskip-1.00006pt\mathcal{O}(1)$ , preventing unbounded growth with $r$ and limiting the rank dependence of the resulting convergence rate. Together, alignment and boundedness form the basis of our descent analysis of the original objective.
+
+5.2 Convergence proof
+
+We now prove Theorem 1 , deferring a few routine details of the momentum analysis to Appendix B . Corollary 1 follows from the same argument by omitting the WD term, i.e., setting $\lambda=0$ .
+
+The update $W_{t+1}=W_{t}-\eta H_{t}=W_{t}-\eta(D_{t}+\lambda W_{t})$ and Assumption 2 gives
+
+$f(W_{t+1})\leq f(W_{t})-\eta\langle\nabla f(W_{t}),H_{t}\rangle_{F}+L\eta^{2}/2\left\lVert H_{t}\right\rVert_{F}^{2}.$ (14)
+
+Let $e_{t}=M_{t}-\nabla f(W_{t})$ . The linear term decomposes as
+
+$\langle\nabla f(W_{t}),H_{t}\rangle_{F}=\langle M_{t},D_{t}\rangle_{F}-\langle e_{t},D_{t}\rangle_{F}+\lambda\langle\nabla f(W_{t}),W_{t}\rangle_{F}.$ (15)
+
+Step 1. Alignment of the NS directions with momentum.
+
+We use Lemma 2 to control the alignment $\langle M_{t},D_{t}\rangle_{F}$ and the norm $\left\lVert D_{t}\right\rVert_{F}$ .
+
+Step 2. Bounds on $\lambda W_{t}$ and $H_{t}$
+
+From ( 8 ), ( 11 ), and ( 12 ), $0<\eta\lambda\leq C_{2}/(2C_{3}T)<1.$ Lemma 2 and the update in Algorithm 1 therefore imply
+
+$\left\lVert W_{t+1}\right\rVert_{F}\leq(1-\eta\lambda)\left\lVert W_{t}\right\rVert_{F}+\eta C_{3}\leq\left\lVert W_{t}\right\rVert_{F}+\eta C_{3}.$
+
+For $0\leq t\leq T$ , ( 8 ) gives
+
+$\lambda\left\lVert W_{t}\right\rVert_{F}\leq\lambda\bigl(\left\lVert W_{0}\right\rVert_{F}+C_{3}\eta t\bigr)\leq C_{2}/2,\qquad\left\lVert H_{t}\right\rVert_{F}\leq C_{4}=C_{2}/2+C_{3}.$ (16)
+
+We can now bound the linear term ( 15 ). Lemma 2 , ( 16 ), and $\left\lVert M_{t}\right\rVert_{F}\geq\left\lVert\nabla f(W_{t})\right\rVert_{F}-\left\lVert e_{t}\right\rVert_{F}$ yield
+
+$\displaystyle\langle\nabla f(W_{t}),H_{t}\rangle_{F}$ $\displaystyle\geq C_{2}\left\lVert M_{t}\right\rVert_{F}-C_{2}\varepsilon/4-C_{3}\left\lVert e_{t}\right\rVert_{F}-\lambda\left\lVert W_{t}\right\rVert_{F}\left\lVert\nabla f(W_{t})\right\rVert_{F}$ $\displaystyle\geq\bigl(C_{2}-\lambda\left\lVert W_{t}\right\rVert_{F}\bigr)\left\lVert\nabla f(W_{t})\right\rVert_{F}-(C_{2}+C_{3})\left\lVert e_{t}\right\rVert_{F}-C_{2}\varepsilon/4$ $\displaystyle\geq\frac{C_{2}}{2}\left\lVert\nabla f(W_{t})\right\rVert_{F}-(C_{2}+C_{3})\left\lVert e_{t}\right\rVert_{F}-\frac{C_{2}\varepsilon}{4}.$ (17)
+
+Substituting ( 17 ) and ( 16 ) into ( 14 ) gives
+
+$f(W_{t+1})\leq f(W_{t})-\frac{C_{2}\eta}{2}\left\lVert\nabla f(W_{t})\right\rVert_{F}+\eta(C_{2}+C_{3})\left\lVert e_{t}\right\rVert_{F}+\frac{C_{2}\eta\varepsilon}{4}+\frac{L\eta^{2}C_{4}^{2}}{2}.$ (18)
+
+Step 3. Tracking error of the Nesterov-style momentum.
+
+Under the assumptions and parameter choices of Theorem 1 ,
+
+$\displaystyle\frac{1}{T}\hskip-1.00006pt\sum\nolimits_{t=0}^{T-1}\hskip-1.00006pt\mathbb{E}\left\lVert M_{t}\hskip-1.00006pt-\hskip-1.00006pt\nabla f(W_{t})\right\rVert_{F}\leq{}$ $\displaystyle\frac{\left\lVert B_{-1}\hskip-1.00006pt-\hskip-1.00006pt\nabla f(W_{0})\right\rVert_{F}}{c_{2}}T^{-1/2}\hskip-1.00006pt+\hskip-1.00006pt\Big(\frac{Lc_{1}C_{4}}{c_{2}}\hskip-1.00006pt+\hskip-1.00006pt\sqrt{2c_{2}}\,\frac{\sigma}{\sqrt{b_{\mathrm{mb}}}}\Big)T^{-1/4}\hskip-1.00006pt.$
+
+Summing ( 18 ), taking expectations, and using Lemma 3 , ( 8 ), and $f(W_{t})\geq f_{\inf}$ , we obtain
+
+$\displaystyle\frac{1}{T}\hskip-1.99997pt\sum_{t=0}^{T-1}\hskip-1.00006pt\mathbb{E}\hskip-1.00006pt\left\lVert\nabla f(W_{t})\right\rVert_{F}\hskip-1.49994pt$ $\displaystyle\leq\hskip-2.5pt\Big[\frac{2(f(W_{0})\hskip-1.00006pt-\hskip-1.00006ptf_{\inf})}{C_{2}c_{1}}\hskip-1.00006pt+\hskip-1.00006pt\frac{2(C_{2}\hskip-1.00006pt+\hskip-1.00006ptC_{3})LC_{4}c_{1}}{C_{2}c_{2}}\hskip-1.00006pt+\hskip-1.00006pt\frac{2\sqrt{2}(C_{2}\hskip-1.00006pt+\hskip-1.00006ptC_{3})\sqrt{c_{2}}\sigma}{C_{2}\sqrt{b_{\mathrm{mb}}}}\hskip-1.00006pt+\hskip-1.00006pt\frac{c_{3}}{2}\Big]T^{-\hskip-0.81949pt1/4}$ $\displaystyle\quad+\frac{2(C_{2}+C_{3})}{C_{2}c_{2}}\left\lVert B_{-1}-\nabla f(W_{0})\right\rVert_{F}\,T^{-1/2}+\frac{Lc_{1}C_{4}^{2}}{C_{2}}T^{-3/4}.$ (19)
+
+For fixed $c_{2}$ , the first two terms in the bracket are minimized by $c_{1}^{2}=(f(W_{0})-f_{\inf})c_{2}/[(C_{2}+C_{3})LC_{4}]$ . Then optimizing over $c_{2}$ and choosing $c_{3}$ to match the resulting statistical scale gives
+
+$\displaystyle\qquad\qquad\qquad\quad c_{1}=\frac{2^{1/4}(f(W_{0})-f_{\inf})^{3/4}b_{\mathrm{mb}}^{1/4}}{(C_{2}+C_{3})^{3/4}(C_{2}/2+C_{3})^{1/4}(L\sigma^{2})^{1/4}},$ $\displaystyle c_{2}=\Big(\frac{2(C_{2}/2+C_{3})L(f(W_{0})-f_{\inf})b_{\mathrm{mb}}}{(C_{2}+C_{3})\sigma^{2}}\Big)^{1/2},~c_{3}=\Big(\frac{L(f(W_{0})-f_{\inf})\sigma^{2}}{b_{\mathrm{mb}}}\Big)^{1/4}.$ (20)
+
+For these choices, the bracket in ( 19 ) equals
+
+$\Big[2^{11/4}\Big(1+\frac{C_{3}}{C_{2}}\Big)^{3/4}\Big(\frac{1}{2}+\frac{C_{3}}{C_{2}}\Big)^{1/4}+\frac{1}{2}\Big]\Big(\frac{L(f(W_{0})-f_{\inf})\sigma^{2}}{b_{\mathrm{mb}}}\Big)^{1/4}.\qed$
+
+6 Advantage of practical NS
+
+Our convergence results do not reveal an advantage of practical NS over standard NS. As discussed for standard NS with WD, the NS iterations may leave very small singular values far from $1$ , potentially slowing convergence. Practical NS was designed to amplify them faster by increasing the singular-value map’s slope at zero ( Jordan et al., 2024 ) , and the following ill-conditioned quadratic illustrates its optimization advantage. The detailed proof is provided in Appendix B .
+
+Let $h,\ell,\kappa\in\mathbb{N}$ , with $\kappa\gg 1$ , $\ell=h\kappa$ , $r=h+\ell$ . Define
+
+$Q=\operatorname{diag}(\kappa I_{h},I_{\ell}),\qquad f(W)=\frac{1}{2}\operatorname{tr}(W^{\top}QW),\qquad W_{0}=I_{r}.$
+
+The high-curvature block accounts for most of the gradient energy, while each block contributes half of the objective value. We consider practical NS or standard NS with $k=2$ , and normalize without an $\varepsilon$ -stabilizer, stopping when the gradient vanishes.
+
+(i) One-step contraction. Denote $\tau_{0}\hskip-1.00006pt=\hskip-1.00006pt\left\lVert\nabla f(W_{0})\hskip-1.00006pt\right\rVert_{F}=\hskip-1.00006pt\sqrt{h\kappa(\kappa+1)},~u=q_{5}(\kappa/\tau_{0}),~v=q_{5}(1/\tau_{0}).$ For deterministic Muon without momentum or WD, the respective optimal stepsizes minimizing $f(W_{1})$ for the two NS choices yield
+
+$\frac{f(W_{1})}{f(W_{0})}=\frac{h\kappa\ell(u-v)^{2}}{(h\kappa+\ell)(h\kappa u^{2}+\ell v^{2})}=\frac{(u-v)^{2}}{2(u^{2}+v^{2})}\leq\left(\frac{u-v}{u+v}\right)^{2}.$
+
+Consider the example with $h=1$ and $\ell=\kappa=100$ , five practical and standard NS iterations give $(u,v)\approx(0.7020,0.6968)$ and $(1,0.2274)$ , respectively, leaving $0.0014\%$ and $28.3789\%$ of $f(W_{0})$ after the one-step update.
+
+For fixed $h$ and $\kappa\to\infty$ , substituting $u=q_{5}(1/\sqrt{h})+\mathcal{O}(\kappa^{-1})$ and $v=a^{5}/(\kappa\sqrt{h})+\mathcal{O}(\kappa^{-2})$ gives
+
+$\frac{f(W_{1})}{f(W_{0})}=\frac{1}{2}-\frac{a^{5}}{\kappa\sqrt{h}\,q_{5}(1/\sqrt{h})}+\mathcal{O}(\kappa^{-2}).$
+
+When $q_{5}(1/\sqrt{h})$ is close to one for both NS choices, the leading-order improvement is mainly governed by $a^{5}$ , which is approximately $484.8762$ for practical NS and $23.1743$ for standard NS. Thus, practical NS yields a substantially stronger one-step contraction.
+
+(ii) Full optimization trajectory. Consider the example with $h=1$ and $\ell=\kappa=100$ . Let $W_{t}^{\mathrm{P}}$ and $W_{t}^{\mathrm{S}}$ denote the Muon iterates generated by practical and standard NS, respectively, using the optimal stepsizes at each iteration $t$ that minimize $f(W_{t+1}^{\mathrm{P}})$ and $f(W_{t+1}^{\mathrm{S}})$ . Then
+
+$\frac{f(W_{t}^{\mathrm{P}})}{f(W_{0})}\leq(6.4514\times 10^{-5})^{t},\qquad\frac{f(W_{t}^{\mathrm{S}})}{f(W_{0})}\geq(0.1406)^{t}.$
+
+Further comparisons for different values of $h$ and $\kappa$ are provided in Table 2 .
+
+Table 2 : One-step and full trajectory comparisons for the ill-conditioned quadratic. Panel (a) reports $f(W_{1}^{\mathrm{P}})/f(W_{1}^{\mathrm{S}})$ ; panel (b) reports $T_{\mathrm{P}}/T_{\mathrm{S}}$ , where $T_{\mathrm{P}}$ and $T_{\mathrm{S}}$ are the numbers of iterations required by practical and standard NS, respectively, to reduce the objective to $10^{-6}$ of its initial value.
+
+7 Experiments
+
+As full gradient evaluation is impractical for large language models, we examine Muon’s $\mathcal{O}(T^{-\hskip-0.81949pt1/4})$ convergence rate using ResNet-32 ( He et al., 2016 ) with 118M parameters (Figure 1 , left), where its Frobenius gradient norm follows an overall trend qualitatively similar to the $T^{-1/4}$ reference curve. We further examine Muon’s theoretical $\sqrt{d}$ improvement over AdamW in the Frobenius norm using ResNet-32 of varying dimensions (Figure 1 , right), where the normalized Muon-to-AdamW gradient norm ratios, denoted by $\sqrt{d}\|\nabla f(W_{\mathrm{Muon}})\|_{F}/\|\nabla f(W_{\mathrm{AdamW}})\|_{F}$ , remain broadly stable across dimensions despite fluctuations, suggesting a growing relative advantage with dimension.
+
+We also show on a 124M-parameter GPT-2-style model ( Radford et al., 2019 ) that a large factor $(1\hskip-1.00006pt-\hskip-1.00006pt\epsilon_{5})^{-\hskip-0.81949pt1}$ arising from the worst-case NS orthogonalization error does not necessarily imply slow convergence (Figure 2 , left), even when it is on the order of $10^{7}$ for standard NS and $10^{5}$ for practical NS (Figure 2 , right). See Appendices C and D for further details, including the setup, larger-model results, and hyperparameter sweeps.
+
+Figure 1: Empirical $\mathcal{O}(T^{-1/4})$ convergence and $\sqrt{d}$ improvement over AdamW on ResNet-32.
+
+Figure 2: Training loss and orthogonalization error factor $(\hskip-1.00006pt1\hskip-0.89996pt-\hskip-0.50003pt\epsilon_{t\hskip-0.40974pt,\hskip-0.40974pt5}\hskip-1.00006pt)^{\hskip-0.81949pt-\hskip-0.81949pt1}$ on the 124M GPT-2-style model.
+
+8 Conclusion
+
+In this paper, we provided an optimization interpretation and established convergence for Muon with practical Newton–Schulz iterations and decoupled weight decay. Our interpretation reveals a dynamic regularization effect that vanishes as stationarity is approached, preserving the original objective as the convergence target. On this basis, we established an $\mathcal{O}(T^{-1/4})$ convergence rate in the stochastic nonconvex setting, with a $\sqrt{d}$ improvement in dimension dependence over the best known AdamW’s convergence rate in terms of the expected Frobenius norm of the gradient. Future work of particular interest includes understanding Muon’s advantages and improving its performance.
+
+AI use statement
+
+In this work, we used generative AI tools to improve the grammar of the manuscript. We have not used generative AI tools for research ideation, theoretical analysis, or the interpretation of experimental results. We have reviewed all AI-assisted work to ensure that it preserves the intended meaning and technical content. We take responsibility for the final content of this work, including text, claims or artifacts produced with the aid of generative AI.
+
+Acknowledgments
+
+This work was supported in part by the National Natural Science Foundation of China under Grants 62503365, 62573319, 62271424, and 62088101.
+
+References
+
+Appendix A Additional related work
+
+Convergence of AdamW.
+
+Although the convergence of Adam and its variants has been extensively studied ( Reddi et al., 2018 ; Zhang et al., 2022 ) , decoupled WD complicates both the optimization interpretation and convergence analysis of AdamW. Xie and Li (2024) show that, if deterministic AdamW converges, its limit is a KKT point of an $\ell_{\infty}$ -constrained problem. Zhou et al. (2024) provide the first convergence analysis of AdamW through a surrogate objective combining the original loss with a dynamic weighted $\ell_{2}$ regularizer. However, their analysis requires an exponentially decreasing of the WD coefficient, progressively weakening regularization. More recently, Li et al. (2026) establish the best known convergence rate ( 1 ) for stationarity of the original objective with a WD coefficient held fixed across iterations. Inspired by these works, we investigate the role of WD in Muon while additionally accounting for its interaction with practical NS, thereby providing an optimization interpretation and convergence analysis for practical Muon.
+
+Newton–Schulz iterations.
+
+NS iterations approximately orthogonalize matrices through repeated matrix polynomial updates ( Björck and Bowie, 1971 ; Higham, 2008 ) . Standard Taylor-based polynomials are designed to progressively improve the orthogonalization accuracy, whereas Muon’s practical polynomial is tuned to move more rapidly toward orthogonalization within a small fixed number of iterations while allowing deviations from exact orthogonalization ( Jordan et al., 2024 ) . Recent methods such as Polar Express ( Amsel et al., 2026 ) and CANS ( Grishina et al., 2025 ) accelerate orthogonalization using a sequence of NS polynomials, each optimized for the singular-value range produced by the previous iteration.
+
+Optimization interpretations of Muon.
+
+Muon’s update direction is often interpreted as a steepest descent direction for a surrogate objective under a suitable norm constraint. Examples include spectral-norm steepest descent ( Bernstein and Newhouse, 2024 ) and spectral-ball LMO formulations ( Pethick et al., 2025 ) for Muon with exact orthogonalization, as well as Frank–Wolfe interpretations ( Pethick et al., 2025 ; Sfyraki and Wang, 2026 ) and the Lion- $\mathcal{K}$ framework ( Chen et al., 2026 ) , which additionally account for WD. Beyond explaining the update direction, the Frank–Wolfe and Lion- $\mathcal{K}$ interpretations also recast Muon with exact orthogonalization and WD as a method for minimizing the original objective under a spectral-norm constraint on the parameters. A complementary perspective studies Muon through matrix preconditioning. Bernstein and Newhouse (2024) interpret Muon’s exact orthogonalization as Shampoo preconditioning without accumulation, while Lau et al. (2026) ; Ma et al. (2026) interpret orthogonalization as preconditioning with inverse square roots of gradient Gram matrices, which can offer benefits such as reduced gradient anisotropy and faster convergence on certain structured matrix problems. Motivated by these perspectives, we also interpret Muon’s update direction as a descent direction for an underlying objective and provide a corresponding preconditioning interpretation.
+
+Understanding Muon’s advantages over Adam and AdamW.
+
+Beyond the success discussed in the introduction, existing work investigates the mechanisms underlying Muon’s advantages over Adam and AdamW from the perspectives of long-tail learning, directional curvature, and convergence complexity. For long-tail learning, these advantages are linked to Muon’s more uniform update singular values, which can reduce the dominance of frequent patterns and promote more balanced learning across frequencies ( Wang et al., 2026c ; Vasudeva et al., 2026 ; Wang et al., 2026a ) . Regarding curvature, the preconditioning interpretation discussed above provides one theoretical perspective. Su (2025) offers another through an isotropic curvature model for a single optimization step, in which gradient orthogonalization is optimal when the curvature penalty has a sufficiently sharp kink. Empirical studies complement these theoretical perspectives by showing that Muon exhibits lower normalized directional curvature than Adam at matched validation loss ( Wang et al., 2026b ) and allocates a larger fraction of its update to low-curvature Hessian subspaces than AdamW ( Kim et al., 2026 ) . In terms of convergence complexity, Ma et al. (2026) and Paquette et al. (2026) compare Muon with exact orthogonalization against SignGD and SignSGD, respectively, while Kim and Oh (2026) compare Muon with standard NS against SGD with momentum, obtaining sharper rank dependence in convergence rates for nuclear norm stationarity. We complement these perspectives by directly comparing the convergence rate we establish for practical Muon in Theorem 1 with the best known AdamW’s rate ( 1 ), showing Muon’s sharper dimension dependence when stationarity is measured in the Frobenius norm.
+
+Appendix B Complete proofs
+
+This appendix provides the complete proofs of Lemma 2 , Lemma 3 , and Proposition 2 . We begin with Lemma 2 , deriving the sharp constants omitted from the main text.
+
+For both practical and standard NS, the momentum $M_{t}$ and the resulting direction $D_{t}$ in Algorithm 1 satisfy
+
+$\displaystyle\langle M_{t},D_{t}\rangle_{F}\geq C_{2}\left\lVert M_{t}\right\rVert_{F}-C_{2}\varepsilon/4,\qquad\left\lVert D_{t}\right\rVert_{F}\leq C_{3},$
+
+where $C_{2}\hskip-1.00006pt=\hskip-1.00006pt\min_{s\in[0,1]}\chi_{5}(s)\hskip-1.00006pt>\hskip-1.00006pt0,~C_{1}\hskip-1.00006pt=\hskip-1.00006pt\max_{s\in[0,1]}\chi_{5}(s)\hskip-1.00006pt>\hskip-1.00006pt0$ , as defined above, and
+
+$\displaystyle C_{3}=\min\{C_{1},q_{\max}\sqrt{r}\},\qquad q_{\max}=\max\nolimits_{s\in[0,1]}q_{5}(s),\qquad r=\min\{m,n\}.$
+
+In particular,
+
+$(C_{2},C_{1},q_{\max})=\begin{cases}(0.6964\ldots,\,484.8762\ldots,\,1.2023\ldots),&\text{practical NS},\\ (1,\,a^{5},\,1),&\text{standard NS}.\end{cases}$
+
+(i) The proof of Proposition 1 ensures that $\chi_{5}$ , $C_{1}$ , $C_{2}$ , and $q_{\max}$ are well defined. Their definitions directly give
+
+$\displaystyle C_{2}s\leq q_{5}(s)\leq C_{1}s,\qquad 0\leq q_{5}(s)\leq q_{\max},\qquad s\in[0,1].$
+
+We first establish the bounds in Lemma 2 and then determine the sharp constants $C_{1}$ , $C_{2}$ , and $q_{\max}$ for both practical and standard NS. By Lemma 1 , $D_{t}=U\operatorname{diag}(q_{5}(s_{i,t}),\ldots,q_{5}(s_{r_{t},t})V^{\top}$ . Then ( 13 ) yields
+
+$\langle M_{t},D_{t}\rangle_{F}=\tau_{t}\sum\nolimits_{i}s_{i,t}q_{5}(s_{i,t})\geq C_{2}\tau_{t}\sum\nolimits_{i}s_{i,t}^{2}=C_{2}\left\lVert M_{t}\right\rVert_{F}^{2}/\tau_{t},$
+
+where $\left\lVert M_{t}\right\rVert_{F}^{2}/\tau_{t}\geq\left\lVert M_{t}\right\rVert_{F}-\varepsilon/4$ , since for $\left\lVert M_{t}\right\rVert_{F}\leq\varepsilon$ the inequality reduces to $(\left\lVert M_{t}\right\rVert_{F}-\varepsilon/2)^{2}/\varepsilon\geq 0$ , whereas for $\left\lVert M_{t}\right\rVert_{F}\geq\varepsilon$ , the left-hand side equals $\left\lVert M_{t}\right\rVert_{F}$ .
+
+Moreover, ( 13 ) together with $\sum_{i}s_{i,t}^{2}=\left\lVert M_{t}\right\rVert_{F}^{2}/\tau_{t}^{2}\leq 1$ gives
+
+$\left\lVert D_{t}\right\rVert_{F}=\sqrt{\sum\nolimits_{i}q_{5}(s_{i,t})^{2}}\leq\min\Big\{C_{1}\sqrt{\sum\nolimits_{i}s_{i,t}^{2}},q_{\max}\sqrt{r}\Big\}\leq C_{3}.$
+
+(ii) We then determine the sharp constants $C_{1}$ , $C_{2}$ , and $q_{\max}$ , which are illustrated in Figure 3 . For practical and standard NS, respectively, we denote $\chi_{5}$ by $\chi_{\mathrm{P},5}$ and $\chi_{\mathrm{S},5}^{(k)}$ , and $q_{\max}$ by $q_{\mathrm{P},\max}$ and $q_{\mathrm{S},\max}^{(k)}$ . We first consider the practical NS and establish the following bounds with both constants being sharp:
+
+$\displaystyle q_{\mathrm{P},5}(1)s\leq q_{\mathrm{P},5}(s)\leq a_{\mathrm{P}}^{5}s,\qquad\forall s\in[0,1].$
+
+Hence $C_{2}=q_{\mathrm{P},5}(1)=0.6964\ldots$ and $C_{1}=a_{\mathrm{P}}^{5}=484.8762\ldots$ .
+
+Figure 3: Sharp bounds for five-step Newton–Schulz maps.
+
+The two positive roots of $q_{\mathrm{P}}^{\prime}(s)=a_{\mathrm{P}}+3b_{\mathrm{P}}s^{2}+5c_{\mathrm{P}}s^{4}$ are
+
+$s_{-}\hskip-1.00006pt=\hskip-1.00006pt\sqrt{\frac{-3b_{\mathrm{P}}-\sqrt{9b_{\mathrm{P}}^{2}-20a_{\mathrm{P}}c_{\mathrm{P}}}}{10c_{\mathrm{P}}}}\hskip-1.00006pt=\hskip-1.00006pt0.5545\ldots,~s_{+}\hskip-1.00006pt=\hskip-1.00006pt\sqrt{\frac{-3b_{\mathrm{P}}+\sqrt{9b_{\mathrm{P}}^{2}-20a_{\mathrm{P}}c_{\mathrm{P}}}}{10c_{\mathrm{P}}}}\hskip-1.00006pt=\hskip-1.00006pt1.0501\ldots.$
+
+We have $\bar{q}_{\mathrm{P}}=\max_{s\in[0,1]}q_{\mathrm{P}}(s)=q_{\mathrm{P}}(s_{-})=1.2023\ldots$ , and denote $\underline{q}_{\mathrm{P}}=q_{\mathrm{P}}(s_{+})=0.6818\ldots$ . The monotonicity intervals of $q_{\mathrm{P}}$ , together with $q_{\mathrm{P}}(\bar{q}_{\mathrm{P}})=0.9465\ldots<\bar{q}_{\mathrm{P}}$ , gives
+
+$q_{\mathrm{P}}([0,\bar{q}_{\mathrm{P}}])\subset[0,\bar{q}_{\mathrm{P}}],\qquad q_{\mathrm{P}}([\underline{q}_{\mathrm{P}},\bar{q}_{\mathrm{P}}])\subset[\underline{q}_{\mathrm{P}},\bar{q}_{\mathrm{P}}].$
+
+Since $q_{\mathrm{P}}$ is continuous, $q_{\mathrm{P}}(0)=0$ , and $q_{\mathrm{P}}(s_{-})=\bar{q}_{\mathrm{P}}$ with $s_{-}\in[0,1]\subset[0,\bar{q}_{\mathrm{P}}]$ , the intermediate value theorem ( Rudin, 2021 ) and the invariance of $[0,\bar{q}_{\mathrm{P}}]$ give
+
+$q_{\mathrm{P}}([0,1])=q_{\mathrm{P}}([0,\bar{q}_{\mathrm{P}}])=[0,\bar{q}_{\mathrm{P}}].$
+
+By induction, $q_{\mathrm{P},j}([0,1])=[0,\bar{q}_{\mathrm{P}}]$ for $j=1,\ldots,5$ . Therefore,
+
+$q_{\mathrm{P},\max}=\max\nolimits_{s\in[0,1]}q_{\mathrm{P},5}(s)=\bar{q}_{\mathrm{P}}=1.2023\ldots.$
+
+Recall that $p_{\mathrm{P}}(s)=a_{\mathrm{P}}+b_{\mathrm{P}}s+c_{\mathrm{P}}s^{2}$ and $q_{\mathrm{P}}(s)=sp_{\mathrm{P}}(s^{2})$ . A direct calculation shows that $p_{\mathrm{P}}$ is decreasing on $[0,\underline{q}_{\mathrm{P}}^{2}]$ and $p_{\mathrm{P}}(\underline{q}_{\mathrm{P}}^{2})=1.6636\ldots>1,$ so $q_{\mathrm{P}}(s)\geq s$ for $s\in[0,\underline{q}_{\mathrm{P}}]$ . Consequently, considering the process $q_{\mathrm{P},0}(s)=s$ and $q_{\mathrm{P},j+1}(s)=q_{\mathrm{P}}(q_{\mathrm{P},j}(s))=q_{\mathrm{P},j}(s)p(q_{\mathrm{P},j}(s)^{2})$ for $j=0,\ldots,4$ , every orbit starting from $s\in[0,1]$ either remains below $\underline{q}_{\mathrm{P}}$ and is nondecreasing, or enters the invariant interval $[\underline{q}_{\mathrm{P}},\bar{q}_{\mathrm{P}}]$ . Hence
+
+$q_{\mathrm{P},5}(s)\geq\min\{s,\underline{q}_{\mathrm{P}}\},\qquad 0\leq s\leq 1.$
+
+Set $s_{\star}=\underline{q}_{\mathrm{P}}/q_{\mathrm{P},5}(1)=0.9790\ldots.$ For $s\in[0,s_{\star}]$ , $q_{\mathrm{P},5}(s)\geq\min\{s,\underline{q}_{\mathrm{P}}\}\geq q_{\mathrm{P},5}(1)s.$ For $s\in[s_{\star},1]$ , we first analyse the monotonicity of $q_{\mathrm{P},5}$ . The following array tracks $q_{\mathrm{P},j}(s)$ after $j$ NS steps, with $q_{\mathrm{P},0}(s)=s$ .
+
+$\begin{array}[]{c|c|c|c}\text{NS steps }j&\text{Iterate}&\text{Enclosing interval }I_{j}&I_{j}\subset\\ \hline\cr 0&s&[0.9790,\,1.0000]&(s_{-},s_{+})\\ 1&q_{\mathrm{P},1}(s)&[0.7010,\,0.7187]&(s_{-},s_{+})\\ 2&q_{\mathrm{P},2}(s)&[1.0924,\,1.1137]&(s_{+},+\infty)\\ 3&q_{\mathrm{P},3}(s)&[0.6983,\,0.7209]&(s_{-},s_{+})\\ 4&q_{\mathrm{P},4}(s)&[1.0897,\,1.1167]&(s_{+},+\infty)\end{array}$
+
+These enclosures follow successively from $[s_{\star},1]\subseteq I_{0}$ and $q_{\mathrm{P}}(I_{j})\subseteq I_{j+1}$ for $j=0,\ldots,3$ , verified using the endpoint values and the monotonicity of $q_{\mathrm{P}}$ on each $I_{j}$ . We know that $q_{\mathrm{P}}^{\prime}(q_{\mathrm{P},j}(s))<0$ for $j=0,1,3$ and $q_{\mathrm{P}}^{\prime}(q_{\mathrm{P},j}(s))>0$ for $j=2,4$ . Thus the chain-rule product contains three negative factors and two positive factors, and $q_{\mathrm{P},5}^{\prime}(s)=\prod\nolimits_{j=0}^{4}q_{\mathrm{P}}^{\prime}(q_{\mathrm{P},j}(s))<0.$ Therefore, for $s\in[0,s_{\star}]$ , $q_{\mathrm{P},5}(s)\geq q_{\mathrm{P},5}(1)\geq q_{\mathrm{P},5}(1)s.$ Together, we obtain
+
+$q_{\mathrm{P},5}(1)s\leq q_{\mathrm{P},5}(s),\qquad 0\leq s\leq 1.$
+
+Since equality holds at $x=1$ , $C_{2}=q_{\mathrm{P},5}(1)$ is sharp.
+
+Note that $\bar{q}_{\mathrm{P}}^{2}<-b_{\mathrm{P}}/c_{\mathrm{P}}$ , invariance of $[0,\bar{q}_{\mathrm{P}}]$ gives $p_{\mathrm{P}}(q_{\mathrm{P},j}(s)^{2})\leq p_{\mathrm{P}}(0)=a_{\mathrm{P}}$ . Thus
+
+$\displaystyle q_{\mathrm{P},5}(s)$ $\displaystyle=s\prod\nolimits_{j=0}^{4}p_{\mathrm{P}}(q_{\mathrm{P},j}(s)^{2})\leq a_{\mathrm{P}}^{5}s,$
+
+and $C_{1}=\max_{s\in[0,1]}\chi_{\mathrm{P},5}(s)=\chi_{\mathrm{P},5}(0)=a_{\mathrm{P}}^{5}=484.8762\ldots$ .
+
+(iii) We next consider the standard NS. The monotonicity of $q_{\mathrm{S}}^{(k)}$ , together with $q_{\mathrm{S}}^{(k)}(0)=0$ , and $q_{\mathrm{S}}^{(k)}(1)=1$ in Lemma 1 gives $q_{\mathrm{S}}^{(k)}([0,1])=[0,1]$ . By induction, $q_{\mathrm{S},j}^{(k)}([0,1])=[0,1]$ and $q_{\mathrm{S},\max}^{(k)}=1$ . Moreover, the definition $p_{\mathrm{S}}^{(k)}(s)=1+\sum_{\ell=1}^{k}\frac{(2\ell)!}{4^{\ell}(\ell!)^{2}}(1-s)^{\ell}$ yields
+
+$1\leq p_{\mathrm{S}}(s)\leq p_{\mathrm{S}}(0)=a,\qquad s\in[0,1].$
+
+Thus,
+
+$\displaystyle s\leq q_{\mathrm{S},5}(s)=s\prod\nolimits_{j=0}^{4}p_{\mathrm{S}}\bigl(q_{\mathrm{S},j}(s)^{2}\bigr)\leq\min\{a^{5}s,1\},\qquad s\in[0,1],$ (21)
+
+which implies $C_{2}=1$ since $q_{\mathrm{S},5}(1)=1$ , and $C_{1}=\max_{s\in[0,1]}\chi_{\mathrm{S},5}^{(k)}(s)=\chi_{\mathrm{S},5}^{(k)}(0)=a^{5}$ . ∎
+
+We next prove Lemma 3 , which bounds the tracking error of the Nesterov-style momentum.
+
+Under the assumptions and parameter choices of Theorem 1 ,
+
+$\displaystyle\frac{1}{T}\hskip-1.00006pt\sum\nolimits_{t=0}^{T-1}\hskip-1.00006pt\mathbb{E}\left\lVert M_{t}\hskip-1.00006pt-\hskip-1.00006pt\nabla f(W_{t})\right\rVert_{F}\leq{}$ $\displaystyle\frac{\left\lVert B_{-1}\hskip-1.00006pt-\hskip-1.00006pt\nabla f(W_{0})\right\rVert_{F}}{c_{2}}T^{-1/2}\hskip-1.00006pt+\hskip-1.00006pt\Big(\frac{Lc_{1}C_{4}}{c_{2}}\hskip-1.00006pt+\hskip-1.00006pt\sqrt{2c_{2}}\,\frac{\sigma}{\sqrt{b_{\mathrm{mb}}}}\Big)T^{-1/4}\hskip-1.00006pt.$
+
+Unrolling the two momentum recursions defining $B_{t}$ and $M_{t}$ in Algorithm 1 gives
+
+$\displaystyle B_{t}$ $\displaystyle=\beta^{t+1}B_{-1}+(1-\beta)\sum\nolimits_{j=0}^{t}\beta^{t-j}G_{j},$ $\displaystyle M_{t}$ $\displaystyle=\beta^{t+2}B_{-1}+(1-\beta)\sum\nolimits_{j=0}^{t-1}\beta^{t-j+1}G_{j}+(1-\beta^{2})G_{t}.$ (22)
+
+Subtracting $\nabla f(W_{t})$ from ( 22 ), using $G_{j}=\nabla f(W_{j})+G_{j}-\nabla f(W_{j})$ , and the reindexing identity
+
+$\displaystyle(1-\beta)\sum_{j=0}^{t-1}\nolimits\beta^{t-j+1}\nabla f(W_{j})-\beta^{2}\nabla f(W_{t})$ $\displaystyle=\sum_{j=0}^{t-1}\nolimits\beta^{t-j+1}\nabla f(W_{j})-\sum_{j=0}^{t-1}\nolimits\beta^{t-j+2}\nabla f(W_{j})-\beta^{2}\nabla f(W_{t})$ $\displaystyle=\sum_{j=1}^{t}\nolimits\beta^{t-j+2}\nabla f(W_{j-1})-\beta^{t+2}\nabla f(W_{0})-\sum_{j=1}^{t}\nolimits\beta^{t-j+2}\nabla f(W_{j})$ $\displaystyle=-\beta^{t+2}\nabla f(W_{0})-\sum_{j=1}^{t}\nolimits\beta^{t-j+2}\bigl(\nabla f(W_{j})-\nabla f(W_{j-1})\bigr),$
+
+we obtain
+
+$\displaystyle e_{t}={}$ $\displaystyle\beta^{t+2}\bigl(B_{-1}-\nabla f(W_{0})\bigr)-\sum\nolimits_{j=1}^{t}\beta^{t-j+2}\bigl(\nabla f(W_{j})-\nabla f(W_{j-1})\bigr)+N_{t},$ (23) $\displaystyle N_{t}={}$ $\displaystyle(1-\beta^{2})\bigl(G_{t}-\nabla f(W_{t})\bigr)+(1-\beta)\sum_{j=0}^{t-1}\nolimits\beta^{t-j+1}\bigl(G_{j}-\nabla f(W_{j})\bigr).$
+
+Assumption 2 and ( 16 ) imply $\left\lVert\nabla f(W_{j})-\nabla f(W_{j-1})\right\rVert_{F}\leq L\eta C_{4}$ . Thus the triangle inequality and the geometric-series bounds in ( 23 ) give
+
+$\frac{1}{T}\sum_{t=0}^{T-1}\nolimits\mathbb{E}\left\lVert e_{t}\right\rVert_{F}\leq\frac{\left\lVert B_{-1}-\nabla f(W_{0})\right\rVert_{F}}{T(1-\beta)}+\frac{L\eta C_{4}}{1-\beta}+\frac{1}{T}\sum_{t=0}^{T-1}\nolimits\mathbb{E}\left\lVert N_{t}\right\rVert_{F}.$ (24)
+
+By independent sampling and Assumption 3 , we have
+
+$\displaystyle\mathbb{E}\hskip-1.00006pt\left\lVert N_{t}\right\rVert_{F}^{2}\hskip-1.00006pt\leq\hskip-1.00006pt\frac{\sigma^{2}}{b_{\mathrm{mb}}}\Big[(1\hskip-1.00006pt-\hskip-1.00006pt\beta^{2})^{2}\hskip-1.00006pt+\hskip-1.00006pt(1\hskip-1.00006pt-\hskip-1.00006pt\beta)^{2}\sum_{j=0}^{t-1}\beta^{2(t-j+1)}\Big]\hskip-1.99997pt\leq\hskip-1.00006pt\frac{\sigma^{2}}{b_{\mathrm{mb}}}\frac{(1-\beta)(1+2\beta-2\beta^{3})}{1+\beta}\hskip-1.00006pt\leq\hskip-1.00006pt\frac{2(1\hskip-1.00006pt-\hskip-1.00006pt\beta)\sigma^{2}}{b_{\mathrm{mb}}}\hskip-1.49994pt.$
+
+By the Cauchy–Schwarz inequality,
+
+$\frac{1}{T}\sum_{t=0}^{T-1}\nolimits\mathbb{E}\left\lVert N_{t}\right\rVert_{F}\leq\Big(\frac{1}{T}\sum_{t=0}^{T-1}\nolimits\mathbb{E}\left\lVert N_{t}\right\rVert_{F}^{2}\Big)^{1/2}\leq\frac{\sigma}{\sqrt{b_{\mathrm{mb}}}}\sqrt{2(1-\beta)}.$
+
+Substituting this bound, $\eta=c_{1}T^{-3/4}$ , and $(1-\beta)=c_{2}T^{-1/2}$ into ( 24 ) yields the desired result. ∎
+
+Finally, we prove Proposition 2 , which illustrates the optimization advantage of practical NS over standard NS on the ill-conditioned quadratic.
+
+Let $h,\ell,\kappa\in\mathbb{N}$ , with $\kappa\gg 1$ , $\ell=h\kappa$ , and $r=h+\ell$ . Define
+
+$Q=\operatorname{diag}(\kappa I_{h},I_{\ell}),\qquad f(W)=\frac{1}{2}\operatorname{tr}(W^{\top}QW),\qquad W_{0}=I_{r}.$
+
+The high-curvature block accounts for most of the gradient energy, while each block contributes half of the objective value. We consider practical NS or standard NS with $k=2$ , and normalize without an $\varepsilon$ -stabilizer, stopping when the gradient vanishes.
+
+(i) One-step contraction. Denote $\tau_{0}\hskip-1.00006pt=\hskip-1.00006pt\left\lVert\nabla f(W_{0})\hskip-1.00006pt\right\rVert_{F}=\hskip-1.00006pt\sqrt{h\kappa(\kappa+1)},~u=q_{5}(\kappa/\tau_{0}),~v=q_{5}(1/\tau_{0}).$ For deterministic Muon without momentum or WD, the respective optimal stepsizes minimizing $f(W_{1})$ for the two NS choices yield
+
+$\frac{f(W_{1})}{f(W_{0})}=\frac{h\kappa\ell(u-v)^{2}}{(h\kappa+\ell)(h\kappa u^{2}+\ell v^{2})}=\frac{(u-v)^{2}}{2(u^{2}+v^{2})}\leq\left(\frac{u-v}{u+v}\right)^{2}.$
+
+Consider the example with $h=1$ and $\ell=\kappa=100$ , five practical and standard NS iterations give $(u,v)\approx(0.7020,0.6968)$ and $(1,0.2274)$ , respectively, leaving $0.0014\%$ and $28.3789\%$ of $f(W_{0})$ after the one-step update.
+
+For fixed $h$ and $\kappa\to\infty$ , substituting $u=q_{5}(1/\sqrt{h})+\mathcal{O}(\kappa^{-1})$ and $v=a^{5}/(\kappa\sqrt{h})+\mathcal{O}(\kappa^{-2})$ gives
+
+$\frac{f(W_{1})}{f(W_{0})}=\frac{1}{2}-\frac{a^{5}}{\kappa\sqrt{h}\,q_{5}(1/\sqrt{h})}+\mathcal{O}(\kappa^{-2}).$
+
+When $q_{5}(1/\sqrt{h})$ is close to one for both NS choices, the leading-order improvement is mainly governed by $a^{5}$ , which is approximately $484.8762$ for practical NS and $23.1743$ for standard NS. Thus, practical NS yields a substantially stronger one-step contraction.
+
+(ii) Full optimization trajectory. Consider the example with $h=1$ and $\ell=\kappa=100$ . Let $W_{t}^{\mathrm{P}}$ and $W_{t}^{\mathrm{S}}$ denote the Muon iterates generated by practical and standard NS, respectively, using the optimal stepsizes at each iteration $t$ that minimize $f(W_{t+1}^{\mathrm{P}})$ and $f(W_{t+1}^{\mathrm{S}})$ . Then
+
+$\frac{f(W_{t}^{\mathrm{P}})}{f(W_{0})}\leq(6.4514\times 10^{-5})^{t},\qquad\frac{f(W_{t}^{\mathrm{S}})}{f(W_{0})}\geq(0.1406)^{t}.$
+
+Further comparisons for different values of $h$ and $\kappa$ are provided in Table 2 .
+
+(i) One-step contraction. The normalized gradient and the NS direction are
+
+$\frac{\nabla f(W_{0})}{\tau_{0}}=\operatorname{diag}\left(\frac{\kappa}{\tau_{0}}I_{h},\frac{1}{\tau_{0}}I_{\ell}\right),\qquad D_{0}=\operatorname{diag}(uI_{h},vI_{\ell}).$
+
+Hence,
+
+$f(W_{0}-\eta D_{0})=\frac{1}{2}\big(h\kappa(1-\eta u)^{2}+\ell(1-\eta v)^{2}\big),$
+
+and the optimal stepsize minimizing $f(W_{0}-\eta D_{0})$ is
+
+$\eta_{0}^{\star}=\frac{h\kappa u+\ell v}{h\kappa u^{2}+\ell v^{2}}.$
+
+With $\eta=\eta_{0}^{\star}$ , we have
+
+$\displaystyle\frac{f(W_{1})}{f(W_{0})}$ $\displaystyle=1-\frac{(h\kappa u+\ell v)^{2}}{(h\kappa+\ell)(h\kappa u^{2}+\ell v^{2})}=\frac{h\kappa\ell(u-v)^{2}}{(h\kappa+\ell)(h\kappa u^{2}+\ell v^{2})}=\frac{(u-v)^{2}}{2(u^{2}+v^{2})}\leq\left(\frac{u-v}{u+v}\right)^{2},$
+
+where the last two steps use $\ell=h\kappa$ and $(u+v)^{2}\leq 2(u^{2}+v^{2})$ .
+
+For $h=1$ and $\ell=\kappa=100$ , direct evaluation of the five NS iterations gives
+
+$(u_{\mathrm{P}},v_{\mathrm{P}})\approx(0.7020\ldots,0.6967\ldots),\qquad(u_{\mathrm{S}},v_{\mathrm{S}})\approx(1,0.2273\ldots).$
+
+Hence, the values of $f(W_{1})/f(W_{0})$ are approximately $1.4118\times 10^{-5}$ and $0.2837\ldots$ for practical and standard NS, respectively, which gives the stated percentages.
+
+Next, fix $h$ and let $\kappa\to\infty$ with $\ell=h\kappa\in\mathbb{N}$ . We have
+
+$\frac{\kappa}{\tau_{0}}=\frac{1}{\sqrt{h}}(1+\kappa^{-1})^{-1/2}=\frac{1}{\sqrt{h}}+\mathcal{O}(\kappa^{-1}),\qquad\frac{1}{\tau_{0}}=\frac{1}{\kappa\sqrt{h}}(1+\kappa^{-1})^{-1/2}=\frac{1}{\kappa\sqrt{h}}+\mathcal{O}(\kappa^{-2}).$
+
+Since $q(s)=as+bs^{3}+cs^{5}$ , its fivefold composition satisfies $q_{5}^{\prime}(0)=a^{5}$ . Consequently,
+
+$u=q_{5}(1/\sqrt{h})+\mathcal{O}(\kappa^{-1}),\qquad v=\frac{a^{5}}{\kappa\sqrt{h}}+\mathcal{O}(\kappa^{-2}),$
+
+and, because $u>0$ ,
+
+$\frac{v}{u}=\frac{a^{5}}{\kappa\sqrt{h}\,q_{5}(1/\sqrt{h})}+\mathcal{O}(\kappa^{-2}).$
+
+Using $(1-z)/(1+z)=1-2z+\mathcal{O}(z^{2})$ as $z\to 0$ yields
+
+$\frac{f(W_{1})}{f(W_{0})}\leq\left(1-\frac{2a^{5}}{\kappa\sqrt{h}\,q_{5}(1/\sqrt{h})}\right)^{2}+\mathcal{O}(\kappa^{-2}).$
+
+In fact, the exact contraction formula also gives
+
+$\frac{f(W_{1})}{f(W_{0})}=\frac{1}{2}-\frac{v/u}{1+(v/u)^{2}}=\frac{1}{2}-\frac{a^{5}}{\kappa\sqrt{h}\,q_{5}(1/\sqrt{h})}+\mathcal{O}(\kappa^{-2}).$
+
+When $q_{5}(1/\sqrt{h})$ is close to one, the leading-order comparison is governed by $a^{5}$ , with $a_{\mathrm{P}}^{5}\approx 484.8762$ and $a_{\mathrm{S}}^{5}\approx 23.1743$ .
+
+(ii) Full optimization trajectory. Set $h=1$ and $\ell=\kappa=100$ . The block structure is preserved throughout the iterations, so write
+
+$W_{t}=\operatorname{diag}(x_{t},y_{t}I_{100}),\qquad x_{0}=y_{0}=1.$
+
+Then
+
+$f(W_{t})=50(x_{t}^{2}+y_{t}^{2}),\qquad\nabla f(W_{t})=\operatorname{diag}(100x_{t},y_{t}I_{100}).$
+
+Whenever $x_{t},y_{t}\neq 0$ , define
+
+$z_{t}=\frac{|x_{t}|}{|y_{t}|},\quad u(z)=q_{5}\left(\frac{100z}{\sqrt{10^{4}z^{2}+100}}\right),\quad v(z)=q_{5}\left(\frac{1}{\sqrt{10^{4}z^{2}+100}}\right),\quad\Psi(z)=\frac{v(z)}{u(z)}.$
+
+With $u_{t}=u(z_{t})$ and $v_{t}=v(z_{t})$ , the NS direction is
+
+$D_{t}=\operatorname{diag}\bigl(\operatorname{sgn}(x_{t})u_{t},\operatorname{sgn}(y_{t})v_{t}I_{100}\bigr),$
+
+where $\operatorname{sgn}(\cdot)$ denotes the sign function. Since $x_{t}=\operatorname{sgn}(x_{t})|x_{t}|$ and $y_{t}=\operatorname{sgn}(y_{t})|y_{t}|$ , we have
+
+$f(W_{t}-\eta D_{t})=50\big((|x_{t}|-\eta u_{t})^{2}+(|y_{t}|-\eta v_{t})^{2}\big)$
+
+Differentiating with respect to $\eta$ gives
+
+$\frac{\mathrm{d}}{\mathrm{d}\eta}f(W_{t}-\eta D_{t})=100\big(\eta(u_{t}^{2}+v_{t}^{2})-|x_{t}|u_{t}-|y_{t}|v_{t}\big),~\eta_{t}^{\star}=\frac{|x_{t}|u_{t}+|y_{t}|v_{t}}{u_{t}^{2}+v_{t}^{2}}.$
+
+Substitution into the update gives
+
+$\displaystyle x_{t+1}$ $\displaystyle=\operatorname{sgn}(x_{t})\frac{v_{t}(|x_{t}|v_{t}-|y_{t}|u_{t})}{u_{t}^{2}+v_{t}^{2}},$ $\displaystyle y_{t+1}$ $\displaystyle=\operatorname{sgn}(y_{t})\frac{u_{t}(|y_{t}|u_{t}-|x_{t}|v_{t})}{u_{t}^{2}+v_{t}^{2}}.$
+
+If $|x_{t}|v_{t}-|y_{t}|u_{t}=0$ , both new blocks vanish and the algorithm reaches the minimizer. Otherwise,
+
+$\displaystyle z_{t+1}$ $\displaystyle=\frac{|x_{t+1}|}{|y_{t+1}|}=\frac{v_{t}}{u_{t}}=\Psi(z_{t}),$ $\displaystyle\frac{f(W_{t+1})}{f(W_{t})}$ $\displaystyle=\frac{x_{t+1}^{2}+y_{t+1}^{2}}{x_{t}^{2}+y_{t}^{2}}=\frac{(u_{t}^{2}+v_{t}^{2})(|x_{t}|v_{t}-|y_{t}|u_{t})^{2}}{(x_{t}^{2}+y_{t}^{2})(u_{t}^{2}+v_{t}^{2})^{2}}$ $\displaystyle=\frac{(|x_{t}|v_{t}-|y_{t}|u_{t})^{2}}{(x_{t}^{2}+y_{t}^{2})(u_{t}^{2}+v_{t}^{2})}=\frac{|y_{t}|^{2}u_{t}^{2}(z_{t}\frac{v_{t}}{u_{t}}-1)^{2}}{|y_{t}|^{2}(1+z_{t}^{2})\,u_{t}^{2}(1+(\frac{v_{t}}{u_{t}})^{2})}$ $\displaystyle=\frac{(1-z_{t}\Psi(z_{t}))^{2}}{(1+z_{t}^{2})(1+\Psi(z_{t})^{2})}.$ (25)
+
+We next find an interval $J$ containing $z_{0}=1$ such that $\Psi(J)\subset J$ . We also bound $z\Psi(z)$ on $J$ to derive the convergence bounds for the objective value.
+
+1) Practical NS. We show that $z_{t}\in[0.9920,1]$ for all $t$ , which keeps the numerator in ( 25 ) small.
+
+Suppose $z\in[0.9920,1]$ . The normalized singular values satisfy
+
+$\frac{100z}{\sqrt{10^{4}z^{2}+100}}\in[0.9949\ldots,0.9950\ldots],\qquad\frac{1}{\sqrt{10^{4}z^{2}+100}}\in[0.0099\ldots,0.0100\ldots].$
+
+On these two intervals, $q_{\mathrm{P},5}$ is decreasing and increasing, respectively, as verified by direct interval propagation through the five NS steps, following the same argument as in the proof of Lemma 2 . A direct calculation gives
+
+$0.7020\ldots\leq u(z)\leq 0.7021\ldots,\qquad 0.6967\ldots\leq v(z)\leq 0.7002\ldots.$
+
+Consequently,
+
+$0.9920<\frac{0.6967\ldots}{0.7021\ldots}\leq\Psi(z)\leq\frac{0.7002\ldots}{0.7020\ldots}<1.$
+
+Since $z_{0}=1$ and $z_{t+1}=\Psi(z_{t})$ , induction gives $z_{t}\in[0.9920,1]$ for every $t$ . In particular,
+
+$0.9920^{2}\leq z_{t}\Psi(z_{t})<1.$
+
+Applying ( 25 ), we obtain
+
+$\frac{f(W_{t+1}^{\mathrm{P}})}{f(W_{t}^{\mathrm{P}})}\leq\frac{(1-0.9920^{2})^{2}}{(1+0.9920^{2})^{2}}\leq 6.4514\times 10^{-5}.$
+
+Multiplying the above inequality yields the desired result.
+
+2) Standard NS. We show that $z_{t}\in J_{\mathrm{S}}=[1/5,1]$ for all $t$ . Suppose $z\in[1/5,1]$ . The normalized singular values satisfy $1/\sqrt{10^{4}z^{2}+100}\geq s_{0}=1/\sqrt{10100}$ . Recall that $a_{\mathrm{S}}=15/8$ . By ( 21 ),
+
+$s\leq q_{\mathrm{S},5}^{(2)}(s)\leq\min\{a_{\mathrm{S}}^{5}s,1\},\qquad s\in[0,1].$
+
+For the first four NS step ( $j=0,\ldots,4$ ), we have
+
+$q_{\mathrm{S},j}^{(2)}(s_{0})\leq a_{\mathrm{S}}^{j}s_{0}<\frac{a_{\mathrm{S}}^{4}}{100}<\frac{1}{8}.$
+
+Thus, at each of the five NS steps, we can apply
+
+$q_{\mathrm{S}}^{(2)}(s)=\frac{15}{8}s-\frac{5}{4}s^{3}+\frac{3}{8}s^{5}\geq\left(\frac{15}{8}-\frac{5}{256}\right)s=\frac{475}{256}s,\qquad s\in[0,1/8],$
+
+which gives
+
+$q_{\mathrm{S},5}^{(2)}(s_{0})\geq\big(\frac{475}{256}\big)^{5}s_{0}>\frac{1}{101}\big(\frac{475}{256}\big)^{5}>\frac{1}{5}.$
+
+For $z\in J_{\mathrm{S}}$ , the normalized singular values satisfy $s_{0}\leq 1/\sqrt{10^{4}z^{2}+100}\leq 100z/\sqrt{10^{4}z^{2}+100}\leq 1$ . Monotonicity of $q_{\mathrm{S},5}^{(2)}$ therefore yields
+
+$\frac{1}{5}<v(z)\leq u(z)\leq 1,\qquad\frac{1}{5}<\Psi(z)=\frac{v(z)}{u(z)}\leq 1,$
+
+which proves the claimed inclusion. Moreover,
+
+$z\Psi(z)\leq z\frac{a_{\mathrm{S}}^{5}/\sqrt{10^{4}z^{2}+100}}{100z/\sqrt{10^{4}z^{2}+100}}=\frac{a_{\mathrm{S}}^{5}}{100}<\frac{1}{4}.$
+
+Starting from $z_{0}=1$ , ( 25 ) thus gives,
+
+$\frac{f(W_{t+1}^{\mathrm{S}})}{f(W_{t}^{\mathrm{S}})}=\frac{(1-z_{t}\Psi(z_{t}))^{2}}{(1+z_{t}^{2})(1+\Psi(z_{t})^{2})}\geq\frac{(1-1/4)^{2}}{4}=\frac{9}{64}=0.140625.$
+
+Multiplying the above inequality yields the desired result. ∎
+
+Appendix C Experimental details on ResNet-32
+
+This appendix details the ResNet-32 experiments used to examine Muon’s convergence rate and its advantage over AdamW in dimension dependence, including the experimental setup, gradient norm convergence rates, accuracy and loss results, and hyperparameter sweeps.
+
+C.1 Experimental setting
+
+Models and data.
+
+We use ResNet-32 models of varying dimensions measured by the number of model parameters. By changing the base channel width $w\in\{16,\allowbreak 32,\allowbreak 64,\allowbreak 192,\allowbreak 256,\allowbreak 320\}$ , we obtain models with $\{0.47,\allowbreak 1.86,\allowbreak 7.41,\allowbreak 66.46,\allowbreak 118.11,\allowbreak 184.50\}$ million parameters, respectively. For each choice of $w$ , the model consists of an initial $3\times 3$ convolution followed by BatchNorm and ReLU, and three residual stages with channel widths $w$ , $2w$ , and $4w$ , respectively. Each stage contains five residual blocks, each comprising two $3\times 3$ convolutions with BatchNorm, while the first block of the second and third stages downsamples the feature map. The resulting features are then globally average pooled and passed through a linear classifier to produce logits for 100 classes. All models are trained from random initialization.
+
+We train the models on CIFAR-100 ( Krizhevsky, 2009 ) , using the standard training set containing 50,000 images and test set containing 10,000 images. All images are normalized per channel, with no data augmentation.
+
+Compared optimizers and hyperparameters.
+
+We compare three optimizers: Muon with practical NS and WD, Muon with standard NS ( $k=2$ ) and WD, and AdamW.
+
+Muon is applied to convolutional and fully connected weight matrices, with convolutional kernels reshaped into two-dimensional matrices, while an auxiliary AdamW optimizer updates biases and normalization parameters with a fixed stepsize of $10^{-3}$ and zero WD. Both Muon variants use five NS steps, momentum coefficient $\beta=0.95$ , and normalization floor $\varepsilon=10^{-7}$ . For the AdamW baseline, AdamW updates all parameters, with biases and normalization parameters excluded from WD. It uses first- and second-moment coefficients $(\beta_{1},\beta_{2})=(0.9,0.999)$ and numerical stability constant $\hat{\varepsilon}=10^{-8}$ . The selected stepsizes and WD coefficients are reported in Table 3 , and the stepsize schedule consists of a $5\%$ linear warmup followed by cosine decay to zero. Specifically, for each dimension and optimizer, we jointly sweep the stepsize and WD coefficient, training each setting for 2,000 iterations with a batch size of 128 and a fixed random seed, and select the setting with the lowest final validation loss. The resulting sweep landscapes are shown in Appendix C.4 (Figure 6 ). The final experiments use three random seeds. The forward and backward passes do not use BF16 autocast, while model parameters and optimizer states are kept in FP32, with CUDA TF32 operations enabled. Neither gradient clipping nor shape dependent Muon scaling is used.
+
+Table 3: Selected stepsize and WD pairs for ResNet-32.
+
+Evaluation metric.
+
+We measure stationarity at every iteration using the Frobenius norm of the gradient computed over the entire training set, $\|\nabla f(W)\|_{F}$ . To compare the dimension dependence of Muon and AdamW, at iteration 2,000, we report $\sqrt{d}\|\nabla f(W_{\mathrm{Muon}})\|_{F}/\|\nabla f(W_{\mathrm{AdamW}})\|_{F}$ , where $W_{\mathrm{Muon}}$ and $W_{\mathrm{AdamW}}$ denote the parameters obtained by Muon and AdamW, respectively. If this ratio remains approximately constant as $d$ increases, the results support Muon’s $\sqrt{d}$ improvement in dimension dependence over AdamW established by our theoretical comparison. Training and test losses are recorded every 100 iterations, with final top-1 accuracy evaluated on the full test set.
+
+C.2 Gradient norm convergence rates
+
+Figure 4: Frobenius gradient norm convergence rates for ResNet-32 models of varying dimensions. The gradient norms exhibit an overall $T^{-1/4}$ trend, with Muon generally converging faster than AdamW.
+
+C.3 Accuracy and loss results
+
+Table 4: CIFAR-100 test top-1 accuracy (over three seeds) for ResNet-32 models of varying dimensions after 2,000 iterations. Muon consistently achieves higher accuracy than AdamW.
+
+Figure 5: Loss curves for ResNet-32 models of varying dimensions. Muon consistently achieves lower training and test losses than AdamW.
+
+C.4 Hyperparameter sweep
+
+Figure 6: Joint sweep over stepsize and WD for ResNet-32 models of varying dimensions.
+
+Appendix D Experimental details on language models
+
+This appendix details the experiments on the 124M GPT-2-style model and presents additional results on the larger 355M GPT-2-style and 0.6B Qwen3-style models ( Yang et al., 2025 ) , further showing that large factors arising from worst-case NS orthogonalization errors need not slow Muon’s convergence. Specifically, we provide the experimental setup, loss curves, singular value distributions, maximum orthogonalization errors and the resulting factors, and hyperparameter sweeps.
+
+D.1 Experimental setting
+
+Models and data.
+
+We use three models: 124M- and 355M-parameter GPT-2-style models, and a 0.6B-parameter Qwen3-style model. The 124M model has 12 layers, hidden size 768, and 12 attention heads. The 355M model has 24 layers, hidden size 1,024, and 16 attention heads. The 0.6B model has 28 layers, hidden size 1,024, 16 query heads, 8 key-value heads, and an intermediate size of 3,072. All models are trained from random initialization.
+
+We train the 124M, 355M, and 0.6B models for 500M, 200M, and 300M tokens, respectively, and evaluate them on a separate validation set containing 5M tokens. Training data come from the FineWeb-Edu sample-10BT subset ( Penedo et al., 2024 ) . The 124M and 355M GPT-2-style models use the GPT-2 tokenizer, while the 0.6B Qwen3-style model uses the Qwen3 tokenizer. All models use a sequence length of 512 tokens, and a batch size of 131,072 tokens per optimizer update.
+
+Task and metrics.
+
+We consider autoregressive language modeling with a next-token prediction objective and report training and validation cross-entropy losses. To illustrate that the worst-case orthogonalization error does not necessarily imply slow convergence, we track the singular-value distributions and orthogonalization errors $\epsilon_{t,5}$ of selected momentum matrices, along with the factors $(1-\epsilon_{t,5})^{-1}$ , motivated by the factor $(1-\epsilon_{5})^{-1}$ in the convergence analysis of standard NS without WD by Kim and Oh (2026) .
+
+Training loss is recorded at every iteration, and validation loss is evaluated every 200 iterations for the 124M model and every 100 iterations for the 355M and 0.6B models. Each evaluation is performed using 20 batches for the 124M and 355M GPT-2-style models and 10 batches for the 0.6B Qwen3-style model.
+
+The singular values of momentum matrices for representative attention and MLP weights in the first, middle, and last transformer blocks are computed using FP64 SVDs without affecting training and recorded at every iteration. Let $s_{i,t}^{l}$ denote the $i$ -th normalized singular value of momentum matrix $l$ at iteration $t$ . The orthogonalization error $\epsilon_{t,5}$ is computed as follows:
+
+$\epsilon_{t,5}^{(\hat{a})}=\max_{l}\max_{i}\left|q_{\hat{a},5}(s_{i,t}^{l})-1\right|,\qquad\hat{a}\in\{\mathrm{P},\mathrm{S}\}.$
+
+Compared optimizers and hyperparameters.
+
+We use the three optimizers as in Appendix C . Muon is applied to two-dimensional hidden-layer matrices, while embeddings, output heads, biases, and normalization parameters are updated by an auxiliary AdamW optimizer. The auxiliary AdamW uses a fixed stepsize of $6\times 10^{-4}$ for the 124M model and $3\times 10^{-4}$ for the 355M and 0.6B models. It applies the selected WD of the corresponding Muon variant to embeddings and output-head matrices, while biases and normalization parameters use zero WD. For the AdamW baseline, all parameters are updated by AdamW, with the selected WD applied to matrix parameters and zero WD applied to biases and normalization parameters.
+
+The optimizer settings follow Appendix C , except where otherwise specified. AdamW uses $\beta_{2}=0.95$ . The selected stepsizes and WD coefficients are reported in Table 5 , and the stepsize schedule consists of a $2\%$ linear warmup followed by cosine decay to $10\%$ of the selected value. Specifically, for each model and optimizer, we jointly sweep the stepsize and WD coefficient, training each setting with a fixed random seed for $30\%$ of the corresponding training schedule, i.e., 1,145, 458, and 687 iterations for the 124M, 355M, and 0.6B models, respectively, and select the setting with the lowest final validation loss. The resulting sweep landscapes are shown in Appendix D.4 (Figure 10 ). The final experiments use three seeds for the 124M and 355M models and one seed for the 0.6B model. The forward and backward passes use BF16 autocast.
+
+Table 5: Selected stepsize and WD pairs for language model training.
+
+D.2 Loss curves
+
+Figure 7: Loss curves across the three language models. Muon consistently achieves lower training and validation losses than AdamW.
+
+D.3 Orthogonalization error
+
+Figure 8: Momentum singular-value distributions for the query projection in the middle transformer block of the three language models. The distributions span a broad range and include very small normalized singular values.
+
+Figure 9: Orthogonalization errors $\epsilon_{t,5}$ and the corresponding factors $(1-\epsilon_{t,5})^{-1}$ for practical and standard NS across the three language models. Practical NS consistently exhibits smaller errors and factors, while the large factor values need not imply slow convergence.
+
+D.4 Hyperparameter sweep
+
+Figure 10: Joint sweep over stepsize and WD for language model training.
+
+Appendix E Interpreting standard NS with WD
+
+As discussed in Section 3 , Muon with standard NS admits a more direct optimization interpretation through its fixed-point condition, since $q_{\mathrm{S},5}$ is strictly increasing on $[0,1]$ and hence invertible.
+
+Dynamic objective.
+
+Recall the scalar fixed-point condition $q_{\mathrm{S},5}(G_{t}/\tau_{t})+\lambda W_{t}=0$ from Section 3 , where $q_{\mathrm{S},5}$ denotes $q_{\mathrm{S},5}^{(k)}$ for arbitrary $k\in\mathbb{N}$ . Applying the odd inverse $q_{\mathrm{S},5}^{-1}$ gives
+
+$G_{t}+\tau_{t}q_{\mathrm{S},5}^{-1}(\lambda W_{t})=0.$
+
+We obtain a regularizer by integrating the second term on the left-hand side with respect to $W$ . Extending this construction to matrices yields
+
+$\widetilde{\Phi}_{t}(W)=f(W)+\widetilde{\mathcal{R}}_{t}(W),\qquad\widetilde{\mathcal{R}}_{t}(W)=\frac{\tau_{t}}{\lambda}\sum_{i=1}^{r}\int_{0}^{\lambda\sigma_{i}(W)}\tilde{q}_{\mathrm{S},5}^{-1}(s)\,\mathrm{d}s.$ (26)
+
+Here, $\tau_{t}$ is held fixed when differentiating in $W$ , and $\sigma_{i}(W)$ denotes the $i$ -th singular value of $W$ . The extended inverse is defined by
+
+$\tilde{q}_{\mathrm{S},5}^{-1}(s)=\begin{cases}q_{\mathrm{S},5}^{-1}(s),&0\leq s\leq 1,\\ s,&s>1,\end{cases}$
+
+where $q_{\mathrm{S},5}^{-1}:[0,1]\to[0,1]$ denotes the inverse of $q_{\mathrm{S},5}$ restricted to $[0,1]$ . For negative arguments, we use the odd extension. Alternatively, one may set $\tilde{q}_{\mathrm{S},5}^{-1}(s)=+\infty$ for $s>1$ , but we omit discussion of this case for brevity. The following proposition establishes the equivalence between the Muon update using standard NS and optimization of the dynamic objective $\widetilde{\Phi}_{t}(W)$ .
+
+(i) Properties of the regularizer.
+
+The regularizer $\widetilde{\mathcal{R}}_{t}$ in ( 26 ) is continuously differentiable and $\lambda\tau_{t}/C_{1}$ -strongly convex.
+
+For an SVD $W=U_{W}\operatorname{diag}(\sigma_{1}(W),\ldots,\sigma_{r}(W))V_{W}^{\top}$ ,
+
+$\nabla\widetilde{\mathcal{R}}_{t}(W)=\tau_{t}U_{W}\operatorname{diag}\Bigl(\tilde{q}_{\mathrm{S},5}^{-1}(\lambda\sigma_{1}(W)),\ldots,\tilde{q}_{\mathrm{S},5}^{-1}(\lambda\sigma_{r}(W))\Bigr)V_{W}^{\top}.$
+
+The following bounds hold:
+
+$\frac{\lambda\tau_{t}}{2C_{1}}\|W\|_{F}^{2}\leq\widetilde{\mathcal{R}}_{t}(W)\leq\frac{\lambda\tau_{t}}{2}\|W\|_{F}^{2},\qquad\|\nabla\widetilde{\mathcal{R}}_{t}(W)\|_{F}\leq\lambda\tau_{t}\|W\|_{F}.$
+
+(ii) Fixed-point equivalence and descent alignment. Ignoring the momentum by setting $\beta=0$ , Muon update in Algorithm 1 using standard NS has the following properties:
+
+The update direction and the stochastic gradient vanish simultaneously, i.e.,
+
+$H_{t}=0\quad\Longleftrightarrow\quad\widehat{\nabla}\widetilde{\Phi}_{t}(W_{t})=0,\qquad\widehat{\nabla}\widetilde{\Phi}_{t}(W_{t})=G_{t}+\nabla\widetilde{\mathcal{R}}_{t}(W_{t}).$
+
+The update direction $H_{t}$ is positively aligned with the stochastic gradient $\widehat{\nabla}\widetilde{\Phi}_{t}(W_{t})$ , i.e.,
+
+$\langle\widehat{\nabla}\widetilde{\Phi}_{t}(W_{t}),H_{t}\rangle_{F}\geq\frac{\tau_{t}}{C_{1}}\|H_{t}\|_{F}^{2}.$
+
+(iii) Exact generalized Frank–Wolfe equivalence. With $\beta=0$ , and $\gamma=\eta\lambda\in(0,1]$ , Muon update in Algorithm 1 using standard NS is exactly a stochastic generalized Frank–Wolfe step on the dynamic objective ( 26 ), with stepsize $\gamma$ .
+
+Specifically, Muon selects its update direction by seeking the greatest decrease in the regularized linear model, whose unique minimizer is
+
+$\operatorname*{arg\,min}_{W\in\mathbb{R}^{m\times n}}\left\{\langle G_{t},W\rangle_{F}+\widetilde{\mathcal{R}}_{t}(W)\right\}=-\frac{D_{t}}{\lambda}.$ (27)
+
+The Muon update therefore takes the equivalent form
+
+$W_{t+1}=(1-\gamma)W_{t}+\gamma\big(-\frac{D_{t}}{\lambda}\big),$ (28)
+
+which moves a fraction $\gamma$ of the way from $W_{t}$ to the unique minimizer $-D_{t}/\lambda$ of the regularized linear subproblem.
+
+(iv) Recovery of the original objective. Consider the deterministic setting where $G_{t}=\nabla f(W_{t})$ . If $\|\nabla f(W_{t})\|_{F}\to 0$ , then $\tau_{t}\to\varepsilon$ . Together with the boundedness of $\{W_{t}\}$ , which WD naturally promotes, the bounds in (i) imply that both $\widetilde{\mathcal{R}}_{t}(W_{t})$ and $\|\nabla\widetilde{\mathcal{R}}_{t}(W_{t})\|_{F}$ are asymptotically $\mathcal{O}(\varepsilon)$ . Thus, $\widetilde{\Phi}_{t}$ approximates the original objective near stationarity.
+
+We first establish bounds on $\tilde{q}_{\mathrm{S},5}^{-1}$ . The standard NS map satisfies
+
+$q_{\mathrm{S}}^{\prime}(s)=q_{\mathrm{S}}^{\prime}(0)(1-s^{2})^{k}.$
+
+Indeed, let $\omega_{\ell}=(2\ell)!/[4^{\ell}(\ell!)^{2}]$ . Differentiating $q_{\mathrm{S}}(s)=s\sum_{\ell=0}^{k}\omega_{\ell}(1-s^{2})^{\ell}$ and using $(2\ell+1)\omega_{\ell}=2(\ell+1)\omega_{\ell+1}$ gives
+
+$\displaystyle q_{\mathrm{S}}^{\prime}(s)$ $\displaystyle=\sum\nolimits_{\ell=0}^{k}\omega_{\ell}(1-s^{2})^{\ell}+\big(2(1-s^{2})-2\big)\sum\nolimits_{\ell=0}^{k}\omega_{\ell}\ell(1-s^{2})^{\ell-1}$ $\displaystyle=\sum\nolimits_{\ell=0}^{k}(2\ell+1)\omega_{\ell}(1-s^{2})^{\ell}-\sum\nolimits_{\ell=0}^{k-1}2(\ell+1)\omega_{\ell+1}(1-s^{2})^{\ell}$ $\displaystyle=(2k+1)\omega_{k}(1-s^{2})^{k}.$
+
+Evaluating at $s=0$ yields $q_{\mathrm{S}}^{\prime}(0)=(2k+1)\omega_{k}$ , proving the identity. The chain rule then gives
+
+$0<q_{\mathrm{S},5}^{\prime}(s)=\prod\nolimits_{j=0}^{4}q_{\mathrm{S}}^{\prime}(q_{\mathrm{S},j}(s))\leq\bigl(q_{\mathrm{S}}^{\prime}(0)\bigr)^{5}=C_{1},\qquad s\in[0,1),$
+
+where the last equality follows from $C_{1}=a^{5}$ and, by direct differentiation of $q_{\mathrm{S}}(s)=s\,p_{\mathrm{S}}(s^{2})$ , $q_{\mathrm{S}}^{\prime}(0)=p_{\mathrm{S}}(0)=a.$ Thus, $q_{\mathrm{S},5}$ is strictly increasing and $C_{1}$ -Lipschitz on $[0,1]$ . Since $q_{\mathrm{S},5}(1)=1$ and $C_{1}\geq 1$ ( $p_{\mathrm{S}}(0)=1+\sum_{\ell=1}^{k}\frac{(2\ell)!}{4^{\ell}(\ell!)^{2}}>1$ ), its extension $\tilde{q}_{\mathrm{S},5}(s)$ preserves both properties on $[0,\infty)$ , where $\tilde{q}_{\mathrm{S},5}(s)=q_{\mathrm{S},5}(s)$ for $s\in[0,1]$ and $\tilde{q}_{\mathrm{S},5}(s)=s$ for $s>1$ . The inverse $\tilde{q}_{\mathrm{S},5}^{-1}$ is therefore continuous and satisfies $\tilde{q}_{\mathrm{S},5}^{-1}(0)=0$ . Recalling from ( 21 ) that $s\leq q_{\mathrm{S},5}(s)\leq C_{1}s$ for $s\in[0,1]$ , we have
+
+$\frac{u}{C_{1}}\leq\tilde{q}_{\mathrm{S},5}^{-1}(u)\leq u,\qquad u\geq 0.$ (29)
+
+For $u\geq v\geq 0$ , we have
+
+$u-v=\tilde{q}_{\mathrm{S},5}(\tilde{q}_{\mathrm{S},5}^{-1}(u))-\tilde{q}_{\mathrm{S},5}(\tilde{q}_{\mathrm{S},5}^{-1}(v))\leq C_{1}\bigl(\tilde{q}_{\mathrm{S},5}^{-1}(u)-\tilde{q}_{\mathrm{S},5}^{-1}(v)\bigr),$
+
+which implies
+
+$\tilde{q}_{\mathrm{S},5}^{-1}(u)-\tilde{q}_{\mathrm{S},5}^{-1}(v)\geq\frac{u-v}{C_{1}}.$ (30)
+
+(i) Properties of the regularizer. By definition,
+
+$\widetilde{\mathcal{R}}_{t}(W)-\frac{\lambda\tau_{t}}{2C_{1}}\|W\|_{F}^{2}=\frac{\tau_{t}}{\lambda}\sum_{i=1}^{r}\int_{0}^{\lambda\sigma_{i}(W)}\left(\tilde{q}_{\mathrm{S},5}^{-1}(u)-\frac{u}{C_{1}}\right)\,du.$
+
+( 29 ) and ( 30 ) imply that the integrand is nonnegative and nondecreasing, so the integral is nondecreasing and convex. By the convexity rule for singular-value functions, the displayed matrix function is convex. Hence $\widetilde{\mathcal{R}}_{t}$ is $(\lambda\tau_{t}/C_{1})$ -strongly convex.
+
+Since $\tilde{q}_{\mathrm{S},5}^{-1}$ is continuous and $\tilde{q}_{\mathrm{S},5}^{-1}(0)=0$ , the differentiation rule for singular-value functions implies that $\widetilde{\mathcal{R}}_{t}$ is continuously differentiable. Let $u_{i}$ and $v_{i}$ denote the $i$ -th columns of $U_{W}$ and $V_{W}$ , respectively. Holding $\tau_{t}$ fixed, the differentiation formula for singular-value functions ( Lewis, 1995 , Theorem 3.1) gives
+
+$\displaystyle\mathrm{d}\widetilde{\mathcal{R}}_{t}(W)$ $\displaystyle=\tau_{t}\sum_{i=1}^{r}\tilde{q}_{\mathrm{S},5}^{-1}(\lambda\sigma_{i}(W))\,u_{i}^{\top}(\mathrm{d}W)v_{i}$ $\displaystyle=\Big\langle\tau_{t}\sum_{i=1}^{r}\tilde{q}_{\mathrm{S},5}^{-1}(\lambda\sigma_{i}(W))\,u_{i}v_{i}^{\top},\,\mathrm{d}W\Big\rangle_{F}.$
+
+This formula also holds at repeated or zero singular values. Therefore,
+
+$\nabla\widetilde{\mathcal{R}}_{t}(W)=\tau_{t}U_{W}\operatorname{diag}\Bigl(\tilde{q}_{\mathrm{S},5}^{-1}(\lambda\sigma_{1}(W)),\ldots,\tilde{q}_{\mathrm{S},5}^{-1}(\lambda\sigma_{r}(W))\Bigr)V_{W}^{\top}.$
+
+Integrating ( 29 ) gives
+
+$\frac{\lambda^{2}\sigma_{i}(W)^{2}}{2C_{1}}\leq\int_{0}^{\lambda\sigma_{i}(W)}\tilde{q}_{\mathrm{S},5}^{-1}(u)\,du\leq\frac{\lambda^{2}\sigma_{i}(W)^{2}}{2}.$
+
+Multiplying by $\tau_{t}/\lambda$ and summing over $i$ yields
+
+$\frac{\lambda\tau_{t}}{2C_{1}}\|W\|_{F}^{2}\leq\widetilde{\mathcal{R}}_{t}(W)\leq\frac{\lambda\tau_{t}}{2}\|W\|_{F}^{2}.$
+
+Finally, the gradient formula and $\tilde{q}_{\mathrm{S},5}^{-1}(u)\leq u$ imply
+
+$\|\nabla\widetilde{\mathcal{R}}_{t}(W)\|_{F}^{2}=\tau_{t}^{2}\sum_{i=1}^{r}\bigl[\tilde{q}_{\mathrm{S},5}^{-1}(\lambda\sigma_{i}(W))\bigr]^{2}\leq\lambda^{2}\tau_{t}^{2}\|W\|_{F}^{2}.$
+
+Taking square roots completes part (i).
+
+(ii) Fixed-point equivalence and descent alignment. When $\beta=0$ , we have $M_{t}=G_{t}$ . Recall that $s_{i,t}=\sigma_{i,t}/\tau_{t}\in(0,1]$ , and
+
+$G_{t}=U_{t}\operatorname{diag}(\sigma_{1,t},\ldots,\sigma_{r,t})V_{t}^{\top},\qquad D_{t}=U_{t}\operatorname{diag}\Bigl(q_{\mathrm{S},5}(s_{1,t}),\ldots,q_{\mathrm{S},5}(s_{r,t})\Bigr)V_{t}^{\top}.$
+
+Since $\tilde{q}_{\mathrm{S},5}^{-1}(q_{\mathrm{S},5}(s))=s$ for $s\in[0,1]$ , the gradient formula in (i) yields
+
+$\displaystyle\nabla\widetilde{\mathcal{R}}_{t}(-D_{t}/\lambda)=-\tau_{t}U_{t}\operatorname{diag}(s_{1,t},\ldots,s_{r,t})V_{t}^{\top}=-U_{t}\operatorname{diag}(\sigma_{1,t},\ldots,\sigma_{r,t})V_{t}^{\top}=-G_{t}.$ (31)
+
+Consequently,
+
+$\widehat{\nabla}\widetilde{\Phi}_{t}(W_{t})=G_{t}+\nabla\widetilde{\mathcal{R}}_{t}(W_{t})=\nabla\widetilde{\mathcal{R}}_{t}(W_{t})-\nabla\widetilde{\mathcal{R}}_{t}(-D_{t}/\lambda).$
+
+By the $(\lambda\tau_{t}/C_{1})$ -strong convexity of $\widetilde{\mathcal{R}}_{t}$ a+nd $H_{t}=D_{t}+\lambda W_{t}$ , we have
+
+$\displaystyle\big\langle\widehat{\nabla}\widetilde{\Phi}_{t}(W_{t}),H_{t}\big\rangle_{F}$ $\displaystyle=\lambda\big\langle\nabla\widetilde{\mathcal{R}}_{t}(W_{t})-\nabla\widetilde{\mathcal{R}}_{t}(-D_{t}/\lambda),W_{t}+D_{t}/\lambda\big\rangle_{F}$ $\displaystyle\geq\frac{\lambda^{2}\tau_{t}}{C_{1}}\|W_{t}+D_{t}/\lambda\|_{F}^{2}=\frac{\tau_{t}}{C_{1}}\|H_{t}\|_{F}^{2}.$
+
+If $H_{t}=0$ , then $W_{t}=-D_{t}/\lambda$ , and hence
+
+$\widehat{\nabla}\widetilde{\Phi}_{t}(W_{t})=\nabla\widetilde{\mathcal{R}}_{t}(W_{t})-\nabla\widetilde{\mathcal{R}}_{t}(-D_{t}/\lambda)=0.$
+
+Conversely, if $\widehat{\nabla}\widetilde{\Phi}_{t}(W_{t})=0$ , then
+
+$0=\big\langle\widehat{\nabla}\widetilde{\Phi}_{t}(W_{t}),H_{t}\big\rangle_{F}\geq\frac{\tau_{t}}{C_{1}}\|H_{t}\|_{F}^{2}.$
+
+Since $\tau_{t}/C_{1}>0$ , this implies $H_{t}=0$ . Thus,
+
+$H_{t}=0\quad\Longleftrightarrow\quad\widehat{\nabla}\widetilde{\Phi}_{t}(W_{t})=0.$
+
+(iii) Exact generalized Frank–Wolfe equivalence. Fix an iteration $t$ and a realization of $G_{t}$ . Throughout this step, $\tau_{t}$ is held fixed. Since $\beta=0$ , ( 31 ) still holds. Then, by the $(\lambda\tau_{t}/C_{1})$ -strong convexity of $\widetilde{\mathcal{R}}_{t}$ , for every $W\in\mathbb{R}^{m\times n}$ ,
+
+$\displaystyle\widetilde{\mathcal{R}}_{t}(W)\geq\widetilde{\mathcal{R}}_{t}\Big(\frac{-D_{t}}{\lambda}\Big)-\Big\langle G_{t},W+\frac{D_{t}}{\lambda}\Big\rangle_{F}+\frac{\lambda\tau_{t}}{2C_{1}}\Big\|W+\frac{D_{t}}{\lambda}\Big\|_{F}^{2}.$
+
+Adding $\langle G_{t},W\rangle_{F}$ to both sides gives
+
+$\displaystyle\langle G_{t},W\rangle_{F}+\widetilde{\mathcal{R}}_{t}(W)\geq{}$ $\displaystyle\Big\langle G_{t},-\frac{D_{t}}{\lambda}\Big\rangle_{F}+\widetilde{\mathcal{R}}_{t}\Big(\frac{-D_{t}}{\lambda}\Big)+\frac{\lambda\tau_{t}}{2C_{1}}\Big\|W+\frac{D_{t}}{\lambda}\Big\|_{F}^{2}.$
+
+Since $\lambda\tau_{t}/C_{1}>0$ , the last term is strictly positive whenever $W\neq-D_{t}/\lambda$ . Thus $-D_{t}/\lambda$ is the unique minimizer, proving ( 27 ).
+
+Finally, substituting $\eta=\gamma/\lambda$ into the Muon update gives
+
+$W_{t+1}=W_{t}-\eta(D_{t}+\lambda W_{t})=W_{t}-\frac{\gamma}{\lambda}(D_{t}+\lambda W_{t})=(1-\gamma)W_{t}+\gamma\big(-D_{t}/\lambda\big).\qed$

@@ -1,0 +1,1638 @@
+% Initial research-talk deck based on overleaf/main_linear.tex.
+% Remove `handout` to enable overlays when presenting.
+\documentclass[handout,compress,9pt]{beamer}
+
+\usefonttheme[onlymath]{serif}
+\usepackage[english]{babel}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{bm}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc}
+
+\usetheme{Boadilla}
+\useoutertheme{infolines}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{theorems}[numbered]
+\setbeamertemplate{caption}[numbered]
+
+\definecolor{ddlblue}{RGB}{0,78,140}
+\definecolor{ddlred}{RGB}{176,34,34}
+\definecolor{ddlgreen}{RGB}{32,120,82}
+\newcommand{\blue}[1]{\textcolor{ddlblue}{#1}}
+\newcommand{\red}[1]{\textcolor{ddlred}{#1}}
+\newcommand{\green}[1]{\textcolor{ddlgreen}{#1}}
+
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\zero}{\bm{0}}
+\newcommand{\bx}{\bm{x}}
+\newcommand{\by}{\bm{y}}
+\newcommand{\bz}{\bm{z}}
+\newcommand{\bw}{\bm{w}}
+\newcommand{\br}{\bm{r}}
+\newcommand{\bmu}{\bm{\mu}}
+\newcommand{\blmbd}{\bm{\lambda}}
+\newcommand{\calA}{\mathcal{A}}
+\newcommand{\calL}{\mathcal{L}}
+\newcommand{\calO}{\mathcal{O}}
+\newcommand{\calS}{\mathcal{S}}
+\newcommand{\prox}{\operatorname{prox}}
+\newcommand{\dist}{\operatorname{dist}}
+\newcommand{\st}{\textnormal{s.t.}}
+\newcommand{\eps}{\varepsilon}
+
+\setbeamertemplate{footline}{%
+  \leavevmode%
+  \hbox{%
+    \begin{beamercolorbox}[wd=.23\paperwidth,ht=2.25ex,dp=1ex,center]{author in head/foot}%
+      \usebeamerfont{author in head/foot}\insertshortauthor~(\insertshortinstitute)
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[wd=.54\paperwidth,ht=2.25ex,dp=1ex,center]{title in head/foot}%
+      \usebeamerfont{title in head/foot}\insertshorttitle
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[wd=.23\paperwidth,ht=2.25ex,dp=1ex,right]{date in head/foot}%
+      \usebeamerfont{date in head/foot}\insertshortdate{}\hspace*{1.4em}\insertframenumber{} / \inserttotalframenumber\hspace*{1ex}
+    \end{beamercolorbox}%
+  }%
+  \vskip0pt%
+}
+
+\title[Dual-Damping Linearized ALM]{Dual-Damping Linearized ALM\\for Nonsmooth Composite Optimization}
+\author[L. Li et al.]{Luxuan Li\inst{1}}
+%  \and Kangkang Deng\inst{2} \and Chunfeng Cui\inst{1} \and Jiang Hu\inst{3}}
+\institute[Beihang]{\inst{1} Beihang University}
+%  \and \inst{2} National University of Defense Technology \and \inst{3} Tsinghua University}
+\date[Research update]{Research update, August 2026}
+
+% Insert a standalone divider slide before every section.
+\AtBeginSection[]{
+  \begin{frame}[plain,noframenumbering]
+    \centering
+    \vfill
+    {\usebeamerfont{section title}\usebeamercolor[fg]{section title}%
+      \Roman{section}.\enspace\insertsectionhead\par}
+    \vfill
+  \end{frame}
+}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Outline}
+  \tableofcontents
+\end{frame}
+
+\section{Problem Setting}
+
+\begin{frame}{Structured Nonsmooth Composite Optimization}
+We consider
+\begin{equation*}
+  \min_{\bx\in\RR^n}\quad F(\bx):=f(\bx)+h\bigl(\calA(\bx)\bigr).
+  \tag{P0}
+\end{equation*}
+\begin{itemize}
+  \item $f:\RR^n\to\RR$ is continuously differentiable and may be nonconvex.
+  \item $\calA:\RR^n\to\RR^m$ is continuously differentiable and may be nonlinear.
+  \item $h:\RR^m\to\RR$ is convex, Lipschitz continuous, and possibly nonsmooth.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Approximate KKT Point}
+  \begin{itemize}
+  \item Introduce $\by=\calA(\bx)$:
+  \begin{equation}
+    \label{Prob:split}
+    \min_{\bx,\by}\quad f(\bx)+h(\by)
+    \qquad \st\qquad \calA(\bx)-\by=\zero.   \tag{P}
+  \end{equation}
+
+  \item The split KKT system is
+  \begin{equation*}
+    \nabla f(\bx)+J_{\calA}(\bx)^\top\bz=\zero,
+    \qquad \bz\in\partial h(\by),
+    \qquad \calA(\bx)-\by=\zero.
+  \end{equation*}
+
+  \item \textbf{approximate $\eps$-KKT point.}
+  Find $(\bx,\by,\bz)$ such that
+  \begin{equation*}
+    \|\nabla f(\bx)+J_{\calA}(\bx)^\top\bz\|\leq\eps,
+    \quad \blue{\bz\in\partial h(\by)},
+    \quad \|\calA(\bx)-\by\|\leq\eps.
+  \end{equation*}
+
+  \item The exact $\by$-proximal step makes the subdifferential condition \blue{exact}.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Main Results}
+\centering
+{\scriptsize
+\renewcommand{\arraystretch}{1.35}
+\setlength{\tabcolsep}{1.2pt}
+\begin{tabular}{@{}p{0.14\textwidth}p{0.12\textwidth}p{0.07\textwidth}p{0.11\textwidth}p{0.055\textwidth}p{0.085\textwidth}p{0.075\textwidth}p{0.19\textwidth}p{0.09\textwidth}@{}}
+\toprule
+\textbf{Method}
+& \shortstack{\textbf{Constrained}\\\textbf{setting}}
+& $A$
+& \shortstack{\textbf{Nonsmoothness}\\\textbf{of $h$}}
+& \textbf{Loop}
+& \shortstack{KKT\\measure}
+& \shortstack{Penalty\\$\rho$}
+& \shortstack{Dual regularizer\\ $s$}
+& \shortstack{\textbf{Iteration}\\\textbf{complexity}}
+\\
+\midrule
+MRSALM
+& Manifold
+& Linear
+& Lipschitz
+& $\checkmark$
+& $\eps$-KKT
+& fixed
+& $s_k=\Theta(k^{1/4})\uparrow$
+& $O(\eps^{-4})$
+\\
+\shortstack{MRALM}
+& Manifold
+& Linear
+& Lipschitz
+& $\times$
+& $\eps$-KKT
+& fixed
+& $s_k=\Theta(k^{1/3})\uparrow$
+& $O(\eps^{-3})$
+\\
+\blue{DDLALM (Ours)}
+& \blue{\shortstack{Uncon-\\strained}}
+& \blue{\shortstack{Non-\\linear}}
+& \blue{Lipschitz}
+& \blue{$\checkmark$}
+& \blue{$\eps$-KKT}
+& fixed
+& \blue{$s_k=\Theta(k^{1/3})\uparrow$}
+& \blue{$O(\eps^{-3})$}
+\\
+\bottomrule
+\end{tabular}}
+\end{frame}
+
+\section{Dual-Damping Reformulation}
+
+\begin{frame}{Dual-Proximal Augmented Lagrangian}
+\begin{itemize}
+  \item The Augmented Lagrangian of Problem \eqref{Prob:split} is defined as
+  \[
+  \calL_\rho(\bx,\by,\blmbd)
+=f(\bx)+h(\by)+\langle\blmbd,\calA(\bx)-\by\rangle
++\frac{\rho}{2}\|\calA(\bx)-\by\|^2.
+  \]
+
+\item \blue{Dual-regularized Augmented Lagrangian}: Fix a center multiplier $\bmu$ and introduce $s>0$, we define
+\begin{equation*}
+  \mathcal P_s(\bx,\by,\blmbd;\bmu)
+  :=\calL_\rho(\bx,\by,\blmbd)
+  -\blue{\frac{1}{2s}\|\blmbd-\bmu\|^2}.
+\end{equation*}
+
+\item For fixed $(\bx,\by,\bmu)$, $\blmbd\mapsto\mathcal P_s$ is $1/s$-strongly concave,
+  admitting a unique maximizer
+\begin{equation*}
+  \blue{\blmbd_s(\bx,\by;\bmu)=\bmu+s\bigl(\calA(\bx)-\by\bigr).}
+\end{equation*}
+
+\item nonconvex--concave $\min_{x,y}\max_\lambda \mathcal L_\rho(x,y,\lambda)$ $\longrightarrow$
+
+nonconvex--\blue{strongly concave} problem:
+\begin{equation*}
+  \min_{\bx,\by}\max_{\blmbd}
+  \mathcal P_s(\bx,\by,\blmbd;\bmu).
+\end{equation*}
+
+\item  \textbf{Reduced Augmented Lagrangian.}
+Substitution $\blmbd_s(\bx,\by;\bmu)$ into $\mathcal P_s$ yields the value function:
+\begin{equation*}
+  \begin{aligned}
+  \Phi_s(\bx,\by;\bmu)
+  &:= \max_{\blmbd}\mathcal P_s(\bx,\by,\blmbd;\bmu) \\
+  &=f(\bx)+h(\by)+\langle\red{\bmu},\calA(\bx)-\by\rangle
+  +\frac{\rho+s}{2}\|\calA(\bx)-\by\|^2.
+  \end{aligned}
+\end{equation*}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Danskin's Theorem for the Value Function $ \Phi_s(\bx,\by;\bmu)$}
+% \scriptsize
+% The value function:
+% \begin{equation*}
+%   \begin{aligned}
+%   \Phi_s(\bx,\by;\bmu)
+%   &:= \max_{\blmbd}\mathcal P_s(\bx,\by,\blmbd;\bmu) \\
+%   &=f(\bx)+h(\by)+\langle\red{\bmu},\calA(\bx)-\by\rangle
+%   +\frac{\rho+s}{2}\|\calA(\bx)-\by\|^2.
+%   \end{aligned}
+% \end{equation*} with 
+% Strong concavity in $\blmbd$ gives the unique maximizer
+% \begin{equation*}
+%   \blue{\blmbd_s(\bx,\by;\bmu)
+%   =\bmu+s\bigl(\calA(\bx)-\by\bigr).}
+% \end{equation*}
+Danskin's theorem gives the smooth outer gradients: \hyperlink{appendix:danskin-theorem}{%
+  \beamergotobutton{Theorem $\rightarrow$}%
+}
+\begin{itemize}
+\setlength{\itemsep}{0.10cm}
+
+\item[\blue{$\triangleright$}]
+\textbf{$\bx$-gradient:}
+\begin{equation*}
+\begin{aligned}
+  \nabla_{\bx}\Phi_s(\bx,\by;\bmu)
+  &=\nabla_{\bx}\mathcal P_s
+  \bigl(\bx,\by,\blmbd_s(\bx,\by;\bmu);\bmu\bigr)\\
+  &=\nabla f(\bx)+J_{\calA}(\bx)^\top
+  \left[\bmu+(\rho+s)\bigl(\calA(\bx)-\by\bigr)\right].
+\end{aligned}
+\end{equation*}
+
+\item[\blue{$\triangleright$}]
+\textbf{$\by$-subgradient:}
+\begin{equation*}
+  \partial_{\by}\Phi_s(\bx,\by;\bmu)
+  =\partial h(\by)-\bmu-(\rho+s)\bigl(\calA(\bx)-\by\bigr).
+\end{equation*}
+
+\item[\blue{$\triangleright$}]
+\textbf{$\bmu$-gradient:}
+\begin{equation*}
+\begin{aligned}
+  \nabla_{\bmu}\Phi_s(\bx,\by;\bmu)
+  &=\nabla_{\bmu}\mathcal P_s
+  \bigl(\bx,\by,\blmbd_s(\bx,\by;\bmu);\bmu\bigr)\\
+  &=\frac{1}{s}\bigl(\blmbd_s(\bx,\by;\bmu)-\bmu\bigr)
+  =\calA(\bx)-\by.
+\end{aligned}
+\end{equation*}
+\end{itemize}
+\end{frame}
+
+\section{Dual-Damping Linearized ALM}
+
+\begin{frame}{Core Framework: Coupled Saddle Update}
+\vspace{0.1cm}
+
+\noindent\textbf{Idea:} Apply gradient steps on
+$\Phi_{s_k}$ and solve the coupled $(\by,\blmbd)$ saddle block exactly.
+
+\noindent\textbf{Parameter:} tolerance $\varepsilon > 0 $, $\eta_k, \, \tau_k, \, s_k$, max iteration number $K$.
+
+Set $\br^k:=\calA(\bx^k)-\by^k$ and $\rho_{s_k}:=\rho+s_k$.
+
+\vspace{0.12cm}
+\begin{itemize}
+\item[\blue{$\triangleright$}] \textbf{Steps 1--2: $\bx$-gradient descent.}
+\begin{equation}\label{eq:slide-exact-multiplier-x}
+\begin{aligned}
+  % \blmbd_{s_k}
+  % &=\arg\max_{\blmbd}\mathcal P_{s_k}
+  % (\bx^k,\by^k,\blmbd;\bmu^k)
+  % =\bmu^k+s_k\br^k,\\
+  \bx^{k+1}
+  &=\bx^k-\eta_k\nabla_{\bx}
+  \Phi_{s_k}(\bx^k,\by^k;\bmu^k)\\
+  &=\bx^k-\eta_k\left[
+  \nabla f(\bx^k)+J_{\calA}(\bx^k)^\top
+  \bigl(\bmu^k+\rho_{s_k}\br^k\bigr)\right].
+\end{aligned}
+\end{equation}
+
+\vspace{0.1cm}
+\item[\blue{$\triangleright$}] \textbf{Step 3: coupled $(\by,\blmbd)$ saddle update.}
+\begin{equation}\label{eq:slide-coupled-saddle-update}
+  (\by^{k+1},\blmbd^{k+1})
+  =
+  \operatorname{saddle}_{\by,\blmbd}
+  \mathcal P_{s_k}(\bx^{k+1},\by,\blmbd;\bmu^k).
+\end{equation}
+
+\vspace{0.1cm}
+\item[\blue{$\triangleright$}] \textbf{Step 4: $\bmu$-gradient ascent on $\Phi_{s_k}$.}
+\begin{equation}\label{eq:slide-mu-update}
+\begin{aligned}
+  \bmu^{k+1}
+  &=\bmu^k+\tau_k\nabla_{\bmu}
+  \Phi_{s_k}(\bx^{k+1},\by^{k+1};\bmu^k)\\
+  &=\bmu^k+\tau_k\br^{k+1}.
+\end{aligned}
+\end{equation}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Step 3: Coupled $(\by,\blmbd)$ Saddle Update}
+\vspace{0.2cm}
+With $(\bx^{k+1},\bmu^k)$ fixed, solve the saddle subproblem exactly:
+\begin{equation*}
+  \min_{\by}\max_{\blmbd}\;
+  \mathcal P_{s_k}(\bx^{k+1},\by,\blmbd;\bmu^k).
+\end{equation*}
+
+\vspace{0.1cm}
+\noindent\textbf{Step 3: Executable form:}\hyperlink{appendix:why-rho-plus-sk}{%
+  \beamergotobutton{Why $\rho+s_k$?}%
+}
+
+\begin{equation*}
+  \begin{aligned}
+  \by^{k+1}
+  &=
+  \prox_{h/\rho_{s_k}}
+  \left(\calA(\bx^{k+1})+\frac{\bmu^k}{\rho_{s_k}}\right), \\
+  \blmbd^{k+1}
+  &=
+  \bmu^k+s_k\br^{k+1}.
+  \end{aligned}
+\end{equation*}
+
+\begin{itemize}
+
+\vspace{0.06cm}
+\item[\blue{$\triangleright$}] \textbf{Coupled saddle point:}
+\begin{equation*}
+  \begin{aligned}
+  \by^{k+1}
+  &=\operatorname*{arg\,min}_{\by}\;
+  \mathcal P_{s_k}(\bx^{k+1},\by,\blmbd^{k+1};\bmu^k) =
+  \prox_{h/\rho}
+  \left(\calA(\bx^{k+1})+\frac{\red{\blmbd^{k+1}}}{\rho}\right),
+  \\
+  \red{\blmbd^{k+1}}
+  &=\operatorname*{arg\,max}_{\blmbd}\;
+  \mathcal P_{s_k}(\bx^{k+1},\by^{k+1},\blmbd;\bmu^k) =  \bmu^k+s_k\bigl(\calA(\bx^{k+1})-\by^{k+1}\bigr).
+  \end{aligned}
+\end{equation*}
+
+\vspace{0.06cm}
+\item[\blue{$\triangleright$}] \textbf{Optimality conditions:} 
+\begin{equation*}
+  0\in
+  \partial h(\by^{k+1})
+  -\blmbd^{k+1}
+  +\rho\bigl(\by^{k+1}-\calA(\bx^{k+1})\bigr),
+\end{equation*}
+\begin{equation*}
+  0=
+  \calA(\bx^{k+1})-\by^{k+1}
+  -\frac{1}{s_k}\bigl(\blmbd^{k+1}-\bmu^k\bigr).
+\end{equation*}
+
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Key Identities Used Throughout}
+
+\begin{itemize}
+  \item[\blue{$\triangleright$}]\textbf{Exact identities}:
+\begin{equation}\label{eq:key-exact-identities}
+\begin{aligned}
+  \blmbd^{k+1}
+  &=\bmu^k+s_k\br^{k+1},\\
+  \bmu^{k+1}-\bmu^k
+  &=\tau_k\br^{k+1}
+  =\frac{\tau_k}{s_k}(\blmbd^{k+1}-\bmu^k),\\
+  \blmbd^{k+1}+\rho\br^{k+1}
+  &=\bmu^k+\rho_{s_k}\br^{k+1}
+  \in\partial h(\by^{k+1}).
+\end{aligned}
+\end{equation}
+
+\item[\blue{$\triangleright$}]\textbf{Convex-combination identities}
+\begin{equation}\label{eq:key-convex-combinations}
+\begin{aligned}
+  \blmbd^{k+1}
+  &=\frac{\rho}{\rho_{s_k}}\bmu^k
+  +\frac{s_k}{\rho_{s_k}}
+  (\blmbd^{k+1}+\rho\br^{k+1}),\\
+  \bmu^{k+1}
+  &=\left(1-\frac{\tau_k}{s_k}\right)\bmu^k+ 
+  \frac{\tau_k}{s_k}\blmbd^{k+1}.
+\end{aligned}
+\end{equation}
+\end{itemize}
+
+\end{frame}
+
+\section{Complexity Analysis}
+
+\begin{frame}{Convergence: $O(\eps^{-3})$ Iteration Complexity}
+Under mild assumptions, choose
+\begin{equation*}
+  s_k=c_s(k+1)^{1/3},
+  \quad \eta_k=\frac{c_x}{s_k},
+  \quad \tau_k=\frac{\theta_\mu s_k}{k+2} = \Theta(k^{-2/3}).
+  \quad c_x\widehat L\left(1+\frac{\rho}{s_0}\right)\le \frac12.
+\end{equation*}
+where $c_s$, $c_x$, $\theta_\mu$, $\rho$, and $\widehat L$ are positive constants independent of $k$.
+Then there exists an index
+$R\in\{\lceil K/2\rceil,\ldots,K-1\}$ such that
+$\blmbd^R+\rho\br^R\in\partial h(\by^R)$ and
+\begin{equation*}
+  \left\|\nabla f(\bx^R)+J_{\calA}(\bx^R)^\top
+  \bigl(\blmbd^R+\rho\br^R\bigr)\right\|
+  =O\bigl(K^{-1/3}\bigr),
+  \qquad
+  \|\calA(\bx^R)-\by^R\|=O(K^{-1/3}).
+\end{equation*}
+Consequently, the oracle complexity of DDLALM to reach an approximate $\varepsilon$-KKT is of the order $\calO(\varepsilon^{-3})$.
+\end{frame}
+
+\begin{frame}[t]{Main Assumptions}
+\small
+\vspace{0.15cm}
+
+% \noindent\textbf{Assumptions}
+\begin{itemize}
+\item[(i)] \textbf{Level-bounded objective.}
+For every $\alpha\in\RR$, the set
+\begin{equation*}
+  \calS_{\alpha}:=\{\bx\in\RR^n:F(\bx)\leq\alpha\}
+\end{equation*}
+is empty or compact.
+
+\item[(ii)] \textbf{Smoothness and boundedness\footnote{Y. Xie and S. J. Wright, ``Complexity of Proximal Augmented Lagrangian for Nonconvex Optimization with Nonlinear Equality Constraints,'' \emph{J. Sci. Comput.}, 86:38, 2021.}.}
+Given a nonempty working level set $\calS:=\calS_{\alpha_0}$.
+The functions $f$ and $\calA$ are $L_f$- and $L_{\calA}$-smooth on $\calS$.
+Moreover,
+\begin{equation*}
+  \|\nabla f(\bx)\|\leq G_f,
+  \quad \|J_{\calA}(\bx)\|\leq G_{\calA},
+  \quad M_{\calA}:=\sup_{\bx\in\calS}\|\calA(\bx)\|<\infty.
+\end{equation*}
+
+\item[(iii)] $h$ is proper, closed, convex, and globally $L_h$-Lipschitz; equivalently,
+\begin{equation*}
+  \|\bz\|\leq L_h
+  \qquad \text{for all }\bz\in\partial h(\by).
+\end{equation*}
+\end{itemize}
+
+\vspace{0.15cm}
+\begin{block}{Remark}
+The smoothness condition can be imposed on a compact convex set $\calS$
+satisfying $\calS_\alpha\subseteq\operatorname{int}(\calS)$.
+The containment $\bx^k\in\calS_\alpha$ for every $k\ge0$ is
+\red{established by induction}.
+\hfill
+\hyperlink{appendix:bootstrap-joint-claim}{%
+  \beamergotobutton{Joint induction claim $\rightarrow$}%
+}
+\end{block}
+\end{frame}
+
+\begin{frame}{Proof Roadmap}
+\scriptsize
+\vspace{0.1cm}
+\begin{itemize}
+\setlength{\itemsep}{0.20cm}
+
+\item[\red{$\blacktriangleright$}]
+\textbf{Step 1: establish multiplier boundedness and feasibility control.}
+
+Assumption (iii) provides bounded subgradients of $h$.
+The two convex-combination identities in
+\eqref{eq:key-convex-combinations} imply
+\begin{equation*}
+  \|\blmbd^{k+1}\|,\ \|\bmu^{k+1}\|\le M_\mu,
+  \qquad
+  \|\br^{k+1}\|\le \frac{C_r}{\rho_{s_k}}.
+\end{equation*}
+
+\item[\red{$\blacktriangleright$}]
+\textbf{Step 2: sufficient primal descent on the value function $\Phi_s$.}
+
+The $\bx$-gradient step and the exact $(\by,\blmbd)$ saddle solve in in \eqref{eq:slide-coupled-saddle-update} yield
+sufficient primal descent; \red{Exactness eliminates the multiplier-tracking error with respect to $\blmbd$.} Together, these properties yield
+\begin{equation*}
+  \Phi_{s_k}(\bx^{k+1},\by^{k+1};\bmu^k)
+  -\Phi_{s_k}(\bx^k,\by^k;\bmu^k)
+  \le -\frac{3\rho_{s_k}}{4\theta_x}\|\Delta_{\bx}^{k+1}\|^2
+  -\frac{\rho_{s_k}}{2}\|\Delta_{\by}^{k+1}\|^2.
+\end{equation*}
+\vspace{-0.22cm}
+
+\item[\red{$\blacktriangleright$}]
+\textbf{Step 3: control the moving-potential drift.}
+Using $\Delta_{\bmu}^{k+1}=\tau_k\br^{k+1}$ from
+\eqref{eq:key-exact-identities}, the two shifts ($s_k$ and $\bmu^k$) satisfy
+\vspace{-0.08cm}
+\begin{equation*}
+\begin{aligned}
+  &\Phi_{s_{k+1}}(\bx^{k+1},\by^{k+1};\bmu^{k+1})
+  -\Phi_{s_k}(\bx^{k+1},\by^{k+1};\bmu^k) = 
+  \underbrace{\langle\Delta_{\bmu}^{k+1},\br^{k+1}\rangle
+  +\frac{\rho_{s_{k+1}}-\rho_{s_k}}{2}\|\br^{k+1}\|^2}_{\text{moving-potential drift}}\\
+  &\qquad\le
+  \underbrace{C_r^2\!\left(
+  \frac{\tau_k}{\rho_{s_k}^2}
+  +\frac{\rho_{s_{k+1}}-\rho_{s_k}}{2\rho_{s_k}^2}
+  \right)}_{e_k}
+\end{aligned}
+\end{equation*}
+\vspace{-0.08cm}
+
+\item[\red{$\blacktriangleright$}]
+\textbf{Step 4: choose the parameter schedules and control the KKT residuals.}
+
+The parameter schedules make the drift errors summable:
+\begin{equation*}
+  \sum_{k=0}^{\infty} e_k < \infty
+\end{equation*}
+\vspace{-0.18cm}
+\hfill
+\hyperlink{appendix:lemmas}{%
+  \beamergotobutton{Appendix I: Lemmas 1--4 $\rightarrow$}%
+}
+
+\end{itemize}
+
+
+\end{frame}
+
+% \begin{frame}{Theorem: An $O(1/K)$ Averaged Bound}
+% \small
+% Lemma 4 gives the finite weighted budget
+% \begin{equation*}
+%   c_{\mathrm{desc}}
+%   \sum_{k=0}^{K-1}\rho_{s_k}D_k
+%   \le C_{\mathrm{desc}},
+%   \qquad
+%   D_k:=\|\Delta_{\bx}^{k+1}\|^2
+%   +\|\Delta_{\by}^{k+1}\|^2.
+% \end{equation*}
+
+% Dividing both sides by $K$ gives
+% \begin{block}{Averaged rate}
+% \begin{equation*}
+%   \blue{\boxed{
+%   \frac{1}{K}\sum_{k=0}^{K-1}\rho_{s_k}D_k
+%   \le \frac{C_{\mathrm{desc}}}{c_{\mathrm{desc}}K}
+%   =O\!\left(\frac{1}{K}\right)}}.
+% \end{equation*}
+% \end{block}
+
+% \end{frame}
+
+\begin{frame}{Comparison with Closely Related Methods}
+\centering
+{\scriptsize
+\renewcommand{\arraystretch}{1.35}
+\setlength{\tabcolsep}{1.2pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}p{0.14\textwidth}p{0.12\textwidth}p{0.11\textwidth}p{0.105\textwidth}p{0.10\textwidth}p{0.17\textwidth}p{0.09\textwidth}@{}}
+\toprule
+\textbf{Method}
+& \shortstack{\textbf{Problem}\\\textbf{setting}}
+& \shortstack{\textbf{Convexity}\\\textbf{of $h$}}
+& \shortstack{\textbf{KKT}\\\textbf{measure}}
+& \shortstack{\textbf{Penalty}\\$\boldsymbol{\rho}$}
+& \shortstack{\textbf{Parameter}\\\textbf{schedule}}
+& \shortstack{\textbf{Iteration}\\\textbf{complexity}}
+\\
+\midrule
+\shortstack{SDCAM$_{1\ell}$\\\green{[1]}}
+& Composite
+& $\checkmark$
+& \shortstack{$(\eps_1,\eps_2,0)$\\stationarity}
+& N/A
+& \shortstack{Continuation\\$\uparrow$}
+& $O(\eps^{-3})$
+\\
+\shortstack{SDD-ADMM\\\green{[2]}}
+& \shortstack{Nonlinear\\equality}
+& $\checkmark$(ncvx)
+& \shortstack{$\eps$-\\stationarity}
+& $\Theta(\eps^{-1})$
+& \shortstack{$\omega,\tau$ fixed\\per run}
+& \shortstack{$O(\eps^{-3})$}
+\\
+\blue{\shortstack{\textbf{DDLALM}\\\textbf{[This work]}}}
+& \blue{$h(\calA(\bx))$}
+& \blue{$\checkmark$}
+& \blue{\shortstack{\textbf{split}\\$\boldsymbol{\eps}$\textbf{-KKT}}}
+& \blue{\textbf{fixed}}
+& \blue{\shortstack{$s_k=\Theta(k^{1/3})$\\$\uparrow$}}
+& \blue{\textbf{$O(\eps^{-3})$}}
+\\
+\bottomrule
+\end{tabular}%
+}}
+
+\vspace{2mm}
+{\tiny
+SDCAM$_{1\ell}$ is the closest same-scope complexity comparator;
+SDD-ADMM is the nonlinear ALM/ADMM-family comparator.
+}
+\end{frame}
+
+\section{Discussion}
+
+\begin{frame}{Concern I: Can the $\by$-Update Avoid $s_k$ in DDALM?}
+Recalling
+\begin{equation*}
+  \begin{aligned}
+  \mathcal P_{s_k}(\bx,\by,\blmbd;\bmu)
+  :=\;&f(\bx)+h(\by)
+  +\langle\blmbd,\calA(\bx)-\by\rangle \\
+  &+\frac{\rho}{2}\|\calA(\bx)-\by\|^2
+  -\frac{1}{2s_k}\|\blmbd-\bmu\|^2.
+  \end{aligned}
+\end{equation*}
+
+For fixed $(\bx,\bmu)$, $\mathcal P_{s_k}$ is $\rho$-strongly convex in
+$\by$ and $1/s_k$-strongly concave in $\blmbd$. Hence
+\begin{equation*}
+  \red{{}\min_{\by}\max_{\blmbd}\mathcal P_{s_k}}
+  =
+  \green{\max_{\blmbd}\min_{\by}\mathcal P_{s_k}},
+\end{equation*}
+Both problems attain the same \blue{unique} saddle point
+$\bigl(\by^\star,\blmbd^\star\bigr)$:
+\hyperlink{appendix:why-rho-plus-sk}{%
+    \beamergotobutton{Why $\rho+s_k$?}%
+  }
+\begin{equation*}
+  \begin{aligned}
+  \by^\star
+  &=\prox_{h/(\rho+s_k)}
+  \left(
+    \calA(\bx)+\frac{\bmu}{\rho+s_k}
+  \right), \\
+  \blmbd^\star
+  &=\bmu+s_k\bigl(\calA(\bx)-\by^\star\bigr).
+  \end{aligned}
+\end{equation*}
+
+Two different one-step update strategies:
+
+\begin{itemize}
+  \item \red{DDLALM}: solve the saddle problem \red{\textbf{exactly.}} The answer seems to be \red{not!} 
+ 
+  \item Candidate route: solve the saddle problem \green{\textbf{inexactly.}}
+
+\end{itemize}
+
+
+\end{frame}
+
+\begin{frame}{Candidate Solution: Reduced-Dual Route}
+\small
+\begin{itemize}
+  \item[\blue{$\triangleright$}]
+  \textbf{Eliminate the $\by$-block through the $\rho$-prox:}
+  \begin{equation*}
+    d_s(\bx,\blmbd;\bmu)
+    :=\min_{\by}\mathcal P_s(\bx,\by,\blmbd;\bmu),
+    \qquad
+    \red{\by(\blmbd;\bx)}
+    =\operatorname{prox}_{h/\rho}
+    \left(\calA(\bx)+\frac{\blmbd}{\rho}\right).
+  \end{equation*}
+
+  \item[\blue{$\triangleright$}]
+  \textbf{Obtain an exact subdifferential certificate:}
+  \begin{equation*}
+    \blmbd+\rho\bigl[\calA(\bx)-\by(\blmbd;\bx)\bigr]
+    \in\partial h\bigl(\by(\blmbd;\bx)\bigr).
+  \end{equation*}
+
+  \item[\blue{$\triangleright$}]
+  \textbf{Apply Danskin's theorem:}
+  \hfill
+  \hyperlink{appendix:danskin-maxmin}{%
+    \beamergotobutton{Danskin derivation $\rightarrow$}%
+  }
+  \begin{equation*}
+    \nabla_{\bx}d_s
+    =\nabla f(\bx)+J_{\calA}(\bx)^\top
+    \left\{\blmbd+\rho\bigl[\calA(\bx)-\by(\blmbd;\bx)\bigr]\right\},
+  \end{equation*}
+  \begin{equation*}
+    \nabla_{\blmbd}d_s
+    =\calA(\bx)-\by(\blmbd;\bx)-\frac{\blmbd-\bmu}{s},
+    \qquad
+    \nabla_{\bmu}d_s
+    =\frac{\blmbd-\bmu}{s}.
+  \end{equation*}
+\end{itemize}
+
+\begin{block}{Moving-center identity}
+\begin{equation*}
+  \blue{\boxed{
+  \calA(\bx)-\by(\blmbd;\bx)
+  =\nabla_{\blmbd}d_s(\bx,\blmbd;\bmu)
+  +\nabla_{\bmu}d_s(\bx,\blmbd;\bmu)}}
+\end{equation*}
+The $\bmu$-gradient exactly complements the regularization term in the
+$\blmbd$-gradient.
+\end{block}
+
+\end{frame}
+
+\begin{frame}{Candidate Algorithm}
+\footnotesize
+
+\noindent\textbf{Idea:} Apply $\bx$-descent and $(\blmbd,\bmu)$-ascent steps to the value function $d_{s_k}$.
+
+\noindent\textbf{Parameters:} tolerance $\varepsilon>0$, stepsizes
+$\eta_k,\alpha_k,\tau_k$, regularization $s_k$, and maximum iteration count $K$.
+
+\vspace{0.08cm}
+\begin{itemize}
+  \item[\blue{$\triangleright$}]
+  \textbf{Use the same $\rho$-prox mapping throughout:}
+  \begin{equation*}
+    \by(\blmbd;\bx)
+    =\operatorname{prox}_{h/\rho}
+    \left(\calA(\bx)+\frac{\blmbd}{\rho}\right).
+  \end{equation*}
+
+  \item[\blue{$\triangleright$}]
+  \textbf{$\bx$-gradient descent on $d_{s_k}(\cdot,\blmbd^k;\bmu^k)$:}
+  \begin{equation*}
+    \bx^{k+1}=\bx^k-\eta_k
+    \left\{\nabla f(\bx^k)+J_{\calA}(\bx^k)^\top
+    \left[\blmbd^k+\rho\bigl(\calA(\bx^k)-\by(\blmbd^k;\bx^k)\bigr)\right]\right\}.
+  \end{equation*}
+
+  \item[\blue{$\triangleright$}]
+  \textbf{One reduced-dual $\blmbd$-gradient ascent step:}
+  \begin{equation*}
+    \blmbd^{k+1}=\blmbd^k+\alpha_k
+    \left[\calA(\bx^{k+1})-\by(\blmbd^k;\bx^{k+1})
+    -\frac{\blmbd^k-\bmu^k}{s_k}\right].
+  \end{equation*}
+
+  \item[\blue{$\triangleright$}]
+  \textbf{Moving-center $\bmu$-gradient ascent:}
+  \begin{equation*}
+    \bmu^{k+1}
+    =\bmu^k+\tau_k\nabla_{\bmu}
+    d_{s_k}(\bx^{k+1},\blmbd^{k+1};\bmu^k)
+    =\bmu^k+\frac{\tau_k}{s_k}(\blmbd^{k+1}-\bmu^k),
+    \qquad 0<\tau_k<s_k.
+  \end{equation*}
+\end{itemize}
+
+\begin{block}{Oracle cost}
+The $\bx$-first order evaluates the same $\rho$-prox mapping at
+$(\blmbd^k,\bx^k)$ and $(\blmbd^k,\bx^{k+1})$.
+\end{block}
+\end{frame}
+
+\begin{frame}{Exact $\blmbd$-Block Solve as a Special Case}
+\small
+\begin{itemize}
+  \item[\blue{$\triangleright$}]
+  \textbf{Choose the reduced-dual stepsize $\alpha_k=s_k$:}
+  \begin{equation*}
+    \begin{aligned}
+    \blmbd^{k+1}
+    &=\blmbd^k+s_k
+    \left[\calA(\bx^{k+1})-\by(\blmbd^k;\bx^{k+1})
+    -\frac{\blmbd^k-\bmu^k}{s_k}\right] \\
+    &=\bmu^k+s_k
+    \bigl[\calA(\bx^{k+1})-\by(\blmbd^k;\bx^{k+1})\bigr].
+    \end{aligned}
+  \end{equation*}
+
+  \item[\blue{$\triangleright$}]
+  \textbf{This is an exact solve of the frozen-$\by$ multiplier block:}
+  \begin{equation*}
+    \blmbd^{k+1}
+    =\arg\max_{\blmbd}\,
+    \mathcal P_{s_k}
+    \bigl(\bx^{k+1},\by(\blmbd^k;\bx^{k+1}),\blmbd;\bmu^k\bigr).
+  \end{equation*}
+
+  \item[\blue{$\triangleright$}]
+  \textbf{The distinction from reduced-dual exact maximization:}
+  in $d_{s_k}(\bx^{k+1},\blmbd;\bmu^k)$, the minimizer
+  $\by(\blmbd;\bx^{k+1})$ changes with $\blmbd$.
+\end{itemize}
+
+\begin{block}{Interpretation}
+$\alpha_k=s_k$ is exact for the frozen-$\by$ block, but it is not an exact
+maximizer of $d_{s_k}$.
+\end{block}
+\end{frame}
+
+\begin{frame}{The role of $\alpha_k$}
+\footnotesize
+\begin{itemize}
+  \item[\blue{$\triangleright$}]
+  \textbf{Core bottleneck:}
+
+ \(\text{primal descent}
+\le
+-\text{descent}
++
+C\eta_k\|\lambda^k-\lambda_k^\star(x^k)\|^2
++
+\text{regularization drift},\) which limits the $\eta_k$.
+  \item[\blue{$\triangleright$}]
+  \textbf{The frozen-$\by$ exact step is not the stable reduced-dual scale:}
+  \begin{equation*}
+   L_{\lambda,k}
+\leq
+\frac1\rho+\frac1{s_k},
+\qquad
+\alpha_k
+\leq
+\frac{1}{
+\frac1\rho+\frac1{s_k}
+}
+=
+\frac{\rho s_k}{\rho+s_k}
+\leq
+\frac1{L_{\lambda,k}}.
+  \end{equation*}
+  Thus $\alpha_k=s_k$ does not respect this scale when $s_k\uparrow$.
+
+  \item[\blue{$\triangleright$}]
+  \textbf{Proposed stable dual step:}
+  \begin{equation*}
+    \blue{\alpha_k=\theta_\lambda\frac{\rho s_k}{\rho+s_k}},
+    \qquad 0<\theta_\lambda\leq1.
+  \end{equation*}
+  It yields the convex-combination representation
+  \begin{equation*}
+    \begin{aligned}
+    \blmbd^{k+1}
+    ={}&(1-\theta_\lambda)\blmbd^k
+    +\theta_\lambda\frac{s_k}{\rho+s_k}
+    \left\{\blmbd^k+\rho\bigl[\calA(\bx^{k+1})
+    -\by(\blmbd^k;\bx^{k+1})\bigr]\right\} \\
+    &+\theta_\lambda\frac{\rho}{\rho+s_k}\bmu^k.
+    \end{aligned}
+  \end{equation*}
+
+  \item[\blue{$\triangleright$}]
+  \textbf{Main parameter schedule:}
+  \begin{equation*}
+    s_k=c_s(k+1)^a,\qquad
+    \eta_k=\frac{\theta_x}{\rho+s_k},\qquad
+    \alpha_k=\theta_\lambda\frac{\rho s_k}{\rho+s_k},\qquad
+    \tau_k=\theta_\mu s_k,
+  \end{equation*}
+  where $a\in(0,1)$, $c_s>0$, $0<\theta_\lambda\leq1$, and
+  $0<\theta_\mu<1$. The complexity target uses $a=1/3$.
+\end{itemize}
+
+\begin{block}{Question}
+Can stable dual contraction and constant-rate center tracking jointly absorb
+the multiplier tracking error?
+\end{block}
+\end{frame}
+
+% \begin{frame}{Proof Roadmap: Four Coupled Modules}
+% \small
+% \begin{itemize}
+%   \item[\blue{$\triangleright$}]
+%   \textbf{Module 1: Basic identities and multiplier boundedness.}
+%   Use the exact $\rho$-prox certificate and the convex-combination updates to
+%   bound $\{\blmbd^k\}$ and $\{\bmu^k\}$ uniformly.
+
+%   \item[\blue{$\triangleright$}]
+%   \textbf{Module 2: Primal descent and multiplier tracking.}
+%   Define the exact regularized target
+%   $\blmbd_{s_k}^{\star}(\bx;\bmu):=\arg\max_{\blmbd}d_{s_k}(\bx,\blmbd;\bmu)$
+%   and derive a recursion for
+%   \begin{equation*}
+%     e_k:=\blmbd^k-\blmbd_{s_k}^{\star}(\bx^k;\bmu^k).
+%   \end{equation*}
+
+%   \item[\blue{$\triangleright$}]
+%   \textbf{Module 3: Center-gap control and a joint Lyapunov function.}
+%   Track $\delta_k:=\blmbd^k-\bmu^k$ and use its decrease to control the
+%   moving-center drift and the regularization drift.
+
+%   \item[\blue{$\triangleright$}]
+%   \textbf{Module 4: KKT reconstruction and complexity.}
+%   Combine the primal step with
+%   \begin{equation*}
+%     \calA(\bx)-\by(\blmbd;\bx)
+%     =\nabla_{\blmbd}d_s+\nabla_{\bmu}d_s
+%   \end{equation*}
+%   to recover stationarity and feasibility at a tail-best iterate.
+% \end{itemize}
+% \end{frame}
+
+% \begin{frame}{Can the Moving Center Absorb the Tracking Error?}
+% \small
+% \begin{itemize}
+%   \item[\blue{$\triangleright$}]
+%   \textbf{Two coupled errors must be controlled:}
+%   \begin{equation*}
+%     e_k=\blmbd^k-\blmbd_{s_k}^{\star}(\bx^k;\bmu^k),
+%     \qquad
+%     \delta_k=\blmbd^k-\bmu^k.
+%   \end{equation*}
+
+%   \item[\blue{$\triangleright$}]
+%   \textbf{Candidate joint Lyapunov function:}
+%   \begin{equation*}
+%     \mathcal V_k
+%     =\psi_{s_k}(\bx^k;\bmu^k)
+%     +c_e\|e_k\|^2+c_\delta\|\delta_k\|^2.
+%   \end{equation*}
+
+%   \item[\blue{$\triangleright$}]
+%   \textbf{Decisive inequality to prove:}
+%   find positive coefficients such that
+%   \begin{equation*}
+%     \mathcal V_{k+1}-\mathcal V_k
+%     \leq-c_x\|\Delta_{\bx}^{k+1}\|^2
+%     -c_e'\|e_k\|^2-c_\delta'\|\delta_k\|^2
+%     +\mathcal E_k^s,
+%   \end{equation*}
+%   where $\mathcal E_k^s$ is the controllable drift induced by
+%   $s_{k+1}-s_k$.
+% \end{itemize}
+
+% \begin{block}{Hu--Jiang open problem}
+% Can the center-gap decrease absorb multiplier tracking and moving-center drift
+% simultaneously while retaining a single loop?
+% \end{block}
+% \end{frame}
+
+
+% \section{References}
+
+\begin{frame}{References}
+\footnotesize
+\begin{enumerate}
+  \item[{[1]}] H. Zhang, N. Marumo, T. K. Pong, and A. Takeda,
+  ``Complexity and Convergence Analysis of a Single-Loop SDCAM for
+  Lipschitz Composite Optimization and Beyond,'' arXiv:2512.24059, 2025.
+
+  \item[{[2]}] K. Sun and X. A. Sun,
+  ``Dual Descent Augmented Lagrangian Method and Alternating Direction
+  Method of Multipliers,'' \emph{SIAM Journal on Optimization},
+  34(2):1679--1707, 2024.
+
+  \item[{[3]}] J. M. Danskin,
+  ``The Theory of Max--Min, with Applications,''
+  \emph{SIAM Journal on Applied Mathematics},
+  14(4):641--664, 1966.
+\end{enumerate}
+\end{frame}
+
+\appendix
+
+\begin{frame}{Appendix Contents}
+\hypertarget{appendix:contents}{}
+\small
+\begin{enumerate}
+  \setlength{\itemsep}{0.22cm}
+  \item \hyperlink{appendix:lemmas}{\textbf{Appendix I:} Lemmas 1--4}
+  \item \hyperlink{appendix:bootstrap-joint-claim}{\textbf{Appendix II:} Induction}
+  \item \hyperlink{appendix:danskin-theorem}{\textbf{Appendix III:} Danskin's Theorem}
+  \item \hyperlink{appendix:why-rho-plus-sk}{\textbf{Appendix IV:} Why $\rho+s_k$ Appears}
+  \item \hyperlink{appendix:danskin-maxmin}{\textbf{Appendix V:} Danskin's Theorem for the Max--Min Problem}
+  \item \hyperlink{appendix:exact-maxmin}{\textbf{Appendix VI:} Exact Solution of the Max--Min Problem}
+\end{enumerate}
+\end{frame}
+
+% BEGIN APPENDIX I LEMMAS
+\begin{frame}{Appendix I: Lemma 1---Multiplier and Feasibility Bounds
+\hfill\hyperlink{appendix:contents}{\beamerreturnbutton{Contents}}}
+\hypertarget{appendix:lemmas}{}
+\label{app:lemmas}
+\scriptsize
+Suppose $0<\tau_k\le s_k$. Define
+\begin{equation*}
+  M_\mu:=\max\{\|\bmu^0\|,L_h\},
+  \qquad C_r:=L_h+M_\mu.
+\end{equation*}
+
+\noindent\textbf{Conclusion:} For every $k\ge0$,
+\begin{align}
+  \|\blmbd^{k+1}\|\le M_\mu,
+  \qquad
+  \|\bmu^{k+1}\|\le M_\mu,
+  \label{eq:two-multiplier-bounds}\\
+  \|\br^{k+1}\|
+  &\le\frac{C_r}{\rho_{s_k}},
+  \qquad
+  \frac{\|\bmu^{k+1}-\bmu^k\|^2}{\tau_k}
+  \le\frac{C_r^2\tau_k}{\rho_{s_k}^2}.
+  \label{eq:feasibility-drift-control}
+\end{align}
+
+\noindent\textbf{Proof:}
+\begin{itemize}
+\setlength{\itemsep}{0.06cm}
+
+\item[\blue{$\triangleright$}]
+\textbf{Saddle certificate.}
+Assumption (iii) and the saddle certificate in
+\eqref{eq:key-exact-identities} give
+\begin{equation*}
+  \blmbd^{k+1}+\rho\br^{k+1}\in\partial h(\by^{k+1}),
+  \qquad
+  \|\blmbd^{k+1}+\rho\br^{k+1}\|\le L_h.
+\end{equation*}
+
+\item[\blue{$\triangleright$}]
+\textbf{Two-multiplier boundedness.}
+The base case holds since $\|\bmu^0\|\le M_\mu$.
+Assume $\|\bmu^k\|\le M_\mu$.
+Applying the two convex combinations in
+\eqref{eq:key-convex-combinations}, respectively, gives
+\begin{equation*}
+\begin{aligned}
+  \|\blmbd^{k+1}\|
+  &\le \frac{\rho}{\rho_{s_k}}M_\mu
+  +\frac{s_k}{\rho_{s_k}}L_h
+  \le M_\mu, \\
+  \|\bmu^{k+1}\|
+  &\le \left(1-\frac{\tau_k}{s_k}\right)M_\mu
+  +\frac{\tau_k}{s_k}M_\mu
+  =M_\mu.
+\end{aligned}
+\end{equation*}
+Thus, \eqref{eq:two-multiplier-bounds} follows by induction.
+
+\item[\blue{$\triangleright$}]
+\textbf{Feasibility and center-multiplier drift.}
+Since $\rho_{s_k}\br^{k+1}
+ =(\blmbd^{k+1}+\rho\br^{k+1})-\bmu^k$ and
+$\bmu^{k+1}-\bmu^k=\tau_k\br^{k+1}$ by
+\eqref{eq:key-exact-identities},
+\begin{equation*}
+\begin{aligned}
+  \|\br^{k+1}\|
+  &\le\frac{L_h+M_\mu}{\rho_{s_k}}
+  =\frac{C_r}{\rho_{s_k}},\\
+  \frac{\|\bmu^{k+1}-\bmu^k\|^2}{\tau_k}
+  &=\tau_k\|\br^{k+1}\|^2
+  \leq\frac{C_r^2\tau_k}{\rho_{s_k}^2}.
+\end{aligned}
+\end{equation*}
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Appendix I: Lemma 2---Quasi-Descent on $\Phi_s$
+\hfill\hyperlink{appendix:contents}{\beamerreturnbutton{Contents}}}
+\vspace{0.2cm}
+\scriptsize
+
+
+Let $\Delta_{\bx}^{k+1}:=\bx^{k+1}-\bx^k$, and define
+$\Delta_{\by}^{k+1}$ and $\Delta_{\bmu}^{k+1}$ similarly.
+
+\noindent\textbf{Conclusion:}
+\begin{equation}\label{eq:slide-quasi-descent}
+\begin{split}
+  &\Phi_{s_{k+1}}(\bx^{k+1},\by^{k+1};\bmu^{k+1})
+  -\Phi_{s_k}(\bx^k,\by^k;\bmu^k)\\
+  &\quad\leq
+  -\frac{3\rho_{s_k}}{4\theta_x}\|\Delta_{\bx}^{k+1}\|^2
+  -\frac{\rho_{s_k}}{2}\|\Delta_{\by}^{k+1}\|^2
+  +\left(\frac{1}{\tau_k}
+  +\frac{\rho_{s_{k+1}}-\rho_{s_k}}{2\tau_k^2}\right)
+  \|\Delta_{\bmu}^{k+1}\|^2.
+\end{split}
+\end{equation}
+
+\noindent\textbf{Proof:}
+
+\begin{itemize}
+\setlength{\itemsep}{0.08cm}
+\item[\blue{$\triangleright$}]
+\textbf{$\bx$-block descent.}
+With $\eta_k=\theta_x/\rho_{s_k}$, the $\bx$-gradient step gives
+\begin{equation*}
+  \Phi_{s_k}(\bx^{k+1},\by^k;\bmu^k)
+  -\Phi_{s_k}(\bx^k,\by^k;\bmu^k)
+  \leq
+  -\frac{3\rho_{s_k}}{4\theta_x}
+  \|\Delta_{\bx}^{k+1}\|^2.
+\end{equation*}
+
+\item[\blue{$\triangleright$}]
+\textbf{$\by$-block descent.}
+The exact $(\by,\blmbd)$ saddle solve makes $\by^{k+1}$ the exact minimizer of the strongly convex $\by$-subproblem. Hence,
+\begin{equation*}
+  \Phi_{s_k}(\bx^{k+1},\by^{k+1};\bmu^k)
+  -\Phi_{s_k}(\bx^{k+1},\by^k;\bmu^k)
+  \leq
+  -\frac{\rho_{s_k}}{2}
+  \|\Delta_{\by}^{k+1}\|^2.
+\end{equation*}
+
+\item[\blue{$\triangleright$}]
+\textbf{Center-multiplier shift.}
+Using $\Delta_{\bmu}^{k+1}=\tau_k\br^{k+1}$ from
+\eqref{eq:key-exact-identities},
+\begin{equation*}
+  \Phi_{s_k}(\bx^{k+1},\by^{k+1};\bmu^{k+1})
+  -\Phi_{s_k}(\bx^{k+1},\by^{k+1};\bmu^k)
+  =\frac{1}{\tau_k}\|\Delta_{\bmu}^{k+1}\|^2.
+\end{equation*}
+
+\item[\blue{$\triangleright$}]
+\textbf{Regularization shift.}
+The variation of $s_k$ contributes
+\begin{equation*}
+  \Phi_{s_{k+1}}(\bx^{k+1},\by^{k+1};\bmu^{k+1})
+  -\Phi_{s_k}(\bx^{k+1},\by^{k+1};\bmu^{k+1})
+  =\frac{\rho_{s_{k+1}}-\rho_{s_k}}{2\tau_k^2}
+  \|\Delta_{\bmu}^{k+1}\|^2.
+\end{equation*}
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Appendix I: Lemma 3---KKT Residual Control
+\hfill\hyperlink{appendix:contents}{\beamerreturnbutton{Contents}}}
+\scriptsize
+
+Fix $k\in\{\lceil K/2\rceil,\ldots,K-1\}$. Then
+\begin{equation*}
+\begin{aligned}
+  &\blmbd^k+\rho\br^k\in\partial h(\by^k),\\
+  &\left\|\nabla f(\bx^k)+J_{\calA}(\bx^k)^\top
+  \bigl(\blmbd^k+\rho\br^k\bigr)\right\|
+  \le \eta_k^{-1}\|\Delta_{\bx}^{k+1}\|
+  +G_{\calA}C_r\left(
+  \frac{\tau_{k-1}}{\rho_{s_{k-1}}}
+  +\frac{\rho_{s_k}-\rho_{s_{k-1}}}{\rho_{s_{k-1}}}
+  \right),\\
+  &\|\calA(\bx^k)-\by^k\| \le\frac{C_r}{\rho_{s_{k-1}}}
+\end{aligned}
+\end{equation*}
+
+\noindent\textbf{Proof:}
+\begin{itemize}
+\setlength{\itemsep}{0.06cm}
+\item[\blue{$\triangleright$}]
+\textbf{Choose the KKT multiplier.}
+By \eqref{eq:key-exact-identities} at iteration $k-1$,
+\begin{equation}\label{eq:kkt-multiplier}
+  \blmbd^k+\rho\br^k
+  =\bmu^{k-1}+\rho_{s_{k-1}}\br^k
+  \in\partial h(\by^k).
+\end{equation}
+
+\item[\blue{$\triangleright$}]
+\textbf{$\bx$-step optimality.}
+The $\bx$-update gives
+\begin{equation}\label{eq:kkt-x-optimality}
+\begin{aligned}
+  \zero
+  &=\eta_k^{-1}\Delta_{\bx}^{k+1}
+  +\nabla_{\bx}\Phi_{s_k}
+  (\bx^k,\by^k;\bmu^k)\\
+  &=\eta_k^{-1}\Delta_{\bx}^{k+1}
+  +\nabla f(\bx^k)
+  +J_{\calA}(\bx^k)^\top
+  \bigl(\bmu^k+\rho_{s_k}\br^k\bigr).
+\end{aligned}
+\end{equation}
+
+\item[\blue{$\triangleright$}]
+\textbf{Multiplier mismatch.}
+Using $\bmu^k-\bmu^{k-1}=\tau_{k-1}\br^k$,
+\begin{equation*}
+\begin{aligned}
+  &\bmu^k+\rho_{s_k}\br^k
+  -\bigl(\blmbd^k+\rho\br^k\bigr)\\
+  &\quad=\bigl(\tau_{k-1}
+  +\rho_{s_k}-\rho_{s_{k-1}}\bigr)\br^k.
+\end{aligned}
+\end{equation*}
+Hence, \eqref{eq:feasibility-drift-control} and
+$\|J_{\calA}(\bx^k)\|\le G_{\calA}$ give the results.
+% \begin{equation*}
+% \begin{aligned}
+%   &\left\|\nabla f(\bx^k)+J_{\calA}(\bx^k)^\top
+%   \bigl(\blmbd^k+\rho\br^k\bigr)\right\|\\
+%   &\quad\le \eta_k^{-1}\|\Delta_{\bx}^{k+1}\|
+%   +G_{\calA}C_r\left(
+%   \frac{\tau_{k-1}}{\rho_{s_{k-1}}}
+%   +\frac{\rho_{s_k}-\rho_{s_{k-1}}}{\rho_{s_{k-1}}}
+%   \right)\\
+%   &\quad=\eta_k^{-1}\|\Delta_{\bx}^{k+1}\|+O(K^{-1}),
+%   \qquad
+%   \|\br^k\|\le\frac{C_r}{\rho_{s_{k-1}}}=O(K^{-a}).
+% \end{aligned}
+% \end{equation*}
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}{Appendix I: Lemma 4---Weighted Finite Length
+\hfill\hyperlink{appendix:contents}{\beamerreturnbutton{Contents}}}
+\scriptsize
+
+Let
+$D_k:=\|\Delta_{\bx}^{k+1}\|^2+\|\Delta_{\by}^{k+1}\|^2$ and
+$c_{\mathrm{desc}}:=\min\{3/(4\theta_x),1/2\}>0$.
+
+\noindent\textbf{Condition:} Let $s_k=c_s(k+1)^a$ and
+$\tau_k=\theta_\mu s_k/(k+2)$ with $a\in(0,1)$. Then
+\begin{equation}\label{eq:slide-weighted-finite-length}
+  c_{\mathrm{desc}}\sum_{k=0}^{K-1}
+  \rho_{s_k}\|\Delta_{\bx}^{k+1}\|^2
+  \le c_{\mathrm{desc}}\sum_{k=0}^{K-1}\rho_{s_k}D_k
+  \le C_{\mathrm{desc}}<\infty.
+\end{equation}
+
+\noindent\textbf{Proof:}
+\begin{itemize}
+\setlength{\itemsep}{0.06cm}
+\item[\blue{$\triangleright$}]
+\textbf{The moving-potential error is summable.}
+\begin{equation*}
+\begin{aligned}
+  e_k
+  &:=C_r^2\left(
+  \frac{\tau_k}{\rho_{s_k}^2}
+  +\frac{\rho_{s_{k+1}}-\rho_{s_k}}{2\rho_{s_k}^2}
+  \right),\\
+  \frac{\tau_k}{\rho_{s_k}^2}
+  &=O(k^{-(1+a)}),
+  \qquad
+  \frac{\rho_{s_{k+1}}-\rho_{s_k}}{\rho_{s_k}^2}
+  =O(k^{-(1+a)}).
+\end{aligned}
+\end{equation*}
+Hence, $\sum_{k=0}^{\infty}e_k<\infty$.
+
+\item[\blue{$\triangleright$}]
+\textbf{Quasi-descent leaves a finite error budget.}
+Lemma 2 and Lemma 1 yield
+\begin{equation}\label{eq:slide-clean-quasi-descent}
+  \Phi_{s_{k+1}}^{k+1}-\Phi_{s_k}^{k}
+  \le -c_{\mathrm{desc}}\rho_{s_k}D_k+e_k,
+  \qquad
+  \Phi_{s_k}^{k}:=\Phi_{s_k}(\bx^k,\by^k;\bmu^k).
+\end{equation}
+
+\item[\blue{$\triangleright$}]
+\textbf{Telescoping converts descent into a global budget.}
+Summing \eqref{eq:slide-clean-quasi-descent} and using 
+$\Phi_{s_K}^{K}\ge\underline\Phi$ give
+\begin{equation*}
+\begin{aligned}
+  c_{\mathrm{desc}}\sum_{k=0}^{K-1}\rho_{s_k}D_k
+  % &\le \Phi_{s_0}^{0}-\Phi_{s_K}^{K}
+  % +\sum_{k=0}^{K-1}e_k\\
+  \le \Phi_{s_0}^{0}-\underline\Phi
+  +\sum_{k=0}^{\infty}e_k
+  =:C_{\mathrm{desc}}<\infty.
+\end{aligned}
+\end{equation*}
+\end{itemize}
+\end{frame}
+
+% END APPENDIX I LEMMAS
+
+% \section{Appendix}
+
+\begin{frame}{Appendix II.1: Induction---Joint Claim
+\hfill\hyperlink{appendix:contents}{\beamerreturnbutton{Contents}}}
+\hypertarget{appendix:bootstrap-joint-claim}{}
+\scriptsize
+\begin{itemize}
+\setlength{\itemsep}{0.11cm}
+
+\item[\blue{$\triangleright$}]
+\textbf{Summable drift budget.}
+Define
+\begin{equation*}
+  e_k:=C_r^2\left(
+  \frac{\tau_k}{\rho_{s_k}^2}
+  +\frac{\rho_{s_{k+1}}-\rho_{s_k}}{2\rho_{s_k}^2}
+  \right),
+  \qquad
+  C_e:=\sum_{k=0}^{\infty}e_k<\infty.
+\end{equation*}
+
+\item[\blue{$\triangleright$}]
+\textbf{Derived level set.}
+Set
+\begin{equation*}
+  \overline\Phi:=\Phi_{s_0}(\bx^0,\by^0;\bmu^0)+C_e,
+  \qquad
+  \alpha:=\overline\Phi+\frac{C_r^2}{2\rho_{s_0}},
+  \qquad
+  \calS_\alpha:=\{\bx:F(\bx)\leq\alpha\}.
+\end{equation*}
+Choose a compact convex set $\calS$ such that
+$\calS_\alpha\subseteq\operatorname{int}(\calS)$.
+
+\item[\blue{$\triangleright$}]
+\textbf{Potential-to-objective bridge.}
+Multiplier boundedness and the Lipschitz continuity of $h$ give
+\begin{equation*}
+  F(\bx^k)
+  \leq
+  \Phi_{s_k}(\bx^k,\by^k;\bmu^k)
+  +\frac{C_r^2}{2\rho_{s_k}}.
+\end{equation*}
+
+\item[\blue{$\triangleright$}]
+\textbf{Joint induction claim.}
+For every $k\geq0$, prove simultaneously that
+\begin{equation*}
+  \Phi_{s_k}(\bx^k,\by^k;\bmu^k)
+  \leq
+  \Phi_{s_0}(\bx^0,\by^0;\bmu^0)+\sum_{j=0}^{k-1}e_j,
+  \qquad
+  \bx^k\in\calS_\alpha.
+\end{equation*}
+
+\item[\blue{$\triangleright$}]
+\textbf{Base case.}
+The potential bound is immediate, and
+\begin{equation*}
+  F(\bx^0)
+  \leq\Phi_{s_0}(\bx^0,\by^0;\bmu^0)
+  +\frac{C_r^2}{2\rho_{s_0}}
+  \leq\alpha.
+\end{equation*}
+Hence, $\bx^0\in\calS_\alpha$.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Appendix II.2: Induction---Smooth Region
+\hfill\hyperlink{appendix:contents}{\beamerreturnbutton{Contents}}}
+\scriptsize
+\begin{itemize}
+\setlength{\itemsep}{0.13cm}
+
+\item[\blue{$\triangleright$}]
+\textbf{Induction hypothesis.}
+Assume that the joint claim holds at iteration $k$. In particular,
+\begin{equation*}
+  \bx^k\in\calS_\alpha\subseteq\operatorname{int}(\calS).
+\end{equation*}
+
+\item[\blue{$\triangleright$}]
+\textbf{Safety margin.}
+Define
+\begin{equation*}
+  d_{\calS}:=\operatorname{dist}(\calS_\alpha,\partial\calS)>0,
+  \qquad
+  M_d:=\max\left\{
+  \frac{\|\nabla_{\bx}\Phi_{s_0}(\bx^0,\by^0;\bmu^0)\|}{\rho_{s_0}},
+  \frac{G_f+G_{\calA}(M_\mu+C_r)}{\rho_{s_0}}
+  \right\}.
+\end{equation*}
+
+\item[\blue{$\triangleright$}]
+\textbf{Normalized gradient bound.}
+Lemma 1 and Assumption (ii) imply
+\begin{equation*}
+  \frac{\|\nabla_{\bx}\Phi_{s_k}(\bx^k,\by^k;\bmu^k)\|}
+       {\rho_{s_k}}
+  \leq M_d.
+\end{equation*}
+The definition of $M_d$ covers $k=0$; the bounds
+$\|\bmu^k\|\leq M_\mu$ and $\|\br^k\|\leq C_r/\rho_{s_{k-1}}$
+cover $k\geq1$.
+
+\item[\blue{$\triangleright$}]
+\textbf{The next iterate remains in $\calS$.}
+Choose $\eta_k=\theta_x/\rho_{s_k}$ with
+$\theta_xM_d\leq d_{\calS}$. Then
+\begin{equation*}
+  \|\bx^{k+1}-\bx^k\|
+  =\frac{\theta_x}{\rho_{s_k}}
+  \|\nabla_{\bx}\Phi_{s_k}(\bx^k,\by^k;\bmu^k)\|
+  \leq\theta_xM_d
+  \leq d_{\calS}.
+\end{equation*}
+Thus, $\bx^{k+1}\in\calS$. Convexity also gives
+$[\bx^k,\bx^{k+1}]\subseteq\calS$.
+
+\item[\blue{$\triangleright$}]
+\textbf{Primal descent is now valid.}
+The whole line segment lies in the smoothness region. Therefore, the
+one-step descent inequality of Lemma 2 applies at iteration $k$.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Appendix II.3: Induction---Closure
+\hfill\hyperlink{appendix:contents}{\beamerreturnbutton{Contents}}}
+\scriptsize
+\begin{itemize}
+\setlength{\itemsep}{0.16cm}
+
+\item[\blue{$\triangleright$}]
+\textbf{Apply quasi-descent.}
+Since $\bx^k,\bx^{k+1}\in\calS$, Lemma 2 and the drift bound give
+\begin{equation*}
+\begin{aligned}
+  \Phi_{s_{k+1}}(\bx^{k+1},\by^{k+1};\bmu^{k+1})
+  &\leq \Phi_{s_k}(\bx^k,\by^k;\bmu^k)+e_k\\
+  &\leq \Phi_{s_0}(\bx^0,\by^0;\bmu^0)
+  +\sum_{j=0}^{k}e_j.
+\end{aligned}
+\end{equation*}
+
+\item[\blue{$\triangleright$}]
+\textbf{Convert potential control to objective control.}
+Using $\sum_{j=0}^{k}e_j\leq C_e$ and
+$\rho_{s_{k+1}}\geq\rho_{s_0}$,
+\begin{equation*}
+\begin{aligned}
+  F(\bx^{k+1})
+  &\leq
+  \Phi_{s_{k+1}}(\bx^{k+1},\by^{k+1};\bmu^{k+1})
+  +\frac{C_r^2}{2\rho_{s_{k+1}}}\\
+  &\leq
+  \overline\Phi+\frac{C_r^2}{2\rho_{s_0}}
+  =\alpha.
+\end{aligned}
+\end{equation*}
+
+\item[\blue{$\triangleright$}]
+\textbf{Return to the derived level set.}
+The definition of $\calS_\alpha$ gives
+\begin{equation*}
+  \bx^{k+1}\in\calS_\alpha.
+\end{equation*}
+Both parts of the joint claim now hold at iteration $k+1$.
+\end{itemize}
+
+\begin{block}{mechanism}
+\centering
+$\displaystyle
+\bx^k\in\calS_\alpha
+\ \Longrightarrow\ 
+\bx^{k+1}\in\calS
+\ \Longrightarrow\ 
+\text{quasi-descent is valid}
+\ \Longrightarrow\ 
+F(\bx^{k+1})\leq\alpha
+\ \Longrightarrow\ 
+\bx^{k+1}\in\calS_\alpha.$
+\end{block}
+\end{frame}
+
+\begin{frame}{Appendix III: Danskin's Theorem
+\hfill\hyperlink{appendix:contents}{\beamerreturnbutton{Contents}}}
+\hypertarget{appendix:danskin-theorem}{}
+\small
+Let
+\begin{equation*}
+  V(\mathbf u):=\max_{\mathbf v\in\mathcal V}g(\mathbf u,\mathbf v),
+  \qquad
+  \mathbf v^\star(\mathbf u)
+  \in\operatorname*{arg\,max}_{\mathbf v\in\mathcal V}
+  g(\mathbf u,\mathbf v).
+\end{equation*}
+Assume that the maximum is attained, $g$ is continuously differentiable in
+$\mathbf u$, and the standard continuity conditions of Danskin's
+theorem~{\normalfont[3]} hold.
+
+\begin{block}{Unique-maximizer form}
+If $\mathbf v^\star(\mathbf u)$ is unique, then $V$ is differentiable at
+$\mathbf u$ and
+\begin{equation*}
+  \blue{\nabla V(\mathbf u)=\nabla_{\mathbf u}g
+  \bigl(\mathbf u,\mathbf v^\star(\mathbf u)\bigr).}
+\end{equation*}
+No derivative of the solution map $\mathbf v^\star(\mathbf u)$ is required.
+\end{block}
+
+% \begin{block}{Application to $\Phi_s$}
+% The $1/s$-strong concavity of
+% $\blmbd\mapsto\mathcal P_s(\bx,\by,\blmbd;\bmu)$ gives the unique maximizer
+% $\blmbd_s$. Hence, for $\mathbf u=\bx$ or $\mathbf u=\bmu$,
+% \begin{equation*}
+%   \nabla_{\mathbf u}\Phi_s(\bx,\by;\bmu)
+%   =\nabla_{\mathbf u}\mathcal P_s
+%   \bigl(\bx,\by,\blmbd_s(\bx,\by;\bmu);\bmu\bigr).
+% \end{equation*}
+% \end{block}
+\end{frame}
+
+% Original derivation
+\begin{frame}{Appendix IV: Why $\rho+s_k$ Appears
+\hfill\hyperlink{appendix:contents}{\beamerreturnbutton{Contents}}}
+\hypertarget{appendix:why-rho-plus-sk}{}
+
+For fixed $(\bx^{k+1},\bmu^k)$, the two conditions are
+\begin{equation*}
+  0\in\partial h(\by^{k+1})-\blmbd^{k+1}
+  +\rho\bigl(\by^{k+1}-\calA(\bx^{k+1})\bigr),
+\end{equation*}
+\begin{equation*}
+  \blmbd^{k+1}=\bmu^k+s_k
+  \bigl(\calA(\bx^{k+1})-\by^{k+1}\bigr).
+\end{equation*}
+Substituting the second condition into the first gives
+\begin{equation*}
+  0\in\partial h(\by^{k+1})-\bmu^k
+  +(\rho+s_k)\bigl(\by^{k+1}-\calA(\bx^{k+1})\bigr),
+\end{equation*}
+and therefore the explicit $(\rho+s_k)$-prox update follows.
+\end{frame}
+
+\begin{frame}{Appendix V: Danskin's Theorem for the Max--Min Problem
+\hfill\hyperlink{appendix:contents}{\beamerreturnbutton{Contents}}}
+\small
+For fixed $(\bx,\bmu)$, define the reduced dual function
+\begin{equation*}
+  d_s(\bx,\blmbd;\bmu)
+  :=\min_{\by}\mathcal P_s(\bx,\by,\blmbd;\bmu).
+\end{equation*}
+The inner problem is $\rho$-strongly convex and has the unique minimizer
+\begin{equation*}
+  \by(\blmbd;\bx)
+  =\operatorname{prox}_{h/\rho}
+  \left(\calA(\bx)+\frac{\blmbd}{\rho}\right).
+\end{equation*}
+Thus, the max--min problem is equivalently
+\begin{equation*}
+  \max_{\blmbd}\min_{\by}\mathcal P_s(\bx,\by,\blmbd;\bmu)
+  =\max_{\blmbd}d_s(\bx,\blmbd;\bmu).
+\end{equation*}
+
+\hypertarget{appendix:danskin-maxmin}{}
+\begin{block}{Danskin's theorem}
+Since the inner minimizer is unique and $\mathcal P_s$ is differentiable
+with respect to $(\bx,\blmbd)$, Danskin's theorem gives
+\begin{equation*}
+  \begin{aligned}
+  \nabla_{\blmbd}d_s(\bx,\blmbd;\bmu)
+  &=\nabla_{\blmbd}\mathcal P_s
+    \bigl(\bx,\by(\blmbd;\bx),\blmbd;\bmu\bigr) \\
+  &=\calA(\bx)-\by(\blmbd;\bx)-\frac{1}{s}(\blmbd-\bmu).
+  \end{aligned}
+\end{equation*}
+Moreover,
+\begin{equation*}
+  \begin{aligned}
+  \nabla_{\bx}d_s(\bx,\blmbd;\bmu)
+  &=\nabla_{\bx}\mathcal P_s
+    \bigl(\bx,\by(\blmbd;\bx),\blmbd;\bmu\bigr) \\
+  &=\nabla f(\bx)+J_{\calA}(\bx)^\top
+    \left[\blmbd+\rho\bigl(\calA(\bx)-\by(\blmbd;\bx)\bigr)\right].
+  \end{aligned}
+\end{equation*}
+No derivative of the possibly nonsmooth solution map $\by(\blmbd;\bx)$
+with respect to either $\bx$ or $\blmbd$ is needed.
+\end{block}
+\end{frame}
+
+\begin{frame}{Appendix VI: Exact Solution of the Max--Min Problem
+\hfill\hyperlink{appendix:contents}{\beamerreturnbutton{Contents}}}
+\hypertarget{appendix:exact-maxmin}{}
+\small
+
+The function $d_s(\bx,\cdot;\bmu)$ is $1/s$-strongly concave. Its unique
+maximizer $\blmbd^\star$ therefore satisfies
+\begin{equation*}
+  0=\nabla_{\blmbd}d_s(\bx,\blmbd^\star;\bmu)
+  =\calA(\bx)-\by(\blmbd^\star;\bx)
+  -\frac{1}{s}(\blmbd^\star-\bmu).
+\end{equation*}
+Let $\by^\star:=\by(\blmbd^\star;\bx)$. The exact optimality conditions are
+\begin{equation*}
+  0\in\partial h(\by^\star)-\blmbd^\star
+  +\rho\bigl(\by^\star-\calA(\bx)\bigr),
+\end{equation*}
+\begin{equation*}
+  \blmbd^\star
+  =\bmu+s\bigl(\calA(\bx)-\by^\star\bigr).
+\end{equation*}
+Substitution gives
+\begin{equation*}
+  0\in\partial h(\by^\star)-\bmu
+  +(\rho+s)\bigl(\by^\star-\calA(\bx)\bigr).
+\end{equation*}
+Hence the unique exact solution is
+\begin{equation*}
+  \boxed{
+  \by^\star=\operatorname{prox}_{h/(\rho+s)}
+  \left(\calA(\bx)+\frac{\bmu}{\rho+s}\right),
+  \qquad
+  \blmbd^\star=\bmu+s\bigl(\calA(\bx)-\by^\star\bigr).}
+\end{equation*}
+% \begin{alertblock}{Consequence}
+% Eliminating $y$ first exposes a $\rho$-prox, but exact maximization of the
+% reduced dual function recovers the same $(\rho+s)$-dependent saddle point.
+% \end{alertblock}
+\end{frame}
+
+\end{document}

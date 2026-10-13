@@ -1,0 +1,82 @@
+[
+  {
+    "anchor": "Thmdefinition1",
+    "kind": "ltx_theorem ltx_theorem_definition",
+    "text": "Definition 1 (weak proximal oracle) . A map $\\mathcal{A}:\\mathbb{V}\\times\\mathbb{R}_{+}\\rightarrow\\mathop{\\mbox{\\rm dom}}(\\mathcal{R})$ is called a weak proximal oracle for Problem ( 1 ) if, for every ${\\mathbf{y}}\\in\\mathbb{V}$ and $\\lambda>0$ , it outputs a point ${\\mathbf{x}}\\in\\mathop{\\mbox{\\rm dom}}(\\mathcal{R})$ such that for any ${\\mathbf{x}}^{*}\\in\\mathcal{X}^{*}$ , $\\displaystyle\\lambda\\left\\lVert{\\mathbf{x}}-{\\mathbf{y}}\\right\\rVert^{2}+\\mathcal{R}({\\mathbf{x}})\\leq\\lambda\\left\\lVert{\\mathbf{x}}^{*}-{\\mathbf{y}}\\right\\rVert^{2}+\\mathcal{R}({\\mathbf{x}}^{*}).$ (4)"
+  },
+  {
+    "anchor": "Thmdefinition2",
+    "kind": "ltx_theorem ltx_theorem_definition",
+    "text": "Definition 2 (restricted proximal oracle) . Let $\\widehat{\\mathcal{K}}\\subseteq\\mathop{\\mbox{\\rm dom}}(\\mathcal{R})$ be a closed, but not necessarily convex, set satisfying $\\mathcal{X}^{*}\\subseteq\\widehat{\\mathcal{K}}$ . A map $\\mathcal{A}:\\mathbb{V}\\times\\mathbb{R}_{+}\\rightarrow\\widehat{\\mathcal{K}}$ is called a restricted proximal oracle associated with $\\widehat{\\mathcal{K}}$ if, for every ${\\mathbf{y}}\\in\\mathbb{V}$ and $\\lambda>0$ , it outputs a point in $\\displaystyle\\argmin_{{\\mathbf{z}}\\in\\widehat{\\mathcal{K}}}\\left\\{\\lambda\\left\\lVert{\\mathbf{z}}-{\\mathbf{y}}\\right\\rVert^{2}+\\mathcal{R}({\\mathbf{z}})\\right\\}.$ (5) Since $\\mathcal{X}^{*}\\subseteq\\widehat{\\mathcal{K}}$ , every restricted proximal oracle is a weak proximal oracle in the sense of Definition 1 ."
+  },
+  {
+    "anchor": "Thmdefinition3",
+    "kind": "ltx_theorem ltx_theorem_definition",
+    "text": "Definition 3 ( $k$ -fold sparse projection oracle) . Suppose $\\mathcal{R}$ is the indicator function of a convex and compact set $\\mathcal{K}\\subset\\mathbb{V}$ whose set of vertices is denoted $\\mathcal{V}$ . Suppose every ${\\mathbf{x}}^{*}\\in\\mathcal{X}^{*}$ can be written as a convex combination of at most $s$ vertices from $\\mathcal{V}$ , where $s<<n$ . For a positive integer $k$ such that $ks\\leq n$ , a $k$ -fold sparse projection oracle is an oracle that for every ${\\mathbf{y}}\\in\\mathbb{V}$ , outputs a point in $\\displaystyle\\argmin_{{\\mathbf{z}}\\in\\mathcal{C}_{sk}}\\left\\lVert{\\mathbf{z}}-{\\mathbf{y}}\\right\\rVert,$ (6) where $\\mathcal{C}_{sk}\\subseteq\\mathcal{K}$ contains all points in $\\mathcal{K}$ that can be written as the convex combination of at most $s\\cdot{}k$ vertices from $\\mathcal{V}$ . In particular, this oracle implements the restricted proximal oracle of Definition 2 with $\\widehat{\\mathcal{K}}=\\mathcal{C}_{sk}$ ."
+  },
+  {
+    "anchor": "Thmtheorem1",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 1 (Deterministic geometric lower bound) . Fix an integer $N\\geq 5$ , $1\\leq k\\leq 6N$ , and $R>0$ . For every deterministic method making at most $T\\leq\\lfloor N/(4k)\\rfloor$ projections onto $\\mathcal{C}_{k}$ (see ( 7 )), there exist orthonormal vectors ${\\mathbf{q}}_{1},\\ldots,{\\mathbf{q}}_{N}\\in\\mathbb{R}^{2N}$ , a unit vector ${\\mathbf{r}}\\in\\mathbb{R}^{2N}$ , and a deterministic tie-breaking rule for the projection oracle such that, for the resulting set $\\mathcal{K}_{N,R}\\subset\\mathbb{R}^{6N}$ defined by ( 9 ), the method returns either an infeasible point or a point $\\widehat{\\mathbf{w}}$ satisfying $\\displaystyle\\left\\lVert\\widehat{\\mathbf{w}}-{\\mathbf{s}}^{*}\\right\\rVert^{2}\\geq\\frac{R^{2}}{2}.$ Between sparse-projection calls, the method may also receive arbitrary answers from auxiliary oracles whose response rules do not depend on ${\\mathbf{q}}_{1},\\ldots,{\\mathbf{q}}_{N}$ or ${\\mathbf{r}}$ . In the applications below, these auxiliary answers are precisely the free first-order oracle answers."
+  },
+  {
+    "anchor": "Thmtheorem2",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 2 (The nonsmooth case) . Fix $\\alpha,G>0$ , an integer $N\\geq 5$ , and $1\\leq k\\leq 6N$ . For every deterministic method using at most $\\lfloor N/(4k)\\rfloor$ calls to a $k$ -fold sparse projection oracle, there exists an instance in dimension $n=6N$ with compact feasible set, an $\\alpha$ -strongly convex objective whose feasible subgradients have norm at most $G$ , and a unique vertex minimizer, such that the returned point $\\widehat{\\mathbf{w}}$ is either infeasible or $\\displaystyle f(\\widehat{\\mathbf{w}})-f({\\mathbf{w}}^{*})\\geq\\frac{G^{2}}{36\\alpha N}.$ (14) Arbitrarily many first-order calls between sparse projections are allowed. Consequently, there is a universal constant $c_{0}>0$ such that, whenever $G^{2}/(\\alpha\\epsilon{}k)$ is sufficiently large, every deterministic method that guarantees an $\\epsilon$ -optimal feasible point on all such instances requires at least $c_{0}G^{2}/(\\alpha\\epsilon k)$ $k$ -fold sparse projections in the worst case."
+  },
+  {
+    "anchor": "Thmremark1",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 1 . Note that the bounded-subgradient property in Theorem 2 holds on more than just the feasible set. Indeed, $\\mathcal{K}_{N,R}\\subseteq\\{{\\mathbf{w}}:\\left\\lVert{\\mathbf{w}}\\right\\rVert\\leq R\\}$ , and for every $\\left\\lVert{\\mathbf{w}}\\right\\rVert\\leq R$ and every ${\\mathbf{g}}\\in\\partial f({\\mathbf{w}})$ , $\\left\\lVert{\\mathbf{g}}\\right\\rVert\\leq\\alpha R+\\frac{2G}{3}=\\frac{G}{3\\sqrt{N}}+\\frac{2G}{3}\\leq G.$ Thus the lower bound continues to hold when subgradients are assumed bounded on a Euclidean ball containing the feasible set. This is the same type of neighborhood-access assumption used by MOPES [ 18 ] to obtain its improved projection complexity for nonsmooth constrained optimization."
+  },
+  {
+    "anchor": "Thmtheorem3",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 3 (The smooth case) . Fix $\\alpha,\\beta>0$ , let $\\kappa:=\\beta/\\alpha$ , $N:=\\left\\lfloor(\\kappa-5)/16\\right\\rfloor$ , and suppose that $\\kappa\\geq 85$ . For every $1\\leq k\\leq 6N$ and every deterministic method using at most $\\lfloor N/(4k)\\rfloor$ calls to a $k$ -fold sparse projection oracle, there exists an instance in dimension $n=6N$ with an $\\alpha$ -strongly convex and $\\beta$ -smooth quadratic objective, a unique vertex minimizer, and a feasible set diameter $D$ satisfying $D\\leq 2$ , such that the returned point $\\widehat{{\\mathbf{w}}}$ is either infeasible or $\\displaystyle f(\\widehat{\\mathbf{w}})-f({\\mathbf{w}}^{*})\\geq\\frac{\\alpha}{4}.$ (16) Consequently, for $\\epsilon=\\alpha/8$ , every deterministic method that guarantees an $\\epsilon$ -optimal feasible point on all such instances requires $\\Omega\\left(\\beta/(\\alpha k)\\right)$ calls to the $k$ -fold sparse projection oracle in worst case."
+  },
+  {
+    "anchor": "Thmtheorem4",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 4 (Randomized geometric lower bound) . For any $N\\geq 8$ , let $T\\leq\\left\\lfloor N/(128\\log(2N))\\right\\rfloor$ . Every randomized method using at most $T$ calls to a $1$ -fold sparse projection oracle, while making arbitrary first-order calls whose returned answers are generated by a rule independent of $\\sigma$ , has some fixed $\\sigma\\in\\{-1,+1\\}^{N}$ for which its output $\\widehat{\\mathbf{w}}=(\\widehat{\\mathbf{x}},\\widehat{\\mathbf{z}})$ satisfies $\\mathbb{E}\\left\\lVert\\widehat{\\mathbf{x}}-R{\\mathbf{u}}_{\\sigma}\\right\\rVert^{2}\\geq\\frac{R^{2}}{4},$ where the expectation is taken over the internal randomness of the method."
+  },
+  {
+    "anchor": "Thmtheorem5",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 5 (The nonsmooth case) . Fix $\\alpha,G>0$ and an integer $N\\geq 8$ . For every randomized method using at most $\\lfloor N/(128\\log(2N))\\rfloor$ calls to a $1$ -fold sparse-projection oracle, there exists an instance in dimension $n=2N$ with compact feasible set, an $\\alpha$ -strongly convex objective whose feasible subgradients have norm at most $G$ , and a unique vertex minimizer ${\\mathbf{w}}^{*}$ , such that $\\mathbb{E}[F(\\widehat{\\mathbf{w}})-F({\\mathbf{w}}^{*})]\\geq\\frac{G^{2}}{128\\alpha N},$ where the expectation is over the method’s internal randomness. Arbitrarily many first-order calls between sparse projections are allowed. Consequently, there is a universal constant $c_{0}>0$ such that, whenever $G^{2}/(\\alpha\\epsilon)$ is sufficiently large, every randomized method that guarantees expected error at most $\\epsilon$ on all $s=k=1$ instances requires at least $c_{0}\\frac{G^{2}}{\\alpha\\epsilon\\,\\log(2G^{2}/(\\alpha\\epsilon))}$ sparse projections in the worst case."
+  },
+  {
+    "anchor": "Thmremark2",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 2 . As in the deterministic construction of Theorem 2 , the bounded-subgradient property here holds on the entire Euclidean ball containing the feasible set. Indeed, $\\mathcal{K}_{\\sigma}\\subseteq\\{{\\mathbf{w}}:\\left\\lVert{\\mathbf{w}}\\right\\rVert\\leq R\\}$ and, for every $\\left\\lVert{\\mathbf{w}}\\right\\rVert\\leq R$ and every ${\\mathbf{g}}\\in\\partial f({\\mathbf{w}})$ , $\\left\\lVert{\\mathbf{g}}\\right\\rVert\\leq\\alpha R+\\frac{3G}{4}=\\frac{G}{4\\sqrt{N}}+\\frac{3G}{4}\\leq G.$ Thus the randomized lower bound also holds under the same type of neighborhood-access assumption discussed after Theorem 2 , and used by MOPES [ 18 ] ."
+  },
+  {
+    "anchor": "Thmtheorem6",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 6 (The smooth case) . Fix $\\alpha,\\beta>0$ , let $\\kappa:=\\beta/\\alpha$ , $N:=\\left\\lfloor(\\kappa-2)/32\\right\\rfloor$ , and suppose that $\\kappa\\geq 258$ . For every randomized method using at most $\\lfloor N/(128\\log(2N))\\rfloor$ calls to a $1$ -fold sparse-projection oracle, there exists an instance in dimension $n=2N$ with an $\\alpha$ -strongly convex and $\\beta$ -smooth quadratic objective, a unique vertex minimizer ${\\mathbf{w}}^{*}$ , and feasible-set diameter $D\\leq 2$ , such that $\\mathbb{E}[F(\\widehat{\\mathbf{w}})-F({\\mathbf{w}}^{*})]\\geq\\frac{\\alpha}{8}.$ Consequently, for $\\epsilon=\\alpha/16$ , every randomized method that guarantees expected error at most $\\epsilon$ on all such instances requires $\\Omega\\left((\\beta/\\alpha)/\\log(2\\beta/\\alpha)\\right)$ calls to the $1$ -fold sparse-projection oracle in the worst case."
+  },
+  {
+    "anchor": "Thmtheorem7",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 7 . For any ${\\mathbf{x}}_{\\rm in}\\in\\mathop{\\mbox{\\rm dom}}(\\mathcal{R})$ and any integer $T\\geq 0$ , let ${\\mathbf{x}}_{T}$ denote the output of Algorithm 1 . Then $\\displaystyle F({\\mathbf{x}}_{T})-F^{*}\\leq\\left(1-\\frac{\\alpha}{4\\beta}\\right)^{T}\\bigl(F({\\mathbf{x}}_{\\rm in})-F^{*}\\bigr).$ (21) In particular, Algorithm 1 uses $T$ weak proximal oracle calls and $T$ gradient evaluations."
+  },
+  {
+    "anchor": "Thmremark3",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 3 (use of line-search in Algorithm 1 ) . Algorithm 1 only requires the smoothness parameter $\\beta$ in order to set the convex combination parameter when forming the new point ${\\mathbf{x}}_{t+1}$ . It is a simple observation that replacing this parameter with exact line-search on the $[0,1]$ interval, i.e., taking ${\\mathbf{x}}_{t+1}\\leftarrow(1-\\eta_{t}){\\mathbf{x}}_{t}+\\eta_{t}{\\mathbf{v}}_{t}$ with $\\eta_{t}\\leftarrow\\argmin_{\\eta\\in[0,1]}F((1-\\eta){\\mathbf{x}}_{t}+\\eta{\\mathbf{v}}_{t})$ , does not change the consequences of Theorem 7 ."
+  },
+  {
+    "anchor": "Thmtheorem8",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 8 . Algorithm 3 returns $\\widehat{\\mathbf{x}}\\in\\mathop{\\mbox{\\rm dom}}(\\mathcal{R})$ with $F(\\widehat{\\mathbf{x}})-F^{*}\\leq\\epsilon$ using $\\displaystyle O\\left(1+\\frac{G^{2}}{\\alpha\\epsilon}+\\log\\left(1+\\log\\left(1+\\frac{\\alpha\\Delta_{0}}{G^{2}}\\right)\\right)\\right)$ (32) weak proximal oracle calls and $\\displaystyle O\\left(\\frac{\\overline{G}_{0}^{2}}{\\alpha\\epsilon}+\\frac{\\overline{G}_{0}^{2}}{G^{2}}\\left({1+\\log\\left(1+\\log\\left(1+\\frac{\\alpha\\Delta_{0}}{G^{2}}\\right)\\right)}\\right)\\right)$ (33) subgradient calls to $f$ ."
+  },
+  {
+    "anchor": "Thmremark4",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 4 (The constrained case) . Suppose $\\mathcal{R}=I_{\\mathcal{K}}$ , where $\\mathcal{K}$ is convex and compact, and suppose $\\mathcal{K}$ is enclosed by a Euclidean ball $\\mathcal{B}$ such that $\\left\\lVert{\\mathbf{g}}\\right\\rVert\\leq G$ for any ${\\mathbf{g}}\\in\\partial f({\\mathbf{u}}),{\\mathbf{u}}\\in\\mathcal{B}$ . This matches the assumptions of the projection-based MOPES algorithm [ 18 ] . Then, the additional localized bound $\\overline{G}_{0}$ is not needed. Indeed, every weak proximal output belongs to $\\mathcal{K}$ , and hence so does the average returned by each invocation of Algorithm 2 . Thus every center ${\\mathbf{c}}$ used by Algorithm 3 belongs to $\\mathcal{K}\\subseteq\\mathcal{B}$ . For the auxiliary updates, replace the set $\\{{\\mathbf{y}}|\\left\\lVert{\\mathbf{y}}-{\\mathbf{c}}\\right\\rVert\\leq D\\}$ in Algorithm 2 with $\\mathcal{Y}:=\\{{\\mathbf{y}}|\\left\\lVert{\\mathbf{y}}-{\\mathbf{c}}\\right\\rVert\\leq D\\}\\cap\\mathcal{B}$ . The proof of Lemma 4 is unchanged. Moreover, all auxiliary first-order queries belong to $\\mathcal{B}$ , while the points ${\\mathbf{v}}_{\\theta}$ used in its proof belong to $\\mathcal{K}\\subseteq\\mathcal{B}$ . Therefore Algorithm 2 may be run with $\\overline{G}_{0}=G$ and $K=1$ . Consequently, both the weak-proximal and subgradient complexities are $O\\left(1+\\frac{G^{2}}{\\alpha\\epsilon}+\\log\\left(1+\\log\\left(1+\\frac{\\alpha\\Delta_{0}}{G^{2}}\\right)\\right)\\right).$"
+  },
+  {
+    "anchor": "Thmtheorem9",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 9 . Fix $0<\\alpha<G$ and $n\\geq 2$ , and let $\\Delta_{n}:=\\left\\{{\\mathbf{x}}\\in\\mathbb{R}_{+}^{n}:\\ \\sum_{i=1}^{n}x_{i}=1\\right\\}$ . Consider the following linear optimization model over $\\Delta_{n}$ : at every linear-oracle call, on input ${\\mathbf{c}}\\in\\mathbb{R}^{n}$ , the oracle returns some ${\\mathbf{v}}\\in\\argmin_{{\\mathbf{x}}\\in\\{{\\mathbf{e}}_{1},\\dots,{\\mathbf{e}}_{n}\\}}\\left\\langle{\\mathbf{c}},{\\mathbf{x}}\\right\\rangle$ , with any fixed deterministic tie-breaking rule, and after $T$ such calls the method must return a point $\\widehat{\\mathbf{x}}\\in\\textrm{conv}\\{{\\mathbf{v}}_{1},\\ldots,{\\mathbf{v}}_{T}\\}$ . There exists a nonsmooth $\\alpha$ -strongly convex objective $f:\\mathbb{R}^{n}\\to\\mathbb{R}$ with unique minimizer ${\\mathbf{x}}^{*}\\in\\Delta_{n}$ , such that every subgradient of $f$ has norm at most $G$ over $\\Delta_{n}$ , and for every $1\\leq T\\leq n$ , every output of such a method satisfies $\\displaystyle f(\\widehat{\\mathbf{x}})-f({\\mathbf{x}}^{*})\\geq(G-\\alpha)\\sqrt{\\frac{1}{T}-\\frac{1}{n}}.$ (37) Consequently, any such method guaranteeing error at most $\\epsilon$ must use at least $T\\geq\\frac{1}{2}\\min\\left\\{n,(G-\\alpha)^{2}/\\epsilon^{2}\\right\\}$ linear optimization oracle calls."
+  }
+]

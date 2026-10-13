@@ -1,0 +1,191 @@
+\section{Preliminaries}
+\label{sec:preliminaries}
+% \subsection{Notation}
+% \label{sec:notation}
+\textbf{Notation.} We use $\langle\cdot,\cdot\rangle$ and $\|\cdot\|$ for the
+Euclidean inner product and norm; for a matrix, $\|\cdot\|$ is the spectral
+norm. For $\calA=(A_1,\ldots,A_m)^\top$, the Jacobian
+$J_{\calA}(\bx)\in\RR^{m\times n}$ has $i$th row $\nabla A_i(\bx)^\top$. For a
+nonempty closed convex set $C$, $\dist(\bu,C):=\min_{\bv\in C}\|\bu-\bv\|$, and
+$\Pi_C(\bu)$ is the Euclidean projection of $\bu$ onto $C$. When convenient, we
+identify $\RR^2$ with $\mathbb C$, so that $\|p\|=|p|$ and
+$\langle p,q\rangle=\operatorname{Re}(\bar pq)$.
+% Throughout the paper, $\partial h$ denotes the limiting
+% subdifferential of $h$.
+
+For a proper closed convex function \(h:\RR^m\to\RR\cup\{+\infty\}\), its
+subdifferential, convex conjugate, and proximal mapping are
+\[
+    \partial h(\by):=\{\bv:\ h(\bw)\ge h(\by)+\langle\bv,\bw-\by\rangle
+    \ \text{for all }\bw\},
+    \qquad
+    h^*(\bq):=\sup_{\by\in\RR^m}\{\langle\bq,\by\rangle-h(\by)\},
+\]
+\begin{equation}
+    \prox_{t h}(\bu)
+    :=\argmin_{\by\in\RR^m}
+       \Bigl\{h(\by)+\frac{1}{2t}\|\by-\bu\|^2\Bigr\},
+    \qquad t>0;
+    \label{eq:prox-definition}
+\end{equation}
+see~\cite{rockafellar1970convex}. We write
+\(\dom\partial h^*:=\{\bq:\partial h^*(\bq)\neq\varnothing\}\).
+
+
+\subsection{Assumptions}
+\label{sec:assumptions}
+We impose the following assumptions.
+% \begin{assumption}[Uniform Jacobian regularity]
+% \label{ass:strong-licq}
+% There exists a constant $\nu>0$ such that
+% \[
+%     \sigma_{\min}\bigl(J_{\calA}(\bx)\bigr)\ge \nu,
+%     \qquad
+%     \forall \bx\in\calS.
+% \]
+% Equivalently,
+% \[
+%     \|J_{\calA}(\bx)^\top \by\|
+%     \ge
+%     \nu \|\by\|,
+%     \qquad \forall \bx\in\calS,\ \forall \by\in\RR^m.
+% \]
+% \end{assumption}
+\begin{assumption}[Smooth components]
+\label{ass:smoothness}
+There exist constants $L_f,G_f,L_{\calA},G_{\calA}\ge0$ such that, for
+all $\bx,\bx'\in\RR^n$,
+\[
+\begin{aligned}
+    \|\nabla f(\bx)-\nabla f(\bx')\|
+    &\le L_f\|\bx-\bx'\|,
+    &\|\nabla f(\bx)\|&\le G_f,\\
+    \|J_{\calA}(\bx)-J_{\calA}(\bx')\|
+    &\le L_{\calA}\|\bx-\bx'\|,
+    &\|J_{\calA}(\bx)\|&\le G_{\calA}.
+\end{aligned}
+\]
+\end{assumption}
+
+\begin{assumption}[Lipschitz outer function]
+\label{ass:h}
+The function $h:\RR^m\to\RR$ is convex and $L_h$-Lipschitz:
+\[
+    |h(\bu)-h(\bv)|\le L_h\|\bu-\bv\|,
+    \qquad \bu,\bv\in\RR^m.
+\]
+\end{assumption}
+
+\subsection{Problem class, stationarity, and oracle}
+\label{subsec:setup}
+To study~(Q), we introduce the following problem class.
+\begin{definition}[Problem class]
+\label{def:problem-class}
+Let \(\Delta>0\) and
+\(\mathbf C=(L_f,G_f,L_{\calA},G_{\calA},L_h)\in\RR^5_{\ge0}\).
+We denote by \(\mathcal I(\mathbf C,\Delta)\) the set of all triples
+\((f,\calA,h)\), over all dimensions \(n,m\in\NN\), such that
+Assumptions~\ref{ass:smoothness} and~\ref{ass:h} hold with the constants
+in \(\mathbf C\) and
+\(
+    F(\zero)-\inf_{\bx\in\RR^n}F(\bx)\le\Delta .
+\)
+\end{definition}
+The constants \(\mathbf C\) and \(\Delta\) do not depend on the target
+accuracy or on \(n,m\), and the gap condition implies \(\inf F>-\infty\).
+% The gap condition implies
+% \(\inf F>-\infty\). Assumption~\ref{ass:level-boundedness} is not part of
+% \(\mathcal I(\mathbf C,\Delta)\); it is imposed separately in the complexity
+% results that require it.
+
+{We use the following stationarity measure for Problem~\eqref{prob:main}.} 
+\begin{definition}[\(\epsilon\)-KKT point]
+\label{def:eps-kkt}
+Given \(\epsilon>0\). A triple \((\bx,\by,\bq)\) with
+\(\bq\in\partial h(\by)\) is an \(\epsilon\)-KKT point of
+\eqref{prob:main} if
+\begin{equation}
+    \mathcal{R}_{\mathrm{KKT}}(\bx,\by,\bq)
+    :=
+    \max\Bigl\{
+        \bigl\|\nabla f(\bx)+J_{\calA}(\bx)^\top\bq\bigr\|,\;
+        \|\calA(\bx)-\by\|
+    \Bigr\} \leq \epsilon
+    \label{eq:kkt-residual}
+\end{equation}
+\end{definition}
+
+We next relate Definition~\ref{def:eps-kkt} to game stationarity (GS) for the
+minimax reformulation~Problem~\eqref{eq:ncl} of Problem~\eqref{prob:main}. We use the
+following GS definition from \cite[Definition~3.1(b)]{li2025nonsmooth} and
+\cite[(2.10)--(2.11)]{zhang2026matching}.
+\begin{definition}[\(\epsilon\)-GS point]
+\label{def:eps-gs}
+Let \(\epsilon>0\). A pair \((\bx,\bq)\in\RR^n\times\dom\partial h^*\) is an
+\(\epsilon\)-game stationary point (\(\epsilon\)-GS) of~Problem~\eqref{eq:ncl} if
+\[
+    \calG(\bx,\bq)
+    :=
+    \max\Bigl\{
+        \bigl\|\nabla f(\bx)+J_{\calA}(\bx)^\top\bq\bigr\|,\;
+        \dist\bigl(\calA(\bx),\partial h^*(\bq)\bigr)
+    \Bigr\}
+    \le\epsilon .
+\]
+\end{definition}
+We now relate $\epsilon$-KKT points of Problem~\eqref{prob:main}
+to $\epsilon$-GS points of its Fenchel saddle reformulation~Problem~\eqref{eq:ncl}. 
+\begin{proposition}[KKT points of Problem~\eqref{prob:main} and GS points of~Problem~\eqref{eq:ncl}]
+\label{prop:kkt-gs}
+Suppose that Assumption~\ref{ass:h} holds, and let
+\((\bx,\bq)\in\RR^n\times\dom\partial h^*\). Then the following measurement relationship holds: 
+\[
+    \calG(\bx,\bq)
+    =
+    \min_{\by\in\partial h^*(\bq)}
+    \mathcal{R}_{\mathrm{KKT}}(\bx,\by,\bq),
+\]
+with minimum attained at
+\(\hat\by=\Pi_{\partial h^*(\bq)}\bigl(\calA(\bx)\bigr)\). Consequently, for
+every \(\epsilon>0\):
+\begin{enumerate}[label=(\alph*)]
+\item if \((\bx,\by,\bq)\) is an \(\epsilon\)-KKT point
+  of~Problem~\eqref{prob:main}, then \((\bx,\bq)\) is an \(\epsilon\)-GS point
+  of~Problem~\eqref{eq:ncl};
+\item if \((\bx,\bq)\) is an \(\epsilon\)-GS point of~Problem~\eqref{eq:ncl}, then
+  \((\bx,\hat\by,\bq)\) is an \(\epsilon\)-KKT point of~Problem~\eqref{prob:main}.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+Since \(h\) is proper, closed, and convex,
+\(\bq\in\partial h(\by)\) if and only if \(\by\in\partial h^*(\bq)\)
+\cite[Theorem~23.5]{rockafellar1970convex}. The first term of
+\(\mathcal{R}_{\mathrm{KKT}}\) does not depend on \(\by\). The set
+\(\partial h^*(\bq)\) is nonempty, closed, and convex, so
+\(\min_{\by\in\partial h^*(\bq)}\|\calA(\bx)-\by\|
+=\dist(\calA(\bx),\partial h^*(\bq))\), attained at \(\hat\by\).
+Statements~(a) and~(b) follow.
+\end{proof}
+
+We next introduce the following deterministic first-order oracle model.
+\begin{definition}[Oracle model]
+\label{def:oracle-model}
+We assume access to a deterministic first-order oracle
+\[
+    \mathcal{O}_{f,\mathcal{A}}(\bx)
+    :=
+    \bigl(f(\bx),\nabla f(\bx),\mathcal{A}(\bx),J_{\mathcal{A}}(\bx)\bigr),
+\]
+and an exact proximal oracle
+\[
+    \mathcal{O}_{h}(\bv,t)
+    :=
+    \operatorname{prox}_{t h}(\bv),
+    \qquad t>0.
+\]
+Each call to either oracle counts as one oracle evaluation. In particular,
+the cost of solving the proximal subproblem is represented by one exact
+proximal-oracle call.
+\end{definition}
+

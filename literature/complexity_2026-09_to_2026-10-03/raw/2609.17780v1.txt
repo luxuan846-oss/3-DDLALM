@@ -1,0 +1,353 @@
+Content selection saved. Describe the issue below:
+
+The Complexity of Finding Stationary Points in Nonsmooth Nonconvex Optimization
+
+We prove that first-order algorithms require $\Omega(\delta^{-1}\epsilon^{-3})$ gradient queries (in the worst case) to find a $(\delta,\epsilon)$ -Goldstein stationary point of a Lipschitz function, at which there is a convex combination of gradients within distance $\delta$ whose norm is at most $\epsilon$ . This lower bound is tight, matching known algorithms up to absolute constants, therefore resolving the complexity of convergence to stationarity in nonsmooth nonconvex optimization. We further prove a tight lower bound of $\Omega(\lambda^{1/2}\epsilon^{-7/2})$ for finding points satisfying the recently proposed relaxed notion of $(\lambda,\epsilon)$ -stationarity, which allows combining further-away gradients. Our results reveal that convergence rates to nonsmooth stationarity are not affected by gradient stochasticity, in sharp contrast to smooth optimization.
+
+1 Introduction
+
+We consider optimization problems associated with an objective function $f:\mathbb{R}^{d}\to\mathbb{R}$ which is not necessarily smooth or convex. Such objectives are extremely common in modern applications, such as those involving neural networks, but they cannot, in general, be globally minimized efficiently ( Nemirovski and Yudin, 1983 ; Murty and Kabadi, 1987 ) . This discrepancy has motivated the introduction of local stationarity measures for analyzing the convergence of optimization methods. For example, for smooth objectives where $\nabla f$ is Lipschitz continuous, it is known that gradient descent can find an $\epsilon$ -stationary point, namely $\mathbf{x}$ such that $\|\nabla f(\mathbf{x})\|\leq\epsilon$ , within $O(1/\epsilon^{2})$ steps, independent of the dimension $d$ . Moreover, this convergence rate is known to be optimal among all first-order methods ( Carmon et al., 2020 ) . Extending stationarity-based convergence analyses to nonsmooth objectives is not so simple. Indeed, classical works only established asymptotic convergence in such settings ( Burke et al., 2005 ; Kiwiel, 2007 ) , and while it remains true that even simple subgradient methods asymptotically converge to stationary points under mild assumptions ( Davis et al., 2020 ) , getting anywhere near a point with small (sub-)gradient norm may require $\exp(\Omega(d))$ many steps ( Kornowski and Shamir, 2022b ) .
+
+In a landmark paper, ( Zhang et al., 2020 ) bypassed such hardness results and introduced a relaxed stationarity notion based on the Goldstein subdifferential ( Goldstein, 1977 ) . Roughly, a point $\mathbf{x}$ is called $(\delta,\epsilon)$ -Goldstein stationary if there exists a convex combination of gradients in a $\delta$ -ball around $\mathbf{x}$ whose norm is less than $\epsilon$ . Remarkably, Zhang et al. (2020) showed that $O(1/\delta\epsilon^{3})$ first-order queries suffice to find such a point, independently of the dimension $d$ . Since then, Goldstein stationarity has found many applications and has been extensively studied, and there are by now many algorithms which are proven to converge efficiently to such points in various settings, including general Lipschitz optimization ( Tian et al., 2022 ; Davis et al., 2022 ) and its variants such as stochastic ( Cutkosky et al., 2023 ) , zero-order ( Lin et al., 2022 ; Chen et al., 2023 ; Kornowski and Shamir, 2024 ) , constrained ( Grimmer and Jia, 2024 ; Liu et al., 2024 ) , private ( Zhang et al., 2024 ; Kornowski et al., 2025 ) , and minimax optimization ( Shi and Luo, 2026 ) , as well as higher-order extensions ( Guan and So, 2026a ; Guan and So, 2026b ) .
+
+A fundamental question throughout this vast body of work is understanding the complexity of finding $(\delta,\epsilon)$ -Goldstein stationary points. For stochastic problems, Cutkosky et al. (2023) proved that $\Theta(1/\delta\epsilon^{3})$ stochastic gradient queries are both sufficient and necessary, thus matching the smooth stochastic rate of $\Theta(1/\epsilon^{4})$ under the natural parameter regime $\delta\approx\epsilon$ ( Ghadimi and Lan, 2013 ; Arjevani et al., 2023 ) . Interestingly though, for deterministic problems in which exact gradients are available, despite substantial effort, no algorithm is known to achieve a complexity better than $O(1/\delta\epsilon^{3})$ , attained already by ( Zhang et al., 2020 ) . In comparison, as previously discussed, deterministic smooth optimization requires only $O(1/\epsilon^{2})$ gradient queries. This left the following fundamental question open:
+
+What is the gradient-oracle complexity of finding $(\delta,\epsilon)$ -Goldstein stationary points of nonsmooth nonconvex functions? In particular, do deterministic gradients enable faster convergence than stochastic ones?
+
+In this work, we resolve this question by proving that $\Omega(1/\delta\epsilon^{3})$ gradient queries are necessary to find a $(\delta,\epsilon)$ -Goldstein stationary point, even when the gradients are deterministic. In light of previously discussed algorithmic results, this lower bound is tight. Interestingly, our result implies that under the Goldstein framework, nonsmooth nonconvex optimization problems do not suffer from stochasticity, thus answering an open question asked by Cutkosky et al. (2023) . In Table 1 , we summarize the optimal (i.e., minimax) oracle complexities of stationarity in nonconvex optimization, with our result indicated in blue.
+
+In addition, we consider the complexity of finding $(\lambda,\epsilon)$ -stationary points, a stationarity notion proposed by Zhang and Cutkosky (2024) , which relaxes Goldstein stationarity by allowing gradients to be combined beyond a ball (the formal definition appears in Section 2 ). This relaxation has proved to be widely useful in analyzing various algorithms which are popular in practice, such as Adam ( Ahn and Cutkosky, 2024 ) , schedule-free methods ( Ahn et al., 2025 ) , and spectral optimizers ( Jiang et al., 2026 ; Li and Tsuchiya, 2026 ) .
+
+In this context, we prove a lower bound showing that $\Omega(\lambda^{1/2}/\epsilon^{7/2})$ deterministic gradient queries are necessary to find a $(\lambda,\epsilon)$ -stationary point. This tightly matches previously known algorithmic upper bounds up to constants ( Zhang and Cutkosky, 2024 ) . Moreover, similarly to our conclusion for Goldstein stationarity, by matching even the optimal stochastic rate, our result proves that gradient stochasticity does not affect the convergence rate to such points.
+
+Table 1 : First-order complexities for finding stationary points of nonconvex functions (omitting problem parameters). Notably, for $\delta\approx\epsilon$ all complexities coincide, except for smooth deterministic optimization.
+
+2 Preliminaries
+
+Notation.
+
+Let $[n]:=\{1,\dots,n\}$ . We use boldface font to denote vectors, e.g., let $\mathbf{x}\in\mathbb{R}^{d}$ , whose $i^{\textnormal{th}}$ coordinate is denoted by $x_{i}$ . We denote $\mathbf{x}\preceq\mathbf{y}$ if $x_{i}\leq y_{i}$ for all $i$ . We denote a vector’s support by $\mathrm{supp}(\mathbf{x}):=\{i:x_{i}\neq 0\}$ , and of a set by $\mathrm{supp}(\mathcal{X}):=\cup_{\mathbf{x}\in\mathcal{X}}\mathrm{supp}(\mathbf{x})$ . Given a vector-valued function $\mathbf{f}:\mathbb{R}^{d}\to\mathbb{R}^{n}$ we denote $\mathbf{f}(\mathbf{x})=(f_{1}(\mathbf{x}),\dots,f_{n}(\mathbf{x}))$ . $\|\mathbf{x}\|$ denotes the Euclidean norm, $\langle\,\cdot\,,\,\cdot\,\rangle$ is the standard Euclidean dot product, and $\mathbb{B}(\mathbf{x},\delta):=\{\mathbf{y}\in\mathbb{R}^{d}:\|\mathbf{y}-\mathbf{x}\|\leq\delta\}$ denotes a closed ball. We denote by $\mathbf{0}$ the zero vector and by $\mathbf{1}$ the all-ones vector, where the dimension is clear from context, and let $\mathrm{dist}(\mathbf{0},\mathcal{X}):=\inf_{\mathbf{x}\in\mathcal{X}}\|\mathbf{x}\|$ . We denote by $\mathbb{S}^{d-1}\subset\mathbb{R}^{d}$ the unit sphere, and $\mathbf{e}_{i}$ is the $i^{\textnormal{th}}$ standard basis vector. We denote the ReLU operation as $[x]_{+}=\max\{0,x\}$ , applied to vectors coordinate-wise. We use the standard big-O notation, with $O(\cdot)$ , $\Theta(\cdot)$ and $\Omega(\cdot)$ hiding absolute constants that do not depend on problem parameters.
+
+Nonsmooth Optimization.
+
+A function $f:\mathbb{R}^{d}\to\mathbb{R}$ is called $L$ -Lipschitz if for any $\mathbf{x},\mathbf{y}\in\mathbb{R}^{d}:|f(\mathbf{x})-f(\mathbf{y})|\leq L\|\mathbf{x}-\mathbf{y}\|$ . By Rademacher’s theorem, Lipschitz functions are differentiable almost everywhere (with respect to Lebesgue measure). Hence, for any Lipschitz function $f:\mathbb{R}^{d}\to\mathbb{R}$ and point $\mathbf{x}\in\mathbb{R}^{d}$ the Clarke subdifferential ( Clarke, 1990 ) can be defined as
+
+$\partial f(\mathbf{x}):=\mathrm{conv}\{\mathbf{g}\,:\,\mathbf{g}=\lim_{n\to\infty}\nabla f(\mathbf{x}_{n}),\,\mathbf{x}_{n}\to\mathbf{x}\}~,$
+
+namely, the convex hull of all limit points of $\nabla f(\mathbf{x}_{n})$ over all sequences of differentiable points which converge to $\mathbf{x}$ . Given $\delta\geq 0$ the Goldstein $\delta$ -subdifferential ( Goldstein, 1977 ) of $f$ at $\mathbf{x}$ is the set
+
+$\partial_{\delta}f(\mathbf{x}):=\mathrm{conv}\left(\cup_{\mathbf{y}\in\mathbb{B}(\mathbf{x},\delta)}\partial f(\mathbf{y})\right)~,$
+
+namely, all convex combinations of Clarke subgradients at points in a $\delta$ -neighborhood of $\mathbf{x}$ .
+
+A point $\mathbf{x}$ is a $(\delta,\epsilon)$ -Goldstein stationary point of $f$ if $\mathrm{dist}(\mathbf{0},\partial_{\delta}f(\mathbf{x}))\leq\epsilon$ .
+
+Given $\lambda>0$ , we further denote
+
+$\mathcal{P}_{\lambda}f(\mathbf{x}):=\inf_{\begin{subarray}{c}\text{random vector}~\mathbf{y}\in\mathbb{R}^{d}\\ \mathbf{g}\in\partial f(\mathbf{y})\text{~a.s.}\end{subarray}}\left\{\|\mathbb{E}[\mathbf{g}]\|+\lambda\cdot\mathbb{E}\|\mathbf{x}-\mathbf{y}\|^{2}\right\}~.$
+
+A point $\mathbf{x}$ is a $(\lambda,\epsilon)$ -stationary point of $f$ if $\mathcal{P}_{\lambda}f(\mathbf{x})\leq\epsilon$ .
+
+Note that by only considering distributions over $\mathbf{y}$ supported on $\mathbb{B}(\mathbf{x},\delta)$ , it is clear that $\mathcal{P}_{\lambda}f(\mathbf{x})\leq\mathrm{dist}(\mathbf{0},\partial_{\delta}f(\mathbf{x}))+\lambda\delta^{2}$ , and so any $(\sqrt{\epsilon/2\lambda},\epsilon/2)$ -Goldstein stationary point is $(\lambda,\epsilon)$ -stationary.
+
+Zhang and Cutkosky (2024) included an additional requirement in the definition of $\mathcal{P}_{\lambda}$ that $\mathbb{E}[\mathbf{y}]=\mathbf{x}$ , which we chose not to include for a more direct comparison to Goldstein stationarity. Note that omitting this condition makes the definition easier to satisfy, hence only implies a stronger lower bound.
+
+Algorithms.
+
+We consider iterative first-order algorithms, in the standard oracle complexity framework ( Nemirovski and Yudin, 1983 ) : At each time step $t\in\mathbb{N}$ , an algorithm produces an iterate $\mathbf{x}_{t}$ , receives the oracle response $(f(\mathbf{x}_{t}),\partial f(\mathbf{x}_{t}))$ , and chooses its next iterate, possibly at random, based on all the previous oracle responses. 1 1 1 For the sake of proving a lower bound, assuming an algorithm can access the entire Clarke subdifferential, even though this is typically not the case, only makes the result stronger. In this work, we focus on the class of zero-respecting algorithms ( Carmon et al., 2020 ) , which is a general class defined as satisfying $\mathbf{x}_{0}=\mathbf{0}$ , and
+
+$\Pr\left[\mathrm{supp}(\mathbf{x}_{t})\subseteq\cup_{t^{\prime}<t}\mathrm{supp}(\partial f(\mathbf{x}_{t^{\prime}}))\right]=1~~~~\text{for all~~}t\in\mathbb{N}~.$
+
+We note that this algorithm class subsumes the classical linear-span assumption ( Nesterov, 2018 ) , and includes essentially all first-order algorithms of interest in our setting. 2 2 2 Note that some algorithms analyzed in prior works perturb the iterates, which seemingly defies the zero-respecting condition. However, perturbations are only considered for the sake of ensuring that iterates are differentiable, which helps avoid computationally infeasible subgradient selection procedures. Since we allow the algorithm to see the entire subdifferential and do not assume bounded computation, no perturbations are needed for prior algorithms to work. We further emphasize that this definition allows algorithms to be randomized, which is crucial in this context, since it is known that deterministic algorithms cannot converge to Goldstein stationary points in a dimension-free manner ( Jordan et al., 2023 ) .
+
+3 Main Results
+
+We are now ready to present our lower bound for finding Goldstein stationary points:
+
+For some absolute constant $c>0$ the following holds: For any $L,\Delta,\delta,\epsilon>0$ satisfying $\epsilon\leq c\cdot\min\{L,\delta L^{2}\Delta^{-1},\Delta\delta^{-1}\}$ , there exists an $L$ -Lipschitz function $f:\mathbb{R}^{d}\to\mathbb{R}$ , where $d=\Theta({\Delta L^{2}}{\delta^{-1}\epsilon^{-3}})$ , satisfying $f(\mathbf{0})-\inf f\leq\Delta$ , such that for any zero-respecting first-order algorithm, all of its first $T$ iterates are not $(\delta,\epsilon)$ -Goldstein stationary points of $f$ , unless
+
+$T\geq c\cdot\frac{\Delta L^{2}}{\delta\epsilon^{3}}~.$
+
+As previously discussed, Theorem 3.1 is tight up to a numerical constant due to existing upper bounds, thus establishing the optimal first-order oracle complexity of finding Goldstein stationary points. Moreover, the rate is matched by stochastic algorithms ( Cutkosky et al., 2023 ) , therefore establishing that the first-order oracle complexity of finding Goldstein stationary points does not depend on the stochasticity of the gradients. In particular, this result improves the previously best-known lower bound for this task, which was $\Omega(1/\epsilon^{2})$ , due to Kornowski and Shamir (2022a) .
+
+We will now sketch the idea behind the proof, which appears in Section 4 . At a high level, the proof follows a standard lower bound recipe ( Nemirovski and Yudin, 1983 ; Nesterov, 2018 ; Carmon et al., 2020 ; Arjevani et al., 2023 ) : construct a function $f$ which simultaneously satisfies $(i)$ a “zero-chain” property, meaning that the support of any subgradient at $\mathbf{x}$ is not much larger than the support of $\mathbf{x}$ , and $(ii)$ all solution points (in this case, Goldstein stationary) have large “progress”, meaning that their last coordinates are non-zero. Clearly, $(i)+(ii)$ imply a lower bound via the zero-respecting property.
+
+As the starting point of our concrete construction, we first recall existing upper bounds. All prior algorithms for finding Goldstein stationary points follow (either explicitly or implicitly) Goldstein’s conceptual method ( Goldstein, 1977 ) , which consists of a double-loop structure, with an outer iteration decreasing the function value by order $\delta\epsilon$ , and an inner loop which finds such a descent direction by combining $O(1/\epsilon^{2})$ gradients, thus leading to a complexity of $O(\frac{1}{\delta\epsilon}\cdot\frac{1}{\epsilon^{2}})=O(\frac{1}{\delta\epsilon^{3}})$ (assuming a bound on initial suboptimality). Interestingly, the construction of our lower bound is directly informed by such upper bounds: We partition coordinates into $B=\Omega(1/\delta\epsilon)$ “blocks” of length $n=\Omega(1/\epsilon^{2})$ each, and construct a function with a “double-loop zero-chain” property (Lemma 4.2 ), ensuring both that each individual block cannot progress too quickly (i.e., an “inner chain”), and also that activating a block requires substantial progress in the preceding block (i.e., an “outer chain”). The main technical challenge in the analysis is further guaranteeing that convex combinations of gradients, which can activate arbitrary blocks, remain large. To this end, for every point $\mathbf{x}$ with a zero final block, we explicitly construct a unit vector $\mathbf{w}^{\prime}(\mathbf{x})\in\mathbb{S}^{d-1}$ whose inner product with all nearby gradients is $\Omega(1/\sqrt{n})$ , implying that any convex combination of nearby gradients cannot be smaller than order $1/\sqrt{n}\approx\epsilon$ (Lemma 4.6 ).
+
+Next, we extend our lower bound to the task of finding $(\lambda,\epsilon)$ -stationary points:
+
+For some absolute constant $c>0$ the following holds: For any $L,\Delta,\lambda,\epsilon>0$ satisfying $\epsilon\leq c\cdot\min\{L,\Delta^{2/3}\lambda^{1/3},L^{4}\Delta^{-2}\lambda^{-1}\}$ , there exists an $L$ -Lipschitz function $f:\mathbb{R}^{d}\to\mathbb{R}$ , where $d=\Theta({\Delta L^{2}\sqrt{\lambda}}{\epsilon^{-7/2}})$ , satisfying $f(\mathbf{0})-\inf f\leq\Delta$ , such that for any zero-respecting first-order algorithm, all of its first $T$ iterates are not $(\lambda,\epsilon)$ -stationary points of $f$ , unless
+
+$T\geq c\cdot\frac{\Delta L^{2}\sqrt{\lambda}}{\epsilon^{7/2}}~.$
+
+As mentioned, Theorem 3.2 is tight up to a numerical constant due to existing upper bounds, thus establishing the optimal first-order oracle complexity of finding $(\lambda,\epsilon)$ -stationary points. Once again, this rate is matched by stochastic algorithms ( Zhang and Cutkosky, 2024 ) , therefore establishing that the first-order oracle complexity of finding stationary points under this relaxed notion does not depend on the stochasticity of the gradients as well. We are not aware of any previous lower bound for this task when having access to deterministic gradients.
+
+The proof of Theorem 3.2 considers the same lower bound construction as in the proof of Theorem 3.1 . The only missing ingredient is that we further show that all subgradients, even at points with non-zero last block, are non-negatively correlated with the aforementioned direction $\mathbf{w}^{\prime}$ . Therefore, taking combinations with far-away gradients cannot help in decreasing $\mathcal{P}_{\lambda}$ , since assigning probability mass to distant points in order to minimize the combination’s norm is compensated by the quadratic distance penalty.
+
+4 Proofs
+
+4.1 Proof of Theorem 3.1
+
+Let $d=Bn$ for some sufficiently large natural number $B\geq 2$ and odd number $n\geq 99$ to be specified later. Throughout the proof, given $\mathbf{x}\in\mathbb{R}^{d}$ , we denote $\mathbf{x}=(\mathbf{x}^{1},\dots,\mathbf{x}^{B})$ where $\mathbf{x}^{i}\in\mathbb{R}^{n}$ , namely, we view a vector as consisting of $B$ “blocks” of $n$ coordinates each.
+
+We start the proof by introducing several functions which will be used to construct our lower bound. Denote the smoothstep function $s:\mathbb{R}\to[0,1]$ and the odd smoothstep $\psi:\mathbb{R}\to[-1,1]$ (see Figure 1 ) as
+
+$s(t):=\begin{cases}0,&t\leq 0\\ 3t^{2}-2t^{3},&t\in(0,1)\\ 1,&t\geq 1\end{cases}~,\qquad\psi(t):=s(t)-s(-t)~.$
+
+Figure 1 : plot of $s$ and $\psi$ .
+
+Throughout the proof we will use that fact that $0\leq s^{\prime},\psi^{\prime}\leq\frac{3}{2}$ . For a block $\mathbf{z}\in\mathbb{R}^{n}$ , we define
+
+$\bar{\psi}(\mathbf{z}):=\frac{1}{n}\sum_{j\in[n]}\psi(z_{j})~,\qquad\widetilde{\psi}(\mathbf{z}):=\frac{1}{n}\sum_{j\in[n]}\psi(z_{j})^{2}~,$
+
+and also let
+
+$\displaystyle h(\mathbf{z})$ $\displaystyle:=\left[\mathrm{median}_{j\in[n]}\left(\theta_{j}-z_{j}\right)\right]_{[-1,1]}~,\qquad\theta_{j}:=\frac{j-(n+1)/2}{10^{4}n\sqrt{B}}~,$
+
+where $[a]_{[-1,1]}:=\min\{1,\,\max\{-1,\,a\}\}$ denotes the clipping to $[-1,1]$ .
+
+We consider the (unscaled) hard function $F:\mathbb{R}^{d}\to\mathbb{R}$ to be
+
+$\displaystyle F(\mathbf{x})$ $\displaystyle:=\left(\left[h(\mathbf{x}^{1})-2s\left(16\widetilde{\psi}(\mathbf{x}^{1})-1\right)+\frac{3}{4}\right]_{+}^{2}+\sum_{i=2}^{B}\left[h(\mathbf{x}^{i})+s\left(32\widetilde{\psi}(\mathbf{x}^{i-1})-1\right)-2s\left(16\widetilde{\psi}(\mathbf{x}^{i})-1\right)-\frac{1}{4}\right]_{+}^{2}\right)^{1/2}$ $\displaystyle~~~~~~~-100\sum_{i\in[B]}\bar{\psi}(\mathbf{x}^{i})~.$
+
+Equivalently, it will be useful to denote
+
+$\displaystyle\sigma_{1}(\mathbf{x})$ $\displaystyle:=h(\mathbf{x}^{1})-2s\bigl(16\widetilde{\psi}(\mathbf{x}^{1})-1\bigr)+\frac{3}{4}~,$ $\displaystyle\sigma_{i}(\mathbf{x})$ $\displaystyle:=h(\mathbf{x}^{i})+s\bigl(32\widetilde{\psi}(\mathbf{x}^{i-1})-1\bigr)-2s\bigl(16\widetilde{\psi}(\mathbf{x}^{i})-1\bigr)-\frac{1}{4}~,\qquad i\in\{2,\dots,B\},$ $\displaystyle\bar{\Psi}(\mathbf{x})$ $\displaystyle:=\sum_{i\in[B]}\bar{\psi}(\mathbf{x}^{i})~,$
+
+and observe that
+
+$F(\mathbf{x})=\|[\bm{\sigma}(\mathbf{x})]_{+}\|-100\bar{\Psi}(\mathbf{x})~,$ (1)
+
+where the ReLU function $[\,\cdot\,]_{+}$ is applied coordinate-wise. Intuitively, the construction consists of three components: $(1)$ a shifted median $h$ ensuring that coordinates are revealed sequentially within each block; $(2)$ smoothstep terms $s$ ensuring that blocks are revealed sequentially; $(3)$ a term $-100\bar{\Psi}$ resulting a non-negligible gradient direction preventing Goldstein stationarity until all blocks are non-zero.
+
+The function $F$ is $(49+150\sqrt{B/n})$ -Lipschitz, and satisfies $F(\mathbf{0})-\inf F\leq 200B$ .
+
+It is easy to verify that $\mathbf{x}\mapsto(h(\mathbf{x}^{i}))_{i\in[B]}$ is $1$ -Lipschitz, that $\mathbf{x}\mapsto(\widetilde{\psi}(\mathbf{x}^{i}))_{i\in[B]}$ is $(3/\sqrt{n})$ -Lipschitz, thus also $1$ -Lipschitz, and that each of the maps $\mathbf{z}\mapsto 2s\bigl(16\widetilde{\psi}(\mathbf{z})-1\bigr),~\mathbf{z}\mapsto s\bigl(32\widetilde{\psi}(\mathbf{z})-1\bigr)$ has Lipschitz constant at most $48\cdot 3/\sqrt{n}$ . Hence $\bm{\sigma}:\mathbb{R}^{d}\to\mathbb{R}^{B}$ has Lipschitz constant bounded by $1+288/\sqrt{n}\leq 49$ , and therefore so does $\mathbf{x}\mapsto\|[\bm{\sigma}(\mathbf{x})]_{+}\|$ . To bound the additional term in Eq. ( 1 ), a straightforward calculation shows that $|\psi^{\prime}(t)|\leq\frac{3}{2}$ , hence $\psi$ is $\frac{3}{2}$ -Lipschitz, and therefore $\bar{\psi}$ is $\frac{3}{2\sqrt{n}}$ -Lipschitz. By orthogonality of different blocks, we get that for any $\mathbf{x},\mathbf{y}\in\mathbb{R}^{d}:$
+
+$\displaystyle\left|\sum_{i\in[B]}\bar{\psi}(\mathbf{x}^{i})-\sum_{i\in[B]}\bar{\psi}(\mathbf{y}^{i})\right|$ $\displaystyle\leq\sum_{i\in[B]}\left|\bar{\psi}(\mathbf{x}^{i})-\bar{\psi}(\mathbf{y}^{i})\right|\leq\frac{3}{2\sqrt{n}}\sum_{i\in[B]}\|\mathbf{x}^{i}-\mathbf{y}^{i}\|\leq\frac{3}{2\sqrt{n}}\sqrt{B}\left(\sum_{i\in[B]}\|\mathbf{x}^{i}-\mathbf{y}^{i}\|^{2}\right)^{1/2}$ $\displaystyle=\frac{3}{2}\sqrt{\frac{B}{n}}\|\mathbf{x}-\mathbf{y}\|~.$
+
+Overall, we see that $F$ has Lipschitz constant of at most $49+100\cdot\frac{3}{2}\sqrt{B/n}$ .
+
+To bound the suboptimality at zero, first note that $h(\mathbf{0})=\bar{\psi}(\mathbf{0})=\widetilde{\psi}(\mathbf{0})=0$ , so $F(\mathbf{0})=\frac{3}{4}$ . Further noting that $\psi\leq 1$ and so $\bar{\psi}\leq 1$ , by Eq. ( 1 ) it is clear that $F\geq 0-100B$ . Overall, $F(\mathbf{0})-\inf F\leq\frac{3}{4}+100B<200B$ .
+
+∎
+
+Let $\mathbf{x}\in\mathbb{R}^{d}$ and $i\in[B]$ . It holds that:
+
+If $\mathrm{supp}(\mathbf{x}^{i})\subseteq J\subsetneq[n]$ , then there exists $j^{*}\notin J$ such that $\mathrm{supp}(\mathbf{g}^{i})\subseteq J\cup\{j^{*}\}$ for all $\mathbf{g}\in\partial F(\mathbf{x})$ .
+
+If $\mathbf{x}^{i}=\mathbf{0}$ and $|\mathrm{supp}(\mathbf{x}^{i-1})|\leq\frac{n}{32}$ for some $i\geq 2$ , then $\mathbf{g}^{i}=\mathbf{0}$ for all $\mathbf{g}\in\partial F(\mathbf{x})$ .
+
+Thus, if a zero-respecting algorithm is applied to $F$ for $T\leq\frac{d}{64}$ iterations, all of its iterates $\mathbf{x}_{1},\dots,\mathbf{x}_{T}$ must satisfy $\mathbf{x}_{t}^{B}=\mathbf{0}$ .
+
+Note that by definition of $h$ , for any $\mathbf{z}\in\mathbb{R}^{n}:$
+
+$\partial h(\mathbf{z})\subseteq\mathcal{G}(\mathbf{z}):=\begin{cases}\mathrm{conv}\{-\mathbf{e}_{j}~:~h(\mathbf{z})=\theta_{j}-z_{j}\},&|h(\mathbf{z})|<1\\ \mathrm{conv}\left(\{-\mathbf{e}_{j}~:~h(\mathbf{z})=\theta_{j}-z_{j}\}\cup\{\mathbf{0}\}\right),&|h(\mathbf{z})|=1\end{cases}~.$ (2)
+
+Further using the facts that $\partial(f_{1}+f_{2})\subseteq\partial f_{1}+\partial f_{2}$ and $\partial(f_{1}\circ f_{2})\subseteq\mathrm{conv}\{g_{1}\mathbf{g}_{2}:g_{1}\in\partial f_{1}(f_{2}(\mathbf{x})),\mathbf{g}_{2}\in\partial f_{2}(\mathbf{x})\}$ ( Clarke, 1990 , Proposition 2.3.3, Theorem 2.3.9) we get via direct differentiation that any $\mathbf{g}\in\partial F(\mathbf{x})$ has the block form
+
+$\displaystyle\mathbf{g}^{i}=w_{i}(\mathbf{x})\mathbf{u}^{i}+32\left[w_{i+1}(\mathbf{x})s^{\prime}\bigl(32\widetilde{\psi}(\mathbf{x}^{i})-1\bigr)-w_{i}(\mathbf{x})s^{\prime}\bigl(16\widetilde{\psi}(\mathbf{x}^{i})-1\bigr)\right]\nabla\widetilde{\psi}(\mathbf{x}^{i})-100\nabla\bar{\psi}(\mathbf{x}^{i})$ (3) $\displaystyle\text{where}~~\mathbf{u}^{i}\in\mathcal{G}(\mathbf{x}^{i}),\qquad\mathbf{w}(\mathbf{x})\in\partial\Phi(\bm{\sigma}(\mathbf{x}))\subseteq\{\mathbf{a}\in[0,1]^{B}:\|\mathbf{a}\|\leq 1\},\qquad\Phi(\mathbf{a}):=\|[\mathbf{a}]_{+}\|~.$
+
+Here $w_{B+1}(\mathbf{x}):=0$ , and $w_{i}(\mathbf{x})=0$ whenever $\sigma_{i}(\mathbf{x})<0$ ; if $[\bm{\sigma}(\mathbf{x})]_{+}\neq\mathbf{0}$ , then $\mathbf{w}(\mathbf{x})=[\bm{\sigma}(\mathbf{x})]_{+}/\|[\bm{\sigma}(\mathbf{x})]_{+}\|$ .
+
+We claim that for all $\mathbf{x}\in\mathbb{R}^{d},~i\in[B],~j\in[n]:$
+
+$\displaystyle x^{i}_{j}=0\text{~~and~~}\left(\sigma_{i}(\mathbf{x})<0\text{~~or~~}\theta_{j}-x^{i}_{j}\neq h(\mathbf{x}^{i})\right)~~~\implies~~~\forall\mathbf{g}\in\partial F(\mathbf{x}):~g^{i}_{j}=0~.$ (4)
+
+Indeed, looking at Eq. ( 3 ) and noting that $\psi^{\prime}(0)=0$ , we see that the second and third terms which depend on $\nabla\widetilde{\psi},\nabla\bar{\psi}$ vanish when $x^{i}_{j}=0$ . For the remaining first term $w_{i}(\mathbf{x})\mathbf{u}^{i}$ , it holds that either $\sigma_{i}(\mathbf{x})<0$ which implies $w_{i}(\mathbf{x})=0$ , or else $\theta_{j}-x^{i}_{j}\neq h(\mathbf{x}^{i})$ and so $u^{i}_{j}=0$ for all $\mathbf{u}^{i}\in\mathcal{G}(\mathbf{x}^{i})$ since this coordinate is not active according to Eq. ( 2 ). In either case, $w_{i}(\mathbf{x})u^{i}_{j}=0$ thus proving Eq. ( 4 ).
+
+To prove $(i)$ , fix $i\in[B]$ and suppose $\mathrm{supp}(\mathbf{x}^{i})\subseteq J\subsetneq[n]$ . Since for any $j\notin J$ it holds that $x^{i}_{j}=0$ , and by noting that $(\theta_{j})_{j\in[n]}\subset(-1,1)$ are distinct, we see that there is at most one $j\notin J$ attaining $h(\mathbf{x}^{i})=\theta_{j}-x^{i}_{j}$ . Let $j^{*}\notin J$ be this index (if it is not attained by any such index, pick arbitrarily). We get that for any $j\notin J\cup\{j^{*}\}$ both $x^{i}_{j}=0$ and $\theta_{j}-x^{i}_{j}\neq h(\mathbf{x}^{i})$ , hence $g^{i}_{j}=0$ for all $\mathbf{g}\in\partial F(\mathbf{x})$ by Eq. ( 4 ), proving that $\mathrm{supp}(\mathbf{g}^{i})\subseteq J\cup\{j^{*}\}$ as claimed.
+
+To prove $(ii)$ , suppose $\mathbf{x}^{i}=\mathbf{0}$ and $|\mathrm{supp}(\mathbf{x}^{i-1})|\leq\frac{n}{32}$ . Since $\psi(0)=0$ and $\psi^{2}\leq 1$ , it holds that
+
+$\displaystyle\widetilde{\psi}(\mathbf{x}^{i-1})=\frac{1}{n}\sum_{j\in[n]}\psi(x^{i-1}_{j})^{2}\leq\frac{|\mathrm{supp}(\mathbf{x}^{i-1})|}{n}\leq\frac{1}{32}$ $\displaystyle\implies~~$ $\displaystyle 32\widetilde{\psi}(\mathbf{x}^{i-1})-1\leq 0$ $\displaystyle\implies~~$ $\displaystyle s(32\widetilde{\psi}(\mathbf{x}^{i-1})-1)=0~.$
+
+Further note that $h(\mathbf{x}^{i})=\widetilde{\psi}(\mathbf{x}^{i})=0$ , so overall
+
+$\sigma_{i}(\mathbf{x})=\underset{=0}{\underbrace{h(\mathbf{x}^{i})}}+\underset{=0}{\underbrace{s\bigl(32\widetilde{\psi}(\mathbf{x}^{i-1})-1\bigr)}}-\underset{=0}{\underbrace{2s\bigl(16\widetilde{\psi}(\mathbf{x}^{i})-1\bigr)}}-\frac{1}{4}<0~.$
+
+Thus, by Eq. ( 4 ) we get that $\mathbf{g}^{i}=\mathbf{0}$ for all $\mathbf{g}\in\partial F(\mathbf{x})$ as claimed.
+
+We now prove the final conclusion. By the zero-respecting property, item $(i)$ , applied to the cumulative set of coordinates revealed in a block, shows that this set can grow by at most one index at each iteration. Hence, for the support within a block to grow beyond $\frac{n}{32}$ , any zero-respecting algorithm requires at least $\lfloor n/32\rfloor+1$ iterations after that block first becomes accessible. Moreover, item $(ii)$ further shows that block $i$ cannot first become accessible unless $|\mathrm{supp}(\mathbf{x}^{i-1})|>\frac{n}{32}$ . Therefore, to get to a point $\mathbf{x}$ such that its final block $\mathbf{x}^{B}\neq\mathbf{0}$ , any zero-respecting algorithm requires a number of iterations which is at least $(B-1)(\lfloor n/32\rfloor+1)>(B-1)\frac{n}{32}\geq\frac{Bn}{64}$ , where the last inequality uses $B\geq 2$ .
+
+∎
+
+For any $\mathbf{x}\in\mathbb{R}^{d},~\mathbf{g}\in\partial F(\mathbf{x}):~\mathbf{g}\preceq-4\nabla\bar{\Psi}(\mathbf{x})\preceq\mathbf{0}$ .
+
+The fact that $-4\nabla\bar{\Psi}(\mathbf{x})\preceq\mathbf{0}$ is easily seen by recalling that $\bar{\Psi}$ increases in each coordinate, and so it remains to prove the inequality $\mathbf{g}\preceq-4\nabla\bar{\Psi}(\mathbf{x})$ . Let $\mathbf{g}\in\partial F(\mathbf{x})$ and recall its block form given by Eq. ( 3 ). Denote $a_{i}:=32[w_{i+1}(\mathbf{x})s^{\prime}\bigl(32\widetilde{\psi}(\mathbf{x}^{i})-1\bigr)-w_{i}(\mathbf{x})s^{\prime}\bigl(16\widetilde{\psi}(\mathbf{x}^{i})-1\bigr)]$ , i.e., the coefficient of $\nabla\widetilde{\psi}(\mathbf{x}^{i})$ . Since $0\leq s^{\prime}\leq\frac{3}{2}$ it holds that $|a_{i}|\leq 48$ . Further observe that $\mathbf{u}^{i}\preceq 0$ by Eq. ( 2 ), and $\mathbf{w}(\mathbf{x})\succeq 0$ , so $w_{i}(\mathbf{x})\mathbf{u}^{i}\preceq\mathbf{0}$ . Lastly, since $|\psi|\leq 1$ we get that $|\nabla\widetilde{\psi}|\preceq 2\nabla\bar{\psi}$ . Overall, plugging into Eq. ( 3 ) we obtain
+
+$\mathbf{g}^{i}~\preceq~\mathbf{0}+48\nabla\widetilde{\psi}(\mathbf{x}^{i})-100\nabla\bar{\psi}(\mathbf{x}^{i})~\preceq~48|\nabla\widetilde{\psi}(\mathbf{x}^{i})|-100\nabla\bar{\psi}(\mathbf{x}^{i})~\preceq~-4\nabla\bar{\psi}(\mathbf{x}^{i})~,$ (5)
+
+hence $\mathbf{g}\preceq-4\nabla\bar{\Psi}(\mathbf{x})$ .
+
+∎
+
+For any $\mathbf{x}\in\mathbb{R}^{d},~\mathbf{g}\in\partial F(\mathbf{x}),~i\in[B]$ , if $[\bm{\sigma}(\mathbf{x})]_{+}\neq\mathbf{0}$ then $-\sum_{j\in[n]}g^{i}_{j}\geq\frac{[\sigma_{i}(\mathbf{x})]_{+}}{\|[\bm{\sigma}(\mathbf{x})]_{+}\|}$ .
+
+First, we claim that for any $\mathbf{z}\in\mathbb{R}^{n}:$
+
+$\widetilde{\psi}(\mathbf{z})<\frac{1}{8}~~~\implies~~~|h(\mathbf{z})|<1\text{~~and~~}\|\nabla\bar{\psi}(\mathbf{z})\|\geq\frac{[|h(\mathbf{z})|-\frac{1}{10^{4}\sqrt{B}}]_{+}}{2\sqrt{n}}~.$ (6)
+
+Indeed, assuming $\widetilde{\psi}(\mathbf{z})=\frac{1}{n}\sum_{j\in[n]}\psi(z_{j})^{2}<\frac{1}{8}$ , since $\psi(\frac{3}{4})^{2}>\frac{1}{2}$ , at most $n/4$ coordinates of $\mathbf{z}$ can satisfy $|z_{j}|>\frac{3}{4}$ . Noting that $|\theta_{j}|:=|\frac{j-(n+1)/2}{10^{4}n\sqrt{B}}|\leq\frac{1}{10^{4}\sqrt{B}}$ , we see that the median $|h(\mathbf{z})|<1$ , proving the first claim. Moreover, by definition of the median, at least half of the coordinates satisfy $|z_{j}|\geq|h(\mathbf{z})|-\frac{1}{10^{4}\sqrt{B}}$ , and at least $n/4$ of these coordinates satisfy $|z_{j}|\leq\frac{3}{4}$ . Denote a set of such coordinates by $J$ , so $|J|\geq n/4$ . Noting that by direct calculation $\psi^{\prime}(z_{j})\geq|z_{j}|$ on $[-\frac{3}{4},\frac{3}{4}]$ , since $[\nabla\bar{\psi}(\mathbf{z})]_{j}=\frac{\psi^{\prime}(z_{j})}{n}$ we get
+
+$\|\nabla\bar{\psi}(\mathbf{z})\|=\sqrt{\sum_{j\in[n]}\frac{\psi^{\prime}(z_{j})^{2}}{n^{2}}}\geq\frac{1}{n}\sqrt{\sum_{j\in J}|z_{j}|^{2}}\geq\frac{\sqrt{|J|}}{n}\left[|h(\mathbf{z})|-\frac{1}{10^{4}\sqrt{B}}\right]_{+}\geq\frac{[|h(\mathbf{z})|-\frac{1}{10^{4}\sqrt{B}}]_{+}}{2\sqrt{n}}~,$
+
+proving Eq. ( 6 ).
+
+Now, let $\mathbf{x}\in\mathbb{R}^{d}$ such that $[\bm{\sigma}(\mathbf{x})]_{+}\neq\mathbf{0}$ , and let $i\in[B]$ . If $[\sigma_{i}(\mathbf{x})]_{+}=0$ , then the lemma immediately follows from Lemma 4.3 . Otherwise, assume that $[\sigma_{i}(\mathbf{x})]_{+}>0$ . Note that this implies that $\widetilde{\psi}(\mathbf{x}^{i})<\frac{1}{8}$ , since otherwise $-s(16\widetilde{\psi}(\mathbf{x}^{i})-1)\leq-1$ and by definition of $\sigma_{i}(\mathbf{x})$ it could not have been positive. Therefore, by Eq. ( 6 ) it holds that $|h(\mathbf{x}^{i})|<1$ , which further implies via Eq. ( 2 ) that any $\mathbf{u}^{i}\in\mathcal{G}(\mathbf{x}^{i})$ satisfies $\sum_{j\in[n]}u^{i}_{j}=-1$ . Recalling the block form of $\mathbf{g}\in\partial F(\mathbf{x})$ given by Eq. ( 3 ), and noting that $w_{i}(\mathbf{x})=\frac{[\sigma_{i}(\mathbf{x})]_{+}}{\|[\bm{\sigma}(\mathbf{x})]_{+}\|}$ since $[\sigma_{i}(\mathbf{x})]_{+}\neq 0$ , and the non-positivity of the terms established in Eq. ( 5 ), we overall get
+
+$\sum_{j\in[n]}g^{i}_{j}\leq w_{i}(\mathbf{x})\sum_{j\in[n]}u^{i}_{j}+0=-w_{i}(\mathbf{x})=-\frac{[\sigma_{i}(\mathbf{x})]_{+}}{\|[\bm{\sigma}(\mathbf{x})]_{+}\|}~.$
+
+∎
+
+Define $\mathbf{r}:\mathbb{R}^{d}\to\mathbb{R}^{B}$ as $r_{i}(\mathbf{x}):=[\sigma_{i}(\mathbf{x})-h(\mathbf{x}^{i})]_{+}$ for all $i\in[B]$ . Then for any $\mathbf{x},\mathbf{y}\in\mathbb{R}^{d}:$
+
+$\|[\bm{\sigma}(\mathbf{x})]_{+}-\mathbf{r}(\mathbf{y})\|\leq 2\sqrt{n}\left\|\nabla\bar{\Psi}(\mathbf{x})\right\|+\frac{1}{10^{4}}+\frac{288\|\mathbf{x}-\mathbf{y}\|}{\sqrt{n}}~.$
+
+For any $i\in[B]$ , the scalar ReLU is $1$ -Lipschitz, so
+
+$|[\sigma_{i}(\mathbf{x})]_{+}-r_{i}(\mathbf{x})|\leq|h(\mathbf{x}^{i})|~.$
+
+If $\widetilde{\psi}(\mathbf{x}^{i})\geq 1/8$ , then $2s(16\widetilde{\psi}(\mathbf{x}^{i})-1)=2$ , and both $[\sigma_{i}(\mathbf{x})]_{+}$ and $r_{i}(\mathbf{x})$ vanish. Otherwise, Eq. ( 6 ) gives
+
+$|[\sigma_{i}(\mathbf{x})]_{+}-r_{i}(\mathbf{x})|\leq 2\sqrt{n}\|\nabla\bar{\psi}(\mathbf{x}^{i})\|+\frac{1}{10^{4}\sqrt{B}}~.$
+
+Consequently, by the triangle inequality in $\mathbb{R}^{B}$ and orthogonality of different blocks,
+
+$\|[\bm{\sigma}(\mathbf{x})]_{+}-\mathbf{r}(\mathbf{x})\|\leq 2\sqrt{n}\|\nabla\bar{\Psi}(\mathbf{x})\|+\frac{1}{10^{4}}~.$
+
+The map $\mathbf{x}\mapsto(\widetilde{\psi}(\mathbf{x}^{i}))_{i\in[B]}$ is $3/\sqrt{n}$ -Lipschitz, and both scalar functions $x\mapsto s(32x-1)$ and $x\mapsto 2s(16x-1)$ are $48$ -Lipschitz, hence $\mathbf{r}$ is $288/\sqrt{n}$ -Lipschitz. For $\mathbf{y}\in\mathbb{R}^{d}$ , another triangle inequality yields
+
+$\|[\bm{\sigma}(\mathbf{x})]_{+}-\mathbf{r}(\mathbf{y})\|\leq 2\sqrt{n}\|\nabla\bar{\Psi}(\mathbf{x})\|+\frac{1}{10^{4}}+\frac{288\|\mathbf{x}-\mathbf{y}\|}{\sqrt{n}}~.$
+
+∎
+
+Let $\delta^{\prime}\leq\frac{\sqrt{n}}{5000}$ . For any $\mathbf{x}\in\mathbb{R}^{d}$ satisfying $\mathbf{x}^{B}=\mathbf{0}$ , there is a unit vector $\mathbf{w}^{\prime}(\mathbf{x})\preceq\mathbf{0}$ such that for all $\mathbf{y}\in\mathbb{B}(\mathbf{x},\delta^{\prime}),~\mathbf{g}\in\partial F(\mathbf{y}):~\langle\mathbf{w}^{\prime}(\mathbf{x}),\mathbf{g}\rangle\geq\frac{1}{4\sqrt{n}}$ . In particular, $\mathbf{x}$ is not a $(\delta^{\prime},\frac{1}{5\sqrt{n}})$ -Goldstein stationarity point of $F$ .
+
+Fix $\mathbf{x}\in\mathbb{R}^{d}$ such that $\mathbf{x}^{B}=\mathbf{0}$ . Let $\mathbf{y}\in\mathbb{B}(\mathbf{x},\delta^{\prime})$ and $\mathbf{g}\in\partial F(\mathbf{y})$ . Fix $i\in[B]$ to be the minimal index such that $\widetilde{\psi}(\mathbf{x}^{i})\leq\frac{1}{16}$ (such an $i$ exists since $\widetilde{\psi}(\mathbf{x}^{B})=\widetilde{\psi}(\mathbf{0})=0$ ). If $i=1$ , then $r_{1}(\mathbf{x})=3/4$ directly. If $i\geq 2$ , note that
+
+$\displaystyle r_{i}(\mathbf{x})=[\sigma_{i}(\mathbf{x})-h(\mathbf{x}^{i})]_{+}=\Biggl[s\bigl(\underset{>1}{\underbrace{32\widetilde{\psi}(\mathbf{x}^{i-1})-1}}\bigr)-2s\bigl(\underset{\leq 0}{\underbrace{16\widetilde{\psi}(\mathbf{x}^{i})-1}}\bigr)-\frac{1}{4}\Biggr]_{+}=\left[1-\frac{1}{4}\right]_{+}=\frac{3}{4}~,$
+
+and so
+
+$\displaystyle\|\mathbf{r}(\mathbf{x})\|\geq\left|r_{i}(\mathbf{x})\right|\geq\frac{3}{4}>\frac{1}{2}~.$ (7)
+
+Define $\mathbf{v}\in\mathbb{R}^{d}$ in block form as
+
+$\mathbf{v}^{i}:=-\frac{r_{i}(\mathbf{x})}{\sqrt{n}\|\mathbf{r}(\mathbf{x})\|}\mathbf{1}~,$
+
+and further let
+
+$\mathbf{u}:=\begin{cases}-\frac{\nabla\bar{\Psi}(\mathbf{x})}{\|\nabla\bar{\Psi}(\mathbf{x})\|},&\nabla\bar{\Psi}(\mathbf{x})\neq\mathbf{0}\\ \mathbf{0},&\text{otherwise}\end{cases}~.$
+
+If $\mathbf{u}\neq\mathbf{0}$ , then we see that
+
+$\displaystyle\langle\mathbf{u},\mathbf{g}\rangle$ $\displaystyle=\left\langle\frac{\nabla\bar{\Psi}(\mathbf{x})}{\|\nabla\bar{\Psi}(\mathbf{x})\|},-\mathbf{g}\right\rangle\overset{\text{Lemma~\ref{lem: g<0}}}{\geq}4\left\langle\frac{\nabla\bar{\Psi}(\mathbf{x})}{\|\nabla\bar{\Psi}(\mathbf{x})\|},\nabla\bar{\Psi}(\mathbf{y})\right\rangle=4\|\nabla\bar{\Psi}(\mathbf{x})\|+4\left\langle\frac{\nabla\bar{\Psi}(\mathbf{x})}{\|\nabla\bar{\Psi}(\mathbf{x})\|},\nabla\bar{\Psi}(\mathbf{y})-\nabla\bar{\Psi}(\mathbf{x})\right\rangle$ $\displaystyle\geq 4\|\nabla\bar{\Psi}(\mathbf{x})\|-4\|\nabla\bar{\Psi}(\mathbf{y})-\nabla\bar{\Psi}(\mathbf{x})\|$ $\displaystyle\geq 4\|\nabla\bar{\Psi}(\mathbf{x})\|-\frac{24\delta^{\prime}}{n}$ (8)
+
+where the last inequality holds since $\nabla\bar{\Psi}$ is $\frac{6}{n}$ -Lipschitz, which is easily verified by direct calculation. The inequality above clearly holds if $\mathbf{u}=\mathbf{0}$ as well. Applying Lemma 4.5 and again using the fact that $\nabla\bar{\Psi}$ is $6/n$ -Lipschitz gives
+
+$\displaystyle\|[\bm{\sigma}(\mathbf{y})]_{+}-\mathbf{r}(\mathbf{x})\|\leq 2\sqrt{n}\|\nabla\bar{\Psi}(\mathbf{y})\|+\frac{1}{10^{4}}+\frac{288\delta^{\prime}}{\sqrt{n}}\leq 2\sqrt{n}\|\nabla\bar{\Psi}(\mathbf{x})\|+\frac{1}{10^{4}}+\frac{300\delta^{\prime}}{\sqrt{n}}~.$ (9)
+
+Moreover, if $[\bm{\sigma}(\mathbf{y})]_{+}\neq\mathbf{0}$ then
+
+$\displaystyle\langle\mathbf{v},\mathbf{g}\rangle$ $\displaystyle=\sum_{i\in[B]}\langle\mathbf{v}^{i},\mathbf{g}^{i}\rangle=\frac{1}{\sqrt{n}\|\mathbf{r}(\mathbf{x})\|}\sum_{i\in[B]}r_{i}(\mathbf{x})\left(-\sum_{j\in[n]}g^{i}_{j}\right)$ $\displaystyle\geq\frac{1}{\sqrt{n}\|\mathbf{r}(\mathbf{x})\|}\sum_{i\in[B]}r_{i}(\mathbf{x})\frac{[\sigma_{i}(\mathbf{y})]_{+}}{\|[\bm{\sigma}(\mathbf{y})]_{+}\|}=\frac{1}{\sqrt{n}}\left\langle\frac{\mathbf{r}(\mathbf{x})}{\|\mathbf{r}(\mathbf{x})\|},\frac{[\bm{\sigma}(\mathbf{y})]_{+}}{\|[\bm{\sigma}(\mathbf{y})]_{+}\|}\right\rangle$ $\displaystyle\geq\frac{1}{\sqrt{n}}\left(1-\frac{2\|\mathbf{r}(\mathbf{x})-[\bm{\sigma}(\mathbf{y})]_{+}\|}{\|\mathbf{r}(\mathbf{x})\|}\right)$ $\displaystyle\geq\frac{1}{\sqrt{n}}\left(1-4\|\mathbf{r}(\mathbf{x})-[\bm{\sigma}(\mathbf{y})]_{+}\|\right)$ $\displaystyle\geq\frac{1}{\sqrt{n}}-8\left\|\nabla\bar{\Psi}(\mathbf{x})\right\|-\frac{4}{10^{4}\sqrt{n}}-\frac{1200\delta^{\prime}}{n}$ (10)
+
+where the first inequality is due to Lemma 4.4 , the second is the elementary inequality $\langle\frac{\mathbf{a}}{\|\mathbf{a}\|},\frac{\mathbf{b}}{\|\mathbf{b}\|}\rangle\geq 1-\frac{2\|\mathbf{a}-\mathbf{b}\|}{\|\mathbf{a}\|}$ for any $\mathbf{a},\mathbf{b}\neq\mathbf{0}$ , the third is by Eq. ( 7 ), and the last is by Eq. ( 9 ). The inequality above also holds if $[\bm{\sigma}(\mathbf{y})]_{+}=\mathbf{0}$ , since in that case $\langle\mathbf{v},\mathbf{g}\rangle\geq 0\geq\frac{1}{\sqrt{n}}\left(1-4\|\mathbf{r}(\mathbf{x})\|\right)$ by Lemma 4.3 and Eq. ( 7 ), and Eq. ( 9 ) again gives the same final lower bound.
+
+Let $\mathbf{w}^{\prime}:=\frac{2\mathbf{u}+\mathbf{v}}{\|2\mathbf{u}+\mathbf{v}\|}$ . Combining Eqs. ( 8 ), ( 10 ) and the fact that by construction $\|\mathbf{u}\|\leq 1$ , $\|\mathbf{v}\|=1$ , and $\mathbf{u},\mathbf{v}\preceq\mathbf{0}$ , thus $0<\|2\mathbf{u}+\mathbf{v}\|\leq 3$ , we get that
+
+$\displaystyle\left\langle\mathbf{w}^{\prime},\mathbf{g}\right\rangle\geq\frac{1}{3}\left(8\|\nabla\bar{\Psi}(\mathbf{x})\|-\frac{48\delta^{\prime}}{n}+\frac{1}{\sqrt{n}}-8\left\|\nabla\bar{\Psi}(\mathbf{x})\right\|-\frac{4}{10^{4}\sqrt{n}}-\frac{1200\delta^{\prime}}{n}\right)\geq\frac{1}{4\sqrt{n}}~,$
+
+the last inequality following from the assumption on $\delta^{\prime}$ .
+
+Finally, since the inequality above holds for any $\mathbf{g}\in\partial F(\mathbf{y}),~\mathbf{y}\in\mathbb{B}(\mathbf{x},\delta^{\prime})$ , we see that it must also hold for any $\mathbf{g}\in\partial_{\delta^{\prime}}F(\mathbf{x})$ by taking convex combinations. Thus, for any $\mathbf{g}\in\partial_{\delta^{\prime}}F(\mathbf{x}):$
+
+$\mathrm{dist}(\mathbf{0},\partial_{\delta^{\prime}}F(\mathbf{x}))\geq\|\mathbf{g}\|\geq\left\langle\mathbf{w}^{\prime},\mathbf{g}\right\rangle>\frac{1}{5\sqrt{n}}~.$
+
+∎
+
+We are ready to complete the proof. Given $L,\Delta,\delta,\epsilon>0$ as in the theorem, set
+
+$N:=\left(\frac{L}{1600\epsilon}\right)^{2},\qquad n:=2\left\lfloor\frac{N-1}{2}\right\rfloor+1,\qquad B:=\left\lfloor\frac{\Delta}{8\cdot 10^{6}\delta\epsilon}\right\rfloor,\qquad d:=Bn~.$
+
+Then $n\geq 99$ is odd, $N/2\leq n\leq N$ , and $2\leq B\leq n$ . Consider the scaled function
+
+$f(\mathbf{x}):=\frac{\Delta}{200B}F\left(\frac{1600B\sqrt{n}\epsilon}{\Delta}\cdot\mathbf{x}\right)~.$
+
+By Lemma 4.1 it holds that
+
+$f(\mathbf{0})-\inf f\leq\frac{\Delta}{200B}\cdot 200B\leq\Delta$
+
+and, since $B\leq n$ ,
+
+$\mathrm{Lip}(f)\leq\frac{\Delta}{200B}\cdot\frac{1600B\sqrt{n}\epsilon}{\Delta}\cdot 200=1600\sqrt{n}\epsilon\leq L~.$
+
+Furthermore, the radius after scaling satisfies
+
+$\delta^{\prime}:=\frac{1600B\sqrt{n}\epsilon}{\Delta}\cdot\delta\leq\frac{\sqrt{n}}{5000}~.$
+
+Since scaling does not affect the gradient support, it still holds by Lemma 4.2 that when applying a zero-respecting algorithm to $f$ , all the iterates $\mathbf{x}_{1},\dots,\mathbf{x}_{T}$ must satisfy $\mathbf{x}_{t}^{B}=\mathbf{0}$ unless
+
+$T>\frac{Bn}{64}=\Theta\left(\frac{\Delta L^{2}}{\delta\epsilon^{3}}\right)~.$
+
+But whenever $\mathbf{x}_{t}^{B}=\mathbf{0}$ it also holds that $\frac{1600B\sqrt{n}\epsilon}{\Delta}\cdot\mathbf{x}_{t}^{B}=\mathbf{0}$ , hence Lemma 4.6 ensures that
+
+$\mathrm{dist}(\mathbf{0},\partial_{\delta}f(\mathbf{x}_{t}))=8\sqrt{n}\epsilon\cdot\mathrm{dist}\left(\mathbf{0},\partial_{\delta^{\prime}}F\left(\frac{1600B\sqrt{n}\epsilon}{\Delta}\cdot\mathbf{x}_{t}\right)\right)\geq\frac{8\sqrt{n}\epsilon}{5\sqrt{n}}=\frac{8}{5}\epsilon>\epsilon~.$
+
+4.2 Proof of Theorem 3.2
+
+We use the same unscaled hard function $F$ and block notation as in the proof of Theorem 3.1 . Given $L,\Delta,\lambda,\epsilon>0$ as in the theorem, let
+
+$\delta:=2\sqrt{\frac{\epsilon}{\lambda}}~,$
+
+and set
+
+$N:=\left(\frac{L}{1600\epsilon}\right)^{2},\qquad n:=2\left\lfloor\frac{N-1}{2}\right\rfloor+1,\qquad B:=\left\lfloor\frac{\Delta\sqrt{\lambda}}{16\cdot 10^{6}\epsilon^{3/2}}\right\rfloor,\qquad d:=Bn~.$
+
+The assumptions in the theorem imply that $\delta\epsilon\leq\Delta/(16\cdot 10^{6})$ , and the parameter assignment above are precisely those in the proof of Theorem 3.1 for this choice of $\delta$ . In particular, $n\geq 99$ is odd, $N/2\leq n\leq N$ , and $2\leq B\leq n$ . Consider the same scaled function
+
+$f(\mathbf{x}):=\alpha F(\beta\mathbf{x}),\qquad\alpha:=\frac{\Delta}{200B},\qquad\beta:=\frac{1600B\sqrt{n}\epsilon}{\Delta}~.$
+
+As already verified using Lemma 4.1 , $f$ is $L$ -Lipschitz and satisfies $f(\mathbf{0})-\inf f\leq\Delta$ .
+
+We claim that whenever $\mathbf{x}^{B}=\mathbf{0}$ , it holds that $\mathcal{P}_{\lambda}f(\mathbf{x})\geq 2\epsilon$ . To see this, recall that by Lemma 4.6 , applied at $\beta\mathbf{x}$ , there is a unit vector $\mathbf{w}^{\prime}\preceq\mathbf{0}$ satisfying for all $\mathbf{z}\in\mathbb{B}(\beta\mathbf{x},\beta\delta)\subseteq\mathbb{B}(\beta\mathbf{x},\frac{\sqrt{n}}{5000}),~\mathbf{g}^{\prime}\in\partial F(\mathbf{z}):~\langle\mathbf{w}^{\prime},\mathbf{g}^{\prime}\rangle\geq\frac{1}{4\sqrt{n}}$ . Consequently, since $\partial f(\mathbf{y})=\alpha\beta\,\partial F(\beta\mathbf{y})$ , it holds that for all $\mathbf{y}\in\mathbb{B}(\mathbf{x},\delta),~\mathbf{g}\in\partial f(\mathbf{y}):$
+
+$\langle\mathbf{w}^{\prime},\mathbf{g}\rangle\geq\frac{\alpha\beta}{4\sqrt{n}}=2\epsilon~.$ (11)
+
+Furthermore, Lemma 4.3 implies that $\mathbf{g}\preceq\mathbf{0}$ for every $\mathbf{g}\in\partial f(\mathbf{y}),~\mathbf{y}\in\mathbb{R}^{d}$ , and since $\mathbf{w}^{\prime}\preceq\mathbf{0}$ , we also have (without assuming $\mathbf{y}\in\mathbb{B}(\mathbf{x},\delta)$ ):
+
+$\langle\mathbf{w}^{\prime},\mathbf{g}\rangle\geq 0~.$ (12)
+
+Now, let $\mathbf{y},\mathbf{g}\in\mathbb{R}^{d}$ be random vectors with $\mathbf{g}\in\partial f(\mathbf{y})$ almost surely. If $\mathbf{y}\in\mathbb{B}(\mathbf{x},\delta)$ , then by Eq. ( 11 ):
+
+$\langle\mathbf{w}^{\prime},\mathbf{g}\rangle+\lambda\|\mathbf{x}-\mathbf{y}\|^{2}\geq 2\epsilon+0=2\epsilon~,$
+
+while if $\mathbf{y}\notin\mathbb{B}(\mathbf{x},\delta)$ , then by Eq. ( 12 ):
+
+$\langle\mathbf{w}^{\prime},\mathbf{g}\rangle+\lambda\|\mathbf{x}-\mathbf{y}\|^{2}\geq 0+\lambda\delta^{2}=4\epsilon~,$
+
+and so overall
+
+$\|\mathbb{E}[\mathbf{g}]\|+\lambda\mathbb{E}\|\mathbf{x}-\mathbf{y}\|^{2}\geq\mathbb{E}\left[\langle\mathbf{w}^{\prime},\mathbf{g}\rangle+\lambda\mathbb{E}\|\mathbf{x}-\mathbf{y}\|^{2}\right]\geq 2\epsilon~.$
+
+Taking the infimum over all such random vectors proves that $\mathcal{P}_{\lambda}f(\mathbf{x})\geq 2\epsilon$ , as claimed.
+
+Finally, positive scaling preserves subgradient supports, so Lemma 4.2 ensures that all of the first $T\leq Bn/64$ iterates of any zero-respecting algorithm satisfy $\mathbf{x}_{t}^{B}=\mathbf{0}$ . For all these iterates, $\mathcal{P}_{\lambda}f(\mathbf{x}_{t})\geq 2\epsilon>\epsilon$ , so they are not $(\lambda,\epsilon)$ -stationary. The parameter assignment gives
+
+$\frac{Bn}{64}=\Theta\left(\frac{\Delta L^{2}\sqrt{\lambda}}{\epsilon^{7/2}}\right)~,$
+
+completing the proof.
+
+5 Discussion
+
+In this work, we proved tight lower bounds which establish the first-order complexity of finding Goldstein stationary points, as well as a related relaxation thereof. In particular, our results indicate that in nonsmooth nonconvex optimization, algorithms do not suffer from gradient stochasticity, thus answering an open question posed by Cutkosky et al. (2023) .
+
+It is interesting to note that in smooth nonconvex optimization, optimal convergence rates are in fact affected by gradient stochasticity ( $\epsilon^{-2}$ vs. $\epsilon^{-4}$ ). By contrast, in nonsmooth convex optimization, it is well-known that optimal complexities remain the same, since deterministic and stochastic subgradient methods converge similarly over convex functions (see e.g., Bubeck, 2015 ). Thus, it can be (very) informally argued that nonsmooth nonconvex optimization behaves more similarly to nonsmooth convex optimization, than to smooth nonconvex optimization.
+
+Finally, we note that while we established tight lower bounds for (possibly randomized) zero-respecting algorithms, which already covers algorithms of interest, our lower bound construction can be extended via known reductions to account for arbitrary randomized algorithms which use a local oracle ( Carmon et al., 2020 ) . We plan this extension for a future version of this work.
+
+Statement on AI use
+
+The author used ChatGPT 6 Pro when working on this paper. In more detail, the author had sought this result for several years ever since working on ( Kornowski and Shamir, 2022a ) , in which a weaker lower bound was proved. Throughout these years, the author made several failed attempts at proving the tight lower bound (including prompting various LLMs, which were useless for this problem). These endeavors resulted in an unpublished note based on the author’s accumulated knowledge of the problem, in which partial progress was made based on the partition into coordinate blocks, as conveyed in the paragraphs following Theorem 3.1 . Recently, the author read Li and Pan (2026) , in which the authors used GPT 5.6 Sol to prove an $\Omega(1/\epsilon^{4})$ lower bound on the deterministic complexity of weakly-convex optimization, using a very similar block-based approach. 3 3 3 Note that this setting is incomparable to ours: On the one hand, weakly-convex optimization is easier by imposing an additional assumption on the objective; however, the optimality criterion in that setting, of finding an approximate-stationary point of the Moreau envelope, implies being close to an $\epsilon$ -stationary point, which is a stronger condition than Goldstein stationarity (and is, in fact, impossible to achieve efficiently in Lipschitz optimization, Kornowski and Shamir, 2022b ). This led the author to revisit the problem using the latest version of ChatGPT, prompted with the aforementioned note attached. At first, it still failed. Yet, after a conversation in which both the author and the AI contributed ideas, the key missing idea of defining $h$ as a median (instead of a max, as is more typical to such lower-bound constructions) emerged. The author then wrote the complete analysis, as well as the rest of the paper. The author takes full responsibility for the paper’s content.
+
+References

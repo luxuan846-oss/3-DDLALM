@@ -1,0 +1,1713 @@
+Content selection saved. Describe the issue below:
+
+An $\Omega(\kappa_{y}^{8}\epsilon^{-6})$ Lower Bound for Stochastic NC-SC Bilevel Optimization with First-order Oracles
+
+We study the oracle complexity of finding $\epsilon$ -stationary points of smooth bilevel optimization problems with a nonconvex upper-level objective and a strongly convex lower-level problem. We consider a stochastic first-order oracle that returns unbiased stochastic gradients of both the upper- and lower-level objectives, with variance bounded by $\sigma^{2}$ . We prove that, for any initial optimality gap $\Delta>0$ and all sufficiently small $\epsilon>0$ , every adaptive randomized first-order algorithm requires $\Omega\!\left(\Delta\kappa_{y}^{2}\epsilon^{-2}\max\{1,\sigma^{2}\kappa_{y}^{6}\epsilon^{-4}\}\right)$ oracle queries to find an $\epsilon$ -stationary point of its hyper-objective function, where $\kappa_{y}$ denotes the condition number of the lower-level problem. In particular, in the noise-dominated regime, the lower bound is $\Omega\!\left(\Delta\sigma^{2}\kappa_{y}^{8}\epsilon^{-6}\right).$ This establishes the optimality of the $\epsilon^{-6}$ dependence achieved by the best-known first-order stochastic methods.
+
+1 Introduction
+
+Bilevel optimization is a fundamental framework for hierarchical decision making in which one optimization problem is nested inside another ( Colson et al., 2007 ) . In its canonical unconstrained form, the problem is written as
+
+$\min_{\bm{x}\in\mathbb{R}^{d_{x}}}\Phi(\bm{x})\coloneqq f\bigl(\bm{x},\bm{y}^{*}(\bm{x})\bigr),\qquad\bm{y}^{*}(\bm{x})\coloneqq\arg\min_{\bm{y}\in\mathbb{R}^{d_{y}}}g(\bm{x},\bm{y}).$ (1)
+
+This nested structure captures a wide range of modern learning problems, including hyperparameter optimization and meta-learning ( Franceschi et al., 2018 ; Rajeswaran et al., 2019 ) , as well as reinforcement learning and actor-critic methods ( Hong et al., 2023 ) .
+
+We study the smooth nonconvex-strongly-convex setting, where $g(\bm{x},\cdot)$ is strongly convex for every $\bm{x}$ , while the upper-level objective $f$ , and hence the hyper-objective $\Phi$ , may be nonconvex. Under standard smoothness assumptions, $\Phi$ is differentiable, but its gradient involves the inverse lower-level Hessian. Classical approaches therefore approximate this inverse ( Ghadimi and Wang, 2018 ; Ji et al., 2021 ) , typically requiring Hessian-vector and thus access to second-order information. Since such products can be substantially more expensive than gradients, first-order bilevel methods using only upper- and lower-level gradients have been developed ( Shen and Chen, 2023 ; Kwon et al., 2023 ; Chen et al., 2025b ; Kwon et al., 2024b ) . In the stochastic NC-SC setting under bounded variance, the best-known first-order methods exhibit an $\epsilon^{-6}$ dependence: the double-loop F 3 BSA method achieves $\tilde{\mathcal{O}}(\bar{\kappa}_{y}^{11}\epsilon^{-6})$ ( Chen et al., 2025b ) , while the single-loop SGHA method achieves $\mathcal{O}(\bar{\kappa}_{y}^{17}\epsilon^{-6})$ ( Gu et al., 2026 ) , where $\bar{\kappa}_{y}$ denotes the global condition number. Whether this $\epsilon^{-6}$ dependence is unavoidable remains open.
+
+More recently, Chen et al. (2025a) introduced a nested bilevel zero-chain construction, proving $\Omega(\kappa_{y}^{2.5}\epsilon^{-2})$ and $\Omega(\kappa_{y}^{4.5}\epsilon^{-4})$ lower bounds for zero-respecting algorithms on a constrained domain under the exact first-order oracle ( $\mathcal{FO}$ ) and the stochastic first-order oracle ( $\mathcal{SFO}$ ), respectively, where $\kappa_{y}$ denotes the lower-level condition number. Their construction uses a deterministic upper-level objective and a quadratic lower-level objective, with stochasticity entering through selected lower-level gradient responses. Although this yields a stronger dependence on $\kappa_{y}$ , the stochastic lower bound scales only as $\epsilon^{-4}$ , leaving an $\epsilon^{-2}$ gap to the known $\epsilon^{-6}$ upper bounds. This motivates the central question:
+
+Does stochastic NC-SC bilevel optimization require $\Omega(\epsilon^{-6})$ standard $\mathcal{SFO}$ calls?
+
+In this paper, we answer this question affirmatively. Under a standard stochastic first-order oracle, we prove that every randomized adaptive algorithm requires
+
+$\Omega\left(\frac{\Delta\kappa_{y}^{2}}{\epsilon^{2}}\max\left\{1,\frac{\sigma^{2}\kappa_{y}^{6}}{\epsilon^{4}}\right\}\right)$
+
+oracle calls to find an $\epsilon$ -stationary point.
+
+Our construction starts from the smooth nonconvex zero-chain of Carmon et al. (2020) and its stochastic extension in Arjevani et al. (2023) . In these constructions, each oracle query can reveal at most one new relevant coordinate. We use a smooth indicator to distinguish the coordinates already revealed by previous oracle responses from the incoming coordinate, and randomize only the part of the objective associated with the incoming coordinate. This part appears in the stochastic lower-level oracle only when a fresh Bernoulli sample is successful.
+
+To keep the bilevel problem unchanged, we place the incoming-coordinate term in a two-dimensional strongly convex quadratic block and add a compensation term. The lower-level minimizer remains explicit, and the resulting upper-level objective $\Phi$ coincides with the original zero-chain objective. The incoming-coordinate term enters the stochastic lower-level gradient with a coefficient of order $\kappa_{y}^{-1}$ , while the relevant off-diagonal entry of the inverse lower Hessian has order $\kappa_{y}$ . These two factors cancel in the hypergradient. Thus the stochastic lower-level gradient has smaller variance, while the corresponding component of $\nabla\Phi$ has the same order as in the original zero-chain construction.
+
+Finally, following the random-rotation arguments of Carmon et al. (2020) and Arjevani et al. (2023) , the construction also applies to adaptive randomized first-order algorithms. The choice of the chain parameters gives $T=\Theta\!\left(\Delta\kappa_{y}^{2}\epsilon^{-2}\right)$ coordinates, while the variance constraint permits a progress probability $p$ satisfying $p^{-1}=\Theta\!\left(\max\left\{1,\sigma^{2}\kappa_{y}^{6}\epsilon^{-4}\right\}\right)$ . Since each successful Bernoulli sample increases the coordinate progress by at most one, the required number of oracle calls is of order $T/p$ . This gives $\Omega\!\left(\Delta\kappa_{y}^{2}\epsilon^{-2}\max\left\{1,\sigma^{2}\kappa_{y}^{6}\epsilon^{-4}\right\}\right)$ , which reduces to $\Omega(\Delta\sigma^{2}\kappa_{y}^{8}\epsilon^{-6})$ in the noise-dominated regime.
+
+Table 1: first-order oracle complexity bounds for finding an $\epsilon$ -stationary point in smooth NC-SC minimax and bilevel optimization.
+
+Table notes. $\mathcal{FO}$ denotes an exact first-order oracle. A $\mathcal{SFO}$ uses an independent sample at each oracle call. The $\bm{y}^{*}$ -aware oracle of ( Kwon et al., 2024a ) imposes unbiasedness and bounded variance only locally around $\bm{y}^{*}(\bm{x})$ . The quantities $\kappa_{y}$ and $\bar{\kappa}_{y}$ denote the lower-level and global condition numbers, respectively. Fixed problem parameters are suppressed unless displayed. For upper bounds, “Method / Algorithm class” reports the proposed algorithm; for lower bounds, it reports the class of algorithms covered by the result.
+
+2 Related Work
+
+Bilevel optimization.
+
+Bilevel optimization has its roots in hierarchical decision making and Stackelberg games ( von Stackelberg, 1934 ) , and was introduced as a mathematical-programming model by Bracken and McGill (1973) ; see Colson et al. (2007) for an early survey. A classical approach to hypergradient computation is approximate implicit differentiation (AID). After approximately solving the lower-level problem, AID applies the implicit-function theorem and approximately solves a linear system involving $\nabla_{yy}^{2}g$ , typically using conjugate gradients or a truncated Neumann series ( Domke, 2012 ; Pedregosa, 2016 ; Ghadimi and Wang, 2018 ; Grazzi et al., 2020 ) . Iterative differentiation (ITD), by contrast, unrolls a finite number of lower-level iterations and differentiates through the resulting computational graph in either forward or reverse mode ( Maclaurin et al., 2015 ; Franceschi et al., 2017 ; Shaban et al., 2019 ) . Nonasymptotic analyses of AID and ITD for the NC-SC setting were developed by Ji et al. (2021) , with subsequent extensions to stochastic and variance-reduced settings ( Arbel and Mairal, 2021 ; Dagréou et al., 2022 ; Hong et al., 2023 ) . Among these methods, stocBio ( Ji et al., 2021 ) achieves the best-known HVP complexity of $\widetilde{\mathcal{O}}(\bar{\kappa}_{y}^{6}\epsilon^{-4})$ under the stochastic NC-SC bilevel setting. Although these approaches avoid explicitly forming or inverting a Hessian, they usually require Hessian-vector products (HVP), which dominate the computational cost.
+
+Several first-order methods have been developed for bilevel optimization, using only gradients of the upper- and lower-level objectives. Early approaches include value-function and penalty-based methods such as BOME and penalty-based bilevel gradient descent ( Liu et al., 2022 ; Shen and Chen, 2023 ) , followed by related penalty and sequential reformulations ( Lu and Mei, 2024 ; Kwon et al., 2024b ) . The F 2 SA method ( Kwon et al., 2023 ) , based on approximately minimizing a penalized surrogate, achieves $\tilde{\mathcal{O}}(\bar{\kappa}_{y}^{7}\epsilon^{-3})$ deterministic complexity and $\tilde{\mathcal{O}}(\operatorname{poly}(\bar{\kappa}_{y})\epsilon^{-7})$ stochastic complexity, where $\bar{\kappa}_{y}$ denotes the global condition number. The F 2 BA/F 2 BSA framework of Chen et al. (2025b) improves these rates. In the deterministic NC-SC setting, F 2 BA achieves $\tilde{\mathcal{O}}(\bar{\kappa}_{y}^{4}\epsilon^{-2})$ , and further improved to $\tilde{\mathcal{O}}(\bar{\kappa}_{y}^{7/2}\epsilon^{-2})$ by F 2 BA + ( Chen et al., 2025a ) . In the stochastic NC-SC setting, F 2 BSA achieves $\tilde{\mathcal{O}}(\bar{\kappa}_{y}^{12}\epsilon^{-6})$ , and further improved to $\tilde{\mathcal{O}}(\bar{\kappa}_{y}^{11}\epsilon^{-6})$ by F 3 BSA ( Chen et al., 2025b ) . Thus, the best-known fully first-order methods achieve only an $\epsilon^{-6}$ dependence under standard stochastic first-order information, in contrast to the $\epsilon^{-4}$ dependence attainable by HVP-based or variance-reduced methods under stronger smoothness assumptions ( Ji et al., 2021 ; Arbel and Mairal, 2021 ) .
+
+Lower bounds and zero-chain constructions.
+
+The modern lower-bound theory for first-order optimization originates from chain-structured quadratic instances used in convex optimization ( Nemirovskij and Yudin, 1983 ; Nesterov, 2013 ) . The essential feature of these instances is that first-order information can reveal new coordinates only sequentially. Carmon et al. (2020) ; Carmon et al. (2021) formalized this mechanism through zero-chains and developed robust zero-chain constructions for smooth nonconvex optimization. Their results include the classical $\Omega(\epsilon^{-2})$ lower bound for smooth nonconvex optimization under the first-order oracle, as well as the $\Omega(\epsilon^{-12/7})$ and $\Omega(\epsilon^{-8/5})$ lower bounds under second-order and arbitrarily high-order smoothness, respectively. In stochastic optimization, Arjevani et al. (2023) introduced probability- $p$ zero-chains together with random rotations and soft projections, establishing the tight $\Omega(\epsilon^{-4})$ lower bound under bounded variance and the $\Omega(\epsilon^{-3})$ lower bound under mean-squared smoothness. Random rotation is also the standard device for lifting coordinate-based zero-chain arguments beyond a fixed coordinate system ( Carmon et al., 2020 ; Arjevani et al., 2023 ) .
+
+Lower bounds for general bilevel optimization are more recent. Liang and others (2023) established lower bounds for convex-strongly-convex and strongly-convex-strongly-convex bilevel problems under second-order oracle access. In finite-sum bilevel empirical-risk minimization, Dagréou et al. (2024) derived a matching finite-sum lower bound, while Chen et al. (2024) studied hardness phenomena that arise when the lower-level problem is not strongly convex.
+
+For stochastic NC-SC bilevel optimization, Kwon et al. (2024a) established an $\Omega(\epsilon^{-6})$ lower bound under bounded variance and an $\Omega(\epsilon^{-4})$ lower bound under an additional stochastic-smoothness assumption. Their oracle is $\bm{y}^{*}$ -aware, supplying an $O(\epsilon)$ -accurate approximation of $\bm{y}^{*}(\bm{x})$ , while requiring the stochastic gradients to be unbiased only locally around $\bm{y}^{*}(\bm{x})$ . Consequently, these lower bounds do not directly characterize the standard globally unbiased stochastic first-order oracle considered in this paper. More recently, Chen et al. (2025a) developed strengthened NC-SC bilevel lower bounds under standard first-order oracle models. In particular, they established $\Omega(\kappa_{y}^{2.5}\epsilon^{-2})$ and $\Omega(\kappa_{y}^{4.5}\epsilon^{-4})$ lower bounds for zero-respecting first-order algorithms on a constrained domain under deterministic and stochastic settings, respectively. As a special case of NC-SC bilevel optimization, NC-SC minimax optimization admits the lower bound $\Omega\!\left(\sqrt{\kappa_{y}}\epsilon^{-2}+\kappa_{y}^{1/3}\sigma^{2}\epsilon^{-4}\right)$ ( Li et al., 2021 ; Zhang et al., 2021 ) .
+
+Our new lower bound closes the gap between the best-known $\epsilon^{-6}$ first-order upper bound and the previous corresponding $\epsilon^{-4}$ lower bound for stochastic NC-SC bilevel optimization. It shows that, under a stochastic first-order oracle, smooth NC-SC bilevel optimization can be strictly harder in its dependence on $\epsilon$ than NC-SC minimax optimization, smooth nonconvex minimization, and bilevel optimization with access to Hessian-vector products.
+
+Notation.
+
+Vectors and matrices are denoted by boldface letters. For a vector $\bm{x}\in\mathbb{R}^{d}$ , its $i$ –th coordinate is denoted by $x_{i}$ , and $\bm{e}_{i}$ denotes the $i$ –th standard basis vector. For a matrix $\bm{M}$ , $\lVert\bm{M}\rVert_{\mathrm{op}}$ denotes its operator norm. For a $C^{r}$ map $h:\mathbb{R}^{m}\to\mathbb{R}^{q}$ , we regard its $r$ –th derivative $D^{r}h(\bm{x})$ as an $r$ –linear map and define $\left\lVert D^{r}h(\bm{x})\right\rVert_{\mathrm{op}}\coloneqq\sup_{\left\lVert\bm{u}_{1}\right\rVert=\cdots=\left\lVert\bm{u}_{r}\right\rVert=1}\left\lVert D^{r}h(\bm{x})[\bm{u}_{1},\ldots,\bm{u}_{r}]\right\rVert$ . For a function of two variables $h(\bm{x},\bm{y})$ , we use $\nabla_{x}h$ , $\nabla_{y}h$ , and $\nabla^{2}_{xy}h$ for the corresponding partial gradients and Hessian blocks. For $\bm{z}\in\mathbb{R}^{T}$ and $k\in\{0,\ldots,T\}$ , let $\bm{P}_{k}\bm{z}=(z_{1},\ldots,z_{k},0,\ldots,0)$ denote coordinate truncation onto the first $k$ coordinates, and set $\bm{P}_{k}=\bm{I}_{T}$ for $k\geq T$ . For a threshold $c\geq 0$ , define the progress of $\bm{z}$ by $\operatorname{prog}_{c}(\bm{z})\coloneqq\max\bigl(\{0\}\cup\{j\in[T]:\lvert z_{j}\rvert>c\}\bigr)$ . We write $\operatorname{St}(d,T)\coloneqq\left\{\bm{U}\in\mathbb{R}^{d\times T}:\bm{U}^{\top}\bm{U}=\bm{I}_{T}\right\}$ for the Stiefel manifold. If $\bm{U}=(\bm{u}_{1},\ldots,\bm{u}_{T})\in\operatorname{St}(d,T)$ , then its columns $\bm{u}_{1},\ldots,\bm{u}_{T}$ are orthonormal in $\mathbb{R}^{d}$ .
+
+3 Problem Setup
+
+In this section, we introduce the bilevel function class considered in this paper, the algorithm class to which our lower bound applies, and the complexity measurement of the algorithms.
+
+3.1 Function Class
+
+To study the standard smooth nonconvex-strongly-convex (NC-SC) bilevel problem formulated in ( 1 ), we introduce the following class of functions.
+
+Fix $L_{f},L_{g},\rho,C_{f},\mu_{g},\Delta>0$ . We write $\mathcal{F}(L_{f},L_{g},\rho,C_{f},\mu_{g},\Delta)$ for the class of pairs $f,g:\mathbb{R}^{d_{x}}\times\mathbb{R}^{d_{y}}\to\mathbb{R}$ satisfying the following conditions.
+
+$\nabla f$ and $\nabla g$ are globally $L_{f}$ – and $L_{g}$ –Lipschitz, respectively.
+
+$g(\bm{x},\cdot)$ is $\mu_{g}$ –strongly convex for every $\bm{x}$ .
+
+The full Hessian $\nabla^{2}g$ is globally $\rho$ –Lipschitz.
+
+The lower partial gradient of the upper-level objective is globally bounded, namely $\sup_{\bm{x},\bm{y}}\left\lVert\nabla_{y}f(\bm{x},\bm{y})\right\rVert\leq C_{f}$ .
+
+The hyper-objective $\Phi(\bm{x})$ is lower bounded and satisfies $\Phi(\bm{0})-\inf_{\bm{x}}\Phi(\bm{x})\leq\Delta$ .
+
+For the proof, we use two notions of condition numbers. The intrinsic condition number is determined by the actual lower-level Hessian, whereas the global condition number is defined by the parameters specifying the function class.
+
+For a pair $(f,g)$ in Definition 3.1 , define the intrinsic lower-level curvature modulus and lower-level smoothness modulus by
+
+$\mu_{g}^{\rm act}\coloneqq\inf_{\bm{x},\bm{y}}\lambda_{\min}\!\left(\nabla^{2}_{yy}g(\bm{x},\bm{y})\right),\qquad L_{y}\coloneqq\sup_{\bm{x},\bm{y}}\left\lVert\nabla^{2}_{yy}g(\bm{x},\bm{y})\right\rVert_{\mathrm{op}}.$
+
+Define the aggregate Lipschitz constant by $\bar{L}\coloneqq\max\left\{C_{f},L_{f},L_{g},\rho\right\}$ . The intrinsic lower-level and global condition numbers are, respectively,
+
+$\kappa_{y}\coloneqq\frac{L_{y}}{\mu_{g}^{\rm act}},\qquad\bar{\kappa}_{y}\coloneqq\frac{\bar{L}}{\mu_{g}}.$
+
+One always has $\kappa_{y}\leq\bar{\kappa}_{y}$ . For the hard instances constructed below, the intrinsic lower-level smoothness satisfies $L_{y}=\Theta(1)$ and the intrinsic curvature modulus satisfies $\mu_{g}^{\rm act}=\Theta(\kappa^{-1})$ . Consequently, the intrinsic condition number satisfies $\kappa_{y}=\Theta(\kappa)$ . Our lower bound is stated in terms of this intrinsic condition number.
+
+3.2 Algorithm Class and Oracle Model
+
+We consider randomized adaptive algorithms under the stochastic first-order oracle ( $\mathcal{SFO}$ ). At each iteration, the next query may be any measurable function of the algorithm’s internal randomness and the previous query-response history. Let
+
+$\mathsf{W}\coloneqq\mathbb{R}^{d_{x}}\times\mathbb{R}^{d_{y}}$
+
+be the query space, and let
+
+$\mathsf{Y}\coloneqq\mathbb{R}^{d_{x}+d_{y}}\times\mathbb{R}^{d_{x}+d_{y}}$
+
+be the joint oracle-response space. For any $t\geq 0$ , define the space of length- $t$ transcripts by
+
+$\mathsf{T}_{t}\coloneqq(\mathsf{W}\times\mathsf{Y})^{t},\qquad\mathsf{T}_{0}\coloneqq\{\varnothing\}.$
+
+Fix an oracle-call budget $N\in\mathbb{N}_{0}$ . A randomized adaptive algorithm $\mathsf{A}$ consists of a random seed $\omega_{\rm alg}$ taking values in a standard Borel probability space, a sequence of Borel query maps
+
+$\operatorname{Query}_{t}^{\mathsf{A}}:\Omega_{\rm alg}\times\mathsf{T}_{t-1}\longrightarrow\mathsf{W},\qquad 1\leq t\leq N,$
+
+and a Borel output map
+
+$\operatorname{Output}_{N}^{\mathsf{A}}:\Omega_{\rm alg}\times\mathsf{T}_{N}\longrightarrow\mathbb{R}^{d_{x}}.$
+
+Given an oracle, the interaction is defined recursively. Starting from the empty transcript $\mathcal{T}_{0}=\varnothing$ , at call $t$ the algorithm selects
+
+$\bm{w}_{t}=(\bm{x}_{t},\bm{y}_{t})=\operatorname{Query}_{t}^{\mathsf{A}}(\omega_{\rm alg},\mathcal{T}_{t-1}),$
+
+receives an oracle response $\bm{Y}_{t}\in\mathsf{Y}$ , and forms
+
+$\mathcal{T}_{t}=\bigl(\mathcal{T}_{t-1},\bm{w}_{t},\bm{Y}_{t}\bigr)\in\mathsf{T}_{t}.$
+
+After $N$ calls, the algorithm returns
+
+$\widehat{\bm{x}}_{N}^{\mathsf{A}}=\operatorname{Output}_{N}^{\mathsf{A}}(\omega_{\rm alg},\mathcal{T}_{N}).$
+
+The pre-query information before call $t$ is the sigma-field
+
+$\mathscr{F}_{t-1}\coloneqq\sigma\bigl(\omega_{\rm alg},\mathcal{T}_{t-1}\bigr).$
+
+Thus $\bm{w}_{t}$ is $\mathscr{F}_{t-1}$ -measurable. We denote by $\mathcal{A}_{N}^{\mathcal{SFO}}(d_{x},d_{y})$ the class of all such algorithms making at most $N$ stochastic first-order oracle calls. When the dimensions are clear, we simply write $\mathcal{A}_{N}^{\mathcal{SFO}}$ .
+
+An algorithm that stops before call $N$ is included in $\mathcal{A}_{N}^{\mathcal{SFO}}$ by allowing its output map to ignore all subsequent oracle responses. No zero-respecting, linear-span, or other structural restriction is imposed on the query maps.
+
+We next introduce the stochastic first-order oracle.
+
+At a query $(\bm{x}_{t},\bm{y}_{t})$ , a joint stochastic first-order oracle returns
+
+$\bm{Y}_{t}=\mathbb{O}^{\mathcal{SFO}}(\bm{x}_{t},\bm{y}_{t};\zeta_{t},\xi_{t})=\bigl(\bm{G}_{f}(\bm{x}_{t},\bm{y}_{t};\zeta_{t}),\bm{G}_{g}(\bm{x}_{t},\bm{y}_{t};\xi_{t})\bigr).$
+
+The fresh sample pair $(\zeta_{t},\xi_{t})$ is independent of the pre-query sigma-field $\mathscr{F}_{t-1}$ . At every possibly random query generated by an algorithm in $\mathcal{A}_{N}^{\mathcal{SFO}}$ , the oracle satisfies
+
+$\displaystyle\mathbb{E}\!\left[\bm{G}_{f}(\bm{x}_{t},\bm{y}_{t};\zeta_{t})\,\middle|\,\mathscr{F}_{t-1}\right]$ $\displaystyle=\nabla f(\bm{x}_{t},\bm{y}_{t}),$ $\displaystyle\mathbb{E}\!\left[\left\lVert\bm{G}_{f}(\bm{x}_{t},\bm{y}_{t};\zeta_{t})-\nabla f(\bm{x}_{t},\bm{y}_{t})\right\rVert^{2}\,\middle|\,\mathscr{F}_{t-1}\right]$ $\displaystyle\leq\sigma^{2},$ $\displaystyle\mathbb{E}\!\left[\bm{G}_{g}(\bm{x}_{t},\bm{y}_{t};\xi_{t})\,\middle|\,\mathscr{F}_{t-1}\right]$ $\displaystyle=\nabla g(\bm{x}_{t},\bm{y}_{t}),$ $\displaystyle\mathbb{E}\!\left[\left\lVert\bm{G}_{g}(\bm{x}_{t},\bm{y}_{t};\xi_{t})-\nabla g(\bm{x}_{t},\bm{y}_{t})\right\rVert^{2}\,\middle|\,\mathscr{F}_{t-1}\right]$ $\displaystyle\leq\sigma^{2}.$
+
+We write $\mathbb{O}_{\sigma}^{\mathcal{SFO}}(f,g)$ for the collection of all such oracles for the function pair $(f,g)$ .
+
+3.3 Worst-Case Oracle Complexity
+
+Since the hyper-objective $\Phi$ in ( 1 ) is nonconvex, global optimization may require exponentially many oracle calls in the worst case ( Nemirovskij and Yudin, 1983 ) . We therefore use the standard first-order stationarity criterion from smooth nonconvex optimization ( Carmon et al., 2020 ; Carmon et al., 2021 ; Arjevani et al., 2023 ) .
+
+A possibly random point $\widehat{\bm{x}}\in\mathbb{R}^{d_{x}}$ is called an $\epsilon$ -stationary output of $\Phi$ if
+
+$\mathbb{E}\left\lVert\nabla\Phi(\widehat{\bm{x}})\right\rVert\leq\epsilon,$ (2)
+
+where the expectation is taken over all randomness of the algorithm and the stochastic oracle.
+
+For a function class $\mathcal{F}$ and an associated family of admissible stochastic oracles $\mathbb{O}_{\sigma}^{\mathcal{SFO}}$ , define the worst-case risk after $N$ oracle calls by
+
+$\displaystyle\mathfrak{R}_{N}^{\mathcal{SFO}}\bigl(\mathcal{A}^{\mathcal{SFO}},\mathcal{F},\mathbb{O}_{\sigma}^{\mathcal{SFO}}\bigr)\coloneqq\inf_{\mathsf{A}\in\mathcal{A}_{N}^{\mathcal{SFO}}}\sup_{(f,g)\in\mathcal{F}}\sup_{\mathbb{O}\in\mathbb{O}_{\sigma}^{\mathcal{SFO}}(f,g)}\mathbb{E}_{\mathsf{A},\mathbb{O}}\left\lVert\nabla\Phi\bigl(\widehat{\bm{x}}_{N}^{\mathsf{A}}\bigr)\right\rVert.$ (3)
+
+Here $\widehat{\bm{x}}_{N}^{\mathsf{A}}$ denotes the output of $\mathsf{A}$ after at most $N$ oracle calls.
+
+The worst-case $\mathcal{SFO}$ complexity for finding an $\epsilon$ -stationary point is
+
+$\operatorname{Compl}_{\epsilon}^{\mathcal{SFO}}(\mathcal{A}^{\mathcal{SFO}},\mathcal{F},\mathbb{O}_{\sigma}^{\mathcal{SFO}})\coloneqq\inf\left\{N\in\mathbb{N}_{0}:\mathfrak{R}_{N}^{\mathcal{SFO}}(\mathcal{A}^{\mathcal{SFO}},\mathcal{F},\mathbb{O}_{\sigma}^{\mathcal{SFO}})\leq\epsilon\right\}.$ (4)
+
+Definition 3.6 follows the uniform minimax convention: a single algorithm is chosen before the worst-case objective function and stochastic oracle are selected. This quantifier order is consistent with our lower-bound statement, which states that for every randomized adaptive algorithm there exist an instance and an admissible oracle on which the algorithm requires the claimed number of oracle calls.
+
+4 Lower Bound for Stochastic NC-SC Bilevel Optimization
+
+In this section, we first construct and analyze the hard instance for a fixed orthonormal frame, including the parameter choice. We then randomize the frame to obtain the progress bound for randomized adaptive algorithms. The proofs are given in the appendices.
+
+4.1 Main Result
+
+There are universal positive constants $c_{\rm LB},c_{\epsilon},\bar{L}_{f},\bar{L}_{g},\bar{\rho}$ with the following property. Fix any $\Delta>0$ . There is a finite constant $\bar{C}_{f}(\Delta)>0$ , depending only on $\Delta$ , such that, for every $\kappa\geq 2$ , $\sigma\geq 0$ , and $\epsilon$ satisfying
+
+$0<\epsilon\leq c_{\epsilon}\min\{1,\sqrt{\Delta}\},$ (5)
+
+and every $N\in\mathbb{N}_{0}$ satisfying
+
+$N\leq c_{\rm LB}\frac{\Delta\kappa^{2}}{\epsilon^{2}}\max\left\{1,\frac{\sigma^{2}\kappa^{6}}{\epsilon^{4}}\right\},$ (6)
+
+there exists a finite dimension $d$ such that, for every $\mathsf{A}\in\mathcal{A}_{N}^{\mathcal{SFO}}(d,d+2)$ , there exist a pair $(f,g)\in\mathcal{F}(\bar{L}_{f},\bar{L}_{g},\bar{\rho},\bar{C}_{f}(\Delta),(2\kappa)^{-1},\Delta)$ and an oracle $\mathbb{O}\in\mathbb{O}_{\sigma}^{\mathcal{SFO}}(f,g)$ such that the output $\widehat{\bm{x}}_{N}^{\mathsf{A}}$ obeys
+
+$\mathbb{E}_{\mathsf{A},\mathbb{O}}\left\lVert\nabla\Phi(\widehat{\bm{x}}_{N}^{\mathsf{A}})\right\rVert>\frac{3}{2}\epsilon,\qquad\mathbb{E}_{\mathsf{A},\mathbb{O}}\left\lVert\nabla\Phi(\widehat{\bm{x}}_{N}^{\mathsf{A}})\right\rVert^{2}>\frac{9}{4}\epsilon^{2}.$ (7)
+
+In particular,
+
+$\mathfrak{R}_{N}^{\mathcal{SFO}}\bigl(\mathcal{A}^{\mathcal{SFO}},\mathcal{F}(\bar{L}_{f},\bar{L}_{g},\bar{\rho},\bar{C}_{f}(\Delta),(2\kappa)^{-1},\Delta),\mathbb{O}_{\sigma}^{\mathcal{SFO}}\bigr)\geq\frac{3}{2}\epsilon>\epsilon.$
+
+Finally, as the intrinsic condition number of the constructed lower problem satisfies $\kappa\leq\kappa_{y}\leq 14\kappa$ , the complexity bound can equivalently be expressed as
+
+$\Omega\!\left(\frac{\Delta\kappa_{y}^{2}}{\epsilon^{2}}\max\left\{1,\frac{\sigma^{2}\kappa_{y}^{6}}{\epsilon^{4}}\right\}\right).$ (8)
+
+By Theorem 4.1 , the noise-dominated term is $\Omega\!\left(\Delta\sigma^{2}\kappa_{y}^{8}\epsilon^{-6}\right)$ . To our knowledge, this is the first $\epsilon^{-6}$ complexity lower bound for smooth stochastic NC-SC bilevel optimization under the standard stochastic first-order oracle, showing that the $\epsilon$ -dependence of the existing upper bounds is optimal ( Chen et al., 2025b ; Gu et al., 2026 ) . When $\sigma=0$ , the same construction yields a deterministic lower bound $\Omega\!\left(\Delta\kappa_{y}^{2}\epsilon^{-2}\right)$ for randomized algorithms. This is slightly weaker in its dependence on $\kappa_{y}$ than the deterministic lower bound of Chen et al. (2025a) , which establishes the bound $\Omega\!\left(\Delta\kappa_{y}^{2.5}\epsilon^{-2}\right)$ .
+
+We emphasize that the theorem is high-dimensional. Once the parameters and the oracle-call budget $N$ are fixed, the ambient dimension $d$ is chosen sufficiently large, uniformly over all algorithms in $\mathcal{A}_{N}^{\mathcal{SFO}}(d,d+2)$ . A sufficient choice of $d$ is given in ( 84 ). Thus, the theorem does not assert an $\epsilon^{-6}$ lower bound in any fixed finite dimension.
+
+The proof has an analytic part and a probabilistic part. The analytic part shows that the hypergradient is large whenever the coordinate progress is below $T$ . The probabilistic part shows that, below the stated call budget, the coordinate progress remains below $T$ with constant probability. The hard instance is first defined relative to a fixed orthonormal frame. $\eta$ sets the scale of the rescaled zero-chain: each chain coordinate contributes $O(\eta^{2})$ to the initial gap, while the corresponding gradient scale is $O(\eta)$ . $T$ is the number of chain coordinates, and $p$ is the success probability of the fresh Bernoulli variable that permits dependence on the next relevant coordinate. The random rotation hides the fixed frame and is used only in the probabilistic progress argument.
+
+We choose $T=\Theta(\Delta/\eta^{2})$ , which uses the initial-gap budget up to numerical constants. The stochastic lower-level oracle randomizes a compensated perturbation inside a two-dimensional strongly convex quadratic block, with gradient norm $O(\eta^{2}/\kappa)$ . After Bernoulli importance weighting, its contribution to the oracle variance is bounded by $O(\eta^{4}/(p\kappa^{2}))$ . We therefore choose $p$ as $p^{-1}=\Theta\!\left(\max\{1,\sigma^{2}\kappa^{2}\eta^{-4}\}\right)$ , and further choose $\eta=\Theta(\epsilon/\kappa)$ so that the hypergradient at any point with coordinate progress below $T$ exceeds $\epsilon$ . Combining these three relations with the $T/p$ query bound for the probability- $p$ zero-chain gives the $\kappa^{8}\epsilon^{-6}$ term in the noise-dominated regime. The random rotation affects the dimension required for the progress argument but does not change this parameter scaling.
+
+4.2 Hard Instance Construction
+
+In the hard bilevel instance constructed below, the lower variable is denoted by $\bm{y}=(\bm{z},\bm{v})\in\mathbb{R}^{d}\times\mathbb{R}^{2}$ . The $\bm{z}$ -block yields $\bm{z}^{*}(\bm{x})=\kappa\bm{x}$ . The two-dimensional $\bm{v}$ -block scales the gradient contribution of the compensated term by $\Theta(\kappa^{-1})$ , while preserving the corresponding term in the hyper-objective after the lower problem is minimized.
+
+Throughout this section, every symbol of the form $C_{\bullet}$ denotes a fixed numerical constant independent of $T,d,\bm{U},\eta,\kappa,\Delta,\sigma$ , and $\epsilon$ . The class bound $\bar{C}_{f}(\Delta)$ is allowed to depend on $\Delta$ , as stated in Lemma 4.7 .
+
+4.2.1 Scaled Nonconvex Zero-chain
+
+Following the zero-chain construction of Carmon et al. (2020) , define
+
+$\Psi(t)=\begin{cases}0,&t\leq\frac{1}{2},\\[2.84526pt] \exp\!\left(1-\dfrac{1}{(2t-1)^{2}}\right),&t>\frac{1}{2},\end{cases}\qquad\Phi_{0}(t)=\sqrt{e}\int_{-\infty}^{t}e^{-s^{2}/2}\,ds,$ (9)
+
+and
+
+$Q(t_{1},t_{2})=\Psi(-t_{1})\Phi_{0}(-t_{2})-\Psi(t_{1})\Phi_{0}(t_{2}).$ (10)
+
+For $\bm{a}=(a_{1},\ldots,a_{T})$ , set $a_{0}=1$ and let
+
+$F_{T}(\bm{a})=\sum_{i=1}^{T}Q(a_{i-1},a_{i}).$ (11)
+
+Given $0<\eta\leq 1$ , set $z_{0}=\eta$ and define
+
+$H_{\eta,T}(\bm{z})=\eta^{2}F_{T}(\bm{z}/\eta)=\eta^{2}\sum_{i=1}^{T}\mathcal{L}_{i}^{\eta}(\bm{z}),\qquad\mathcal{L}_{i}^{\eta}(\bm{z})=Q(z_{i-1}/\eta,z_{i}/\eta).$ (12)
+
+The function $H_{\eta,T}$ has a sequential dependence structure. Its $i$ th summand depends on coordinates $i-1$ and $i$ , and for $i\geq 2$ this summand and all of its derivatives vanish when $\lvert z_{i-1}\rvert\leq\eta/2$ . The quantity $\operatorname{prog}_{\eta}(\bm{z})$ is the largest index whose coordinate has magnitude greater than $\eta$ . If $j=\operatorname{prog}_{\eta}(\bm{z})+1\leq T$ , then Lemma 4.2 gives $\lvert\partial_{j}H_{\eta,T}(\bm{z})\rvert\geq\eta$ . We use standard properties of the smooth nonconvex zero-chain from Carmon et al. (2020) and Arjevani et al. (2023) ; see, e.g., the derivative and zero-chain bounds around Lemmas 2–3 and 6–7 of Arjevani et al. (2023) . We state the scaled form needed here and omit the proof.
+
+There are fixed numerical constants $C_{\Delta},C_{{\rm ch},2},C_{{\rm ch},3}>0$ such that, for all $T\geq 1$ , $0<\eta\leq 1$ , and $\bm{z}\in\mathbb{R}^{T}$ ,
+
+$H_{\eta,T}(\bm{0})-\inf_{\bm{q}\in\mathbb{R}^{T}}H_{\eta,T}(\bm{q})\leq C_{\Delta}\eta^{2}T,$ (13)
+
+and
+
+$\displaystyle\left\lVert\nabla H_{\eta,T}(\bm{z})\right\rVert_{\infty}\leq 23\eta,$ $\displaystyle\quad\left\lVert\nabla H_{\eta,T}(\bm{z})\right\rVert\leq 23\eta\sqrt{T},$ (14) $\displaystyle\left\lVert D^{2}H_{\eta,T}(\bm{z})\right\rVert_{\mathrm{op}}\leq C_{{\rm ch},2},$ $\displaystyle\quad\left\lVert D^{3}H_{\eta,T}(\bm{z})\right\rVert_{\mathrm{op}}\leq\frac{C_{{\rm ch},3}}{\eta}.$ (15)
+
+If $j=\operatorname{prog}_{\eta}(\bm{z})+1\leq T$ , then
+
+$\partial_{j}H_{\eta,T}(\bm{z})\leq-\eta.$ (16)
+
+Finally, if $i\geq 2$ and $\left\lvert z_{i-1}\right\rvert\leq\eta/2$ , then $\mathcal{L}_{i}^{\eta}$ and all its derivatives vanish at $\bm{z}$ .
+
+By ( 12 ), for every $r\geq 0$ ,
+
+$D^{r}H_{\eta,T}(\bm{z})=\eta^{2-r}D^{r}F_{T}(\bm{z}/\eta).$ (17)
+
+Thus each summand contributes $O(\eta^{2})$ to the initial gap; whenever $\operatorname{prog}_{\eta}(\bm{z})<T$ , the derivative in coordinate $\operatorname{prog}_{\eta}(\bm{z})+1$ has magnitude $\Theta(\eta)$ ; and the Hessian remains $O(1)$ .
+
+4.2.2 Smooth Decomposition of the Zero-chain
+
+For the stochastic construction, we use soft indicators of the tail coordinates $z_{i},\ldots,z_{T}$ to isolate the incoming-coordinate summand for randomization. This decomposition adapts the smooth probability- $p$ zero-chain construction of Arjevani et al. (2023, Sections 3.3 and 5.1) by rescaling it with parameter $\eta$ . Let
+
+$\chi_{+}(s)=\begin{cases}0,&s\leq 0,\\ e^{-1/s},&s>0,\end{cases}$
+
+and, for $a<b$ , define the flat transition
+
+$\gamma_{a,b}(t)=\frac{\chi_{+}(t-a)}{\chi_{+}(t-a)+\chi_{+}(b-t)}.$ (18)
+
+$\gamma_{a,b}(t)$ is $C^{\infty}$ , equals zero on $(-\infty,a]$ , equals one on $[b,\infty)$ , and satisfies $\gamma_{a,b}^{(r)}(a)=\gamma_{a,b}^{(r)}(b)=0$ for every integer $r\geq 1$ . Define
+
+$\displaystyle\Gamma(t)=\gamma_{1/4,1/2}(t),$ $\displaystyle\quad\upsilon(t)=\Gamma\!\left(\left\lvert t\right\rvert\right),$ (19) $\displaystyle\bm{V}_{i}^{\eta}(\bm{z})=\bigl(\upsilon(z_{i}/\eta),\ldots,\upsilon(z_{T}/\eta)\bigr),$ $\displaystyle\quad h_{i}^{\eta}(\bm{z})=\Gamma\!\left(1-\left\lVert\bm{V}_{i}^{\eta}(\bm{z})\right\rVert\right).$ (20)
+
+Indeed, if $\bm{x}=\bm{z}/\eta$ , then $h_{i}^{\eta}(\bm{z})$ has the same tail-norm form as the smooth progress indicator $\Theta_{i}(\bm{x})$ in Arjevani et al. (2023, Eq. (19)) , up to the particular choice of the one-dimensional transition function. The thresholds $\eta/4$ and $\eta/2$ define a fixed transition region. A tail coordinate with magnitude greater than $\eta/2$ makes every corresponding soft indicator vanish locally, while the flatness of the chain summands eliminates terms lying more than one coordinate beyond the current progress index.
+
+Finally, define
+
+$b_{\eta,T}(\bm{z})=\eta^{2}\sum_{i=1}^{T}h_{i}^{\eta}(\bm{z})\mathcal{L}_{i}^{\eta}(\bm{z}),\qquad A_{\eta,T}(\bm{z})=H_{\eta,T}(\bm{z})-b_{\eta,T}(\bm{z}).$ (21)
+
+For $\xi\sim\operatorname{Ber}(p)$ , randomizing only $b_{\eta,T}$ in the decomposition $H_{\eta,T}=A_{\eta,T}+b_{\eta,T}$ gives
+
+$A_{\eta,T}(\bm{z})+\frac{\xi}{p}b_{\eta,T}(\bm{z})=H_{\eta,T}(\bm{z})+\left(\frac{\xi}{p}-1\right)b_{\eta,T}(\bm{z}).$
+
+This has the same importance-weighted form as the randomized zero-chain in Arjevani et al. (2023, Eq. (31)) . In our bilevel construction, however, we do not randomize the chain function directly. Instead, $A_{\eta,T}$ enters the deterministic upper-level term, while $b_{\eta,T}$ is used to construct the compensated lower-level block, which is multiplied in its entirety by $\xi/p$ .
+
+Although $b_{\eta,T}$ is written as a sum of $T$ terms, at any point at most one summand can have a nonzero derivative of order at most three. The next lemma gives this derivative bound together with the required coordinate-dependence identities. Its proof is given in Appendix A .
+
+For $r=0,1,2,3$ ,
+
+$\left\lVert D^{r}b_{\eta,T}(\bm{z})\right\rVert_{\mathrm{op}}\leq C_{\rm ext}\eta^{2-r},$ (22)
+
+where $C_{\rm ext}$ is a fixed numerical constant. Let
+
+$m=\operatorname{prog}_{\eta/2}(\bm{z}),\qquad k=\operatorname{prog}_{\eta/4}(\bm{z}).$
+
+Then $m\leq k$ . If $m<T$ , only the $(m+1)$ –st summand in ( 21 ) can have a nonzero derivative of order at most three at $\bm{z}$ ; if $m=T$ , the value and derivatives through order three of every summand vanish at $\bm{z}$ . Moreover,
+
+$\displaystyle A_{\eta,T}(\bm{z})=A_{\eta,T}(\bm{P}_{k}\bm{z}),$ $\displaystyle b_{\eta,T}(\bm{z})=b_{\eta,T}(\bm{P}_{k+1}\bm{z}),$ (23) $\displaystyle D^{r}A_{\eta,T}(\bm{z})=D^{r}A_{\eta,T}(\bm{P}_{k}\bm{z})\circ(\bm{P}_{k},\ldots,\bm{P}_{k}),$ $\displaystyle 1\leq r\leq 3,$ (24) $\displaystyle D^{r}b_{\eta,T}(\bm{z})=D^{r}b_{\eta,T}(\bm{P}_{k+1}\bm{z})\circ(\bm{P}_{k+1},\ldots,\bm{P}_{k+1}),$ $\displaystyle 1\leq r\leq 3.$ (25)
+
+The identities remain valid when a coordinate is exactly at a threshold $\eta/4$ or $\eta/2$ .
+
+Equations ( 23 )–( 25 ) show that $A_{\eta,T}$ and its first three derivatives depend only on the first $k$ coordinates, while $b_{\eta,T}$ may also depend on coordinate $k+1$ . These coordinate-dependence identities are used in the random-rotation argument.
+
+4.2.3 Bilevel Objectives and Stochastic Oracle
+
+Define an even, compactly supported cutoff function
+
+$\omega(t)=1-\gamma_{1,2}(\lvert t\rvert),\qquad\omega(t)=\begin{cases}1,&|t|\leq 1,\\ 0,&|t|\geq 2.\end{cases}$ (26)
+
+We will later use the scaled cutoff function $\psi_{\eta}(v)=v\omega(v/\eta)$ . Then $\psi_{\eta}(v)=v$ on $[-\eta,\eta]$ and $\psi_{\eta}(v)=0$ outside $[-2\eta,2\eta]$ . Since $\varphi(t):=t\omega(t)$ is a fixed smooth compactly supported function, the numerical constant $C_{\psi}\coloneqq\max_{0\leq r\leq 3}\lVert\varphi^{(r)}\rVert_{\infty}$ is finite. The identity $\psi_{\eta}(v)=\eta\varphi(v/\eta)$ gives
+
+$\left\lVert\psi_{\eta}^{(r)}\right\rVert_{\infty}\leq C_{\psi}\eta^{1-r},\quad 0\leq r\leq 3.$ (27)
+
+To obtain a stronger dependence of the stochastic lower bound on the condition number $\kappa_{y}$ , we introduce a $2\times 2$ matrix that will serve as a quadratic block in the hard instance. Fix $\kappa\geq 2$ and define
+
+$\bm{M}_{\kappa}\coloneqq\frac{1}{2}\begin{pmatrix}1+\kappa^{-1}&-(1-\kappa^{-1})\\ -(1-\kappa^{-1})&1+\kappa^{-1}\end{pmatrix}.$ (28)
+
+Let $d_{\kappa}\coloneqq\frac{\kappa+1}{2}$ and $s_{\kappa}\coloneqq\frac{\kappa-1}{2}$ . Then
+
+$\bm{M}_{\kappa}^{-1}=\begin{pmatrix}d_{\kappa}&s_{\kappa}\\ s_{\kappa}&d_{\kappa}\end{pmatrix},\qquad\lambda_{\min}(\bm{M}_{\kappa})=\kappa^{-1},\qquad\lambda_{\max}(\bm{M}_{\kappa})=1.$ (29)
+
+For $\kappa\geq 2$ , these quantities satisfy
+
+$s_{\kappa}\geq\frac{\kappa}{4},\qquad d_{\kappa}\leq\frac{3\kappa}{4},\qquad 1<\frac{d_{\kappa}}{s_{\kappa}}\leq 3.$ (30)
+
+Fix an orthonormal frame $\bm{U}=(\bm{u}_{1},\ldots,\bm{u}_{T})$ in $\mathbb{R}^{d}$ . A Haar-random choice of $\bm{U}$ is introduced only in Section 4.5 . Let $R=230\eta\sqrt{T}$ , and define the soft projection, following Carmon et al. (2020) and Arjevani et al. (2023) , by
+
+$\rho_{R}(\bm{z})=\frac{\bm{z}}{\sqrt{1+\left\lVert\bm{z}\right\rVert^{2}/R^{2}}}.$ (31)
+
+Define the projected chain coordinates $\bm{q}_{\bm{U}}(\bm{z})\coloneqq\bm{U}^{\top}\rho_{R}(\bm{z})$ . Applying the deterministic and incoming-coordinate components in ( 21 ) to these projected coordinates, define
+
+$a_{\bm{U}}(\bm{z})\coloneqq A_{\eta,T}(\bm{q}_{\bm{U}}(\bm{z})),\qquad\theta_{\bm{U}}(\bm{z})\coloneqq b_{\eta,T}(\bm{q}_{\bm{U}}(\bm{z})).$ (32)
+
+We then define three components of the hard instance: a pseudo-Huber term, an incoming-coordinate term scaling $\theta_{\bm{U}}(\bm{z})$ by $1/s_{\kappa}$ , and a compensation term:
+
+$\displaystyle h_{R}(\bm{z})=\frac{1}{4}R^{2}\left(\sqrt{1+\frac{\left\lVert\bm{z}\right\rVert^{2}}{R^{2}}}-1\right),$ (33) $\displaystyle\vartheta_{\kappa,\bm{U}}(\bm{z})=\frac{\theta_{\bm{U}}(\bm{z})}{s_{\kappa}},$ (34) $\displaystyle\mathcal{R}_{\kappa,\bm{U}}(\bm{z},\bm{v})=\frac{d_{\kappa}}{2}\vartheta_{\kappa,\bm{U}}(\bm{z})^{2}-\vartheta_{\kappa,\bm{U}}(\bm{z})\psi_{\eta}(v_{1}),\qquad\bm{v}=(v_{1},v_{2})\in\mathbb{R}^{2}.$ (35)
+
+Finally, we define the upper- and lower-level objectives of the hard instance as follows:
+
+$\displaystyle f_{\bm{U}}^{\kappa}(\bm{x},\bm{z},\bm{v})$ $\displaystyle=a_{\bm{U}}(\bm{z})+v_{2}+h_{R}(\bm{z}),$ (36) $\displaystyle g_{\bm{U}}^{\kappa}(\bm{x},\bm{z},\bm{v})$ $\displaystyle=\frac{1}{2\kappa}\left\lVert\bm{z}\right\rVert^{2}-\left\langle\bm{x},\bm{z}\right\rangle+\frac{1}{2}\bm{v}^{\top}\bm{M}_{\kappa}\bm{v}+\mathcal{R}_{\kappa,\bm{U}}(\bm{z},\bm{v}).$ (37)
+
+Note that the upper-level variable $\bm{x}$ appears only in the lower-level objective. We introduce stochasticity by randomizing only the compensated block. Specifically, for $\xi\sim\operatorname{Ber}(p)$ with $p\in(0,1]$ , set
+
+$\widehat{f}_{\bm{U}}^{\kappa}=f_{\bm{U}}^{\kappa},\qquad\widehat{g}_{\bm{U}}^{\kappa}(\bm{x},\bm{z},\bm{v};\xi)=\frac{1}{2\kappa}\left\lVert\bm{z}\right\rVert^{2}-\left\langle\bm{x},\bm{z}\right\rangle+\frac{1}{2}\bm{v}^{\top}\bm{M}_{\kappa}\bm{v}+\frac{\xi}{p}\mathcal{R}_{\kappa,\bm{U}}(\bm{z},\bm{v}).$ (38)
+
+The $\mathcal{SFO}$ returns $(\nabla\widehat{f}_{\bm{U}}^{\kappa},\nabla\widehat{g}_{\bm{U}}^{\kappa})$ .
+
+To explain the two auxiliary coordinates, consider the region in which $\psi_{\eta}(v_{1})=v_{1}$ . Lemma 4.6 shows that the population lower-level minimizer lies in this region. Hence, the $\bm{v}$ -subproblem is
+
+$\min_{\bm{v}\in\mathbb{R}^{2}}\left\{\frac{1}{2}\bm{v}^{\top}\bm{M}_{\kappa}\bm{v}+\frac{d_{\kappa}}{2}\vartheta_{\kappa,\bm{U}}(\bm{z})^{2}-\vartheta_{\kappa,\bm{U}}(\bm{z})v_{1}\right\},$
+
+whose first-order condition is
+
+$\bm{M}_{\kappa}\bm{v}=\begin{pmatrix}\vartheta_{\kappa,\bm{U}}(\bm{z})\\ 0\end{pmatrix}.$
+
+Since $(\bm{M}_{\kappa}^{-1})_{21}=s_{\kappa}$ , the second coordinate of the solution is $v_{2}^{*}=s_{\kappa}\vartheta_{\kappa,\bm{U}}(\bm{z})=\theta_{\bm{U}}(\bm{z})$ . Since the upper objective contains $v_{2}$ , substitution of the lower solution recovers $\theta_{\bm{U}}(\bm{z})$ at its original scale. Moreover, since $(\bm{M}_{\kappa}^{-1})_{11}=d_{\kappa}$ ,
+
+$\min_{\bm{v}}\left\{\frac{1}{2}\bm{v}^{\top}\bm{M}_{\kappa}\bm{v}-\vartheta_{\kappa,\bm{U}}(\bm{z})v_{1}+\frac{d_{\kappa}}{2}\vartheta_{\kappa,\bm{U}}(\bm{z})^{2}\right\}=0.$
+
+Thus minimizing over $\bm{v}$ adds no $\bm{z}$ -dependent value to the lower-level objective, and $\bm{z}^{*}(\bm{x})=\kappa\bm{x}$ is unchanged. Both terms in $\mathcal{R}_{\kappa,\bm{U}}$ are multiplied by the same Bernoulli weight; otherwise the response for $\xi=0$ could still depend on the incoming coordinate through the deterministic compensation term.
+
+4.3 Properties of the Hard Instance
+
+The next lemma gives the derivative bounds obtained after composition with the soft projection $\rho_{R}$ . Its proof is given in Appendix B.1 .
+
+Define
+
+$\displaystyle C_{A}=\max\left\{23+C_{\rm ext},C_{{\rm ch},2}+C_{\rm ext},C_{{\rm ch},3}+C_{\rm ext}\right\},$ (39) $\displaystyle C_{\theta}=C_{\rm ext}\left(1+\frac{18}{230}+\frac{36}{230^{2}}\right),\qquad C_{a}=C_{A}\left(1+\frac{18}{230}+\frac{36}{230^{2}}\right).$ (40)
+
+Uniformly in $T,d,\bm{U}$ , the soft projection satisfies
+
+$\left\lVert D\rho_{R}\right\rVert\leq 1,\qquad\left\lVert D^{2}\rho_{R}\right\rVert_{\mathrm{op}}\leq\frac{6}{R},\qquad\left\lVert D^{3}\rho_{R}\right\rVert_{\mathrm{op}}\leq\frac{36}{R^{2}}.$ (41)
+
+The rotated pieces satisfy
+
+$\displaystyle\left\lvert\theta_{\bm{U}}(\bm{z})\right\rvert\leq C_{\theta}\eta^{2},$ $\displaystyle\quad\left\lVert D^{r}\theta_{\bm{U}}(\bm{z})\right\rVert_{\mathrm{op}}\leq C_{\theta}\eta^{2-r},$ $\displaystyle\quad 1\leq r\leq 3,$ (42) $\displaystyle\left\lVert Da_{\bm{U}}(\bm{z})\right\rVert\leq C_{a}\eta\sqrt{T},$ $\displaystyle\quad\left\lVert D^{2}a_{\bm{U}}(\bm{z})\right\rVert_{\mathrm{op}}\leq C_{a},$ $\displaystyle\quad\left\lVert D^{3}a_{\bm{U}}(\bm{z})\right\rVert_{\mathrm{op}}\leq\frac{C_{a}}{\eta}.$ (43)
+
+The pseudo-Huber term satisfies
+
+$h_{R}\geq 0,\qquad h_{R}(\bm{0})=0,\qquad\left\lVert\nabla h_{R}(\bm{z})\right\rVert\leq\frac{1}{4}R,\qquad 0\preceq\nabla^{2}h_{R}(\bm{z})\preceq\frac{1}{4}\bm{I}.$ (44)
+
+Since $s_{\kappa}=\Theta(\kappa)$ , $\vartheta_{\kappa,\bm{U}}=\theta_{\bm{U}}/s_{\kappa}$ and its derivatives contain a factor of order $\kappa^{-1}$ . The next lemma gives the corresponding global bounds for $\mathcal{R}_{\kappa,\bm{U}}$ . Its proof is given in Appendix B.3 .
+
+Define
+
+$\displaystyle C_{\rm grad}=8C_{\theta}(2C_{\theta}+C_{\psi}),$ $\displaystyle\qquad C_{\rm Hess}=16C_{\theta}(2C_{\theta}+C_{\psi}),$ $\displaystyle\qquad C_{\rm third}=32C_{\theta}(2C_{\theta}+C_{\psi}).$ (45)
+
+For every $\kappa\geq 2$ , $0<\eta\leq 1$ , $\bm{z}\in\mathbb{R}^{d}$ , and $\bm{v}\in\mathbb{R}^{2}$ ,
+
+$\displaystyle\left\lvert\vartheta_{\kappa,\bm{U}}(\bm{z})\right\rvert\leq\frac{4C_{\theta}\eta^{2}}{\kappa},$ $\displaystyle\quad\left\lVert D^{r}\vartheta_{\kappa,\bm{U}}(\bm{z})\right\rVert_{\rm op}\leq\frac{4C_{\theta}\eta^{2-r}}{\kappa},$ $\displaystyle\quad 1\leq r\leq 3,$ (46) $\displaystyle\left\lVert\nabla_{(z,v)}\mathcal{R}_{\kappa,\bm{U}}(\bm{z},\bm{v})\right\rVert\leq C_{\rm grad}\frac{\eta^{2}}{\kappa},$ $\displaystyle\quad\left\lVert D^{2}_{(z,v)}\mathcal{R}_{\kappa,\bm{U}}(\bm{z},\bm{v})\right\rVert_{\rm op}\leq C_{\rm Hess}\frac{\eta}{\kappa},$ (47) $\displaystyle\left\lVert D^{3}_{(z,v)}\mathcal{R}_{\kappa,\bm{U}}(\bm{z},\bm{v})\right\rVert_{\rm op}\leq\frac{C_{\rm third}}{\kappa}.$ (48)
+
+4.3.1 Lower-level Solution and Hyper-objective
+
+The next lemma solves the lower-level problem and gives the resulting hyper-objective. In particular, the main lower solution is $\bm{z}^{*}(\bm{x})=\kappa\bm{x}$ , and the hyper-objective contains $\theta_{\bm{U}}$ at its original scale. Its proof is given in Appendix B.2 .
+
+Define
+
+$\eta_{0}=\min\left\{1,\frac{1}{3C_{\theta}},\frac{1}{8C_{\theta}C_{\psi}}\right\}.$ (49)
+
+If $0<\eta\leq\eta_{0}$ , then
+
+$\mathbb{E}_{\xi}\widehat{g}_{\bm{U}}^{\kappa}=g_{\bm{U}}^{\kappa},\qquad\bm{z}_{\bm{U}}^{*}(\bm{x})=\kappa\bm{x},\qquad\bm{v}_{\bm{U}}^{*}(\bm{x})=\bm{M}_{\kappa}^{-1}\begin{pmatrix}\vartheta_{\kappa,\bm{U}}(\kappa\bm{x})\\ 0\end{pmatrix}.$ (50)
+
+In particular,
+
+$v_{1,\bm{U}}^{*}(\bm{x})=\frac{d_{\kappa}}{s_{\kappa}}\theta_{\bm{U}}(\kappa\bm{x}),\qquad v_{2,\bm{U}}^{*}(\bm{x})=\theta_{\bm{U}}(\kappa\bm{x}).$ (51)
+
+Consequently, the hyper-objective is
+
+$\Phi_{\bm{U}}^{\kappa}(\bm{x})=H_{\eta,T}\!\left(\bm{U}^{\top}\rho_{R}(\kappa\bm{x})\right)+h_{R}(\kappa\bm{x}).$ (52)
+
+4.3.2 Smoothness, Strong Convexity, and Condition Number
+
+We next verify that the construction belongs to the prescribed function class. The following lemma establishes the required smoothness and strong convexity, and relates the construction parameter $\kappa$ to the intrinsic lower-level condition number $\kappa_{y}$ . Its proof is given in Appendix B.3 .
+
+Define
+
+$\displaystyle c_{\rm reg}=\min\left\{\eta_{0},\frac{1}{2C_{\rm Hess}}\right\},$ $\displaystyle\qquad C_{\kappa}=14.$ (53)
+
+Then
+
+$\displaystyle\bar{L}_{f}=C_{a}+\frac{1}{4},$ $\displaystyle\qquad\bar{L}_{g}=8+C_{\rm Hess},$ (54) $\displaystyle\bar{\rho}=C_{\rm third}+1,$ $\displaystyle\qquad\bar{C}_{f}(\Delta)=1+\frac{C_{a}+115/2}{\sqrt{C_{\Delta}}}\sqrt{\Delta}.$ (55)
+
+Assume $\kappa\geq 2$ and
+
+$0<\eta\leq c_{\rm reg},\qquad C_{\Delta}\eta^{2}T\leq\Delta.$ (56)
+
+Uniformly in $T,d,\bm{U}$ :
+
+$\nabla f_{\bm{U}}^{\kappa}$ and $\nabla g_{\bm{U}}^{\kappa}$ are globally $\bar{L}_{f}$ - and $\bar{L}_{g}$ -Lipschitz in all variables;
+
+$\sup_{\bm{x},\bm{z},\bm{v}}\left\lVert\nabla_{(z,v)}f_{\bm{U}}^{\kappa}(\bm{x},\bm{z},\bm{v})\right\rVert\leq\bar{C}_{f}(\Delta)$ ;
+
+$g_{\bm{U}}^{\kappa}(\bm{x},\cdot,\cdot)$ is $(2\kappa)^{-1}$ -strongly convex;
+
+$\nabla^{2}g_{\bm{U}}^{\kappa}$ is globally $\bar{\rho}$ -Lipschitz.
+
+Moreover the actual lower condition number satisfies $\kappa\leq\kappa_{y}\leq C_{\kappa}\kappa$ .
+
+4.3.3 Unbiasedness and Variance Bounds
+
+The stochastic lower-level objective ( 38 ) multiplies $\mathcal{R}_{\kappa,\bm{U}}$ by a Bernoulli importance weight $\xi/p$ . The next lemma verifies conditional unbiasedness and bounded variance and gives an admissible choice of $p$ . Its proof is given in Appendix B.4 .
+
+Define
+
+$C_{\rm var}=16C_{\theta}^{2}\left[(4C_{\theta}+C_{\psi})^{2}+C_{\psi}^{2}\right].$ (57)
+
+For $0<\eta\leq 1$ , consider any possibly random query $(\bm{x}_{t},\bm{z}_{t},\bm{v}_{t})$ generated by $\mathsf{A}\in\mathcal{A}_{N}^{\mathcal{SFO}}$ . Conditionally on the pre-query sigma-field $\mathscr{F}_{t-1}$ ,
+
+$\displaystyle\mathbb{E}\!\left[\nabla\widehat{g}_{\bm{U}}^{\kappa}\mid\mathscr{F}_{t-1}\right]=\nabla g_{\bm{U}}^{\kappa},$ (58) $\displaystyle\mathbb{E}\!\left[\left\lVert\nabla\widehat{g}_{\bm{U}}^{\kappa}-\nabla g_{\bm{U}}^{\kappa}\right\rVert^{2}\mathrel{}\middle|\mathscr{F}_{t-1}\right]\leq C_{\rm var}\frac{\eta^{4}}{\kappa^{2}}\frac{1-p}{p}.$ (59)
+
+The upper stochastic gradient is exact and has zero variance. Consequently, the choice
+
+$p=\begin{cases}1,&\sigma=0,\\[2.84526pt] \displaystyle\min\left\{1,\frac{C_{\rm var}\eta^{4}}{\sigma^{2}\kappa^{2}}\right\},&\sigma>0,\end{cases}$ (60)
+
+ensures variance at most $\sigma^{2}$ and satisfies
+
+$\frac{1}{p}=\max\left\{1,\frac{\sigma^{2}\kappa^{2}}{C_{\rm var}\eta^{4}}\right\}.$ (61)
+
+Lemma 4.5 gives $\lVert\nabla_{(\bm{z},\bm{v})}\mathcal{R}_{\kappa,\bm{U}}\rVert=O(\eta^{2}/\kappa)$ . Multiplication by $\xi/p$ preserves the conditional mean and gives conditional variance $O(\eta^{4}(1-p)/(\kappa^{2}p))$ . Thus ( 60 ) gives
+
+$\frac{1}{p}=\Theta\!\left(\max\left\{1,\frac{\sigma^{2}\kappa^{2}}{\eta^{4}}\right\}\right)$
+
+up to numerical constants. Proposition 4.13 will further combine the high-probability coordinate-progress bound with a Bernoulli success-count estimate, and gives a constant probability that the rotated chain coordinates at the output have progress below $T$ whenever $N\leq T/(8p)$ .
+
+4.3.4 Initial Gap and Hypergradient Lower Bound
+
+We now bound the initial optimality gap and establish a lower bound on the hypergradient norm whenever the coordinate progress is below $T$ . Note that $\lVert\rho_{R}(\bm{z})\rVert\leq R$ , so the normalized projected vector $\rho_{R}(\bm{z})/\eta$ used in the random-rotation argument has norm at most $R/\eta$ . However, $D\rho_{R}(\bm{z})$ becomes small when $\lVert\bm{z}\rVert$ is large. Hence, the term $h_{R}(\bm{z})$ is included so that the lower bound of the hypergradient norm in Lemma 4.9 remains valid in this region while its Hessian remains uniformly bounded. Its proof is given in Appendix D .
+
+For every orthonormal frame $\bm{U}$ ,
+
+$\Phi_{\bm{U}}^{\kappa}(\bm{0})-\inf_{\bm{x}}\Phi_{\bm{U}}^{\kappa}(\bm{x})\leq C_{\Delta}\eta^{2}T.$ (62)
+
+If
+
+$\operatorname{prog}_{\eta/4}(\bm{U}^{\top}\rho_{R}(\kappa\bm{x}))<T,$ (63)
+
+then
+
+$\left\lVert\nabla\Phi_{\bm{U}}^{\kappa}(\bm{x})\right\rVert>\frac{\kappa\eta}{2}.$ (64)
+
+4.4 Parameter Choice
+
+The preceding estimates hold for every fixed frame $\bm{U}$ , so the parameters can be chosen before $\bm{U}$ is randomized.
+
+The construction uses three parameter relations: $\kappa\eta\asymp\epsilon$ , $T\eta^{2}\asymp\Delta$ , and $p^{-1}\asymp\max\{1,\sigma^{2}\kappa^{2}/\eta^{4}\}$ . They set the stationarity scale, use the gap budget up to constants, and enforce the variance bound, respectively. Substitution into $T/p$ yields the claimed order. The calculation below specifies constants that satisfy all assumptions.
+
+Choose
+
+$\eta=\frac{4\epsilon}{\kappa},\qquad X=\frac{\Delta}{2C_{\Delta}\eta^{2}},\qquad T=\lfloor X\rfloor.$ (65)
+
+The universal upper bound on $\epsilon$ in ( 5 ) is chosen in Appendix E so that $X\geq 32$ and all the smallness conditions in Lemmas 4.6 and 4.7 hold. Since $X\geq 2$ ,
+
+$\lfloor X\rfloor\geq X-1\geq\frac{X}{2},$
+
+and therefore
+
+$\frac{\Delta}{4C_{\Delta}\eta^{2}}\leq T\leq\frac{\Delta}{2C_{\Delta}\eta^{2}}.$ (66)
+
+The upper bound gives
+
+$C_{\Delta}\eta^{2}T\leq\frac{\Delta}{2}\leq\Delta,$
+
+so the constructed hyper-objective lies in the required initial-gap class. Moreover, if the rotated chain coordinates at the output have progress below $T$ , then Lemma 4.9 and ( 65 ) give
+
+$\left\lVert\nabla\Phi_{\bm{U}}^{\kappa}(\widehat{\bm{x}}_{N}^{\mathsf{A}})\right\rVert>\frac{\kappa\eta}{2}=2\epsilon.$ (67)
+
+Choose $p$ as in ( 60 ). Combining ( 66 ) with ( 61 ) gives
+
+$\displaystyle\frac{T}{8p}$ $\displaystyle\geq\frac{\Delta}{32C_{\Delta}\eta^{2}}\max\left\{1,\frac{\sigma^{2}\kappa^{2}}{C_{\rm var}\eta^{4}}\right\}$ $\displaystyle=\frac{\Delta\kappa^{2}}{512C_{\Delta}\epsilon^{2}}\max\left\{1,\frac{\sigma^{2}\kappa^{6}}{256C_{\rm var}\epsilon^{4}}\right\}.$ (68)
+
+Since $C_{\rm var}$ is a fixed numerical constant, decreasing a universal prefactor if necessary turns ( 68 ) into
+
+$\frac{T}{8p}=\Omega\!\left(\frac{\Delta\kappa^{2}}{\epsilon^{2}}\max\left\{1,\frac{\sigma^{2}\kappa^{6}}{\epsilon^{4}}\right\}\right).$ (69)
+
+In the noise-dominated regime, this is
+
+$\Omega\!\left(\Delta\sigma^{2}\kappa^{8}\epsilon^{-6}\right).$
+
+It remains to relate the progress index to the number of successful Bernoulli samples. Let
+
+$S_{N}=\sum_{t=1}^{N}\xi_{t}.$
+
+Freshness gives $\mathbb{E}S_{N}=Np$ . Hence, whenever $N\leq T/(8p)$ , Markov’s inequality yields
+
+$\mathbb{P}(S_{N}\geq T)\leq\frac{\mathbb{E}S_{N}}{T}=\frac{Np}{T}\leq\frac{1}{8}.$ (70)
+
+Under the dimension condition stated below, the random-rotation argument in Section 4.5 shows, with probability at least $7/8$ , that
+
+$\operatorname{prog}_{\eta/4}\!\left(\bm{U}^{\top}\rho_{R}(\kappa\widehat{\bm{x}}_{N}^{\mathsf{A}})\right)\leq\min\{T,S_{N}\}.$ (71)
+
+Together with ( 70 ), this implies that the rotated chain coordinates at the output have progress below $T$ with probability at least $3/4$ . Equation ( 67 ) then gives
+
+$\mathbb{E}\left\lVert\nabla\Phi_{\bm{U}}^{\kappa}(\widehat{\bm{x}}_{N}^{\mathsf{A}})\right\rVert>\frac{3}{4}(2\epsilon)=\frac{3}{2}\epsilon>\epsilon.$
+
+If the frame $\bm{U}$ were known to the algorithm, one query could have nonzero components in many chain directions, and ( 71 ) would not hold. We will therefore take $\bm{U}$ to be Haar-uniform and prove the progress bound with high probability. This step does not alter $\eta$ , $T$ , or $p$ .
+
+4.5 Random Rotation for Adaptive Randomized Algorithms
+
+We compare the geometric progress of the queries with the Bernoulli success count. For the point queried on call $t$ , define
+
+$k_{t}\coloneqq\operatorname{prog}_{\eta/4}\!\left(\bm{U}^{\top}\rho_{R}(\bm{z}_{t})\right).$ (72)
+
+The number of successful Bernoulli draws and the corresponding upper bound on coordinate progress are
+
+$S_{t}\coloneqq\sum_{s=1}^{t}\xi_{s},\qquad L_{t}\coloneqq\min\{T,S_{t}\},\qquad S_{0}=L_{0}=0.$ (73)
+
+The goal is to prove, with high probability, that $k_{t}\leq L_{t-1}$ before call $t$ . On this event, a response with $\xi_{t}=0$ depends only on the first $L_{t-1}$ frame columns, whereas a response with $\xi_{t}=1$ may depend on one additional frame column. This dependence on the initial frame columns is combined with the spherical-cap estimate in the coupled induction below.
+
+4.5.1 Random-rotation Lemmas
+
+If the frame were fixed and known, an adaptive algorithm could query a vector with nonzero components in all chain directions. We therefore choose
+
+$\bm{U}=(\bm{u}_{1},\ldots,\bm{u}_{T})$
+
+Haar-uniformly from the Stiefel manifold
+
+$\operatorname{St}(d,T)=\left\{\bm{V}\in\mathbb{R}^{d\times T}:\bm{V}^{\top}\bm{V}=\bm{I}_{T}\right\}.$
+
+The coordinates of an ambient vector $\bm{r}\in\mathbb{R}^{d}$ in the random frame are then
+
+$\bm{U}^{\top}\bm{r}=\bigl(\left\langle\bm{u}_{1},\bm{r}\right\rangle,\ldots,\left\langle\bm{u}_{T},\bm{r}\right\rangle\bigr).$
+
+The proof constructs a coupled transcript whose dependence on $\bm{U}$ is through a random number of initial frame columns. Conditional on the sigma-field defined below, the remaining columns have the Haar-completion law on the orthogonal complement of the span of the recorded frame columns. The spherical-cap bound therefore controls the inner product of a bounded adaptive query with each remaining column.
+
+The number of recorded frame columns is random because it depends on the previous Bernoulli samples. A conditional Haar statement for a fixed number of initial columns therefore cannot be applied directly with a random index. The next lemma applies the corresponding conditional law separately on each event $\{J=\ell\}$ and combines the resulting identities. This justifies the corresponding conditioning for the adaptive transcript. For a frame $\bm{U}$ , write $\bm{U}_{\leq\ell}=(\bm{u}_{1},\ldots,\bm{u}_{\ell})$ . Its proof is given in Appendix C.1 .
+
+Let $T\geq 1$ , $d\geq T$ , let $\bm{U}$ be Haar-uniform on $\operatorname{St}(d,T)$ , and let $Z$ be an independent random element of a standard Borel space. Let $J=J(Z)\in\{0,\ldots,T\}$ be Borel measurable. For each deterministic $\ell$ , let $\mathsf{K}_{\ell}(\bm{U}_{\leq\ell},\cdot)$ denote the canonical Haar-completion kernel on the orthogonal complement of $\operatorname{span}(\bm{U}_{\leq\ell})$ , with the evident point mass interpretation when $\ell=T$ . Define $\mathscr{H}_{J}$ stratumwise by
+
+$E\in\mathscr{H}_{J}\quad\Longleftrightarrow\quad E\cap\{J=\ell\}\in\sigma(Z,\bm{U}_{\leq\ell})\quad\text{for every }0\leq\ell\leq T.$
+
+Then, for every bounded Borel function $\varphi(Z,\bm{U})$ ,
+
+$\mathbb{E}\!\left[\varphi(Z,\bm{U})\mid\mathscr{H}_{J}\right]=\sum_{\ell=0}^{T}\bm{1}_{\{J=\ell\}}\int\varphi\bigl(Z,(\bm{U}_{\leq\ell},\bm{V})\bigr)\,\mathsf{K}_{\ell}(\bm{U}_{\leq\ell},d\bm{V})\quad\text{a.s.}$
+
+Consequently, on $\{J=\ell<T\}$ , each column $\bm{u}_{j}$ with $j>\ell$ has, conditionally on $\mathscr{H}_{J}$ , the uniform spherical marginal in $\operatorname{span}(\bm{U}_{\leq\ell})^{\perp}$ .
+
+The next lemma states the random-rotation argument for a probability- $p$ zero-chain. Given the first $\ell$ frame directions, a response with $\xi_{t}=0$ depends on no additional direction, whereas a response with $\xi_{t}=1$ may depend on direction $\ell+1$ . In sufficiently high dimension, spherical concentration then bounds the coordinate progress of the vector associated with an adaptive query by $\ell$ with high probability. Its proof is given in Appendix C.2 .
+
+There is a numerical constant $C_{\rm H}>0$ with the following property. Fix $\eta>0$ and $R>\eta$ . Let $T\geq 1$ , $d\geq T$ , and let $\bm{U}=(\bm{u}_{1},\ldots,\bm{u}_{T})$ be Haar-uniform on $\operatorname{St}(d,T)$ . Consider an arbitrary randomized adaptive procedure with random seed $\omega_{\rm alg}$ that makes $N$ calls. Let $\mathcal{T}_{t-1}\in\mathsf{T}_{t-1}$ denote its actual transcript before call $t$ , and define its pre-query information by
+
+$\mathscr{F}_{t-1}=\sigma\bigl(\omega_{\rm alg},\mathcal{T}_{t-1}\bigr).$
+
+Let $\mathsf{D}$ be a standard Borel space containing the public query data used by the oracle. Before call $t$ , the procedure chooses a query descriptor $\bm{a}_{t}\in\mathsf{D}$ and an associated vector $\bm{r}_{t}\in\mathbb{R}^{d}$ , both measurable with respect to $\mathscr{F}_{t-1}$ , such that
+
+$\left\lVert\bm{r}_{t}\right\rVert\leq\frac{R}{\eta}.$ (74)
+
+Let $p\in(0,1]$ , and let $\xi_{1},\ldots,\xi_{N}$ be i.i.d. $\operatorname{Ber}(p)$ variables such that $\bm{U}$ , $\omega_{\rm alg}$ , and $(\xi_{1},\ldots,\xi_{N})$ are mutually independent. At call $t$ , the oracle uses $\xi_{t}$ . In particular, $\xi_{t}$ is independent of the actual pre-query sigma-field $\mathscr{F}_{t-1}$ . Let $\bm{Y}_{t}$ denote the oracle response, taking values in a standard Borel response space $\mathsf{Y}$ . We impose the following response-dependence condition. For every $t\in\{1,\ldots,N\}$ , integer $\ell\in\{0,\ldots,T\}$ , and bit $b\in\{0,1\}$ , there is a Borel map
+
+$M_{t,\ell}^{(b)}:\mathsf{T}_{t-1}\times\mathsf{D}\times\mathbb{R}^{d}\times\operatorname{St}(d,\ell_{b})\longrightarrow\mathsf{Y},\qquad\ell_{b}=\min\{T,\ell+b\},$ (75)
+
+where $\mathsf{T}_{t-1}$ is the transcript space before call $t$ , such that, on the event
+
+$\left\{\xi_{t}=b,\quad\operatorname{prog}_{1/4}(\bm{U}^{\top}\bm{r}_{t})\leq\ell\right\},$ (76)
+
+the actual response satisfies
+
+$\bm{Y}_{t}=M_{t,\ell}^{(b)}\bigl(\mathcal{T}_{t-1},\bm{a}_{t},\bm{r}_{t},\bm{u}_{1},\ldots,\bm{u}_{\ell_{b}}\bigr).$ (77)
+
+Thus a failed call has a representation using only the first $\ell$ columns, while a successful call has a representation using only the first $\min\{T,\ell+1\}$ columns. The requirement is the existence of the uniform Borel maps in ( 75 ); a pointwise statement that happens to mention no later column is not sufficient. After the $N$ calls, append an additional vector $\bm{r}_{N+1}$ determined by the procedure’s output and satisfying $\left\lVert\bm{r}_{N+1}\right\rVert\leq\frac{R}{\eta}$ , but return no oracle response to this vector. Put $n=N+1$ . If $\delta\in(0,1)$ and
+
+$d\geq T+C_{\rm H}(\frac{R}{\eta})^{2}n\log\left(\frac{2n^{2}T}{\delta}\right),$ (78)
+
+then, with probability at least $1-\delta$ , simultaneously,
+
+$\displaystyle\operatorname{prog}_{1/4}(\bm{U}^{\top}\bm{r}_{t})\leq L_{t-1},\quad 1\leq t\leq N,$ (79) $\displaystyle\operatorname{prog}_{1/4}(\bm{U}^{\top}\bm{r}_{N+1})\leq L_{N}.$ (80)
+
+The probability is joint over $\bm{U}$ , the procedure’s private randomness, and the fresh Bernoulli variables.
+
+The proof uses the adaptive random-rotation argument of Arjevani et al. (2023, Appendix B.1.2, especially Lemmas 13–14) . Lemma 14 gives the required conditional rotational invariance, and the proof of Lemma 13 combines it with spherical concentration. Lemma 4.10 extends the conditional law from a fixed number of initial columns to the random number used here. It remains to verify the required dependence of the complete bilevel oracle response on the initial frame columns.
+
+For the present hard instance, the objects in Lemma 4.11 are defined as follows. At call $t$ , the public query descriptor is
+
+$\bm{a}_{t}=(\bm{x}_{t},\bm{z}_{t},\bm{v}_{t})\in\mathsf{D}\coloneqq\mathbb{R}^{d}\times\mathbb{R}^{d}\times\mathbb{R}^{2},$
+
+and the associated vector is
+
+$\bm{r}_{t}=\frac{\rho_{R}(\bm{z}_{t})}{\eta}.$
+
+The complete oracle response is
+
+$\bm{Y}_{t}=\left(\nabla\widehat{f}_{\bm{U}}^{\kappa}(\bm{x}_{t},\bm{z}_{t},\bm{v}_{t}),\nabla\widehat{g}_{\bm{U}}^{\kappa}(\bm{x}_{t},\bm{z}_{t},\bm{v}_{t};\xi_{t})\right)\in\mathsf{Y}\coloneqq\mathbb{R}^{2d+2}\times\mathbb{R}^{2d+2},$
+
+where $\widehat{f}_{\bm{U}}^{\kappa}=f_{\bm{U}}^{\kappa}$ . The original transcript $\mathcal{T}_{t-1}$ consists only of the query-response pairs observed before call $t$ . The algorithm’s complete pre-query information is
+
+$\mathscr{F}_{t-1}=\sigma\bigl(\omega_{\rm alg},\mathcal{T}_{t-1}\bigr),$
+
+as in ( 3.3 ). Since $R=230\eta\sqrt{T}$ , and $\|\rho_{R}(\bm{z}_{t})\|\leq R$ , the associated vector satisfies
+
+$\|\bm{r}_{t}\|=\frac{\|\rho_{R}(\bm{z}_{t})\|}{\eta}\leq\frac{R}{\eta}=230\sqrt{T},$
+
+so the norm condition in Lemma 4.11 is satisfied. Moreover,
+
+$\operatorname{prog}_{1/4}(\bm{U}^{\top}\bm{r}_{t})=\operatorname{prog}_{\eta/4}\bigl(\bm{U}^{\top}\rho_{R}(\bm{z}_{t})\bigr).$
+
+At call $t$ , the number of initial frame columns is $\ell=L_{t-1}$ , and the bit $b$ is the realized Bernoulli sample $\xi_{t}$ . Lemma 4.12 below constructs the maps $M_{t,\ell}^{(0)}$ and $M_{t,\ell}^{(1)}$ : the map for $\xi_{t}=0$ uses only $\bm{u}_{1},\ldots,\bm{u}_{\ell}$ , whereas the map for $\xi_{t}=1$ uses only $\bm{u}_{1},\ldots,\bm{u}_{\min\{T,\ell+1\}}$ .
+
+Finally, if $\widehat{\bm{x}}_{N}^{\mathsf{A}}$ is the algorithm’s output, the additional output vector is
+
+$\bm{r}_{N+1}=\frac{\rho_{R}(\kappa\widehat{\bm{x}}_{N}^{\mathsf{A}})}{\eta}.$
+
+The factor $\kappa\widehat{\bm{x}}_{N}^{\mathsf{A}}$ appears because the lower-level solution satisfies $\bm{z}^{*}(\widehat{\bm{x}}_{N}^{\mathsf{A}})=\kappa\widehat{\bm{x}}_{N}^{\mathsf{A}}$ , and the hyper-objective evaluates the chain at this lower solution.
+
+4.5.2 Probability– $p$ Zero-chain Property
+
+In the following lemma, we verify that the complete joint oracle response satisfies the response-dependence condition of Lemma 4.11 , including at the threshold points of the soft indicators. Its proof is given in Appendix C.3 .
+
+Fix a query $(\bm{x},\bm{z},\bm{v})$ , and write
+
+$\bm{q}=\bm{q}_{\bm{U}}(\bm{z})=\bm{U}^{\top}\rho_{R}(\bm{z}).$ (81)
+
+For every fixed $\ell\in\{0,\ldots,T\}$ , there are Borel maps $M_{\ell}^{(0)}$ and $M_{\ell}^{(1)}$ , depending only on the public query and respectively on
+
+$\bm{u}_{1},\ldots,\bm{u}_{\ell}\quad\text{and}\quad\bm{u}_{1},\ldots,\bm{u}_{\min\{T,\ell+1\}},$
+
+such that, whenever
+
+$\operatorname{prog}_{\eta/4}(\bm{q})\leq\ell,$ (82)
+
+the joint upper-lower oracle response with sample bit $\xi=b$ is exactly $M_{\ell}^{(b)}$ . In particular, these maps do not take the random progress index $\operatorname{prog}_{\eta/4}(\bm{q})$ as an argument. They verify the response-dependence condition ( 75 )–( 77 ).
+
+4.5.3 Lower Bound on Oracle Calls
+
+Combining Lemmas 4.11 and Lemma 4.12 with the Bernoulli success-count estimate ( 70 ) gives the following progress estimate. Its proof is given in Appendix C.4 .
+
+Fix $\mathsf{A}\in\mathcal{A}_{N}^{\mathcal{SFO}}(d,d+2)$ , and let $\widehat{\bm{x}}_{N}^{\mathsf{A}}$ be its output after $N$ calls to the oracle ( 38 ). Set $S_{N}=\sum_{t=1}^{N}\xi_{t}$ . If
+
+$N\leq\frac{T}{8p}$ (83)
+
+and
+
+$d\geq T+C_{\rm H}(230^{2}T)(N+1)\log(16(N+1)^{2}T),$ (84)
+
+then, jointly over $\bm{U}$ , the algorithm’s private randomness, and the fresh oracle samples,
+
+$\mathbb{P}\left(\operatorname{prog}_{\eta/4}\!\left(\bm{U}^{\top}\rho_{R}(\kappa\widehat{\bm{x}}_{N}^{\mathsf{A}})\right)<T\right)\geq\frac{3}{4}.$ (85)
+
+The dimension condition ( 84 ) ensures, through spherical concentration, that an adaptive query has a small projection onto each remaining frame column with high probability. It does not add a factor to the oracle lower bound. After the call budget $N$ is fixed, the proof chooses a sufficiently large finite dimension $d$ . The conclusion then holds for every $\mathsf{A}\in\mathcal{A}_{N}^{\mathcal{SFO}}(d,d+2)$ , although the final deterministic frame and hence the hard instance may depend on $\mathsf{A}$ . The oracle complexity is determined by $T/p$ ; the dimension condition is used only in the random-rotation argument.
+
+Proposition 4.13 implies that, for $N\leq T/(8p)$ , the rotated chain coordinates at the output have progress below $T$ with probability at least $3/4$ . Lemma 4.9 then gives a hypergradient above the target accuracy on this event. Appendix E combines these estimates and proves Theorem 4.1 .
+
+5 Conclusion and Future Work
+
+We established the stochastic first-order lower bound
+
+$\Omega\!\left(\frac{\Delta\kappa_{y}^{2}}{\epsilon^{2}}\max\left\{1,\frac{\sigma^{2}\kappa_{y}^{6}}{\epsilon^{4}}\right\}\right)$
+
+for smooth NC-SC bilevel optimization over arbitrary adaptive randomized first-order algorithms. In the noise-dominated regime, this becomes $\Omega(\Delta\sigma^{2}\kappa_{y}^{8}\epsilon^{-6})$ , showing that the $\epsilon^{-6}$ dependence of the best-known first-order upper bounds ( Chen et al., 2025b ; Gu et al., 2026 ) is information-theoretically unavoidable under the bounded-variance $\mathcal{SFO}$ model. The optimal dependence on the condition number remains open, however, in view of the upper bound $\tilde{\mathcal{O}}\!\left(\bar{\kappa}_{y}^{11}\epsilon^{-6}\right)$ of Chen et al. (2025b) . Another interesting direction is to establish lower bounds in a fixed ambient dimension, rather than allowing the dimension to grow with the target accuracy.
+
+AI Disclosure
+
+The hard-instance construction and its presentation were refined through iterative collaboration with OpenAI’s GPT-5.6 Sol. The authors supplied the model with an independently developed proof draft targeting an $\epsilon^{-6}$ lower bound, motivated by their unpublished upper-bound result showing that $\epsilon^{-4}$ complexity bound is attainable when the lower-level objective is quadratic or satisfies an averaged stochastic smoothness condition, but not necessarily for the general problem class. The authors independently checked all mathematical arguments and take full responsibility for the content of the paper. An accompanying Lean formalization, developed with assistance from Codex and available at https://github.com/Wu-Qilong/Lower-Bounds-for-Nonconvex-Strongly-Convex-Bilevel-Optimization , provides machine-checked verification of the lower-bound argument.
+
+References
+
+Appendix A Proof of Lemma 4.3
+
+We divide the proof into four steps.
+
+Step 1: the soft indicators are smooth and have dimension-free derivative bounds. The absolute value in $\upsilon(t)=\Gamma(\left\lvert t\right\rvert)$ causes no nonsmoothness at zero because $\Gamma$ is identically zero on a neighborhood of zero. Hence $\upsilon\in C^{\infty}(\mathbb{R})$ . Define
+
+$K_{\upsilon}=\max_{0\leq r\leq 3}\left\lVert\upsilon^{(r)}\right\rVert_{\infty}.$ (86)
+
+This is a finite numerical constant. For $1\leq r\leq 3$ , directions $\bm{u}_{1},\ldots,\bm{u}_{r}$ , and a coordinate $j\geq i$ ,
+
+$\bigl[D^{r}V_{i}^{\eta}(\bm{z})[\bm{u}_{1},\ldots,\bm{u}_{r}]\bigr]_{j}=\eta^{-r}\upsilon^{(r)}(z_{j}/\eta)\prod_{\ell=1}^{r}(\bm{u}_{\ell})_{j}.$
+
+Consequently,
+
+$\displaystyle\left\lVert D^{r}V_{i}^{\eta}(\bm{z})[\bm{u}_{1},\ldots,\bm{u}_{r}]\right\rVert^{2}$ $\displaystyle\leq K_{\upsilon}^{2}\eta^{-2r}\sum_{j=i}^{T}\prod_{\ell=1}^{r}\left\lvert(\bm{u}_{\ell})_{j}\right\rvert^{2}$ $\displaystyle\leq K_{\upsilon}^{2}\eta^{-2r}\prod_{\ell=1}^{r}\sum_{j=i}^{T}\left\lvert(\bm{u}_{\ell})_{j}\right\rvert^{2}$ $\displaystyle\leq K_{\upsilon}^{2}\eta^{-2r}\prod_{\ell=1}^{r}\left\lVert\bm{u}_{\ell}\right\rVert^{2}.$ (87)
+
+For each Euclidean dimension $n$ , define $\chi_{n}(\bm{\nu})=\Gamma(1-\left\lVert\bm{\nu}\right\rVert)$ on $\mathbb{R}^{n}$ . If $\left\lVert\bm{\nu}\right\rVert\leq 1/2$ , then $1-\left\lVert\bm{\nu}\right\rVert\geq 1/2$ and $\chi_{n}(\bm{\nu})=1$ . If $\left\lVert\bm{\nu}\right\rVert\geq 3/4$ , then $1-\left\lVert\bm{\nu}\right\rVert\leq 1/4$ and $\chi_{n}(\bm{\nu})=0$ . On the fixed annulus $1/2<\left\lVert\bm{\nu}\right\rVert<3/4$ , the norm is smooth and its first three derivatives have dimension-free operator bounds. Near the origin, where the norm itself is not differentiable, $\chi_{n}$ is constant. Thus every $\chi_{n}$ is globally $C^{\infty}$ . For completeness, on this annulus put $q=\left\lVert\bm{\nu}\right\rVert$ and $\bm{e}=\bm{\nu}/q$ . Then
+
+$Dq[\bm{h}]=\left\langle\bm{e},\bm{h}\right\rangle,\qquad D^{2}q=\frac{\bm{I}-\bm{e}\bm{e}^{\top}}{q}.$
+
+Hence $\left\lVert Dq\right\rVert\leq 1$ and $\left\lVert D^{2}q\right\rVert_{\mathrm{op}}\leq 2$ . Moreover $D\bm{e}[\bm{h}]=(\bm{I}-\bm{e}\bm{e}^{\top})\bm{h}/q$ , so $\left\lVert D\bm{e}\right\rVert_{\mathrm{op}}\leq 2$ ; differentiating $D^{2}q=(\bm{I}-\bm{e}\bm{e}^{\top})/q$ once more gives $\left\lVert D^{3}q\right\rVert_{\mathrm{op}}\leq 12$ . Applying the chain rule to the fixed one-dimensional function $t\mapsto\Gamma(1-t)$ now proves that the first three derivatives of $\chi_{n}$ are bounded independently of the dimension. Therefore the following constant is finite:
+
+$K_{\chi}=\max\left\{1,\max_{1\leq r\leq 3}\sup_{n\geq 1}\sup_{\bm{\nu}\in\mathbb{R}^{n}}\left\lVert D^{r}\chi_{n}(\bm{\nu})\right\rVert_{\mathrm{op}}\right\}.$ (88)
+
+Define
+
+$C_{\rm gate}=K_{\chi}(1+K_{\upsilon})^{3}.$ (89)
+
+To see explicitly why this one constant covers all derivative orders, write $h_{i}^{\eta}=\chi_{T-i+1}\circ\bm{V}_{i}^{\eta}$ . For unit directions, the chain rule gives
+
+$\displaystyle Dh_{i}^{\eta}$ $\displaystyle=D\chi[DV_{i}^{\eta}],$ $\displaystyle D^{2}h_{i}^{\eta}$ $\displaystyle=D^{2}\chi[DV_{i}^{\eta},DV_{i}^{\eta}]+D\chi[D^{2}\bm{V}_{i}^{\eta}],$ $\displaystyle D^{3}h_{i}^{\eta}$ $\displaystyle=D^{3}\chi[DV_{i}^{\eta},DV_{i}^{\eta},DV_{i}^{\eta}]+3D^{2}\chi[D^{2}\bm{V}_{i}^{\eta},DV_{i}^{\eta}]+D\chi[D^{3}\bm{V}_{i}^{\eta}].$
+
+Equation ( 87 ) implies $\left\lVert D^{r}V_{i}^{\eta}\right\rVert_{\mathrm{op}}\leq K_{\upsilon}\eta^{-r}$ . Consequently the respective coefficients are bounded by $K_{\chi}K_{\upsilon}$ , $K_{\chi}(K_{\upsilon}^{2}+K_{\upsilon})$ , and $K_{\chi}(K_{\upsilon}^{3}+3K_{\upsilon}^{2}+K_{\upsilon})$ , each of which is at most $C_{\rm gate}$ . Together with $0\leq h_{i}^{\eta}\leq 1$ , this gives
+
+$\left\lVert D^{r}h_{i}^{\eta}(\bm{z})\right\rVert_{\mathrm{op}}\leq C_{\rm gate}\eta^{-r},\qquad 0\leq r\leq 3.$ (90)
+
+Step 2: at most one summand has a nonzero value or a nonzero derivative of order at most three. Assume first that $m<T$ . If $i\leq m$ , the vector $\bm{V}_{i}^{\eta}(\bm{z})$ contains its $m$ –th coordinate. Because $\left\lvert z_{m}\right\rvert>\eta/2$ , this coordinate equals one. Hence $\left\lVert\bm{V}_{i}^{\eta}(\bm{z})\right\rVert\geq 1$ and $h_{i}^{\eta}$ is identically zero in a neighborhood of $\bm{z}$ . Therefore the value and all derivatives of $h_{i}^{\eta}\mathcal{L}_{i}^{\eta}$ vanish at $\bm{z}$ .
+
+If $i\geq m+2$ , then $i-1\geq m+1$ . The definition of $m$ implies $\left\lvert z_{i-1}\right\rvert\leq\eta/2$ . The flatness statement in Lemma 4.2 then shows that the value and all derivatives of $\mathcal{L}_{i}^{\eta}$ vanish at $\bm{z}$ , so the same is true of the product. The only index not covered by these two cases is $i=m+1$ . If $m=T$ , the first case applies to every $i\leq T$ and all summands have values and derivatives that vanish at $\bm{z}$ .
+
+Step 3: derivative bounds for $b_{\eta,T}$ . The derivatives of the fixed two-variable function $Q$ through order three are bounded. Define
+
+$C_{\rm link}=\max_{0\leq r\leq 3}\left\{2^{r/2}\sup_{(a,b)\in\mathbb{R}^{2}}\left\lVert D^{r}Q(a,b)\right\rVert_{\mathrm{op}}\right\},\qquad C_{\rm ext}=8C_{\rm gate}C_{\rm link}.$ (91)
+
+The linear map $\bm{z}\mapsto(z_{i-1}/\eta,z_{i}/\eta)$ has operator norm at most $\sqrt{2}/\eta$ ; hence
+
+$\left\lVert D^{r}\mathcal{L}_{i}^{\eta}(\bm{z})\right\rVert_{\mathrm{op}}\leq C_{\rm link}\eta^{-r},\qquad 0\leq r\leq 3.$ (92)
+
+At the fixed point $\bm{z}$ , Step 2 leaves at most one nonzero summand. If $m=T$ , the value and derivatives through order three of every summand vanish at $\bm{z}$ , and the desired bound is immediate. Hence it remains only to consider $m<T$ . Thus the product rule and ( 90 ) yield
+
+$\displaystyle\left\lVert D^{r}b_{\eta,T}(\bm{z})\right\rVert_{\mathrm{op}}$ $\displaystyle\leq\eta^{2}\sum_{s=0}^{r}\binom{r}{s}\left\lVert D^{s}h_{m+1}^{\eta}(\bm{z})\right\rVert_{\mathrm{op}}\left\lVert D^{r-s}\mathcal{L}_{m+1}^{\eta}(\bm{z})\right\rVert_{\mathrm{op}}$ $\displaystyle\leq C_{\rm gate}C_{\rm link}\eta^{2-r}\sum_{s=0}^{r}\binom{r}{s}$ $\displaystyle=2^{r}C_{\rm gate}C_{\rm link}\eta^{2-r}$ $\displaystyle\leq C_{\rm ext}\eta^{2-r},$
+
+where $2^{r}\leq 8$ for $r\leq 3$ .
+
+Step 4: exact derivative-truncation identities. Recall that $m=\operatorname{prog}_{\eta/2}(\bm{z})$ and $k=\operatorname{prog}_{\eta/4}(\bm{z})$ . Since $\eta/2>\eta/4$ , we necessarily have $m\leq k$ .
+
+We first assume that $k<T$ . By the definition of $k$ , every coordinate $j>k$ satisfies $|z_{j}|\leq\eta/4$ , and therefore
+
+$\upsilon(z_{j}/\eta)=0,\qquad j>k.$
+
+The derivatives of $\upsilon(z_{j}/\eta)$ through order three also vanish. This remains true when $|z_{j}|=\eta/4$ , because $\Gamma$ is flat at $1/4$ .
+
+Suppose first that $m=k<T$ . If $k\geq 1$ , then $|z_{k}|>\eta/2$ , so $\upsilon(z_{k}/\eta)=1$ . Hence coordinate $k$ makes every soft indicator $h_{i}^{\eta}$ with $i\leq k$ identically zero in a neighborhood of $\bm{z}$ . When $k=0$ , there are no such soft indicators. Moreover, the value and all derivatives of every summand with $i\geq k+2$ vanish, since
+
+$|z_{i-1}|\leq\frac{\eta}{4}\leq\frac{\eta}{2}.$
+
+Finally, $\bm{V}_{k+1}^{\eta}(\bm{z})=0$ , so $h_{k+1}^{\eta}(\bm{z})=\Gamma(1)=1$ . It follows that, at $\bm{z}$ and throughout the set obtained by fixing the first $k$ coordinates and varying the coordinates $j>k$ subject to $|z_{j}|\leq\eta/4$ ,
+
+$b_{\eta,T}(\bm{z})=\eta^{2}\mathcal{L}_{k+1}^{\eta}(\bm{z}),\qquad A_{\eta,T}(\bm{z})=\eta^{2}\sum_{i=1}^{k}\mathcal{L}_{i}^{\eta}(\bm{z}).$ (93)
+
+The sum is interpreted as zero when $k=0$ . The first expression in ( 93 ) depends only on coordinates through $k+1$ , whereas the second depends only on coordinates through $k$ .
+
+Now suppose that $m<k$ . The value and all derivatives of every summand with $i\geq m+2$ vanish because $|z_{i-1}|\leq\eta/2$ . Hence
+
+$H_{\eta,T}(\bm{z})=\eta^{2}\sum_{i=1}^{m+1}\mathcal{L}_{i}^{\eta}(\bm{z}),\qquad b_{\eta,T}(\bm{z})=\eta^{2}h_{m+1}^{\eta}(\bm{z})\mathcal{L}_{m+1}^{\eta}(\bm{z}).$ (94)
+
+Since $m+1\leq k$ , the first expression in ( 94 ) depends only on the first $k$ coordinates. In the second expression, for every $j>k$ , $\upsilon(z_{j}/\eta)$ and its derivatives through order three vanish. Thus the soft indicator $h_{m+1}^{\eta}$ , and hence the full product $h_{m+1}^{\eta}\mathcal{L}_{m+1}^{\eta}$ , depends only on the first $k$ coordinates. This is stronger than the claimed dependence through $k+1$ . Since $A_{\eta,T}=H_{\eta,T}-b_{\eta,T}$ , the function $A_{\eta,T}$ also depends only on the first $k$ coordinates.
+
+We next verify the coordinate-truncation conclusion explicitly. Define
+
+$\bm{z}_{A}(t)=\bm{P}_{k}\bm{z}+t(\bm{I}-\bm{P}_{k})\bm{z},\qquad\bm{z}_{b}(t)=\bm{P}_{k+1}\bm{z}+t(\bm{I}-\bm{P}_{k+1})\bm{z},\qquad t\in[0,1].$
+
+These paths satisfy
+
+$\bm{z}_{A}(\bm{0})=\bm{P}_{k}\bm{z},\qquad\bm{z}_{A}(\bm{1})=\bm{z},\qquad\bm{z}_{b}(\bm{0})=\bm{P}_{k+1}\bm{z},\qquad\bm{z}_{b}(\bm{1})=\bm{z}.$
+
+For every $t\in[0,1]$ and $j>k$ ,
+
+$|[\bm{z}_{A}(t)]_{j}|=t|z_{j}|\leq\frac{\eta}{4}.$
+
+Similarly, for every $j>k+1$ ,
+
+$|[\bm{z}_{b}(t)]_{j}|=t|z_{j}|\leq\frac{\eta}{4}.$
+
+The first $k$ coordinates remain unchanged along both paths. Moreover, $|z_{k+1}|\leq\eta/4$ . Consequently, for every $t\in[0,1]$ ,
+
+$\operatorname{prog}_{\eta/4}(\bm{z}_{A}(t))=\operatorname{prog}_{\eta/4}(\bm{z}_{b}(t))=k,$
+
+and
+
+$\operatorname{prog}_{\eta/2}(\bm{z}_{A}(t))=\operatorname{prog}_{\eta/2}(\bm{z}_{b}(t))=m.$
+
+Therefore the same case, either $m=k$ or $m<k$ , and the same explicit formulas ( 93 )–( 94 ) remain valid along the corresponding paths.
+
+Since the explicit formulas above contain no coordinates after $k$ for $A_{\eta,T}$ and none after $k+1$ for $b_{\eta,T}$ throughout the corresponding regions where the varied coordinates remain in $[-\eta/4,\eta/4]$ , we obtain
+
+$A_{\eta,T}(\bm{z})=A_{\eta,T}(\bm{P}_{k}\bm{z}),\qquad b_{\eta,T}(\bm{z})=b_{\eta,T}(\bm{P}_{k+1}\bm{z}).$ (95)
+
+More generally, for every $1\leq r\leq 3$ , the order- $r$ derivatives satisfy
+
+$D^{r}A_{\eta,T}(\bm{z})=D^{r}A_{\eta,T}(\bm{P}_{k}\bm{z})\circ(\bm{P}_{k},\ldots,\bm{P}_{k}),$ (96)
+
+and
+
+$D^{r}b_{\eta,T}(\bm{z})=D^{r}b_{\eta,T}(\bm{P}_{k+1}\bm{z})\circ(\bm{P}_{k+1},\ldots,\bm{P}_{k+1}).$ (97)
+
+If $k=T$ , the identities ( 95 )–( 97 ) are automatic from the convention $\bm{P}_{s}=\bm{I}$ for $s\geq T$ .
+
+It remains to check the two threshold boundaries. At $|z_{j}|=\eta/4$ , every derivative entering from the transition side vanishes because $\Gamma$ is flat at $1/4$ . At $|z_{j}|=\eta/2$ , the function $\upsilon(z_{j}/\eta)$ is flat at one, while the value and all derivatives of the next summand vanish by Lemma 4.2 . Hence the value and derivative identities ( 95 )–( 97 ) remain valid when a coordinate lies exactly at either threshold. This proves all the stated identities. ∎
+
+Appendix B Proofs for Section 4.3
+
+B.1 Proof of Lemma 4.4
+
+Write
+
+$s(\bm{z})=\sqrt{1+\left\lVert\bm{z}\right\rVert^{2}/R^{2}},\qquad\alpha(\bm{z})=s(\bm{z})^{-1},\qquad\bm{r}=\rho_{R}(\bm{z})=\bm{z}/s(\bm{z}).$
+
+Direct differentiation gives
+
+$D\rho_{R}(\bm{z})=\alpha\bm{I}-\frac{\alpha^{3}}{R^{2}}\bm{z}\bm{z}^{\top}=\frac{\bm{I}}{s(\bm{z})}-\frac{\bm{r}\bm{r}^{\top}}{R^{2}s(\bm{z})}.$ (98)
+
+The two distinct eigenvalues of this symmetric matrix are in $[0,1]$ , so $\left\lVert D\rho_{R}(\bm{z})\right\rVert_{\mathrm{op}}\leq 1$ . Indeed, if $\bm{z}=0$ , then $\alpha(\bm{0})=1$ , and
+
+$D\rho_{R}(\bm{0})=\bm{I}.$
+
+Consequently,
+
+$\|D\rho_{R}(\bm{0})\|_{\mathrm{op}}=\|\bm{I}\|_{\mathrm{op}}=1.$
+
+Suppose now that $\bm{z}\neq 0$ , and define the unit vector $\bm{e}=\frac{\bm{z}}{\|\bm{z}\|}$ . Every vector $\bm{h}\in\mathbb{R}^{d}$ has the orthogonal decomposition
+
+$\bm{h}=\bm{h}_{\parallel}+\bm{h}_{\perp},\qquad\bm{h}_{\parallel}=\langle\bm{e},\bm{h}\rangle\bm{e},\qquad\bm{h}_{\perp}=\bm{h}-\langle\bm{e},\bm{h}\rangle\bm{e},$
+
+where
+
+$\bm{h}_{\parallel}\in\operatorname{span}\{\bm{z}\},\qquad\langle\bm{z},\bm{h}_{\perp}\rangle=0.$
+
+We first examine the action of $D\rho_{R}(\bm{z})$ on the orthogonal subspace $\bm{z}^{\perp}$ . Since $\langle\bm{z},\bm{h}_{\perp}\rangle=0$ ,
+
+$\displaystyle D\rho_{R}(\bm{z})\bm{h}_{\perp}=\alpha(\bm{z})\bm{h}_{\perp}-\frac{\alpha(\bm{z})^{3}}{R^{2}}\bm{z}\bm{z}^{\top}\bm{h}_{\perp}=\alpha(\bm{z})\bm{h}_{\perp}.$ (99)
+
+Thus every vector orthogonal to $\bm{z}$ is an eigenvector with eigenvalue $\alpha(\bm{z})$ .
+
+Next, consider the radial direction $\bm{e}$ . Because $\bm{z}=\|\bm{z}\|\bm{e}$ , we have
+
+$\bm{z}\bm{z}^{\top}\bm{e}=\bm{z}\langle\bm{z},\bm{e}\rangle=\|\bm{z}\|^{2}\bm{e}.$
+
+Therefore,
+
+$\displaystyle D\rho_{R}(\bm{z})\bm{e}=\left(\alpha(\bm{z})-\frac{\alpha(\bm{z})^{3}\|\bm{z}\|^{2}}{R^{2}}\right)\bm{e}=\alpha(\bm{z})\left(1-\frac{\alpha(\bm{z})^{2}\|\bm{z}\|^{2}}{R^{2}}\right)\bm{e}.$ (100)
+
+By the definition of $\alpha(\bm{z})$ ,
+
+$\displaystyle 1-\frac{\alpha(\bm{z})^{2}\|\bm{z}\|^{2}}{R^{2}}$ $\displaystyle=1-\frac{\|\bm{z}\|^{2}/R^{2}}{1+\|\bm{z}\|^{2}/R^{2}}$ $\displaystyle=\frac{1}{1+\|\bm{z}\|^{2}/R^{2}}$ $\displaystyle=\alpha(\bm{z})^{2}.$ (101)
+
+Substituting this identity into ( 100 ) yields
+
+$D\rho_{R}(\bm{z})\bm{e}=\alpha(\bm{z})^{3}\bm{e}.$ (102)
+
+Hence the eigenvalue in the radial direction is $\alpha(\bm{z})^{3}$ , whereas the eigenvalue in every tangential direction is $\alpha(\bm{z})$ .
+
+Since $D\rho_{R}(\bm{z})$ is symmetric, its operator norm is the largest absolute value of its eigenvalues. Moreover,
+
+$0<\alpha(\bm{z})=\frac{1}{\sqrt{1+\|\bm{z}\|^{2}/R^{2}}}\leq 1.$
+
+Consequently,
+
+$0<\alpha(\bm{z})^{3}\leq\alpha(\bm{z})\leq 1,$
+
+and therefore
+
+$\|D\rho_{R}(\bm{z})\|_{\mathrm{op}}=\max\{\alpha(\bm{z}),\alpha(\bm{z})^{3}\}=\alpha(\bm{z})\leq 1.$ (103)
+
+We now verify the two higher-order bounds explicitly. For directions $\bm{h},\bm{k},\bm{\ell}$ ,
+
+$\displaystyle D\alpha[\bm{h}]=-\frac{\alpha^{3}}{R^{2}}\left\langle\bm{z},\bm{h}\right\rangle,$ $\displaystyle D^{2}\alpha[\bm{h},\bm{k}]=\frac{3\alpha^{5}}{R^{4}}\left\langle\bm{z},\bm{h}\right\rangle\left\langle\bm{z},\bm{k}\right\rangle-\frac{\alpha^{3}}{R^{2}}\left\langle\bm{h},\bm{k}\right\rangle,$ $\displaystyle D^{3}\alpha[\bm{h},\bm{k},\bm{\ell}]=-\frac{15\alpha^{7}}{R^{6}}\left\langle\bm{z},\bm{h}\right\rangle\left\langle\bm{z},\bm{k}\right\rangle\left\langle\bm{z},\bm{\ell}\right\rangle$ $\displaystyle\hskip 71.13188pt+\frac{3\alpha^{5}}{R^{4}}\Bigl(\left\langle\bm{h},\bm{k}\right\rangle\left\langle\bm{z},\bm{\ell}\right\rangle+\left\langle\bm{h},\bm{\ell}\right\rangle\left\langle\bm{z},\bm{k}\right\rangle+\left\langle\bm{k},\bm{\ell}\right\rangle\left\langle\bm{z},\bm{h}\right\rangle\Bigr).$
+
+Here and below $\alpha=\alpha(\bm{z})$ . Since $\alpha\leq 1$ and $\alpha\left\lVert\bm{z}\right\rVert\leq R$ , unit directions satisfy
+
+$\left\lvert D\alpha[\bm{h}]\right\rvert\leq\frac{1}{R},\qquad\left\lvert D^{2}\alpha[\bm{h},\bm{k}]\right\rvert\leq\frac{4}{R^{2}}.$ (104)
+
+Because $\rho_{R}(\bm{z})=\alpha(\bm{z})\bm{z}$ ,
+
+$D^{2}\rho_{R}[\bm{h},\bm{k}]=D\alpha[\bm{h}]\bm{k}+D\alpha[\bm{k}]\bm{h}+D^{2}\alpha[\bm{h},\bm{k}]\bm{z}.$ (105)
+
+The last term must be bounded before discarding its radial factors:
+
+$\displaystyle\left\lvert D^{2}\alpha[\bm{h},\bm{k}]\right\rvert\left\lVert\bm{z}\right\rVert$ $\displaystyle\leq\frac{3\alpha^{5}\left\lVert\bm{z}\right\rVert^{3}}{R^{4}}+\frac{\alpha^{3}\left\lVert\bm{z}\right\rVert}{R^{2}}$ $\displaystyle=\frac{3\alpha^{2}(\alpha\left\lVert\bm{z}\right\rVert)^{3}}{R^{4}}+\frac{\alpha^{2}(\alpha\left\lVert\bm{z}\right\rVert)}{R^{2}}$ $\displaystyle\leq\frac{4}{R}.$
+
+Combining this with ( 104 ) in ( 105 ) gives $\left\lVert D^{2}\rho_{R}\right\rVert_{\mathrm{op}}\leq\frac{6}{R}$ .
+
+Similarly,
+
+$D^{3}\rho_{R}[\bm{h},\bm{k},\bm{\ell}]=D^{2}\alpha[\bm{h},\bm{k}]\bm{\ell}+D^{2}\alpha[\bm{h},\bm{\ell}]\bm{k}+D^{2}\alpha[\bm{k},\bm{\ell}]\bm{h}+D^{3}\alpha[\bm{h},\bm{k},\bm{\ell}]\bm{z}.$ (106)
+
+The first three terms contribute at most $\frac{12}{R^{2}}$ . For the last term, the displayed formula for $D^{3}\alpha$ yields
+
+$\displaystyle\left\lvert D^{3}\alpha[\bm{h},\bm{k},\bm{\ell}]\right\rvert\left\lVert\bm{z}\right\rVert$ $\displaystyle\leq\frac{15\alpha^{7}\left\lVert\bm{z}\right\rVert^{4}}{R^{6}}+\frac{9\alpha^{5}\left\lVert\bm{z}\right\rVert^{2}}{R^{4}}$ $\displaystyle=\frac{15\alpha^{3}(\alpha\left\lVert\bm{z}\right\rVert)^{4}}{R^{6}}+\frac{9\alpha^{3}(\alpha\left\lVert\bm{z}\right\rVert)^{2}}{R^{4}}\leq\frac{24}{R^{2}}.$
+
+Equation ( 106 ) therefore gives $\left\lVert D^{3}\rho_{R}\right\rVert_{\mathrm{op}}\leq\frac{36}{R^{2}}$ , completing ( 41 ). Since $\bm{U}$ is an isometry from $\mathbb{R}^{T}$ into $\mathbb{R}^{d}$ , the same bounds hold for $\bm{q}_{\bm{U}}=\bm{U}^{\top}\rho_{R}$ .
+
+For $\theta_{\bm{U}}=b_{\eta,T}\circ\bm{q}_{\bm{U}}$ , the first derivative satisfies
+
+$\left\lVert D\theta_{\bm{U}}\right\rVert\leq\left\lVert Db_{\eta,T}\right\rVert\left\lVert D\bm{q}_{\bm{U}}\right\rVert\leq C_{\rm ext}\eta\leq C_{\theta}\eta.$
+
+For the second derivative, the chain rule gives, for unit directions $\bm{w}_{1},\bm{w}_{2}$ ,
+
+$\displaystyle D^{2}\theta_{\bm{U}}[\bm{w}_{1},\bm{w}_{2}]={}$ $\displaystyle D^{2}b_{\eta,T}[D\bm{q}_{\bm{U}}\bm{w}_{1},D\bm{q}_{\bm{U}}\bm{w}_{2}]+Db_{\eta,T}[D^{2}\bm{q}_{\bm{U}}[\bm{w}_{1},\bm{w}_{2}]].$
+
+Using Lemma 4.3 , ( 41 ), $R=230\eta\sqrt{T}$ , and $T\geq 1$ gives
+
+$\displaystyle\left\lVert D^{2}\theta_{\bm{U}}\right\rVert_{\mathrm{op}}$ $\displaystyle\leq C_{\rm ext}+C_{\rm ext}\eta\frac{6}{R}$ $\displaystyle=C_{\rm ext}\left(1+\frac{6}{230\sqrt{T}}\right)$ $\displaystyle\leq C_{\rm ext}\left(1+\frac{18}{230}+\frac{36}{230^{2}}\right)$ $\displaystyle=C_{\theta}.$
+
+For the third derivative, the multivariate chain rule produces one term of type $D^{3}b(D\bm{q})^{3}$ , three permutations of type $D^{2}b(D^{2}\bm{q},D\bm{q})$ , and one term $Db(D^{3}\bm{q})$ . Therefore
+
+$\displaystyle\left\lVert D^{3}\theta_{\bm{U}}\right\rVert_{\mathrm{op}}$ $\displaystyle\leq\frac{C_{\rm ext}}{\eta}+3C_{\rm ext}\frac{6}{R}+C_{\rm ext}\eta\frac{36}{R^{2}}$ $\displaystyle=\frac{C_{\rm ext}}{\eta}\left(1+\frac{18}{230\sqrt{T}}+\frac{36}{230^{2}T}\right)$ $\displaystyle\leq\frac{C_{\theta}}{\eta}.$
+
+The value bound $\left\lvert\theta_{\bm{U}}\right\rvert\leq C_{\rm ext}\eta^{2}\leq C_{\theta}\eta^{2}$ follows from the $r=0$ case of Lemma 4.3 . This proves ( 42 ).
+
+The proof for $a_{\bm{U}}$ is the same, using $A_{\eta,T}=H_{\eta,T}-b_{\eta,T}$ . Specifically,
+
+$\displaystyle\left\lVert DA_{\eta,T}\right\rVert\leq 23\eta\sqrt{T}+C_{\rm ext}\eta\leq(23+C_{\rm ext})\eta\sqrt{T}\leq C_{A}\eta\sqrt{T},$ $\displaystyle\left\lVert D^{2}A_{\eta,T}\right\rVert_{\mathrm{op}}\leq C_{{\rm ch},2}+C_{\rm ext}\leq C_{A},$ $\displaystyle\left\lVert D^{3}A_{\eta,T}\right\rVert_{\mathrm{op}}\leq\frac{C_{{\rm ch},3}+C_{\rm ext}}{\eta}\leq\frac{C_{A}}{\eta}.$
+
+The first derivative of $a_{\bm{U}}=A\circ\bm{q}_{\bm{U}}$ is therefore at most $C_{A}\eta\sqrt{T}\leq C_{a}\eta\sqrt{T}$ . For the next two orders, the same chain-rule formulas give
+
+$\displaystyle\left\lVert D^{2}a_{\bm{U}}\right\rVert_{\mathrm{op}}$ $\displaystyle\leq C_{A}+C_{A}\eta\sqrt{T}\frac{6}{R}=C_{A}\left(1+\frac{6}{230}\right)\leq C_{a},$ $\displaystyle\left\lVert D^{3}a_{\bm{U}}\right\rVert_{\mathrm{op}}$ $\displaystyle\leq\frac{C_{A}}{\eta}+3C_{A}\frac{6}{R}+C_{A}\eta\sqrt{T}\frac{36}{R^{2}}$ $\displaystyle=\frac{C_{A}}{\eta}\left(1+\frac{18}{230\sqrt{T}}+\frac{36}{230^{2}\sqrt{T}}\right)$ $\displaystyle\leq\frac{C_{a}}{\eta}.$
+
+This proves ( 43 ).
+
+Finally,
+
+$\nabla h_{R}(\bm{z})=\frac{\bm{z}}{4s(\bm{z})}=\frac{1}{4}\rho_{R}(\bm{z}).$
+
+Thus $\left\lVert\nabla h_{R}\right\rVert\leq\frac{1}{4}R$ . Differentiating once more gives $\nabla^{2}h_{R}=\frac{1}{4}D\rho_{R}$ , whose eigenvalues lie in $[0,\frac{1}{4}]$ by ( 98 ). Nonnegativity and $h_{R}(\bm{0})=0$ follow immediately from ( 33 ). ∎
+
+B.2 Proof of Lemma 4.6
+
+The first identity follows from $\mathbb{E}[\xi/p]=1$ . Fix $\bm{z}$ . Consider the candidate
+
+$\bar{\bm{v}}=\bm{M}_{\kappa}^{-1}\begin{pmatrix}\vartheta_{\kappa,\bm{U}}\\ 0\end{pmatrix}=\begin{pmatrix}d_{\kappa}\vartheta_{\kappa,\bm{U}}\\ s_{\kappa}\vartheta_{\kappa,\bm{U}}\end{pmatrix}=\begin{pmatrix}(d_{\kappa}/s_{\kappa})\theta_{\bm{U}}\\ \theta_{\bm{U}}\end{pmatrix}.$ (107)
+
+By ( 42 ), ( 30 ), and ( 49 ),
+
+$|\bar{v}_{1}|\leq 3C_{\theta}\eta^{2}\leq\eta.$ (108)
+
+Hence $\psi_{\eta}(\bar{v}_{1})=\bar{v}_{1}$ and $\psi_{\eta}^{\prime}(\bar{v}_{1})=1$ .
+
+For fixed $\bm{z}$ , the Hessian of the $\bm{v}$ -dependent lower block is
+
+$\bm{M}_{\kappa}-\vartheta_{\kappa,\bm{U}}\psi_{\eta}^{\prime\prime}(v_{1})\bm{e}_{1}\bm{e}_{1}^{\top}.$ (109)
+
+The bounds $s_{\kappa}\geq\kappa/4$ and $\lVert\psi_{\eta}^{\prime\prime}\rVert_{\infty}\leq C_{\psi}/\eta$ give
+
+$|\vartheta_{\kappa,\bm{U}}|\lVert\psi_{\eta}^{\prime\prime}\rVert_{\infty}\leq\frac{4C_{\theta}C_{\psi}\eta}{\kappa}\leq\frac{1}{2\kappa}.$ (110)
+
+Since $\lambda_{\min}(\bm{M}_{\kappa})=\kappa^{-1}$ , the block in ( 109 ) is globally bounded below by $(2\kappa)^{-1}\bm{I}_{2}$ . Thus the $\bm{v}$ -subproblem is globally strongly convex. Its gradient is
+
+$\bm{M}_{\kappa}\bm{v}-\vartheta_{\kappa,\bm{U}}\psi_{\eta}^{\prime}(v_{1})\bm{e}_{1}.$
+
+At ( 107 ), this gradient equals zero, so $\bar{\bm{v}}$ is the unique global minimizer.
+
+At this minimizer, $\bm{M}_{\kappa}\bar{\bm{v}}=\vartheta_{\kappa,\bm{U}}\bm{e}_{1}$ and $\bar{v}_{1}=d_{\kappa}\vartheta_{\kappa,\bm{U}}$ . Therefore the minimized block has value
+
+$\displaystyle\frac{1}{2}\bar{\bm{v}}^{\top}\bm{M}_{\kappa}\bar{\bm{v}}+\frac{d_{\kappa}}{2}\vartheta_{\kappa,\bm{U}}^{2}-\vartheta_{\kappa,\bm{U}}\psi_{\eta}(\bar{v}_{1})=\frac{d_{\kappa}}{2}\vartheta_{\kappa,\bm{U}}^{2}+\frac{d_{\kappa}}{2}\vartheta_{\kappa,\bm{U}}^{2}-d_{\kappa}\vartheta_{\kappa,\bm{U}}^{2}=0.$
+
+After minimizing in $\bm{v}$ , the lower objective is exactly
+
+$\bm{z}\longmapsto\frac{1}{2\kappa}\lVert\bm{z}\rVert^{2}-\langle\bm{x},\bm{z}\rangle.$
+
+Its unique minimizer is $\bm{z}^{*}(\bm{x})=\kappa\bm{x}$ . Together with ( 107 ), this proves ( 50 )–( 51 ).
+
+Finally, the upper objective reads the second auxiliary coordinate, which equals $\theta_{\bm{U}}(\kappa\bm{x})$ . Using $H_{\eta,T}=A_{\eta,T}+b_{\eta,T}$ ,
+
+$\displaystyle\Phi_{\bm{U}}^{\kappa}(\bm{x})$ $\displaystyle=a_{\bm{U}}(\kappa\bm{x})+\theta_{\bm{U}}(\kappa\bm{x})+h_{R}(\kappa\bm{x})$ $\displaystyle=H_{\eta,T}(\bm{q}_{\bm{U}}(\kappa\bm{x}))+h_{R}(\kappa\bm{x}),$
+
+which is ( 52 ). ∎
+
+B.3 Proofs of Lemmas 4.5 and 4.7
+
+We first prove Lemma 4.5 . Since $s_{\kappa}\geq\kappa/4$ , ( 42 ) immediately gives ( 46 ). The first derivatives of the compensated block are
+
+$D_{z}\mathcal{R}_{\kappa,\bm{U}}=(d\vartheta_{\kappa,\bm{U}}-\psi_{\eta})D\vartheta_{\kappa,\bm{U}},\qquad\partial_{v_{1}}\mathcal{R}_{\kappa,\bm{U}}=-\vartheta_{\kappa,\bm{U}}\psi_{\eta}^{\prime},\qquad\partial_{v_{2}}\mathcal{R}_{\kappa,\bm{U}}=0.$ (111)
+
+By ( 30 ), ( 46 ), and ( 27 ),
+
+$|d\vartheta_{\kappa,\bm{U}}-\psi_{\eta}|\leq 4C_{\theta}\eta^{2}+C_{\psi}\eta\leq(4C_{\theta}+C_{\psi})\eta.$
+
+Consequently,
+
+$\displaystyle\lVert D_{z}\mathcal{R}_{\kappa,\bm{U}}\rVert\leq 4C_{\theta}(4C_{\theta}+C_{\psi})\frac{\eta^{2}}{\kappa},$ $\displaystyle\qquad|\partial_{v_{1}}\mathcal{R}_{\kappa,\bm{U}}|\leq 4C_{\theta}C_{\psi}\frac{\eta^{2}}{\kappa}.$ (112)
+
+The norm of the full gradient is at most the sum of these two block norms, proving the first bound in ( 48 ) with $C_{\rm grad}$ .
+
+Differentiating ( 111 ) gives the nonzero Hessian blocks
+
+$\begin{split}&D^{2}_{zz}\mathcal{R}_{\kappa,\bm{U}}=(d\vartheta_{\kappa,\bm{U}}-\psi_{\eta})D^{2}\vartheta_{\kappa,\bm{U}}+dD\vartheta_{\kappa,\bm{U}}D\vartheta_{\kappa,\bm{U}}^{\top},\\ &D^{2}_{zv_{1}}\mathcal{R}_{\kappa,\bm{U}}=-\psi_{\eta}^{\prime}D\vartheta_{\kappa,\bm{U}},\\ &\partial^{2}_{v_{1}v_{1}}\mathcal{R}_{\kappa,\bm{U}}=-\vartheta_{\kappa,\bm{U}}\psi_{\eta}^{\prime\prime}.\end{split}$ (113)
+
+Using $d_{\kappa}\leq\kappa$ , $0<\eta\leq 1$ , and the same derivative bounds yields
+
+$\displaystyle\lVert D^{2}_{zz}\mathcal{R}_{\kappa,\bm{U}}\rVert_{\rm op}\leq(32C_{\theta}^{2}+4C_{\theta}C_{\psi})\frac{\eta}{\kappa},$ $\displaystyle\quad\lVert D^{2}_{zv_{1}}\mathcal{R}_{\kappa,\bm{U}}\rVert\leq 4C_{\theta}C_{\psi}\frac{\eta}{\kappa},$ $\displaystyle\quad|\partial^{2}_{v_{1}v_{1}}\mathcal{R}_{\kappa,\bm{U}}|\leq 4C_{\theta}C_{\psi}\frac{\eta}{\kappa}.$ (114)
+
+The operator norm of a symmetric block matrix is at most the sum of the norms of its diagonal blocks and twice the norms of its strict upper-triangular blocks. Therefore
+
+$\left\lVert D^{2}_{(z,v)}\mathcal{R}_{\kappa,\bm{U}}(\bm{z},\bm{v})\right\rVert_{\rm op}\leq C_{\rm Hess}\frac{\eta}{\kappa}.$ (115)
+
+The unperturbed lower-variable Hessian is $\operatorname{diag}(\kappa^{-1}\bm{I},\bm{M}_{\kappa})$ , whose smallest eigenvalue is $\kappa^{-1}$ . By ( 115 ), Weyl’s inequality, and $\eta\leq c_{\rm reg}\leq(2C_{\rm Hess})^{-1}$ ,
+
+$D^{2}_{(z,v)}g_{\bm{U}}^{\kappa}\succeq\left(\frac{1}{\kappa}-C_{\rm Hess}\frac{\eta}{\kappa}\right)\bm{I}\succeq\frac{1}{2\kappa}\bm{I}.$ (116)
+
+This proves the claimed strong convexity.
+
+In the variable order $(\bm{x},\bm{z},\bm{v})$ , write the full Hessian as
+
+$\nabla^{2}g_{\bm{U}}^{\kappa}=\begin{pmatrix}0&-\bm{I}&0\\ -\bm{I}&\kappa^{-1}\bm{I}&0\\ 0&0&\bm{M}_{\kappa}\end{pmatrix}+\begin{pmatrix}0&0\\ 0&D^{2}_{(z,v)}\mathcal{R}_{\kappa,\bm{U}}\end{pmatrix},$ (117)
+
+where the second display is blocked as $\bm{x}$ versus $(\bm{z},\bm{v})$ . The $(\bm{x},\bm{z})$ block of the first matrix obeys the elementary estimate
+
+$\lVert\bm{w}_{z}\rVert^{2}+\lVert-\bm{w}_{x}+\kappa^{-1}\bm{w}_{z}\rVert^{2}\leq 3(\lVert\bm{w}_{x}\rVert^{2}+\lVert\bm{w}_{z}\rVert^{2}),$
+
+and hence has operator norm at most $\sqrt{3}<3$ . Since $\lVert\bm{M}_{\kappa}\rVert_{\rm op}=1$ , the first matrix has operator norm less than three. Together with ( 115 ), this gives
+
+$\sup_{\bm{x},\bm{z},\bm{v}}\lVert\nabla^{2}g_{\bm{U}}^{\kappa}(\bm{x},\bm{z},\bm{v})\rVert_{\rm op}\leq 3+C_{\rm Hess}\leq 8+C_{\rm Hess}=\bar{L}_{g}.$
+
+Hence $\nabla g_{\bm{U}}^{\kappa}$ is globally $\bar{L}_{g}$ -Lipschitz.
+
+It remains to prove the third-derivative bound asserted in Lemma 4.5 . Differentiating ( 113 ), the four nonzero tensor types are
+
+$\begin{array}[]{@{}l@{\qquad}l@{}}D^{3}_{zzz}\mathcal{R}_{\kappa,\bm{U}}=(d\vartheta_{\kappa,\bm{U}}-\psi_{\eta})D^{3}\vartheta_{\kappa,\bm{U}}+d\displaystyle\sum_{\rm three\ placements}D^{2}\vartheta_{\kappa,\bm{U}}\otimes D\vartheta_{\kappa,\bm{U}},&D^{3}_{zzv_{1}}\mathcal{R}_{\kappa,\bm{U}}=-\psi_{\eta}^{\prime}D^{2}\vartheta_{\kappa,\bm{U}},\\[2.84526pt] D^{3}_{zv_{1}v_{1}}\mathcal{R}_{\kappa,\bm{U}}=-\psi_{\eta}^{\prime\prime}D\vartheta_{\kappa,\bm{U}},&\partial^{3}_{v_{1}v_{1}v_{1}}\mathcal{R}_{\kappa,\bm{U}}=-\vartheta_{\kappa,\bm{U}}\psi_{\eta}^{\prime\prime\prime}.\end{array}$
+
+The $zzz$ block is at most $(64C_{\theta}^{2}+4C_{\theta}C_{\psi})/\kappa$ , and each of the remaining three block types is at most $4C_{\theta}C_{\psi}/\kappa$ . Expanding a unit trilinear form gives one $zzz$ term, three $zzv_{1}$ terms, three $zv_{1}v_{1}$ terms, and one $v_{1}v_{1}v_{1}$ term. Thus
+
+$\lVert D^{3}_{(z,v)}\mathcal{R}_{\kappa,\bm{U}}\rVert_{\rm op}\leq\frac{C_{\rm third}}{\kappa},$ (118)
+
+which completes the proof of ( 48 ). Since $\kappa\geq 2$ , the right-hand side of ( 118 ) is at most $C_{\rm third}$ . All remaining terms in $g$ are quadratic, so integrating that bound along a line segment proves that $\nabla^{2}g$ is globally $C_{\rm third}$ -Lipschitz, and hence globally $\bar{\rho}=(C_{\rm third}+1)$ -Lipschitz.
+
+For the upper objective, the only nonzero Hessian block is $D^{2}_{zz}f_{\bm{U}}^{\kappa}=D^{2}a_{\bm{U}}+D^{2}h_{R}$ ; the coordinate $v_{2}$ appears linearly. Lemma 4.4 and ( 44 ) give
+
+$\sup_{\bm{x},\bm{z},\bm{v}}\lVert\nabla^{2}f_{\bm{U}}^{\kappa}(\bm{x},\bm{z},\bm{v})\rVert_{\rm op}\leq C_{a}+\frac{1}{4}=\bar{L}_{f}.$
+
+Thus, $\nabla f$ is globally $\bar{L}_{f}$ -Lipschitz. Moreover,
+
+$\displaystyle\left\lVert\nabla_{(z,v)}f_{\bm{U}}^{\kappa}\right\rVert$ $\displaystyle\leq\left\lVert Da_{\bm{U}}\right\rVert+\left\lVert\nabla h_{R}\right\rVert+1$ $\displaystyle\leq(C_{a}+\frac{115}{2})\eta\sqrt{T}+1$ (119) $\displaystyle\leq 1+\frac{C_{a}+115/2}{\sqrt{C_{\Delta}}}\sqrt{\Delta}$ (120) $\displaystyle=\bar{C}_{f}(\Delta).$ (121)
+
+The last inequality follows from $C_{\Delta}\eta^{2}T\leq\Delta$ : dividing by $C_{\Delta}$ and taking square roots gives $\eta\sqrt{T}\leq\sqrt{\Delta/C_{\Delta}}$ .
+
+The lower-variable Hessian satisfies
+
+$\displaystyle L_{y}$ $\displaystyle=\sup_{\bm{x},\bm{z},\bm{v}}\left\|D^{2}_{(z,v)}g_{\bm{U}}^{\kappa}(\bm{x},\bm{z},\bm{v})\right\|_{\mathrm{op}}$ $\displaystyle\leq\left\|\operatorname{diag}(\kappa^{-1}\bm{I},\bm{M}_{\kappa})\right\|_{\mathrm{op}}+\left\|D^{2}_{(z,v)}\mathcal{R}_{\kappa,\bm{U}}(\bm{z},\bm{v})\right\|_{\mathrm{op}}$ $\displaystyle\leq 1+C_{\rm Hess}\frac{\eta}{\kappa}$ $\displaystyle\leq 1+\frac{1}{2\kappa}$ $\displaystyle\leq\frac{5}{4}.$
+
+Here the penultimate inequality uses $C_{\rm Hess}\eta\leq 1/2$ , while the last uses $\kappa\geq 2$ . Together with $\mu_{g}^{\rm act}\geq\mu_{g}=(2\kappa)^{-1}$ from ( 116 ), this gives $\kappa_{y}=L_{y}/\mu_{g}^{\rm act}\leq(5/2)\kappa\leq 14\kappa=C_{\kappa}\kappa$ . It remains to prove that the actual lower-level condition number cannot be substantially smaller than the construction parameter $\kappa$ . Define
+
+$\bm{q}^{\circ}=(\eta,\ldots,\eta)\in\mathbb{R}^{T},\qquad\bm{r}^{\circ}=\bm{U}\bm{q}^{\circ}\in\mathbb{R}^{d}.$
+
+Since $\bm{U}^{\top}\bm{U}=\bm{I}_{T}$ , the linear map $\bm{q}\mapsto\bm{U}\bm{q}$ is an isometry on $\mathbb{R}^{T}$ . Consequently,
+
+$\left\lVert\bm{r}^{\circ}\right\rVert^{2}=\left\lVert\bm{U}\bm{q}^{\circ}\right\rVert^{2}=(\bm{q}^{\circ})^{\top}\bm{U}^{\top}\bm{U}\bm{q}^{\circ}=\left\lVert\bm{q}^{\circ}\right\rVert^{2}=\eta^{2}T,$
+
+Thus,
+
+$\left\lVert\bm{r}^{\circ}\right\rVert=\eta\sqrt{T}=\frac{R}{230}<R.$ (122)
+
+We next verify explicitly that every point in the open ball of radius $R$ belongs to the range of $\rho_{R}$ . In particular, define
+
+$\bm{z}^{\circ}=\frac{\bm{r}^{\circ}}{\sqrt{1-\left\lVert\bm{r}^{\circ}\right\rVert^{2}/R^{2}}}.$ (123)
+
+This vector is finite because $\left\lVert\bm{r}^{\circ}\right\rVert<R$ . Moreover,
+
+$\displaystyle\frac{\left\lVert\bm{z}^{\circ}\right\rVert^{2}}{R^{2}}=\frac{\left\lVert\bm{r}^{\circ}\right\rVert^{2}/R^{2}}{1-\left\lVert\bm{r}^{\circ}\right\rVert^{2}/R^{2}},$
+
+which implies
+
+$1+\frac{\left\lVert\bm{z}^{\circ}\right\rVert^{2}}{R^{2}}=\frac{1}{1-\left\lVert\bm{r}^{\circ}\right\rVert^{2}/R^{2}}$
+
+It follows that
+
+$\displaystyle\rho_{R}(\bm{z}^{\circ})$ $\displaystyle=\frac{\bm{z}^{\circ}}{\sqrt{1+\left\lVert\bm{z}^{\circ}\right\rVert^{2}/R^{2}}}$ $\displaystyle=\frac{\bm{r}^{\circ}/\sqrt{1-\left\lVert\bm{r}^{\circ}\right\rVert^{2}/R^{2}}}{1/\sqrt{1-\left\lVert\bm{r}^{\circ}\right\rVert^{2}/R^{2}}}$ $\displaystyle=\bm{r}^{\circ}$ $\displaystyle=\bm{U}\bm{q}^{\circ}.$ (124)
+
+Therefore,
+
+$\bm{q}_{\bm{U}}(\bm{z}^{\circ})=\bm{U}^{\top}\rho_{R}(\bm{z}^{\circ})=\bm{U}^{\top}\bm{U}\bm{q}^{\circ}=\bm{q}^{\circ}.$ (125)
+
+Every coordinate of $\bm{q}^{\circ}$ has magnitude $\eta$ , and hence
+
+$\left\lvert q_{i}^{\circ}\right\rvert=\eta>\frac{\eta}{2},\qquad 1\leq i\leq T.$
+
+By the definition of the progress function, this gives
+
+$\operatorname{prog}_{\eta/2}(\bm{q}^{\circ})=T.$ (126)
+
+The full-progress case of Lemma 4.3 states that the value and derivatives through order three of every summand defining $b_{\eta,T}$ vanish at $\bm{q}^{\circ}$ . In particular,
+
+$b_{\eta,T}(\bm{q}^{\circ})=0,\qquad Db_{\eta,T}(\bm{q}^{\circ})=0,\qquad D^{2}b_{\eta,T}(\bm{q}^{\circ})=0.$ (127)
+
+Recall that
+
+$\theta_{\bm{U}}(\bm{z})=b_{\eta,T}(\bm{q}_{\bm{U}}(\bm{z})).$
+
+Combining ( 125 ) and ( 127 ) yields
+
+$\theta_{\bm{U}}(\bm{z}^{\circ})=b_{\eta,T}(\bm{q}^{\circ})=0.$ (128)
+
+The first-order chain rule gives
+
+$D\theta_{\bm{U}}(\bm{z}^{\circ})=Db_{\eta,T}(\bm{q}^{\circ})D\bm{q}_{\bm{U}}(\bm{z}^{\circ})=0.$
+
+The second-order chain rule gives, for arbitrary directions $\bm{w}_{1},\bm{w}_{2}\in\mathbb{R}^{d}$ ,
+
+$\displaystyle D^{2}\theta_{\bm{U}}(\bm{z}^{\circ})[\bm{w}_{1},\bm{w}_{2}]={}$ $\displaystyle D^{2}b_{\eta,T}(\bm{q}^{\circ})\bigl[D\bm{q}_{\bm{U}}(\bm{z}^{\circ})\bm{w}_{1},D\bm{q}_{\bm{U}}(\bm{z}^{\circ})\bm{w}_{2}\bigr]$ $\displaystyle+Db_{\eta,T}(\bm{q}^{\circ})\bigl[D^{2}\bm{q}_{\bm{U}}(\bm{z}^{\circ})[\bm{w}_{1},\bm{w}_{2}]\bigr]$ $\displaystyle={}$ $\displaystyle 0.$
+
+Consequently,
+
+$\theta_{\bm{U}}(\bm{z}^{\circ})=0,\qquad D\theta_{\bm{U}}(\bm{z}^{\circ})=0,\qquad D^{2}\theta_{\bm{U}}(\bm{z}^{\circ})=0.$ (129)
+
+Since $\vartheta_{\kappa,\bm{U}}=\theta_{\bm{U}}/s_{\kappa}$ , its value and first two derivatives also vanish at $\bm{z}^{\circ}$ . Substitution into ( 113 ) shows that, for every $\bm{v}\in\mathbb{R}^{2}$ ,
+
+$D^{2}_{(z,v)}\mathcal{R}_{\kappa,\bm{U}}(\bm{z}^{\circ},\bm{v})=0.$ (130)
+
+Recall that
+
+$g_{\bm{U}}^{\kappa}(\bm{x},\bm{z},\bm{v})=\frac{1}{2\kappa}\left\lVert\bm{z}\right\rVert^{2}-\left\langle\bm{x},\bm{z}\right\rangle+\frac{1}{2}\bm{v}^{\top}\bm{M}_{\kappa}\bm{v}+\mathcal{R}_{\kappa,\bm{U}}(\bm{z},\bm{v}).$
+
+When $\bm{x}$ is fixed, the term $-\left\langle\bm{x},\bm{z}\right\rangle$ is linear in $\bm{z}$ and therefore has zero lower-variable Hessian. Combining this observation with ( 130 ), we obtain, for every $\bm{x}$ and $\bm{v}$ ,
+
+$D^{2}_{(z,v)}g_{\bm{U}}^{\kappa}(\bm{x},\bm{z}^{\circ},\bm{v})=\operatorname{diag}(\kappa^{-1}\bm{I},\bm{M}_{\kappa}).$ (131)
+
+By Definition 3.2 , the actual curvature modulus and lower smoothness are $\mu_{g}^{\rm act}$ and $L_{y}$ . The matrix in ( 131 ) has smallest eigenvalue $\kappa^{-1}$ and operator norm one by ( 29 ). Since an infimum cannot exceed the value at a particular point, ( 131 ) implies
+
+$\mu_{g}^{\rm act}\leq\frac{1}{\kappa}.$ (132)
+
+Likewise, since a supremum cannot be smaller than the value at a particular point,
+
+$L_{y}\geq 1.$ (133)
+
+Therefore the actual lower-level condition number satisfies
+
+$\displaystyle\kappa_{y}=\frac{L_{y}}{\mu_{g}^{\rm act}}\geq\frac{1}{1/\kappa}=\kappa.$ (134)
+
+Together with the previously established upper bound $\kappa_{y}\leq C_{\kappa}\kappa$ , this proves
+
+$\kappa\leq\kappa_{y}\leq C_{\kappa}\kappa.$
+
+Hence the construction parameter and the actual lower-level condition number are equivalent up to universal numerical constants:
+
+$\kappa_{y}=\Theta(\kappa).$
+
+∎
+
+B.4 Proof of Lemma 4.8
+
+The only random term is $(\xi/p)\mathcal{R}_{\kappa,\bm{U}}$ . Freshness gives $\mathbb{E}[\xi/p\mid\mathscr{F}_{t-1}]=1$ , so differentiation and conditional expectation yield ( 58 ). In the variable order $(\bm{x},\bm{z},\bm{v})$ , the complete gradient noise is
+
+$\nabla\widehat{g}_{\bm{U}}^{\kappa}-\nabla g_{\bm{U}}^{\kappa}=\left(\frac{\xi}{p}-1\right)\begin{pmatrix}0\\ (d_{\kappa}\vartheta_{\kappa,\bm{U}}-\psi_{\eta})D\vartheta_{\kappa,\bm{U}}\\ -\vartheta_{\kappa,\bm{U}}\psi_{\eta}^{\prime}\bm{e}_{1}\end{pmatrix}.$ (135)
+
+The bounds used in ( 112 ) give
+
+$\displaystyle\left\lVert(d_{\kappa}\vartheta_{\kappa,\bm{U}}-\psi_{\eta})D\vartheta_{\kappa,\bm{U}}\right\rVert\leq 4C_{\theta}(4C_{\theta}+C_{\psi})\frac{\eta^{2}}{\kappa},$ $\displaystyle\quad\left\lvert\vartheta_{\kappa,\bm{U}}\psi_{\eta}^{\prime}\right\rvert\leq 4C_{\theta}C_{\psi}\frac{\eta^{2}}{\kappa}.$ (136)
+
+Thus the deterministic vector in ( 135 ) has squared norm at most $C_{\rm var}\eta^{4}/\kappa^{2}$ by the definition ( 57 ). For $\xi\sim\operatorname{Ber}(p)$ ,
+
+$\displaystyle\mathbb{E}\left(\frac{\xi}{p}-1\right)^{2}$ $\displaystyle=p\left(\frac{1}{p}-1\right)^{2}+(1-p)$ $\displaystyle=\frac{(1-p)^{2}}{p}+1-p$ $\displaystyle=\frac{1-p}{p}.$
+
+This proves ( 59 ).
+
+If $p=1$ , the noise is zero. Otherwise, we choose $p=C_{\rm var}\eta^{4}/(\sigma^{2}\kappa^{2})$ , and
+
+$C_{\rm var}\frac{\eta^{4}}{\kappa^{2}}\frac{1-p}{p}=\sigma^{2}(1-p)\leq\sigma^{2}.$
+
+Equation ( 61 ) follows from the two branches. ∎
+
+Appendix C Proofs for Section 4.5
+
+C.1 Proof of Lemma 4.10
+
+For a fixed number $\ell$ of initial frame columns, disintegration of Haar measure with respect to these columns gives the completion kernel $\mathsf{K}_{\ell}$ ; this is the conditional-rotation statement used in Arjevani et al. (2023, Lemma 14) . To pass to the random index $J$ , test the displayed candidate conditional expectation against a bounded $\mathscr{H}_{J}$ -measurable function. On the stratum $\{J=\ell\}$ , that test function is a Borel function of $(Z,\bm{U}_{\leq\ell})$ . The event $\{J=\ell\}$ is measurable with respect to $Z$ and is therefore independent of $\bm{U}$ . Applying the conditional Haar disintegration on this stratum gives the conditional-expectation identity. The defining property of a Borel probability kernel also makes the kernel integral Borel in $(Z,\bm{U}_{\leq\ell})$ , so the displayed candidate is $\mathscr{H}_{J}$ -measurable. Summing over the finite partition $\{J=0\},\ldots,\{J=T\}$ proves the formula. The marginal statement follows from rotational invariance of the completion kernel. ∎
+
+C.2 Proof of Lemma 4.11
+
+We use the adaptive random-rotation argument of Arjevani et al. (2023, Appendix B.1.2, especially Lemmas 13–14) . Lemma 14 provides the relevant conditional rotational invariance, while the proof of Lemma 13 combines it with the standard spherical-cap estimate. The coupled-transcript argument below is our specialization of these ingredients and is not a verbatim restatement of either cited lemma.
+
+Step 1: augment the transcript with the first recorded frame columns. For the purpose of the conditional-Haar argument, after call $t$ we record the Bernoulli bits $\xi_{1},\ldots,\xi_{t}$ and the first $L_{t}$ columns $\bm{u}_{1},\ldots,\bm{u}_{L_{t}}$ in an augmented transcript. Let $\mathcal{T}_{t}^{\rm orig}$ denote the transcript actually observed by the original procedure, and define
+
+$\mathcal{T}_{t}=\bigl(\mathcal{T}_{t}^{\rm orig},\xi_{1},\ldots,\xi_{t},\bm{u}_{1},\ldots,\bm{u}_{L_{t}}\bigr).$
+
+The additional transcript entries are auxiliary variables used only in the proof; they are not additional oracle observations available to the original procedure. Throughout the remainder of this proof, $\mathcal{T}_{t}^{\rm orig}$ denotes the original query-response transcript, whereas $\mathcal{T}_{t}$ denotes the augmented transcript defined above.
+
+For the algorithm fixed in Proposition 4.13 , the original query and output rules are induced by $\operatorname{Query}_{t}^{\mathsf{A}}$ and $\operatorname{Output}_{N}^{\mathsf{A}}$ from Definition 3.3 . The query descriptor and its associated vector are obtained from the algorithmic query through the Borel map
+
+$(\bm{x}_{t},\bm{z}_{t},\bm{v}_{t})\longmapsto\left((\bm{x}_{t},\bm{z}_{t},\bm{v}_{t}),\frac{\rho_{R}(\bm{z}_{t})}{\eta}\right).$
+
+Let $\pi_{t}^{\rm orig}$ denote the canonical projection onto the original transcript component, so that
+
+$\pi_{t}^{\rm orig}(\mathcal{T}_{t})=\mathcal{T}_{t}^{\rm orig}.$
+
+The original query rule is extended to the augmented transcript space by
+
+$\operatorname{Query}_{t}^{\rm aug}(\omega_{\rm alg},\mathcal{T}_{t-1})=\operatorname{Query}_{t}^{\rm orig}\bigl(\omega_{\rm alg},\pi_{t-1}^{\rm orig}(\mathcal{T}_{t-1})\bigr),$
+
+and the output rule is extended by
+
+$\operatorname{Output}^{\rm aug}(\omega_{\rm alg},\mathcal{T}_{N})=\operatorname{Output}^{\rm orig}\bigl(\omega_{\rm alg},\pi_{N}^{\rm orig}(\mathcal{T}_{N})\bigr).$
+
+Thus the additional Bernoulli bits and frame columns are available for the measurability argument but do not affect the actual queries or the final output of the original procedure.
+
+For uniform notation, let $J_{t}$ be the number of recorded frame columns associated with each of the $n=N+1$ vectors, and set
+
+$J_{t}=\begin{cases}L_{t-1},&1\leq t\leq N,\\ L_{N},&t=n=N+1.\end{cases}$ (137)
+
+Thus $J_{t}$ is the number of columns recorded in the augmented transcript when $\bm{r}_{t}$ is formed. In particular, the additional output vector $\bm{r}_{n}=\bm{r}_{N+1}$ is assigned $J_{n}=L_{N}$ , because it receives no new Bernoulli draw or oracle response.
+
+Step 2: construct a coupled transcript with the required measurability. Let $\omega_{\rm alg}$ be the random seed of the algorithm from Definition 3.3 . By construction, it is independent of $\bm{U}$ and of $\xi_{1},\ldots,\xi_{N}$ . After conditioning on $\omega_{\rm alg}$ , the procedure’s query and output rules are Borel deterministic maps of their transcripts. We construct recursively an augmented coupled transcript $\widetilde{\mathcal{T}}_{t}$ , whose original query-response component is
+
+$\widetilde{\mathcal{T}}_{t}^{\rm orig}=\pi_{t}^{\rm orig}(\widetilde{\mathcal{T}}_{t}),$ (138)
+
+together with coupled query descriptors $\widetilde{\bm{a}}_{t}$ , coupled vectors $\widetilde{\bm{r}}_{t}$ , and coupled responses $\widetilde{\bm{Y}}_{t}$ .
+
+Start with the same original and augmented initial transcripts:
+
+$\widetilde{\mathcal{T}}_{0}^{\rm orig}=\mathcal{T}_{0}^{\rm orig},\qquad\widetilde{\mathcal{T}}_{0}=\mathcal{T}_{0}.$
+
+Suppose $\widetilde{\mathcal{T}}_{t-1}$ has been constructed. Feed this augmented transcript and the same seed $\omega_{\rm alg}$ to the augmented query rule, and denote its next query descriptor and associated vector by
+
+$\widetilde{\bm{a}}_{t}=(\widetilde{\bm{x}}_{t},\widetilde{\bm{z}}_{t},\widetilde{\bm{v}}_{t})=\operatorname{Query}_{t}^{\rm aug}\bigl(\omega_{\rm alg},\widetilde{\mathcal{T}}_{t-1}\bigr)=\operatorname{Query}_{t}^{\rm orig}\bigl(\omega_{\rm alg},\widetilde{\mathcal{T}}_{t-1}^{\rm orig}\bigr),\qquad\widetilde{\bm{r}}_{t}=\frac{\rho_{R}(\widetilde{\bm{z}}_{t})}{\eta}.$ (139)
+
+Define the coupled response for every outcome, including outcomes on which geometric progress has already failed, by
+
+$\widetilde{\bm{Y}}_{t}=M_{t,L_{t-1}}^{(\xi_{t})}\bigl(\widetilde{\mathcal{T}}_{t-1}^{\rm orig},\widetilde{\bm{a}}_{t},\widetilde{\bm{r}}_{t},\bm{u}_{1},\ldots,\bm{u}_{L_{t}}\bigr).$ (140)
+
+Equivalently, the first argument in this display is $\pi_{t-1}^{\rm orig}(\widetilde{\mathcal{T}}_{t-1})$ , so it belongs to the original transcript space $\mathsf{T}_{t-1}$ , exactly as required by ( 75 ). The definition is legitimate because
+
+$L_{t}=\min\{T,L_{t-1}+\xi_{t}\}.$
+
+Thus the last argument of ( 140 ) contains exactly the first $L_{t}$ frame columns required by ( 75 ).
+
+Form the new original component $\widetilde{\mathcal{T}}_{t}^{\rm orig}$ by applying the original transcript-update rule to $\widetilde{\mathcal{T}}_{t-1}^{\rm orig}$ , the coupled query, and $\widetilde{\bm{Y}}_{t}$ . Then define the new augmented coupled transcript by
+
+$\widetilde{\mathcal{T}}_{t}=\bigl(\widetilde{\mathcal{T}}_{t}^{\rm orig},\xi_{1},\ldots,\xi_{t},\bm{u}_{1},\ldots,\bm{u}_{L_{t}}\bigr).$ (141)
+
+After call $N$ , feed $\widetilde{\mathcal{T}}_{N}$ to $\operatorname{Output}^{\rm aug}$ , apply the output-to-vector map $\bm{x}\mapsto\rho_{R}(\kappa\bm{x})/\eta$ , and denote the resulting vector by $\widetilde{\bm{r}}_{N+1}$ .
+
+The recursion never evaluates $\operatorname{prog}_{1/4}(\bm{U}^{\top}\widetilde{\bm{r}}_{t})$ and never reads a frame column after $\bm{u}_{L_{t}}$ . Consequently, on every event $\{L_{t}=\ell\}$ ,
+
+$\widetilde{\mathcal{T}}_{t}\quad\text{is measurable with respect to}\quad\sigma\bigl(\omega_{\rm alg},\xi_{1},\ldots,\xi_{t},\bm{u}_{1},\ldots,\bm{u}_{\ell}\bigr).$ (142)
+
+This is proved directly by induction from ( 139 )–( 140 ). More precisely, define the information available when the vector $\bm{r}_{t}$ is formed by
+
+$\widetilde{\mathcal{I}}_{t}=\begin{cases}\sigma\bigl(\omega_{\rm alg},\xi_{1},\ldots,\xi_{t-1},\bm{u}_{1},\ldots,\bm{u}_{J_{t}}\bigr),&1\leq t\leq N,\\[2.84526pt] \sigma\bigl(\omega_{\rm alg},\xi_{1},\ldots,\xi_{N},\bm{u}_{1},\ldots,\bm{u}_{J_{n}}\bigr),&t=N+1.\end{cases}$ (143)
+
+For a random index $J\in\{0,\ldots,T\}$ , the notation $\sigma(Z,\bm{u}_{1},\ldots,\bm{u}_{J})$ denotes the sigma-field characterized stratumwise by
+
+$E\cap\{J=\ell\}\in\sigma(Z,\bm{u}_{1},\ldots,\bm{u}_{\ell}),\qquad 0\leq\ell\leq T.$
+
+Then $\widetilde{\bm{r}}_{1},\ldots,\widetilde{\bm{r}}_{t}$ , the subspace $\mathcal{U}_{t}$ spanned by the first $J_{t}$ frame columns, and the Gram-Schmidt basis introduced below are all $\widetilde{\mathcal{I}}_{t}$ -measurable. In particular, no response or Bernoulli bit from call $t$ is used when $\widetilde{\bm{r}}_{t}$ is formed.
+
+We also record the agreement property. For $1\leq t\leq N$ , define coupled progress event as
+
+$\widetilde{\mathcal{E}}_{t}=\left\{\operatorname{prog}_{1/4}(\bm{U}^{\top}\widetilde{\bm{r}}_{t})\leq L_{t-1}\right\}.$ (144)
+
+If $\widetilde{\mathcal{E}}_{1},\ldots,\widetilde{\mathcal{E}}_{t-1}$ hold, induction shows that
+
+$\widetilde{\mathcal{T}}_{t-1}^{\rm orig}=\mathcal{T}_{t-1}^{\rm orig},\qquad\widetilde{\mathcal{T}}_{t-1}=\mathcal{T}_{t-1},\qquad\widetilde{\bm{a}}_{t}=\bm{a}_{t},\qquad\widetilde{\bm{r}}_{t}=\bm{r}_{t}.$
+
+Indeed, both transcript equalities are trivial before the first call. Suppose they hold before call $s$ and $\widetilde{\mathcal{E}}_{s}$ also holds. Then ( 77 ), with $\ell=L_{s-1}$ and $b=\xi_{s}$ , says that the actual response equals the coupled response in ( 140 ), because both maps receive the same original-transcript argument $\mathcal{T}_{s-1}^{\rm orig}$ . Hence the original query-response transcripts remain identical after call $s$ . The Bernoulli bits and the first $L_{s}$ frame columns are shared by construction, so ( 141 ) also makes the augmented transcripts identical. Thus the actual and coupled processes coincide up to, but not beyond, their first progress violation. If all $N$ query events hold, their output vectors coincide as well:
+
+$\widetilde{\bm{r}}_{N+1}=\bm{r}_{N+1}.$
+
+Step 3: apply the conditional Haar law and state the cap bound. For each index $t$ , take $Z$ in Lemma 4.10 to consist of the algorithm seed and the Bernoulli bits available before that vector is formed, and take $J=J_{t}$ . The index $J_{t}$ is a Borel function of those bits and is independent of $\bm{U}$ . Equations ( 142 ) and ( 143 ) show, stratum by stratum, that the coupled transcript and coupled vector are measurable with respect to $\mathscr{H}_{J_{t}}$ . Hence, on $\{J_{t}=\ell\}$ , the remaining columns retain the Haar-completion law in $\operatorname{span}\{\bm{u}_{1},\ldots,\bm{u}_{\ell}\}^{\perp}$ . This is the precise point at which the restriction of the frame dependence to the first $J_{t}$ columns and independence of the Bernoulli bits from the frame are used.
+
+Moreover, there is a numerical constant $c_{\rm sph}>0$ such that the following spherical-cap estimate holds: if $\bm{u}$ is uniform on the unit sphere of an $m$ -dimensional Euclidean space and $\bm{w}$ is a fixed unit vector in that space, then, for every $\tau\in(0,1)$ ,
+
+$\mathbb{P}\left(\left\lvert\left\langle\bm{u},\bm{w}\right\rangle\right\rvert>\tau\right)\leq 2\exp\left(-c_{\rm sph}m\tau^{2}\right).$ (145)
+
+The Haar disintegration conditional on a fixed number of initial columns and this spherical-cap estimate are the two geometric ingredients imported from the cited Appendix of ( Arjevani et al., 2023 ) ; the extension to the random index was proved in Lemma 4.10 .
+
+Step 4: define the components of the associated vectors orthogonal to the recorded frame columns. For notational economy, throughout the geometric calculation below we write $\bm{r}_{t}$ for the coupled vector $\widetilde{\bm{r}}_{t}$ . The transfer back to the actual vectors is performed in Step 7. For a subspace $\mathcal{V}\subseteq\mathbb{R}^{d}$ , let $\bm{\Pi}_{\mathcal{V}}$ denote the Euclidean orthogonal projector onto $\mathcal{V}$ , and let $\bm{I}_{d}$ denote the identity map on $\mathbb{R}^{d}$ . For the vector $\bm{r}_{t}$ , define the span of the first $J_{t}$ frame columns by
+
+$\mathcal{U}_{t}=\operatorname{span}\{\bm{u}_{1},\ldots,\bm{u}_{J_{t}}\},$ (146)
+
+with the convention $\mathcal{U}_{t}=\{0\}$ when $J_{t}=0$ . Remove the component in $\mathcal{U}_{t}$ from the first $t$ vectors and define
+
+$\mathcal{W}_{t}=(\bm{I}_{d}-\bm{\Pi}_{\mathcal{U}_{t}})\operatorname{span}\{\bm{r}_{1},\ldots,\bm{r}_{t}\}.$ (147)
+
+Let
+
+$m_{t}=\dim(\mathcal{W}_{t}).$ (148)
+
+Since $\mathcal{W}_{t}$ is the image of a space spanned by $t$ vectors,
+
+$m_{t}\leq t\leq n.$ (149)
+
+Apply Gram-Schmidt, in the displayed order, to the residual vectors
+
+$(\bm{I}_{d}-\bm{\Pi}_{\mathcal{U}_{t}})\bm{r}_{1},\ldots,(\bm{I}_{d}-\bm{\Pi}_{\mathcal{U}_{t}})\bm{r}_{t},$
+
+discarding zero residuals. This gives an orthonormal basis
+
+$\bm{w}_{t,1},\ldots,\bm{w}_{t,m_{t}}$ (150)
+
+of $\mathcal{W}_{t}$ . Gram-Schmidt with this deterministic tie-breaking rule is a Borel operation on each stratum determined by which residuals vanish. Hence the basis is $\widetilde{\mathcal{I}}_{t}$ -measurable. It may depend on the coupled transcript and on the first $J_{t}$ frame columns, but conditional on those objects it is fixed.
+
+To make the probability union bound range over a deterministic finite index set, pad this basis to $n$ vectors by defining, for every $s\in\{1,\ldots,n\}$ ,
+
+$\bar{\bm{w}}_{t,s}=\begin{cases}\bm{w}_{t,s},&s\leq m_{t},\\ \bm{0},&s>m_{t}.\end{cases}$ (151)
+
+The padding does not change any basis expansion below. It only gives a fixed ambient index set for the cap events. Since $m_{t}$ and the un-padded basis are $\widetilde{\mathcal{I}}_{t}$ -measurable, the padded vectors are also $\widetilde{\mathcal{I}}_{t}$ -measurable.
+
+The component of $\bm{r}_{t}$ orthogonal to $\mathcal{U}_{t}$ is
+
+$\bm{r}_{t}^{\perp}=(\bm{I}_{d}-\bm{\Pi}_{\mathcal{U}_{t}})\bm{r}_{t}.$ (152)
+
+Because $\bm{r}_{t}^{\perp}\in\mathcal{W}_{t}$ , it has the unique expansion
+
+$\bm{r}_{t}^{\perp}=\sum_{s=1}^{m_{t}}\alpha_{t,s}\bm{w}_{t,s},\qquad\alpha_{t,s}=\left\langle\bm{w}_{t,s},\bm{r}_{t}^{\perp}\right\rangle.$ (153)
+
+Define the coefficient vector
+
+$\bm{\alpha}_{t}=(\alpha_{t,1},\ldots,\alpha_{t,m_{t}})\in\mathbb{R}^{m_{t}}.$ (154)
+
+Orthonormality, contractivity of orthogonal projection, and ( 74 ) give
+
+$\left\lVert\bm{\alpha}_{t}\right\rVert^{2}=\sum_{s=1}^{m_{t}}\alpha_{t,s}^{2}=\left\lVert\bm{r}_{t}^{\perp}\right\rVert^{2}\leq\left\lVert\bm{r}_{t}\right\rVert^{2}\leq(\frac{R}{\eta})^{2}.$ (155)
+
+Step 5: choose the scalar cap threshold and control all adaptive basis directions. Define the scalar threshold
+
+$\tau=\frac{\eta}{4R\sqrt{n}}.$ (156)
+
+This symbol is a scalar and is unrelated to the coefficient vector $\bm{\alpha}_{t}$ . Since $R\geq\eta$ and $n\geq 1$ , one has $\tau\in(0,1)$ , as required in ( 145 ).
+
+Conditional on $\widetilde{\mathcal{I}}_{t}$ , and on each stratum $\{J_{t}=\ell\}$ , each remaining frame column is uniform in an orthogonal complement of dimension $d-\ell$ . Since $J_{t}\leq T$ ,
+
+$d-J_{t}\geq d-T.$ (157)
+
+The coupled vectors are $\widetilde{\mathcal{I}}_{t}$ -measurable and therefore fixed under this conditioning; they impose no additional conditions on the remaining frame columns.
+
+For every fixed triple $(t,s,j)\in\{1,\ldots,n\}\times\{1,\ldots,n\}\times\{1,\ldots,T\}$ , define the padded bad cap event
+
+$\mathcal{B}_{t,s,j}=\left\{s\leq m_{t},\quad J_{t}<j,\quad\left\lvert\left\langle\bm{u}_{j},\bar{\bm{w}}_{t,s}\right\rangle\right\rvert>\tau\right\}.$ (158)
+
+If $s>m_{t}$ or $j\leq J_{t}$ , this event is empty. Otherwise, $\bar{\bm{w}}_{t,s}=\bm{w}_{t,s}$ is a unit vector fixed under conditioning on $\widetilde{\mathcal{I}}_{t}$ . Conditional on $\widetilde{\mathcal{I}}_{t}$ , the basis in ( 150 ) is fixed. On each stratum $\{J_{t}=\ell\}$ , the remaining columns $\bm{u}_{\ell+1},\ldots,\bm{u}_{T}$ retain their conditional Haar law in $\operatorname{span}\{\bm{u}_{1},\ldots,\bm{u}_{\ell}\}^{\perp}$ . Thus ( 145 ), together with ( 157 ), gives
+
+$\mathbb{P}\left(\mathcal{B}_{t,s,j}\,\middle|\,\widetilde{\mathcal{I}}_{t}\right)\leq 2\exp\left(-c_{\rm sph}(d-T)\tau^{2}\right).$ (159)
+
+The events in ( 158 ) are indexed by the fixed finite set
+
+$\{1,\ldots,n\}\times\{1,\ldots,n\}\times\{1,\ldots,T\},\qquad\left\lvert\{1,\ldots,n\}\times\{1,\ldots,n\}\times\{1,\ldots,T\}\right\rvert=n^{2}T.$ (160)
+
+The inactive triples correspond to empty events and therefore cost no probability, while retaining them makes the union index set deterministic. Because $\tau^{2}=\eta^{2}(16R^{2}n)^{-1}$ , we may choose the numerical constant $C_{\rm H}\geq\frac{16}{c_{\rm sph}}$ in ( 78 ), so that
+
+$2\exp\left(-c_{\rm sph}(d-T)\tau^{2}\right)\leq\frac{\delta}{n^{2}T}.$ (161)
+
+The explicitly constructed coupled transcript is essential here. It would not be valid to condition the actual transcript on all previous progress events and then assert that the remaining columns retain their Haar law, because those progress events themselves depend on the remaining columns. In contrast, the coupled continuation in ( 140 ) satisfies the preceding transcript-measurability statement on every outcome, including after a progress violation.
+
+Step 6: bound the coordinates after $J_{t}$ for every coupled vector. Fix an index $t$ , and suppose that none of the padded events $\mathcal{B}_{t,s,j}$ , with $1\leq s\leq n$ and $1\leq j\leq T$ , occurs. Fix an index $j>J_{t}$ . For every active basis index $s\leq m_{t}$ , the guards in ( 158 ) are then satisfied and $\bar{\bm{w}}_{t,s}=\bm{w}_{t,s}$ . Hence $\lvert\langle\bm{u}_{j},\bm{w}_{t,s}\rangle\rvert\leq\tau$ for all $1\leq s\leq m_{t}$ . Since the frame columns are orthonormal,
+
+$\bm{u}_{j}\perp\mathcal{U}_{t}.$
+
+Consequently,
+
+$\left\langle\bm{u}_{j},\bm{r}_{t}\right\rangle=\left\langle\bm{u}_{j},\bm{r}_{t}^{\perp}\right\rangle.$ (162)
+
+Using ( 153 ), Cauchy-Schwarz, ( 155 ), the complements of the events in ( 158 ), and $m_{t}\leq n$ , we obtain
+
+$\displaystyle\left\lvert\left\langle\bm{u}_{j},\bm{r}_{t}\right\rangle\right\rvert$ $\displaystyle=\left\lvert\sum_{s=1}^{m_{t}}\alpha_{t,s}\left\langle\bm{u}_{j},\bm{w}_{t,s}\right\rangle\right\rvert$ $\displaystyle\leq\left(\sum_{s=1}^{m_{t}}\alpha_{t,s}^{2}\right)^{1/2}\left(\sum_{s=1}^{m_{t}}\left\lvert\left\langle\bm{u}_{j},\bm{w}_{t,s}\right\rangle\right\rvert^{2}\right)^{1/2}$ $\displaystyle\leq\frac{R}{\eta}\sqrt{m_{t}}\,\tau$ $\displaystyle\leq\frac{R}{\eta}\sqrt{n}\left(\frac{\eta}{4R\sqrt{n}}\right)=\frac{1}{4}.$ (163)
+
+Thus every coordinate of $\bm{U}^{\top}\bm{r}_{t}$ with index greater than $J_{t}$ has absolute value at most $1/4$ , and hence
+
+$\operatorname{prog}_{1/4}(\bm{U}^{\top}\bm{r}_{t})\leq J_{t}.$ (164)
+
+Step 7: prove progress for the coupled process and transfer it to the actual process. Extend the notation from ( 144 ) to the response-free output by defining, for every $t\in\{1,\ldots,n\}$ ,
+
+$\widetilde{\mathcal{E}}_{t}=\left\{\operatorname{prog}_{1/4}(\bm{U}^{\top}\widetilde{\bm{r}}_{t})\leq J_{t}\right\}.$ (165)
+
+For each fixed triple, Step 5 gives the conditional estimate ( 159 ), and the dimension choice gives the budget ( 161 ). Taking expectations removes the conditioning, so
+
+$\mathbb{P}(\mathcal{B}_{t,s,j})\leq\frac{\delta}{n^{2}T}\qquad\text{for every fixed }(t,s,j).$ (166)
+
+Step 6 shows, for every $t$ , that
+
+$\widetilde{\mathcal{E}}_{t}^{c}\subseteq\bigcup_{s=1}^{n}\bigcup_{j=1}^{T}\mathcal{B}_{t,s,j}.$ (167)
+
+Indeed, if every event on the right is absent, Step 6 bounds every coordinate after $J_{t}$ by $1/4$ , which is exactly $\widetilde{\mathcal{E}}_{t}$ . Therefore a union bound over the fixed set of $n^{2}T$ triples gives
+
+$\displaystyle\mathbb{P}\left(\bigcup_{t=1}^{n}\widetilde{\mathcal{E}}_{t}^{c}\right)\leq\sum_{t=1}^{n}\sum_{s=1}^{n}\sum_{j=1}^{T}\mathbb{P}(\mathcal{B}_{t,s,j})\leq n^{2}T\frac{\delta}{n^{2}T}=\delta.$ (168)
+
+Thus, with probability at least $1-\delta$ , all coupled progress events hold simultaneously.
+
+On this simultaneous event, the agreement induction in Step 2 shows that
+
+$\widetilde{\mathcal{T}}_{t}=\mathcal{T}_{t},\qquad\widetilde{\bm{a}}_{t}=\bm{a}_{t},\qquad\widetilde{\bm{r}}_{t}=\bm{r}_{t},\qquad 1\leq t\leq N,$
+
+and also $\widetilde{\bm{r}}_{N+1}=\bm{r}_{N+1}$ . For $1\leq t\leq N$ , the identity $J_{t}=L_{t-1}$ therefore turns $\widetilde{\mathcal{E}}_{t}$ into ( 79 ). For the additional output vector, $n=N+1$ , $\widetilde{\bm{r}}_{n}=\bm{r}_{N+1}$ , and $J_{n}=L_{N}$ ; hence $\widetilde{\mathcal{E}}_{n}$ becomes ( 80 ). This proves both conclusions for the actual adaptive procedure. ∎
+
+C.3 Proof of Lemma 4.12
+
+Fix $\ell\in\{0,\ldots,T\}$ , assume ( 82 ), and put
+
+$\ell^{+}=\min\{T,\ell+1\}.$
+
+For $s\in\{\ell,\ell^{+}\}$ , define the padded coordinate vector computable from the first $s$ frame columns by
+
+$\bm{q}^{[s]}(\bm{z})=\bm{P}_{s}\bm{q}=\sum_{j=1}^{s}\left\langle\bm{u}_{j},\rho_{R}(\bm{z})\right\rangle\bm{e}_{j}\in\mathbb{R}^{T}.$ (169)
+
+The expression in ( 169 ) makes clear that it is a Borel function only of the public query and the first $s$ frame columns. We now express every returned vector in terms of $\bm{q}^{[\ell]}$ or $\bm{q}^{[\ell^{+}]}$ , without using the random index $\operatorname{prog}_{\eta/4}(\bm{q})$ .
+
+Step 1: the upper gradient uses only the first $\ell$ frame columns. Recall that
+
+$f_{\bm{U}}^{\kappa}(\bm{x},\bm{z},\bm{v})=A_{\eta,T}(\bm{q}_{\bm{U}}(\bm{z}))+v_{2}+h_{R}(\bm{z}).$
+
+The upper objective is independent of $\bm{x}$ , and the chain rule gives
+
+$\displaystyle\nabla_{x}f_{\bm{U}}^{\kappa}=0,$ $\displaystyle\quad\nabla_{z}f_{\bm{U}}^{\kappa}=D\rho_{R}(\bm{z})^{\top}\bm{U}\nabla A_{\eta,T}(\bm{q})+\nabla h_{R}(\bm{z}),$ $\displaystyle\quad\nabla_{\bm{v}}f_{\bm{U}}^{\kappa}=\bm{e}_{2}.$ (170)
+
+Let $k=\operatorname{prog}_{\eta/4}(\bm{q})$ . The premise gives $k\leq\ell$ . The derivative-truncation identity ( 24 ), first at $\bm{q}$ and then at $\bm{q}^{[\ell]}=\bm{P}_{\ell}\bm{q}$ , gives
+
+$\nabla A_{\eta,T}(\bm{q})=\bm{P}_{\ell}\nabla A_{\eta,T}(\bm{q}^{[\ell]}).$ (171)
+
+Therefore
+
+$\bm{U}\nabla A_{\eta,T}(\bm{q})=\sum_{j=1}^{\ell}\bigl[\nabla A_{\eta,T}(\bm{q}^{[\ell]})\bigr]_{j}\bm{u}_{j}.$ (172)
+
+In particular, neither the ambient vectors nor their scalar coefficients depend on a column $\bm{u}_{j}$ with $j>\ell$ , and the formula itself does not require knowing $k$ .
+
+For completeness, formula ( 98 ) gives
+
+$D\rho_{R}(\bm{z})^{\top}\bm{u}_{j}=\frac{\bm{u}_{j}}{s(\bm{z})}-\frac{\left\langle\bm{u}_{j},\rho_{R}(\bm{z})\right\rangle}{R^{2}s(\bm{z})}\rho_{R}(\bm{z}).$ (173)
+
+Thus applying $D\rho_{R}(\bm{z})^{\top}$ to ( 172 ) still uses only $\bm{u}_{1},\ldots,\bm{u}_{\ell}$ . The remaining terms $\nabla h_{R}(\bm{z})$ and $\bm{e}_{2}$ are functions only of the public query. Consequently the complete upper gradient has a Borel representation using only the first $\ell$ columns.
+
+Step 2: a failed lower sample introduces no dependence on an additional frame column. Differentiating ( 38 ) in the variable order $(\bm{x},\bm{z},\bm{v})$ gives
+
+$\nabla\widehat{g}_{\bm{U}}^{\kappa}(\bm{x},\bm{z},\bm{v};\xi)=\begin{pmatrix}-\bm{z}\\[2.84526pt] \kappa^{-1}\bm{z}-\bm{x}+(\xi/p)\bigl(d_{\kappa}\vartheta_{\kappa,\bm{U}}(\bm{z})-\psi_{\eta}(v_{1})\bigr)D\vartheta_{\kappa,\bm{U}}(\bm{z})\\[2.84526pt] \bm{M}_{\kappa}\bm{v}-(\xi/p)\vartheta_{\kappa,\bm{U}}(\bm{z})\psi_{\eta}^{\prime}(v_{1})\bm{e}_{1}\end{pmatrix}.$ (174)
+
+When $\xi=0$ , both terms containing the scaled incoming-coordinate term $\vartheta_{\kappa,\bm{U}}$ disappear, and ( 174 ) reduces to
+
+$\begin{pmatrix}-\bm{z}\\ \kappa^{-1}\bm{z}-\bm{x}\\ \bm{M}_{\kappa}\bm{v}\end{pmatrix}.$ (175)
+
+This lower-gradient vector is determined entirely by the query and contains no dependence on $\bm{U}$ . Together with the upper gradient from Step 1, which depends only on the first $\ell$ frame columns, it gives the required response map for a failed call; the complete failed response need not be independent of those first $\ell$ columns.
+
+Step 3: a successful lower sample uses at most one additional column. The quantities in ( 174 ) that depend on $\bm{U}$ are $\vartheta_{\kappa,\bm{U}}(\bm{z})$ and $D\vartheta_{\kappa,\bm{U}}(\bm{z})$ . By definition,
+
+$\vartheta_{\kappa,\bm{U}}(\bm{z})=s_{\kappa}^{-1}b_{\eta,T}(\bm{q}).$
+
+The value-truncation identity ( 23 ) gives
+
+$\vartheta_{\kappa,\bm{U}}(\bm{z})=s_{\kappa}^{-1}b_{\eta,T}(\bm{q}^{[\ell^{+}]}).$ (176)
+
+Indeed, $\bm{q}$ and $\bm{q}^{[\ell^{+}]}$ have the same progress index $k\leq\ell$ and the same truncation through coordinate $\min\{T,k+1\}$ . Applying the value-truncation identity to both vectors therefore gives the same value. Since
+
+$(\bm{q}^{[\ell^{+}]})_{j}=\left\langle\bm{u}_{j},\rho_{R}(\bm{z})\right\rangle\quad\text{for }j\leq\ell^{+},$
+
+the scalar $\vartheta_{\kappa,\bm{U}}(\bm{z})$ depends on the frame only through
+
+$\bm{u}_{1},\ldots,\bm{u}_{\ell^{+}}.$
+
+It is important to use the value-truncation identity here: the mere fact that $\vartheta_{\kappa,\bm{U}}(\bm{z})$ is a scalar would not by itself prevent it from carrying information about a frame column with index greater than $\ell^{+}$ .
+
+For the derivative, the ordinary chain rule gives
+
+$D\vartheta_{\kappa,\bm{U}}(\bm{z})=s_{\kappa}^{-1}D\rho_{R}(\bm{z})^{\top}\bm{U}\nabla b_{\eta,T}(\bm{q}).$ (177)
+
+The derivative-truncation identity ( 25 ) implies
+
+$\nabla b_{\eta,T}(\bm{q})=\bm{P}_{\ell^{+}}\nabla b_{\eta,T}\bigl(\bm{q}^{[\ell^{+}]}\bigr).$ (178)
+
+Consequently,
+
+$\bm{U}\nabla b_{\eta,T}(\bm{q})=\sum_{j=1}^{\ell^{+}}\left[\nabla b_{\eta,T}\bigl(\bm{q}^{[\ell^{+}]}\bigr)\right]_{j}\bm{u}_{j}.$ (179)
+
+Combining ( 177 ), ( 179 ), and ( 173 ) shows that $D\vartheta_{\kappa,\bm{U}}(\bm{z})$ also uses no frame column after $\bm{u}_{\ell^{+}}$ .
+
+Step 4: define the uniform Borel response maps. Let $M_{\ell}^{(0)}$ return the upper-gradient formula ( 170 ), evaluated through ( 171 )–( 172 ), together with the failed lower gradient ( 175 ). Let $M_{\ell}^{(1)}$ return the same upper gradient together with the successful specialization of ( 174 ), evaluating $\vartheta_{\kappa,\bm{U}}(\bm{z})$ and $D\vartheta_{\kappa,\bm{U}}(\bm{z})$ through ( 176 ) and ( 178 )–( 179 ). All operations involved are compositions of smooth finite-dimensional maps and are therefore Borel. The first map uses only $\bm{u}_{1},\ldots,\bm{u}_{\ell}$ , and the second only $\bm{u}_{1},\ldots,\bm{u}_{\ell^{+}}$ . No map evaluates or receives $k$ . In Lemma 4.11 , take the public query descriptor to be $\bm{a}_{t}=(\bm{x}_{t},\bm{z}_{t},\bm{v}_{t})$ and the associated vector to be $\bm{r}_{t}=\rho_{R}(\bm{z}_{t})/\eta$ . For every $t$ , $\ell$ , and $b$ , define
+
+$M_{t,\ell}^{(b)}\bigl(\mathcal{T},\bm{a},\bm{r},\bm{u}_{1},\ldots,\bm{u}_{\ell_{b}}\bigr):=M_{\ell}^{(b)}\bigl(\bm{a},\bm{u}_{1},\ldots,\bm{u}_{\ell_{b}}\bigr).$
+
+Thus the formal map may simply ignore the transcript argument $\mathcal{T}$ and the redundant vector argument $\bm{r}$ . Since $\eta>0$ ,
+
+$\operatorname{prog}_{1/4}(\bm{U}^{\top}\bm{r}_{t})=\operatorname{prog}_{\eta/4}(\bm{U}^{\top}\rho_{R}(\bm{z}_{t})).$
+
+At call $t$ , take $\ell=L_{t-1}$ . On the geometric event $\operatorname{prog}_{\eta/4}(\bm{U}^{\top}\rho_{R}(\bm{z}_{t}))\leq L_{t-1}$ , the preceding identities show that the actual joint response satisfies
+
+$\bm{Y}_{t}=M_{t,L_{t-1}}^{(\xi_{t})}\bigl(\mathcal{T}_{t-1},\bm{a}_{t},\bm{r}_{t},\bm{u}_{1},\ldots,\bm{u}_{L_{t}}\bigr).$
+
+Indeed, on the failed branch $\xi_{t}=0$ , one has $L_{t}=L_{t-1}$ , and the response map uses only the first $L_{t-1}$ frame columns. On the successful branch $\xi_{t}=1$ , one has $L_{t}=\min\{T,L_{t-1}+1\}$ , and the response map uses only the first $L_{t}$ frame columns. This is precisely ( 77 ). Hence the bilevel oracle satisfies the stated response-dependence condition, and its response maps do not evaluate the random progress index. ∎
+
+C.4 Proof of Proposition 4.13
+
+Step 1: associate a bounded vector with each query. At call $t$ , let $\bm{a}_{t}=(\bm{x}_{t},\bm{z}_{t},\bm{v}_{t})$ be the point selected by the algorithm and define
+
+$\bm{r}_{t}=\frac{\rho_{R}(\bm{z}_{t})}{\eta}.$ (180)
+
+The soft projection satisfies
+
+$\left\lVert\rho_{R}(\bm{z}_{t})\right\rVert<R=230\eta\sqrt{T}.$
+
+Therefore
+
+$\left\lVert\bm{r}_{t}\right\rVert=\frac{\left\lVert\rho_{R}(\bm{z}_{t})\right\rVert}{\eta}\leq\frac{R}{\eta}=230\sqrt{T}.$ (181)
+
+The construction has $T\geq 1$ , so $R=230\eta\sqrt{T}>\eta$ . Moreover, ( 60 ) gives $0<p\leq 1$ , the dimension condition implies $d\geq T$ , and ( 181 ) gives the required norm bound. Thus the basic parameter and norm conditions of Lemma 4.11 are satisfied.
+
+Step 2: include an output that was never queried. The algorithm may return a point $\widehat{\bm{x}}_{N}^{\mathsf{A}}$ at which it never called the oracle. The hyper-objective at $\widehat{\bm{x}}_{N}^{\mathsf{A}}$ evaluates the rotated zero-chain at the lower level solution
+
+$\bm{z}^{*}(\widehat{\bm{x}}_{N}^{\mathsf{A}})=\kappa\widehat{\bm{x}}_{N}^{\mathsf{A}}.$
+
+Accordingly, append the additional output vector
+
+$\bm{r}_{N+1}=\frac{\rho_{R}(\kappa\widehat{\bm{x}}_{N}^{\mathsf{A}})}{\eta}.$ (182)
+
+It obeys the same norm bound as ( 181 ). No oracle response is returned, so this additional vector provides no additional oracle information and does not change $L_{N}$ .
+
+Step 3: apply the adaptive Haar lemma. Lemma 4.12 verifies the required response-dependence condition. Choose $\delta=1/8$ . Substituting $R^{2}=230^{2}\eta^{2}T$ and $2(N+1)^{2}T/\delta=16(N+1)^{2}T$ into ( 78 ) gives exactly ( 84 ). Hence, with probability at least $7/8$ ,
+
+$\operatorname{prog}_{1/4}\!\left(\bm{U}^{\top}\frac{\rho_{R}(\kappa\widehat{\bm{x}}_{N}^{\mathsf{A}})}{\eta}\right)\leq L_{N}=\min\{T,S_{N}\}.$ (183)
+
+For every coordinate $j$ , because $\eta>0$ ,
+
+$\left\lvert\left[\bm{U}^{\top}\rho_{R}(\kappa\widehat{\bm{x}}_{N}^{\mathsf{A}})/\eta\right]_{j}\right\rvert>\frac{1}{4}$
+
+holds if and only if
+
+$\left\lvert\left[\bm{U}^{\top}\rho_{R}(\kappa\widehat{\bm{x}}_{N}^{\mathsf{A}})\right]_{j}\right\rvert>\frac{\eta}{4}.$
+
+Therefore
+
+$\operatorname{prog}_{1/4}\!\left(\bm{U}^{\top}\frac{\rho_{R}(\kappa\widehat{\bm{x}}_{N}^{\mathsf{A}})}{\eta}\right)=\operatorname{prog}_{\eta/4}\!\left(\bm{U}^{\top}\rho_{R}(\kappa\widehat{\bm{x}}_{N}^{\mathsf{A}})\right).$ (184)
+
+Step 4: fewer than $T$ successes occur with high probability. Freshness gives
+
+$\mathbb{E}[\xi_{t}\mid\mathscr{F}_{t-1}]=p.$
+
+Using the tower property and summing over the calls,
+
+$\mathbb{E}S_{N}=\sum_{t=1}^{N}\mathbb{E}\!\left[\mathbb{E}[\xi_{t}\mid\mathscr{F}_{t-1}]\right]=Np.$ (185)
+
+Markov’s inequality and ( 83 ) now yield
+
+$\mathbb{P}(S_{N}\geq T)\leq\frac{\mathbb{E}S_{N}}{T}=\frac{Np}{T}\leq\frac{1}{8}.$ (186)
+
+Thus the event
+
+$\mathcal{E}_{\rm B}\coloneqq\{S_{N}<T\}$
+
+has probability at least $7/8$ .
+
+Step 5: intersect the two good events. Let $\mathcal{E}_{\rm H}$ be the event on which ( 183 ) holds. On $\mathcal{E}_{\rm H}\cap\mathcal{E}_{\rm B}$ ,
+
+$\displaystyle\operatorname{prog}_{\eta/4}\!\left(\bm{U}^{\top}\rho_{R}(\kappa\widehat{\bm{x}}_{N}^{\mathsf{A}})\right)\leq\min\{T,S_{N}\}=S_{N}<T.$ (187)
+
+Finally, the union bound gives
+
+$\displaystyle\mathbb{P}(\mathcal{E}_{\rm H}\cap\mathcal{E}_{\rm B})$ $\displaystyle=1-\mathbb{P}(\mathcal{E}_{\rm H}^{c}\cup\mathcal{E}_{\rm B}^{c})$ $\displaystyle\geq 1-\mathbb{P}(\mathcal{E}_{\rm H}^{c})-\mathbb{P}(\mathcal{E}_{\rm B}^{c})$ $\displaystyle\geq 1-\frac{1}{8}-\frac{1}{8}=\frac{3}{4}.$
+
+Together with ( 187 ), this proves ( 85 ). ∎
+
+Appendix D Proof of Lemma 4.9
+
+At $\bm{x}=0$ , $\rho_{R}(\bm{0})=0$ and $h_{R}(\bm{0})=0$ , so $\Phi_{\bm{U}}^{\kappa}(\bm{0})=H_{\eta,T}(\bm{0})$ . For every $\bm{x}$ , $h_{R}(\kappa\bm{x})\geq 0$ and hence
+
+$\Phi_{\bm{U}}^{\kappa}(\bm{x})=H_{\eta,T}(\bm{U}^{\top}\rho_{R}(\kappa\bm{x}))+h_{R}(\kappa\bm{x})\geq\inf_{\bm{q}\in\mathbb{R}^{T}}H_{\eta,T}(\bm{q}).$
+
+Taking the infimum over $\bm{x}$ and subtracting from the equality at zero gives
+
+$\displaystyle\Phi_{\bm{U}}^{\kappa}(\bm{0})-\inf_{\bm{x}}\Phi_{\bm{U}}^{\kappa}(\bm{x})\leq H_{\eta,T}(\bm{0})-\inf_{\bm{q}}H_{\eta,T}(\bm{q})\leq C_{\Delta}\eta^{2}T,$
+
+where the last step is Lemma 4.2 . This proves ( 62 ).
+
+We now prove the gradient statement. Recall that $R=230\eta\sqrt{T}$ , and introduce the normalized variables
+
+$\bm{w}=\frac{\kappa\bm{x}}{\eta},\qquad\bm{r}=\rho_{R/\eta}(\bm{w}),\qquad\bm{q}=\bm{U}^{\top}\bm{r}.$ (188)
+
+The radial definition gives the exact scaling
+
+$\rho_{R}(\eta\bm{w})=\eta\rho_{R/\eta}(\bm{w})=\eta\bm{r}.$
+
+Together with $H_{\eta,T}(\eta\bm{q})=\eta^{2}F_{T}(\bm{q})$ and ( 33 ), this yields
+
+$\Phi_{\bm{U}}^{\kappa}(\eta\bm{w}/\kappa)=\eta^{2}\mathcal{G}_{\bm{U}}(\bm{w}),$ (189)
+
+where
+
+$\mathcal{G}_{\bm{U}}(\bm{w})=F_{T}(\bm{U}^{\top}\rho_{R/\eta}(\bm{w}))+\frac{1}{4}(\frac{R}{\eta})^{2}\left(\sqrt{1+\frac{\eta^{2}\left\lVert\bm{w}\right\rVert^{2}}{R^{2}}}-1\right).$ (190)
+
+Let
+
+$s=\sqrt{1+\frac{\eta^{2}\left\lVert\bm{w}\right\rVert^{2}}{R^{2}}},\qquad\bm{J}=D\rho_{R/\eta}(\bm{w}).$
+
+Because the gradient of the pseudo-Huber term in normalized variables is $\frac{1}{4}\bm{r}$ , differentiation of ( 190 ) gives
+
+$\nabla\mathcal{G}_{\bm{U}}(\bm{w})=\bm{J}^{\top}\bm{U}\nabla F_{T}(\bm{q})+\frac{1}{4}\bm{r}.$ (191)
+
+Assumption ( 63 ) becomes $\operatorname{prog}_{1/4}(\bm{q})<T$ , and therefore also $\operatorname{prog}_{1}(\bm{q})<T$ . Let
+
+$j=\operatorname{prog}_{1}(\bm{q})+1.$
+
+Then $j\leq T$ and $\left\lvert q_{j}\right\rvert\leq 1$ . The incoming-coordinate derivative bound in Lemma 4.2 , applied with scale one, gives
+
+$\partial_{j}F_{T}(\bm{q})\leq-1,\qquad\left\lVert\nabla F_{T}(\bm{q})\right\rVert\leq 23\sqrt{T}.$ (192)
+
+Formula ( 98 ), now at radius $R/\eta$ , reads
+
+$\bm{J}=\frac{\bm{I}}{s}-\frac{\eta^{2}\bm{r}\bm{r}^{\top}}{R^{2}s}.$
+
+Take the inner product of ( 191 ) with the unit vector $\bm{u}_{j}$ . The first part of $\bm{J}$ contributes $(1/s)\partial_{j}F_{T}(\bm{q})$ ; the rank-one correction and the regularizer may have the opposite sign. The reverse triangle inequality $|a+b+c|\geq|a|-|b|-|c|$ therefore gives
+
+$\displaystyle\left\lvert\left\langle\bm{u}_{j},\nabla\mathcal{G}_{\bm{U}}(\bm{w})\right\rangle\right\rvert\geq{}\frac{1}{s}-\frac{\eta^{2}\left\lvert\left\langle\bm{u}_{j},\bm{r}\right\rangle\right\rvert\left\lVert\bm{r}\right\rVert\left\lVert\nabla F_{T}(\bm{q})\right\rVert}{R^{2}s}-\frac{1}{4}\left\lvert\left\langle\bm{u}_{j},\bm{r}\right\rangle\right\rvert.$ (193)
+
+Here $\left\langle\bm{u}_{j},\bm{r}\right\rangle=q_{j}$ , so its absolute value is at most one.
+
+We split into two exhaustive cases. First suppose $\left\lVert\bm{w}\right\rVert\leq\frac{R}{2\eta}$ . Then
+
+$s=\sqrt{1+\frac{\eta^{2}\|\bm{w}\|^{2}}{R^{2}}}\leq\sqrt{1+\frac{1}{4}}=\frac{\sqrt{5}}{2},\qquad\left\lVert\bm{r}\right\rVert=\frac{\left\lVert\bm{w}\right\rVert}{s}\leq\|\bm{w}\|\leq\frac{R}{2\eta}.$
+
+Since also $s\geq 1$ , the middle term in ( 193 ) satisfies
+
+$\frac{\eta^{2}\left\lvert\left\langle\bm{u}_{j},\bm{r}\right\rangle\right\rvert\left\lVert\bm{r}\right\rVert\left\lVert\nabla F_{T}(\bm{q})\right\rVert}{R^{2}s}\leq\frac{\eta\cdot(R/2)\cdot 23\sqrt{T}}{R^{2}}=\frac{23\sqrt{T}}{2(230\sqrt{T})}=\frac{1}{20}.$
+
+Using $\left\lVert\nabla\mathcal{G}_{\bm{U}}(\bm{w})\right\rVert\geq\left\lvert\left\langle\bm{u}_{j},\nabla\mathcal{G}_{\bm{U}}(\bm{w})\right\rangle\right\rvert$ ,
+
+$\left\lVert\nabla\mathcal{G}_{\bm{U}}(\bm{w})\right\rVert\geq\left\lvert\left\langle\bm{u}_{j},\nabla\mathcal{G}_{\bm{U}}(\bm{w})\right\rangle\right\rvert\geq\frac{2}{\sqrt{5}}-\frac{1}{20}-\frac{1}{4}>\frac{1}{2}.$ (194)
+
+Now suppose $\left\lVert\bm{w}\right\rVert>\frac{R}{2\eta}$ . The function $t\mapsto t/\sqrt{1+t^{2}\eta^{2}/R^{2}}$ is increasing, so
+
+$\|\bm{r}\|>\frac{R/2}{\eta\sqrt{1+1/4}}=\frac{R/2}{\eta\sqrt{5}/2}=\frac{R}{\eta\sqrt{5}}.$ (195)
+
+Also $s>\frac{\sqrt{5}}{2}$ . The eigenvalues of $\bm{J}$ are at most $1/s$ , and therefore $\left\lVert\bm{J}\right\rVert_{\mathrm{op}}<\frac{2}{\sqrt{5}}$ . Applying the reverse triangle inequality directly to ( 191 ), then using ( 192 ) and ( 195 ), gives
+
+$\displaystyle\left\lVert\nabla\mathcal{G}_{\bm{U}}(\bm{w})\right\rVert$ $\displaystyle\geq\frac{1}{4}\left\lVert\bm{r}\right\rVert-\left\lVert\bm{J}\right\rVert_{\mathrm{op}}\left\lVert\nabla F_{T}(\bm{q})\right\rVert$ (196) $\displaystyle>\frac{R}{4\eta\sqrt{5}}-\frac{46}{\sqrt{5}}\sqrt{T}$ (197) $\displaystyle=\frac{230/4-46}{\sqrt{5}}\sqrt{T}>\frac{1}{2}.$ (198)
+
+Thus $\left\lVert\nabla\mathcal{G}_{\bm{U}}(\bm{w})\right\rVert>1/2$ in both cases.
+
+Finally, $\bm{w}=\kappa\bm{x}/\eta$ . Applying the chain rule to ( 189 ) gives
+
+$\nabla_{x}\Phi_{\bm{U}}^{\kappa}(\bm{x})=\eta^{2}\left(\frac{\kappa}{\eta}\right)\nabla\mathcal{G}_{\bm{U}}(\bm{w})=\kappa\eta\nabla\mathcal{G}_{\bm{U}}(\bm{w}).$
+
+Combining this identity with the last two case bounds proves ( 64 ). ∎
+
+Appendix E Proof of Theorem 4.1
+
+Fix $\kappa\geq 2$ , $\Delta>0$ , $\sigma\geq 0$ , and $\epsilon$ satisfying ( 5 ). Choose
+
+$\eta=\frac{4\epsilon}{\kappa},\qquad X=\frac{\Delta}{2C_{\Delta}\eta^{2}},\qquad T=\lfloor X\rfloor.$ (199)
+
+We first check the rounding and all smallness conditions. Since $\eta^{2}=\frac{16\epsilon^{2}}{\kappa^{2}}$ ,
+
+$X=\frac{\Delta\kappa^{2}}{32C_{\Delta}\epsilon^{2}}.$
+
+Fix the theorem constant
+
+$c_{\epsilon}=\min\left\{1,\frac{c_{\rm reg}}{4},\frac{1}{16\sqrt{C_{\Delta}}}\right\}.$ (200)
+
+Then $\epsilon\leq c_{\epsilon}\sqrt{\Delta}$ and $\kappa\geq 2$ imply
+
+$X=\frac{\Delta\kappa^{2}}{32C_{\Delta}\epsilon^{2}}\geq\frac{4}{32C_{\Delta}c_{\epsilon}^{2}}\geq 32.$
+
+In particular, $X\geq 2$ , and hence
+
+$\lfloor X\rfloor\geq X-1\geq X/2.$
+
+Substituting the definition of $X$ gives the two-sided estimate
+
+$\frac{\Delta}{4C_{\Delta}\eta^{2}}\leq T\leq\frac{\Delta}{2C_{\Delta}\eta^{2}}.$ (201)
+
+The right inequality implies $C_{\Delta}\eta^{2}T\leq\Delta/2$ . Moreover, ( 200 ) and $\epsilon\leq c_{\epsilon}\leq c_{\rm reg}/4$ give
+
+$\eta=\frac{4\epsilon}{\kappa}\leq\frac{c_{\rm reg}}{\kappa}\leq c_{\rm reg}\leq\eta_{0}.$
+
+Thus Lemmas 4.6 and 4.7 apply.
+
+Choose $p$ according to ( 60 ). At every call, take the upper sample $\zeta_{t}$ to be a fixed dummy symbol and draw the lower sample bits $\xi_{t}\stackrel{{\scriptstyle\mathrm{iid}}}{{\sim}}\operatorname{Ber}(p)$ , independently of the Haar frame and the algorithm’s random seed. By Lemma 4.8 , the resulting $\mathcal{SFO}$ is conditionally unbiased and has variance at most $\sigma^{2}$ . The reciprocal $p^{-1}$ is given by ( 61 ).
+
+Let $N$ satisfy ( 6 ), where we now fix
+
+$c_{\rm LB}=\frac{1}{512C_{\Delta}\max\{1,256C_{\rm var}\}}.$ (202)
+
+We show that this choice ensures $N\leq\frac{T}{8p}$ . From ( 201 ) and ( 61 ),
+
+$\displaystyle\frac{T}{8p}$ $\displaystyle\geq\frac{\Delta}{32C_{\Delta}\eta^{2}}\max\left\{1,\frac{\sigma^{2}\kappa^{2}}{C_{\rm var}\eta^{4}}\right\}$ $\displaystyle=\frac{\Delta\kappa^{2}}{512C_{\Delta}\epsilon^{2}}\max\left\{1,\frac{\sigma^{2}\kappa^{6}}{256C_{\rm var}\epsilon^{4}}\right\}.$ (203)
+
+For every $a\geq 0$ and $\beta>0$ ,
+
+$\max\left\{1,\frac{a}{\beta}\right\}\geq\frac{1}{\max\{1,\beta\}}\max\{1,a\}.$ (204)
+
+Indeed, if $\beta\geq 1$ , both $1\geq 1/\beta$ and $a/\beta$ are at least the corresponding term divided by $\beta$ ; if $\beta<1$ , then $a/\beta\geq a$ and the factor on the right is one. Apply ( 204 ) with $a=\sigma^{2}\kappa^{6}/\epsilon^{4}$ and $\beta=256C_{\rm var}$ . Together with ( 202 ), this proves $N\leq\frac{T}{8p}$ .
+
+Set $n=N+1$ and choose $d$ satisfying ( 84 ). Fix an arbitrary algorithm
+
+$\mathsf{A}\in\mathcal{A}_{N}^{\mathcal{SFO}}(d,d+2).$
+
+Draw $\bm{U}$ Haar-uniformly from $\operatorname{St}(d,T)$ and consider the hard instance ( 36 )–( 38 ). This use of a random frame is only a proof distribution; a deterministic frame will be fixed below. The frame, the algorithm seed, and the i.i.d. Bernoulli oracle samples are taken mutually independent on the product probability space. Lemma 4.9 and the upper bound in ( 201 ) give, for every $\bm{U}$ ,
+
+$\Phi_{\bm{U}}^{\kappa}(\bm{0})-\inf_{\bm{x}}\Phi_{\bm{U}}^{\kappa}(\bm{x})\leq C_{\Delta}\eta^{2}T\leq\Delta/2\leq\Delta.$
+
+Lemma 4.7 verifies all class conditions, including $\kappa_{y}=\Theta(\kappa)$ .
+
+We record the measurability and integrability needed to fix one frame. The algorithmic query maps are Borel, the hard sample-gradient maps are Borel in the frame, query, and Bernoulli bit, and the interaction has only finitely many recursive steps. Hence
+
+$(\bm{U},\omega_{\rm alg},\xi)\longmapsto\left\lVert\nabla\Phi_{\bm{U}}^{\kappa}(\widehat{\bm{x}}_{N}^{\mathsf{A}})\right\rVert$
+
+is jointly Borel measurable. It is also uniformly bounded. Indeed, ( 191 ), $\lVert\bm{J}\rVert_{\rm op}\leq 1$ , $\lVert\nabla F_{T}\rVert\leq 23\sqrt{T}$ , and $\lVert\bm{r}\rVert\leq\frac{R}{\eta}=230\sqrt{T}$ give
+
+$\left\lVert\nabla\Phi_{\bm{U}}^{\kappa}(\bm{x})\right\rVert\leq\kappa\eta(23+230/4)\sqrt{T}\qquad\text{for every }\bm{U}\text{ and }\bm{x}.$
+
+Thus its first and second powers are integrable, and Tonelli-Fubini and Jensen may be applied below without an extended-value ambiguity.
+
+Proposition 4.13 shows that the rotated chain coordinates at the output have progress below $T$ with probability at least $3/4$ . On that event, Lemma 4.9 and the choice of $\eta$ give
+
+$\left\lVert\nabla\Phi_{\bm{U}}^{\kappa}(\widehat{\bm{x}}_{N}^{\mathsf{A}})\right\rVert>\frac{\kappa\eta}{2}=2\epsilon.$ (205)
+
+The gradient norm is nonnegative outside the event, so
+
+$\mathbb{E}_{\bm{U},\omega_{\rm alg},\xi}\left\lVert\nabla\Phi_{\bm{U}}^{\kappa}(\widehat{\bm{x}}_{N}^{\mathsf{A}})\right\rVert>\frac{3}{4}(2\epsilon)=\frac{3}{2}\epsilon.$ (206)
+
+By Tonelli-Fubini, the left-hand side of ( 206 ) is the Haar average of the conditional expectations at fixed frames. If every deterministic frame had conditional expectation at most $3\epsilon/2$ , this average would be at most $3\epsilon/2$ , a contradiction. Hence there exists at least one deterministic frame $\bm{U}_{0}$ for which
+
+$\mathbb{E}_{\omega_{\rm alg},\xi}\left\lVert\nabla\Phi_{\bm{U}_{0}}^{\kappa}(\widehat{\bm{x}}_{N}^{\mathsf{A}})\right\rVert>\frac{3}{2}\epsilon.$
+
+The hard functions obtained by fixing $\bm{U}_{0}$ are deterministic. The selected frame may depend on the algorithm as permitted by the minimax quantifier order, but it does not depend on any realization of the algorithm seed or oracle samples. Finally, Jensen’s inequality gives
+
+$\mathbb{E}_{\omega_{\rm alg},\xi}\left\lVert\nabla\Phi_{\bm{U}_{0}}^{\kappa}(\widehat{\bm{x}}_{N}^{\mathsf{A}})\right\rVert^{2}\geq\left(\mathbb{E}_{\omega_{\rm alg},\xi}\left\lVert\nabla\Phi_{\bm{U}_{0}}^{\kappa}(\widehat{\bm{x}}_{N}^{\mathsf{A}})\right\rVert\right)^{2}>\frac{9}{4}\epsilon^{2}.$
+
+This proves ( 7 ). Since $\kappa\leq\kappa_{y}\leq 14\kappa$ , monotonicity and the max comparison ( 204 ) lose at most the fixed factor $14^{8}$ when replacing $\kappa$ by $\kappa_{y}$ . This proves ( 8 ). ∎

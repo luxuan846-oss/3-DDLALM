@@ -1,0 +1,943 @@
+Content selection saved. Describe the issue below:
+
+Complexities of Weak Proximal Oracle Methods for Composite Convex Optimization
+
+We consider a standard convex composite optimization problem with either smooth or nonsmooth objective function, and under quadratic growth. In recent years, several works gave algorithms based on a weak proximal oracle (WPO) that essentially match in oracle complexities proximal (sub)gradient methods relying on exact prox operations. Importantly, such WPOs, which relax the strong optimality condition of the standard prox operator, may admit much more efficient implementation in terms of runtime when optimal solutions have some sparse structure. A question remained if such WPO-based methods can be accelerated (in the sense of Nesterov’s accelerated gradient). In this work we provide a negative answer by establishing lower bounds against both deterministic and randomized methods. Thus, while WPOs can substantially reduce the cost of individual oracle calls, this comes with an inherent loss in oracle complexity. We also provide a new upper-bound for WPO-based nonsmooth convex composite optimization, nearly matching the proximal subgradient method.
+
+1 Introduction
+
+We consider the standard composite model
+
+$\displaystyle\min_{{\mathbf{x}}\in\mathbb{V}}\left\{F({\mathbf{x}}):=f({\mathbf{x}})+\mathcal{R}({\mathbf{x}})\right\}.$ (1)
+
+Throughout, $\mathbb{V}$ is a finite-dimensional Euclidean space of ambient dimension $n:=\dim(\mathbb{V})$ . We write $\left\langle\cdot,\cdot\right\rangle$ and $\left\lVert\cdot\right\rVert$ for its inner product and induced Euclidean norm, respectively. For ${\mathbf{x}}\in\mathbb{V}$ and a nonempty set $\mathcal{S}\subseteq\mathbb{V}$ define $\textrm{dist}({\mathbf{x}},\mathcal{S}):=\inf_{{\mathbf{z}}\in\mathcal{S}}\left\lVert{\mathbf{x}}-{\mathbf{z}}\right\rVert$ .
+
+The function $f:\mathbb{V}\to\mathbb{R}$ is closed and convex, and $\mathcal{R}:\mathbb{V}\to\mathbb{R}\cup\{+\infty\}$ is proper, closed, and convex. Denote $\mathcal{X}^{*}:=\argmin_{{\mathbf{x}}\in\mathbb{V}}F({\mathbf{x}})$ , $F^{*}:=\min_{{\mathbf{x}}\in\mathbb{V}}F({\mathbf{x}})$ , and assume that $\mathcal{X}^{*}$ is nonempty. Throughout, we assume that $F$ satisfies the $\alpha$ -quadratic-growth condition, for some $\alpha>0$ ,
+
+$\displaystyle F({\mathbf{x}})-F^{*}\geq\frac{\alpha}{2}\textrm{dist}({\mathbf{x}},\mathcal{X}^{*})^{2},\qquad{\mathbf{x}}\in\mathop{\mbox{\rm dom}}(\mathcal{R}).$ (2)
+
+We distinguish between the following two fundamental regimes.
+
+In the smooth case , $f$ is differentiable and $\beta$ -smooth with $\beta\geq\alpha$ .
+
+In the nonsmooth case , no smoothness assumption is imposed on $f$ .
+
+Standard first-order methods for Problem ( 1 ), which treat the function $\mathcal{R}$ in closed-form, rely on an oracle for $\mathcal{R}$ that can compute a minimizer of the proximal problem:
+
+$\displaystyle\min_{{\mathbf{z}}\in\mathbb{V}}\left\{\lambda\|{{\mathbf{z}}-{\mathbf{y}}}\|^{2}+\mathcal{R}({\mathbf{z}})\right\},$ (3)
+
+for any $\lambda\geq 0$ and ${\mathbf{y}}\in\mathbb{V}$ [ 5 , 17 , 3 ] .
+
+However, in many problems of interest, implementing this proximal oracle may be inefficient in high-dimensions. We discuss this in more detail in Section 1.1 , however, a clean example to keep in mind is when $\mathbb{V}$ is a space of real matrices and $\mathcal{R}$ is a nuclear norm regularizer (sum of singular values) or an indicator for the positive semidefinite cone. In both scenarios, solving ( 3 ) amounts in worst case to a full singular value decomposition (SVD) / eigen-decomposition, which is prohibitive when the dimension is very large.
+
+One important family of alternative methods is based on the Frank-Wolfe algorithm [ 8 , 15 ] , which concerns the case that $\mathcal{R}$ is an indicator for a convex and compact set, and instead of solving the potentially expensive Problem ( 3 ) (which reduces to Euclidean projection in this case), requires only linear optimization steps over the feasible domain. However, these methods are well known to suffer from slow sublinear convergence rates even under quadratic growth or strong convexity conditions, as opposed to proximal methods that can leverage such conditions towards obtaining faster rates. A well known lower bound for these methods in case that $f$ is smooth and strongly convex is given in [ 15 ] . For completeness, we bring a simple lower bound covering the case that $f$ is nonsmooth and strongly convex (Theorem 9 in the appendix) 1 1 1 we note that while there is active research on Frank-Wolfe-type methods that can leverage quadratic growth / strong convexity conditions, such results most often come with additional dependencies not present in proximal methods and consider very specific structures of $\mathcal{R}$ , and are beyond the scope of this work .
+
+In recent years several works proposed methods that build on an oracle that relaxes the exact minimization of the prox operator in ( 3 ) towards obtaining an oracle that can benefit from the quadratic growth condition, yet may be more efficient to implement in terms of runtime [ 1 , 12 , 11 , 13 , 7 , 10 , 9 ] . The following definition, which is our main object of interest in this work, captures the most common definition. The term weak proximal oracle was originally coined in [ 11 ] .
+
+A map $\mathcal{A}:\mathbb{V}\times\mathbb{R}_{+}\rightarrow\mathop{\mbox{\rm dom}}(\mathcal{R})$ is called a weak proximal oracle for Problem ( 1 ) if, for every ${\mathbf{y}}\in\mathbb{V}$ and $\lambda>0$ , it outputs a point ${\mathbf{x}}\in\mathop{\mbox{\rm dom}}(\mathcal{R})$ such that for any ${\mathbf{x}}^{*}\in\mathcal{X}^{*}$ ,
+
+$\displaystyle\lambda\left\lVert{\mathbf{x}}-{\mathbf{y}}\right\rVert^{2}+\mathcal{R}({\mathbf{x}})\leq\lambda\left\lVert{\mathbf{x}}^{*}-{\mathbf{y}}\right\rVert^{2}+\mathcal{R}({\mathbf{x}}^{*}).$ (4)
+
+Condition ( 4 ) strongly relaxes the optimality condition of the standard prox operation ( 3 ), and simply requires the output to be competitive with the set of minimizers of the global Problem ( 1 ).
+
+In Section 1.1 we survey in detail settings in which this oracle can indeed be implemented with potentially much better runtime than the exact prox operator. For now, we shall only mention that for our clean example from before of a matrix nuclear norm regularizer or an indicator for the positive semidefinite cone, in case all optimal solutions to the global Problem ( 1 ) have low rank (which is indeed the case in many applications of interest), a WPO will require only a low-rank matrix decomposition, instead of a full-rank one for the exact prox operation.
+
+In this work we ask:
+
+What are the complexities of first-order methods for Problem ( 1 ) (under the assumptions listed above), when the function $\mathcal{R}$ is accessible only through a weak proximal oracle?
+
+To make this question even more focused, we note that [ 1 , 12 , 11 , 13 , 7 , 10 , 9 ] essentially showed that when $f$ is smooth, an order of $O\left({\frac{\beta}{\alpha}\log\frac{1}{\epsilon}}\right)$ gradient computations and WPO calls suffices to find an $\epsilon$ -approximate solution (in function value). This matches the complexities of the proximal gradient method but with a potentially much more efficient oracle. However, an important question remained open: whether accelerated rates (in the sense of Nesterov’s accelerated gradient method), that replace the $\beta/\alpha$ factor with its square root $\sqrt{\beta/\alpha}$ , are possible?
+
+In case $f$ is nonsmooth, [ 11 ] showed that when $f$ can be replaced with a suitable smooth approximation, $\tilde{O}\left({\frac{1}{\alpha\epsilon}}\right)$ WPO calls suffice (here we let $\tilde{O}$ hide log factors and we focus only on dependence on $\alpha,\epsilon$ ), which matches (up to log factors and in terms of $\alpha,\epsilon$ ) the proximal subgradient method. However, this approach is not generic (since it requires a known smooth approximation). The MOPES method [ 18 ] , in case $\mathcal{R}$ is an indicator for a convex and compact set, requires only an order of $O\left({1/\sqrt{\alpha\epsilon}}\right)$ exact projections onto the feasible set 2 2 2 while [ 18 ] did not consider a quadratic growth assumption and gave a $O(\|{{\mathbf{x}}_{0}-{\mathbf{x}}^{*}}\|/\epsilon)$ projection complexity bound, where ${\mathbf{x}}^{*}$ is some optimal solution, the reduction to the quadratic growth case follows from a standard restarting argument . This raises the question whether WPO-based methods for the nonsmooth case can be accelerated, replacing the $1/(\alpha\epsilon)$ dependence with only $1/\sqrt{\alpha\epsilon}$ ?
+
+Unfortunately, our main results are negative: WPO-based methods cannot be accelerated and the terms $\beta/\alpha$ and $1/(\alpha\epsilon)$ in the smooth and nonsmooth case, respectively, cannot be improved beyond perhaps log factors. Hence, while weak proximal oracles can substantially reduce the cost of individual oracle calls, this comes with an inherent loss in oracle complexity.
+
+On the positive side, in case $f$ is nonsmooth, and without assuming $\mathcal{R}$ is an indicator for a convex and compact set, we provide a generic upper-bound requiring $\tilde{O}\left({\frac{1}{\alpha\epsilon}}\right)$ WPO and first-order oracle calls.
+
+Together, these results essentially characterize the oracle complexity of weak proximal methods under quadratic growth. Weak proximal access can yield substantially cheaper iterations than exact proximal access, but unlike exact proximal access it does not support accelerated oracle complexity in the worst case.
+
+Before we can present our results in more detail we require two additional definitions of oracles for accessing $\mathcal{R}$ . Let us first present these definitions and then discuss their purpose.
+
+Let $\widehat{\mathcal{K}}\subseteq\mathop{\mbox{\rm dom}}(\mathcal{R})$ be a closed, but not necessarily convex, set satisfying $\mathcal{X}^{*}\subseteq\widehat{\mathcal{K}}$ . A map $\mathcal{A}:\mathbb{V}\times\mathbb{R}_{+}\rightarrow\widehat{\mathcal{K}}$ is called a restricted proximal oracle associated with $\widehat{\mathcal{K}}$ if, for every ${\mathbf{y}}\in\mathbb{V}$ and $\lambda>0$ , it outputs a point in
+
+$\displaystyle\argmin_{{\mathbf{z}}\in\widehat{\mathcal{K}}}\left\{\lambda\left\lVert{\mathbf{z}}-{\mathbf{y}}\right\rVert^{2}+\mathcal{R}({\mathbf{z}})\right\}.$ (5)
+
+Since $\mathcal{X}^{*}\subseteq\widehat{\mathcal{K}}$ , every restricted proximal oracle is a weak proximal oracle in the sense of Definition 1 .
+
+Suppose $\mathcal{R}$ is the indicator function of a convex and compact set $\mathcal{K}\subset\mathbb{V}$ whose set of vertices is denoted $\mathcal{V}$ . Suppose every ${\mathbf{x}}^{*}\in\mathcal{X}^{*}$ can be written as a convex combination of at most $s$ vertices from $\mathcal{V}$ , where $s<<n$ . For a positive integer $k$ such that $ks\leq n$ , a $k$ -fold sparse projection oracle is an oracle that for every ${\mathbf{y}}\in\mathbb{V}$ , outputs a point in
+
+$\displaystyle\argmin_{{\mathbf{z}}\in\mathcal{C}_{sk}}\left\lVert{\mathbf{z}}-{\mathbf{y}}\right\rVert,$ (6)
+
+where $\mathcal{C}_{sk}\subseteq\mathcal{K}$ contains all points in $\mathcal{K}$ that can be written as the convex combination of at most $s\cdot{}k$ vertices from $\mathcal{V}$ .
+
+In particular, this oracle implements the restricted proximal oracle of Definition 2 with $\widehat{\mathcal{K}}=\mathcal{C}_{sk}$ .
+
+Let us now discuss why we have three different oracle definitions. As already mentioned above, these oracles form a hierarchy: the $k$ -fold sparse projection oracle (in case $\mathcal{R}$ is an indicator for a set) implies a restricted proximal oracle, which in turn implies a weak proximal oracle. Our upper bounds will rely on the weakest assumption — the weak proximal oracle, while our examples for concrete efficient implementations, discussed in Section 1.1 , will all in fact implement the stronger restricted proximal oracle. Finally, all of our lower bounds will hold under the stronger assumption of a $1$ -fold sparse projection oracle (in particular they all establish hard instances in which $\mathcal{R}$ is an indicator for a convex set). Moreover, our deterministic lower bounds (i.e., that hold against any deterministic method) will allow the strongest assumption of a $k$ -fold sparse projection oracle for $k>1$ . These are provided to show that even significantly increasing the strength of the oracle for $\mathcal{R}$ by allowing $k>1$ cannot have (in worst case) a dramatic effect on the rate of convergence, and also does not enable acceleration for moderate values of $k$ .
+
+Table 1 summarizes our main oracle-complexity results together with the corresponding known upper bounds. The lower bounds already hold in the more restrictive setting $\mathcal{R}=I_{\mathcal{K}}$ , when the feasible set is accessed through a sparse projection oracle and $f$ is strongly convex. In contrast, our upper bounds apply to a general convex regularizer $\mathcal{R}$ and an arbitrary weak proximal oracle, and require only quadratic growth of $F$ ; in particular, the optimal solution need not be unique. For comparison, the table also reports the standard projection-based upper bounds: accelerated projected gradient in the smooth case and restarted MOPES in the nonsmooth case. Thus the table highlights the gap between the weaker oracle models considered here and access to an exact prox operator. For ease of presentation, the table presents the bounds in simplified form, omitting typically-lower-order terms. Refer to the theorems in the sequel for precise statements.
+
+One thing that is important to note is that while the deterministic lower bounds with a $k$ -fold sparse projection oracle reported in the table decay with $1/k$ , our constructions of such oracles detailed in Section 1.1 will have complexity that typically scales at least linearly with $k$ . Thus, these lower bounds essentially establish that there is nothing to gain from taking $k>1$ .
+
+Table 1: Summary of the main oracle-complexity results and exact-oracle benchmarks.
+
+The lower bounds allow arbitrarily many first-order objective calls. The lower bounds hold already when $\mathcal{R}=I_{\mathcal{K}}$ and $f$ is strongly convex, whereas the WPO upper bounds require only quadratic growth and apply to a general convex regularizer $\mathcal{R}$ . $G$ is a local upper-bound on norms of subgradients.
+
+1.1 Representative implementations of weak proximal oracles
+
+We discuss three concrete representative implementations of the restricted proximal oracle of Definition 2 , and hence of a WPO. The examples show that restricting the proximal problem to a structured set containing all optimal solutions can result in a much more efficient procedure than implementing the standard exact proximal oracle. The first two examples were already used for designing efficient WPO-based algorithms in [ 1 , 12 , 11 , 13 , 7 , 10 , 9 ] , however, here we discuss more general constructions. The third example was previously considered in [ 14 ] . These examples are detailed below and also summarized in Table 2 .
+
+Sparse solutions with a symmetric regularizer.
+
+First consider $\mathbb{V}=\mathbb{R}^{n}$ . Suppose that $\mathcal{R}$ is invariant under coordinate permutations and, in addition, one of the following holds:
+
+$\mathop{\mbox{\rm dom}}(\mathcal{R})\subseteq\mathbb{R}_{+}^{n}$ ; or
+
+$\mathcal{R}$ is invariant under coordinate-wise sign changes.
+
+This setting includes, for example, symmetric norm regularizers, indicators of permutation- and sign-symmetric sets, and sums of such terms.
+
+Suppose that every ${\mathbf{x}}^{*}\in\mathcal{X}^{*}$ satisfies $\textrm{nnz}({\mathbf{x}}^{*})\leq s$ , and for some $r\geq s$ define
+
+$\mathcal{C}_{r}:=\left\{{\mathbf{x}}\in\mathop{\mbox{\rm dom}}(\mathcal{R}):\textrm{nnz}({\mathbf{x}})\leq r\right\}.$
+
+The proximal problem over $\mathcal{C}_{r}$ can be reduced to only $r$ coordinates. For $T\subseteq[n]$ , let ${\mathbf{I}}_{T}$ denote the matrix formed by the columns of the identity matrix indexed by $T$ , and let ${\mathbf{y}}_{T}$ denote the restriction of ${\mathbf{y}}$ to $T$ .
+
+Let $\mathcal{R}$ satisfy the symmetry conditions above, and let $s\leq r\leq n$ . Fix ${\mathbf{y}}\in\mathbb{R}^{n}$ and $\lambda>0$ .
+
+If $\mathop{\mbox{\rm dom}}(\mathcal{R})\subseteq\mathbb{R}_{+}^{n}$ , let $T$ contain the indices of the $r$ largest entries of ${\mathbf{y}}$ . If $\mathcal{R}$ is invariant under coordinate-wise sign changes, let $T$ contain the indices of the $r$ largest entries of ${\mathbf{y}}$ in absolute value. Let
+
+$\widehat{{\mathbf{u}}}\in\argmin_{{\mathbf{u}}\in\mathbb{R}^{r}}\left\{\lambda\left\lVert{\mathbf{u}}-{\mathbf{y}}_{T}\right\rVert^{2}+\mathcal{R}({\mathbf{I}}_{T}{\mathbf{u}})\right\},\qquad\widehat{{\mathbf{x}}}:={\mathbf{I}}_{T}\widehat{{\mathbf{u}}}.$
+
+Then
+
+$\widehat{{\mathbf{x}}}\in\argmin_{{\mathbf{x}}\in\mathcal{C}_{r}}\left\{\lambda\left\lVert{\mathbf{x}}-{\mathbf{y}}\right\rVert^{2}+\mathcal{R}({\mathbf{x}})\right\}.$
+
+Consequently, if every ${\mathbf{x}}^{*}\in\mathcal{X}^{*}$ is $s$ -sparse, then for every $r\geq s$ this construction implements a weak proximal oracle.
+
+Thus the WPO requires only finding the $r$ largest coordinates and solving an $r$ -dimensional proximal problem. For an indicator regularizer this reduces to the sparse restricted projection considered previously in [ 4 ] . More generally, it applies directly to non-indicator regularizers with the same symmetry.
+
+When $r\ll n$ , the computational savings need not come only from the proximal operation itself. The sparse oracle output may also make the first-order computations substantially cheaper. For example, consider the dense quadratic
+
+$f({\mathbf{x}})=\frac{1}{2}{\mathbf{x}}^{\top}{\mathbf{A}}{\mathbf{x}}+{\mathbf{b}}^{\top}{\mathbf{x}}.$
+
+If ${\mathbf{A}}{\mathbf{x}}$ is maintained and an update has the form ${\mathbf{x}}^{+}=(1-\gamma){\mathbf{x}}+\gamma{\mathbf{v}}$ , where ${\mathbf{v}}$ is $r$ -sparse, then ${\mathbf{A}}{\mathbf{x}}^{+}=(1-\gamma){\mathbf{A}}{\mathbf{x}}+\gamma{\mathbf{A}}{\mathbf{v}}$ , and hence the new gradient can be computed in $O(nr)$ time, which is considerably faster than the $O(n^{2})$ time required for a fresh multiplication by a dense ${\mathbf{A}}$ , in case $r\ll n$ .
+
+A related setting is Bayesian D-optimal design,
+
+$f({\mathbf{x}})=-\log\det{\mathbf{M}}({\mathbf{x}}),\qquad{\mathbf{M}}({\mathbf{x}}):={\mathbf{M}}_{0}+\sum_{i=1}^{n}x_{i}{\mathbf{a}}_{i}{\mathbf{a}}_{i}^{\top},\qquad{\mathbf{M}}_{0}\succ 0,$
+
+where ${\mathbf{a}}_{i}\in\mathbb{R}^{d}$ and, for example, ${\mathbf{x}}$ belongs to the unit simplex. Here updating the gradient after a dense update to ${\mathbf{x}}$ (as occurs in worst case in proximal gradient methods) requires expensive matrix inversion using $O(d^{3})$ time. However, when only a few entries in ${\mathbf{x}}$ are updated (as discussed for the quadratic case above), the inverse could be updated much more efficiently via the Sherman–Morrison–Woodbury formula.
+
+Low-rank solutions with a spectral regularizer.
+
+There are two direct matrix analogues of the construction above. First, let $q=\min\{d_{1},d_{2}\}$ and consider $\mathbb{V}=\mathbb{R}^{d_{1}\times d_{2}}$ endowed with the Frobenius norm, whose ambient dimension is $n=d_{1}d_{2}$ . Suppose that $\mathcal{R}$ is unitarily invariant, that is, $\mathcal{R}({\mathbf{P}}{\mathbf{X}}{\mathbf{Q}}^{\top})=\mathcal{R}({\mathbf{X}})$ for every pair of orthogonal matrices ${\mathbf{P}}$ and ${\mathbf{Q}}$ of the appropriate dimensions. Equivalently, there is a proper, closed, convex, and permutation-invariant function $\rho:\mathbb{R}_{+}^{q}\rightarrow\mathbb{R}\cup\{+\infty\}$ such that $\mathcal{R}({\mathbf{X}})=\rho\bigl(\boldsymbol{\sigma}({\mathbf{X}})\bigr)$ , where $\boldsymbol{\sigma}({\mathbf{X}})$ denotes the vector of singular values of ${\mathbf{X}}$ . Thus $\mathcal{R}({\mathbf{X}})$ depends on ${\mathbf{X}}$ only through its singular values. This includes, for example, nuclear- and Schatten-norm regularizers, indicators of spectrally symmetric sets, and sums of such terms.
+
+There is also a symmetric-matrix version. In this case, $\mathbb{V}=\mathbb{S}^{d}$ is endowed with the Frobenius norm, $\mathop{\mbox{\rm dom}}(\mathcal{R})\subseteq\mathbb{S}_{+}^{d}$ , and $\mathcal{R}$ is invariant under orthogonal conjugation, that is, $\mathcal{R}({\mathbf{U}}{\mathbf{X}}{\mathbf{U}}^{\top})=\mathcal{R}({\mathbf{X}})$ for every orthogonal matrix ${\mathbf{U}}$ . Equivalently, there is a proper, closed, convex, and permutation-invariant function $\rho:\mathbb{R}^{d}\rightarrow\mathbb{R}\cup\{+\infty\}$ with $\mathop{\mbox{\rm dom}}(\rho)\subseteq\mathbb{R}_{+}^{d}$ such that $\mathcal{R}({\mathbf{X}})=\rho\bigl(\boldsymbol{\lambda}({\mathbf{X}})\bigr)$ , where $\boldsymbol{\lambda}({\mathbf{X}})$ denotes the vector of eigenvalues of ${\mathbf{X}}$ . This setting includes, in particular, the indicator of the PSD cone.
+
+In either setting, suppose that every ${\mathbf{X}}^{*}\in\mathcal{X}^{*}$ has rank at most $r$ , and define
+
+$\mathcal{C}_{r}:=\left\{{\mathbf{X}}\in\mathop{\mbox{\rm dom}}(\mathcal{R}):\textrm{rank}({\mathbf{X}})\leq r\right\}.$
+
+As in the sparse-vector case, the proximal problem over $\mathcal{C}_{r}$ reduces to an $r$ -dimensional problem.
+
+In the rectangular-matrix setting, suppose $\mathcal{R}({\mathbf{X}})=\rho\bigl(\boldsymbol{\sigma}({\mathbf{X}})\bigr)$ , where $\rho:\mathbb{R}_{+}^{q}\rightarrow\mathbb{R}\cup\{+\infty\}$ is permutation invariant. Fix ${\mathbf{Y}}\in\mathbb{R}^{d_{1}\times d_{2}}$ and $\lambda>0$ , and let ${\mathbf{Y}}={\mathbf{U}}\operatorname{Diag}(\boldsymbol{\sigma}){\mathbf{V}}^{\top}$ , $\sigma_{1}\geq\cdots\geq\sigma_{q}\geq 0$ , be a SVD, where ${\mathbf{U}}$ and ${\mathbf{V}}$ have $q$ orthonormal columns. Let ${\mathbf{U}}_{r}$ and ${\mathbf{V}}_{r}$ contain the first $r$ columns of ${\mathbf{U}}$ and ${\mathbf{V}}$ , respectively. Let
+
+$\widehat{{\mathbf{u}}}\in\argmin_{{\mathbf{u}}\in\mathbb{R}_{+}^{r}}\left\{\lambda\left\lVert{\mathbf{u}}-\boldsymbol{\sigma}_{1:r}\right\rVert^{2}+\rho\!\left(({\mathbf{u}},\mathbf{0}_{q-r})\right)\right\},$
+
+and set $\widehat{{\mathbf{X}}}:={\mathbf{U}}_{r}\operatorname{Diag}(\widehat{{\mathbf{u}}}){\mathbf{V}}_{r}^{\top}$ .
+
+In the symmetric-matrix setting, suppose $\mathcal{R}({\mathbf{X}})=\rho\bigl(\boldsymbol{\lambda}({\mathbf{X}})\bigr)$ , where $\rho:\mathbb{R}^{d}\rightarrow\mathbb{R}\cup\{+\infty\}$ is permutation invariant and $\mathop{\mbox{\rm dom}}(\rho)\subseteq\mathbb{R}_{+}^{d}$ . Fix ${\mathbf{Y}}\in\mathbb{S}^{d}$ and $\lambda>0$ , and let ${\mathbf{Y}}={\mathbf{U}}\operatorname{Diag}(\boldsymbol{\gamma}){\mathbf{U}}^{\top}$ , $\gamma_{1}\geq\cdots\geq\gamma_{d}$ , be an eigendecomposition. Let ${\mathbf{U}}_{r}$ contain the first $r$ columns of ${\mathbf{U}}$ . Let
+
+$\widehat{{\mathbf{u}}}\in\argmin_{{\mathbf{u}}\in\mathbb{R}_{+}^{r}}\left\{\lambda\left\lVert{\mathbf{u}}-\boldsymbol{\gamma}_{1:r}\right\rVert^{2}+\rho\!\left(({\mathbf{u}},\mathbf{0}_{d-r})\right)\right\},$
+
+and set $\widehat{{\mathbf{X}}}:={\mathbf{U}}_{r}\operatorname{Diag}(\widehat{{\mathbf{u}}}){\mathbf{U}}_{r}^{\top}$ .
+
+In either setting,
+
+$\widehat{{\mathbf{X}}}\in\argmin_{{\mathbf{X}}\in\mathcal{C}_{r}}\left\{\lambda\left\lVert{\mathbf{X}}-{\mathbf{Y}}\right\rVert_{F}^{2}+\mathcal{R}({\mathbf{X}})\right\}.$
+
+Consequently, if every ${\mathbf{X}}^{*}\in\mathcal{X}^{*}$ has rank at most $r$ , the corresponding construction implements a weak proximal oracle.
+
+Two standard special cases make the computational saving particularly concrete. If $\mathcal{R}({\mathbf{X}})=\tau\left\lVert{\mathbf{X}}\right\rVert_{*}$ , where $\left\lVert\cdot\right\rVert_{*}$ denotes the matrix nuclear norm (sum of singular values), the rank- $r$ restricted proximal oracle computes the leading $r$ singular components of ${\mathbf{Y}}$ and soft-thresholds their singular values at $\tau/(2\lambda)$ , whereas the exact proximal map soft-thresholds the entire singular spectrum, which in worst case requires a full SVD. In the symmetric-matrix setting, if $\mathcal{R}=I_{\mathbb{S}_{+}^{d}}$ , i.e., $\mathcal{R}$ is the indicator for the positive semidefinite cone, the rank- $r$ restricted oracle requires the largest $r$ eigenpairs of ${\mathbf{Y}}$ , whereas exact projection onto the PSD cone requires all eigenpairs and hence a full eigen-decomposition.
+
+Note also that, as in the previous sparse-vector setting, for suitable objective functions these low-rank updates can also significantly reduce the cost of updating the gradient from one iteration to the next.
+
+Vertex solutions over $0/1$ polytopes.
+
+For our third example suppose $\mathcal{R}=I_{\mathcal{K}}$ , $\mathcal{K}=\textrm{conv}(\mathcal{V})$ , $\mathcal{V}\subseteq\{0,1\}^{n}$ , and suppose that every optimal solution is a vertex, $\mathcal{X}^{*}\subseteq\mathcal{V}$ . Taking $\widehat{\mathcal{K}}=\mathcal{V}$ in Definition 2 , the restricted proximal oracle reduces, independently of $\lambda$ , to
+
+$\argmin_{{\mathbf{v}}\in\mathcal{V}}\left\lVert{\mathbf{v}}-{\mathbf{y}}\right\rVert^{2}=\argmin_{{\mathbf{v}}\in\mathcal{V}}\left\langle\mathbf{1}-2{\mathbf{y}},{\mathbf{v}}\right\rangle,$
+
+where we used $\left\lVert{\mathbf{v}}\right\rVert^{2}=\mathbf{1}^{\top}{\mathbf{v}}$ for every ${\mathbf{v}}\in\{0,1\}^{n}$ . Thus projection onto the vertices is exactly one linear-optimization call over the polytope. This was already observed in [ 14 ] . There are many nontrivial polytopes for which this linear problem is much simpler than Euclidean projection onto the full polytope [ 15 , 6 ] . For a matroid base polytope it is solved by the greedy algorithm; for the spanning-tree polytope it is a minimum-weight spanning-tree computation; for the Birkhoff polytope it is a linear assignment problem; and for an $s$ – $t$ path polytope on an acyclic network it is a shortest-path computation. Exact Euclidean projection, which in this case is the exact proximal operation, instead requires solving the corresponding convex quadratic optimization problem over the entire polytope.
+
+Table 2: Representative implementations of weak proximal oracles and comparison with exact proximal operations.
+
+1.2 Organization of the paper
+
+The remainder of the paper is organized as follows. Section 2 develops a resisting-oracle construction and uses it to establish deterministic lower bounds for the nonsmooth and smooth regimes under a $k$ -fold sparse projection oracle (Theorems 2 and 3 ). Section 3 extends these lower bounds to randomized methods for the $1$ -fold sparse projection oracle, at the cost of a logarithmic factor (Theorems 5 and 6 ). Section 4 complements these results with WPO-based upper bounds under quadratic growth, first recalling the smooth-case result and then developing a new nonsmooth method and its analysis (Theorems 7 and 8 ).
+
+2 Deterministic Lower Bounds
+
+We shall assume throughout this section that $\mathcal{R}$ is an indicator for a convex and compact set and that $f$ is strongly convex, which in particular means that the optimal solution is unique. Most importantly, the lower bounds will hold under a stronger access model to $\mathcal{R}$ than a weak proximal oracle; we shall assume that the feasible set corresponding to $\mathop{\mbox{\rm dom}}(\mathcal{R})$ is accessible through the stronger $k$ -fold sparse projection oracle (Definition 3 ). Our lower bounds will hold already for the case that the (unique) optimal solution is a vertex of the feasible set (i.e., $s=1$ in terms of the oracle definition).
+
+The convex and compact set, for which $\mathcal{R}$ is the indicator, will be denoted $\mathcal{K}_{N,R}:=\textrm{conv}(\mathcal{V}_{N,R})$ , where $\mathcal{V}_{N,R}$ is the set of vertices. Since our construction is such that the optimal solution is a vertex in $\mathcal{V}_{N,R}$ , the set corresponding to the $k$ -fold sparse projection operation is
+
+$\displaystyle\mathcal{C}_{k}=\textrm{conv}_{k}(\mathcal{V}_{N,R}):=\left\{\sum_{i=1}^{p}\lambda_{i}{\mathbf{v}}_{i}:p\leq k,\ {\mathbf{v}}_{i}\in\mathcal{V}_{N,R},\ \lambda_{i}\geq 0,\ \sum_{i}\lambda_{i}=1\right\}.$ (7)
+
+We use the standard black-box oracle model: the method is not given an explicit description of $\mathcal{K}_{N,R}$ , and its only access to the feasible set is through projection onto $\mathcal{C}_{k}$ . The method may otherwise perform arbitrary computations and make arbitrarily many first-order calls to the objective.
+
+The proof uses a deterministic resisting oracle. We fix an arbitrary deterministic method, but leave some of the orthonormal vectors defining the feasible set unspecified while the method interacts with the sparse-projection oracle. At each $k$ -fold sparse-projection call, the not-yet-specified vectors are chosen so that an exact projection can be returned without using the target vertex ${\mathbf{s}}^{*}$ , while fixing at most $k$ new vectors ${\mathbf{q}}_{j}$ . The objective does not depend on these vectors, so arbitrarily many first-order calls to the objective provide no information about the choices that remain. After all sparse-projection calls and the final output are known, the remaining orthonormal vectors are chosen so that every previously returned point is still an exact projection w.r.t. $\mathcal{C}_{k}$ , while the output stays a constant distance from the target vertex. Since at most $k$ new vectors ${\mathbf{q}}_{j}$ are fixed per sparse-projection call, this yields an $\Omega(N/k)$ geometric lower bound, which we then combine with nonsmooth and smooth objectives.
+
+2.1 The resisting construction
+
+Let $N\geq 2$ , $m=2N$ , and let ${\mathbf{q}}_{1},\ldots,{\mathbf{q}}_{N}\in\mathbb{R}^{m}$ be orthonormal. Define
+
+${\mathbf{u}}_{N}:=\frac{1}{\sqrt{N}}\sum_{i=1}^{N}{\mathbf{q}}_{i},\qquad{\mathbf{v}}_{j}:=\frac{1}{\sqrt{N}}\sum_{i=1}^{j}{\mathbf{q}}_{i},\qquad\rho_{j}:=\frac{j}{N},\quad j\in[N].$
+
+Then
+
+$\displaystyle\left\lVert{\mathbf{v}}_{j}\right\rVert^{2}$ $\displaystyle=\rho_{j},\quad\rho_{1}\leq\cdots\leq\rho_{N}=1,$ $\displaystyle\left\langle{\mathbf{v}}_{i},{\mathbf{v}}_{j}\right\rangle$ $\displaystyle=\left\langle{\mathbf{v}}_{i},{\mathbf{u}}_{N}\right\rangle=\rho_{i},\quad i<j\leq N.$ (8)
+
+Thus, as seen from every earlier ${\mathbf{v}}_{i}$ , a later ${\mathbf{v}}_{j}$ is indistinguishable from ${\mathbf{u}}_{N}$ .
+
+Let ${\mathbf{r}}\in\mathbb{R}^{m}$ be a unit vector, and write a point of $\mathbb{R}^{3m}$ as $({\mathbf{x}},{\mathbf{z}},{\mathbf{h}})$ with ${\mathbf{x}},{\mathbf{z}},{\mathbf{h}}\in\mathbb{R}^{m}$ . For $R>0$ define
+
+$\displaystyle{\mathbf{s}}^{*}$ $\displaystyle:=R\left(\frac{{\mathbf{u}}_{N}}{\sqrt{2}},0,\frac{{\mathbf{r}}}{\sqrt{2}}\right),\qquad{\mathbf{s}}_{j}:=R\left(\frac{{\mathbf{v}}_{j}}{\sqrt{2}},\frac{{\mathbf{q}}_{j}}{\sqrt{2}},0\right),\quad j\in[N].$ (9)
+
+Let $\mathcal{V}_{N,R}:=\{{\mathbf{s}}^{*},{\mathbf{s}}_{1},\ldots,{\mathbf{s}}_{N}\}$ and $\mathcal{K}_{N,R}:=\textrm{conv}(\mathcal{V}_{N,R})$ . We call ${\mathbf{s}}^{*}$ the target vertex and ${\mathbf{s}}_{1},\ldots,{\mathbf{s}}_{N}$ the non-target vertices.
+
+Each point in $\mathcal{V}_{N,R}$ is a vertex of $\mathcal{K}_{N,R}$ . Indeed, ${\mathbf{s}}_{j}$ is the unique maximizer over $\mathcal{V}_{N,R}$ of the linear functional $({\mathbf{x}},{\mathbf{z}},{\mathbf{h}})\mapsto\left\langle{\mathbf{q}}_{j},{\mathbf{z}}\right\rangle$ , while ${\mathbf{s}}^{*}$ is the unique maximizer of $({\mathbf{x}},{\mathbf{z}},{\mathbf{h}})\mapsto\left\langle{\mathbf{r}},{\mathbf{h}}\right\rangle$ . Moreover, $\left\lVert{\mathbf{s}}^{*}\right\rVert=R$ , $\left\lVert{\mathbf{s}}_{j}\right\rVert^{2}=\frac{R^{2}}{2}(1+\rho_{j})\leq R^{2}$ , so $\mathcal{K}_{N,R}$ is contained in the Euclidean ball of radius $R$ . Also note that
+
+$\displaystyle\forall i<j:\qquad\left\langle{\mathbf{s}}_{i},{\mathbf{s}}_{j}\right\rangle=\frac{R^{2}}{2}\rho_{i}=\left\langle{\mathbf{s}}_{i},{\mathbf{s}}^{*}\right\rangle.$ (10)
+
+Fix an integer $N\geq 5$ , $1\leq k\leq 6N$ , and $R>0$ . For every deterministic method making at most $T\leq\lfloor N/(4k)\rfloor$ projections onto $\mathcal{C}_{k}$ (see ( 7 )), there exist orthonormal vectors ${\mathbf{q}}_{1},\ldots,{\mathbf{q}}_{N}\in\mathbb{R}^{2N}$ , a unit vector ${\mathbf{r}}\in\mathbb{R}^{2N}$ , and a deterministic tie-breaking rule for the projection oracle such that, for the resulting set $\mathcal{K}_{N,R}\subset\mathbb{R}^{6N}$ defined by ( 9 ), the method returns either an infeasible point or a point $\widehat{\mathbf{w}}$ satisfying
+
+$\displaystyle\left\lVert\widehat{\mathbf{w}}-{\mathbf{s}}^{*}\right\rVert^{2}\geq\frac{R^{2}}{2}.$
+
+Between sparse-projection calls, the method may also receive arbitrary answers from auxiliary oracles whose response rules do not depend on ${\mathbf{q}}_{1},\ldots,{\mathbf{q}}_{N}$ or ${\mathbf{r}}$ . In the applications below, these auxiliary answers are precisely the free first-order oracle answers.
+
+We construct the vectors gradually while interacting with the method. Suppose that, immediately before a new sparse-projection call, ${\mathbf{q}}_{1},\ldots,{\mathbf{q}}_{\ell}$ have already been fixed, and write the input to the sparse projection oracle call as $y=({\mathbf{p}},{\mathbf{z}},{\mathbf{h}})$ , ${\mathbf{p}},{\mathbf{z}},{\mathbf{h}}\in\mathbb{R}^{m}$ . Provisionally complete ${\mathbf{q}}_{1},\ldots,{\mathbf{q}}_{\ell}$ to an orthonormal family ${\mathbf{q}}_{1},\ldots,{\mathbf{q}}_{N}$ such that every ${\mathbf{q}}_{j}$ , $j>\ell$ , is orthogonal to the ${\mathbf{p}}$ - and ${\mathbf{z}}$ -blocks of all sparse-projection inputs seen so far, including the current call. Likewise, choose ${\mathbf{r}}$ orthogonal to the ${\mathbf{h}}$ -blocks of all these inputs. Only the vectors needed for the current oracle answer will be fixed permanently.
+
+For every $j>\ell$ , the orthogonality conditions give
+
+$\displaystyle\left\langle{\mathbf{y}},{\mathbf{s}}_{j}\right\rangle$ $\displaystyle=\frac{R}{\sqrt{2}}\left(\left\langle{\mathbf{p}},{\mathbf{v}}_{j}\right\rangle+\left\langle{\mathbf{z}},{\mathbf{q}}_{j}\right\rangle\right)=\frac{R}{\sqrt{2N}}\sum_{i=1}^{\ell}\left\langle{\mathbf{p}},{\mathbf{q}}_{i}\right\rangle=\left\langle{\mathbf{y}},{\mathbf{s}}^{*}\right\rangle.$ (11)
+
+Thus, all not-yet-fixed non-target vertices and the target vertex have the same inner product with the current sparse-projection input. Choose any ${\mathbf{w}}\in\argmin_{{\mathbf{x}}\in\mathcal{C}_{k}}\left\lVert{\mathbf{x}}-{\mathbf{y}}\right\rVert^{2}$ for the provisional completion, and fix a representation of ${\mathbf{w}}$ using at most $k$ vertices. Write it as
+
+$\displaystyle{\mathbf{w}}=\sum_{i\in I}\lambda_{i}{\mathbf{s}}_{i}+\sum_{p=1}^{q}\mu_{p}\widetilde{{\mathbf{s}}}_{p},\qquad I\subseteq[\ell],$ (12)
+
+where $\lambda_{i},\mu_{p}\geq 0$ , their sum is one, and $\widetilde{{\mathbf{s}}}_{1},\ldots,\widetilde{{\mathbf{s}}}_{q}$ are the vertices in this representation that are not already fixed. Associate $\widetilde{{\mathbf{s}}}_{p}={\mathbf{s}}_{j}$ with the index $j$ , and associate $\widetilde{{\mathbf{s}}}_{p}={\mathbf{s}}^{*}$ with the index $+\infty$ . Order them so that their associated indices satisfy $j_{1}<\cdots<j_{q}$ . In particular, the target is last whenever it is present.
+
+Replace these vertices, with the same coefficients, by the next unused non-target vertices:
+
+$\displaystyle\widetilde{{\mathbf{w}}}:=\sum_{i\in I}\lambda_{i}{\mathbf{s}}_{i}+\sum_{p=1}^{q}\mu_{p}{\mathbf{s}}_{\ell+p}.$ (13)
+
+Since $|I|+q\leq k$ , we have $\widetilde{{\mathbf{w}}}\in\mathcal{C}_{k}$ . Moreover, on the $t$ th sparse-projection call,
+
+$\ell+q\leq kt\leq kT\leq\frac{N}{4},$
+
+so all the replacement vertices are available.
+
+By ( 11 ) we have that, $\left\langle{\mathbf{y}},\widetilde{{\mathbf{w}}}\right\rangle=\left\langle{\mathbf{y}},{\mathbf{w}}\right\rangle$ . We next show that $\left\lVert\widetilde{{\mathbf{w}}}\right\rVert\leq\left\lVert{\mathbf{w}}\right\rVert$ . For every already fixed vertex ${\mathbf{s}}_{i}$ , $i\in I$ , and every replaced vertex, the corresponding cross inner product is unchanged by ( 10 ):
+
+$\left\langle{\mathbf{s}}_{i},\widetilde{{\mathbf{s}}}_{p}\right\rangle=\frac{R^{2}}{2}\rho_{i}=\left\langle{\mathbf{s}}_{i},{\mathbf{s}}_{\ell+p}\right\rangle.$
+
+For each $p$ , if $\widetilde{{\mathbf{s}}}_{p}={\mathbf{s}}_{j_{p}}$ is a non-target vertex, then $j_{p}\geq\ell+p$ and,
+
+$\left\lVert{\mathbf{s}}_{\ell+p}\right\rVert^{2}=\frac{R^{2}}{2}(1+\rho_{\ell+p})\leq\frac{R^{2}}{2}(1+\rho_{j_{p}})=\left\lVert\widetilde{{\mathbf{s}}}_{p}\right\rVert^{2}.$
+
+If $\widetilde{{\mathbf{s}}}_{p}={\mathbf{s}}^{*}$ , the same inequality follows from $\left\lVert{\mathbf{s}}_{\ell+p}\right\rVert\leq R=\left\lVert{\mathbf{s}}^{*}\right\rVert$ .
+
+Finally, for $1\leq p<r\leq q$ , the vertex $\widetilde{{\mathbf{s}}}_{p}$ cannot be the target, and therefore $j_{p}$ is finite. Since $j_{p}\geq\ell+p$ , we have using ( 10 )
+
+$\left\langle{\mathbf{s}}_{\ell+p},{\mathbf{s}}_{\ell+r}\right\rangle=\frac{R^{2}}{2}\rho_{\ell+p}\leq\frac{R^{2}}{2}\rho_{j_{p}}=\left\langle\widetilde{{\mathbf{s}}}_{p},\widetilde{{\mathbf{s}}}_{r}\right\rangle.$
+
+Since all coefficients in ( 12 ) are nonnegative, the preceding comparisons imply that $\left\lVert\widetilde{{\mathbf{w}}}\right\rVert^{2}\leq\left\lVert{\mathbf{w}}\right\rVert^{2}$ . Together with $\left\langle{\mathbf{y}},\widetilde{{\mathbf{w}}}\right\rangle=\left\langle{\mathbf{y}},{\mathbf{w}}\right\rangle$ , this gives $\left\lVert\widetilde{{\mathbf{w}}}-{\mathbf{y}}\right\rVert^{2}\leq\left\lVert{\mathbf{w}}-{\mathbf{y}}\right\rVert^{2}$ . Since ${\mathbf{w}}$ is a minimizer over $\mathcal{C}_{k}$ and $\widetilde{{\mathbf{w}}}\in\mathcal{C}_{k}$ , equality must hold. Hence $\widetilde{{\mathbf{w}}}$ is also an exact projection of ${\mathbf{y}}$ onto $\mathcal{C}_{k}$ .
+
+Return $\widetilde{{\mathbf{w}}}$ and permanently fix ${\mathbf{q}}_{\ell+1},\ldots,{\mathbf{q}}_{\ell+q}$ . Thus the returned point does not use the target vertex and at most $k$ new vectors are fixed. If an input is repeated, return exactly the same answer as before.
+
+Every returned vertex depends only on vectors that have already been fixed. Moreover, for every previous sparse-projection input, its inner products with all not-yet-fixed vertices are given by ( 11 ), while all vertex norms and pairwise inner products are determined by ( 8 )–( 10 ). Thus changing the still-unfixed orthonormal vectors does not change the value of any previous sparse-projection problem. Consequently, all previous answers remain exact projections as the construction continues, and the answers are consistent with a single deterministic tie-breaking rule. Calls to the auxiliary oracles do not affect the construction because their response rules are independent of ${\mathbf{q}}_{1},\ldots,{\mathbf{q}}_{N}$ and ${\mathbf{r}}$ .
+
+After all $T$ sparse-projection calls, at most $\ell\leq kT$ vectors have been fixed. The remaining $N-\ell$ vectors may be chosen orthonormal and orthogonal to the ${\mathbf{p}}$ - and ${\mathbf{z}}$ -blocks of all $T$ sparse-projection inputs, since the relevant orthogonal complement has dimension at least
+
+$m-\ell-2T=2N-\ell-2T\geq N-\ell,$
+
+where we used $T\leq N/4$ . Finally, choose the unit vector ${\mathbf{r}}$ orthogonal to the ${\mathbf{h}}$ -blocks of all sparse-projection inputs and to the third block $\widehat{{\mathbf{h}}}$ of the final output; this is possible since these impose at most $T+1<m$ linear constraints.
+
+Suppose now that $\widehat{{\mathbf{w}}}$ is feasible, and write
+
+$\widehat{{\mathbf{w}}}=\theta^{*}{\mathbf{s}}^{*}+\sum_{j=1}^{N}\theta_{j}{\mathbf{s}}_{j},\qquad\theta^{*},\theta_{j}\geq 0,\qquad\theta^{*}+\sum_{j=1}^{N}\theta_{j}=1.$
+
+Comparing the third blocks gives $\widehat{{\mathbf{h}}}=\frac{\theta^{*}R}{\sqrt{2}}{\mathbf{r}}$ . Since ${\mathbf{r}}\perp\widehat{{\mathbf{h}}}$ , we must have $\theta^{*}=0$ , and therefore $\widehat{{\mathbf{h}}}=0$ . This implies that,
+
+$\left\lVert\widehat{{\mathbf{w}}}-{\mathbf{s}}^{*}\right\rVert^{2}\geq\left\lVert\widehat{{\mathbf{h}}}-R{\mathbf{r}}/\sqrt{2}\right\rVert^{2}=\frac{R^{2}}{2},$
+
+which proves the theorem. ∎
+
+2.2 The deterministic lower bounds
+
+Fix $\alpha,G>0$ , an integer $N\geq 5$ , and $1\leq k\leq 6N$ . For every deterministic method using at most $\lfloor N/(4k)\rfloor$ calls to a $k$ -fold sparse projection oracle, there exists an instance in dimension $n=6N$ with compact feasible set, an $\alpha$ -strongly convex objective whose feasible subgradients have norm at most $G$ , and a unique vertex minimizer, such that the returned point $\widehat{\mathbf{w}}$ is either infeasible or
+
+$\displaystyle f(\widehat{\mathbf{w}})-f({\mathbf{w}}^{*})\geq\frac{G^{2}}{36\alpha N}.$ (14)
+
+Arbitrarily many first-order calls between sparse projections are allowed.
+
+Consequently, there is a universal constant $c_{0}>0$ such that, whenever $G^{2}/(\alpha\epsilon{}k)$ is sufficiently large, every deterministic method that guarantees an $\epsilon$ -optimal feasible point on all such instances requires at least $c_{0}G^{2}/(\alpha\epsilon k)$ $k$ -fold sparse projections in the worst case.
+
+Fix a deterministic method. Use the preceding geometry with $R=G/(3\alpha\sqrt{N})$ and ${\mathbf{w}}^{*}={\mathbf{s}}^{*}$ , and define
+
+$\displaystyle f({\mathbf{x}},{\mathbf{z}},{\mathbf{h}})$ $\displaystyle:=\frac{\alpha}{2}\bigl(\left\lVert{\mathbf{x}}\right\rVert^{2}+\left\lVert{\mathbf{z}}\right\rVert^{2}+\left\lVert{\mathbf{h}}\right\rVert^{2}\bigr)+\frac{2G}{3}\left\lVert{\mathbf{z}}\right\rVert,\qquad{\mathbf{x}},{\mathbf{z}},{\mathbf{h}}\in\mathbb{R}^{m}.$ (15)
+
+This function is $\alpha$ -strongly convex. Since $\mathcal{K}_{N,R}$ is contained in the ball of radius $R$ , every feasible subgradient has norm at most
+
+$\alpha R+\frac{2G}{3}=\frac{G}{3\sqrt{N}}+\frac{2G}{3}\leq G.$
+
+To specify the free first-order oracle completely, let it return
+
+$\left(\alpha{\mathbf{x}},\,\alpha{\mathbf{z}}+\frac{2G}{3}\frac{{\mathbf{z}}}{\left\lVert{\mathbf{z}}\right\rVert},\,\alpha{\mathbf{h}}\right)$
+
+when ${\mathbf{z}}\neq 0$ , and $(\alpha{\mathbf{x}},0,\alpha{\mathbf{h}})$ when ${\mathbf{z}}=0$ . In particular, these answers depend only on the first-order input $({\mathbf{x}},{\mathbf{z}},{\mathbf{h}})$ , and not on the vectors ${\mathbf{q}}_{j}$ or ${\mathbf{r}}$ defining the feasible set.
+
+In order to verify the optimality of ${\mathbf{w}}^{*}={\mathbf{s}}^{*}$ , and although the first-order oracle returns the zero element of the ${\mathbf{z}}$ -subdifferential when ${\mathbf{z}}=0$ , for the optimality certificate we may choose
+
+${\mathbf{g}}^{*}=\left(\frac{\alpha R}{\sqrt{2}}{\mathbf{u}}_{N},\,\frac{2G}{3}{\mathbf{u}}_{N},\,\frac{\alpha R}{\sqrt{2}}{\mathbf{r}}\right)\in\partial f({\mathbf{w}}^{*}),$
+
+since $\left\lVert{\mathbf{u}}_{N}\right\rVert=1$ .
+
+For every non-target vertex ${\mathbf{s}}_{j}$ ,
+
+${\mathbf{s}}_{j}-{\mathbf{s}}^{*}=R\left(\frac{{\mathbf{v}}_{j}-{\mathbf{u}}_{N}}{\sqrt{2}},\frac{{\mathbf{q}}_{j}}{\sqrt{2}},-\frac{{\mathbf{r}}}{\sqrt{2}}\right),$
+
+and therefore
+
+$\displaystyle\left\langle{\mathbf{g}}^{*},{\mathbf{s}}_{j}-{\mathbf{s}}^{*}\right\rangle$ $\displaystyle=\frac{\alpha R^{2}}{2}\left\langle{\mathbf{u}}_{N},{\mathbf{v}}_{j}-{\mathbf{u}}_{N}\right\rangle+\frac{2GR}{3\sqrt{2}}\left\langle{\mathbf{u}}_{N},{\mathbf{q}}_{j}\right\rangle-\frac{\alpha R^{2}}{2}\left\lVert{\mathbf{r}}\right\rVert^{2}$ $\displaystyle=\frac{\alpha R^{2}}{2}(\rho_{j}-1)+\frac{2GR}{3\sqrt{2N}}-\frac{\alpha R^{2}}{2}$ $\displaystyle=\frac{G^{2}}{9\alpha N}\left(\frac{\rho_{j}}{2}-1+\sqrt{2}\right)>0,$
+
+where we used $\left\lVert{\mathbf{u}}_{N}\right\rVert=\left\lVert{\mathbf{r}}\right\rVert=1$ , $\left\langle{\mathbf{u}}_{N},{\mathbf{v}}_{j}\right\rangle=\rho_{j}$ , $\left\langle{\mathbf{u}}_{N},{\mathbf{q}}_{j}\right\rangle=1/\sqrt{N}$ , and $R=G/(3\alpha\sqrt{N})$ .
+
+Thus, ${\mathbf{w}}^{*}={\mathbf{s}}^{*}$ is indeed the unique constrained minimizer. Theorem 1 and strong convexity now give
+
+$f(\widehat{\mathbf{w}})-f({\mathbf{w}}^{*})\geq\frac{\alpha R^{2}}{4}=\frac{G^{2}}{36\alpha N},$
+
+which proves the theorem. ∎
+
+Note that the bounded-subgradient property in Theorem 2 holds on more than just the feasible set. Indeed, $\mathcal{K}_{N,R}\subseteq\{{\mathbf{w}}:\left\lVert{\mathbf{w}}\right\rVert\leq R\}$ , and for every $\left\lVert{\mathbf{w}}\right\rVert\leq R$ and every ${\mathbf{g}}\in\partial f({\mathbf{w}})$ ,
+
+$\left\lVert{\mathbf{g}}\right\rVert\leq\alpha R+\frac{2G}{3}=\frac{G}{3\sqrt{N}}+\frac{2G}{3}\leq G.$
+
+Thus the lower bound continues to hold when subgradients are assumed bounded on a Euclidean ball containing the feasible set. This is the same type of neighborhood-access assumption used by MOPES [ 18 ] to obtain its improved projection complexity for nonsmooth constrained optimization.
+
+Fix $\alpha,\beta>0$ , let $\kappa:=\beta/\alpha$ , $N:=\left\lfloor(\kappa-5)/16\right\rfloor$ , and suppose that $\kappa\geq 85$ . For every $1\leq k\leq 6N$ and every deterministic method using at most $\lfloor N/(4k)\rfloor$ calls to a $k$ -fold sparse projection oracle, there exists an instance in dimension $n=6N$ with an $\alpha$ -strongly convex and $\beta$ -smooth quadratic objective, a unique vertex minimizer, and a feasible set diameter $D$ satisfying $D\leq 2$ , such that the returned point $\widehat{{\mathbf{w}}}$ is either infeasible or
+
+$\displaystyle f(\widehat{\mathbf{w}})-f({\mathbf{w}}^{*})\geq\frac{\alpha}{4}.$ (16)
+
+Consequently, for $\epsilon=\alpha/8$ , every deterministic method that guarantees an $\epsilon$ -optimal feasible point on all such instances requires $\Omega\left(\beta/(\alpha k)\right)$ calls to the $k$ -fold sparse projection oracle in worst case.
+
+Fix a deterministic method. Since $\kappa\geq 85$ , we have $N\geq 5$ . Use the same geometry with $R=1$ , set ${\mathbf{w}}^{*}={\mathbf{s}}^{*}$ , and define $\gamma:=2\sqrt{\kappa-5}/\kappa$ . Consider the quadratic objective
+
+$\displaystyle f({\mathbf{x}},{\mathbf{z}},{\mathbf{h}})$ $\displaystyle:=\frac{\beta}{2}\left(\frac{5}{\kappa}\left\lVert{\mathbf{x}}\right\rVert^{2}+2\gamma\left\langle{\mathbf{x}},{\mathbf{z}}\right\rangle+\left(1-\frac{4}{\kappa}\right)\left\lVert{\mathbf{z}}\right\rVert^{2}+\frac{1}{\kappa}\left\lVert{\mathbf{h}}\right\rVert^{2}\right),~{\mathbf{x}},{\mathbf{z}},{\mathbf{h}}\in\mathbb{R}^{m}.$ (17)
+
+Its gradient is
+
+$\nabla f({\mathbf{x}},{\mathbf{z}},{\mathbf{h}})=\beta\left(\frac{5}{\kappa}{\mathbf{x}}+\gamma{\mathbf{z}},\,\gamma{\mathbf{x}}+\left(1-\frac{4}{\kappa}\right){\mathbf{z}},\,\frac{1}{\kappa}{\mathbf{h}}\right).$
+
+In particular, the objective and its gradient depend only on the query $({\mathbf{x}},{\mathbf{z}},{\mathbf{h}})$ and not on the vectors ${\mathbf{q}}_{j}$ or ${\mathbf{r}}$ defining the feasible set and its target vertex. Hence first-order objective calls reveal no information about these hidden vectors.
+
+The Hessian with respect to the three blocks $({\mathbf{x}},{\mathbf{z}},{\mathbf{h}})$ is
+
+$\nabla^{2}f=\beta\begin{pmatrix}\frac{5}{\kappa}\textbf{I}_{m}&\gamma\textbf{I}_{m}&0\\ \gamma\textbf{I}_{m}&\left(1-\frac{4}{\kappa}\right)\textbf{I}_{m}&0\\ 0&0&\frac{1}{\kappa}\textbf{I}_{m}\end{pmatrix}.$
+
+The trace and determinant of the upper-left $2\times 2$ block, without the factor $\beta$ , are respectively
+
+$1+\frac{1}{\kappa}\qquad\text{and}\qquad\frac{5}{\kappa}\left(1-\frac{4}{\kappa}\right)-\gamma^{2}=\frac{1}{\kappa}.$
+
+Its two distinct eigenvalues are therefore $1$ and $1/\kappa$ . Together with the eigenvalue $1/\kappa$ of the third block, this shows that the exact strong-convexity and smoothness parameters are indeed $\beta/\kappa=\alpha$ and $\beta$ , respectively. Moreover,
+
+$\nabla f({\mathbf{s}}^{*})=\frac{\beta}{\sqrt{2}}\left(\frac{5}{\kappa}{\mathbf{u}}_{N},\,\gamma{\mathbf{u}}_{N},\,\frac{1}{\kappa}{\mathbf{r}}\right).$
+
+Since $N\leq(\kappa-5)/16$ , we have
+
+$\frac{\gamma}{\sqrt{N}}=\frac{2\sqrt{\kappa-5}}{\kappa\sqrt{N}}\geq\frac{8}{\kappa}.$
+
+For every non-target vertex ${\mathbf{s}}_{j}$ ,
+
+${\mathbf{s}}_{j}-{\mathbf{s}}^{*}=\left(\frac{{\mathbf{v}}_{j}-{\mathbf{u}}_{N}}{\sqrt{2}},\frac{{\mathbf{q}}_{j}}{\sqrt{2}},-\frac{{\mathbf{r}}}{\sqrt{2}}\right),$
+
+and therefore
+
+$\displaystyle\left\langle\nabla f({\mathbf{s}}^{*}),{\mathbf{s}}_{j}-{\mathbf{s}}^{*}\right\rangle$ $\displaystyle=\frac{\beta}{2}\left(\frac{5}{\kappa}\left\langle{\mathbf{u}}_{N},{\mathbf{v}}_{j}-{\mathbf{u}}_{N}\right\rangle+\gamma\left\langle{\mathbf{u}}_{N},{\mathbf{q}}_{j}\right\rangle-\frac{1}{\kappa}\left\lVert{\mathbf{r}}\right\rVert^{2}\right)$ $\displaystyle=\frac{\beta}{2}\left(\frac{5}{\kappa}(\rho_{j}-1)+\frac{\gamma}{\sqrt{N}}-\frac{1}{\kappa}\right)$ $\displaystyle\geq\frac{\beta}{2}\left(-\frac{5}{\kappa}+\frac{8}{\kappa}-\frac{1}{\kappa}\right)>0,$
+
+where we used $\left\lVert{\mathbf{u}}_{N}\right\rVert=\left\lVert{\mathbf{r}}\right\rVert=1$ , $\left\langle{\mathbf{u}}_{N},{\mathbf{v}}_{j}\right\rangle=\rho_{j}$ , $\left\langle{\mathbf{u}}_{N},{\mathbf{q}}_{j}\right\rangle=1/\sqrt{N}$ , $\rho_{j}\geq 0$ , and $\gamma/\sqrt{N}\geq 8/\kappa$ .
+
+Thus ${\mathbf{w}}^{*}={\mathbf{s}}^{*}$ is indeed the unique minimizer. Theorem 1 and the strong convexity of $f$ then give that whenever the returned point $\widehat{\mathbf{w}}$ is feasible,
+
+$f(\widehat{\mathbf{w}})-f({\mathbf{w}}^{*})\geq\frac{\alpha}{2}\left\lVert\widehat{\mathbf{w}}-{\mathbf{w}}^{*}\right\rVert^{2}\geq\frac{\alpha}{4},$
+
+proving the theorem.
+
+∎
+
+3 Randomized Lower Bounds
+
+The hard instances in the lower bounds in the previous section were tailored for a specific deterministic method via a resisting oracle construction. This however leaves open the possibility that a randomized method might escape these lower bounds. Here we partially close this gap. We provide lower bounds against any randomized method. As before we shall consider the case that $\mathcal{R}$ is an indicator for a convex and compact set and that $f$ is strongly convex. However, while our deterministic lower bounds allowed access to the feasible set through a $k$ -fold sparse projection oracle, here we shall only consider the case $k=1$ .
+
+We use a modified construction in which one target vertex is accompanied by many non-target vertices of the same norm. Hence a $1$ -fold sparse projection is equivalent to linear maximization over the vertices, and typically returns a non-target vertex. Here, the set is constructed based on a randomly chosen vector $\sigma$ , sampled before the interaction begins.
+
+A randomized method is allowed at most $T$ sparse-projection calls for every realization of its internal randomness. All expectations below are over this randomness once the instance is fixed. Infeasible outputs have infinite composite error. As in previous section, only sparse-projection calls are counted: between them the method may make arbitrary first-order calls to the objective. In the objective constructions below, the rule producing those first-order answers is independent of the random vector $\sigma$ , so these free calls do not reveal the random instance.
+
+3.1 The randomized construction
+
+Let $\sigma\sim\operatorname{Unif}\{-1,+1\}^{N}$ and ${\mathbf{u}}_{\sigma}=N^{-1/2}\sum_{i}\sigma_{i}{\mathbf{e}}_{i}$ . Write points in $\mathbb{R}^{2N}$ as $({\mathbf{x}},{\mathbf{z}})$ with ${\mathbf{x}},{\mathbf{z}}\in\mathbb{R}^{N}$ . For $R>0$ define
+
+$\displaystyle{\mathbf{s}}_{\sigma}^{*}$ $\displaystyle:=(R{\mathbf{u}}_{\sigma},0),\qquad\mathcal{D}_{i}:=\left\{\left(\frac{R}{\sqrt{2}}{\mathbf{v}},\frac{R}{\sqrt{2}}\sigma_{i}{\mathbf{e}}_{i}\right)|\left\lVert{\mathbf{v}}\right\rVert=1\right\},\quad i\in[N],$ $\displaystyle\mathcal{V}_{\sigma}$ $\displaystyle:=\{{\mathbf{s}}_{\sigma}^{*}\}\cup\bigcup_{i=1}^{N}\mathcal{D}_{i},\qquad\mathcal{K}_{\sigma}:=\textrm{conv}(\mathcal{V}_{\sigma}).$
+
+Note the dependence of $\mathcal{D}_{i}$ on $\sigma$ is only through the sign $\sigma_{i}$ . Every point of $\mathcal{V}_{\sigma}$ has norm $R$ , and hence $\operatorname{vert}(\mathcal{K}_{\sigma})=\mathcal{V}_{\sigma}$ and $\operatorname{diam}(\mathcal{K}_{\sigma})\leq 2R$ . The point ${\mathbf{s}}_{\sigma}^{*}$ is the target vertex, every point in $\bigcup_{i}\mathcal{D}_{i}$ is a non-target vertex. For $k=1$ , the sparse-projection oracle projects onto $\mathcal{C}_{1}=\mathcal{V}_{\sigma}$ . Since all points in $\mathcal{C}_{1}$ have norm $R$ , this is simply linear maximization. For an input $({\mathbf{p}},{\mathbf{z}})\in\mathbb{R}^{2N}$ , the target score and the largest non-target score, divided by $R$ , are
+
+$\displaystyle T_{\sigma}({\mathbf{p}},{\mathbf{z}}):=\frac{\langle({\mathbf{p}},{\mathbf{z}}),{\mathbf{s}}_{\sigma}^{*}\rangle}{R}=\langle{\mathbf{p}},{\mathbf{u}}_{\sigma}\rangle,$ $\displaystyle D_{\sigma}({\mathbf{p}},{\mathbf{z}}):=\frac{1}{R}\max_{{\mathbf{s}}\in\cup_{i}\mathcal{D}_{i}}\langle({\mathbf{p}},{\mathbf{z}}),{\mathbf{s}}\rangle=\frac{1}{\sqrt{2}}\left(\|{\mathbf{p}}\|+\max_{i}\sigma_{i}z_{i}\right).$ (18)
+
+Fix the following deterministic tie-breaking rule. Return the target only when $T_{\sigma}>D_{\sigma}$ ; otherwise return a maximum-score non-target vertex, breaking ties by the smallest maximizing index $i$ . If ${\mathbf{p}}\neq 0$ , the first block of this vertex is $R{\mathbf{p}}/(\sqrt{2}\left\lVert{\mathbf{p}}\right\rVert)$ ; if ${\mathbf{p}}=0$ , use one fixed unit vector, scaled by $R/\sqrt{2}$ , for the first block. Thus, for a fixed input, a non-target answer is determined by the pair $(i,\sigma_{i})$ and has at most $2N$ possible values that depend on the random vector $\sigma$ .
+
+We use the following elementary concentration lemma.
+
+For every fixed sparse-projection input $({\mathbf{p}},{\mathbf{z}})$ ,
+
+$\Pr_{\sigma}\{\text{projection oracle returns }{\mathbf{s}}_{\sigma}^{*}\}\leq\eta_{N}:=e^{-N/4}+2^{-N}.$
+
+Moreover, for every fixed ${\mathbf{x}}\in\mathbb{R}^{N}$ ,
+
+$\Pr_{\sigma}\!\left(\left\lVert{\mathbf{x}}-R{\mathbf{u}}_{\sigma}\right\rVert<\frac{R}{\sqrt{2}}\right)\leq e^{-N/4}\leq\eta_{N}.$
+
+For every fixed unit vector ${\mathbf{r}}\in\mathbb{R}^{N}$ , Hoeffding’s inequality gives
+
+$\displaystyle\Pr_{\sigma}\!\left(\left\langle{\mathbf{r}},{\mathbf{u}}_{\sigma}\right\rangle>\frac{1}{\sqrt{2}}\right)\leq e^{-N/4}.$ (19)
+
+Fix first an input $({\mathbf{p}},{\mathbf{z}})$ and let $M:=\max_{i}\sigma_{i}z_{i}$ . If $M\geq 0$ , then $D_{\sigma}\geq\left\lVert{\mathbf{p}}\right\rVert/\sqrt{2}$ , so a target answer implies ${\mathbf{p}}\neq 0$ and $\left\langle{\mathbf{p}}/\left\lVert{\mathbf{p}}\right\rVert,{\mathbf{u}}_{\sigma}\right\rangle>1/\sqrt{2}$ . By ( 19 ), this event has probability at most $e^{-N/4}$ . If $M<0$ , then every $z_{i}$ is nonzero and $\sigma_{i}=-\operatorname{sign}(z_{i})$ for all $i$ , which is one prescribed sign vector and has probability $2^{-N}$ . This proves the first claim.
+
+Now fix ${\mathbf{x}}$ . If ${\mathbf{x}}=0$ , the second event is impossible. Otherwise write ${\mathbf{x}}=t{\mathbf{r}}$ , where $t:=\left\lVert{\mathbf{x}}\right\rVert>0$ and $\left\lVert{\mathbf{r}}\right\rVert=1$ . If $\left\lVert{\mathbf{x}}-R{\mathbf{u}}_{\sigma}\right\rVert<R/\sqrt{2}$ , then
+
+$t^{2}+R^{2}-2Rt\left\langle{\mathbf{r}},{\mathbf{u}}_{\sigma}\right\rangle<\frac{R^{2}}{2}.$
+
+Hence
+
+$2Rt\left\langle{\mathbf{r}},{\mathbf{u}}_{\sigma}\right\rangle>t^{2}+\frac{R^{2}}{2}\geq\sqrt{2}Rt,$
+
+and therefore $\left\langle{\mathbf{r}},{\mathbf{u}}_{\sigma}\right\rangle>1/\sqrt{2}$ . Thus the second claim follows again from ( 19 ). ∎
+
+For any $N\geq 8$ , let $T\leq\left\lfloor N/(128\log(2N))\right\rfloor$ . Every randomized method using at most $T$ calls to a $1$ -fold sparse projection oracle, while making arbitrary first-order calls whose returned answers are generated by a rule independent of $\sigma$ , has some fixed $\sigma\in\{-1,+1\}^{N}$ for which its output $\widehat{\mathbf{w}}=(\widehat{\mathbf{x}},\widehat{\mathbf{z}})$ satisfies
+
+$\mathbb{E}\left\lVert\widehat{\mathbf{x}}-R{\mathbf{u}}_{\sigma}\right\rVert^{2}\geq\frac{R^{2}}{4},$
+
+where the expectation is taken over the internal randomness of the method.
+
+Fix in advance the entire sequence of random bits that the method may use, independently of $\sigma$ . The method is then deterministic and still makes at most $T$ sparse-projection calls.
+
+Consider the rooted interaction tree obtained by following the method as long as every sparse-projection call returns a non-target vertex. Since the first-order answer rule is independent of $\sigma$ , each history of non-target answers, together with the fixed random bits, determines the next sparse-projection input. At depth $d$ , each node represents a possible history of $d$ such answers and is either terminal, if the method stops, or has at most $2N$ children, corresponding to the possible non-target answers to its next query (as we observed above). Thus, the total number of nodes through depth $T$ , including terminal histories, is at most
+
+$\sum_{d=0}^{T}(2N)^{d}\leq 2(2N)^{T}.$
+
+Associate a bad event with every node of this tree. At a sparse-projection node, the bad event is that the target would be returned at its fixed input. At a terminal node, whose first output block ${\mathbf{x}}$ is fixed, the bad event is
+
+$\left\lVert{\mathbf{x}}-R{\mathbf{u}}_{\sigma}\right\rVert<\frac{R}{\sqrt{2}}.$
+
+By Lemma 3 , every such event has probability at most $\eta_{N}$ . A union bound over the tree therefore gives
+
+$\displaystyle\Pr_{\sigma}\{\text{some bad event occurs}\}\leq 2(2N)^{T}\eta_{N}.$ (20)
+
+By the assumed bound on $T$ , $(2N)^{T}\leq e^{N/128}$ , and hence
+
+$2(2N)^{T}\eta_{N}\leq 2\left(e^{-31N/128}+e^{-(\log 2-1/128)N}\right)\leq\frac{1}{2},$
+
+where the last inequality holds for every $N\geq 8$ .
+
+If no bad event occurs, the actual interaction follows the non-target tree to a terminal history and its output satisfies
+
+$\left\lVert\widehat{\mathbf{x}}-R{\mathbf{u}}_{\sigma}\right\rVert\geq\frac{R}{\sqrt{2}}.$
+
+Consequently, for every fixed realization of the method’s random bits,
+
+$\mathbb{E}_{\sigma}\left\lVert\widehat{\mathbf{x}}-R{\mathbf{u}}_{\sigma}\right\rVert^{2}\geq\frac{R^{2}}{2}\Pr_{\sigma}\!\left(\left\lVert\widehat{\mathbf{x}}-R{\mathbf{u}}_{\sigma}\right\rVert\geq\frac{R}{\sqrt{2}}\right)\geq\frac{R^{2}}{4}.$
+
+Averaging over the method’s random bits and interchanging the two expectations, we have that some fixed $\sigma$ indeed satisfies the same bound in expectation over the method’s randomness. ∎
+
+3.2 The randomized lower bounds
+
+Fix $\alpha,G>0$ and an integer $N\geq 8$ . For every randomized method using at most $\lfloor N/(128\log(2N))\rfloor$ calls to a $1$ -fold sparse-projection oracle, there exists an instance in dimension $n=2N$ with compact feasible set, an $\alpha$ -strongly convex objective whose feasible subgradients have norm at most $G$ , and a unique vertex minimizer ${\mathbf{w}}^{*}$ , such that
+
+$\mathbb{E}[F(\widehat{\mathbf{w}})-F({\mathbf{w}}^{*})]\geq\frac{G^{2}}{128\alpha N},$
+
+where the expectation is over the method’s internal randomness. Arbitrarily many first-order calls between sparse projections are allowed.
+
+Consequently, there is a universal constant $c_{0}>0$ such that, whenever $G^{2}/(\alpha\epsilon)$ is sufficiently large, every randomized method that guarantees expected error at most $\epsilon$ on all $s=k=1$ instances requires at least $c_{0}\frac{G^{2}}{\alpha\epsilon\,\log(2G^{2}/(\alpha\epsilon))}$ sparse projections in the worst case.
+
+Fix a randomized method. Use the preceding construction with $R=\frac{G}{4\alpha\sqrt{N}}$ . Consider the objective function
+
+$f({\mathbf{x}},{\mathbf{z}}):=\frac{\alpha}{2}\bigl(\left\lVert{\mathbf{x}}\right\rVert^{2}+\left\lVert{\mathbf{z}}\right\rVert^{2}\bigr)+\frac{3G}{4}\left\lVert{\mathbf{z}}\right\rVert,\qquad{\mathbf{x}},{\mathbf{z}}\in\mathbb{R}^{N},$
+
+and note it is indeed $\alpha$ -strongly convex. Moreover, every ${\mathbf{g}}\in\partial f({\mathbf{x}},{\mathbf{z}})$ can be written as
+
+${\mathbf{g}}=\alpha({\mathbf{x}},{\mathbf{z}})+\left(0,\frac{3G}{4}{\mathbf{v}}\right)\qquad\text{for some }\left\lVert{\mathbf{v}}\right\rVert\leq 1.$
+
+Since every point of the feasible set $\mathcal{K}_{\sigma}$ has norm at most $R$ , every feasible subgradient therefore satisfies
+
+$\left\lVert{\mathbf{g}}\right\rVert\leq\alpha R+\frac{3G}{4}=\frac{G}{4\sqrt{N}}+\frac{3G}{4}\leq G.$
+
+To specify the first-order oracle, let it return $\left(\alpha{\mathbf{x}},\alpha{\mathbf{z}}+\frac{3G}{4}\frac{{\mathbf{z}}}{\left\lVert{\mathbf{z}}\right\rVert}\right)$ when ${\mathbf{z}}\neq 0$ , and $(\alpha{\mathbf{x}},0)$ when ${\mathbf{z}}=0$ . This is a valid subgradient rule that depends only on the query $({\mathbf{x}},{\mathbf{z}})$ and not on $\sigma$ .
+
+We next verify that ${\mathbf{w}}^{*}={\mathbf{s}}_{\sigma}^{*}=(R{\mathbf{u}}_{\sigma},0)$ is the unique minimizer over $\mathcal{K}_{\sigma}$ . To certify its optimality, consider the corresponding subgradient ${\mathbf{g}}^{*}:=\left(\alpha R{\mathbf{u}}_{\sigma},\frac{3G}{4}{\mathbf{u}}_{\sigma}\right)\in\partial f({\mathbf{w}}^{*})$ . For every non-target vertex ${\mathbf{s}}=\left(\frac{R}{\sqrt{2}}{\mathbf{v}},\frac{R}{\sqrt{2}}\sigma_{i}{\mathbf{e}}_{i}\right)$ we have,
+
+$\displaystyle\left\langle{\mathbf{g}}^{*},{\mathbf{s}}-{\mathbf{w}}^{*}\right\rangle$ $\displaystyle=\alpha R^{2}\left(\frac{1}{\sqrt{2}}\left\langle{\mathbf{u}}_{\sigma},{\mathbf{v}}\right\rangle-1\right)+\frac{3GR}{4\sqrt{2N}}$ $\displaystyle\geq-\alpha R^{2}\left(1+\frac{1}{\sqrt{2}}\right)+\frac{3GR}{4\sqrt{2N}}$ $\displaystyle=\frac{(\sqrt{2}-1)G^{2}}{16\alpha N}>0,$
+
+and so ${\mathbf{w}}^{*}={\mathbf{s}}_{\sigma}^{*}$ is indeed the unique minimizer.
+
+Thus, for every feasible output $\widehat{\mathbf{w}}=(\widehat{\mathbf{x}},\widehat{\mathbf{z}})$ , strong convexity implies that
+
+$\displaystyle F(\widehat{\mathbf{w}})-F({\mathbf{w}}^{*})=f(\widehat{\mathbf{w}})-f({\mathbf{w}}^{*})\geq\frac{\alpha}{2}\left\lVert\widehat{\mathbf{w}}-{\mathbf{w}}^{*}\right\rVert^{2}\geq\frac{\alpha}{2}\left\lVert\widehat{\mathbf{x}}-R{\mathbf{u}}_{\sigma}\right\rVert^{2}.$
+
+The same inequality holds trivially for an infeasible output because its composite error is infinite.
+
+Taking expectations and using Theorem 4 indeed gives
+
+$\mathbb{E}\bigl[F(\widehat{\mathbf{w}})-F({\mathbf{w}}^{*})\bigr]\geq\frac{\alpha}{2}\mathbb{E}\left\lVert\widehat{\mathbf{x}}-R{\mathbf{u}}_{\sigma}\right\rVert^{2}\geq\frac{\alpha R^{2}}{8}=\frac{G^{2}}{128\alpha N},$
+
+which proves the theorem. ∎
+
+As in the deterministic construction of Theorem 2 , the bounded-subgradient property here holds on the entire Euclidean ball containing the feasible set. Indeed, $\mathcal{K}_{\sigma}\subseteq\{{\mathbf{w}}:\left\lVert{\mathbf{w}}\right\rVert\leq R\}$ and, for every $\left\lVert{\mathbf{w}}\right\rVert\leq R$ and every ${\mathbf{g}}\in\partial f({\mathbf{w}})$ ,
+
+$\left\lVert{\mathbf{g}}\right\rVert\leq\alpha R+\frac{3G}{4}=\frac{G}{4\sqrt{N}}+\frac{3G}{4}\leq G.$
+
+Thus the randomized lower bound also holds under the same type of neighborhood-access assumption discussed after Theorem 2 , and used by MOPES [ 18 ] .
+
+Fix $\alpha,\beta>0$ , let $\kappa:=\beta/\alpha$ , $N:=\left\lfloor(\kappa-2)/32\right\rfloor$ , and suppose that $\kappa\geq 258$ . For every randomized method using at most $\lfloor N/(128\log(2N))\rfloor$ calls to a $1$ -fold sparse-projection oracle, there exists an instance in dimension $n=2N$ with an $\alpha$ -strongly convex and $\beta$ -smooth quadratic objective, a unique vertex minimizer ${\mathbf{w}}^{*}$ , and feasible-set diameter $D\leq 2$ , such that
+
+$\mathbb{E}[F(\widehat{\mathbf{w}})-F({\mathbf{w}}^{*})]\geq\frac{\alpha}{8}.$
+
+Consequently, for $\epsilon=\alpha/16$ , every randomized method that guarantees expected error at most $\epsilon$ on all such instances requires $\Omega\left((\beta/\alpha)/\log(2\beta/\alpha)\right)$ calls to the $1$ -fold sparse-projection oracle in the worst case.
+
+Fix a randomized method. Since $\kappa\geq 258$ , we have $N\geq 8$ . Use the preceding construction with $R=1$ , set ${\mathbf{w}}^{*}={\mathbf{s}}_{\sigma}^{*}=({\mathbf{u}}_{\sigma},0)$ , and define $\gamma:=\sqrt{\kappa-2}/\kappa$ . Consider the quadratic objective
+
+$f({\mathbf{x}},{\mathbf{z}}):=\frac{\beta}{2}\left(\frac{2}{\kappa}\left\lVert{\mathbf{x}}\right\rVert^{2}+2\gamma\left\langle{\mathbf{x}},{\mathbf{z}}\right\rangle+\left(1-\frac{1}{\kappa}\right)\left\lVert{\mathbf{z}}\right\rVert^{2}\right),\qquad{\mathbf{x}},{\mathbf{z}}\in\mathbb{R}^{N}.$
+
+Its gradient is
+
+$\nabla f({\mathbf{x}},{\mathbf{z}})=\beta\left(\frac{2}{\kappa}{\mathbf{x}}+\gamma{\mathbf{z}},\,\gamma{\mathbf{x}}+\left(1-\frac{1}{\kappa}\right){\mathbf{z}}\right).$
+
+In particular, the objective and its gradient are independent of $\sigma$ , as required by Theorem 4 .
+
+The Hessian with respect to the two blocks $({\mathbf{x}},{\mathbf{z}})$ is
+
+$\nabla^{2}f=\beta\begin{pmatrix}\frac{2}{\kappa}\textbf{I}_{N}&\gamma\textbf{I}_{N}\\ \gamma\textbf{I}_{N}&\left(1-\frac{1}{\kappa}\right)\textbf{I}_{N}\end{pmatrix}.$
+
+The trace and determinant of the $2\times 2$ block, without the factor $\beta$ , are respectively
+
+$1+\frac{1}{\kappa}\qquad\text{and}\qquad\frac{2}{\kappa}\left(1-\frac{1}{\kappa}\right)-\gamma^{2}=\frac{1}{\kappa}.$
+
+Its two distinct eigenvalues are therefore $1$ and $1/\kappa$ . Thus the exact strong-convexity and smoothness parameters are indeed $\beta/\kappa=\alpha$ and $\beta$ , respectively.
+
+We next verify that ${\mathbf{w}}^{*}={\mathbf{s}}_{\sigma}^{*}$ is the unique minimizer over the feasible set $\mathcal{K}_{\sigma}$ . At ${\mathbf{w}}^{*}$ ,
+
+$\nabla f({\mathbf{w}}^{*})=\beta\left(\frac{2}{\kappa}{\mathbf{u}}_{\sigma},\,\gamma{\mathbf{u}}_{\sigma}\right).$
+
+Since $N\leq(\kappa-2)/32$ , we have
+
+$\frac{\gamma}{\sqrt{N}}=\frac{\sqrt{\kappa-2}}{\kappa\sqrt{N}}\geq\frac{4\sqrt{2}}{\kappa}.$
+
+For every non-target vertex
+
+${\mathbf{s}}=\left(\frac{1}{\sqrt{2}}{\mathbf{v}},\frac{1}{\sqrt{2}}\sigma_{i}{\mathbf{e}}_{i}\right),\qquad\left\lVert{\mathbf{v}}\right\rVert=1,$
+
+using $\left\langle{\mathbf{u}}_{\sigma},\sigma_{i}{\mathbf{e}}_{i}\right\rangle=1/\sqrt{N}$ , we have
+
+$\displaystyle\left\langle\nabla f({\mathbf{w}}^{*}),{\mathbf{s}}-{\mathbf{w}}^{*}\right\rangle$ $\displaystyle=\beta\left[\frac{2}{\kappa}\left(\frac{1}{\sqrt{2}}\left\langle{\mathbf{u}}_{\sigma},{\mathbf{v}}\right\rangle-1\right)+\frac{\gamma}{\sqrt{2N}}\right]$ $\displaystyle\geq\frac{\beta}{\kappa}\left[-2\left(1+\frac{1}{\sqrt{2}}\right)+4\right]>0.$
+
+Thus the constrained first-order optimality condition holds at ${\mathbf{w}}^{*}$ , and strong convexity makes it the unique minimizer.
+
+For every feasible output $\widehat{\mathbf{w}}=(\widehat{\mathbf{x}},\widehat{\mathbf{z}})$ , strong convexity and the optimality condition give
+
+$\displaystyle F(\widehat{\mathbf{w}})-F({\mathbf{w}}^{*})$ $\displaystyle=f(\widehat{\mathbf{w}})-f({\mathbf{w}}^{*})\geq\frac{\alpha}{2}\left\lVert\widehat{\mathbf{w}}-{\mathbf{w}}^{*}\right\rVert^{2}\geq\frac{\alpha}{2}\left\lVert\widehat{\mathbf{x}}-{\mathbf{u}}_{\sigma}\right\rVert^{2}.$
+
+The same inequality holds trivially for an infeasible output because its composite error is infinite. Taking expectations and applying Theorem 4 , we obtain, for some fixed $\sigma$ ,
+
+$\mathbb{E}\bigl[F(\widehat{\mathbf{w}})-F({\mathbf{w}}^{*})\bigr]\geq\frac{\alpha}{2}\mathbb{E}\left\lVert\widehat{\mathbf{x}}-{\mathbf{u}}_{\sigma}\right\rVert^{2}\geq\frac{\alpha}{8},$
+
+which proves the theorem.
+
+∎
+
+4 WPO-based Upper Bounds
+
+In this section we turn to consider upper bounds for Problem ( 1 ). As opposed to our lower bounds constructions that considered stronger assumptions than those described in the Introduction, here we consider the original weaker assumptions given in the Introduction. In particular $F$ corresponds to a general convex composite model, i.e., $\mathcal{R}$ need not be an indicator for a convex set, and $f$ is not assumed strongly convex and we do not assume a unique minimizer; we only assume $F$ satisfies the quadratic growth condition ( 2 ), but can have more than one minimizer. Throughout this section $\mathcal{A}$ denotes a weak proximal oracle as defined in Definition 1 .
+
+We present algorithms for both the smooth and nonsmooth regimes that access the function $\mathcal{R}$ only through the weak proximal oracle $\mathcal{A}$ . For the smooth case the algorithm and its linear convergence rate result are not new and have appeared in several previous works, e.g., [ 12 , 11 , 13 , 10 ] . Given that both the description of the algorithm and the convergence analysis are very short, we include it for completeness. For the nonsmooth case, while the presented algorithm and convergence analysis are based on previously introduced techniques, to the best of our knowledge, such result was not previously known, and the technical details are far more intricate than in the smooth case.
+
+4.1 The smooth case
+
+The algorithm is given as Algorithm 1 .
+
+Algorithm 1 Weak proximal gradient method under quadratic growth
+
+For any ${\mathbf{x}}_{\rm in}\in\mathop{\mbox{\rm dom}}(\mathcal{R})$ and any integer $T\geq 0$ , let ${\mathbf{x}}_{T}$ denote the output of Algorithm 1 . Then
+
+$\displaystyle F({\mathbf{x}}_{T})-F^{*}\leq\left(1-\frac{\alpha}{4\beta}\right)^{T}\bigl(F({\mathbf{x}}_{\rm in})-F^{*}\bigr).$ (21)
+
+In particular, Algorithm 1 uses $T$ weak proximal oracle calls and $T$ gradient evaluations.
+
+Fix an iteration $t$ and choose a closest optimizer ${\mathbf{x}}_{t}^{*}\in\argmin_{{\mathbf{x}}^{*}\in\mathcal{X}^{*}}\left\lVert{\mathbf{x}}_{t}-{\mathbf{x}}^{*}\right\rVert$ . Applying the weak proximal guarantee ( 4 ) to the oracle call in Algorithm 1 with comparison point ${\mathbf{x}}_{t}^{*}$ gives,
+
+$\frac{\alpha}{4}\left\lVert{\mathbf{v}}_{t}-\left({\mathbf{x}}_{t}-\frac{2}{\alpha}\nabla f({\mathbf{x}}_{t})\right)\right\rVert^{2}+\mathcal{R}({\mathbf{v}}_{t})\leq\frac{\alpha}{4}\left\lVert{\mathbf{x}}_{t}^{*}-\left({\mathbf{x}}_{t}-\frac{2}{\alpha}\nabla f({\mathbf{x}}_{t})\right)\right\rVert^{2}+\mathcal{R}({\mathbf{x}}_{t}^{*}).$
+
+Expanding the two squared norms gives,
+
+$\displaystyle\left\langle\nabla f({\mathbf{x}}_{t}),{\mathbf{v}}_{t}-{\mathbf{x}}_{t}\right\rangle+\frac{\alpha}{4}\|{{\mathbf{v}}_{t}-{\mathbf{x}}_{t}}\|^{2}+\mathcal{R}({\mathbf{v}}_{t})$ $\displaystyle\leq\left\langle\nabla f({\mathbf{x}}_{t}),{\mathbf{x}}_{t}^{*}-{\mathbf{x}}_{t}\right\rangle+\frac{\alpha}{4}\|{{\mathbf{x}}_{t}^{*}-{\mathbf{x}}_{t}}\|^{2}+\mathcal{R}({\mathbf{x}}_{t}^{*})$ (22)
+
+By $\beta$ -smoothness of $f$ , convexity of $\mathcal{R}$ , and the update of ${\mathbf{x}}_{t+1}$ in Algorithm 1 ,
+
+$\displaystyle F({\mathbf{x}}_{t+1})$ $\displaystyle\leq f({\mathbf{x}}_{t})+\frac{\alpha}{2\beta}\left\langle\nabla f({\mathbf{x}}_{t}),{\mathbf{v}}_{t}-{\mathbf{x}}_{t}\right\rangle+\frac{\alpha^{2}}{8\beta}\left\lVert{\mathbf{v}}_{t}-{\mathbf{x}}_{t}\right\rVert^{2}$ $\displaystyle~~+\left(1-\frac{\alpha}{2\beta}\right)\mathcal{R}({\mathbf{x}}_{t})+\frac{\alpha}{2\beta}\mathcal{R}({\mathbf{v}}_{t})$ $\displaystyle\leq f({\mathbf{x}}_{t})+\frac{\alpha}{2\beta}\left\langle\nabla f({\mathbf{x}}_{t}),{\mathbf{x}}_{t}^{*}-{\mathbf{x}}_{t}\right\rangle+\frac{\alpha^{2}}{8\beta}\left\lVert{\mathbf{x}}_{t}^{*}-{\mathbf{x}}_{t}\right\rVert^{2}$ $\displaystyle~~+\left(1-\frac{\alpha}{2\beta}\right)\mathcal{R}({\mathbf{x}}_{t})+\frac{\alpha}{2\beta}\mathcal{R}({\mathbf{x}}_{t}^{*}),$
+
+where the last inequality is due to ( 22 ).
+
+Convexity of $f$ also gives
+
+$f({\mathbf{x}}_{t})-f({\mathbf{x}}_{t}^{*})+\left\langle\nabla f({\mathbf{x}}_{t}),{\mathbf{x}}_{t}^{*}-{\mathbf{x}}_{t}\right\rangle\leq 0.$
+
+Subtracting $F^{*}=F({\mathbf{x}}_{t}^{*})$ from both sides and using the last inequality yields
+
+$\displaystyle F({\mathbf{x}}_{t+1})-F^{*}$ $\displaystyle\leq\left(1-\frac{\alpha}{2\beta}\right)\bigl(F({\mathbf{x}}_{t})-F^{*}\bigr)+\frac{\alpha^{2}}{8\beta}\left\lVert{\mathbf{x}}_{t}-{\mathbf{x}}_{t}^{*}\right\rVert^{2}.$
+
+Finally, quadratic growth gives
+
+$F({\mathbf{x}}_{t+1})-F^{*}\leq\left(1-\frac{\alpha}{4\beta}\right)\bigl(F({\mathbf{x}}_{t})-F^{*}\bigr),$
+
+which proves the theorem. ∎
+
+Algorithm 1 only requires the smoothness parameter $\beta$ in order to set the convex combination parameter when forming the new point ${\mathbf{x}}_{t+1}$ . It is a simple observation that replacing this parameter with exact line-search on the $[0,1]$ interval, i.e., taking ${\mathbf{x}}_{t+1}\leftarrow(1-\eta_{t}){\mathbf{x}}_{t}+\eta_{t}{\mathbf{v}}_{t}$ with $\eta_{t}\leftarrow\argmin_{\eta\in[0,1]}F((1-\eta){\mathbf{x}}_{t}+\eta{\mathbf{v}}_{t})$ , does not change the consequences of Theorem 7 .
+
+4.2 The nonsmooth case
+
+We now turn to consider a WPO-based upper bound for the nonsmooth case, which is significantly more intricate than the previous smooth case. Our Algorithm, given below as Algorithm 3 , iteratively invokes a one-stage method described in Algorithm 2 . This one-stage method and its analysis are heavily based on the optimistic primal-dual and linear optimization oracle-based method presented in [ 2 ] . Nevertheless, there are also some important differences: [ 2 ] considers the constrained setting only (i.e., $\mathcal{R}$ is an indicator for a convex and compact set), it assumes the subgradients of the objective are globally bounded, and it assumes access to a linear optimization oracle. Also they provide only a $1/\epsilon^{2}$ -type convergence rate, which is understandable given their use of a linear optimization oracle. Here, we assume the more general proximal setting, we do not require a global bound on subgradients, we assume access through a weak proximal oracle, and we prove a $1/\epsilon$ -type convergence rate, under quadratic growth. These differences naturally require certain changes to the algorithm and its analysis. For instance, we add localization steps (the projections onto the set $\mathcal{Y}$ in Algorithm 2 ) in order to rely only on a local bound on subgradients, rather than a global one. Additionally, while [ 2 ] uses a single-loop algorithm and each iteration makes one subgradient oracle call and one linear optimization oracle call, our Algorithm 2 uses a double loop in order to balance correctly between the number of calls to the subgradient oracle and the weak proximal oracle.
+
+In what follows, let ${\mathbf{x}}_{\rm in}\in\mathop{\mbox{\rm dom}}(\mathcal{R})$ and let $\Delta_{0}$ be any known upper bound satisfying $F({\mathbf{x}}_{\rm in})-F^{*}\leq\Delta_{0}$ . Define the initial sublevel set $\mathcal{L}_{0}:=\left\{{\mathbf{x}}\in\mathop{\mbox{\rm dom}}(\mathcal{R}):F({\mathbf{x}})-F^{*}\leq\Delta_{0}\right\}$ . Assume that, for some $G>0$ , $\left\lVert{\mathbf{g}}\right\rVert\leq G$ for every ${\mathbf{x}}\in\mathcal{L}_{0}$ , ${\mathbf{g}}\in\partial f({\mathbf{x}})$ . Set $D_{0}:=\sqrt{2\Delta_{0}/\alpha}$ , $\mathcal{U}_{0}:=\left\{{\mathbf{u}}\in\mathbb{V}|\textrm{dist}({\mathbf{u}},\mathcal{L}_{0})\leq D_{0}\right\}$ , and define
+
+$\overline{G}_{0}:=\max\left\{G,\,\sup\left\{\left\lVert{\mathbf{g}}\right\rVert|{\mathbf{u}}\in\mathcal{U}_{0},{\mathbf{g}}\in\partial f({\mathbf{u}})\right\}\right\}.$
+
+Algorithm 2 One-stage nonsmooth weak-proximal primal-dual method
+
+Let ${\mathbf{c}}\in\mathcal{L}_{0}$ , let $D>0$ , and suppose that there is ${\mathbf{x}}_{\mathbf{c}}^{*}\in\mathcal{X}^{*}$ such that $\left\lVert{\mathbf{c}}-{\mathbf{x}}_{\mathbf{c}}^{*}\right\rVert\leq D$ . Set $\mathcal{Y}:=\{{\mathbf{y}}:\left\lVert{\mathbf{y}}-{\mathbf{c}}\right\rVert\leq D\}$ , and suppose that $\left\lVert{\mathbf{g}}\right\rVert\leq\overline{G}_{0}$ for every ${\mathbf{y}}\in\mathcal{Y}$ and every ${\mathbf{g}}\in\partial f({\mathbf{y}})$ . Fix positive integers $T,K$ satisfying $K\geq\overline{G}_{0}^{2}/G^{2}$ , and run Algorithm 2 with center ${\mathbf{c}}$ , radius $D$ , constants $G,\overline{G}_{0}$ , and integers $T,K$ . If $6GD/\sqrt{T}<\Delta_{0}$ , then its output $\overline{{\mathbf{v}}}_{T}:=T^{-1}\sum_{t=1}^{T}{\mathbf{v}}_{t}$ belongs to $\mathcal{L}_{0}$ and
+
+$\displaystyle F(\overline{{\mathbf{v}}}_{T})-F^{*}\leq\frac{6GD}{\sqrt{T}}.$ (23)
+
+The algorithm uses $T$ weak proximal oracle calls and $TK$ subgradient calls to $f$ .
+
+Denote ${\mathbf{x}}^{*}:={\mathbf{x}}_{\mathbf{c}}^{*}\in\mathcal{Y}$ . Expanding the WPO guarantee for the call in the algorithm and using ${\mathbf{x}}^{*}$ as the comparison point (similarly to the derivation of Eq. ( 22 ) in the smooth case) gives
+
+$\displaystyle\left\langle{\mathbf{q}}_{t},{\mathbf{v}}_{t}-{\mathbf{x}}^{*}\right\rangle+\mathcal{R}({\mathbf{v}}_{t})-\mathcal{R}({\mathbf{x}}^{*})\leq\eta\left(\left\lVert{\mathbf{x}}^{*}-{\mathbf{c}}\right\rVert^{2}-\left\lVert{\mathbf{v}}_{t}-{\mathbf{c}}\right\rVert^{2}\right).$ (24)
+
+For fixed $t$ and $s$ , define
+
+$\displaystyle\Phi_{t,s}({\mathbf{y}})$ $\displaystyle:=\left\langle{\mathbf{g}}_{t,s}-{\mathbf{q}}_{t},{\mathbf{y}}\right\rangle+\frac{\eta}{2}\left\lVert{\mathbf{y}}-{\mathbf{v}}_{t}\right\rVert^{2}+\frac{\rho K}{2}\left\lVert{\mathbf{y}}-{\mathbf{y}}_{t,s}\right\rVert^{2}.$
+
+Completing the square gives
+
+$\displaystyle\Phi_{t,s}({\mathbf{y}})$ $\displaystyle=\frac{\rho K+\eta}{2}\left\lVert{\mathbf{y}}-\frac{\rho K{\mathbf{y}}_{t,s}+{\mathbf{q}}_{t}+\eta{\mathbf{v}}_{t}-{\mathbf{g}}_{t,s}}{\rho K+\eta}\right\rVert^{2}+\mathrm{const}.$
+
+Consequently, the projected update in Algorithm 2 is exactly
+
+$\displaystyle{\mathbf{y}}_{t,s+1}=\argmin_{{\mathbf{y}}\in\mathcal{Y}}\Phi_{t,s}({\mathbf{y}}).$
+
+The function $\Phi_{t,s}$ is $(\rho K+\eta)$ -strongly convex. Since ${\mathbf{x}}^{*}\in\mathcal{Y}$ , this implies that
+
+$\displaystyle\Phi_{t,s}({\mathbf{y}}_{t,s+1})+\frac{\rho K+\eta}{2}\left\lVert{\mathbf{x}}^{*}-{\mathbf{y}}_{t,s+1}\right\rVert^{2}\leq\Phi_{t,s}({\mathbf{x}}^{*}).$
+
+Expanding and dividing through by $K$ gives
+
+$\displaystyle\frac{1}{K}\left\langle{\mathbf{g}}_{t,s}-{\mathbf{q}}_{t},{\mathbf{y}}_{t,s+1}-{\mathbf{x}}^{*}\right\rangle+\frac{\eta}{2K}\left\lVert{\mathbf{y}}_{t,s+1}-{\mathbf{v}}_{t}\right\rVert^{2}+\frac{\rho}{2}\left\lVert{\mathbf{y}}_{t,s+1}-{\mathbf{y}}_{t,s}\right\rVert^{2}$ $\displaystyle\qquad\leq\frac{\eta}{2K}\left\lVert{\mathbf{x}}^{*}-{\mathbf{v}}_{t}\right\rVert^{2}+\frac{\rho}{2}\left(\left\lVert{\mathbf{x}}^{*}-{\mathbf{y}}_{t,s}\right\rVert^{2}-\left\lVert{\mathbf{x}}^{*}-{\mathbf{y}}_{t,s+1}\right\rVert^{2}\right)-\frac{\eta}{2K}\left\lVert{\mathbf{x}}^{*}-{\mathbf{y}}_{t,s+1}\right\rVert^{2}.$
+
+Using
+
+$\displaystyle\left\langle{\mathbf{g}}_{t,s}-{\mathbf{q}}_{t},{\mathbf{y}}_{t,s+1}-{\mathbf{x}}^{*}\right\rangle$ $\displaystyle=\left\langle{\mathbf{g}}_{t,s},{\mathbf{y}}_{t,s}-{\mathbf{x}}^{*}\right\rangle+\left\langle{\mathbf{g}}_{t,s},{\mathbf{y}}_{t,s+1}-{\mathbf{y}}_{t,s}\right\rangle+\left\langle{\mathbf{q}}_{t},{\mathbf{x}}^{*}-{\mathbf{y}}_{t,s+1}\right\rangle,$
+
+we obtain
+
+$\displaystyle\frac{1}{K}\left\langle{\mathbf{g}}_{t,s},{\mathbf{y}}_{t,s}-{\mathbf{x}}^{*}\right\rangle+\frac{1}{K}\left\langle{\mathbf{q}}_{t},{\mathbf{x}}^{*}-{\mathbf{y}}_{t,s+1}\right\rangle+\frac{\eta}{2K}\left\lVert{\mathbf{y}}_{t,s+1}-{\mathbf{v}}_{t}\right\rVert^{2}$ $\displaystyle\quad+\frac{1}{K}\left\langle{\mathbf{g}}_{t,s},{\mathbf{y}}_{t,s+1}-{\mathbf{y}}_{t,s}\right\rangle+\frac{\rho}{2}\left\lVert{\mathbf{y}}_{t,s+1}-{\mathbf{y}}_{t,s}\right\rVert^{2}$ $\displaystyle\qquad\leq\frac{\eta}{2K}\left\lVert{\mathbf{x}}^{*}-{\mathbf{v}}_{t}\right\rVert^{2}+\frac{\rho}{2}\left(\left\lVert{\mathbf{x}}^{*}-{\mathbf{y}}_{t,s}\right\rVert^{2}-\left\lVert{\mathbf{x}}^{*}-{\mathbf{y}}_{t,s+1}\right\rVert^{2}\right).$
+
+Young’s inequality and $\left\lVert{\mathbf{g}}_{t,s}\right\rVert\leq\overline{G}_{0}$ , give
+
+$\displaystyle\frac{1}{K}\left\langle{\mathbf{g}}_{t,s},{\mathbf{y}}_{t,s+1}-{\mathbf{y}}_{t,s}\right\rangle+\frac{\rho}{2}\left\lVert{\mathbf{y}}_{t,s+1}-{\mathbf{y}}_{t,s}\right\rVert^{2}\geq-\frac{\left\lVert{\mathbf{g}}_{t,s}\right\rVert^{2}}{2\rho K^{2}}\geq-\frac{\overline{G}_{0}^{2}}{2\rho K^{2}}.$
+
+Plugging this inequality into the previous one and using the convexity of $f$ , gives
+
+$\displaystyle\frac{f({\mathbf{y}}_{t,s})-f({\mathbf{x}}^{*})}{K}+\frac{1}{K}\left\langle{\mathbf{q}}_{t},{\mathbf{x}}^{*}-{\mathbf{y}}_{t,s+1}\right\rangle+\frac{\eta}{2K}\left\lVert{\mathbf{y}}_{t,s+1}-{\mathbf{v}}_{t}\right\rVert^{2}$ $\displaystyle\qquad\leq\frac{\eta}{2K}\left\lVert{\mathbf{x}}^{*}-{\mathbf{v}}_{t}\right\rVert^{2}+\frac{\rho}{2}\left(\left\lVert{\mathbf{x}}^{*}-{\mathbf{y}}_{t,s}\right\rVert^{2}-\left\lVert{\mathbf{x}}^{*}-{\mathbf{y}}_{t,s+1}\right\rVert^{2}\right)+\frac{\overline{G}_{0}^{2}}{2\rho K^{2}}.$ (25)
+
+Jensen’s inequality and the definition of $\widehat{{\mathbf{y}}}_{t}$ give
+
+$\frac{1}{K}\sum_{s=1}^{K}\left\lVert{\mathbf{y}}_{t,s+1}-{\mathbf{v}}_{t}\right\rVert^{2}\geq\left\lVert\widehat{{\mathbf{y}}}_{t}-{\mathbf{v}}_{t}\right\rVert^{2}.$
+
+Additionally, the dual update gives
+
+$\displaystyle\frac{1}{2\eta}\left(\left\lVert{\mathbf{q}}_{t+1}\right\rVert^{2}-\left\lVert{\mathbf{q}}_{t}\right\rVert^{2}\right)$ $\displaystyle=\frac{1}{2\eta}\left(\left\lVert{\mathbf{q}}_{t}+\eta({\mathbf{v}}_{t}-\widehat{{\mathbf{y}}}_{t})\right\rVert^{2}-\left\lVert{\mathbf{q}}_{t}\right\rVert^{2}\right)$ $\displaystyle=\left\langle{\mathbf{q}}_{t},{\mathbf{v}}_{t}-\widehat{{\mathbf{y}}}_{t}\right\rangle+\frac{\eta}{2}\left\lVert{\mathbf{v}}_{t}-\widehat{{\mathbf{y}}}_{t}\right\rVert^{2}.$
+
+Using $\left\langle{\mathbf{q}}_{t},{\mathbf{x}}^{*}-\widehat{{\mathbf{y}}}_{t}\right\rangle=\left\langle{\mathbf{q}}_{t},{\mathbf{x}}^{*}-{\mathbf{v}}_{t}\right\rangle+\left\langle{\mathbf{q}}_{t},{\mathbf{v}}_{t}-\widehat{{\mathbf{y}}}_{t}\right\rangle$ , we obtain the identity
+
+$\displaystyle\left\langle{\mathbf{q}}_{t},{\mathbf{x}}^{*}-\widehat{{\mathbf{y}}}_{t}\right\rangle+\frac{\eta}{2}\left\lVert\widehat{{\mathbf{y}}}_{t}-{\mathbf{v}}_{t}\right\rVert^{2}=\left\langle{\mathbf{q}}_{t},{\mathbf{x}}^{*}-{\mathbf{v}}_{t}\right\rangle+\frac{1}{2\eta}\left(\left\lVert{\mathbf{q}}_{t+1}\right\rVert^{2}-\left\lVert{\mathbf{q}}_{t}\right\rVert^{2}\right).$
+
+Consequently, summing ( 25 ) over $s$ and using the last two observations, gives
+
+$\displaystyle\frac{1}{K}\sum_{s=1}^{K}\bigl(f({\mathbf{y}}_{t,s})-f({\mathbf{x}}^{*})\bigr)+\frac{1}{2\eta}\left(\left\lVert{\mathbf{q}}_{t+1}\right\rVert^{2}-\left\lVert{\mathbf{q}}_{t}\right\rVert^{2}\right)$ $\displaystyle\leq\left\langle{\mathbf{q}}_{t},{\mathbf{v}}_{t}-{\mathbf{x}}^{*}\right\rangle+\frac{\eta}{2}\left\lVert{\mathbf{x}}^{*}-{\mathbf{v}}_{t}\right\rVert^{2}+\frac{\overline{G}_{0}^{2}}{2\rho K}+\frac{\rho}{2}\left(\left\lVert{\mathbf{x}}^{*}-{\mathbf{y}}_{t,1}\right\rVert^{2}-\left\lVert{\mathbf{x}}^{*}-{\mathbf{y}}_{t,K+1}\right\rVert^{2}\right).$ (26)
+
+Adding $\mathcal{R}({\mathbf{v}}_{t})-\mathcal{R}({\mathbf{x}}^{*})$ to both sides and applying ( 24 ), we get
+
+$\displaystyle\frac{1}{K}\sum_{s=1}^{K}\bigl(f({\mathbf{y}}_{t,s})-f({\mathbf{x}}^{*})\bigr)+\mathcal{R}({\mathbf{v}}_{t})-\mathcal{R}({\mathbf{x}}^{*})+\frac{1}{2\eta}\left(\left\lVert{\mathbf{q}}_{t+1}\right\rVert^{2}-\left\lVert{\mathbf{q}}_{t}\right\rVert^{2}\right)$ $\displaystyle\qquad\leq\eta\left(\left\lVert{\mathbf{x}}^{*}-{\mathbf{c}}\right\rVert^{2}-\left\lVert{\mathbf{v}}_{t}-{\mathbf{c}}\right\rVert^{2}+\frac{1}{2}\left\lVert{\mathbf{x}}^{*}-{\mathbf{v}}_{t}\right\rVert^{2}\right)+\frac{\overline{G}_{0}^{2}}{2\rho K}$ $\displaystyle\qquad\quad+\frac{\rho}{2}\left(\left\lVert{\mathbf{x}}^{*}-{\mathbf{y}}_{t,1}\right\rVert^{2}-\left\lVert{\mathbf{x}}^{*}-{\mathbf{y}}_{t,K+1}\right\rVert^{2}\right).$
+
+Note,
+
+$\displaystyle\left\lVert{\mathbf{x}}^{*}-{\mathbf{c}}\right\rVert^{2}-\left\lVert{\mathbf{v}}_{t}-{\mathbf{c}}\right\rVert^{2}+\frac{1}{2}\left\lVert{\mathbf{x}}^{*}-{\mathbf{v}}_{t}\right\rVert^{2}$ $\displaystyle~~=2\left\lVert{\mathbf{x}}^{*}-{\mathbf{c}}\right\rVert^{2}-\frac{1}{2}\left\lVert({\mathbf{x}}^{*}-{\mathbf{c}})+({\mathbf{v}}_{t}-{\mathbf{c}})\right\rVert^{2}\leq 2D^{2}.$
+
+Thus, the entire outer iteration yields
+
+$\displaystyle\frac{1}{K}\sum_{s=1}^{K}\bigl(f({\mathbf{y}}_{t,s})-f({\mathbf{x}}^{*})\bigr)+\mathcal{R}({\mathbf{v}}_{t})-\mathcal{R}({\mathbf{x}}^{*})+\frac{1}{2\eta}\left(\left\lVert{\mathbf{q}}_{t+1}\right\rVert^{2}-\left\lVert{\mathbf{q}}_{t}\right\rVert^{2}\right)$ $\displaystyle\qquad\leq\frac{\overline{G}_{0}^{2}}{2\rho K}+2\eta D^{2}+\frac{\rho}{2}\left(\left\lVert{\mathbf{x}}^{*}-{\mathbf{y}}_{t,1}\right\rVert^{2}-\left\lVert{\mathbf{x}}^{*}-{\mathbf{y}}_{t,K+1}\right\rVert^{2}\right).$ (27)
+
+Summing ( 27 ) over $t$ , dividing by $T$ , using ${\mathbf{q}}_{1}=0$ , ${\mathbf{y}}_{1,1}={\mathbf{c}}$ , ${\mathbf{y}}_{t+1,1}={\mathbf{y}}_{t,K+1}$ , and slightly rearranging, we get
+
+$\displaystyle\frac{1}{TK}\sum_{t=1}^{T}\sum_{s=1}^{K}f({\mathbf{y}}_{t,s})+\frac{1}{T}\sum_{t=1}^{T}\mathcal{R}({\mathbf{v}}_{t})-F^{*}$ $\displaystyle\qquad\leq\frac{\overline{G}_{0}^{2}}{2\rho K}+2\eta D^{2}+\frac{\rho D^{2}}{2T}-\frac{1}{2\eta T}\left\lVert{\mathbf{q}}_{T+1}\right\rVert^{2}.$ (28)
+
+It remains to transfer this estimate from the auxiliary average to the WPO average. Define
+
+$\overline{{\mathbf{y}}}^{-}:=\frac{1}{TK}\sum_{t=1}^{T}\sum_{s=1}^{K}{\mathbf{y}}_{t,s},\qquad\overline{{\mathbf{y}}}^{+}:=\frac{1}{TK}\sum_{t=1}^{T}\sum_{s=1}^{K}{\mathbf{y}}_{t,s+1}.$
+
+Averaging the differences of dual updates and using the continuity of the auxiliary sequence between successive outer iterations gives
+
+${\mathbf{q}}_{T+1}=\eta T(\overline{{\mathbf{v}}}_{T}-\overline{{\mathbf{y}}}^{+}),\qquad\overline{{\mathbf{y}}}^{+}-\overline{{\mathbf{y}}}^{-}=\frac{{\mathbf{y}}_{T,K+1}-{\mathbf{y}}_{1,1}}{TK}.$
+
+Since ${\mathbf{y}}_{T,K+1},{\mathbf{y}}_{1,1}$ are in $\mathcal{Y}$ , this yields
+
+$\displaystyle\left\lVert\overline{{\mathbf{v}}}_{T}-\overline{{\mathbf{y}}}^{-}\right\rVert\leq\frac{\left\lVert{\mathbf{q}}_{T+1}\right\rVert}{\eta T}+\frac{2D}{TK}.$ (29)
+
+For $0\leq\theta\leq 1$ , set
+
+${\mathbf{v}}_{\theta}:=(1-\theta){\mathbf{x}}^{*}+\theta\overline{{\mathbf{v}}}_{T},\qquad{\mathbf{y}}_{\theta}:=(1-\theta){\mathbf{x}}^{*}+\theta\overline{{\mathbf{y}}}^{-}.$
+
+Whenever ${\mathbf{v}}_{\theta}\in\mathcal{L}_{0}$ , choose ${\mathbf{g}}_{\theta}\in\partial f({\mathbf{v}}_{\theta})$ . The bound $\left\lVert{\mathbf{g}}_{\theta}\right\rVert\leq G$ , convexity, and ( 29 ) imply
+
+$\displaystyle f({\mathbf{v}}_{\theta})-f({\mathbf{y}}_{\theta})$ $\displaystyle\leq\left\langle{\mathbf{g}}_{\theta},{\mathbf{v}}_{\theta}-{\mathbf{y}}_{\theta}\right\rangle\leq\theta\left(\frac{G}{\eta T}\left\lVert{\mathbf{q}}_{T+1}\right\rVert+\frac{2GD}{TK}\right).$
+
+Also, convexity gives
+
+$\displaystyle f({\mathbf{y}}_{\theta})$ $\displaystyle\leq(1-\theta)f({\mathbf{x}}^{*})+\frac{\theta}{TK}\sum_{t=1}^{T}\sum_{s=1}^{K}f({\mathbf{y}}_{t,s}),$ $\displaystyle\mathcal{R}({\mathbf{v}}_{\theta})$ $\displaystyle\leq(1-\theta)\mathcal{R}({\mathbf{x}}^{*})+\frac{\theta}{T}\sum_{t=1}^{T}\mathcal{R}({\mathbf{v}}_{t}).$
+
+Combining the preceding bounds, whenever ${\mathbf{v}}_{\theta}\in\mathcal{L}_{0}$ , gives
+
+$\displaystyle F({\mathbf{v}}_{\theta})-F^{*}$ $\displaystyle=f({\mathbf{v}}_{\theta})-f({\mathbf{y}}_{\theta})+f({\mathbf{y}}_{\theta})+\mathcal{R}({\mathbf{v}}_{\theta})-F^{*}$ $\displaystyle\leq\theta\Bigg[\frac{1}{TK}\sum_{t=1}^{T}\sum_{s=1}^{K}f({\mathbf{y}}_{t,s})+\frac{1}{T}\sum_{t=1}^{T}\mathcal{R}({\mathbf{v}}_{t})-F^{*}+\frac{G}{\eta T}\left\lVert{\mathbf{q}}_{T+1}\right\rVert+\frac{2GD}{TK}\Bigg].$
+
+Applying ( 28 ) and using
+
+$\frac{G}{\eta T}\left\lVert{\mathbf{q}}_{T+1}\right\rVert-\frac{1}{2\eta T}\left\lVert{\mathbf{q}}_{T+1}\right\rVert^{2}=\frac{G^{2}}{2\eta T}-\frac{1}{2\eta T}\left(\left\lVert{\mathbf{q}}_{T+1}\right\rVert-G\right)^{2}\leq\frac{G^{2}}{2\eta T},$
+
+we have that whenever ${\mathbf{v}}_{\theta}\in\mathcal{L}_{0}$ ,
+
+$\displaystyle F({\mathbf{v}}_{\theta})-F^{*}\leq\theta\left(\frac{\overline{G}_{0}^{2}}{2\rho K}+\frac{\rho D^{2}}{2T}+2\eta D^{2}+\frac{G^{2}}{2\eta T}+\frac{2GD}{TK}\right).$ (30)
+
+For the parameters in Algorithm 2 ,
+
+$\frac{\overline{G}_{0}^{2}}{2\rho K}+\frac{\rho D^{2}}{2T}=\frac{\overline{G}_{0}D}{\sqrt{TK}}\leq\frac{GD}{\sqrt{T}},\qquad 2\eta D^{2}+\frac{G^{2}}{2\eta T}=\frac{5GD}{2\sqrt{T}}.$
+
+Moreover, $\frac{2GD}{TK}\leq\frac{2GD}{\sqrt{T}}$ . Thus the RHS of ( 30 ) is at most
+
+$\displaystyle\theta\frac{11GD}{2\sqrt{T}}<\theta\frac{6GD}{\sqrt{T}}<\theta\Delta_{0}.$ (31)
+
+Now suppose by way of contradiction that $\overline{{\mathbf{v}}}_{T}\notin\mathcal{L}_{0}$ . Since ${\mathbf{x}}^{*}\in\mathcal{X}^{*}\subseteq\mathcal{L}_{0}$ and $F$ is closed and convex, there is a $\theta_{0}\in(0,1)$ such that $F({\mathbf{v}}_{\theta_{0}})-F^{*}=\Delta_{0}$ . However, applying ( 30 ) at $\theta_{0}$ , together with ( 31 ), then leads to a contradiction. Hence $\overline{{\mathbf{v}}}_{T}\in\mathcal{L}_{0}$ . We may therefore take $\theta=1$ in ( 30 ) which, together with ( 31 ), proves ( 23 ). ∎
+
+Algorithm 3 given below iteratively invokes the one-stage Algorithm 2 with a standard shrinking mechanism.
+
+Algorithm 3 Nonsmooth weak-proximal method under quadratic growth
+
+Algorithm 3 returns $\widehat{\mathbf{x}}\in\mathop{\mbox{\rm dom}}(\mathcal{R})$ with $F(\widehat{\mathbf{x}})-F^{*}\leq\epsilon$ using
+
+$\displaystyle O\left(1+\frac{G^{2}}{\alpha\epsilon}+\log\left(1+\log\left(1+\frac{\alpha\Delta_{0}}{G^{2}}\right)\right)\right)$ (32)
+
+weak proximal oracle calls and
+
+$\displaystyle O\left(\frac{\overline{G}_{0}^{2}}{\alpha\epsilon}+\frac{\overline{G}_{0}^{2}}{G^{2}}\left({1+\log\left(1+\log\left(1+\frac{\alpha\Delta_{0}}{G^{2}}\right)\right)}\right)\right)$ (33)
+
+subgradient calls to $f$ .
+
+We first establish by induction that every invocation of Algorithm 2 satisfies all the assumptions of Lemma 4 . In fact, it suffices to show that at the beginning of each iteration of the while loop we have that ${\mathbf{x}}\in\mathcal{L}_{0}$ and that there exists ${\mathbf{x}}^{*}\in\mathcal{X}^{*}$ such that $\|{{\mathbf{x}}-{\mathbf{x}}^{*}}\|\leq D$ : the definitions of $K,T,D,\Delta$ in the algorithm imply the remaining conditions: $\mathcal{Y}\subseteq\mathcal{U}_{0}$ (which implies the upper-bound on the subgradients), $K\geq\overline{G}_{0}^{2}/G^{2}$ , and $6GD/\sqrt{T}<\Delta_{0}$ . As for the condition $\|{{\mathbf{x}}-{\mathbf{x}}^{*}}\|\leq D$ , note that if we have $F({\mathbf{x}})-F^{*}\leq\Delta$ , then quadratic growth implies that indeed there is ${\mathbf{x}}^{*}\in\mathcal{X}^{*}$ such that $\|{{\mathbf{x}}-{\mathbf{x}}^{*}}\|\leq\sqrt{2\Delta/\alpha}=D$ . Thus, it suffices to prove that at the beginning of each iteration ${\mathbf{x}}\in\mathcal{L}_{0}$ and $F({\mathbf{x}})-F^{*}\leq\Delta$ . This holds by assumption for the first iteration. Now suppose these conditions hold at the beginning of some iteration and so the assumptions of Lemma 4 hold, and let ${\mathbf{x}}^{+},\Delta^{+}$ denote the updates to ${\mathbf{x}},\Delta$ after the call to Algorithm 2 . By Lemma 4 we have that ${\mathbf{x}}^{+}\in\mathcal{L}_{0}$ , and
+
+$\displaystyle F({\mathbf{x}}^{+})-F^{*}\leq\frac{6GD}{\sqrt{T}}=\Delta^{+}\leq\frac{\Delta}{2},$ (34)
+
+where the equality and the last inequality follow from the definitions of $D,T,\Delta$ .
+
+Thus, the assumptions of Lemma 4 continue to hold for the next iteration, and the induction holds. This also proves that Algorithm 3 terminates with $F(\widehat{\mathbf{x}})-F^{*}\leq\epsilon$ .
+
+It remains to count oracle calls. It is convenient to distinguish between stages according to whether $\Delta>288G^{2}/\alpha$ . Consider first a stage for which $\Delta>288G^{2}/\alpha$ , then $T=1$ . Let $\Delta^{+}$ denote the value assigned to the maintained bound at the end of this stage. By the update in the algorithm, $\Delta^{+}=6G\sqrt{2\Delta/\alpha}$ . Define the corresponding normalized bounds $q:=\alpha\Delta/G^{2}$ , $q^{+}:=\alpha\Delta^{+}/G^{2}$ . The recurrence is therefore
+
+$q^{+}=\frac{\alpha}{G^{2}}6G\sqrt{\frac{2\Delta}{\alpha}}=6\sqrt{\frac{2\alpha\Delta}{G^{2}}}=6\sqrt{2q}.$
+
+Consequently, the number $R$ of stages for which $\Delta>288G^{2}/\alpha$ satisfies
+
+$\displaystyle R=O\left(1+\log\left(1+\log\left(1+\frac{\alpha\Delta_{0}}{G^{2}}\right)\right)\right).$ (35)
+
+Each such stage uses one weak proximal call and $K$ subgradient calls.
+
+Consider now the remaining stages, for which $\Delta\leq 288G^{2}/\alpha$ . Let their successive maintained bounds be $\Delta_{0}^{\prime},\Delta_{1}^{\prime},\ldots,\Delta_{J-1}^{\prime}$ , where each one is larger than $\epsilon$ . By ( 34 ), $\Delta_{j+1}^{\prime}\leq\Delta_{j}^{\prime}/2$ , and hence
+
+$\frac{1}{\Delta_{j}^{\prime}}\leq 2^{-(J-1-j)}\frac{1}{\Delta_{J-1}^{\prime}}.$
+
+Since $\Delta_{J-1}^{\prime}>\epsilon$ ,
+
+$\displaystyle\sum_{j=0}^{J-1}\frac{1}{\Delta_{j}^{\prime}}\leq\frac{2}{\Delta_{J-1}^{\prime}}<\frac{2}{\epsilon}.$ (36)
+
+For these stages, $T_{j}\leq 1+(288G^{2})/(\alpha\Delta_{j}^{\prime})$ . Also, because the maintained bound decreases by at least a factor two (see ( 34 )) and starts this regime at most $288G^{2}/\alpha$ ,
+
+$J=O\left(1+\log\left(1+\frac{G^{2}}{\alpha\epsilon}\right)\right)=O\left(1+\frac{G^{2}}{\alpha\epsilon}\right).$
+
+Together with ( 36 ), this gives
+
+$\sum_{j=0}^{J-1}T_{j}\leq\sum_{j=0}^{J-1}\left({1+\frac{288G^{2}}{\alpha\Delta_{j}^{\prime}}}\right)=O\left(1+\frac{G^{2}}{\alpha\epsilon}\right).$
+
+Combining this bound with ( 35 ), the total number of weak proximal oracle calls indeed satisfies ( 32 ).
+
+Since every outer iteration of Algorithm 2 uses one weak proximal oracle call and exactly $K$ subgradient calls, the total number of subgradient calls is $K$ times that of the WPO, which proves ( 33 ). ∎
+
+Suppose $\mathcal{R}=I_{\mathcal{K}}$ , where $\mathcal{K}$ is convex and compact, and suppose $\mathcal{K}$ is enclosed by a Euclidean ball $\mathcal{B}$ such that $\left\lVert{\mathbf{g}}\right\rVert\leq G$ for any ${\mathbf{g}}\in\partial f({\mathbf{u}}),{\mathbf{u}}\in\mathcal{B}$ . This matches the assumptions of the projection-based MOPES algorithm [ 18 ] . Then, the additional localized bound $\overline{G}_{0}$ is not needed. Indeed, every weak proximal output belongs to $\mathcal{K}$ , and hence so does the average returned by each invocation of Algorithm 2 . Thus every center ${\mathbf{c}}$ used by Algorithm 3 belongs to $\mathcal{K}\subseteq\mathcal{B}$ . For the auxiliary updates, replace the set $\{{\mathbf{y}}|\left\lVert{\mathbf{y}}-{\mathbf{c}}\right\rVert\leq D\}$ in Algorithm 2 with $\mathcal{Y}:=\{{\mathbf{y}}|\left\lVert{\mathbf{y}}-{\mathbf{c}}\right\rVert\leq D\}\cap\mathcal{B}$ . The proof of Lemma 4 is unchanged. Moreover, all auxiliary first-order queries belong to $\mathcal{B}$ , while the points ${\mathbf{v}}_{\theta}$ used in its proof belong to $\mathcal{K}\subseteq\mathcal{B}$ . Therefore Algorithm 2 may be run with $\overline{G}_{0}=G$ and $K=1$ . Consequently, both the weak-proximal and subgradient complexities are
+
+$O\left(1+\frac{G^{2}}{\alpha\epsilon}+\log\left(1+\log\left(1+\frac{\alpha\Delta_{0}}{G^{2}}\right)\right)\right).$
+
+5 Acknowledgement
+
+This work was funded by the European Union (ERC, ProFreeOpt, 101170791). Views and opinions expressed are however those of the author(s) only and do not necessarily reflect those of the European Union or the European Research Council Executive Agency. Neither the European Union nor the granting authority can be held responsible for them.
+
+Appendix A Lower-Bound for Frank-Wolfe-type Methods
+
+The argument below is closely related to Lan’s lower bound for nonsmooth linear-optimization-based convex programming [ 16 ] , with the modification that it considers a strongly convex objective function.
+
+Fix $0<\alpha<G$ and $n\geq 2$ , and let $\Delta_{n}:=\left\{{\mathbf{x}}\in\mathbb{R}_{+}^{n}:\ \sum_{i=1}^{n}x_{i}=1\right\}$ . Consider the following linear optimization model over $\Delta_{n}$ : at every linear-oracle call, on input ${\mathbf{c}}\in\mathbb{R}^{n}$ , the oracle returns some ${\mathbf{v}}\in\argmin_{{\mathbf{x}}\in\{{\mathbf{e}}_{1},\dots,{\mathbf{e}}_{n}\}}\left\langle{\mathbf{c}},{\mathbf{x}}\right\rangle$ , with any fixed deterministic tie-breaking rule, and after $T$ such calls the method must return a point $\widehat{\mathbf{x}}\in\textrm{conv}\{{\mathbf{v}}_{1},\ldots,{\mathbf{v}}_{T}\}$ . There exists a nonsmooth $\alpha$ -strongly convex objective $f:\mathbb{R}^{n}\to\mathbb{R}$ with unique minimizer ${\mathbf{x}}^{*}\in\Delta_{n}$ , such that every subgradient of $f$ has norm at most $G$ over $\Delta_{n}$ , and for every $1\leq T\leq n$ , every output of such a method satisfies
+
+$\displaystyle f(\widehat{\mathbf{x}})-f({\mathbf{x}}^{*})\geq(G-\alpha)\sqrt{\frac{1}{T}-\frac{1}{n}}.$ (37)
+
+Consequently, any such method guaranteeing error at most $\epsilon$ must use at least $T\geq\frac{1}{2}\min\left\{n,(G-\alpha)^{2}/\epsilon^{2}\right\}$ linear optimization oracle calls.
+
+Let
+
+${\mathbf{u}}:=\frac{1}{n}\mathbf{1}\qquad\text{and}\qquad f({\mathbf{x}}):=(G-\alpha)\left\lVert{\mathbf{x}}-{\mathbf{u}}\right\rVert+\frac{\alpha}{2}\left\lVert{\mathbf{x}}-{\mathbf{u}}\right\rVert^{2}.$
+
+Note $f$ is indeed $\alpha$ -strongly convex and its unique minimizer is ${\mathbf{x}}^{*}={\mathbf{u}}\in\Delta_{n}$ with $f({\mathbf{x}}^{*})=0$ .
+
+We first verify the bounded-subgradient condition on $\Delta_{n}$ . For every ${\mathbf{x}}\in\Delta_{n}$ ,
+
+$\left\lVert{\mathbf{x}}-{\mathbf{u}}\right\rVert^{2}=\left\lVert{\mathbf{x}}\right\rVert^{2}-\frac{1}{n}\leq 1-\frac{1}{n}<1.$
+
+If ${\mathbf{x}}\neq{\mathbf{u}}$ , then
+
+$\partial f({\mathbf{x}})=\left\{(G-\alpha)\frac{{\mathbf{x}}-{\mathbf{u}}}{\left\lVert{\mathbf{x}}-{\mathbf{u}}\right\rVert}+\alpha({\mathbf{x}}-{\mathbf{u}})\right\},$
+
+and hence every ${\mathbf{g}}\in\partial f({\mathbf{x}})$ satisfies
+
+$\left\lVert{\mathbf{g}}\right\rVert=(G-\alpha)+\alpha\left\lVert{\mathbf{x}}-{\mathbf{u}}\right\rVert\leq G.$
+
+At ${\mathbf{x}}={\mathbf{u}}$ we have $\partial f({\mathbf{u}})=(G-\alpha)\{{\mathbf{g}}:\left\lVert{\mathbf{g}}\right\rVert\leq 1\}$ , so the same bound holds.
+
+Since every extreme point of $\Delta_{n}$ is a standard basis vector, after $T$ linear-oracle calls every point in $\textrm{conv}\{{\mathbf{v}}_{1},\ldots,{\mathbf{v}}_{T}\}$ has at most $T$ nonzero coordinates. Let $q:=|\mathop{\mbox{\rm supp}}(\widehat{\mathbf{x}})|\leq T$ . Since $\widehat{\mathbf{x}}\in\Delta_{n}$ , the Cauchy–Schwarz inequality gives
+
+$1=\left(\sum_{i\in\mathop{\mbox{\rm supp}}(\widehat{\mathbf{x}})}\widehat{x}_{i}\right)^{2}\leq q\sum_{i=1}^{n}\widehat{x}_{i}^{2},$
+
+and therefore $\left\lVert\widehat{\mathbf{x}}\right\rVert^{2}\geq 1/q\geq 1/T$ . Using $\left\langle\widehat{\mathbf{x}},{\mathbf{u}}\right\rangle=1/n=\left\lVert{\mathbf{u}}\right\rVert^{2}$ , we obtain
+
+$\left\lVert\widehat{\mathbf{x}}-{\mathbf{u}}\right\rVert^{2}=\left\lVert\widehat{\mathbf{x}}\right\rVert^{2}-\frac{1}{n}\geq\frac{1}{T}-\frac{1}{n}.$
+
+Consequently,
+
+$f(\widehat{\mathbf{x}})-f({\mathbf{x}}^{*})\geq(G-\alpha)\sqrt{\frac{1}{T}-\frac{1}{n}},$
+
+which proves the theorem.
+
+∎
+
+Appendix B Proofs of Restricted Proximal Oracle Implementations
+
+B.1 Proof of Lemma 1
+
+We first restate the lemma and then prove it.
+
+Let $\mathcal{R}$ satisfy the symmetry conditions above, and let $s\leq r\leq n$ . Fix ${\mathbf{y}}\in\mathbb{R}^{n}$ and $\lambda>0$ .
+
+If $\mathop{\mbox{\rm dom}}(\mathcal{R})\subseteq\mathbb{R}_{+}^{n}$ , let $T$ contain the indices of the $r$ largest entries of ${\mathbf{y}}$ . If $\mathcal{R}$ is invariant under coordinate-wise sign changes, let $T$ contain the indices of the $r$ largest entries of ${\mathbf{y}}$ in absolute value. Let
+
+$\widehat{{\mathbf{u}}}\in\argmin_{{\mathbf{u}}\in\mathbb{R}^{r}}\left\{\lambda\left\lVert{\mathbf{u}}-{\mathbf{y}}_{T}\right\rVert^{2}+\mathcal{R}({\mathbf{I}}_{T}{\mathbf{u}})\right\},\qquad\widehat{{\mathbf{x}}}:={\mathbf{I}}_{T}\widehat{{\mathbf{u}}}.$
+
+Then
+
+$\widehat{{\mathbf{x}}}\in\argmin_{{\mathbf{x}}\in\mathcal{C}_{r}}\left\{\lambda\left\lVert{\mathbf{x}}-{\mathbf{y}}\right\rVert^{2}+\mathcal{R}({\mathbf{x}})\right\}.$
+
+Consequently, if every ${\mathbf{x}}^{*}\in\mathcal{X}^{*}$ is $s$ -sparse, then for every $r\geq s$ this construction implements a weak proximal oracle.
+
+Fix any ${\mathbf{z}}\in\mathcal{C}_{r}$ . Consider first the case $\mathop{\mbox{\rm dom}}(\mathcal{R})\subseteq\mathbb{R}_{+}^{n}$ . By permuting the coordinates of ${\mathbf{z}}$ , we may place its nonzero entries on the coordinates in $T$ , pairing its largest entries with the largest entries of ${\mathbf{y}}$ . Denote the resulting point by $\widetilde{{\mathbf{z}}}$ . By permutation invariance, $\mathcal{R}(\widetilde{{\mathbf{z}}})=\mathcal{R}({\mathbf{z}})$ , $\left\lVert\widetilde{{\mathbf{z}}}\right\rVert=\left\lVert{\mathbf{z}}\right\rVert$ . Moreover, the rearrangement inequality gives $\left\langle\widetilde{{\mathbf{z}}},{\mathbf{y}}\right\rangle\geq\left\langle{\mathbf{z}},{\mathbf{y}}\right\rangle$ . Hence,
+
+$\lambda\left\lVert\widetilde{{\mathbf{z}}}-{\mathbf{y}}\right\rVert^{2}+\mathcal{R}(\widetilde{{\mathbf{z}}})\leq\lambda\left\lVert{\mathbf{z}}-{\mathbf{y}}\right\rVert^{2}+\mathcal{R}({\mathbf{z}}).$
+
+If $\mathcal{R}$ is invariant under coordinate-wise sign changes, first change the signs of the nonzero entries of ${\mathbf{z}}$ to agree with the corresponding signs of ${\mathbf{y}}$ , and then permute their absolute values so that the largest ones are paired with the $r$ largest entries of ${\mathbf{y}}$ in absolute value. Signed permutation invariance again preserves both $\mathcal{R}({\mathbf{z}})$ and $\left\lVert{\mathbf{z}}\right\rVert$ , while the inner product with ${\mathbf{y}}$ cannot decrease. The same inequality therefore holds.
+
+Thus, in either case, for every ${\mathbf{z}}\in\mathcal{C}_{r}$ there is a point with support contained in $T$ whose proximal objective is no larger. It remains only to minimize over points supported on $T$ . For ${\mathbf{x}}={\mathbf{I}}_{T}{\mathbf{u}}$ ,
+
+$\left\lVert{\mathbf{x}}-{\mathbf{y}}\right\rVert^{2}=\left\lVert{\mathbf{u}}-{\mathbf{y}}_{T}\right\rVert^{2}+\left\lVert{\mathbf{y}}_{T^{c}}\right\rVert^{2},$
+
+where the second term is independent of ${\mathbf{u}}$ . Hence the minimizer is precisely $\widehat{{\mathbf{x}}}={\mathbf{I}}_{T}\widehat{{\mathbf{u}}}$ defined above.
+
+Finally, since $r\geq s$ , every ${\mathbf{x}}^{*}\in\mathcal{X}^{*}$ belongs to $\mathcal{C}_{r}$ . Therefore, we indeed have that for every ${\mathbf{x}}^{*}\in\mathcal{X}^{*}$ ,
+
+$\lambda\left\lVert\widehat{{\mathbf{x}}}-{\mathbf{y}}\right\rVert^{2}+\mathcal{R}(\widehat{{\mathbf{x}}})\leq\lambda\left\lVert{\mathbf{x}}^{*}-{\mathbf{y}}\right\rVert^{2}+\mathcal{R}({\mathbf{x}}^{*}).$
+
+∎
+
+B.2 Proof of Lemma 2
+
+We first restate the lemma and then prove it.
+
+In the rectangular-matrix setting, suppose $\mathcal{R}({\mathbf{X}})=\rho\bigl(\boldsymbol{\sigma}({\mathbf{X}})\bigr)$ , where $\rho:\mathbb{R}_{+}^{q}\rightarrow\mathbb{R}\cup\{+\infty\}$ is permutation invariant. Fix ${\mathbf{Y}}\in\mathbb{R}^{d_{1}\times d_{2}}$ and $\lambda>0$ , and let ${\mathbf{Y}}={\mathbf{U}}\operatorname{Diag}(\boldsymbol{\sigma}){\mathbf{V}}^{\top}$ , $\sigma_{1}\geq\cdots\geq\sigma_{q}\geq 0$ , be a SVD, where ${\mathbf{U}}$ and ${\mathbf{V}}$ have $q$ orthonormal columns. Let ${\mathbf{U}}_{r}$ and ${\mathbf{V}}_{r}$ contain the first $r$ columns of ${\mathbf{U}}$ and ${\mathbf{V}}$ , respectively. Let
+
+$\widehat{{\mathbf{u}}}\in\argmin_{{\mathbf{u}}\in\mathbb{R}_{+}^{r}}\left\{\lambda\left\lVert{\mathbf{u}}-\boldsymbol{\sigma}_{1:r}\right\rVert^{2}+\rho\!\left(({\mathbf{u}},\mathbf{0}_{q-r})\right)\right\},$
+
+and set $\widehat{{\mathbf{X}}}:={\mathbf{U}}_{r}\operatorname{Diag}(\widehat{{\mathbf{u}}}){\mathbf{V}}_{r}^{\top}$ .
+
+In the symmetric-matrix setting, suppose $\mathcal{R}({\mathbf{X}})=\rho\bigl(\boldsymbol{\lambda}({\mathbf{X}})\bigr)$ , where $\rho:\mathbb{R}^{d}\rightarrow\mathbb{R}\cup\{+\infty\}$ is permutation invariant and $\mathop{\mbox{\rm dom}}(\rho)\subseteq\mathbb{R}_{+}^{d}$ . Fix ${\mathbf{Y}}\in\mathbb{S}^{d}$ and $\lambda>0$ , and let ${\mathbf{Y}}={\mathbf{U}}\operatorname{Diag}(\boldsymbol{\gamma}){\mathbf{U}}^{\top}$ , $\gamma_{1}\geq\cdots\geq\gamma_{d}$ , be an eigendecomposition. Let ${\mathbf{U}}_{r}$ contain the first $r$ columns of ${\mathbf{U}}$ . Let
+
+$\widehat{{\mathbf{u}}}\in\argmin_{{\mathbf{u}}\in\mathbb{R}_{+}^{r}}\left\{\lambda\left\lVert{\mathbf{u}}-\boldsymbol{\gamma}_{1:r}\right\rVert^{2}+\rho\!\left(({\mathbf{u}},\mathbf{0}_{d-r})\right)\right\},$
+
+and set $\widehat{{\mathbf{X}}}:={\mathbf{U}}_{r}\operatorname{Diag}(\widehat{{\mathbf{u}}}){\mathbf{U}}_{r}^{\top}$ .
+
+In either setting,
+
+$\widehat{{\mathbf{X}}}\in\argmin_{{\mathbf{X}}\in\mathcal{C}_{r}}\left\{\lambda\left\lVert{\mathbf{X}}-{\mathbf{Y}}\right\rVert_{F}^{2}+\mathcal{R}({\mathbf{X}})\right\}.$
+
+Consequently, if every ${\mathbf{X}}^{*}\in\mathcal{X}^{*}$ has rank at most $r$ , the corresponding construction implements a weak proximal oracle.
+
+We first consider the rectangular-matrix setting. Fix any ${\mathbf{X}}\in\mathcal{C}_{r}$ , and let $\tau_{1}\geq\cdots\geq\tau_{r}\geq 0$ denote its nonzero singular values, padded with zeros if $\textrm{rank}({\mathbf{X}})<r$ . Define $\widetilde{{\mathbf{X}}}:={\mathbf{U}}_{r}\operatorname{Diag}(\boldsymbol{\tau}_{1:r}){\mathbf{V}}_{r}^{\top}$ . The matrices ${\mathbf{X}}$ and $\widetilde{{\mathbf{X}}}$ have the same singular values, and therefore $\mathcal{R}(\widetilde{{\mathbf{X}}})=\mathcal{R}({\mathbf{X}})$ . Moreover, von Neumann’s trace inequality gives $\langle{{\mathbf{X}},{\mathbf{Y}}\rangle}\leq\sum_{i=1}^{r}\tau_{i}\sigma_{i}=\langle{\widetilde{{\mathbf{X}}},{\mathbf{Y}}}\rangle$ . Since ${\mathbf{X}}$ and $\widetilde{{\mathbf{X}}}$ also have the same Frobenius norm, $\|{\widetilde{{\mathbf{X}}}-{\mathbf{Y}}}\|_{F}^{2}\leq\|{{\mathbf{X}}-{\mathbf{Y}}}\|_{F}^{2}$ . Thus, every rank- $r$ candidate can be replaced, without increasing the proximal objective, by one whose singular vectors agree with the leading singular vectors of ${\mathbf{Y}}$ and whose diagonal entries are nonincreasing.
+
+It remains to observe that the ordering constraint on these diagonal entries is redundant. For any ${\mathbf{u}}\in\mathbb{R}_{+}^{r}$ , let ${\mathbf{u}}^{\downarrow}$ denote the vector obtained by sorting its entries in nonincreasing order. Permutation invariance of $\rho$ gives $\rho\!\left(({\mathbf{u}}^{\downarrow},\mathbf{0}_{q-r})\right)=\rho\!\left(({\mathbf{u}},\mathbf{0}_{q-r})\right)$ . Since $\boldsymbol{\sigma}_{1:r}$ is nonincreasing, the rearrangement inequality gives $\langle{{\mathbf{u}}^{\downarrow},\boldsymbol{\sigma}_{1:r}}\rangle\geq\langle{{\mathbf{u}},\boldsymbol{\sigma}_{1:r}}\rangle$ , and hence $\left\lVert{\mathbf{u}}^{\downarrow}-\boldsymbol{\sigma}_{1:r}\right\rVert^{2}\leq\left\lVert{\mathbf{u}}-\boldsymbol{\sigma}_{1:r}\right\rVert^{2}$ . Therefore, minimizing over all ${\mathbf{u}}\in\mathbb{R}_{+}^{r}$ gives the same optimal value as minimizing under the additional constraint $u_{1}\geq\cdots\geq u_{r}\geq 0$ .
+
+Finally, for every ${\mathbf{u}}\in\mathbb{R}_{+}^{r}$ , permutation invariance of $\rho$ and orthogonality of the singular vectors give
+
+$\mathcal{R}\!\left({\mathbf{U}}_{r}\operatorname{Diag}({\mathbf{u}}){\mathbf{V}}_{r}^{\top}\right)=\rho\!\left(({\mathbf{u}},\mathbf{0}_{q-r})\right)$
+
+and
+
+$\|{{\mathbf{U}}_{r}\operatorname{Diag}({\mathbf{u}}){\mathbf{V}}_{r}^{\top}-{\mathbf{Y}}}\|_{F}^{2}=\left\lVert{\mathbf{u}}-\boldsymbol{\sigma}_{1:r}\right\rVert^{2}+\sum_{i=r+1}^{q}\sigma_{i}^{2}.$
+
+The last sum is independent of ${\mathbf{u}}$ . Hence the scalar problem defining $\widehat{{\mathbf{u}}}$ is exactly the remaining part of the rank- $r$ proximal problem, and $\widehat{{\mathbf{X}}}$ is a minimizer.
+
+We next consider the symmetric-matrix setting. Fix any ${\mathbf{X}}\in\mathcal{C}_{r}$ . Since $\mathop{\mbox{\rm dom}}(\mathcal{R})\subseteq\mathbb{S}_{+}^{d}$ , the matrix ${\mathbf{X}}$ is positive semidefinite. Let $\tau_{1}\geq\cdots\geq\tau_{r}\geq 0$ denote its nonzero eigenvalues, padded with zeros if $\textrm{rank}({\mathbf{X}})<r$ , and define $\widetilde{{\mathbf{X}}}:={\mathbf{U}}_{r}\operatorname{Diag}(\boldsymbol{\tau}_{1:r}){\mathbf{U}}_{r}^{\top}$ . The matrices ${\mathbf{X}}$ and $\widetilde{{\mathbf{X}}}$ have the same eigenvalues, and therefore $\mathcal{R}(\widetilde{{\mathbf{X}}})=\mathcal{R}({\mathbf{X}})$ . The trace inequality for symmetric matrices gives $\langle{{\mathbf{X}},{\mathbf{Y}}}\rangle\leq\sum_{i=1}^{r}\tau_{i}\gamma_{i}=\langle{\widetilde{{\mathbf{X}}},{\mathbf{Y}}}\rangle$ . Since ${\mathbf{X}}$ and $\widetilde{{\mathbf{X}}}$ also have the same Frobenius norm, $\|{\widetilde{{\mathbf{X}}}-{\mathbf{Y}}}\|_{F}^{2}\leq\|{{\mathbf{X}}-{\mathbf{Y}}}\|_{F}^{2}$ . Thus, every rank- $r$ candidate can be replaced, without increasing the proximal objective, by one whose eigenvectors agree with the leading eigenvectors of ${\mathbf{Y}}$ and whose nonzero eigenvalues are nonincreasing.
+
+As above, the ordering constraint is redundant. For any ${\mathbf{u}}\in\mathbb{R}_{+}^{r}$ , permutation invariance of $\rho$ and the rearrangement inequality give $\rho\!\left(({\mathbf{u}}^{\downarrow},\mathbf{0}_{d-r})\right)=\rho\!\left(({\mathbf{u}},\mathbf{0}_{d-r})\right)$ and $\left\lVert{\mathbf{u}}^{\downarrow}-\boldsymbol{\gamma}_{1:r}\right\rVert^{2}\leq\left\lVert{\mathbf{u}}-\boldsymbol{\gamma}_{1:r}\right\rVert^{2}$ . Moreover,
+
+$\mathcal{R}\!\left({\mathbf{U}}_{r}\operatorname{Diag}({\mathbf{u}}){\mathbf{U}}_{r}^{\top}\right)=\rho\!\left(({\mathbf{u}},\mathbf{0}_{d-r})\right)$
+
+and
+
+$\|{{\mathbf{U}}_{r}\operatorname{Diag}({\mathbf{u}}){\mathbf{U}}_{r}^{\top}-{\mathbf{Y}}}\|_{F}^{2}=\left\lVert{\mathbf{u}}-\boldsymbol{\gamma}_{1:r}\right\rVert^{2}+\sum_{i=r+1}^{d}\gamma_{i}^{2}.$
+
+The last sum is independent of ${\mathbf{u}}$ . Hence, the scalar problem defining $\widehat{{\mathbf{u}}}$ is exactly the remaining part of the rank- $r$ proximal problem, and $\widehat{{\mathbf{X}}}$ is again a minimizer.
+
+Finally, if every ${\mathbf{X}}^{*}\in\mathcal{X}^{*}$ has rank at most $r$ , then ${\mathbf{X}}^{*}\in\mathcal{C}_{r}$ , and therefore, in either setting,
+
+$\lambda\|{\widehat{{\mathbf{X}}}-{\mathbf{Y}}}\|_{F}^{2}+\mathcal{R}(\widehat{{\mathbf{X}}})\leq\lambda\|{{\mathbf{X}}^{*}-{\mathbf{Y}}}\|_{F}^{2}+\mathcal{R}({\mathbf{X}}^{*}).$
+
+∎
+
+References

@@ -1,0 +1,1761 @@
+Content selection saved. Describe the issue below:
+
+Matching Multi-Loop Complexities with a Single Loop: Optimal Optimization Stationarity and Best-Known Game Stationarity in Nonconvex–Concave Minimax Optimization
+
+We introduce a new single-loop algorithmic framework for smooth nonconvex–concave minimax optimization. The resulting projected damped extragradient method combines projected extragradient updates, dual momentum, and a moving proximal center. Under both the optimization- stationarity and game-stationarity criteria, our method achieves the best-known complexity among single-loop first-order methods. For optimization stationarity, our method achieves a gradient complexity of $\mathcal{O}(L^{2}D_{Y}\bar{\Delta}_{0}\varepsilon^{-3})$ , where $L$ is the gradient Lipschitz constant, $D_{Y}$ bounds the diameter of the dual feasible set, and $\bar{\Delta}_{0}$ is an initialization quantity involving the value-function gap and the initial gradients. Moreover, by incorporating a fixed-center warm-up phase, the complexity can be improved to $\mathcal{O}(L^{2}D_{Y}\Delta_{\phi}\varepsilon^{-3})$ , up to an additive lower-order cost, where $\Delta_{\phi}:=\phi(x_{0})-\inf_{x}\phi(x)$ . We further establish a lower bound of $\Omega(L^{2}D_{Y}\Delta_{\phi}\varepsilon^{-3})$ for optimization stationarity over projected zero-respecting first-order methods. This lower bound proves that the warm-started version of our algorithm is optimal up to a constant factor for optimization stationarity within this oracle class. For game stationarity, our method achieves $\mathcal{O}\!\left(L^{3/2}D_{Y}^{1/2}\Delta_{\phi}\varepsilon^{-5/2}\right)$ gradient complexity. This matches the best-known complexity of multi-loop first-order methods, thereby establishing the same complexity with a single-loop algorithmic structure. Under dual strong concavity, the proposed framework achieves $\mathcal{O}\!\left(\sqrt{\kappa}\,L\Delta_{\phi}\varepsilon^{-2}\right)$ leading complexity for both stationarity criteria, where $\kappa=L/\mu$ is the dual condition number, up to an additive initialization cost. The $\varepsilon^{-2}$ accuracy dependence is optimal under fixed regularity and initialization bounds.
+
+1 Introduction
+
+We study the deterministic nonconvex–concave (NC–C) minimax problem
+
+$\min_{x\in X}\max_{y\in Y}f(x,y),$
+
+where $X$ is nonempty, closed, and convex, $Y$ is nonempty, compact, and convex, and $f$ has an $L$ -Lipschitz continuous gradient. The objective is possibly nonconvex in $x$ and concave in $y$ . Smooth instances arise in distributionally robust learning Rafique et al. (2022) , group robust learning Sagawa et al. (2020) , and learning with average top- $k$ losses Fan et al. (2017) . In these applications, the dual variable weights samples or groups, or selects large losses, while the primal variable parametrizes a possibly nonconvex model. A central algorithmic challenge is to attain sharp stationarity guarantees using simple first-order updates, without repeatedly solving auxiliary optimization problems.
+
+Two stationarity criteria are relevant to this problem. Optimization stationarity (OS) measures the gradient of a Moreau envelope of the value function $\phi(x)=\max_{y\in Y}f(x,y)$ , extended by $+\infty$ outside $X$ . Game stationarity (GS) measures the joint first-order residual of $f$ , including the normal cones to $X$ and $Y$ . These criteria capture different aspects of stationarity and must also be distinguished from the value-gradient and projected-gradient-mapping criteria used in earlier works. Their formal definitions are given in Section 2 . In the literature review below, complexity bounds suppress fixed smoothness, domain, and initialization quantities unless displayed explicitly; $\widetilde{O}$ additionally suppresses logarithmic factors.
+
+Dual strong concavity provides an important point of comparison. In the nonconvex–strongly concave (NC–SC) setting, let $\mu>0$ be the strong concavity parameter and write $\kappa=L/\mu$ . For an unconstrained primal variable, two-timescale gradient descent ascent (TS-GDA) attains $O(\kappa^{2}\varepsilon^{-2})$ complexity for value-gradient stationarity Lin et al. (2020b) ; Lin et al. (2025) . Under a dual Polyak–Łojasiewicz condition on unconstrained domains, Smoothed-AGDA improves the dependence to $O(\kappa\varepsilon^{-2})$ for GS, with a terminal refinement giving the same leading order for value-gradient stationarity Yang et al. (2022) . Minimax-PPA and Catalyst-EG/OGDA attain $\widetilde{O}(\sqrt{\kappa}\varepsilon^{-2})$ complexity under strong concavity Lin et al. (2020a) ; Zhang et al. (2021) . The single-loop mirror descent ascent method MDA also reports $O(\sqrt{\kappa}\varepsilon^{-2})$ complexity under its prescribed mirror geometry and mirror-gradient-mapping criterion Huang et al. (2021) . Lower bounds of $\Omega(\sqrt{\kappa}L\Delta_{\phi}\varepsilon^{-2})$ are known for value-gradient stationarity in the corresponding unconstrained oracle models Li et al. (2021) ; Zhang et al. (2021) , where $\Delta_{\phi}=\phi(x_{0})-\inf_{x\in X}\phi(x)$ .
+
+The general NC–C setting is more difficult because the value function can be nonsmooth. Multi-loop methods address this difficulty by solving auxiliary optimization problems. Prox-DIAG Thekumparampil et al. (2019) and Minimax-PPA Lin et al. (2020a) attain $\widetilde{O}(\varepsilon^{-3})$ complexity for OS. Minimax-PPA also gives $\widetilde{O}(\varepsilon^{-5/2})$ complexity under its game-stationarity formulation. Li et al. Li et al. (2026) develop Perturbed Smoothed FOAM, which attains $\widetilde{O}(\varepsilon^{-3})$ for OS and $\widetilde{O}(\varepsilon^{-5/2})$ for GS. These methods obtain their guarantees through regularized strongly convex–strongly concave subproblems, whose solution requires inner iterations.
+
+Single-loop methods use a fixed number of elementary first-order updates per iteration, but their representative NC–C guarantees have been weaker. TS-GDA has an $O(\varepsilon^{-6})$ OS bound under an additional primal Lipschitz assumption Lin et al. (2020b) ; Lin et al. (2025) , while AGP attains $O(\varepsilon^{-4})$ under a projected primal–dual gradient-mapping criterion on compact convex domains Xu et al. (2023) . The analysis of Li et al. Li et al. (2026) establishes $O(\varepsilon^{-4})$ complexity for Smoothed GDA under both OS and GS. Their Perturbed Smoothed GDA improves the GS bound to $O(\varepsilon^{-3})$ , while retaining an $O(\varepsilon^{-4})$ OS bound. Thus, under both criteria, a complexity gap remains between these single-loop methods and methods that rely on auxiliary solvers. This motivates the following question:
+
+Can a single-loop first-order method attain the best-known multi-loop complexity rates under both OS and GS, and can its complexity be certified as optimal by a matching lower bound?
+
+We answer the algorithmic question affirmatively under both stationarity criteria and establish a matching lower bound for OS. Our method achieves the best-known complexity among single-loop first-order methods under both OS and GS. Its warm-started OS complexity is optimal up to a constant factor within the projected zero-respecting first-order oracle class, while its GS complexity matches the best-known rate of multi-loop first-order methods. The same framework also attains the sharp $O(\sqrt{\kappa}\varepsilon^{-2})$ dependence under dual strong concavity. Our contributions are as follows; $D_{Y}$ denotes an upper bound on the dual diameter.
+
+A new single-loop algorithm and Lyapunov analysis. We develop a projected damped extragradient framework combining projected prediction–correction steps, dual momentum, and a moving proximal center. A new joint Lyapunov function couples descent of a regularized envelope with tracking of its saddle point, allowing both effects to be controlled within a single loop. A predetermined fixed-center warm-up reduces the initialization dependence while using the same elementary updates, without resetting the state or introducing repeated inner solves.
+
+Optimal OS complexity and a matching lower bound. For NC–C problems, the method achieves gradient complexity
+
+$O\!\left(L^{2}D_{Y}\bar{\Delta}_{0}\varepsilon^{-3}\right),$
+
+where $\bar{\Delta}_{0}$ involves the initial value-function gap and initial gradients. The fixed-center warm-up improves this bound to
+
+$O\!\left(L^{2}D_{Y}\Delta_{\phi}\varepsilon^{-3}\right),$
+
+up to an additive lower-order cost, with an expected squared Moreau-gradient guarantee (Corollary 4.3 ). We also prove the lower bound
+
+$\Omega\!\left(L^{2}D_{Y}\Delta_{\phi}\varepsilon^{-3}\right)$
+
+for projected zero-respecting first-order methods, including randomized output rules at a fixed query budget (Theorem 5.1 ). The upper and lower bounds match in their dependence on $L$ , $D_{Y}$ , $\Delta_{\phi}$ , and $\varepsilon$ , establishing optimality up to a constant factor for the leading warm-started OS complexity within this oracle class.
+
+Multi-loop GS complexity attained with a single loop. For NC–C problems, the warm-started method returns a deterministic best-certificate iterate with leading gradient complexity
+
+$O\!\left(L^{3/2}D_{Y}^{1/2}\Delta_{\phi}\varepsilon^{-5/2}\right),$
+
+with an additive lower-order warm-up cost (Corollary 4.4 ). To the best of our knowledge, this is the first single-loop method to attain the best-known $\varepsilon^{-5/2}$ GS complexity of multi-loop first-order methods for general smooth NC–C problems. The leading term has no multiplicative logarithmic factor.
+
+A common framework for the strongly concave case. Under dual strong concavity, the same framework requires no dual perturbation and yields $O(\sqrt{\kappa}L\Delta_{0}\varepsilon^{-2})$ complexity for both OS and GS, where $\Delta_{0}$ is the corresponding initialization quantity. With the fixed-center warm-up, the leading complexity becomes
+
+$O\!\left(\sqrt{\kappa}L\Delta_{\phi}\varepsilon^{-2}\right)$
+
+for fixed problem and initialization quantities with $\Delta_{\phi}>0$ as $\varepsilon\downarrow 0$ (Corollary 4.2 ). This dependence matches the known NC–SC lower-bound rate for value-gradient stationarity in the corresponding unconstrained oracle models.
+
+Table 1: First-order oracle complexity bounds for NC–C minimax optimization, with problem and initialization parameters.
+
+Note. $D_{Y}$ bounds the dual diameter, $L_{f}$ is the additional primal Lipschitz constant required by TS-GDA, and $\Delta_{\phi}=\phi(x_{0})-\phi_{\inf}$ , where $\phi_{\inf}=\inf_{x\in X}\phi(x)$ . The quantities $\Delta_{\Psi_{1}}$ and $\Delta_{\Psi_{2}}$ are the initial potential gaps in ( Li et al., 2026 , Definition 3.1) , evaluated with each method’s corresponding perturbation. The quantity $\Delta_{p_{0}}$ is the initial regularized-envelope gap in ( Li et al., 2026 , Theorem 6.1) . The lower-bound row concerns OS and applies to the projected zero-respecting first-order oracle class. The warm-up row reports leading terms for fixed problem and initialization quantities with $\Delta_{\phi}>0$ as $\varepsilon\downarrow 0$ ; the full bound, including the additive warm-up cost, is given in ( 4.38 ).
+
+Table 1 compares our NC–C upper bounds with representative single- and multi-loop first-order methods and records the OS lower bound established in this paper.
+
+Organization. Section 2 states the assumptions and stationarity criteria. Section 3 presents the algorithm. Section 4 develops the common Lyapunov analysis and establishes the NC–SC and NC–C complexity bounds, together with the warm-up refinement. Section 5 proves the matching OS lower bound and specifies the oracle class in which the leading warm-started complexity is optimal. Section 6 presents numerical illustrations, and Section 7 concludes. The appendices contain the technical proofs.
+
+Notation. We use $\langle\cdot,\cdot\rangle$ and $\lVert\cdot\rVert$ for the Euclidean inner product and norm, respectively, with $\lVert(x,y)\rVert^{2}=\lVert x\rVert^{2}+\lVert y\rVert^{2}$ on product spaces. For matrices, $\lVert\cdot\rVert$ denotes the spectral norm. For a nonempty closed convex set $C\subseteq\mathbb{R}^{d}$ , let $\Pi_{C}(w):=\argmin_{u\in C}\lVert u-w\rVert^{2}/2$ be the Euclidean projection onto $C$ , and let $N_{C}(u):=\{\eta\in\mathbb{R}^{d}:\langle\eta,a-u\rangle\leq 0\text{ for all }a\in C\}$ be its normal cone at $u\in C$ . For a nonempty set $S$ , write $\dist(w,S):=\inf_{u\in S}\lVert w-u\rVert$ and $\diam(S):=\sup_{u,v\in S}\lVert u-v\rVert$ . The support of a vector $u$ is $\supp(u):=\{i:u_{i}\neq 0\}$ , and $\mathbb{E}$ denotes expectation over all randomness.
+
+2 Problem Formulation and Preliminaries
+
+2.1 Problem setting and assumptions
+
+We consider the deterministic minimax problem
+
+$\min_{x\in X}\max_{y\in Y}f(x,y),$ (2.1)
+
+where $X\subseteq\mathbb{R}^{n}$ is nonempty, closed, and convex, and $Y\subseteq\mathbb{R}^{p}$ is nonempty, compact, and convex. Let $D_{Y}>0$ be an upper bound on the diameter of $Y$ . After a translation of the dual coordinates, we assume $0\in Y$ , so that $\lVert y\rVert\leq D_{Y}$ for every $y\in Y$ .
+
+The function $f$ is continuously differentiable on an open neighborhood of $X\times Y$ and satisfies the following conditions.
+
+For some $L>0$ and all $(x,y),(x^{\prime},y^{\prime})\in X\times Y$ ,
+
+$\lVert\nabla f(x^{\prime},y^{\prime})-\nabla f(x,y)\rVert\leq L\lVert(x^{\prime}-x,y^{\prime}-y)\rVert.$ (2.2)
+
+For some $0\leq\mu\leq L$ , the function $f(x,\cdot)$ is $\mu$ -strongly concave on $Y$ for every $x\in X$ ; namely,
+
+${f(x,y^{\prime})\leq f(x,y)+\langle\nabla_{y}f(x,y),y^{\prime}-y\rangle-\frac{\mu}{2}\lVert y^{\prime}-y\rVert^{2},\qquad y,y^{\prime}\in Y.}$ (2.3)
+
+The value function is bounded below:
+
+$\inf_{x\in X}\max_{y\in Y}f(x,y)>-\infty.$ (2.4)
+
+Define the extended-valued value function of ( 2.1 ) by
+
+$\phi(x)=\begin{cases}\max_{y\in Y}f(x,y),&x\in X,\\ +\infty,&x\notin X.\end{cases}$ (2.5)
+
+By ( 2.4 ), we have $\phi_{\inf}:=\inf_{x\in X}\phi(x)>-\infty$ . When $\mu>0$ , the maximizer over $Y$ is unique and the finite-valued mapping $x\mapsto\max_{y\in Y}f(x,y)$ is differentiable at every $x\in X$ . When $\mu=0$ , this mapping may be nonsmooth even though $f$ is smooth, motivating the use of the Moreau envelope to study stationarity. For $\lambda>L$ , define the Moreau envelope and proximal mapping of $\phi$ by
+
+$\displaystyle\Phi_{\lambda}(z)$ $\displaystyle=\min_{x\in X}\left\{\phi(x)+\frac{\lambda}{2}\lVert x-z\rVert^{2}\right\},$ (2.6) $\displaystyle\bar{x}(z)$ $\displaystyle=\operatorname{prox}_{\phi/\lambda}(z)=\argmin_{x\in X}\left\{\phi(x)+\frac{\lambda}{2}\lVert x-z\rVert^{2}\right\}.$ (2.7)
+
+The function $\phi$ is $L$ -weakly convex. Thus the minimizer in ( 2.7 ) is unique and
+
+$\nabla\Phi_{\lambda}(z)=\lambda\bigl(z-\bar{x}(z)\bigr).$ (2.8)
+
+For properties of the value function $\phi$ and its Moreau envelope $\Phi_{\lambda}$ , see Lin et al. (2025) .
+
+2.2 Stationarity measures
+
+We use two stationarity criteria for ( 2.1 ): optimization stationarity (OS), based on the Moreau envelope of the value function, and game stationarity (GS), based on first-order residuals in both variables.
+
+For $\lambda>L$ and $\varepsilon>0$ , a point $x\in X$ is an $\varepsilon$ -optimization stationary point relative to $\lambda$ if
+
+$\lVert\nabla\Phi_{\lambda}(x)\rVert\leq\varepsilon.$ (2.9)
+
+A random point $Z\in X$ almost surely is $\varepsilon$ -optimization stationary in expectation relative to $\lambda$ if
+
+$\mathbb{E}\lVert\nabla\Phi_{\lambda}(Z)\rVert\leq\varepsilon.$
+
+The OS upper bounds below establish the stronger guarantee $\mathbb{E}\lVert\nabla\Phi_{{\lambda}}(Z)\rVert^{2}\leq\varepsilon^{2}$ , which implies this expected-norm criterion by Jensen’s inequality.
+
+For game stationarity, define the residual at $(x,y)\in X\times Y$ by
+
+${\mathcal{R}(x,y)=\sqrt{\dist^{2}\bigl(0,\nabla_{x}f(x,y)+N_{X}(x)\bigr)+\dist^{2}\bigl(0,-\nabla_{y}f(x,y)+N_{Y}(y)\bigr)}.}$ (2.10)
+
+For $\varepsilon>0$ , a pair $(x,y)\in X\times Y$ is an $\varepsilon$ -game stationary point of ( 2.1 ) if
+
+$\mathcal{R}(x,y)\leq\varepsilon.$ (2.11)
+
+For further discussion of these stationarity criteria and their relationships, see Lin et al. (2025) ; Li et al. (2026) .
+
+3 Algorithm
+
+3.1 Regularized saddle-point formulation
+
+We first introduce a regularized saddle-point problem. Fix $\lambda>L$ and choose $\tau\geq 0$ such that $\mu_{y}:=\mu+\tau>0$ . For a center $z\in\mathbb{R}^{n}$ , define
+
+$p(z)=\min_{x\in X}\max_{y\in Y}G(x,y;z),$ (3.1)
+
+where
+
+$G(x,y;z)=f(x,y)+\frac{\lambda}{2}\lVert x-z\rVert^{2}-\frac{\tau}{2}\lVert y\rVert^{2}.$
+
+The function $G(\cdot,\cdot;z)$ is $(\lambda-L)$ -strongly convex in $x$ and $\mu_{y}$ -strongly concave in $y$ , so the auxiliary problem has a unique saddle point $(x^{\star}(z),y^{\star}(z))$ . Write $G^{\star}(z)=G(x^{\star}(z),y^{\star}(z);z)=p(z)$ . The envelope is continuously differentiable and
+
+$\nabla p(z)=\lambda\bigl(z-x^{\star}(z)\bigr).$ (3.2)
+
+For this regularized formulation and its envelope properties, see ( Li et al., 2026 , Sections 3.1 and 6) . If $\tau=0$ , then $p=\Phi_{\lambda}$ . Positive $\tau$ supplies the dual curvature needed when the original problem is merely concave. The same auxiliary problem is used by Li et al. Li et al. (2026) , whereas our method employs different primal–dual updates and a different Lyapunov function.
+
+3.2 Algorithm and implementation
+
+We now use the regularized saddle-point formulation ( 3.1 ) to construct a single-loop method. At iteration $t$ , with $z=z_{t}$ fixed, we apply a projected extragradient step with dual momentum: a prediction is followed by a correction using gradients at the predicted pair. We then update $z_{t}$ toward the corrected primal iterate $x_{t+1}$ . The complete procedure is presented in Algorithm 1 .
+
+Algorithm 1 Single-loop projected damped extragradient method
+
+The subproblem iteration is a modified version of the damped extragradient method developed in our unpublished manuscript on unconstrained strongly convex–strongly concave minimax optimization. To handle the constraints $X$ and $Y$ , we introduce projections and the normal-cone variables $\xi_{t}$ and $n_{t}$ . The dual correction $n_{t}$ enters both the prediction and momentum updates. The following lemma shows that these variables belong to the normal cones at the corresponding iterates.
+
+The iterates of Algorithm 1 satisfy
+
+$\xi_{t}\in N_{X}(x_{t}),\qquad n_{t}\in N_{Y}(y_{t}),\qquad t=0,\ldots,T.$ (3.3)
+
+At initialization, both normal-cone inequalities hold because $\xi_{0}=n_{0}=0$ . For any $x\in X$ , the projection theorem applied to the primal correction gives
+
+$\left\langle\frac{x_{t}-x_{t+1}}{h}-\nabla_{x}f(\widetilde{x}_{t},\widetilde{y}_{t})-\lambda(\widetilde{x}_{t}-z_{t}),\,x-x_{t+1}\right\rangle\leq 0.$
+
+By the definition of $\xi_{t+1}$ , this is $\langle\xi_{t+1},x-x_{t+1}\rangle\leq 0$ . Similarly, for any $y\in Y$ , the dual projection gives
+
+$\left\langle\frac{y_{t}-y_{t+1}}{h}+\nabla_{y}f(\widetilde{x}_{t},\widetilde{y}_{t})-\tau\widetilde{y}_{t}+\bar{v}_{t},\,y-y_{t+1}\right\rangle\leq 0.$
+
+The first argument is $[1+(1-\alpha)\gamma]n_{t+1}$ . Since $1+(1-\alpha)\gamma>0$ , division yields $\langle n_{t+1},y-y_{t+1}\rangle\leq 0$ . As $x\in X$ and $y\in Y$ are arbitrary, these inequalities prove $\xi_{t+1}\in N_{X}(x_{t+1})$ and $n_{t+1}\in N_{Y}(y_{t+1})$ . ∎
+
+To implement the game-stationarity output in Algorithm 1 , define the computable certificate at each corrected iterate by
+
+$S_{t}=\lVert\nabla_{x}f(x_{t+1},y_{t+1})+\xi_{t+1}\rVert^{2}+\lVert-\nabla_{y}f(x_{t+1},y_{t+1})+\tau y_{t+1}+n_{t+1}\rVert^{2}.$ (3.4)
+
+The quantity $S_{t}$ is the squared norm of a stationarity residual for the dual-regularized objective $f(x,y)-\tau\lVert y\rVert^{2}/2$ , evaluated using the normal-cone vectors supplied by the algorithm. It is used to select the game-stationarity output. The following lemma relates this certificate and the auxiliary envelope gradient to the stationarity measures of the original problem. Its proof is given in Appendix 10.1 .
+
+Suppose that Assumption 2.1 holds, $\tau\geq 0$ , $\lambda>L$ , and $\mu+\tau>0$ . Then the iterates of Algorithm 1 satisfy
+
+$\mathcal{R}(x_{t+1},y_{t+1})\leq\sqrt{S_{t}}+\tau D_{Y}$ (3.5)
+
+Moreover, for every $z\in\mathbb{R}^{n}$ ,
+
+$\|\nabla\Phi_{\lambda}(z)-\nabla p(z)\|\leq\lambda D_{Y}\sqrt{\frac{\tau}{\lambda-L}}.$ (3.6)
+
+Consequently, for every iterate $z_{t}$ ,
+
+$\|\nabla\Phi_{\lambda}(z_{t})\|\leq\|\nabla p(z_{t})\|+\lambda D_{Y}\sqrt{\frac{\tau}{\lambda-L}}.$ (3.7)
+
+In particular, if $\tau=0$ , then ${\|\nabla\Phi_{\lambda}(z_{t})\|=\|\nabla p(z_{t})\|}.$
+
+Game stationarity incurs a bias linear in $\tau$ , whereas the envelope gradient incurs a bias proportional to $\sqrt{\tau}$ . These different dependences determine the two regularization choices in the concave case.
+
+We count one full first-order oracle call at $(x,y)$ as returning $(\nabla_{x}f(x,y),\nabla_{y}f(x,y))$ . After one call at $(x_{0},y_{0})$ , each iteration queries only the predicted and corrected pairs. The corrected-point gradient is used for the momentum update and $S_{t}$ , then cached for the next prediction. Thus $T$ iterations require at most $1+2T$ calls; the regularization terms are computed explicitly.
+
+4 Convergence and Complexity Analysis
+
+We first establish the Lyapunov and residual estimates shared by both regimes. We then present the NC–SC and NC–C complexity bounds in Sections 4.1 and 4.2 , respectively, and give a common fixed-center warm-up refinement in Section 4.3 . The common descent proof is in Appendices 8 – 9 ; the initialization, output, and complexity arguments are collected in Appendix 10 .
+
+Throughout this section, we set $\lambda=2L$ and fix $\tau\geq 0$ such that $0<\mu_{y}\leq L$ . The center update decreases $p$ up to an error proportional to $\|x_{t+1}-x^{\star}(z_{t})\|^{2}$ . Since the algorithm makes only one auxiliary update before moving the center, this error must be controlled together with the auxiliary dynamics. Let $w_{t}=(x_{t},y_{t},\xi_{t},n_{t},v_{t})$ and define
+
+$\displaystyle\mathcal{V}_{t}:={}$ $\displaystyle p(z_{t})-\inf_{z}p(z)+\mathcal{E}_{z_{t}}(w_{t})+\frac{\sqrt{2L\mu_{y}}}{256L^{2}}\|v_{t}\|^{2}.$ (4.1)
+
+The first two terms together form the optimality gap of the auxiliary envelope, while the last two terms measure the error in tracking its saddle point. For $x\in X$ , $y\in Y$ , $\xi\in N_{X}(x)$ , $n\in N_{Y}(y)$ , and arbitrary $v$ , write $w=(x,y,\xi,n,v)$ and set
+
+$\displaystyle\mathcal{E}_{z}(w):={}$ $\displaystyle-\frac{16L-\sqrt{2L\mu_{y}}}{16L}\bigl(G(x,y;z)-G^{\star}(z)\bigr)+\frac{1}{L}\|\nabla_{x}G(x,y;z)+\xi\|^{2}$ (4.2) $\displaystyle+\frac{1}{L}\|-\nabla_{y}G(x,y;z)+n-v\|^{2}+\frac{\sqrt{2L\mu_{y}}}{16L}\langle v,y-y^{\star}(z)\rangle+\frac{\mu_{y}}{256}\|y-y^{\star}(z)\|^{2}.$
+
+The residual and momentum terms are chosen so that their decrease absorbs the tracking error in the envelope estimate below.
+
+We now specify the algorithm parameters used in the descent analysis. A Lipschitz constant for the full gradient of $G(\cdot,\cdot;z)$ is $L_{G}:=3L+\tau\leq 4L$ . Choose
+
+$\begin{gathered}h=\frac{1}{64L_{G}},\qquad\alpha=\left(1+\frac{h\sqrt{2L\mu_{y}}}{16}\right)^{-1},\qquad\gamma=4\sqrt{\frac{2L}{\mu_{y}}}-1,\\[3.0pt] (1-\alpha)\gamma=\frac{h(8L-\sqrt{2L\mu_{y}})}{16+h\sqrt{2L\mu_{y}}},\qquad\beta=\frac{h\sqrt{2L\mu_{y}}}{4096}.\end{gathered}$ (4.3)
+
+The parameters of Algorithm 1 remain fixed during a run. The parameter $\tau$ is chosen to balance the convergence bound and the bias in the stationarity measure of the original problem.
+
+Suppose that Assumption 2.1 holds and the parameters are chosen as in ( 4.3 ). Then the center update satisfies
+
+$\displaystyle p(z_{t+1})-p(z_{t})$ $\displaystyle\leq-\frac{\beta}{4L}\|\nabla p(z_{t})\|^{2}+\frac{5}{2}\beta L\|x_{t+1}-x^{\star}(z_{t})\|^{2}.$ (4.4)
+
+Under Assumption 2.1 and the parameter choice ( 4.3 ),
+
+$\displaystyle\mathcal{E}_{z_{t+1}}(w_{t+1})-\mathcal{E}_{z_{t}}(w_{t})+\frac{\sqrt{2L\mu_{y}}}{256L^{2}}\bigl(\|v_{t+1}\|^{2}-\|v_{t}\|^{2}\bigr)\leq-\frac{5}{2}\beta L\|x_{t+1}-x^{\star}(z_{t})\|^{2}+\frac{\beta}{8L}\|\nabla p(z_{t})\|^{2}.$ (4.5)
+
+Define the one-step dissipation at the center $z_{t}$ by
+
+$\displaystyle{\mathcal{D}_{z_{t}}(w_{t+1},w_{t}):={}}$ $\displaystyle{\displaystyle\frac{h}{4}\|\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}\|^{2}}$ (4.6) $\displaystyle}{{\displaystyle+{}}\frac{3h\sqrt{2L\mu_{y}}}{512L}\|-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}\|^{2}{{}+{}}\frac{7h\sqrt{2L\mu_{y}}}{4096L}\|v_{t+1}\|^{2}$ $\displaystyle+\frac{h\mu_{y}\sqrt{2L\mu_{y}}}{128}\|y_{t+1}-y^{\star}(z_{t})\|^{2}{{}+{}}\frac{h\sqrt{2L\mu_{y}}(16L-\sqrt{2L\mu_{y}})}{1024}\|x_{t+1}-x^{\star}(z_{t})\|^{2}$ $\displaystyle}{{\displaystyle+{}}\frac{1}{4L}\mathcal{I}_{z_{t}}(w_{t+1},w_{t}).$
+
+Here $\mathcal{I}_{z_{t}}(w_{t+1},w_{t})$ is the sum of squared residual increments defined in ( 9.3 ). All terms in $\mathcal{D}_{z_{t}}(w_{t+1},w_{t})$ are nonnegative.
+
+Under Assumption 2.1 and the parameter choice ( 4.3 ), Algorithm 1 satisfies $\mathcal{V}_{t}\geq 0$ for every $t$ . Moreover,
+
+$\displaystyle\mathcal{V}_{t+1}-\mathcal{V}_{t}\leq-\frac{1}{2}\mathcal{D}_{z_{t}}(w_{t+1},w_{t})-\frac{\beta}{8L}\|\nabla p(z_{t})\|^{2}.$ (4.7)
+
+In particular,
+
+$\mathcal{V}_{t+1}-\mathcal{V}_{t}\leq-\frac{\beta}{8L}\|\nabla p(z_{t})\|^{2}.$ (4.8)
+
+For a fixed problem and initial point $(x_{0},y_{0})$ , define the initial energy
+
+$\displaystyle\Delta_{\tau}:=\mathcal{V}_{0}=p(x_{0})-\inf_{z}p(z)+\mathcal{E}_{x_{0}}(x_{0},y_{0},0,0,0).$ (4.9)
+
+It depends on $\tau$ , but is fixed throughout the run.
+
+Under Assumption 2.1 and the parameter choice ( 4.3 ), the iterates of Algorithm 1 satisfy, for every integer $T\geq 1$ ,
+
+$\sum_{t=0}^{T-1}S_{t}\leq\frac{32L\Delta_{\tau}}{\beta},\qquad\sum_{t=0}^{T-1}\|\nabla p(z_{t})\|^{2}\leq\frac{8L\Delta_{\tau}}{\beta}.$ (4.10)
+
+More generally, let $a\geq 0$ and suppose that the same elementary updates use the moving-center step $\beta$ for $a\leq t<a+T$ , starting from a feasible state satisfying the normal-cone inclusions. Then
+
+$\sum_{t=a}^{a+T-1}S_{t}\leq\frac{32L\mathcal{V}_{a}}{\beta},\qquad\sum_{t=a}^{a+T-1}\|\nabla p(z_{t})\|^{2}\leq\frac{8L\mathcal{V}_{a}}{\beta}.$ (4.11)
+
+The state at index $a$ need not have zero normal-cone or momentum variables.
+
+To turn the aggregate estimates in Lemma 4.3 into output guarantees, Algorithm 1 selects the corrected pair minimizing the computable quantity $S_{t}$ for GS and samples a center uniformly for OS. Lemma 3.2 then transfers the corresponding bounds to the original problem. Neither rule evaluates $\nabla p(z_{t})$ or solves an auxiliary saddle problem exactly.
+
+Under the conditions of Theorem 4.1 , the deterministic output satisfies
+
+${\mathcal{R}(x_{\rm out},y_{\rm out})\leq\sqrt{S_{j}}+\tau\|y_{j+1}\|\leq\sqrt{\frac{32L\Delta_{\tau}}{\beta T}}+\tau D_{Y}.}$ (4.12)
+
+The random output $z_{\rm out}\in X$ satisfies
+
+$\mathbb{E}\|\nabla p(z_{\rm out})\|^{2}\leq\frac{8L\Delta_{\tau}}{\beta T}$ (4.13)
+
+and
+
+$\mathbb{E}\|\nabla\Phi_{2L}(z_{\rm out})\|^{2}\leq\frac{16L\Delta_{\tau}}{\beta T}+8L\tau D_{Y}^{2}.$ (4.14)
+
+The expectations are taken with respect to the independently sampled output index $J$ , while the iterates themselves are generated deterministically.
+
+4.1 Nonconvex–strongly concave complexity results
+
+When $\mu>0$ , taking $\tau=0$ gives $p=\Phi_{2L}$ . The two output rules give the following OS and GS guarantees for the constrained problem. Write $\kappa=L/\mu$ , and let $\Delta_{0}$ denote the initial energy $\Delta_{\tau}$ in ( 4.9 ) evaluated at $\tau=0$ .
+
+Suppose that Assumption 2.1 holds with $\mu>0$ . For $\varepsilon>0$ , let $\tau=0$ , $\mu_{y}=\mu$ , and $\lambda=2L$ , and choose the remaining parameters as in ( 4.3 ). Run Algorithm 1 for
+
+$T=\max\left\{1,\left\lceil\frac{128L\Delta_{0}}{\beta\varepsilon^{2}}\right\rceil\right\}$ (4.15)
+
+iterations. The random center returned by Algorithm 1 satisfies
+
+$\mathbb{E}\|\nabla\Phi_{2L}(z_{\rm out})\|^{2}\leq\varepsilon^{2}.$ (4.16)
+
+For fixed $\Delta_{0}>0$ , as $\varepsilon\downarrow 0$ , the first-order oracle complexity of Theorem 4.2 is
+
+$O\!\left(\sqrt{\kappa}L\Delta_{0}\varepsilon^{-2}\right).$ (4.17)
+
+Under the assumptions and parameter choices of Theorem 4.2 , run Algorithm 1 for $T$ iterations, with $T$ given by ( 4.15 ). The deterministic game output satisfies
+
+$\mathcal{R}(x_{\rm out},y_{\rm out})\leq\varepsilon.$ (4.18)
+
+For fixed $\Delta_{0}>0$ , as $\varepsilon\downarrow 0$ , the first-order oracle complexity of Theorem 4.3 is
+
+$O\!\left(\sqrt{\kappa}L\Delta_{0}\varepsilon^{-2}\right).$ (4.19)
+
+The two theorems use the same trajectory and iteration budget; only the output rule differs. Section 4.3 sharpens the leading initialization dependence from $\Delta_{0}$ to the value-function gap by adding a fixed-center warm-up. No warm-up is needed for the baseline bounds above.
+
+4.2 Nonconvex–concave complexity results
+
+We next take $\mu=0$ . We first bound the dependence of the initial energy $\Delta_{\tau}$ on the regularization parameter $\tau$ .
+
+Suppose that $\mu=0$ , $0<\tau\leq L$ , $\mu_{y}=\tau$ , and $z_{0}=x_{0}$ , $\xi_{0}=n_{0}=v_{0}=0$ . Define
+
+${\bar{\Delta}_{0}:=\phi(x_{0})-\phi_{\inf}+D_{Y}\|\nabla_{y}f(x_{0},y_{0})\|+\frac{\|\nabla_{x}f(x_{0},y_{0})\|^{2}+2\|\nabla_{y}f(x_{0},y_{0})\|^{2}}{L}.}$ (4.20)
+
+Then
+
+$0\leq\Delta_{\tau}\leq\bar{\Delta}_{0}+\left[\left(1+\frac{1}{256}\right)\tau+\frac{2\tau^{2}}{L}\right]D_{Y}^{2}.$ (4.21)
+
+Suppose that Assumption 2.1 holds with $\mu=0$ . For $\varepsilon>0$ , let
+
+$\tau=\min\left\{L,\frac{\varepsilon^{2}}{16LD_{Y}^{2}}\right\},\qquad\mu_{y}=\tau,$ (4.22)
+
+let $\lambda=2L$ , and choose the remaining parameters as in ( 4.3 ). Run Algorithm 1 for
+
+$T=\max\left\{1,\left\lceil\frac{128L\Delta_{\tau}}{\beta\varepsilon^{2}}\right\rceil\right\}$ (4.23)
+
+iterations. The random output of Algorithm 1 satisfies
+
+$\mathbb{E}\|\nabla\Phi_{2L}(z_{\rm out})\|^{2}\leq\varepsilon^{2}.$ (4.24)
+
+By Lemma 4.4 and the choice of $\tau$ , $\Delta_{\tau}\leq\bar{\Delta}_{0}+O(\varepsilon^{2}/L)$ as $\varepsilon\downarrow 0$ . For fixed $\bar{\Delta}_{0}>0$ , the first-order oracle complexity of Theorem 4.4 is therefore
+
+$O\!\left(L^{2}D_{Y}\bar{\Delta}_{0}\varepsilon^{-3}\right).$ (4.25)
+
+We next consider game stationarity. The game-stationarity bound ( 4.12 ) contains the regularization bias $\tau D_{Y}$ . To keep this term below $\varepsilon/2$ , we choose $\tau\leq\varepsilon/(2D_{Y})$ .
+
+Suppose that Assumption 2.1 holds with $\mu=0$ . For $\varepsilon>0$ , let
+
+$\tau=\min\left\{L,\frac{\varepsilon}{2D_{Y}}\right\},\qquad\mu_{y}=\tau,$ (4.26)
+
+let $\lambda=2L$ , and choose the remaining parameters as in ( 4.3 ). Run Algorithm 1 for $T$ iterations, with $T$ given by ( 4.23 ) using the present values of $\beta$ and $\Delta_{\tau}$ . The deterministic game output of Algorithm 1 satisfies
+
+$\mathcal{R}(x_{\rm out},y_{\rm out})\leq\varepsilon.$ (4.27)
+
+By Lemma 4.4 and the choice of $\tau$ , $\Delta_{\tau}\leq\bar{\Delta}_{0}+O(\varepsilon D_{Y})$ as $\varepsilon\downarrow 0$ . For fixed $\bar{\Delta}_{0}>0$ , the first-order oracle complexity of Theorem 4.5 is therefore
+
+$O\!\left(L^{3/2}D_{Y}^{1/2}\bar{\Delta}_{0}\varepsilon^{-5/2}\right).$ (4.28)
+
+Both results follow from the common residual estimates. Their different accuracy exponents arise from the perturbation choices: the OS transfer has a $\sqrt{\tau}$ bias, whereas the GS transfer has a $\tau$ bias. The following warm-up refinement leaves these choices unchanged.
+
+4.3 Fixed-center warm-up and refined complexity bounds
+
+We now improve the initialization dependence of both the NC–SC and NC–C bounds. A single fixed-center argument applies to both regimes: only the effective dual curvature and the warm-up tolerance change. Throughout this subsection, Assumption 2.1 holds, $\lambda=2L$ , $\tau\geq 0$ , and $0<\mu_{y}=\mu+\tau\leq L$ . The parameters $h,\alpha,\gamma,\beta$ are given by ( 4.3 ). Write
+
+$\Delta_{\phi}:=\phi(x_{0})-\phi_{\inf}.$
+
+For a feasible state $w=(x,y,\xi,n,v)$ satisfying the normal-cone inclusions, abbreviate its tracking energy by
+
+$H_{z}(w):=\mathcal{E}_{z}(w)+\frac{\sqrt{2L\mu_{y}}}{256L^{2}}\|v\|^{2}.$ (4.29)
+
+Thus $\mathcal{V}_{t}=p(z_{t})-\inf_{z}p(z)+H_{z_{t}}(w_{t})$ . Define the computable initialization bound
+
+$\displaystyle\overline{H}_{\mu,\tau}:={}$ $\displaystyle D_{Y}\|\nabla_{y}f(x_{0},y_{0})\|$ (4.30) $\displaystyle+\frac{\|\nabla_{x}f(x_{0},y_{0})\|^{2}+\|-\nabla_{y}f(x_{0},y_{0})+\tau y_{0}\|^{2}}{L}+\left(\frac{\tau}{2}+\frac{\mu+\tau}{256}\right)D_{Y}^{2}.$
+
+Keeping the squared regularized gradient unexpanded makes this bound valid for $\tau=0$ as well as $\tau>0$ .
+
+For an arbitrary tolerance $\eta>0$ , set
+
+$q_{\mu,\tau,\eta}:=\max\left\{1,\frac{\overline{H}_{\mu,\tau}}{\eta}\right\},\qquad T_{\rm w}:=\left\lceil\frac{\log q_{\mu,\tau,\eta}}{\log(1+128\beta)}\right\rceil.$ (4.31)
+
+For a target accuracy $\varepsilon>0$ , define
+
+$\begin{gathered}B_{\mu,\tau,\eta}:=\Delta_{\phi}+\frac{\tau D_{Y}^{2}}{2}+\eta,\\ T:=\max\left\{1,\left\lceil\frac{128LB_{\mu,\tau,\eta}}{\beta\varepsilon^{2}}\right\rceil\right\}.\end{gathered}$ (4.32)
+
+Use the predetermined center-step schedule
+
+$\beta_{t}=\begin{cases}0,&0\leq t<T_{\rm w},\\ \beta,&T_{\rm w}\leq t<T_{\rm w}+T.\end{cases}$ (4.33)
+
+All other parameters stay fixed, and the entire state is retained at the transition. Algorithm 2 therefore uses the same explicit updates as Algorithm 1 , with no inner solve or state reset.
+
+Algorithm 2 Projected damped extragradient with a fixed-center warm-up
+
+Let $H_{t}:=H_{x_{0}}(w_{t})$ for $0\leq t\leq T_{\rm w}$ and
+
+$\Delta_{\tau}^{\rm w}:=\mathcal{V}_{T_{\rm w}}=p(x_{0})-\inf_{z}p(z)+H_{T_{\rm w}}.$ (4.34)
+
+Algorithm 2 satisfies
+
+$\begin{gathered}0\leq H_{0}\leq\overline{H}_{\mu,\tau},\qquad H_{T_{\rm w}}\leq\eta,\qquad 0\leq\Delta_{\tau}^{\rm w}\leq B_{\mu,\tau,\eta}.\end{gathered}$ (4.35)
+
+The proof uses the fixed-center contraction in Theorem 9.1 and the common initialization estimate in Appendix 10.4 ; it is given in Appendix 10.7.1 .
+
+Under the conditions above, Algorithm 2 satisfies
+
+$\mathbb{E}\|\nabla p(z_{\rm out})\|^{2}\leq\frac{\varepsilon^{2}}{16},\qquad S_{j}\leq\frac{\varepsilon^{2}}{4}.$ (4.36)
+
+Consequently,
+
+$\mathcal{R}(x_{\rm out},y_{\rm out})\leq\frac{\varepsilon}{2}+\tau D_{Y},\qquad\mathbb{E}\|\nabla\Phi_{2L}(z_{\rm out})\|^{2}\leq\frac{\varepsilon^{2}}{8}+8L\tau D_{Y}^{2}.$ (4.37)
+
+When $\tau=0$ , the OS bound is sharpened to $\mathbb{E}\|\nabla\Phi_{2L}(z_{\rm out})\|^{2}\leq\varepsilon^{2}/16$ . The number $N$ of full first-order oracle calls satisfies
+
+$\displaystyle N$ $\displaystyle\leq 1+2(T_{\rm w}+T)$ (4.38) $\displaystyle\leq 5+\frac{\log q_{\mu,\tau,\eta}}{32\beta}+\frac{256LB_{\mu,\tau,\eta}}{\beta\varepsilon^{2}}.$
+
+There are $4(T_{\rm w}+T)$ projections. The initial query used to compute ( 4.30 ) is shared with the first prediction, and no additional query is required at the phase transition.
+
+The inherited-state form of Lemma 4.3 supplies both residual bounds. Appendix 10.7.2 contains the proof and the query count. The following three corollaries only specialize $(\mu,\tau,\eta)$ .
+
+Suppose that $\mu>0$ . Set $\tau=0$ , $\eta=\varepsilon^{2}/L$ , and $\kappa=L/\mu$ , and write $\overline{H}_{\mu}:=\overline{H}_{\mu,0}$ . Algorithm 2 returns a random OS center and a deterministic GS pair satisfying
+
+$\mathbb{E}\|\nabla\Phi_{2L}(z_{\rm out})\|^{2}\leq\varepsilon^{2},\qquad\mathcal{R}(x_{\rm out},y_{\rm out})\leq\varepsilon.$ (4.39)
+
+Its oracle complexity is
+
+$N=O\!\left(\sqrt{\kappa}\left[\frac{L\Delta_{\phi}}{\varepsilon^{2}}+1+\log\!\left(1+\frac{L\overline{H}_{\mu}}{\varepsilon^{2}}\right)\right]\right).$ (4.40)
+
+For a fixed instance with $\Delta_{\phi}>0$ , the leading term is $O(\sqrt{\kappa}L\Delta_{\phi}\varepsilon^{-2})$ .
+
+Suppose that $\mu=0$ . Choose $\tau$ as in ( 4.22 ) and set $\eta=\tau D_{Y}^{2}$ . Algorithm 2 returns a random center satisfying
+
+$\mathbb{E}\|\nabla\Phi_{2L}(z_{\rm out})\|^{2}\leq\varepsilon^{2}.$ (4.41)
+
+The full query bound is ( 4.38 ), with $B_{0,\tau,\eta}=\Delta_{\phi}+3\tau D_{Y}^{2}/2$ . For a fixed instance with $\Delta_{\phi}>0$ , its leading order as $\varepsilon\downarrow 0$ is
+
+$O\!\left(L^{2}D_{Y}\Delta_{\phi}\varepsilon^{-3}\right).$ (4.42)
+
+Suppose that $\mu=0$ . Choose $\tau$ as in ( 4.26 ) and set $\eta=\tau D_{Y}^{2}$ . Algorithm 2 returns a deterministic pair satisfying
+
+$\mathcal{R}(x_{\rm out},y_{\rm out})\leq\varepsilon.$ (4.43)
+
+The full query bound is again ( 4.38 ), with $B_{0,\tau,\eta}=\Delta_{\phi}+3\tau D_{Y}^{2}/2$ . For a fixed instance with $\Delta_{\phi}>0$ , its leading order as $\varepsilon\downarrow 0$ is
+
+$O\!\left(L^{3/2}D_{Y}^{1/2}\Delta_{\phi}\varepsilon^{-5/2}\right).$ (4.44)
+
+The positive tolerance $\eta$ is distinct from the perturbation parameter $\tau$ . In the NC–C case, $\eta=\tau D_{Y}^{2}$ recovers the original warm-up target; in the NC–SC case, $\tau=0$ and this target must be replaced by a positive tolerance. The choice $\eta=\varepsilon^{2}/L$ is valid even when $\Delta_{\phi}=0$ . If only a known bound $\overline{\Delta}\geq\Delta_{\phi}$ is available, it may replace $\Delta_{\phi}$ in the budget and complexity statements. In particular, for NC–SC and $\overline{\Delta}>0$ , the alternative $\eta=\overline{\Delta}$ and $B=2\overline{\Delta}$ gives
+
+$N=O\!\left(\sqrt{\kappa}\left[\frac{L\overline{\Delta}}{\varepsilon^{2}}+1+\log\max\{1,\overline{H}_{\mu}/\overline{\Delta}\}\right]\right),$ (4.45)
+
+whose warm-up length is independent of $\varepsilon$ . Neither version evaluates the envelope or its infimum. The additive terms in the full bounds cannot be discarded for a zero gap or unbounded initialization errors.
+
+5 Lower Bound for Optimization Stationarity
+
+5.1 Problem class and oracle model
+
+Fix $L,\Delta,D_{Y}>0$ . Consider instances of ( 2.1 ) with $X=\mathbb{R}^{d_{x}}$ , a nonempty compact convex dual set $Y\subset\mathbb{R}^{d_{y}}$ containing the origin, and a globally continuously differentiable objective function $f:\mathbb{R}^{d_{x}+d_{y}}\to\mathbb{R}$ satisfying
+
+$\begin{gathered}\|\nabla f(w)-\nabla f(w^{\prime})\|\leq L\|w-w^{\prime}\|\quad(w,w^{\prime}\in\mathbb{R}^{d_{x}+d_{y}}),\\ f(x,\cdot)\text{ is concave},\qquad\diam(Y)\leq D_{Y},\qquad\phi(0)-\inf_{x}\phi(x)\leq\Delta.\end{gathered}$ (5.1)
+
+Let $\Delta_{\phi}:=\phi(0)-\inf_{x}\phi(x)\leq\Delta$ denote the actual initial gap. The dimensions are not fixed in advance. In particular, global smoothness in ( 5.1 ) is stronger than the product-domain smoothness required in Assumption 2.1 . Since $\phi$ is $L$ -weakly convex and bounded below, $\Phi_{2L}$ under the convention ( 2.6 ) is differentiable. The pointwise OS target is
+
+$\|\nabla\Phi_{2L}(x^{\mathrm{out}})\|\leq\varepsilon.$ (5.2)
+
+Let $\mathcal{Z}=\mathbb{R}^{d_{x}}\times Y$ and $F(x,y)=(\nabla_{x}f(x,y),-\nabla_{y}f(x,y))$ . A deterministic method starts at $w^{0}=0$ and queries $F$ at feasible points $w^{t}\in\mathcal{Z}$ . It is projected zero-respecting if each subsequent query satisfies
+
+$\begin{gathered}w^{t+1}=\Pi_{\mathcal{Z}}(a^{t+1}),\\ \supp(a^{t+1})\subseteq\bigcup_{s=0}^{t}\bigl(\supp(w^{s})\cup\supp(F(w^{s}))\bigr).\end{gathered}$ (5.3)
+
+After $T$ queries, at $w^{0},\ldots,w^{T-1}$ , its output must also satisfy
+
+$\begin{gathered}w^{\mathrm{out}}=\Pi_{\mathcal{Z}}(a^{\mathrm{out}}),\\ \supp(a^{\mathrm{out}})\subseteq\bigcup_{s=0}^{T-1}\bigl(\supp(w^{s})\cup\supp(F(w^{s}))\bigr).\end{gathered}$ (5.4)
+
+A primal-only output is permitted if it is the first block of such a $w^{\mathrm{out}}$ . For $T=0$ , the union is empty and the output is the origin. Complexity counts first-order oracle calls; projections are not charged.
+
+The output restriction is part of the model. Accordingly, the result does not cover methods that introduce arbitrary unexplored coordinates or arbitrary changes of basis.
+
+5.2 Hard instance and zero-chain structure
+
+Let $M\geq 1$ and $n\geq 2$ be integers. Write $x=(x_{1},\ldots,x_{M})\in\mathbb{R}^{M}$ and $y=(y^{1},\ldots,y^{M})\in\mathbb{R}^{Mn}$ , where $y^{i}\in\mathbb{R}^{n}$ . Define the scalar functions
+
+$\displaystyle s(t)$ $\displaystyle=\begin{cases}0,&t\leq 0,\\ \sin^{2}(\pi t/2),&0<t<1,\\ 1,&t\geq 1,\end{cases}$ $\displaystyle h(t)$ $\displaystyle=\begin{cases}t,&|t|\leq 1,\\ \sgn(t)\bigl(2-(3-|t|)^{2}/4\bigr),&1<|t|<3,\\ 2\sgn(t),&|t|\geq 3,\end{cases}$ (5.5)
+
+and set
+
+$\begin{gathered}g(t):=\frac{1}{4}h(t),\qquad R_{n}(t):=\frac{(|t|-\sqrt{n})_{+}^{2}}{2n},\qquad t^{-}:=\max\{-t,0\},\\ P_{i}(x):=\prod_{j=1}^{i}s(x_{j}),\quad P_{0}(x):=1,\qquad w_{i}(x):=P_{i-1}(x)(1-s(x_{i})).\end{gathered}$ (5.6)
+
+The symmetric matrix $Q_{n}$ and the dual feasible set $Y_{M,n}$ are defined by
+
+$u^{\top}Q_{n}u:=\sum_{j=1}^{n-1}(u_{j}-u_{j+1})^{2}+\frac{u_{1}^{2}+u_{n}^{2}}{n}\quad(u\in\mathbb{R}^{n})$ (5.7)
+
+and
+
+$Y_{M,n}:=\{y\in\mathbb{R}^{Mn}:\|y\|_{2}\leq n,\ \|y\|_{\infty}\leq\sqrt{n}\}.$ (5.8)
+
+Consider the globally defined objective
+
+$\displaystyle\widehat{f}_{M,n}(x,y)={}$ $\displaystyle-\frac{1}{2}\sum_{i=1}^{M}(y^{i})^{\top}Q_{n}y^{i}+\sum_{i=1}^{M}w_{i}(x)\left[h\!\left(\frac{y_{1}^{i}}{\sqrt{n}}\right)-g(x_{i})h\!\left(\frac{y_{n}^{i}}{\sqrt{n}}\right)\right]$ (5.9) $\displaystyle-\sum_{i=1}^{M}\bigl(R_{n}(y_{1}^{i})+R_{n}(y_{n}^{i})\bigr)-4\sum_{i=1}^{M}s(x_{i})+\frac{1}{2}\sum_{i=1}^{M}(x_{i}^{-})^{2}.$
+
+The corresponding base value function is
+
+$\varphi_{M,n}(x):=\max_{y\in Y_{M,n}}\widehat{f}_{M,n}(x,y).$ (5.10)
+
+Zero-chain structure. On the feasible set $Y_{M,n}$ , the endpoint function $h$ is linear and the penalty $R_{n}$ has zero derivative. Hence
+
+$\nabla_{y^{i}}\widehat{f}_{M,n}(x,y)=-Q_{n}y^{i}+\frac{w_{i}(x)}{\sqrt{n}}\bigl(e_{1}-g(x_{i})e_{n}\bigr),$ (5.11)
+
+where $e_{1},e_{n}\in\mathbb{R}^{n}$ are the first and last standard basis vectors.
+
+Propagation within a dual block. When $x_{i}=0$ , the forcing in ( 5.11 ) acts only on $e_{1}$ . Since $Q_{n}$ is tridiagonal, a vector supported on $y_{1}^{i},\ldots,y_{r}^{i}$ with $r<n$ produces a dual gradient supported on at most $y_{1}^{i},\ldots,y_{r+1}^{i}$ . Hence $y_{n}^{i}$ can only be reached sequentially.
+
+Dual-to-primal activation. At $x_{i}=0$ , the identities $s(0)=s^{\prime}(0)=0$ and $g^{\prime}(0)=1/4$ give
+
+$\partial_{x_{i}}\widehat{f}_{M,n}(x,y)=-\frac{P_{i-1}(x)}{4\sqrt{n}}\,y_{n}^{i}.$ (5.12)
+
+Thus $x_{i}$ cannot be revealed until $y_{n}^{i}$ has been revealed.
+
+Primal-to-dual gating. For $i<M$ , if $x_{i+1}=0$ ,
+
+$w_{i+1}(x)=P_{i}(x)=P_{i-1}(x)s(x_{i}).$ (5.13)
+
+Hence the next dual block cannot be activated until $s(x_{i})>0$ .
+
+Consequently, information can propagate only according to the order
+
+$y_{1}^{1}\to\cdots\to y_{n}^{1}\to x_{1}\to\cdots\to y_{1}^{M}\to\cdots\to y_{n}^{M}\to x_{M}.$ (5.14)
+
+Lemma 11.5 formalizes the corresponding support induction for projected zero-respecting methods and shows that
+
+$T<M(n+1)\quad\Longrightarrow\quad x_{M}^{\mathrm{out}}=0.$ (5.15)
+
+5.3 Oracle lower bound and scope of optimality
+
+By appropriately scaling the instance constructed in Section 5.2 and applying Lemmas 11.5 and 11.7 , we obtain the following lower bound.
+
+Let $L_{0}=128$ , $c_{0}=1/512$ , and define
+
+$\varepsilon_{*}:=\min\left\{c_{0}\sqrt{\frac{L\Delta}{40L_{0}}},\frac{c_{0}LD_{Y}}{8L_{0}}\right\},\qquad c_{*}:=\frac{c_{0}^{3}}{320L_{0}^{2}}.$ (5.16)
+
+For every $0<\varepsilon\leq\varepsilon_{*}$ , there is an instance satisfying ( 5.1 ), with initial gap $2\Delta/5\leq\Delta_{\phi}\leq\Delta$ , such that any method in Definition 5.1 whose output satisfies ( 5.2 ) must make at least
+
+$T\geq c_{*}\frac{L^{2}\Delta_{\phi}D_{Y}}{\varepsilon^{3}}$ (5.17)
+
+first-order oracle calls. More precisely, for the dimensions chosen in the proof, every output after $T<M(n+1)$ queries satisfies $\|\nabla\Phi_{2L}(x^{\mathrm{out}})\|>2\varepsilon$ .
+
+For the base value function ( 5.10 ), define its envelope with curvature $\ell>L_{0}$ by
+
+$\Phi_{M,n,\ell}(x):=\min_{u}\left\{\varphi_{M,n}(u)+\frac{\ell}{2}\|u-x\|^{2}\right\}.$ (5.18)
+
+The full gradient of $\widehat{f}_{M,n}$ is globally $L_{0}$ -Lipschitz and the objective is concave in the dual variable (Lemma 11.3 ). The dual diameter is $2n$ , and the initial value gap is at most $5M$ (Lemmas 11.1 and 11.4 ). After fewer than $M(n+1)$ queries, every admissible output has $x_{M}^{\mathrm{out}}=0$ (Lemma 11.5 ). Finally,
+
+$x_{M}=0\quad\Longrightarrow\quad\|\nabla\Phi_{M,n,2L_{0}}(x)\|>c_{0}$ (5.19)
+
+by Lemma 11.7 .
+
+To meet the prescribed $L$ , $\Delta$ , and $D_{Y}$ , choose the scale factors $b,a>0$ and the integers $M,n$ as
+
+$b=\frac{2L_{0}\varepsilon}{c_{0}L},\qquad a=\frac{Lb^{2}}{L_{0}},\qquad M=\left\lfloor\frac{\Delta}{5a}\right\rfloor,\qquad n=\left\lfloor\frac{D_{Y}}{2b}\right\rfloor.$ (5.20)
+
+These choices make $a=\Theta(\varepsilon^{2}/L)$ and $b=\Theta(\varepsilon/L)$ , so $M=\Theta(L\Delta/\varepsilon^{2})$ and $n=\Theta(LD_{Y}/\varepsilon)$ for fixed positive $L,\Delta,D_{Y}$ as $\varepsilon\downarrow 0$ . Since $a=4L_{0}\varepsilon^{2}/(c_{0}^{2}L)$ , the accuracy range ( 5.16 ) implies $a\leq\Delta/10$ and $b\leq D_{Y}/4$ . Thus $M\geq 1$ , $n\geq 2$ , and
+
+$\frac{\Delta}{10a}\leq M\leq\frac{\Delta}{5a},\qquad\frac{D_{Y}}{4b}\leq n\leq\frac{D_{Y}}{2b}.$ (5.21)
+
+With these parameters, define the scaled instance by
+
+$f_{\mathrm{sc}}(x,y)=a\widehat{f}_{M,n}(x/b,y/b),\qquad\mathcal{Y}=bY_{M,n}.$ (5.22)
+
+Its gradient Lipschitz constant is at most $aL_{0}/b^{2}=L$ . Positive scaling preserves dual concavity and primal nonconvexity, and $\diam(\mathcal{Y})=2bn\leq D_{Y}$ . Its value function is $\phi_{\mathrm{sc}}(x)=a\varphi_{M,n}(x/b)$ , so
+
+$\frac{2}{5}\Delta\leq 4aM\leq\Delta_{\phi}:=\phi_{\mathrm{sc}}(0)-\inf\phi_{\mathrm{sc}}=a\left(4M+\frac{a_{n}}{2}\right)\leq 5aM\leq\Delta.$
+
+Here $a_{n}$ is defined in Lemma 11.4 ; the lower bound uses ( 5.21 ). Hence ( 5.1 ) holds, and $\Delta_{\phi}$ and $\Delta$ differ by at most a constant factor.
+
+Projection and the first-order operator obey
+
+$\Pi_{bY_{M,n}}(v)=b\Pi_{Y_{M,n}}(v/b),\qquad F_{\mathrm{sc}}(w)=\frac{a}{b}F_{M,n}(w/b).$
+
+Positive scaling changes neither coordinate support nor the chain subspaces in Lemma 11.5 . Therefore that lemma also applies to the scaled instance, and $T<M(n+1)$ implies $x_{M}^{\mathrm{out}}=0$ .
+
+Let $\Phi_{\mathrm{sc},\ell}$ denote the envelope of $\phi_{\mathrm{sc}}$ with curvature $\ell$ . Substituting $u=bq$ gives
+
+$\displaystyle\Phi_{\mathrm{sc},\ell}(x)$ $\displaystyle=\min_{q}\left\{a\varphi_{M,n}(q)+\frac{\ell b^{2}}{2}\|q-x/b\|^{2}\right\}$ (5.23) $\displaystyle=a\Phi_{M,n,\ell b^{2}/a}(x/b).$
+
+At $\ell=2L$ , the base curvature is $2Lb^{2}/a=2L_{0}$ . Consequently, if $T<M(n+1)$ , then ( 5.19 ) gives
+
+$\|\nabla\Phi_{\mathrm{sc},2L}(x^{\mathrm{out}})\|=\frac{a}{b}\|\nabla\Phi_{M,n,2L_{0}}(x^{\mathrm{out}}/b)\|>\frac{a}{b}c_{0}=2\varepsilon.$
+
+This contradicts ( 5.2 ). The query bound follows from
+
+$M(n+1)\geq Mn\geq\frac{\Delta D_{Y}}{40ab}=\frac{c_{0}^{3}}{320L_{0}^{2}}\frac{L^{2}\Delta D_{Y}}{\varepsilon^{3}}.$
+
+Since $\Delta_{\phi}\leq\Delta$ , this proves ( 5.17 ). ∎
+
+The support induction and Moreau-gradient barrier hold pathwise. For randomized methods satisfying ( 5.3 )–( 5.4 ) almost surely, any fixed query budget $T<M(n+1)$ therefore gives
+
+$\mathbb{E}\|\nabla\Phi_{2L}(x^{\mathrm{out}})\|>2\varepsilon,\qquad\mathbb{E}\|\nabla\Phi_{2L}(x^{\mathrm{out}})\|^{2}>4\varepsilon^{2}.$
+
+Thus the lower bound also holds for the expected-norm OS criterion in Definition 2.1 and the expected squared-norm criterion in Theorem 4.4 , at a fixed total query budget.
+
+The leading OS upper bound ( 4.42 ) for Algorithm 2 matches the lower bound in Theorem 5.1 in its $L^{2}D_{Y}\Delta_{\phi}\varepsilon^{-3}$ dependence within the class of projected zero-respecting methods. The additional terms in ( 4.38 ) are lower order for each fixed instance with $\Delta_{\phi}>0$ as $\varepsilon\downarrow 0$ . Appendix 11.4 verifies the initialization and oracle-class conditions required for this comparison.
+
+6 Numerical Experiments
+
+We provide two numerical examples to illustrate the empirical behavior of the proposed method. We compare our method with GDA, AGP, Smoothed GDA (SGDA), and Perturbed Smoothed GDA (PSGDA). Performance is measured against the number of full-gradient oracle calls; for the Waterbirds experiment, we additionally report elapsed time.
+
+6.1 Dirac-GAN
+
+We first consider the Dirac-GAN game used in Xu et al. (2023) ,
+
+$\min_{x\in\mathbb{R}}\max_{y\in\mathbb{R}}f(x,y)=-\log(1+e^{-xy})+\log 2.$ (6.1)
+
+Its stationary point is $(0,0)$ . We measure convergence by
+
+$d_{t}=\sqrt{x_{t}^{2}+y_{t}^{2}}.$
+
+We compare Ours with GDA, AGP, SGDA, and PSGDA. All methods start from $(x_{0},y_{0})=(1,1)$ . Figure 1 reports the distance to the stationary point against full-gradient oracle calls and shows the corresponding trajectories in the $(x,y)$ plane.
+
+Figure 1: Dirac-GAN: (a) distance over $150$ oracle calls (dotted line: $10^{-2}$ ; display floor: $10^{-16}$ ); (b) one GDA revolution ( $1160$ calls) and $150$ calls for the other methods. Circles mark selected iterates; the diamond and star mark $(1,1)$ and $(0,0)$ , respectively.
+
+Figure 1 (a) shows that Ours converges rapidly to the stationary point. It first reaches and remains below $d=10^{-2}$ after $7$ oracle calls, compared with $9$ calls for PSGDA, $15$ calls for AGP, and $23$ calls for SGDA. For the more stringent threshold $d=10^{-8}$ , Ours reaches the threshold after $13$ calls, while PSGDA requires $25$ calls in the displayed run.
+
+Figure 1 (b) further illustrates the different dynamics of the methods. Ours approaches the origin directly and rapidly, whereas GDA exhibits pronounced rotational behavior. Taken together, the two panels show that the proposed method outperforms all compared baselines in this example: it reaches the reported distance thresholds with fewer oracle calls and follows a more direct trajectory toward the stationary point.
+
+6.2 Waterbirds Group DRO
+
+We next consider a group distributionally robust optimization problem based on the Waterbirds dataset Sagawa et al. (2020) :
+
+$\min_{\|\theta\|_{2}\leq 5}\max_{y\in\Delta_{4}}f(\theta,y)=\sum_{g=1}^{4}\frac{y_{g}}{|I_{g}|}\sum_{j\in I_{g}}\log\!\left(1+e^{-b_{j}s_{\theta}(a_{j})}\right).$ (6.2)
+
+Here $\Delta_{4}=\{y\geq 0:\mathbf{1}^{\top}y=1\}$ , $I_{g}$ indexes the samples in group $g$ , and $b_{j}\in\{-1,1\}$ is the bird label. The four groups are determined by the bird labels and backgrounds. We use fixed ImageNet-pretrained ResNet18 features followed by a fixed projection to $\mathbb{R}^{32}$ . The classifier is
+
+$s_{\theta}(a)=v^{\top}\tanh(W^{\top}a+u)+c,\qquad\theta=(\operatorname{vec}(W),u,v,c)\in\mathbb{R}^{137},$
+
+where $W\in\mathbb{R}^{32\times 4}$ , $u,v\in\mathbb{R}^{4}$ , and $c\in\mathbb{R}$ . The resulting objective is nonconvex in $\theta$ and linear in $y$ .
+
+With $X=\{\theta:\|\theta\|_{2}\leq 5\}$ , we evaluate the methods using the projected first-order residual
+
+$\mathcal{R}_{\mathrm{proj}}(\theta,y)=\sqrt{\|\theta-\Pi_{X}(\theta-\nabla_{\theta}f)\|_{2}^{2}+\|y-\Pi_{\Delta_{4}}(y+\nabla_{y}f)\|_{2}^{2}}.$ (6.3)
+
+We compare Ours with GDA, AGP, SGDA, and PSGDA from the same initial point and on the same data split. Figure 2 reports the best projected residual against both full-gradient oracle calls and elapsed time.
+
+Figure 2: Waterbirds: best original-game projected residual versus (a) full-gradient oracle calls and (b) elapsed time for the same runs. Time includes algorithm updates and diagnostics.
+
+Figure 2 (a) shows that the proposed method achieves the smallest projected residual among all compared methods. After $1001$ full-gradient oracle calls, Ours reaches $3.457\times 10^{-4}$ , compared with $1.520\times 10^{-3}$ for PSGDA, $8.269\times 10^{-3}$ for SGDA, $2.797\times 10^{-2}$ for AGP, and $1.914\times 10^{-1}$ for GDA.
+
+The elapsed-time curves in Figure 2 (b) show a similar trend: the proposed method decreases the residual rapidly and attains the best final residual among the compared methods. Thus, on this Waterbirds instance, the proposed method outperforms all compared baselines under both the full-gradient-oracle-call and elapsed-time comparisons, achieving the smallest projected residual in each case.
+
+7 Conclusions
+
+This work closes the complexity gap between single-loop and multi-loop first-order methods for smooth nonconvex–concave minimax optimization under both optimization stationarity (OS) and game stationarity (GS). The algorithmic contribution lies in coordinating projected extragradient steps, dual momentum, and proximal-center evolution within a single loop. The theoretical contribution is a Lyapunov analysis that jointly controls optimization progress and saddle-point tracking, together with a lower-bound construction certifying the sharpness of the OS guarantee.
+
+For OS, the fixed-center warm-up converts the initialization-dependent bound $O(L^{2}D_{Y}\bar{\Delta}_{0}\varepsilon^{-3})$ into the leading complexity $O(L^{2}D_{Y}\Delta_{\phi}\varepsilon^{-3})$ , relegating the initial-gradient dependence to an additive lower-order cost. Our globally smooth hard instances require $\Omega(L^{2}D_{Y}\Delta_{\phi}\varepsilon^{-3})$ queries from projected zero-respecting first-order methods, even when admissible randomized outputs are allowed at a fixed query budget. Thus, on the common initialization class, the upper and lower bounds agree up to a constant factor in all displayed parameters. This establishes optimality of the leading warm-started OS complexity within the stated oracle class, beyond merely identifying the sharp $\varepsilon^{-3}$ exponent.
+
+For GS, the leading bound $O(L^{3/2}D_{Y}^{1/2}\Delta_{\phi}\varepsilon^{-5/2})$ shows that the best-known multi-loop rate can be attained through elementary single-loop updates, without a logarithmic factor in the leading term. To our knowledge, no previous single-loop method achieves this bound for general smooth nonconvex–concave problems. Dual strong concavity further yields $O(\sqrt{\kappa}L\Delta_{0}\varepsilon^{-2})$ complexity for both criteria; after warm-up, the leading term becomes $O(\sqrt{\kappa}L\Delta_{\phi}\varepsilon^{-2})$ , matching the known lower-bound rate for value-gradient stationarity in the corresponding unconstrained oracle models. These warm-started leading bounds apply for fixed problem and initialization quantities with $\Delta_{\phi}>0$ as $\varepsilon\downarrow 0$ .
+
+The resulting picture is that sharp complexity guarantees need not rely on nested auxiliary solvers: a suitably coordinated single-loop dynamics can attain them, with oracle optimality established for OS. Natural next steps include stochastic extensions, treatment of unbounded dual domains, and lower bounds for broader first-order oracle classes.
+
+8 Saddle-Point Sensitivity and Center Descent
+
+Throughout this appendix, Assumption 2.1 holds, $\lambda=2L$ , $0<\mu_{y}=\mu+\tau\leq L$ , and the parameters are given by ( 4.3 ).
+
+8.1 Saddle-point sensitivity
+
+We first estimate how the saddle point changes with the center. For $z,z^{\prime}\in\mathbb{R}^{n}$ , write $\delta z=z^{\prime}-z$ , $\delta x^{\star}=x^{\star}(z^{\prime})-x^{\star}(z)$ , and $\delta y^{\star}=y^{\star}(z^{\prime})-y^{\star}(z)$ . Adding the variational inequalities at the two saddle points and using $L$ -strong convexity in $x$ , $\mu_{y}$ -strong concavity in $y$ , and Young’s inequality gives
+
+$\displaystyle L\|\delta x^{\star}\|^{2}+\mu_{y}\|\delta y^{\star}\|^{2}$ $\displaystyle\leq 2L\langle\delta z,\delta x^{\star}\rangle\leq\frac{L}{2}\|\delta x^{\star}\|^{2}+2L\|\delta z\|^{2}.$ (8.1)
+
+Consequently,
+
+$\displaystyle\|x^{\star}(z^{\prime})-x^{\star}(z)\|$ $\displaystyle\leq 2\|z^{\prime}-z\|,$ (8.2) $\displaystyle\|y^{\star}(z^{\prime})-y^{\star}(z)\|$ $\displaystyle\leq\sqrt{\frac{2L}{\mu_{y}}}\|z^{\prime}-z\|.$
+
+8.2 Smoothness of the auxiliary envelope
+
+Combining the first estimate in ( 8.2 ) with ( 3.2 ) yields
+
+$\displaystyle\nabla p(z)$ $\displaystyle=2L(z-x^{\star}(z)),$ (8.3) $\displaystyle\|\nabla p(z^{\prime})-\nabla p(z)\|$ $\displaystyle\leq 6L\|z^{\prime}-z\|.$
+
+8.3 Proof of Lemma 4.1
+
+The center update and ( 3.2 ) give
+
+$\displaystyle z_{t+1}-z_{t}$ $\displaystyle=\beta(x_{t+1}-z_{t})$ (8.4) $\displaystyle=\beta\bigl[x_{t+1}-x^{\star}(z_{t})+x^{\star}(z_{t})-z_{t}\bigr]$ $\displaystyle=\beta\left(x_{t+1}-x^{\star}(z_{t})-\frac{1}{2L}\nabla p(z_{t})\right).$
+
+In particular,
+
+$\|z_{t+1}-z_{t}\|^{2}\leq 2\beta^{2}\|x_{t+1}-x^{\star}(z_{t})\|^{2}+\frac{\beta^{2}}{2L^{2}}\|\nabla p(z_{t})\|^{2}.$ (8.5)
+
+By $6L$ -smoothness and Young’s inequality,
+
+$\langle\nabla p(z_{t}),x_{t+1}-x^{\star}(z_{t})\rangle\leq\frac{1}{8L}\|\nabla p(z_{t})\|^{2}+2L\|x_{t+1}-x^{\star}(z_{t})\|^{2},$
+
+we obtain
+
+$\displaystyle p(z_{t+1})-p(z_{t})$ $\displaystyle\leq\langle\nabla p(z_{t}),z_{t+1}-z_{t}\rangle+3L\|z_{t+1}-z_{t}\|^{2}$ $\displaystyle\leq-\frac{\beta}{L}\left(\frac{3}{8}-\frac{3}{2}\beta\right)\|\nabla p(z_{t})\|^{2}$ $\displaystyle\quad+\beta L(2+6\beta)\|x_{t+1}-x^{\star}(z_{t})\|^{2}.$
+
+By ( 4.3 ), $\mu_{y}\leq L$ , and $L_{G}\geq 3L$ , we have $0<\beta\leq\sqrt{2}/(3\cdot 64\cdot 4096)<1/12$ . Consequently, $3/8-3\beta/2\geq 1/4$ and $2+6\beta\leq 5/2$ , which gives ( 4.4 ). ∎
+
+The squared-distance term in this bound is absorbed by the decrease in the auxiliary error established in the next appendix.
+
+9 Auxiliary Saddle Dynamics and Lyapunov Descent
+
+The parameters are those in ( 4.3 ), with $\lambda=2L$ and $0<\mu_{y}=\mu+\tau\leq L$ . The proof separates the value-function change from the change in the auxiliary tracking error:
+
+$\displaystyle\mathcal{V}_{t+1}-\mathcal{V}_{t}={}$ $\displaystyle p(z_{t+1})-p(z_{t})$ (9.1) $\displaystyle+\mathcal{E}_{z_{t+1}}(w_{t+1})-\mathcal{E}_{z_{t}}(w_{t})$ $\displaystyle+\frac{\sqrt{2L\mu_{y}}}{256L^{2}}\bigl(\|v_{t+1}\|^{2}-\|v_{t}\|^{2}\bigr).$
+
+Appendix 8.3 bounds the first difference. We establish the auxiliary estimate by combining fixed-center dissipation with the effect of the center update. Appendix 9.4 combines the two estimates to prove Theorem 4.1 .
+
+9.1 Projection and extragradient error identities
+
+We estimate the second term in ( 9.1 ). Adding and subtracting $\mathcal{E}_{z_{t}}(w_{t+1})$ in the auxiliary error difference gives
+
+$\displaystyle\mathcal{E}_{z_{t+1}}(w_{t+1})-\mathcal{E}_{z_{t}}(w_{t})+\frac{\sqrt{2L\mu_{y}}}{256L^{2}}\bigl(\|v_{t+1}\|^{2}-\|v_{t}\|^{2}\bigr)$ (9.2) $\displaystyle=\underbrace{\mathcal{E}_{z_{t}}(w_{t+1})-\mathcal{E}_{z_{t}}(w_{t})+\frac{\sqrt{2L\mu_{y}}}{256L^{2}}\bigl(\|v_{t+1}\|^{2}-\|v_{t}\|^{2}\bigr)}_{\text{one-step change at a fixed center}}$ $\displaystyle+\underbrace{\mathcal{E}_{z_{t+1}}(w_{t+1})-\mathcal{E}_{z_{t}}(w_{t+1})}_{\text{change due to center movement}}.$
+
+For a fixed center, $G(\cdot,\cdot;z_{t})$ is strongly convex–strongly concave. We first control the extragradient error induced by the projections, and then estimate the three potential components to prove the one-step contraction ( 9.21 ), retaining all dissipation terms. These terms absorb the error due to center movement in Lemma 9.4 , which yields Lemma 4.2 .
+
+Lemma 3.1 guarantees the normal-cone inclusions required by the algorithm. Fix iteration $t$ . The prediction, correction, and momentum updates use the center $z_{t}$ and map $w_{t}=(x_{t},y_{t},\xi_{t},n_{t},v_{t})$ to $w_{t+1}=(x_{t+1},y_{t+1},\xi_{t+1},n_{t+1},v_{t+1})$ . Both gradient evaluations below refer to the same function $G(\cdot,\cdot;z_{t})$ ; the change from $z_{t}$ to $z_{t+1}$ is estimated separately. Define the sum of squared increments
+
+$\displaystyle\mathcal{I}_{z_{t}}(w_{t+1},w_{t})$ (9.3) $\displaystyle={}\lVert\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}-\nabla_{x}G(x_{t},y_{t};z_{t})-\xi_{t}\rVert^{2}$ $\displaystyle+\bigl\|{-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}}+\nabla_{y}G(x_{t},y_{t};z_{t})-n_{t}+v_{t}\bigr\|^{2}.$
+
+For iteration $t$ , define
+
+$\displaystyle e_{x,t}$ $\displaystyle=\nabla_{x}G(\widetilde{x}_{t},\widetilde{y}_{t};z_{t})-\nabla_{x}G(x_{t+1},y_{t+1};z_{t}),$ (9.4) $\displaystyle e_{y,t}$ $\displaystyle=\bigl(1+(1-\alpha)\gamma\bigr)\bigl(\nabla_{y}G(x_{t+1},y_{t+1};z_{t})-\nabla_{y}G(\widetilde{x}_{t},\widetilde{y}_{t};z_{t})\bigr).$
+
+The iterates of Algorithm 1 satisfy
+
+$\displaystyle x_{t+1}-x_{t}$ $\displaystyle=-h\bigl(\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}+e_{x,t}\bigr),$ (9.5) $\displaystyle y_{t+1}-y_{t}$ $\displaystyle=-h\bigl(-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}+e_{y,t}\bigr),$ (9.6) $\displaystyle\sqrt{\lVert e_{x,t}\rVert^{2}+\lVert e_{y,t}\rVert^{2}}$ $\displaystyle\leq 2hL_{G}\sqrt{\mathcal{I}_{z_{t}}(w_{t+1},w_{t})}.$ (9.7)
+
+By the definition of $\xi_{t+1}$ and ( 9.4 ),
+
+$\displaystyle x_{t+1}-x_{t}$ $\displaystyle=-h\bigl(\nabla_{x}G(\widetilde{x}_{t},\widetilde{y}_{t};z_{t})+\xi_{t+1}\bigr)$ $\displaystyle=-h\bigl[\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}+\nabla_{x}G(\widetilde{x}_{t},\widetilde{y}_{t};z_{t})-\nabla_{x}G(x_{t+1},y_{t+1};z_{t})\bigr]$ $\displaystyle=-h\bigl(\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}+e_{x,t}\bigr),$
+
+which proves ( 9.5 ). Subtracting the two momentum updates gives
+
+$\displaystyle\bar{v}_{t}-v_{t+1}$ $\displaystyle=\alpha v_{t}+(1-\alpha)\gamma\nabla_{y}G(\widetilde{x}_{t},\widetilde{y}_{t};z_{t})$ $\displaystyle-\alpha v_{t}-(1-\alpha)\gamma\bigl(\nabla_{y}G(x_{t+1},y_{t+1};z_{t})-n_{t+1}\bigr)$ $\displaystyle=(1-\alpha)\gamma\bigl(\nabla_{y}G(\widetilde{x}_{t},\widetilde{y}_{t};z_{t})-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}\bigr).$ (9.8)
+
+By the definition of $n_{t+1}$ ,
+
+$y_{t+1}-y_{t}=h\bigl(\nabla_{y}G(\widetilde{x}_{t},\widetilde{y}_{t};z_{t})+\bar{v}_{t}-\bigl(1+(1-\alpha)\gamma\bigr)n_{t+1}\bigr).$
+
+Substituting $\bar{v}_{t}=v_{t+1}+(\bar{v}_{t}-v_{t+1})$ and ( 9.8 ), we obtain
+
+$\displaystyle\frac{y_{t+1}-y_{t}}{h}$ $\displaystyle=\nabla_{y}G(\widetilde{x}_{t},\widetilde{y}_{t};z_{t})+v_{t+1}+(1-\alpha)\gamma\bigl[\nabla_{y}G(\widetilde{x}_{t},\widetilde{y}_{t};z_{t})-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})\bigr]$ $\displaystyle+\bigl[(1-\alpha)\gamma-1-(1-\alpha)\gamma\bigr]n_{t+1}$ $\displaystyle=\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+v_{t+1}-n_{t+1}$ $\displaystyle+\bigl(1+(1-\alpha)\gamma\bigr)\bigl[\nabla_{y}G(\widetilde{x}_{t},\widetilde{y}_{t};z_{t})-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})\bigr]$ $\displaystyle=\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+v_{t+1}-n_{t+1}-e_{y,t},$
+
+which is ( 9.6 ).
+
+Let
+
+$\widehat{x}_{t}=x_{t}-h\bigl(\nabla_{x}G(x_{t},y_{t};z_{t})+\xi_{t}\bigr),\qquad\widehat{y}_{t}=y_{t}-h\bigl(-\nabla_{y}G(x_{t},y_{t};z_{t})+n_{t}-v_{t}\bigr).$
+
+Subtracting these identities from ( 9.5 ) and ( 9.6 ), respectively, gives
+
+$\displaystyle x_{t+1}-\widehat{x}_{t}$ $\displaystyle=x_{t+1}-x_{t}+h\bigl(\nabla_{x}G(x_{t},y_{t};z_{t})+\xi_{t}\bigr)$ $\displaystyle=-h\bigl(\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}+e_{x,t}\bigr)+h\bigl(\nabla_{x}G(x_{t},y_{t};z_{t})+\xi_{t}\bigr)$ $\displaystyle=-h\bigl[\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}-\nabla_{x}G(x_{t},y_{t};z_{t})-\xi_{t}\bigr]-he_{x,t},$ $\displaystyle y_{t+1}-\widehat{y}_{t}$ $\displaystyle=y_{t+1}-y_{t}+h\bigl(-\nabla_{y}G(x_{t},y_{t};z_{t})+n_{t}-v_{t}\bigr)$ $\displaystyle=-h\bigl(-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}+e_{y,t}\bigr)$ $\displaystyle+h\bigl(-\nabla_{y}G(x_{t},y_{t};z_{t})+n_{t}-v_{t}\bigr)$ $\displaystyle=-h\bigl[-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}+\nabla_{y}G(x_{t},y_{t};z_{t})-n_{t}+v_{t}\bigr]-he_{y,t}.$
+
+The triangle inequality and ( 9.3 ) yield
+
+$\displaystyle\lVert(x_{t+1}-\widehat{x}_{t},y_{t+1}-\widehat{y}_{t})\rVert$ (9.9) $\displaystyle=h\left\|\begin{pmatrix}\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}-\nabla_{x}G(x_{t},y_{t};z_{t})-\xi_{t}\\ -\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}+\nabla_{y}G(x_{t},y_{t};z_{t})-n_{t}+v_{t}\end{pmatrix}+\begin{pmatrix}e_{x,t}\\ e_{y,t}\end{pmatrix}\right\|$ $\displaystyle\leq h\left\|\begin{pmatrix}\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}-\nabla_{x}G(x_{t},y_{t};z_{t})-\xi_{t}\\ -\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}+\nabla_{y}G(x_{t},y_{t};z_{t})-n_{t}+v_{t}\end{pmatrix}\right\|+h\left\|\begin{pmatrix}e_{x,t}\\ e_{y,t}\end{pmatrix}\right\|$ $\displaystyle=h\sqrt{\mathcal{I}_{z_{t}}(w_{t+1},w_{t})}+h\sqrt{\lVert e_{x,t}\rVert^{2}+\lVert e_{y,t}\rVert^{2}}.$
+
+By the projection updates and the nonexpansiveness of Euclidean projection,
+
+$\displaystyle\lVert(\widetilde{x}_{t}-x_{t+1},\widetilde{y}_{t}-y_{t+1})\rVert^{2}$ $\displaystyle=\lVert\Pi_{X}(\widehat{x}_{t})-\Pi_{X}(x_{t+1})\rVert^{2}+\lVert\Pi_{Y}(\widehat{y}_{t})-\Pi_{Y}(y_{t+1})\rVert^{2}$ $\displaystyle\leq\lVert\widehat{x}_{t}-x_{t+1}\rVert^{2}+\lVert\widehat{y}_{t}-y_{t+1}\rVert^{2}$ $\displaystyle=\lVert(\widehat{x}_{t}-x_{t+1},\widehat{y}_{t}-y_{t+1})\rVert^{2}.$
+
+Taking square roots gives
+
+$\lVert(\widetilde{x}_{t}-x_{t+1},\widetilde{y}_{t}-y_{t+1})\rVert\leq\lVert(\widehat{x}_{t}-x_{t+1},\widehat{y}_{t}-y_{t+1})\rVert.$ (9.10)
+
+The parameters in ( 4.3 ) satisfy $0\leq(1-\alpha)\gamma\leq hL/2$ . Combining the two gradient differences in ( 9.4 ), we obtain
+
+$\displaystyle\lVert e_{x,t}\rVert^{2}+\lVert e_{y,t}\rVert^{2}$ $\displaystyle=\lVert\nabla_{x}G(\widetilde{x}_{t},\widetilde{y}_{t};z_{t})-\nabla_{x}G(x_{t+1},y_{t+1};z_{t})\rVert^{2}$ $\displaystyle+\bigl(1+(1-\alpha)\gamma\bigr)^{2}\lVert\nabla_{y}G(x_{t+1},y_{t+1};z_{t})-\nabla_{y}G(\widetilde{x}_{t},\widetilde{y}_{t};z_{t})\rVert^{2}$ $\displaystyle\leq\bigl(1+(1-\alpha)\gamma\bigr)^{2}\lVert\nabla G(\widetilde{x}_{t},\widetilde{y}_{t};z_{t})-\nabla G(x_{t+1},y_{t+1};z_{t})\rVert^{2}$ $\displaystyle\leq\left(1+\frac{hL}{2}\right)^{2}L_{G}^{2}\lVert(\widetilde{x}_{t}-x_{t+1},\widetilde{y}_{t}-y_{t+1})\rVert^{2},$
+
+where the last inequality uses the $L_{G}$ -Lipschitz continuity of the full gradient stated above. Taking square roots and then applying ( 9.10 ) and ( 9.9 ) gives
+
+$\displaystyle\sqrt{\lVert e_{x,t}\rVert^{2}+\lVert e_{y,t}\rVert^{2}}$ $\displaystyle\leq\left(1+\frac{hL}{2}\right)L_{G}\lVert(\widetilde{x}_{t}-x_{t+1},\widetilde{y}_{t}-y_{t+1})\rVert$ $\displaystyle\leq\left(1+\frac{hL}{2}\right)L_{G}\lVert(\widehat{x}_{t}-x_{t+1},\widehat{y}_{t}-y_{t+1})\rVert$ $\displaystyle\leq hL_{G}\left(1+\frac{hL}{2}\right)\left(\sqrt{\mathcal{I}_{z_{t}}(w_{t+1},w_{t})}+\sqrt{\lVert e_{x,t}\rVert^{2}+\lVert e_{y,t}\rVert^{2}}\right).$
+
+Since $hL_{G}=1/64$ and $hL/2\leq 1/128$ , rearranging and dividing by the positive coefficient yields
+
+$\displaystyle\sqrt{\lVert e_{x,t}\rVert^{2}+\lVert e_{y,t}\rVert^{2}}$ $\displaystyle\leq\frac{hL_{G}(1+hL/2)}{1-hL_{G}(1+hL/2)}\sqrt{\mathcal{I}_{z_{t}}(w_{t+1},w_{t})}$ $\displaystyle\leq 2hL_{G}\sqrt{\mathcal{I}_{z_{t}}(w_{t+1},w_{t})},$
+
+This proves ( 9.7 ). ∎
+
+9.2 Positivity and fixed-center dissipation
+
+We use the potential function defined in ( 4.2 ).
+
+For every state $w$ admitted by the definition in ( 4.2 ),
+
+$\displaystyle\mathcal{E}_{z}(w)$ $\displaystyle\geq{}\frac{1}{2L}\|\nabla_{x}G(x,y;z)+\xi\|^{2}+\frac{\sqrt{2L\mu_{y}}}{32}\|x-x^{\star}(z)\|^{2}+\frac{\mu_{y}}{2}\|y-y^{\star}(z)\|^{2}$ $\displaystyle+\frac{1}{L}\left\|-\nabla_{y}G(x,y;z)+n-v-\frac{\sqrt{2L\mu_{y}}}{32}(y-y^{\star}(z))\right\|^{2}.$ (9.11)
+
+Moreover,
+
+$\langle-\nabla_{y}G(x,y;z)+n,y-y^{\star}(z)\rangle+G(x,y;z)-G^{\star}(z)\geq\frac{L}{2}\|x-x^{\star}(z)\|^{2}+\frac{\mu_{y}}{2}\|y-y^{\star}(z)\|^{2}.$ (9.12)
+
+Strong convexity–strong concavity and saddle-point optimality imply
+
+$\displaystyle G(x,y^{\star}(z);z)-G^{\star}(z)$ $\displaystyle\geq\frac{L}{2}\|x-x^{\star}(z)\|^{2},$ (9.13) $\displaystyle G(x,y^{\star}(z);z)$ $\displaystyle\leq G(x,y;z)-\langle\nabla_{y}G(x,y;z),y-y^{\star}(z)\rangle-\frac{\mu_{y}}{2}\|y-y^{\star}(z)\|^{2}.$ (9.14)
+
+Since $\langle n,y-y^{\star}(z)\rangle\geq 0$ , combining the two inequalities proves ( 9.12 ).
+
+Completing the square in ( 4.2 ), we obtain
+
+$\displaystyle\mathcal{E}_{z}(w)$ $\displaystyle={}-\frac{16L-\sqrt{2L\mu_{y}}}{16L}\bigl(G(x,y;z)-G^{\star}(z)\bigr)+\frac{1}{L}\|\nabla_{x}G(x,y;z)+\xi\|^{2}$ $\displaystyle+\frac{\sqrt{2L\mu_{y}}}{16L}\langle-\nabla_{y}G(x,y;z)+n,y-y^{\star}(z)\rangle$ $\displaystyle+\frac{1}{L}\left\|-\nabla_{y}G(x,y;z)+n-v-\frac{\sqrt{2L\mu_{y}}}{32}(y-y^{\star}(z))\right\|^{2}+\frac{\mu_{y}}{512}\|y-y^{\star}(z)\|^{2}.$ (9.15)
+
+Substituting ( 9.14 ) and $\langle n,y-y^{\star}(z)\rangle\geq 0$ gives
+
+$\displaystyle\mathcal{E}_{z}(w)$ $\displaystyle\geq{}-\bigl(G(x,y;z)-G^{\star}(z)\bigr)+\frac{\sqrt{2L\mu_{y}}}{16L}\bigl(G(x,y^{\star}(z);z)-G^{\star}(z)\bigr)+\frac{1}{L}\|\nabla_{x}G(x,y;z)+\xi\|^{2}$ $\displaystyle+\frac{1}{L}\left\|-\nabla_{y}G(x,y;z)+n-v-\frac{\sqrt{2L\mu_{y}}}{32}(y-y^{\star}(z))\right\|^{2}.$ (9.16)
+
+Here, we have dropped the nonnegative term involving $\|y-y^{\star}(z)\|^{2}$ . For any $a\in X$ , strong convexity and $\langle\xi,a-x\rangle\leq 0$ give
+
+$\displaystyle G(a,y;z)$ $\displaystyle\geq G(x,y;z)+\langle\nabla_{x}G(x,y;z)+\xi,a-x\rangle+\frac{L}{2}\|a-x\|^{2}$ $\displaystyle=G(x,y;z)-\frac{1}{2L}\|\nabla_{x}G(x,y;z)+\xi\|^{2}+\frac{L}{2}\left\|a-x+\frac{\nabla_{x}G(x,y;z)+\xi}{L}\right\|^{2}$ $\displaystyle\geq G(x,y;z)-\frac{1}{2L}\|\nabla_{x}G(x,y;z)+\xi\|^{2}.$
+
+Taking the infimum over $a\in X$ and rearranging yields
+
+$G(x,y;z)-\min_{a\in X}G(a,y;z)\leq\frac{1}{2L}\|\nabla_{x}G(x,y;z)+\xi\|^{2},$
+
+whereas strong concavity at the saddle point gives
+
+$\min_{a\in X}G(a,y;z)\leq G(x^{\star}(z),y;z)\leq G^{\star}(z)-\frac{\mu_{y}}{2}\|y-y^{\star}(z)\|^{2}.$
+
+Consequently,
+
+$\frac{1}{2L}\|\nabla_{x}G(x,y;z)+\xi\|^{2}-\bigl(G(x,y;z)-G^{\star}(z)\bigr)\geq\frac{\mu_{y}}{2}\|y-y^{\star}(z)\|^{2}.$
+
+Substituting this inequality and ( 9.13 ) into ( 9.16 ) proves ( 9.11 ). ∎
+
+To relate the one-step change at a fixed center to its dissipation terms, we split the auxiliary subproblem error into three components:
+
+$\displaystyle A_{z}(w):={}$ $\displaystyle-\frac{16L-\sqrt{2L\mu_{y}}}{32}\bigl(G(x,y;z)-G^{\star}(z)\bigr)+\frac{1}{2}\|\nabla_{x}G(x,y;z)+\xi\|^{2},$ $\displaystyle B_{z}(w):={}$ $\displaystyle\frac{1}{2}\|-\nabla_{y}G(x,y;z)+n-v\|^{2},$ $\displaystyle C_{z}(w):={}$ $\displaystyle\frac{\sqrt{2L\mu_{y}}}{32}\langle v,y-y^{\star}(z)\rangle+\frac{L\mu_{y}}{512}\|y-y^{\star}(z)\|^{2}+\frac{\sqrt{2L\mu_{y}}}{512L}\|v\|^{2}.$ (9.17)
+
+Then
+
+$A_{z}(w)+B_{z}(w)+C_{z}(w)=\frac{L}{2}\left[\mathcal{E}_{z}(w)+\frac{\sqrt{2L\mu_{y}}}{256L^{2}}\|v\|^{2}\right].$ (9.18)
+
+The third component contains the momentum cross term, the squared dual distance, and the kinetic energy. We estimate the changes of all three components jointly and retain the dissipation terms needed to control center movement.
+
+We use the full one-step dissipation defined in ( 4.6 ).
+
+To make the residual control explicit, define the two corrected residuals at the old center by
+
+$\displaystyle P_{t+1}$ $\displaystyle:=\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1},$ (9.19) $\displaystyle Q_{t+1}$ $\displaystyle:=-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}.$
+
+The definition ( 4.6 ) gives the following lower bound:
+
+$\displaystyle\mathcal{D}_{z_{t}}(w_{t+1},w_{t})$ (9.20) $\displaystyle\geq\frac{h}{4}\|P_{t+1}\|^{2}+\frac{3h\sqrt{2L\mu_{y}}}{512L}\|Q_{t+1}\|^{2}$ $\displaystyle+\frac{7h\sqrt{2L\mu_{y}}}{4096L}\|v_{t+1}\|^{2}$ $\displaystyle+\frac{h\sqrt{2L\mu_{y}}(16L-\sqrt{2L\mu_{y}})}{1024}\|x_{t+1}-x^{\star}(z_{t})\|^{2}.$
+
+The omitted terms are nonnegative dual-tracking and projection-error terms. All displayed coefficients are positive because $0<\mu_{y}\leq L$ . Thus the dissipation controls both blocks of the auxiliary stationarity residual, including the momentum needed to recover the dual residual $Q_{t+1}+v_{t+1}$ , and the primal tracking error in the envelope descent.
+
+For each iteration $t$ , the update from $w_{t}$ to $w_{t+1}$ at the fixed center $z_{t}$ satisfies
+
+$\displaystyle\mathcal{E}_{z_{t}}(w_{t+1})-\mathcal{E}_{z_{t}}(w_{t})+\frac{\sqrt{2L\mu_{y}}}{256L^{2}}\bigl(\|v_{t+1}\|^{2}-\|v_{t}\|^{2}\bigr)$ (9.21) $\displaystyle+\frac{h\sqrt{2L\mu_{y}}}{32}\left[\mathcal{E}_{z_{t}}(w_{t+1})+\frac{\sqrt{2L\mu_{y}}}{256L^{2}}\|v_{t+1}\|^{2}\right]\leq-\mathcal{D}_{z_{t}}(w_{t+1},w_{t}).$
+
+Both terms in brackets are nonnegative by Lemma 9.2 .
+
+By ( 9.18 ), it suffices to prove
+
+$\displaystyle A_{z_{t}}(w_{t+1})-A_{z_{t}}(w_{t})+B_{z_{t}}(w_{t+1})-B_{z_{t}}(w_{t})$ $\displaystyle\quad+C_{z_{t}}(w_{t+1})-C_{z_{t}}(w_{t})$ $\displaystyle+\frac{h\sqrt{2L\mu_{y}}}{32}\bigl[A_{z_{t}}(w_{t+1})+B_{z_{t}}(w_{t+1})+C_{z_{t}}(w_{t+1})\bigr]\leq-\frac{L}{2}\mathcal{D}_{z_{t}}(w_{t+1},w_{t}).$ (9.22)
+
+We first expand $A_{z_{t}}$ and then add $B_{z_{t}}$ and $C_{z_{t}}$ in turn. The kinetic energy in $C_{z_{t}}$ is kept as an explicit difference of squares and estimated using the momentum update in the final step.
+
+Step 1: Estimating $A_{z_{t}}(w_{t+1})-A_{z_{t}}(w_{t})$ .
+
+Since $\xi_{t}\in N_{X}(x_{t})$ and $n_{t+1}\in N_{Y}(y_{t+1})$ ,
+
+$\langle\xi_{t},x_{t+1}-x_{t}\rangle\leq 0,\qquad\langle n_{t+1},y_{t+1}-y_{t}\rangle\geq 0.$
+
+Combining these inequalities with strong convexity in $x$ and strong concavity in $y$ , respectively, gives
+
+$\displaystyle G(x_{t+1},y_{t};z_{t})$ $\displaystyle\geq G(x_{t},y_{t};z_{t})$ $\displaystyle\quad+\langle\nabla_{x}G(x_{t},y_{t};z_{t})+\xi_{t},x_{t+1}-x_{t}\rangle+\frac{L}{2}\|x_{t+1}-x_{t}\|^{2},$ $\displaystyle G(x_{t+1},y_{t};z_{t})$ $\displaystyle\leq G(x_{t+1},y_{t+1};z_{t})$ $\displaystyle\quad+\langle-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1},y_{t+1}-y_{t}\rangle-\frac{\mu_{y}}{2}\|y_{t+1}-y_{t}\|^{2}.$
+
+It follows that
+
+$\displaystyle G(x_{t+1},y_{t+1};z_{t})-G(x_{t},y_{t};z_{t})$ $\displaystyle\geq\langle\nabla_{x}G(x_{t},y_{t};z_{t})+\xi_{t},x_{t+1}-x_{t}\rangle$ $\displaystyle-\langle-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1},y_{t+1}-y_{t}\rangle$ $\displaystyle+\frac{L}{2}\|x_{t+1}-x_{t}\|^{2}+\frac{\mu_{y}}{2}\|y_{t+1}-y_{t}\|^{2}.$ (9.23)
+
+The difference of squares and the cross term in the $x$ variable satisfy
+
+$\displaystyle\frac{1}{2}\bigl(\|\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}\|^{2}-\|\nabla_{x}G(x_{t},y_{t};z_{t})+\xi_{t}\|^{2}\bigr)$ $\displaystyle-\frac{16L-\sqrt{2L\mu_{y}}}{32}\langle\nabla_{x}G(x_{t},y_{t};z_{t})+\xi_{t},x_{t+1}-x_{t}\rangle$ $\displaystyle-\frac{L(16L-\sqrt{2L\mu_{y}})}{64}\|x_{t+1}-x_{t}\|^{2}$ $\displaystyle=\langle\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1},\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}-\nabla_{x}G(x_{t},y_{t};z_{t})-\xi_{t}\rangle$ $\displaystyle-\frac{16L-\sqrt{2L\mu_{y}}}{32}\langle\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1},x_{t+1}-x_{t}\rangle$ $\displaystyle-\frac{1}{2}\left\|\begin{aligned} &\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}\\ &-\nabla_{x}G(x_{t},y_{t};z_{t})-\xi_{t}-\frac{16L-\sqrt{2L\mu_{y}}}{32}(x_{t+1}-x_{t})\end{aligned}\right\|^{2}$ $\displaystyle-\frac{L(128L-\mu_{y})}{1024}\|x_{t+1}-x_{t}\|^{2}.$ (9.24)
+
+The last term is nonpositive because $0<\mu_{y}\leq L$ . Multiplying ( 9.23 ) by $-\frac{16L-\sqrt{2L\mu_{y}}}{32}$ and using ( 9.24 ) bounds the function-value term and the squared $x$ -residual in the potential.
+
+Specifically, dropping the last term in ( 9.24 ) yields
+
+$\displaystyle A_{z_{t}}(w_{t+1})-A_{z_{t}}(w_{t})$ $\displaystyle\leq-\frac{16L-\sqrt{2L\mu_{y}}}{32}\langle\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1},x_{t+1}-x_{t}\rangle$ $\displaystyle+\frac{16L-\sqrt{2L\mu_{y}}}{32}\langle-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1},y_{t+1}-y_{t}\rangle$ $\displaystyle+\left\langle\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1},\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}-\nabla_{x}G(x_{t},y_{t};z_{t})-\xi_{t}\right\rangle$ $\displaystyle-\frac{1}{2}\left\|\begin{aligned} &\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}\\ &-\nabla_{x}G(x_{t},y_{t};z_{t})-\xi_{t}-\frac{16L-\sqrt{2L\mu_{y}}}{32}(x_{t+1}-x_{t})\end{aligned}\right\|^{2}$ $\displaystyle-\frac{\mu_{y}(16L-\sqrt{2L\mu_{y}})}{64}\|y_{t+1}-y_{t}\|^{2}.$ (9.25)
+
+Step 2: Jointly estimating the increments of $A_{z_{t}}$ and $B_{z_{t}}$ . The difference-of-squares identity gives
+
+$\displaystyle B_{z_{t}}(w_{t+1})-B_{z_{t}}(w_{t})$ $\displaystyle={}\left\|-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}\right\|^{2}$ $\displaystyle+\left\langle-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1},\nabla_{y}G(x_{t},y_{t};z_{t})-n_{t}+v_{t}\right\rangle$ $\displaystyle-\frac{1}{2}\left\|-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}+\nabla_{y}G(x_{t},y_{t};z_{t})-n_{t}+v_{t}\right\|^{2}.$ (9.26)
+
+Applying strong convexity in $x$ at the two endpoints yields
+
+$\displaystyle G(x_{t+1},y_{t};z_{t})$ $\displaystyle\geq G(x_{t},y_{t};z_{t})+\langle\nabla_{x}G(x_{t},y_{t};z_{t}),x_{t+1}-x_{t}\rangle+\frac{L}{2}\|x_{t+1}-x_{t}\|^{2},$ $\displaystyle G(x_{t},y_{t+1};z_{t})$ $\displaystyle\geq G(x_{t+1},y_{t+1};z_{t})-\langle\nabla_{x}G(x_{t+1},y_{t+1};z_{t}),x_{t+1}-x_{t}\rangle+\frac{L}{2}\|x_{t+1}-x_{t}\|^{2}.$
+
+Strong concavity in $y$ gives
+
+$\displaystyle G(x_{t},y_{t+1};z_{t})$ $\displaystyle\leq G(x_{t},y_{t};z_{t})+\langle\nabla_{y}G(x_{t},y_{t};z_{t}),y_{t+1}-y_{t}\rangle-\frac{\mu_{y}}{2}\|y_{t+1}-y_{t}\|^{2},$ $\displaystyle G(x_{t+1},y_{t};z_{t})$ $\displaystyle\leq G(x_{t+1},y_{t+1};z_{t})-\langle\nabla_{y}G(x_{t+1},y_{t+1};z_{t}),y_{t+1}-y_{t}\rangle-\frac{\mu_{y}}{2}\|y_{t+1}-y_{t}\|^{2}.$
+
+Adding the first two inequalities gives a lower bound for the same mixed difference that is bounded from above by the sum of the last two inequalities. Eliminating the function values yields
+
+$\displaystyle\langle\nabla_{x}G(x_{t+1},y_{t+1};z_{t})-\nabla_{x}G(x_{t},y_{t};z_{t}),x_{t+1}-x_{t}\rangle$ $\displaystyle+\langle-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+\nabla_{y}G(x_{t},y_{t};z_{t}),y_{t+1}-y_{t}\rangle$ $\displaystyle\geq L\|x_{t+1}-x_{t}\|^{2}+\mu_{y}\|y_{t+1}-y_{t}\|^{2}.$
+
+By monotonicity of the normal cones,
+
+$\langle\xi_{t+1}-\xi_{t},x_{t+1}-x_{t}\rangle\geq 0,\qquad\langle n_{t+1}-n_{t},y_{t+1}-y_{t}\rangle\geq 0.$
+
+Adding these inequalities gives
+
+$\displaystyle\langle\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}-\nabla_{x}G(x_{t},y_{t};z_{t})-\xi_{t},x_{t+1}-x_{t}\rangle$ $\displaystyle+\langle-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}+\nabla_{y}G(x_{t},y_{t};z_{t})-n_{t},y_{t+1}-y_{t}\rangle$ $\displaystyle\geq L\|x_{t+1}-x_{t}\|^{2}+\mu_{y}\|y_{t+1}-y_{t}\|^{2}.$ (9.27)
+
+By ( 4.3 ),
+
+$\frac{1}{\alpha}=1+\frac{h\sqrt{2L\mu_{y}}}{16},\qquad\frac{(1-\alpha)\gamma}{\alpha}=\frac{h(8L-\sqrt{2L\mu_{y}})}{16}.$
+
+Dividing the momentum update
+
+$v_{t+1}=\alpha v_{t}-(1-\alpha)\gamma\bigl(-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}\bigr)$
+
+by $\alpha$ and substituting these parameter identities gives
+
+$\displaystyle\left(1+\frac{h\sqrt{2L\mu_{y}}}{16}\right)v_{t+1}$ $\displaystyle=v_{t}-\frac{h(8L-\sqrt{2L\mu_{y}})}{16}\bigl(-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}\bigr),$ $\displaystyle v_{t+1}-v_{t}$ $\displaystyle=-\frac{h\sqrt{2L\mu_{y}}}{16}v_{t+1}-\frac{h(8L-\sqrt{2L\mu_{y}})}{16}\bigl(-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}\bigr).$
+
+Rearranging the momentum identity and using ( 9.5 ) and ( 9.6 ), we obtain
+
+$\displaystyle x_{t+1}-x_{t}$ $\displaystyle=-h(\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}+e_{x,t}),$ $\displaystyle y_{t+1}-y_{t}$ $\displaystyle=-h(-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}+e_{y,t}),$ (9.28) $\displaystyle v_{t+1}-v_{t}$ $\displaystyle=-\frac{hL}{2}\bigl(-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}\bigr)$ $\displaystyle+\frac{h\sqrt{2L\mu_{y}}}{16}\bigl(-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}\bigr).$ (9.29)
+
+Substituting ( 9.28 ) into ( 9.27 ) gives
+
+$\displaystyle\frac{1}{h}\left\langle\begin{aligned} &\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1},\\ &\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}-\nabla_{x}G(x_{t},y_{t};z_{t})-\xi_{t}\end{aligned}\right\rangle$ $\displaystyle+\frac{1}{h}\left\langle\begin{aligned} &-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1},\\ &-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}+\nabla_{y}G(x_{t},y_{t};z_{t})-n_{t}\end{aligned}\right\rangle$ $\displaystyle\leq-L\|\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}+e_{x,t}\|^{2}$ $\displaystyle-\mu_{y}\|-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}+e_{y,t}\|^{2}$ $\displaystyle-\frac{1}{h}\langle e_{x,t},\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}-\nabla_{x}G(x_{t},y_{t};z_{t})-\xi_{t}\rangle$ $\displaystyle-\frac{1}{h}\langle e_{y,t},-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}+\nabla_{y}G(x_{t},y_{t};z_{t})-n_{t}\rangle.$ (9.30)
+
+Since
+
+$\displaystyle-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}+\nabla_{y}G(x_{t},y_{t};z_{t})-n_{t}+v_{t}$ $\displaystyle=(-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}+\nabla_{y}G(x_{t},y_{t};z_{t})-n_{t})-(v_{t+1}-v_{t}),$
+
+the last error inner product can be rewritten using ( 9.29 ) as
+
+$\displaystyle-\frac{1}{h}\langle e_{y,t},-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}+\nabla_{y}G(x_{t},y_{t};z_{t})-n_{t}\rangle$ $\displaystyle={}-\frac{1}{h}\langle e_{y,t},-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}+\nabla_{y}G(x_{t},y_{t};z_{t})-n_{t}+v_{t}\rangle$ $\displaystyle+\left\langle\begin{aligned} &e_{y,t},\frac{L}{2}(-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1})\\ &\qquad-\frac{\sqrt{2L\mu_{y}}}{16}(-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1})\end{aligned}\right\rangle.$ (9.31)
+
+Add ( 9.25 ) and ( 9.26 ) and divide by $h$ . After applying ( 9.30 ) to the two increment inner products, the momentum increment and the dual error satisfy
+
+$\displaystyle-\frac{1}{h}\langle-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1},v_{t+1}-v_{t}\rangle$ $\displaystyle-\frac{1}{h}\left\langle e_{y,t},-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}+\nabla_{y}G(x_{t},y_{t};z_{t})-n_{t}\right\rangle$ $\displaystyle=-\frac{1}{h}\left\langle e_{y,t},-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}+\nabla_{y}G(x_{t},y_{t};z_{t})-n_{t}+v_{t}\right\rangle$ $\displaystyle-\frac{1}{h}\langle-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}+e_{y,t},v_{t+1}-v_{t}\rangle$ $\displaystyle=-\frac{1}{h}\left\langle e_{y,t},-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}+\nabla_{y}G(x_{t},y_{t};z_{t})-n_{t}+v_{t}\right\rangle$ $\displaystyle+\frac{L}{2}\left\langle\begin{aligned} &-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}+e_{y,t},\\ &-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}\end{aligned}\right\rangle$ $\displaystyle-\frac{\sqrt{2L\mu_{y}}}{16}\left\langle\begin{aligned} &-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}+e_{y,t},\\ &-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}\end{aligned}\right\rangle.$
+
+Substituting ( 9.28 ) into the two displacement inner products in the increment of $A_{z_{t}}$ gives
+
+$\displaystyle\frac{\begin{aligned} A_{z_{t}}(w_{t+1})-A_{z_{t}}(w_{t})\\ +B_{z_{t}}(w_{t+1})-B_{z_{t}}(w_{t})\end{aligned}}{h}$ $\displaystyle\leq\frac{16L-\sqrt{2L\mu_{y}}}{32}\|\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}\|^{2}$ $\displaystyle\quad-L\|\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}+e_{x,t}\|^{2}$ $\displaystyle-\mu_{y}\|-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}+e_{y,t}\|^{2}$ $\displaystyle+\frac{16L-\sqrt{2L\mu_{y}}}{32}\langle\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1},e_{x,t}\rangle$ $\displaystyle+\frac{\sqrt{2L\mu_{y}}}{32}\langle-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1},-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}+e_{y,t}\rangle$ $\displaystyle-\frac{\sqrt{2L\mu_{y}}}{16}\left\langle\begin{aligned} &-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1},\\ &-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}+e_{y,t}\end{aligned}\right\rangle$ $\displaystyle-\frac{1}{h}\left\langle e_{x,t},\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}-\nabla_{x}G(x_{t},y_{t};z_{t})-\xi_{t}\right\rangle$ $\displaystyle-\frac{1}{h}\left\langle e_{y,t},-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}+\nabla_{y}G(x_{t},y_{t};z_{t})-n_{t}+v_{t}\right\rangle$ $\displaystyle-\frac{1}{2h}\left\|\begin{aligned} &\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}\\ &-\nabla_{x}G(x_{t},y_{t};z_{t})-\xi_{t}-\frac{16L-\sqrt{2L\mu_{y}}}{32}(x_{t+1}-x_{t})\end{aligned}\right\|^{2}$ $\displaystyle-\frac{1}{2h}\left\|-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}+\nabla_{y}G(x_{t},y_{t};z_{t})-n_{t}+v_{t}\right\|^{2}$ $\displaystyle-\frac{\mu_{y}(16L-\sqrt{2L\mu_{y}})}{64h}\|y_{t+1}-y_{t}\|^{2}.$ (9.32)
+
+The coefficient of the cross term involving $-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}$ is
+
+$-\frac{16L-\sqrt{2L\mu_{y}}}{32}+\frac{L}{2}=\frac{\sqrt{2L\mu_{y}}}{32}.$
+
+This term will cancel after the increment of $C_{z_{t}}$ is added.
+
+Step 3: Adding the increment of $C_{z_{t}}$ and canceling the coupling terms. Adding and subtracting $\langle v_{t+1},y_{t}-y^{\star}(z_{t})\rangle$ in the momentum cross-term difference gives
+
+$\displaystyle\langle v_{t+1},y_{t+1}-y^{\star}(z_{t})\rangle-\langle v_{t},y_{t}-y^{\star}(z_{t})\rangle$ $\displaystyle=\langle v_{t+1}-v_{t},y_{t}-y^{\star}(z_{t})\rangle+\langle v_{t+1},y_{t+1}-y_{t}\rangle$ $\displaystyle=\langle v_{t+1}-v_{t},y_{t+1}-y^{\star}(z_{t})\rangle+\langle v_{t+1},y_{t+1}-y_{t}\rangle-\langle v_{t+1}-v_{t},y_{t+1}-y_{t}\rangle.$
+
+For the squared distance, we use
+
+$\frac{1}{2}\bigl(\|y_{t+1}-y^{\star}(z_{t})\|^{2}-\|y_{t}-y^{\star}(z_{t})\|^{2}\bigr)=\langle y_{t+1}-y^{\star}(z_{t}),y_{t+1}-y_{t}\rangle-\frac{1}{2}\|y_{t+1}-y_{t}\|^{2}.$
+
+Hence,
+
+$\displaystyle C_{z_{t}}(w_{t+1})-C_{z_{t}}(w_{t})$ $\displaystyle={}\frac{\sqrt{2L\mu_{y}}}{32}\langle v_{t+1}-v_{t},y_{t+1}-y^{\star}(z_{t})\rangle$ $\displaystyle+\frac{\sqrt{2L\mu_{y}}}{32}\langle v_{t+1},y_{t+1}-y_{t}\rangle-\frac{\sqrt{2L\mu_{y}}}{32}\langle v_{t+1}-v_{t},y_{t+1}-y_{t}\rangle$ $\displaystyle+\frac{L\mu_{y}}{256}\langle y_{t+1}-y^{\star}(z_{t}),y_{t+1}-y_{t}\rangle-\frac{L\mu_{y}}{512}\|y_{t+1}-y_{t}\|^{2}$ $\displaystyle+\frac{\sqrt{2L\mu_{y}}}{512L}\bigl(\|v_{t+1}\|^{2}-\|v_{t}\|^{2}\bigr).$ (9.33)
+
+By the definitions of the three components, removing the last term gives
+
+$\displaystyle A_{z_{t}}(w_{t+1})-A_{z_{t}}(w_{t})+B_{z_{t}}(w_{t+1})-B_{z_{t}}(w_{t})$ $\displaystyle\quad+C_{z_{t}}(w_{t+1})-C_{z_{t}}(w_{t})$ $\displaystyle-\frac{\sqrt{2L\mu_{y}}}{512L}\bigl(\|v_{t+1}\|^{2}-\|v_{t}\|^{2}\bigr)=\frac{L}{2}\bigl(\mathcal{E}_{z_{t}}(w_{t+1})-\mathcal{E}_{z_{t}}(w_{t})\bigr).$
+
+Thus, adding ( 9.25 ), ( 9.26 ), and ( 9.33 ) gives the complete bound on the potential difference:
+
+$\displaystyle\frac{L}{2}\bigl(\mathcal{E}_{z_{t}}(w_{t+1})-\mathcal{E}_{z_{t}}(w_{t})\bigr)$ $\displaystyle\leq-\frac{16L-\sqrt{2L\mu_{y}}}{32}\langle\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1},x_{t+1}-x_{t}\rangle$ $\displaystyle+\frac{16L-\sqrt{2L\mu_{y}}}{32}\langle-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1},y_{t+1}-y_{t}\rangle$ $\displaystyle+\langle\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1},\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}-\nabla_{x}G(x_{t},y_{t};z_{t})-\xi_{t}\rangle$ $\displaystyle+\left\|-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}\right\|^{2}$ $\displaystyle+\left\langle-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1},\nabla_{y}G(x_{t},y_{t};z_{t})-n_{t}+v_{t}\right\rangle$ $\displaystyle+\frac{\sqrt{2L\mu_{y}}}{32}\langle v_{t+1}-v_{t},y_{t+1}-y^{\star}(z_{t})\rangle$ $\displaystyle+\frac{\sqrt{2L\mu_{y}}}{32}\langle v_{t+1},y_{t+1}-y_{t}\rangle$ $\displaystyle-\frac{\sqrt{2L\mu_{y}}}{32}\langle v_{t+1}-v_{t},y_{t+1}-y_{t}\rangle$ $\displaystyle+\frac{L\mu_{y}}{256}\langle y_{t+1}-y^{\star}(z_{t}),y_{t+1}-y_{t}\rangle$ $\displaystyle-\frac{1}{2}\left\|\begin{aligned} &\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}\\ &-\nabla_{x}G(x_{t},y_{t};z_{t})-\xi_{t}-\frac{16L-\sqrt{2L\mu_{y}}}{32}(x_{t+1}-x_{t})\end{aligned}\right\|^{2}$ $\displaystyle-\frac{1}{2}\|-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}+\nabla_{y}G(x_{t},y_{t};z_{t})-n_{t}+v_{t}\|^{2}$ $\displaystyle-\left(\frac{\mu_{y}(16L-\sqrt{2L\mu_{y}})}{64}+\frac{L\mu_{y}}{512}\right)\|y_{t+1}-y_{t}\|^{2}.$ (9.34)
+
+Next, apply ( 9.28 )–( 9.29 ) to ( 9.33 ) and rewrite $v_{t+1}$ as
+
+$v_{t+1}=\bigl(-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}\bigr)-\bigl(-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}\bigr).$
+
+The two terms involving the dual residual and the distance cancel because
+
+$\frac{\sqrt{2L\mu_{y}}}{32}\frac{\sqrt{2L\mu_{y}}}{16}-\frac{L\mu_{y}}{256}=0.$
+
+Expanding the remaining terms gives
+
+$\displaystyle\frac{C_{z_{t}}(w_{t+1})-C_{z_{t}}(w_{t})}{h}-\frac{\sqrt{2L\mu_{y}}}{512Lh}\bigl(\|v_{t+1}\|^{2}-\|v_{t}\|^{2}\bigr)$ $\displaystyle=-\frac{\sqrt{2L\mu_{y}}}{32}\langle-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1},-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}+e_{y,t}\rangle$ $\displaystyle+\frac{\sqrt{2L\mu_{y}}}{32}\|-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}\|^{2}$ $\displaystyle+\frac{\sqrt{2L\mu_{y}}}{32}\langle-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1},e_{y,t}\rangle$ $\displaystyle-\frac{L\sqrt{2L\mu_{y}}}{64}\langle-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1},y_{t+1}-y^{\star}(z_{t})\rangle$ $\displaystyle-\frac{L\mu_{y}}{256}\langle y_{t+1}-y^{\star}(z_{t}),e_{y,t}\rangle-\frac{\sqrt{2L\mu_{y}}}{32h}\langle v_{t+1}-v_{t},y_{t+1}-y_{t}\rangle$ $\displaystyle-\frac{L\mu_{y}}{512h}\|y_{t+1}-y_{t}\|^{2}.$ (9.35)
+
+When this identity is added to ( 9.32 ), the two terms involving $\langle-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1},-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}+e_{y,t}\rangle$ cancel. The coefficients of the squared residual and its inner product with the error both become
+
+$-\frac{\sqrt{2L\mu_{y}}}{16}+\frac{\sqrt{2L\mu_{y}}}{32}=-\frac{\sqrt{2L\mu_{y}}}{32}.$
+
+Step 4: Adding the endpoint weight and estimating the current-iterate terms. First add ( 9.32 ) and ( 9.35 ), and then add the weighted sum of the three endpoint components excluding the kinetic energy:
+
+$\frac{\sqrt{2L\mu_{y}}}{32}\left[A_{z_{t}}(w_{t+1})+B_{z_{t}}(w_{t+1})+C_{z_{t}}(w_{t+1})-\frac{\sqrt{2L\mu_{y}}}{512L}\|v_{t+1}\|^{2}\right]=\frac{L\sqrt{2L\mu_{y}}}{64}\mathcal{E}_{z_{t}}(w_{t+1}).$
+
+Expanding the right-hand side according to the potential definition gives
+
+$\displaystyle\frac{L\sqrt{2L\mu_{y}}}{64}\mathcal{E}_{z_{t}}(w_{t+1})$ $\displaystyle=-\frac{\sqrt{2L\mu_{y}}(16L-\sqrt{2L\mu_{y}})}{1024}\bigl(G(x_{t+1},y_{t+1};z_{t})-G^{\star}(z_{t})\bigr)$ $\displaystyle+\frac{\sqrt{2L\mu_{y}}}{64}\bigl(\|\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}\|^{2}+\|-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}\|^{2}\bigr)$ $\displaystyle+\frac{L\mu_{y}}{512}\langle v_{t+1},y_{t+1}-y^{\star}(z_{t})\rangle+\frac{L\mu_{y}\sqrt{2L\mu_{y}}}{16384}\|y_{t+1}-y^{\star}(z_{t})\|^{2}.$ (9.36)
+
+The terms associated with the function value combine as follows:
+
+$\displaystyle-\frac{\sqrt{2L\mu_{y}}(16L-\sqrt{2L\mu_{y}})}{1024}\bigl(G(x_{t+1},y_{t+1};z_{t})-G^{\star}(z_{t})\bigr)$ $\displaystyle-\frac{\sqrt{2L\mu_{y}}(16L-\sqrt{2L\mu_{y}})}{1024}\langle-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1},y_{t+1}-y^{\star}(z_{t})\rangle$ $\displaystyle\leq-\frac{L\sqrt{2L\mu_{y}}(16L-\sqrt{2L\mu_{y}})}{2048}\|x_{t+1}-x^{\star}(z_{t})\|^{2}$ $\displaystyle\quad-\frac{\mu_{y}\sqrt{2L\mu_{y}}(16L-\sqrt{2L\mu_{y}})}{2048}\|y_{t+1}-y^{\star}(z_{t})\|^{2},$
+
+Here, we have used ( 9.12 ).
+
+We retain both negative squared distances from $x_{t+1}$ and $y_{t+1}$ to the saddle point.
+
+Denote the current-iterate terms and the increment terms resulting from the three-component sum by $(\mathrm{i})$ and $(\mathrm{ii})$ , respectively:
+
+$\displaystyle(\mathrm{i}):={}\frac{32L-\sqrt{2L\mu_{y}}}{64}\|\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}\|^{2}$ $\displaystyle-L\|\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}+e_{x,t}\|^{2}$ $\displaystyle-\mu_{y}\|-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}+e_{y,t}\|^{2}$ $\displaystyle-\frac{\sqrt{2L\mu_{y}}}{64}\|-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}\|^{2}$ $\displaystyle+\frac{16L-\sqrt{2L\mu_{y}}}{32}\langle\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1},e_{x,t}\rangle$ $\displaystyle-\frac{\sqrt{2L\mu_{y}}}{32}\langle-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1},e_{y,t}\rangle$ $\displaystyle-\frac{L\mu_{y}}{256}\langle y_{t+1}-y^{\star}(z_{t}),e_{y,t}\rangle$ $\displaystyle-\frac{L\mu_{y}}{512}\langle-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1},y_{t+1}-y^{\star}(z_{t})\rangle$ $\displaystyle+\frac{L\mu_{y}\sqrt{2L\mu_{y}}}{16384}\|y_{t+1}-y^{\star}(z_{t})\|^{2}$ $\displaystyle-\frac{\mu_{y}\sqrt{2L\mu_{y}}(16L-\sqrt{2L\mu_{y}})}{2048}\|y_{t+1}-y^{\star}(z_{t})\|^{2}$ $\displaystyle-\frac{L\sqrt{2L\mu_{y}}(16L-\sqrt{2L\mu_{y}})}{2048}\|x_{t+1}-x^{\star}(z_{t})\|^{2},$ (9.37) $\displaystyle(\mathrm{ii}):={}$ $\displaystyle-\frac{1}{2h}\left\|\begin{aligned} &\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}\\ &-\nabla_{x}G(x_{t},y_{t};z_{t})-\xi_{t}-\frac{16L-\sqrt{2L\mu_{y}}}{32}(x_{t+1}-x_{t})\end{aligned}\right\|^{2}$ $\displaystyle-\frac{1}{2h}\|-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}+\nabla_{y}G(x_{t},y_{t};z_{t})-n_{t}+v_{t}\|^{2}$ $\displaystyle-\left(\frac{\mu_{y}(16L-\sqrt{2L\mu_{y}})}{64h}+\frac{L\mu_{y}}{512h}\right)\|y_{t+1}-y_{t}\|^{2}$ $\displaystyle-\frac{\sqrt{2L\mu_{y}}}{32h}\langle v_{t+1}-v_{t},y_{t+1}-y_{t}\rangle$ $\displaystyle-\frac{1}{h}\langle e_{x,t},\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}-\nabla_{x}G(x_{t},y_{t};z_{t})-\xi_{t}\rangle$ $\displaystyle-\frac{1}{h}\langle e_{y,t},-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}+\nabla_{y}G(x_{t},y_{t};z_{t})-n_{t}+v_{t}\rangle.$ (9.38)
+
+Adding the three component increments and the endpoint weight, and then applying the saddle-point growth inequality, gives
+
+$\frac{L}{2h}\left[\mathcal{E}_{z_{t}}(w_{t+1})-\mathcal{E}_{z_{t}}(w_{t})+\frac{h\sqrt{2L\mu_{y}}}{32}\mathcal{E}_{z_{t}}(w_{t+1})\right]\leq(\mathrm{i})+(\mathrm{ii}).$ (9.39)
+
+We now estimate the first block obtained from the three-component sum.
+
+Expanding the squared $x$ terms yields
+
+$\displaystyle\frac{32L-\sqrt{2L\mu_{y}}}{64}\|\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}\|^{2}$ $\displaystyle-L\|\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}+e_{x,t}\|^{2}$ $\displaystyle\quad+\frac{16L-\sqrt{2L\mu_{y}}}{32}\langle\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1},e_{x,t}\rangle$ $\displaystyle=-\frac{32L+\sqrt{2L\mu_{y}}}{64}\|\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}\|^{2}$ $\displaystyle-\frac{48L+\sqrt{2L\mu_{y}}}{32}\langle\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1},e_{x,t}\rangle-L\|e_{x,t}\|^{2}$ $\displaystyle\leq-\frac{L}{4}\|\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}\|^{2}+4L\|e_{x,t}\|^{2}.$ (9.40)
+
+Here, we have used $\sqrt{2L\mu_{y}}\leq 2L$ and
+
+$2L\|\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}\|\|e_{x,t}\|\leq\frac{L}{4}\|\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}\|^{2}+4L\|e_{x,t}\|^{2}.$
+
+The remaining three cross terms satisfy
+
+$\displaystyle\frac{\sqrt{2L\mu_{y}}}{32}|\langle-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1},e_{y,t}\rangle|$ $\displaystyle\leq\frac{\sqrt{2L\mu_{y}}}{256}\|-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}\|^{2}+\frac{\sqrt{2L\mu_{y}}}{16}\|e_{y,t}\|^{2},$ (9.41) $\displaystyle\frac{L\mu_{y}}{512}|\langle-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1},y_{t+1}-y^{\star}(z_{t})\rangle|$ $\displaystyle\leq\frac{\sqrt{2L\mu_{y}}}{256}\|-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}\|^{2}$ $\displaystyle+\frac{L\mu_{y}\sqrt{2L\mu_{y}}}{8192}\|y_{t+1}-y^{\star}(z_{t})\|^{2},$ (9.42) $\displaystyle\frac{L\mu_{y}}{256}|\langle y_{t+1}-y^{\star}(z_{t}),e_{y,t}\rangle|$ $\displaystyle\leq\frac{L\mu_{y}\sqrt{2L\mu_{y}}}{16384}\|y_{t+1}-y^{\star}(z_{t})\|^{2}+\frac{\sqrt{2L\mu_{y}}}{32}\|e_{y,t}\|^{2}.$ (9.43)
+
+After these estimates are added, the coefficient of $\|-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}\|^{2}$ is $-\sqrt{2L\mu_{y}}/128$ . The coefficient of the squared dual distance satisfies
+
+$\displaystyle\frac{L\mu_{y}\sqrt{2L\mu_{y}}}{4096}-\frac{\mu_{y}\sqrt{2L\mu_{y}}(16L-\sqrt{2L\mu_{y}})}{2048}\leq-\frac{L\mu_{y}\sqrt{2L\mu_{y}}}{256}.$ (9.44)
+
+Indeed, $\sqrt{2L\mu_{y}}\leq 2L$ implies that the left-hand coefficient is at most $-27L\mu_{y}\sqrt{2L\mu_{y}}/4096$ . Finally, dropping the nonpositive term
+
+$-\mu_{y}\|-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}+e_{y,t}\|^{2},$
+
+and bounding the coefficient of $\|e_{y,t}\|^{2}$ by $3\sqrt{2L\mu_{y}}/32\leq 4L$ , we obtain
+
+$\displaystyle(\mathrm{i})\leq{}-\frac{L}{4}\|\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}\|^{2}$ $\displaystyle-\frac{\sqrt{2L\mu_{y}}}{128}\|-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}\|^{2}-\frac{L\mu_{y}\sqrt{2L\mu_{y}}}{256}\|y_{t+1}-y^{\star}(z_{t})\|^{2}$ $\displaystyle-\frac{L\sqrt{2L\mu_{y}}(16L-\sqrt{2L\mu_{y}})}{2048}\|x_{t+1}-x^{\star}(z_{t})\|^{2}+4L\bigl(\|e_{x,t}\|^{2}+\|e_{y,t}\|^{2}\bigr).$ (9.45)
+
+Step 5: Absorbing the increment errors and completing the kinetic-energy contraction. The negative squared terms in the second block absorb the projection error.
+
+By $\|a-b\|^{2}\geq\|a\|^{2}/2-\|b\|^{2}$ and ( 9.28 ),
+
+$\displaystyle-\frac{1}{2h}\left\|\begin{aligned} &\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}\\ &-\nabla_{x}G(x_{t},y_{t};z_{t})-\xi_{t}-\frac{16L-\sqrt{2L\mu_{y}}}{32}(x_{t+1}-x_{t})\end{aligned}\right\|^{2}$ $\displaystyle-\frac{1}{2h}\|-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}+\nabla_{y}G(x_{t},y_{t};z_{t})-n_{t}+v_{t}\|^{2}$ $\displaystyle\leq-\frac{1}{4h}\mathcal{I}_{z_{t}}(w_{t+1},w_{t})$ $\displaystyle+\frac{h(16L-\sqrt{2L\mu_{y}})^{2}}{1024}\bigl(\|\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}\|^{2}+\|e_{x,t}\|^{2}\bigr).$ (9.46)
+
+For the feedback increment, the identity
+
+$\displaystyle v_{t+1}-v_{t}={}$ $\displaystyle-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+\nabla_{y}G(x_{t},y_{t};z_{t})+(n_{t+1}-n_{t})$ $\displaystyle-\left(-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}+\nabla_{y}G(x_{t},y_{t};z_{t})-n_{t}+v_{t}\right)$
+
+and $\langle n_{t+1}-n_{t},y_{t+1}-y_{t}\rangle\geq 0$ allow us to drop the nonpositive term due to the normal-cone increment. Applying $L_{G}$ -Lipschitz continuity only to $\nabla_{y}G(\cdot,\cdot;z_{t})$ then gives
+
+$\displaystyle-\frac{\sqrt{2L\mu_{y}}}{32h}\langle v_{t+1}-v_{t},y_{t+1}-y_{t}\rangle$ $\displaystyle\leq\frac{L_{G}\sqrt{2L\mu_{y}}}{32h}\sqrt{\|x_{t+1}-x_{t}\|^{2}+\|y_{t+1}-y_{t}\|^{2}}\,\|y_{t+1}-y_{t}\|$ $\displaystyle+\frac{\sqrt{2L\mu_{y}}}{32h}\|-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}+\nabla_{y}G(x_{t},y_{t};z_{t})-n_{t}+v_{t}\|\|y_{t+1}-y_{t}\|$ $\displaystyle\leq\frac{L_{G}\sqrt{2L\mu_{y}}}{64h}\|x_{t+1}-x_{t}\|^{2}$ $\displaystyle+\left(\frac{3L_{G}\sqrt{2L\mu_{y}}}{64h}+\frac{L\mu_{y}}{64h}\right)\|y_{t+1}-y_{t}\|^{2}$ $\displaystyle+\frac{1}{32h}\|-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}+\nabla_{y}G(x_{t},y_{t};z_{t})-n_{t}+v_{t}\|^{2}$ $\displaystyle\leq\frac{hL_{G}\sqrt{2L\mu_{y}}}{32}\bigl(\|\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}\|^{2}+\|e_{x,t}\|^{2}\bigr)$ $\displaystyle+\left(\frac{3hL_{G}\sqrt{2L\mu_{y}}}{32}+\frac{hL\mu_{y}}{32}\right)\bigl(\|-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}\|^{2}+\|e_{y,t}\|^{2}\bigr)$ $\displaystyle+\frac{1}{32h}\mathcal{I}_{z_{t}}(w_{t+1},w_{t}).$ (9.47)
+
+The second inequality uses $\sqrt{a^{2}+b^{2}}\,b\leq a^{2}/2+3b^{2}/2$ for $a,b\geq 0$ and Young’s inequality. By ( 9.7 ) and the Cauchy–Schwarz inequality,
+
+$\displaystyle-\frac{1}{h}\langle e_{x,t},\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}-\nabla_{x}G(x_{t},y_{t};z_{t})-\xi_{t}\rangle$ $\displaystyle-\frac{1}{h}\langle e_{y,t},-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}+\nabla_{y}G(x_{t},y_{t};z_{t})-n_{t}+v_{t}\rangle$ $\displaystyle\leq\frac{1}{h}\sqrt{\|e_{x,t}\|^{2}+\|e_{y,t}\|^{2}}\,\sqrt{\mathcal{I}_{z_{t}}(w_{t+1},w_{t})}$ $\displaystyle\leq\frac{2hL_{G}}{h}\mathcal{I}_{z_{t}}(w_{t+1},w_{t}).$ (9.48)
+
+Moreover, $L\leq L_{G}$ , $\sqrt{2L\mu_{y}}\leq 2L$ , and $\sqrt{2L\mu_{y}}\leq 2L_{G}$ imply
+
+$\displaystyle\frac{h(16L-\sqrt{2L\mu_{y}})^{2}}{1024}+\frac{hL_{G}\sqrt{2L\mu_{y}}}{32}$ $\displaystyle\leq\frac{5LhL_{G}}{16},$ (9.49) $\displaystyle\frac{3hL_{G}\sqrt{2L\mu_{y}}}{32}+\frac{hL\mu_{y}}{32}$ $\displaystyle\leq\frac{hL_{G}\sqrt{2L\mu_{y}}}{8}.$ (9.50)
+
+Both coefficients are at most $L/2$ . Adding ( 9.46 ), ( 9.47 ), and ( 9.48 ), using ( 9.49 )–( 9.50 ), and dropping the explicit nonpositive $\|y_{t+1}-y_{t}\|^{2}$ term in ( 9.38 ), we obtain
+
+$\displaystyle(\mathrm{ii})\leq{}\frac{5LhL_{G}}{16}\|\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}\|^{2}$ $\displaystyle+\frac{hL_{G}\sqrt{2L\mu_{y}}}{8}\|-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}\|^{2}+\frac{L}{2}\bigl(\|e_{x,t}\|^{2}+\|e_{y,t}\|^{2}\bigr)$ $\displaystyle-\frac{7/32-2hL_{G}}{h}\mathcal{I}_{z_{t}}(w_{t+1},w_{t}).$ (9.51)
+
+Substituting ( 9.45 ) and ( 9.51 ) into ( 9.39 ) gives
+
+$\displaystyle\frac{L}{2h}\left[\mathcal{E}_{z_{t}}(w_{t+1})-\mathcal{E}_{z_{t}}(w_{t})+\frac{h\sqrt{2L\mu_{y}}}{32}\mathcal{E}_{z_{t}}(w_{t+1})\right]$ $\displaystyle\leq-\frac{(4-5hL_{G})L}{16}\|\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}\|^{2}$ $\displaystyle-\frac{(1-16hL_{G})\sqrt{2L\mu_{y}}}{128}\|-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}\|^{2}$ $\displaystyle-\frac{L\mu_{y}\sqrt{2L\mu_{y}}}{256}\|y_{t+1}-y^{\star}(z_{t})\|^{2}-\frac{L\sqrt{2L\mu_{y}}(16L-\sqrt{2L\mu_{y}})}{2048}\|x_{t+1}-x^{\star}(z_{t})\|^{2}$ $\displaystyle+\frac{9L}{2}\bigl(\|e_{x,t}\|^{2}+\|e_{y,t}\|^{2}\bigr)-\frac{7/32-2hL_{G}}{h}\mathcal{I}_{z_{t}}(w_{t+1},w_{t}).$ (9.52)
+
+By ( 9.7 ) and $L\leq L_{G}$ ,
+
+$\frac{9L}{2}\bigl(\|e_{x,t}\|^{2}+\|e_{y,t}\|^{2}\bigr)\leq\frac{18(hL_{G})^{3}}{h}\mathcal{I}_{z_{t}}(w_{t+1},w_{t}).$
+
+Substituting $hL_{G}=1/64$ gives
+
+$\displaystyle\frac{4-5hL_{G}}{16}$ $\displaystyle=\frac{251}{1024}\geq\frac{1}{8},$ $\displaystyle\frac{1-16hL_{G}}{128}$ $\displaystyle=\frac{3}{512}\geq\frac{1}{256},$ $\displaystyle\frac{7}{32}-2hL_{G}-18(hL_{G})^{3}$ $\displaystyle=\frac{24567}{131072}\geq\frac{1}{8}.$
+
+Multiplying both sides of ( 9.52 ) by $2h/L$ therefore yields
+
+$\displaystyle\mathcal{E}_{z_{t}}(w_{t+1})-\mathcal{E}_{z_{t}}(w_{t})+\frac{h\sqrt{2L\mu_{y}}}{32}\mathcal{E}_{z_{t}}(w_{t+1})$ $\displaystyle\leq-\frac{h}{4}\|\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}\|^{2}$ $\displaystyle-\frac{h\sqrt{2L\mu_{y}}}{128L}\|-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}\|^{2}$ $\displaystyle-\frac{h\mu_{y}\sqrt{2L\mu_{y}}}{128}\|y_{t+1}-y^{\star}(z_{t})\|^{2}-\frac{h\sqrt{2L\mu_{y}}(16L-\sqrt{2L\mu_{y}})}{1024}\|x_{t+1}-x^{\star}(z_{t})\|^{2}$ $\displaystyle-\frac{1}{4L}\mathcal{I}_{z_{t}}(w_{t+1},w_{t}).$ (9.53)
+
+It remains to estimate the kinetic-energy difference in $C_{z_{t}}$ and its endpoint weight. By ( 9.29 ),
+
+$\left(1+\frac{hL}{2}\right)v_{t+1}=v_{t}-\frac{h(8L-\sqrt{2L\mu_{y}})}{16}(-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}).$ (9.54)
+
+Since $0\leq(8L-\sqrt{2L\mu_{y}})/16\leq L/2$ , the difference-of-squares identity and Young’s inequality give
+
+$\displaystyle\|v_{t}\|^{2}-\|v_{t+1}\|^{2}$ $\displaystyle\geq hL\|v_{t+1}\|^{2}+\frac{h(8L-\sqrt{2L\mu_{y}})}{8}\langle v_{t+1},-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}\rangle$ $\displaystyle\geq\frac{hL}{2}\|v_{t+1}\|^{2}-\frac{hL}{2}\|-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}\|^{2}.$ (9.55)
+
+Multiplying this inequality by $\sqrt{2L\mu_{y}}/(256L^{2})$ , rearranging, and adding the contraction term for the updated kinetic energy yields
+
+$\displaystyle\frac{\sqrt{2L\mu_{y}}}{256L^{2}}\bigl(\|v_{t+1}\|^{2}-\|v_{t}\|^{2}\bigr)+\frac{h\mu_{y}}{4096L}\|v_{t+1}\|^{2}$ $\displaystyle\leq\frac{h\sqrt{2L\mu_{y}}}{512L}\|-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}\|^{2}-\frac{h\sqrt{2L\mu_{y}}}{512L}\left(1-\frac{\sqrt{2L\mu_{y}}}{16L}\right)\|v_{t+1}\|^{2}$ $\displaystyle\leq\frac{h\sqrt{2L\mu_{y}}}{512L}\|-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}\|^{2}-\frac{7h\sqrt{2L\mu_{y}}}{4096L}\|v_{t+1}\|^{2}.$ (9.56)
+
+The last inequality uses $\sqrt{2L\mu_{y}}\leq 2L$ . Note that
+
+$\frac{h\mu_{y}}{4096L}=\frac{h\sqrt{2L\mu_{y}}}{32}\frac{\sqrt{2L\mu_{y}}}{256L^{2}}.$
+
+Adding ( 9.56 ) and ( 9.53 ), the magnitude of the negative coefficient of $\|-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}\|^{2}$ becomes $3h\sqrt{2L\mu_{y}}/(512L)$ , which gives ( 9.21 ). Multiplying both sides by $L/2$ and applying ( 9.18 ) identifies the left-hand side with the three component increments and their weighted endpoint sum in ( 9.22 ), completing the proof.
+
+∎
+
+9.3 Effect of moving the center
+
+We use the saddle-point sensitivity and envelope smoothness estimates in Appendices 8.1 and 8.2 to compare auxiliary errors at different centers.
+
+Fix $w=(x,y,\xi,n,v)$ , where $x\in X$ , $y\in Y$ , $\xi\in N_{X}(x)$ , and $n\in N_{Y}(y)$ . For any $z^{\prime}=z+\delta$ , we have
+
+$\displaystyle\mathcal{E}_{z^{\prime}}(w)-\mathcal{E}_{z}(w)$ (9.57) $\displaystyle\leq\biggl[2L\|x-x^{\star}(z)\|+4\|\nabla_{x}G(x,y;z)+\xi\|$ $\displaystyle+\frac{1}{8}\|v\|+\frac{\sqrt{2L\mu_{y}}}{128}\|y-y^{\star}(z)\|\biggr]\|\delta\|+\frac{1025L}{128}\|\delta\|^{2}.$
+
+First,
+
+$G(x,y;z^{\prime})-G(x,y;z)=-2L\langle x-z,\delta\rangle+L\|\delta\|^{2}.$
+
+By ( 8.3 ),
+
+$\left|p(z^{\prime})-p(z)-\langle\nabla p(z),\delta\rangle\right|\leq 3L\|\delta\|^{2}.$
+
+Since
+
+$2L(x-z)=2L(x-x^{\star}(z))-\nabla p(z),$
+
+we obtain
+
+$\displaystyle\bigl|[G(x,y;z^{\prime})-p(z^{\prime})]-[G(x,y;z)-p(z)]$ (9.58) $\displaystyle+2L\langle x-x^{\star}(z),\delta\rangle\bigr|\leq 4L\|\delta\|^{2}.$
+
+The coefficient of the function-value term in the potential satisfies $0<1-\sqrt{2L\mu_{y}}/(16L)<1$ . The change in this term is therefore bounded above by
+
+$2L\|x-x^{\star}(z)\|\|\delta\|+4L\|\delta\|^{2}.$
+
+Next, $\nabla_{x}G(x,y;z^{\prime})=\nabla_{x}G(x,y;z)-2L\delta$ , so
+
+$\displaystyle\frac{1}{L}\left(\|\nabla_{x}G(x,y;z^{\prime})+\xi\|^{2}-\|\nabla_{x}G(x,y;z)+\xi\|^{2}\right)$ (9.59) $\displaystyle=-4\langle\nabla_{x}G(x,y;z)+\xi,\delta\rangle+4L\|\delta\|^{2}$ $\displaystyle\leq 4\|\nabla_{x}G(x,y;z)+\xi\|\|\delta\|+4L\|\delta\|^{2}.$
+
+Finally, by ( 8.2 ), the cross term in the potential satisfies
+
+$\displaystyle\frac{\sqrt{2L\mu_{y}}}{16L}\left(\langle v,y-y^{\star}(z^{\prime})\rangle-\langle v,y-y^{\star}(z)\rangle\right)$ (9.60) $\displaystyle\leq\frac{\sqrt{2L\mu_{y}}}{16L}\|v\|\|y^{\star}(z^{\prime})-y^{\star}(z)\|$ $\displaystyle\leq\frac{1}{8}\|v\|\|\delta\|,$
+
+whereas the squared-distance term satisfies
+
+$\displaystyle\frac{\mu_{y}}{256}\left(\|y-y^{\star}(z^{\prime})\|^{2}-\|y-y^{\star}(z)\|^{2}\right)$ (9.61) $\displaystyle\leq\frac{\mu_{y}}{128}\|y-y^{\star}(z)\|\|y^{\star}(z^{\prime})-y^{\star}(z)\|$ $\displaystyle+\frac{\mu_{y}}{256}\|y^{\star}(z^{\prime})-y^{\star}(z)\|^{2}$ $\displaystyle\leq\frac{\sqrt{2L\mu_{y}}}{128}\|y-y^{\star}(z)\|\|\delta\|+\frac{L}{128}\|\delta\|^{2}.$
+
+The gradient $\nabla_{y}G(x,y;z)$ is independent of $z$ , and the remaining squared terms do not change. Adding the bounds associated with ( 9.58 )–( 9.61 ) gives ( 9.57 ). ∎
+
+Under Assumption 2.1 , let $\lambda=2L$ , $\tau\geq 0$ , and $0<\mu_{y}=\mu+\tau\leq L$ , and choose the parameters as in ( 4.3 ). Then the iterates of Algorithm 1 satisfy
+
+$\displaystyle\mathcal{E}_{z_{t+1}}(w_{t+1})-\mathcal{E}_{z_{t}}(w_{t})$ (9.62) $\displaystyle+\frac{\sqrt{2L\mu_{y}}}{256L^{2}}\bigl(\|v_{t+1}\|^{2}-\|v_{t}\|^{2}\bigr)$ $\displaystyle\leq-\frac{1}{2}\mathcal{D}_{z_{t}}(w_{t+1},w_{t})-\frac{5}{2}\beta L\|x_{t+1}-x^{\star}(z_{t})\|^{2}$ $\displaystyle+\frac{\beta}{8L}\|\nabla p(z_{t})\|^{2}.$
+
+We combine Theorem 9.1 with Lemma 9.3 to absorb the error due to center movement while retaining half of the nonnegative dissipation defined in ( 4.6 ). To allocate the negative terms in the fixed-center estimate, define
+
+$\displaystyle\mathcal{B}_{t}$ $\displaystyle:=\frac{h\sqrt{2L\mu_{y}}}{8L}\|\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}\|^{2}$ (9.63) $\displaystyle+\frac{7h\sqrt{2L\mu_{y}}}{4096L}\|v_{t+1}\|^{2}+\frac{h\mu_{y}\sqrt{2L\mu_{y}}}{128}\|y_{t+1}-y^{\star}(z_{t})\|^{2}$ $\displaystyle+\frac{7hL\sqrt{2L\mu_{y}}}{512}\|x_{t+1}-x^{\star}(z_{t})\|^{2}.$
+
+Since $\sqrt{2L\mu_{y}}\leq 2L$ ,
+
+$\frac{h\sqrt{2L\mu_{y}}}{32}\frac{4}{L}\leq\frac{h}{4},\qquad\frac{L}{2}-\frac{\sqrt{2L\mu_{y}}}{32}\geq\frac{7L}{16}.$
+
+A termwise comparison with ( 4.6 ) gives
+
+$0\leq\mathcal{B}_{t}\leq\mathcal{D}_{z_{t}}(w_{t+1},w_{t}).$ (9.64)
+
+The weighted Cauchy–Schwarz inequality yields
+
+$\displaystyle\biggl[2L\|x_{t+1}-x^{\star}(z_{t})\|+4\|\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}\|$ (9.65) $\displaystyle+\frac{1}{8}\|v_{t+1}\|+\frac{\sqrt{2L\mu_{y}}}{128}\|y_{t+1}-y^{\star}(z_{t})\|\biggr]^{2}$ $\displaystyle\leq\frac{432L}{h\sqrt{2L\mu_{y}}}\mathcal{B}_{t}.$
+
+Indeed, dividing each squared coefficient by the corresponding coefficient in ( 9.63 ) gives constants whose sum is
+
+$\frac{16L}{h\sqrt{2L\mu_{y}}}\left(\frac{128}{7}+8+\frac{4}{7}+\frac{1}{1024}\right)<\frac{432L}{h\sqrt{2L\mu_{y}}}.$
+
+Set $z^{\prime}=z_{t+1}$ , $z=z_{t}$ , and $w=w_{t+1}$ in ( 9.57 ). Applying $ab\leq a^{2}/4+b^{2}$ to its linear term gives
+
+$\displaystyle\mathcal{E}_{z_{t+1}}(w_{t+1})-\mathcal{E}_{z_{t}}(w_{t+1})$ $\displaystyle\quad\leq\frac{1}{4}\mathcal{B}_{t}+\left(\frac{432L}{h\sqrt{2L\mu_{y}}}+\frac{1025L}{128}\right)\|z_{t+1}-z_{t}\|^{2}$ $\displaystyle\quad\leq\frac{1}{4}\mathcal{B}_{t}+\frac{704L}{h\sqrt{2L\mu_{y}}}\|z_{t+1}-z_{t}\|^{2}.$
+
+The last inequality uses $h\sqrt{2L\mu_{y}}/32\leq 1$ . Substituting ( 8.5 ) then yields
+
+$\displaystyle\mathcal{E}_{z_{t+1}}(w_{t+1})-\mathcal{E}_{z_{t}}(w_{t+1})$ (9.66) $\displaystyle\leq\frac{1}{4}\mathcal{B}_{t}+\frac{1408L\beta^{2}}{h\sqrt{2L\mu_{y}}}\|x_{t+1}-x^{\star}(z_{t})\|^{2}$ $\displaystyle+\frac{352\beta^{2}}{Lh\sqrt{2L\mu_{y}}}\|\nabla p(z_{t})\|^{2}.$
+
+Dropping the nonnegative contraction term on the left-hand side of ( 9.21 ) and adding ( 9.66 ), we obtain
+
+$\displaystyle\mathcal{E}_{z_{t+1}}(w_{t+1})-\mathcal{E}_{z_{t}}(w_{t})$ $\displaystyle\qquad+\frac{\sqrt{2L\mu_{y}}}{256L^{2}}\bigl(\|v_{t+1}\|^{2}-\|v_{t}\|^{2}\bigr)$ $\displaystyle\quad\leq-\mathcal{D}_{z_{t}}(w_{t+1},w_{t})+\frac{1}{4}\mathcal{B}_{t}+\frac{1408L\beta^{2}}{h\sqrt{2L\mu_{y}}}\|x_{t+1}-x^{\star}(z_{t})\|^{2}$ $\displaystyle\qquad+\frac{352\beta^{2}}{Lh\sqrt{2L\mu_{y}}}\|\nabla p(z_{t})\|^{2}.$
+
+Since $\beta=h\sqrt{2L\mu_{y}}/4096$ and $4096=32\cdot 128$ ,
+
+$\displaystyle\frac{5}{2}\beta L+\frac{1408L\beta^{2}}{h\sqrt{2L\mu_{y}}}$ $\displaystyle=\frac{hL\sqrt{2L\mu_{y}}}{64}\left(\frac{5}{128}+\frac{88}{128^{2}}\right)$ (9.67) $\displaystyle\leq\frac{7hL\sqrt{2L\mu_{y}}}{2048},$
+
+and
+
+$\frac{\beta}{4L}-\frac{352\beta^{2}}{Lh\sqrt{2L\mu_{y}}}=\frac{\beta}{2L}\left(\frac{1}{2}-\frac{22}{128}\right)\geq\frac{\beta}{8L}.$ (9.68)
+
+The right-hand side of ( 9.67 ) equals the coefficient of $\|x_{t+1}-x^{\star}(z_{t})\|^{2}$ in $\mathcal{B}_{t}/4$ . Consequently, ( 9.67 ) gives
+
+$\frac{1408L\beta^{2}}{h\sqrt{2L\mu_{y}}}\|x_{t+1}-x^{\star}(z_{t})\|^{2}\leq\frac{1}{4}\mathcal{B}_{t}-\frac{5}{2}\beta L\|x_{t+1}-x^{\star}(z_{t})\|^{2},$
+
+while ( 9.68 ) gives
+
+$\frac{352\beta^{2}}{Lh\sqrt{2L\mu_{y}}}\leq\frac{\beta}{8L}.$
+
+Substituting these bounds into the preceding auxiliary-error estimate and using ( 9.64 ), we obtain
+
+$\displaystyle\mathcal{E}_{z_{t+1}}(w_{t+1})-\mathcal{E}_{z_{t}}(w_{t})$ $\displaystyle\qquad+\frac{\sqrt{2L\mu_{y}}}{256L^{2}}\bigl(\|v_{t+1}\|^{2}-\|v_{t}\|^{2}\bigr)$ $\displaystyle\quad\leq-\mathcal{D}_{z_{t}}(w_{t+1},w_{t})+\frac{1}{2}\mathcal{B}_{t}-\frac{5}{2}\beta L\|x_{t+1}-x^{\star}(z_{t})\|^{2}$ $\displaystyle\qquad+\frac{\beta}{8L}\|\nabla p(z_{t})\|^{2}.$
+
+Since $\mathcal{B}_{t}\leq\mathcal{D}_{z_{t}}(w_{t+1},w_{t})$ , this proves ( 9.62 ). ∎
+
+The dissipation in ( 4.6 ) is nonnegative. Dropping the term $-\mathcal{D}_{z_{t}}(w_{t+1},w_{t})/2$ from Lemma 9.4 gives ( 4.5 ). ∎
+
+9.4 Proof of the unified Lyapunov descent
+
+By ( 2.4 ) and $\|y\|\leq D_{Y}$ ,
+
+$\inf_{z}p(z)\geq\inf_{x\in X}\phi(x)-\frac{\tau D_{Y}^{2}}{2}>-\infty.$
+
+Thus $p(z_{t})-\inf_{z}p(z)\geq 0$ . Lemma 9.2 gives $\mathcal{E}_{z_{t}}(w_{t})\geq 0$ . Together with the nonnegative momentum term, this proves $\mathcal{V}_{t}\geq 0$ .
+
+Add the center-descent estimate of Lemma 4.1 to the auxiliary dissipation estimate of Lemma 9.4 , namely ( 4.4 ) and ( 9.62 ). The coefficients of the primal tracking term $\|x_{t+1}-x^{\star}(z_{t})\|^{2}$ are $-5\beta L/2$ and $5\beta L/2$ , and hence cancel. The remaining coefficient of $\|\nabla p(z_{t})\|^{2}$ is
+
+$\frac{\beta}{8L}-\frac{\beta}{4L}=-\frac{\beta}{8L}.$
+
+The definition ( 4.1 ) now gives ( 4.7 ). Dropping the nonpositive dissipation term yields ( 4.8 ). ∎
+
+10 From Lyapunov Descent to Complexity Bounds
+
+We first establish the stationarity transfer and aggregate residual bounds. A common initialization calculation is then used by the baseline NC–SC and NC–C proofs and by the unified warm-up analysis. The fixed-center contraction and moving-center descent themselves remain in Appendix 9 .
+
+10.1 Transfer to the original problem
+
+By Lemma 3.1 and the definition of distance to a set,
+
+$\displaystyle\dist\bigl(0,\nabla_{x}f(x_{t+1},y_{t+1})+N_{X}(x_{t+1})\bigr)$ $\displaystyle\qquad\leq\|\nabla_{x}f(x_{t+1},y_{t+1})+\xi_{t+1}\|,$ $\displaystyle\dist\bigl(0,-\nabla_{y}f(x_{t+1},y_{t+1})+N_{Y}(y_{t+1})\bigr)$ $\displaystyle\qquad\leq\|-\nabla_{y}f(x_{t+1},y_{t+1})+n_{t+1}\|.$
+
+Consequently,
+
+$\displaystyle\mathcal{R}(x_{t+1},y_{t+1})$ $\displaystyle\quad\leq\left\|\begin{pmatrix}\nabla_{x}f(x_{t+1},y_{t+1})+\xi_{t+1}\\ -\nabla_{y}f(x_{t+1},y_{t+1})+n_{t+1}\end{pmatrix}\right\|$ $\displaystyle\quad=\left\|\begin{pmatrix}\nabla_{x}f(x_{t+1},y_{t+1})+\xi_{t+1}\\ -\nabla_{y}f(x_{t+1},y_{t+1})+\tau y_{t+1}+n_{t+1}\end{pmatrix}-\begin{pmatrix}0\\ \tau y_{t+1}\end{pmatrix}\right\|$ $\displaystyle\quad\leq\sqrt{S_{t}}+\tau\|y_{t+1}\|\leq\sqrt{S_{t}}+\tau D_{Y}.$
+
+The last line follows from the triangle inequality and $\|y_{t+1}\|\leq D_{Y}$ , proving ( 3.5 ).
+
+To estimate the envelope-gradient bias, fix $z\in\mathbb{R}^{n}$ and recall $\bar{x}(z)$ from ( 2.7 ). Since $\|y\|\leq D_{Y}$ , for every $x\in X$ ,
+
+$0\leq\phi(x)+\frac{\lambda}{2}\|x-z\|^{2}-\max_{y\in Y}G(x,y;z)\leq\frac{\tau D_{Y}^{2}}{2}.$
+
+By the $(\lambda-L)$ -strong convexity of the original proximal objective, this perturbation bound, and the optimality of $x^{\star}(z)$ , respectively,
+
+$\displaystyle\frac{\lambda-L}{2}\|\bar{x}(z)-x^{\star}(z)\|^{2}$ $\displaystyle\leq\phi(x^{\star}(z))+\frac{\lambda}{2}\|x^{\star}(z)-z\|^{2}-\phi(\bar{x}(z))-\frac{\lambda}{2}\|\bar{x}(z)-z\|^{2}$ $\displaystyle\leq\max_{y\in Y}G(x^{\star}(z),y;z)-\max_{y\in Y}G(\bar{x}(z),y;z)+\frac{\tau D_{Y}^{2}}{2}$ $\displaystyle\leq\frac{\tau D_{Y}^{2}}{2}.$
+
+Therefore,
+
+$\|\bar{x}(z)-x^{\star}(z)\|\leq D_{Y}\sqrt{\frac{\tau}{\lambda-L}}.$ (10.1)
+
+Equations ( 2.8 ) and ( 3.2 ) give
+
+$\displaystyle\nabla\Phi_{\lambda}(z)-\nabla p(z)$ $\displaystyle=\lambda(z-\bar{x}(z))-\lambda(z-x^{\star}(z))$ $\displaystyle=\lambda\bigl(x^{\star}(z)-\bar{x}(z)\bigr).$
+
+Taking norms and using ( 10.1 ), we obtain
+
+$\displaystyle\|\nabla\Phi_{\lambda}(z)-\nabla p(z)\|$ $\displaystyle=\lambda\|x^{\star}(z)-\bar{x}(z)\|$ $\displaystyle\leq\lambda D_{Y}\sqrt{\frac{\tau}{\lambda-L}}.$
+
+This proves ( 3.6 ). Finally, at $z=z_{t}$ , the triangle inequality gives
+
+$\displaystyle\|\nabla\Phi_{\lambda}(z_{t})\|$ $\displaystyle\leq\|\nabla p(z_{t})\|+\|\nabla\Phi_{\lambda}(z_{t})-\nabla p(z_{t})\|$ $\displaystyle\leq\|\nabla p(z_{t})\|+\lambda D_{Y}\sqrt{\frac{\tau}{\lambda-L}},$
+
+which proves ( 3.7 ). When $\tau=0$ , the definitions give $p=\Phi_{\lambda}$ , so their gradients coincide. ∎
+
+10.2 Summation and residual bounds
+
+We retain the full dissipation term in ( 4.7 ) to bound the sums of the auxiliary envelope gradients and the computable certificates.
+
+Summing ( 4.7 ) and using $\mathcal{V}_{T}\geq 0$ gives
+
+$\sum_{t=0}^{T-1}\left[\frac{1}{2}\mathcal{D}_{z_{t}}(w_{t+1},w_{t})+\frac{\beta}{8L}\|\nabla p(z_{t})\|^{2}\right]\leq\Delta_{\tau},$ (10.2)
+
+where $\mathcal{D}_{z_{t}}(w_{t+1},w_{t})$ is defined in ( 4.6 ). Using $\beta=h\sqrt{2L\mu_{y}}/4096$ and
+
+$\frac{16L-\sqrt{2L\mu_{y}}}{32}\geq\frac{7L}{16},$
+
+we retain individual nonnegative terms in $\mathcal{D}_{z_{t}}(w_{t+1},w_{t})$ to obtain
+
+$\displaystyle\sum_{t=0}^{T-1}\|\nabla_{x}f(x_{t+1},y_{t+1})+2L(x_{t+1}-z_{t})+\xi_{t+1}\|^{2}$ $\displaystyle\qquad\leq\frac{8\Delta_{\tau}}{h},$ (10.3) $\displaystyle\sum_{t=0}^{T-1}\|-\nabla_{y}f(x_{t+1},y_{t+1})+\tau y_{t+1}+n_{t+1}-v_{t+1}\|^{2}$ $\displaystyle\qquad\leq\frac{L\Delta_{\tau}}{12\beta},$ (10.4) $\displaystyle\sum_{t=0}^{T-1}\|v_{t+1}\|^{2}\leq\frac{2L\Delta_{\tau}}{7\beta},$ (10.5) $\displaystyle\sum_{t=0}^{T-1}\|x_{t+1}-x^{\star}(z_{t})\|^{2}\leq\frac{\Delta_{\tau}}{28\beta L},$ (10.6) $\displaystyle\sum_{t=0}^{T-1}\|\nabla p(z_{t})\|^{2}\leq\frac{8L\Delta_{\tau}}{\beta}.$ (10.7)
+
+Since $\nabla p(z_{t})=2L(z_{t}-x^{\star}(z_{t}))$ ,
+
+$\displaystyle\nabla_{x}f(x_{t+1},y_{t+1})+\xi_{t+1}$ (10.8) $\displaystyle=\nabla_{x}f(x_{t+1},y_{t+1})+2L(x_{t+1}-z_{t})+\xi_{t+1}$ $\displaystyle-2L(x_{t+1}-x^{\star}(z_{t}))+\nabla p(z_{t}).$
+
+Applying the squared-norm bounds for sums of three and two vectors, respectively, gives
+
+$\displaystyle S_{t}\leq{}$ $\displaystyle 3\|\nabla_{x}f(x_{t+1},y_{t+1})+2L(x_{t+1}-z_{t})+\xi_{t+1}\|^{2}$ (10.9) $\displaystyle+12L^{2}\|x_{t+1}-x^{\star}(z_{t})\|^{2}+3\|\nabla p(z_{t})\|^{2}$ $\displaystyle+2\|-\nabla_{y}f(x_{t+1},y_{t+1})+\tau y_{t+1}+n_{t+1}-v_{t+1}\|^{2}$ $\displaystyle+2\|v_{t+1}\|^{2}.$
+
+Summing ( 10.9 ) and substituting ( 10.3 )–( 10.7 ) yields
+
+$\displaystyle\sum_{t=0}^{T-1}S_{t}$ $\displaystyle\leq\left(\frac{24\beta}{hL}+\frac{3}{7}+24+\frac{1}{6}+\frac{4}{7}\right)\frac{L\Delta_{\tau}}{\beta}$ $\displaystyle=\left(25+\frac{1}{6}+\frac{24\beta}{hL}\right)\frac{L\Delta_{\tau}}{\beta}\leq\frac{32L\Delta_{\tau}}{\beta}.$
+
+The last inequality uses $\beta/(hL)=\sqrt{2\mu_{y}/L}/4096\leq\sqrt{2}/4096$ .
+
+For an interval $a\leq t<a+T$ , sum the same one-step inequality from $a$ rather than zero. The right-hand side of ( 10.2 ) becomes $\mathcal{V}_{a}-\mathcal{V}_{a+T}\leq\mathcal{V}_{a}$ , and each of the retained dissipation estimates has $\mathcal{V}_{a}$ in place of $\Delta_{\tau}$ . The remaining algebra is unchanged, proving ( 4.11 ). Only feasibility and the normal-cone inclusions were used; the values of $\xi_{a},n_{a},v_{a}$ need not vanish. ∎
+
+10.3 Output guarantees
+
+By the definition of $j$ and ( 4.10 ),
+
+$S_{j}\leq\frac{1}{T}\sum_{t=0}^{T-1}S_{t}\leq\frac{32L\Delta_{\tau}}{\beta T}.$
+
+Combining this bound with the residual estimate in the proof of Lemma 3.2 and $\|y_{j+1}\|\leq D_{Y}$ gives ( 4.12 ). Since $z_{0}=x_{0}\in X$ and $0<\beta\leq 1$ , the center update preserves $z_{t}\in X$ . The uniform random output rule and ( 4.10 ) yield
+
+$\mathbb{E}\|\nabla p(z_{J})\|^{2}=\frac{1}{T}\sum_{t=0}^{T-1}\|\nabla p(z_{t})\|^{2}\leq\frac{8L\Delta_{\tau}}{\beta T},$
+
+which is ( 4.13 ). Setting $\lambda=2L$ in ( 3.6 ) and applying the squared-norm inequality gives
+
+$\displaystyle\mathbb{E}\|\nabla\Phi_{2L}(z_{J})\|^{2}$ $\displaystyle\leq 2\mathbb{E}\|\nabla p(z_{J})\|^{2}$ $\displaystyle\quad+2\mathbb{E}\|\nabla\Phi_{2L}(z_{J})-\nabla p(z_{J})\|^{2}$ $\displaystyle\leq\frac{16L\Delta_{\tau}}{\beta T}+8L\tau D_{Y}^{2}.$
+
+This proves ( 4.14 ). ∎
+
+10.4 Common initialization estimates
+
+The estimates in this subsection hold for both regimes: $\mu\geq 0$ , $\tau\geq 0$ , and $0<\mu_{y}=\mu+\tau\leq L$ . Define
+
+$\phi_{\tau}(x):=\begin{cases}\displaystyle\max_{y\in Y}\left\{f(x,y)-\frac{\tau}{2}\|y\|^{2}\right\},&x\in X,\\ +\infty,&x\notin X.\end{cases}$ (10.10)
+
+Thus $\phi_{0}=\phi$ . Let $H_{z}$ and $\overline{H}_{\mu,\tau}$ be as in ( 4.29 ) and ( 4.30 ).
+
+If $z_{0}=x_{0}$ and $\xi_{0}=n_{0}=v_{0}=0$ , then
+
+$p(x_{0})-\inf_{z}p(z)\leq\Delta_{\phi}+\frac{\tau D_{Y}^{2}}{2},$ (10.11)
+
+and
+
+$0\leq H_{x_{0}}(w_{0})\leq\overline{H}_{\mu,\tau}.$ (10.12)
+
+Consequently, $0\leq\Delta_{\tau}\leq\Delta_{\phi}+\tau D_{Y}^{2}/2+\overline{H}_{\mu,\tau}$ .
+
+The diameter assumption and $0\in Y$ imply, for every $x\in X$ ,
+
+$0\leq\phi(x)-\phi_{\tau}(x)\leq\frac{\tau D_{Y}^{2}}{2}.$ (10.13)
+
+The quadratic term in the envelope is nonnegative, and choosing $z=x$ gives
+
+$\inf_{z}p(z)=\inf_{x\in X}\inf_{z}\{\phi_{\tau}(x)+L\|x-z\|^{2}\}=\inf_{x\in X}\phi_{\tau}(x).$
+
+Together with $p(x_{0})\leq\phi_{\tau}(x_{0})\leq\phi(x_{0})$ , this proves ( 10.11 ).
+
+Since $v_{0}=0$ , the momentum terms vanish at initialization. Expanding the potential gives
+
+$\displaystyle H_{x_{0}}(w_{0})={}$ $\displaystyle\left(1-\frac{\sqrt{2L\mu_{y}}}{16L}\right)\left[p(x_{0})-f(x_{0},y_{0})+\frac{\tau}{2}\|y_{0}\|^{2}\right]$ (10.14) $\displaystyle+\frac{\|\nabla_{x}f(x_{0},y_{0})\|^{2}+\|-\nabla_{y}f(x_{0},y_{0})+\tau y_{0}\|^{2}}{L}+\frac{\mu_{y}}{256}\|y_{0}-y^{\star}(x_{0})\|^{2}.$
+
+Concavity of $f(x_{0},\cdot)$ and the diameter bound yield
+
+$\displaystyle p(x_{0})-f(x_{0},y_{0})+\frac{\tau}{2}\|y_{0}\|^{2}$ $\displaystyle\leq\max_{y\in Y}f(x_{0},y)-f(x_{0},y_{0})+\frac{\tau D_{Y}^{2}}{2}$ $\displaystyle\leq D_{Y}\|\nabla_{y}f(x_{0},y_{0})\|+\frac{\tau D_{Y}^{2}}{2}.$
+
+The last expression is nonnegative, whereas the function difference on the left need not be. We first replace that difference by its nonnegative upper bound, then use $0<1-\sqrt{2L\mu_{y}}/(16L)<1$ to bound the coefficient. Since $\|y_{0}-y^{\star}(x_{0})\|\leq D_{Y}$ , this proves the upper bound in ( 10.12 ). Its lower bound follows from Lemma 9.2 . Adding the envelope and tracking bounds proves the final claim. ∎
+
+10.5 Baseline nonconvex–strongly concave complexity
+
+Since $\tau=0$ , Lemma 3.2 gives $\|\nabla\Phi_{2L}(z_{t})\|=\|\nabla p(z_{t})\|$ . Lemma 4.3 and ( 4.15 ) give
+
+$\displaystyle S_{j}\leq\frac{32L\Delta_{0}}{\beta T}\leq\frac{\varepsilon^{2}}{4},$ $\displaystyle\mathbb{E}\|\nabla\Phi_{2L}(z_{\rm out})\|^{2}\leq\frac{8L\Delta_{0}}{\beta T}\leq\frac{\varepsilon^{2}}{16}.$
+
+Combining the first inequality with ( 4.12 ) proves the game-stationarity claim. For $\tau=0$ , the parameters satisfy
+
+$h=\frac{1}{192L},\qquad\beta=\frac{\sqrt{2\mu/L}}{786432}=\Theta\!\left(\sqrt{\frac{\mu}{L}}\right).$
+
+Under the full first-order oracle and gradient-caching convention in Section 3.2 , initialization requires one query and each iteration requires two additional queries. Thus the total number is at most $1+2T$ , which gives ( 4.17 ) and ( 4.19 ) as $\varepsilon\downarrow 0$ for fixed $\Delta_{0}>0$ . ∎
+
+The budget does not require computing $\Delta_{0}$ exactly. Given any known $\overline{\Delta}_{0}\geq\Delta_{0}$ , choose instead
+
+$T=\max\left\{1,\left\lceil\frac{128L\overline{\Delta}_{0}}{\beta\varepsilon^{2}}\right\rceil\right\}.$ (10.15)
+
+The conclusions of Theorems 4.2 and 4.3 then hold, and for fixed $\overline{\Delta}_{0}>0$ the complexity as $\varepsilon\downarrow 0$ is
+
+$O\!\left(\sqrt{\frac{L}{\mu}}\,\frac{L\overline{\Delta}_{0}}{\varepsilon^{2}}\right)$ (10.16)
+
+first-order oracle calls. This follows from the same proof by using $\Delta_{0}\leq\overline{\Delta}_{0}$ in the two summation estimates. Thus an available upper bound suffices to prescribe the run length, without evaluating the envelope or its infimum.
+
+The $\varepsilon^{-2}$ accuracy dependence is optimal with the regularity and initialization bounds fixed. To see this, embed a smooth nonconvex minimization instance $g$ into $f(x,y)=g(x)-\mu\|y\|^{2}/2$ , with $X=\mathbb{R}^{n}$ and a fixed compact convex $Y$ containing $0$ . Then $\phi=g$ , and the game residual controls $\|\nabla g(x)\|$ . For OS, let $u=\operatorname{prox}_{g/(2L)}(z)$ . Proximal optimality and smoothness give
+
+$\nabla\Phi_{2L}(z)=\nabla g(u)=2L(z-u),\qquad\|\nabla g(z)\|\leq\tfrac{3}{2}\|\nabla\Phi_{2L}(z)\|.$
+
+This pointwise inequality also transfers an expected squared-norm guarantee. Initialize $z_{0}=x_{0}$ , $y_{0}=0$ , and the normal and momentum variables at zero. The definition of $\Delta_{0}$ and the gradient-gap inequality imply
+
+$\Delta_{0}\leq g(x_{0})-\inf g+\frac{\|\nabla g(x_{0})\|^{2}}{L}\leq 3\bigl(g(x_{0})-\inf g\bigr).$
+
+The smooth-minimization lower bound of Carmon et al. (2020) therefore applies under a common bounded initialization budget. This establishes optimality of the accuracy exponent, without asserting optimality of the condition-number dependence.
+
+Writing $\kappa=L/\mu$ , Theorems 4.2 and 4.3 give a baseline gradient complexity upper bound of order $1+\sqrt{\kappa}L\Delta_{0}\varepsilon^{-2}$ for each stated output criterion. Corollary 4.2 replaces $\Delta_{0}$ in the leading term by $\Delta_{\phi}$ , with an additive initialization cost. An optimality comparison must retain both the stationarity criterion and the initialization quantity: lower bounds expressed through the gradient of the value function do not, by themselves, establish a matching lower bound for either guarantee stated here.
+
+10.6 Nonconvex–concave complexity
+
+Apply Lemma 10.1 with $\mu=0$ and $\mu_{y}=\tau$ . The elementary inequality
+
+$\|-\nabla_{y}f(x_{0},y_{0})+\tau y_{0}\|^{2}\leq 2\|\nabla_{y}f(x_{0},y_{0})\|^{2}+2\tau^{2}D_{Y}^{2}$
+
+implies
+
+$\overline{H}_{0,\tau}\leq\bar{\Delta}_{0}-\Delta_{\phi}+\left(\frac{129\tau}{256}+\frac{2\tau^{2}}{L}\right)D_{Y}^{2}.$
+
+Adding the envelope-gap bound ( 10.11 ) gives ( 4.21 ). This proves the NC–C initial-energy bound using the common initialization estimate. ∎
+
+By ( 4.13 ) and ( 4.23 ),
+
+$\mathbb{E}\|\nabla p(z_{\rm out})\|^{2}\leq\frac{8L\Delta_{\tau}}{\beta T}\leq\frac{\varepsilon^{2}}{16}.$
+
+Taking $\lambda=2L$ in the envelope-gradient perturbation bound ( 3.6 ) of Lemma 3.2 and using the choice ( 4.22 ) give, for every $z\in\mathbb{R}^{n}$ ,
+
+$\displaystyle\|\nabla\Phi_{2L}(z)-\nabla p(z)\|$ $\displaystyle\leq 2D_{Y}\sqrt{L\tau}$ $\displaystyle\leq 2D_{Y}\sqrt{\frac{\varepsilon^{2}}{16D_{Y}^{2}}}=\frac{\varepsilon}{2}.$
+
+It follows that
+
+$\displaystyle\mathbb{E}\|\nabla\Phi_{2L}(z_{\rm out})\|^{2}$ $\displaystyle\leq 2\mathbb{E}\|\nabla p(z_{\rm out})\|^{2}$ $\displaystyle\quad+2\mathbb{E}\|\nabla\Phi_{2L}(z_{\rm out})-\nabla p(z_{\rm out})\|^{2}$ $\displaystyle\leq\frac{\varepsilon^{2}}{8}+\frac{\varepsilon^{2}}{2}\leq\varepsilon^{2}.$
+
+∎
+
+Lemma 4.3 and ( 4.23 ) imply
+
+$S_{j}\leq\frac{32L\Delta_{\tau}}{\beta T}\leq\frac{\varepsilon^{2}}{4}.$
+
+The choice ( 4.26 ) ensures $\tau D_{Y}\leq\varepsilon/2$ . Hence ( 4.12 ) gives
+
+$\mathcal{R}(x_{\rm out},y_{\rm out})\leq\sqrt{S_{j}}+\tau D_{Y}\leq\frac{\varepsilon}{2}+\frac{\varepsilon}{2}=\varepsilon.$
+
+∎
+
+10.7 Unified warm-up and its complexity consequences
+
+10.7.1 Warm-up energy
+
+The projection argument in Lemma 3.1 does not use the center-step length. Hence both phases preserve feasibility and $\xi_{t}\in N_{X}(x_{t})$ , $n_{t}\in N_{Y}(y_{t})$ . Lemma 9.2 gives $H_{t}\geq 0$ , and Lemma 10.1 gives $H_{0}\leq\overline{H}_{\mu,\tau}$ . For $0\leq t<T_{\rm w}$ , the center remains $x_{0}$ . Applying the fixed-center estimate ( 9.21 ), with $h\sqrt{2L\mu_{y}}/32=128\beta$ , and dropping its nonnegative dissipation gives
+
+$(1+128\beta)H_{t+1}\leq H_{t},\qquad 0\leq t<T_{\rm w}.$ (10.17)
+
+Therefore
+
+$H_{T_{\rm w}}\leq\frac{\overline{H}_{\mu,\tau}}{(1+128\beta)^{T_{\rm w}}}\leq\eta.$
+
+This includes $T_{\rm w}=0$ , which occurs when $\overline{H}_{\mu,\tau}\leq\eta$ . Since $z_{T_{\rm w}}=x_{0}$ , ( 10.11 ) then gives
+
+$\Delta_{\tau}^{\rm w}=p(x_{0})-\inf_{z}p(z)+H_{T_{\rm w}}\leq\Delta_{\phi}+\frac{\tau D_{Y}^{2}}{2}+\eta=B_{\mu,\tau,\eta}.$
+
+All arguments depend on $\mu$ and $\tau$ through $\mu_{y}=\mu+\tau$ except for the explicit perturbation bias. ∎
+
+10.7.2 Inherited-state residuals and query count
+
+Retaining the complete state preserves the assumptions of the interval version of Lemma 4.3 . Apply ( 4.11 ) with $a=T_{\rm w}$ to obtain
+
+$\sum_{t=T_{\rm w}}^{T_{\rm w}+T-1}S_{t}\leq\frac{32L\Delta_{\tau}^{\rm w}}{\beta},\qquad\sum_{t=T_{\rm w}}^{T_{\rm w}+T-1}\|\nabla p(z_{t})\|^{2}\leq\frac{8L\Delta_{\tau}^{\rm w}}{\beta}.$ (10.18)
+
+Using $\Delta_{\tau}^{\rm w}\leq B_{\mu,\tau,\eta}$ and ( 4.32 ), uniform sampling and certificate minimization give
+
+$\mathbb{E}\|\nabla p(z_{\rm out})\|^{2}\leq\frac{8LB_{\mu,\tau,\eta}}{\beta T}\leq\frac{\varepsilon^{2}}{16},\qquad S_{j}\leq\frac{32LB_{\mu,\tau,\eta}}{\beta T}\leq\frac{\varepsilon^{2}}{4}.$
+
+The transfer argument in Appendix 10.1 then proves ( 4.37 ). For $\tau=0$ , $p=\Phi_{2L}$ , so the stronger auxiliary estimate is already an OS estimate.
+
+The parameters imply
+
+$0<128\beta<1,\qquad\beta^{-1}=\frac{262144(3L+\tau)}{\sqrt{2L(\mu+\tau)}}=\Theta\!\left(\sqrt{\frac{L}{\mu+\tau}}\right).$
+
+Using $\log(1+s)\geq s/2$ for $0\leq s\leq 1$ and the iteration budgets,
+
+$T_{\rm w}\leq 1+\frac{\log q_{\mu,\tau,\eta}}{64\beta},\qquad T\leq 1+\frac{128LB_{\mu,\tau,\eta}}{\beta\varepsilon^{2}}.$
+
+The gradient-caching convention in Section 3.2 uses one initial query and two further queries per iteration. Each iteration makes four projections, and the center-step switch requires neither a new gradient nor a state reset. These observations prove ( 4.38 ) and the projection count. ∎
+
+10.7.3 NC–SC and NC–C specializations
+
+Set $\tau=0$ . The definition ( 4.30 ) reduces to
+
+$\overline{H}_{\mu}=D_{Y}\|\nabla_{y}f(x_{0},y_{0})\|+\frac{\|\nabla_{x}f(x_{0},y_{0})\|^{2}+\|\nabla_{y}f(x_{0},y_{0})\|^{2}}{L}+\frac{\mu D_{Y}^{2}}{256}.$
+
+Here $B_{\mu,0,\eta}=\Delta_{\phi}+\eta$ and $\beta^{-1}=\Theta(\sqrt{\kappa})$ . Theorem 4.6 gives both stated stationarity guarantees. For $\eta=\varepsilon^{2}/L$ , its query bound becomes ( 4.40 ), since
+
+$\frac{L(\Delta_{\phi}+\eta)}{\varepsilon^{2}}=\frac{L\Delta_{\phi}}{\varepsilon^{2}}+1,\qquad\log\max\{1,L\overline{H}_{\mu}/\varepsilon^{2}\}\leq\log(1+L\overline{H}_{\mu}/\varepsilon^{2}).$
+
+For a fixed instance with $\Delta_{\phi}>0$ , $\varepsilon^{2}\log(1+L\overline{H}_{\mu}/\varepsilon^{2})\to 0$ . This proves the leading-order assertion. For the alternative in Remark 4.5 , use $\eta=\overline{\Delta}>0$ and $\Delta_{\phi}+\eta\leq 2\overline{\Delta}$ in the same theorem. This proves ( 4.45 ); both $\overline{H}_{\mu}$ and $\overline{\Delta}$ are independent of $\varepsilon$ , so the warm-up length is also independent of it. ∎
+
+Set $\mu=0$ and $\eta=\tau D_{Y}^{2}$ . Then
+
+$B_{0,\tau,\eta}=\Delta_{\phi}+\frac{3}{2}\tau D_{Y}^{2},\qquad q_{0,\tau,\eta}=\max\{1,\overline{H}_{0,\tau}/(\tau D_{Y}^{2})\}.$
+
+For OS, the choice ( 4.22 ) gives $8L\tau D_{Y}^{2}\leq\varepsilon^{2}/2$ . Theorem 4.6 therefore yields
+
+$\mathbb{E}\|\nabla\Phi_{2L}(z_{\rm out})\|^{2}\leq\frac{\varepsilon^{2}}{8}+\frac{\varepsilon^{2}}{2}\leq\varepsilon^{2}.$
+
+For GS, the choice ( 4.26 ) gives $\tau D_{Y}\leq\varepsilon/2$ , so the same theorem gives $\mathcal{R}(x_{\rm out},y_{\rm out})\leq\varepsilon$ .
+
+For fixed problem and initialization data, $\overline{H}_{0,\tau}$ is bounded as $\tau\downarrow 0$ . For sufficiently small $\varepsilon$ , the OS choice satisfies $\tau=\varepsilon^{2}/(16LD_{Y}^{2})$ and $\beta^{-1}=\Theta(LD_{Y}/\varepsilon)$ . The leading term in ( 4.38 ) is then $O(L^{2}D_{Y}\Delta_{\phi}\varepsilon^{-3})$ ; its other terms are $O((LD_{Y}/\varepsilon)[1+\log(1+L\overline{H}_{0,\tau}/\varepsilon^{2})])$ . For GS, $\tau=\varepsilon/(2D_{Y})$ and $\beta^{-1}=\Theta(\sqrt{LD_{Y}/\varepsilon})$ . The contribution of the value-function gap is $O(L^{3/2}D_{Y}^{1/2}\Delta_{\phi}\varepsilon^{-5/2})$ . The remaining terms are bounded by
+
+$O\!\left(L^{3/2}D_{Y}^{3/2}\varepsilon^{-3/2}+\sqrt{\frac{LD_{Y}}{\varepsilon}}\left[1+\log\!\left(1+\frac{\overline{H}_{0,\tau}}{\varepsilon D_{Y}}\right)\right]\right).$
+
+Dividing these additional terms by the respective leading terms shows that their ratios tend to zero for each fixed instance with $\Delta_{\phi}>0$ . This proves ( 4.42 ) and ( 4.44 ); the full nonasymptotic statement remains ( 4.38 ). ∎
+
+11 Lower-Bound Construction
+
+We first establish the regularity of the base instance and its value function, then show how the oracle reveals the chain coordinates. A value-gradient barrier yields the Moreau-gradient barrier needed for Theorem 5.1 . The final subsection verifies the initialization and oracle-class conditions for comparing the bounds. All constants in the base construction are independent of $M$ and $n$ .
+
+11.1 Analytic properties of the base instance
+
+We establish the regularity properties of the base instance defined in Section 5.2 . For the proofs, introduce the simpler expression
+
+$\displaystyle f_{M,n}(x,y):={}$ $\displaystyle-\frac{1}{2}\sum_{i=1}^{M}(y^{i})^{\top}Q_{n}y^{i}+\frac{1}{\sqrt{n}}\sum_{i=1}^{M}w_{i}(x)(y_{1}^{i}-g(x_{i})y_{n}^{i})$ (11.1) $\displaystyle-4\sum_{i=1}^{M}s(x_{i})+\frac{1}{2}\sum_{i=1}^{M}(x_{i}^{-})^{2}$
+
+The functions $s,h,g,R_{n}$ belong to $C^{1,1}$ and satisfy
+
+$\begin{gathered}0\leq s\leq 1,\quad s^{\prime}\geq 0,\quad(s^{\prime})^{2}=\pi^{2}s(1-s),\quad\Lip(s^{\prime})\leq\pi^{2}/2,\\ s(0)=s^{\prime}(0)=s^{\prime}(1)=0,\quad s(1)=1,\\ |h|\leq 2,\quad 0\leq h^{\prime}\leq 1,\quad\Lip(h^{\prime})\leq 1/2,\\ |g|\leq 1/2,\quad 0\leq g^{\prime}\leq 1/4,\quad\Lip(g^{\prime})\leq 1/8,\quad g(t)=t/4\quad(|t|\leq 1).\end{gathered}$ (11.2)
+
+Moreover,
+
+$w_{i}\geq 0,\qquad\sum_{i=1}^{M}w_{i}=1-P_{M}\leq 1,$ (11.3)
+
+and
+
+$\frac{1}{2n^{2}}\leq\lambda_{\min}(Q_{n})\leq\frac{2}{n^{2}},\qquad\|Q_{n}\|\leq 5.$ (11.4)
+
+The set $Y_{M,n}$ is nonempty, compact, and convex, and, for every $v\in\mathbb{R}^{Mn}$ ,
+
+$\diam(Y_{M,n})=2n,\qquad\supp(\Pi_{Y_{M,n}}(v))\subseteq\supp(v).$ (11.5)
+
+For $0<t<1$ , we have $s^{\prime}(t)=(\pi/2)\sin(\pi t)$ and $s^{\prime\prime}(t)=(\pi^{2}/2)\cos(\pi t)$ ; outside this interval, $s^{\prime}=0$ . On the intervals $|t|<1$ , $1<|t|<3$ , and $|t|>3$ , the derivative $h^{\prime}$ equals $1$ , $(3-|t|)/2$ , and $0$ , respectively. The first derivatives agree at all junctions, which proves ( 11.2 ). Furthermore,
+
+$R_{n}^{\prime}(t)=\frac{\sgn(t)(|t|-\sqrt{n})_{+}}{n},\qquad R_{n}^{\prime\prime}(t)=\frac{1}{n}\boldsymbol{1}_{\{|t|>\sqrt{n}\}}\quad\text{almost everywhere}.$
+
+Thus $\Lip(R_{n}^{\prime})\leq 1/n$ . Summing the identity $w_{i}=P_{i-1}-P_{i}$ gives ( 11.3 ).
+
+Let $\delta_{j}=u_{j+1}-u_{j}$ . The identity $u_{j}=u_{1}+\sum_{\ell<j}\delta_{\ell}$ and the Cauchy–Schwarz inequality yield
+
+$u_{j}^{2}\leq 2u_{1}^{2}+2(j-1)\sum_{\ell=1}^{n-1}\delta_{\ell}^{2}.$
+
+Summing over $j$ gives
+
+$\|u\|^{2}\leq 2nu_{1}^{2}+n(n-1)\sum_{\ell=1}^{n-1}\delta_{\ell}^{2}\leq 2n^{2}u^{\top}Q_{n}u.$
+
+Consequently, $\lambda_{\min}(Q_{n})\geq 1/(2n^{2})$ . Taking $u=\boldsymbol{1}_{n}$ gives a Rayleigh quotient of $2/n^{2}$ and hence the upper bound on $\lambda_{\min}(Q_{n})$ . On the other hand,
+
+$u^{\top}Q_{n}u\leq 2\sum_{j=1}^{n-1}(u_{j}^{2}+u_{j+1}^{2})+\frac{u_{1}^{2}+u_{n}^{2}}{n}\leq 5\|u\|^{2},$
+
+which proves ( 11.4 ).
+
+The set $Y_{M,n}$ is the intersection of a closed ball and a closed cube; it contains the origin and is bounded. Hence it is nonempty, compact, and convex. Its diameter is at most $2n$ . Take $\bar{y}^{1}=\sqrt{n}\boldsymbol{1}_{n}$ and $\bar{y}^{i}=0$ for $i>1$ . Then $\pm\bar{y}\in Y_{M,n}$ and $\|\bar{y}-(-\bar{y})\|=2n$ , so the diameter equals $2n$ . Let $p=\Pi_{Y_{M,n}}(v)$ . If $v_{a}=0$ but $p_{a}\neq 0$ , replace $p_{a}$ by zero to obtain $\widetilde{p}$ . Neither constraint norm increases, so $\widetilde{p}\in Y_{M,n}$ , whereas
+
+$\|\widetilde{p}-v\|^{2}=\|p-v\|^{2}-|p_{a}|^{2}<\|p-v\|^{2}.$
+
+This contradicts the optimality of the projection and proves the support inclusion. ∎
+
+Suppose that $v_{i}\in C^{1,1}(\mathbb{R})$ satisfy $|v_{i}|\leq V_{0}$ , $|v_{i}^{\prime}|\leq V_{1}$ , and $\Lip(v_{i}^{\prime})\leq V_{2}$ . For $G(x)=\sum_{i=1}^{M}w_{i}(x)v_{i}(x_{i})$ , we have
+
+$\displaystyle\|\nabla G(x)\|$ $\displaystyle\leq\pi V_{0}+V_{1},$ (11.6) $\displaystyle\Lip(\nabla G)$ $\displaystyle\leq KV_{0}+2\pi V_{1}+V_{2},\qquad K:=\frac{1+\sqrt{3}}{2}\pi^{2}.$
+
+Let $\theta_{i}=(\pi/2)\min\{1,\max\{0,x_{i}\}\}$ , $u_{i}=(\cos\theta_{i},\sin\theta_{i})$ , and $A=\bigotimes_{i=1}^{M}u_{i}$ . Index the tensor coordinates by $\sigma\in\{0,1\}^{M}$ , where $0$ selects $\cos\theta_{i}$ and $1$ selects $\sin\theta_{i}$ . If $m(\sigma):=\min\{i:\sigma_{i}=0\}$ exists, define $V_{\sigma\sigma}(x)=v_{m(\sigma)}(x_{m(\sigma)})$ . Set the diagonal entry indexed by the all-one vector to zero and all off-diagonal entries to zero. Then
+
+$\sum_{\sigma:m(\sigma)=i}A_{\sigma}^{2}=\left(\prod_{j<i}\sin^{2}\theta_{j}\right)\cos^{2}\theta_{i}\prod_{j>i}(\cos^{2}\theta_{j}+\sin^{2}\theta_{j})=w_{i}.$
+
+It follows that $G=A^{\top}VA$ and $\|A\|=1$ .
+
+We first differentiate within any open region determined by the hyperplanes $x_{i}=0,1$ . For a direction $q$ , set $a_{i}=(\pi/2)q_{i}$ when $0<x_{i}<1$ and $a_{i}=0$ otherwise. Let $B_{i}$ be the tensor obtained by replacing the $i$ th factor of $A$ with $u_{i}^{\perp}=(-\sin\theta_{i},\cos\theta_{i})$ , and let $B_{ij}$ be the tensor obtained by replacing both the $i$ th and $j$ th factors. Since each pair $u_{i},u_{i}^{\perp}$ is orthonormal, $A$ , all $B_{i}$ , and all $B_{ij}$ form an orthonormal collection. Therefore,
+
+$\displaystyle DA[q]$ $\displaystyle=\sum_{i}a_{i}B_{i},$ $\displaystyle D^{2}A[q,q]$ $\displaystyle=-\left(\sum_{i}a_{i}^{2}\right)A+2\sum_{i<j}a_{i}a_{j}B_{ij},$ $\displaystyle\|DA[q]\|^{2}$ $\displaystyle=\sum_{i}a_{i}^{2}\leq\frac{\pi^{2}}{4}\|q\|^{2},$ $\displaystyle\|D^{2}A[q,q]\|^{2}$ $\displaystyle=\left(\sum_{i}a_{i}^{2}\right)^{2}+4\sum_{i<j}a_{i}^{2}a_{j}^{2}\leq\frac{3\pi^{4}}{16}\|q\|^{4}.$
+
+By the definition of the diagonal entries,
+
+$\|V\|\leq V_{0},\qquad\|DV[q]\|\leq V_{1}\|q\|,\qquad\|D^{2}V[q,q]\|\leq V_{2}\|q\|^{2}\quad\text{almost everywhere}.$
+
+Differentiating $A^{\top}VA$ gives
+
+$DG[q]=2(DA[q])^{\top}VA+A^{\top}(DV[q])A$
+
+and
+
+$\displaystyle D^{2}G[q,q]={}$ $\displaystyle 2(D^{2}A[q,q])^{\top}VA+2(DA[q])^{\top}VDA[q]$ $\displaystyle+4(DA[q])^{\top}(DV[q])A+A^{\top}(D^{2}V[q,q])A.$
+
+Hence $|DG[q]|\leq(\pi V_{0}+V_{1})\|q\|$ , and
+
+$\displaystyle|D^{2}G[q,q]|$ $\displaystyle\leq\left(\frac{\sqrt{3}\pi^{2}}{2}V_{0}+\frac{\pi^{2}}{2}V_{0}+2\pi V_{1}+V_{2}\right)\|q\|^{2}$ $\displaystyle=(KV_{0}+2\pi V_{1}+V_{2})\|q\|^{2}.$
+
+As a finite sum of finite products of $C^{1,1}$ functions, $G$ is locally $C^{1,1}$ , and its gradient is continuous across the hyperplanes $x_{i}=0,1$ . The preceding Hessian bound holds almost everywhere in the full space. For an arbitrary segment $[a,b]$ , Fubini’s theorem provides translations $\eta_{j}\to 0$ such that the bound holds almost everywhere on each translated segment $[a+\eta_{j},b+\eta_{j}]$ . The gradient is absolutely continuous on each compact segment, so integration yields
+
+$\|\nabla G(b+\eta_{j})-\nabla G(a+\eta_{j})\|\leq(KV_{0}+2\pi V_{1}+V_{2})\|b-a\|.$
+
+Letting $j\to\infty$ and using continuity proves the global Lipschitz bound. Continuity also extends the gradient norm bound to the boundaries of the regions. ∎
+
+The function $\widehat{f}_{M,n}$ is jointly $L_{0}$ -smooth on $\mathbb{R}^{M+Mn}$ , where $L_{0}:=128$ is independent of $M$ and $n$ . For every $x$ , the function $\widehat{f}_{M,n}(x,\cdot)$ is $\mu_{0}$ -strongly concave, where $\mu_{0}=\lambda_{\min}(Q_{n})$ . Moreover, $\widehat{f}_{M,n}$ is nonconvex in $x$ , and
+
+$\widehat{f}_{M,n}=f_{M,n},\qquad\nabla\widehat{f}_{M,n}=\nabla f_{M,n}\quad\text{on }\mathbb{R}^{M}\times Y_{M,n}.$ (11.7)
+
+Denote the coupling term in ( 5.9 ) by $C(x,y)$ . For fixed $y$ , set
+
+$v_{i}(t)=h(y_{1}^{i}/\sqrt{n})-g(t)h(y_{n}^{i}/\sqrt{n}).$
+
+By ( 11.2 ), we may take $V_{0}=3$ , $V_{1}=1/2$ , and $V_{2}=1/4$ . Applying Lemma 11.2 and including the second derivatives of $-4s(x_{i})$ and $(x_{i}^{-})^{2}/2$ yields, almost everywhere,
+
+$\|\nabla_{xx}^{2}\widehat{f}_{M,n}\|\leq 3K+\pi+\frac{1}{4}+2\pi^{2}+1<65.$ (11.8)
+
+For $r=(r^{1},\ldots,r^{M})\in\mathbb{R}^{Mn}$ with $\|r\|=1$ , we have
+
+$\displaystyle D_{y}C(x,y)[r]$ $\displaystyle=\sum_{i}w_{i}(x)\widetilde{v}_{i}(x_{i}),$ $\displaystyle\widetilde{v}_{i}(t)$ $\displaystyle=\frac{h^{\prime}(y_{1}^{i}/\sqrt{n})r_{1}^{i}-g(t)h^{\prime}(y_{n}^{i}/\sqrt{n})r_{n}^{i}}{\sqrt{n}}.$
+
+Since $|r_{j}^{i}|\leq 1$ , it follows that $|\widetilde{v}_{i}|\leq 3/(2\sqrt{n})$ and $|\widetilde{v}_{i}^{\prime}|\leq 1/(4\sqrt{n})$ . The gradient bound in Lemma 11.2 therefore gives
+
+$\|\nabla_{xy}^{2}\widehat{f}_{M,n}\|\leq\frac{3\pi/2+1/4}{\sqrt{n}}<4.$ (11.9)
+
+Apart from $-I_{M}\otimes Q_{n}$ , the $yy$ Hessian has only diagonal corrections at the first and last coordinates of each block. These corrections are
+
+$\displaystyle d_{i,1}$ $\displaystyle=\frac{w_{i}}{n}h^{\prime\prime}(y_{1}^{i}/\sqrt{n})-R_{n}^{\prime\prime}(y_{1}^{i}),$ $\displaystyle d_{i,n}$ $\displaystyle=-\frac{w_{i}g(x_{i})}{n}h^{\prime\prime}(y_{n}^{i}/\sqrt{n})-R_{n}^{\prime\prime}(y_{n}^{i}).$
+
+If the absolute value of the corresponding coordinate is less than $\sqrt{n}$ , both terms vanish. If it exceeds $\sqrt{n}$ , the bound $0\leq w_{i}\leq 1$ implies, almost everywhere,
+
+$-\frac{3}{2n}\leq d_{i,1}\leq-\frac{1}{2n},\qquad-\frac{5}{4n}\leq d_{i,n}\leq-\frac{3}{4n}.$
+
+Consequently,
+
+$\begin{gathered}\nabla_{yy}^{2}\widehat{f}_{M,n}\preceq-I_{M}\otimes Q_{n}\preceq-\mu_{0}I,\\ \|\nabla_{yy}^{2}\widehat{f}_{M,n}\|\leq 5+\frac{3}{2n}<6.\end{gathered}$ (11.10)
+
+Decompose the full Hessian into its block-diagonal and off-diagonal parts. Equations ( 11.8 )–( 11.10 ) give
+
+$\|\nabla^{2}\widehat{f}_{M,n}\|\leq\max\{65,6\}+4=69<128\quad\text{almost everywhere}.$
+
+The function $\widehat{f}_{M,n}$ is locally $C^{1,1}$ , with a continuous gradient across the boundaries of its pieces. Integrating along segments and using continuity at the boundaries proves global $L_{0}$ -smoothness. For fixed $x$ , integrating ( 11.10 ) in the same way yields
+
+$\displaystyle\widehat{f}_{M,n}(x,y^{\prime})\leq{}$ $\displaystyle\widehat{f}_{M,n}(x,y)+\langle\nabla_{y}\widehat{f}_{M,n}(x,y),y^{\prime}-y\rangle$ $\displaystyle-\frac{\mu_{0}}{2}\|y^{\prime}-y\|^{2}.$
+
+For $y=0$ and $0<t<1/2$ , we have $\widehat{f}_{M,n}(te_{1},0)=-4s(t)$ , whose second derivative is $-2\pi^{2}\cos(\pi t)<0$ . Thus the objective is nonconvex in $x$ . Finally, every coordinate of a point in $Y_{M,n}$ satisfies $|y_{j}^{i}|\leq\sqrt{n}$ . Hence $h(y_{j}^{i}/\sqrt{n})=y_{j}^{i}/\sqrt{n}$ , $h^{\prime}=1$ , and $R_{n}=R_{n}^{\prime}=0$ . Substitution proves ( 11.7 ), including at boundary points. ∎
+
+11.2 Value function and oracle information propagation
+
+Let
+
+$a_{n}:=\frac{2n-1}{3n-1},\qquad b_{n}:=\frac{n}{3n-1},\qquad k_{n}(t):=\frac{a_{n}}{2}(1+g(t)^{2})-b_{n}g(t).$
+
+For every $x$ , the unique dual maximizer is
+
+$y^{i,*}(x)=\frac{w_{i}(x)}{\sqrt{n}}Q_{n}^{-1}(e_{1}-g(x_{i})e_{n}),\qquad i=1,\ldots,M.$ (11.11)
+
+This vector belongs to $Y_{M,n}$ , and
+
+$\varphi_{M,n}(x)=\sum_{i=1}^{M}w_{i}(x)^{2}k_{n}(x_{i})-4\sum_{i=1}^{M}s(x_{i})+\frac{1}{2}\sum_{i=1}^{M}(x_{i}^{-})^{2}.$ (11.12)
+
+Moreover, $0\leq k_{n}\leq 1$ and
+
+$\inf\varphi_{M,n}=-4M,\qquad\varphi_{M,n}(0)-\inf\varphi_{M,n}=4M+\frac{a_{n}}{2}\leq 5M.$ (11.13)
+
+Define
+
+$u_{j}=\frac{n(2n-j)}{3n-1},\qquad v_{j}=\frac{n(n+j-1)}{3n-1},\qquad j=1,\ldots,n.$
+
+Since $u_{j}$ is affine in $j$ , it satisfies $2u_{j}-u_{j-1}-u_{j+1}=0$ for $2\leq j\leq n-1$ . At the endpoints,
+
+$\displaystyle(1+1/n)u_{1}-u_{2}$ $\displaystyle=\frac{(n+1)(2n-1)-n(2n-2)}{3n-1}=1,$ $\displaystyle(1+1/n)u_{n}-u_{n-1}$ $\displaystyle=\frac{n(n+1)-n(n+1)}{3n-1}=0.$
+
+Thus $Q_{n}u=e_{1}$ . The matrix $Q_{n}$ is invariant under reversal of the coordinate order, and $v_{j}=u_{n+1-j}$ , so $Q_{n}v=e_{n}$ . Since $Q_{n}\succ 0$ , we obtain $u=Q_{n}^{-1}e_{1}$ and $v=Q_{n}^{-1}e_{n}$ . Completing the square in each quadratic block of ( 11.1 ) gives the unique unconstrained maximizer in ( 11.11 ).
+
+Because $u_{j},v_{j}\geq 0$ and $u_{j}+v_{j}=n$ ,
+
+$|u_{j}-g(x_{i})v_{j}|\leq u_{j}+|g(x_{i})|v_{j}\leq n.$
+
+Consequently,
+
+$\|y^{i,*}(x)\|_{\infty}\leq\sqrt{n}\,w_{i}(x),\qquad\|y^{i,*}(x)\|_{2}\leq nw_{i}(x).$
+
+Together with ( 11.3 ), these estimates imply
+
+$\|y^{*}(x)\|_{\infty}\leq\sqrt{n},\qquad\|y^{*}(x)\|_{2}^{2}\leq n^{2}\sum_{i}w_{i}(x)^{2}\leq n^{2}\left(\sum_{i}w_{i}(x)\right)^{2}\leq n^{2}.$
+
+Hence $y^{*}(x)\in Y_{M,n}$ . By ( 11.7 ), this point is also the unique maximizer of $\widehat{f}_{M,n}$ over $Y_{M,n}$ .
+
+The displayed columns of $Q_{n}^{-1}$ give
+
+$e_{1}^{\top}Q_{n}^{-1}e_{1}=e_{n}^{\top}Q_{n}^{-1}e_{n}=na_{n},\qquad e_{1}^{\top}Q_{n}^{-1}e_{n}=nb_{n}.$
+
+The maximum of each quadratic block is therefore
+
+$\frac{w_{i}^{2}}{2n}(e_{1}-g(x_{i})e_{n})^{\top}Q_{n}^{-1}(e_{1}-g(x_{i})e_{n})=w_{i}^{2}k_{n}(x_{i}),$
+
+which proves ( 11.12 ). Positive definiteness gives $k_{n}\geq 0$ . Since $a_{n}\leq 1$ , $b_{n}\leq 1/2$ , and $|g|\leq 1/2$ ,
+
+$k_{n}(t)\leq\frac{1}{2}\left(1+\frac{1}{4}\right)+\frac{1}{2}\cdot\frac{1}{2}=\frac{7}{8}\leq 1.$
+
+The signs of the terms in ( 11.12 ) and the bound $s\leq 1$ give $\varphi_{M,n}(x)\geq-4M$ . At $x=\boldsymbol{1}_{M}$ , all $w_{i}$ and $x_{i}^{-}$ vanish and all $s(x_{i})$ equal one, attaining $-4M$ . At $x=0$ , only $w_{1}=1$ is nonzero and $k_{n}(0)=a_{n}/2$ . This proves ( 11.13 ). ∎
+
+Let $d=M(n+1)$ and label the coordinates $c_{1},\ldots,c_{d}$ in the order
+
+$y_{1}^{1},\ldots,y_{n}^{1},x_{1},y_{1}^{2},\ldots,y_{n}^{2},x_{2},\ldots,y_{1}^{M},\ldots,y_{n}^{M},x_{M}.$ (11.14)
+
+Define
+
+$V_{0}:=\{0\},\qquad V_{k}:=\{z:\supp(z)\subseteq\{c_{1},\ldots,c_{\min\{k,d\}}\}\}\quad(k\geq 1).$
+
+For $\widehat{f}_{M,n}$ on $\mathcal{Z}_{M,n}:=\mathbb{R}^{M}\times Y_{M,n}$ , every algorithm in Definition 5.1 satisfies
+
+$w^{t}\in V_{t},\qquad w^{\mathrm{out}}\in V_{T}.$ (11.15)
+
+In particular, $x_{M}^{\mathrm{out}}=0$ whenever $T<M(n+1)$ .
+
+Projection onto the product set separates as
+
+$\Pi_{\mathcal{Z}_{M,n}}(v_{x},v_{y})=(v_{x},\Pi_{Y_{M,n}}(v_{y})).$
+
+By ( 11.5 ), $v\in V_{k}$ implies $\Pi_{\mathcal{Z}_{M,n}}(v)\in V_{k}$ .
+
+Write $F_{M,n}=(\nabla_{x}\widehat{f}_{M,n},-\nabla_{y}\widehat{f}_{M,n})$ . By ( 11.7 ), at a feasible point we have
+
+$\nabla_{y^{i}}\widehat{f}_{M,n}=-Q_{n}y^{i}+\frac{w_{i}(x)}{\sqrt{n}}(e_{1}-g(x_{i})e_{n}).$ (11.16)
+
+If $x_{i}=0$ , then $s^{\prime}(x_{i})=0$ and consequently $\partial_{x_{i}}w_{j}(x)=0$ for every $j$ . Indeed, for $j<i$ the weight does not depend on $x_{i}$ ; for $j=i$ its derivative is $-P_{i-1}s^{\prime}(x_{i})$ ; and for $j>i$ each derivative contains the factor $s^{\prime}(x_{i})$ . Since $g^{\prime}(0)=1/4$ , it follows that
+
+$\partial_{x_{i}}\widehat{f}_{M,n}(x,y)=-\frac{P_{i-1}(x)}{4\sqrt{n}}y_{n}^{i}\quad(x_{i}=0,\ y\in Y_{M,n}).$ (11.17)
+
+We show that $z\in V_{k}\cap\mathcal{Z}_{M,n}$ implies $F_{M,n}(z)\in V_{k+1}$ . This holds trivially for $k\geq d$ . For $k<d$ , write uniquely $k=(i-1)(n+1)+r$ , where $1\leq i\leq M$ and $0\leq r\leq n$ . Then $x_{i}=0$ , only the first $r$ coordinates of $y^{i}$ may be nonzero, and $x_{j}=y^{j}=0$ for all $j>i$ . In block $i$ , $g(x_{i})=0$ and $Q_{n}$ is tridiagonal. If $r<n$ , ( 11.16 ) can therefore activate only the next coordinate $y_{r+1}^{i}$ , while $y_{n}^{i}=0$ makes ( 11.17 ) zero. If $r=n$ , every dual coordinate of block $i$ already belongs to $V_{k}$ , and only $x_{i}$ can be newly activated. For $j>i$ , the product $P_{j-1}$ contains $s(x_{i})=0$ , so $w_{j}=0$ . Together with $y^{j}=0$ , this makes both ( 11.16 ) and ( 11.17 ) zero in those blocks. Thus the gradient support lies in the first $k+1$ coordinates.
+
+Starting from $w^{0}=0\in V_{0}$ , suppose inductively that $w^{s}\in V_{s}$ for every $s\leq t$ . Then $F_{M,n}(w^{s})\in V_{s+1}\subseteq V_{t+1}$ . The support restriction ( 5.3 ) gives $a^{t+1}\in V_{t+1}$ , and projection gives $w^{t+1}\in V_{t+1}$ . Every vector in the union in ( 5.4 ) belongs to $V_{T}$ , so $a^{\mathrm{out}}\in V_{T}$ and its projection remains in $V_{T}$ . If $T=0$ , the output is zero and the same conclusion holds. Finally, $x_{M}$ is the $d$ th coordinate, so $T<d$ implies $x_{M}^{\mathrm{out}}=0$ . ∎
+
+11.3 Stationarity barriers
+
+If $x_{M}\leq 1/2$ , then
+
+$\|\nabla\varphi_{M,n}(x)\|\geq\frac{1}{256}.$ (11.18)
+
+By Lemma 11.4 , $\varphi_{M,n}$ is continuously differentiable, and
+
+$k_{n}^{\prime}(t)=(a_{n}g(t)-b_{n})g^{\prime}(t).$
+
+Since
+
+$a_{n}g(t)-b_{n}\leq\frac{a_{n}}{2}-b_{n}=-\frac{1}{2(3n-1)}<0$
+
+and $g^{\prime}\geq 0$ , we have $k_{n}^{\prime}\leq 0$ . For $t\in[-1,1/2]$ , $g(t)=t/4\leq 1/8$ and $g^{\prime}(t)=1/4$ , so
+
+$k_{n}^{\prime}(t)\leq\frac{1}{4}\left(\frac{a_{n}}{8}-b_{n}\right)=-\frac{6n+1}{32(3n-1)}\leq-\frac{1}{16}.$ (11.19)
+
+Write $s_{i}=s(x_{i})$ and $s_{i}^{\prime}=s^{\prime}(x_{i})$ , and define
+
+$H_{i}(x)=\sum_{m=i+1}^{M}\left(\prod_{j=i+1}^{m-1}s_{j}^{2}\right)(1-s_{m})^{2}k_{n}(x_{m}).$
+
+Empty sums equal zero and empty products equal one. The bounds $0\leq k_{n}\leq 1$ and $(1-s_{m})^{2}\leq 1-s_{m}^{2}$ imply
+
+$\displaystyle 0\leq H_{i}$ $\displaystyle\leq\sum_{m=i+1}^{M}\left(\prod_{j=i+1}^{m-1}s_{j}^{2}\right)(1-s_{m}^{2})$ (11.20) $\displaystyle=1-\prod_{j=i+1}^{M}s_{j}^{2}\leq 1.$
+
+Decompose the first term of the value function as
+
+$\sum_{m}w_{m}^{2}k_{n}(x_{m})=\sum_{m<i}w_{m}^{2}k_{n}(x_{m})+P_{i-1}^{2}\bigl((1-s_{i})^{2}k_{n}(x_{i})+s_{i}^{2}H_{i}\bigr).$
+
+The terms $\sum_{m<i}w_{m}^{2}k_{n}(x_{m})$ , $P_{i-1}$ , and $H_{i}$ do not depend on $x_{i}$ . Differentiating ( 11.12 ) term by term yields
+
+$\displaystyle\partial_{i}\varphi_{M,n}(x)={}$ $\displaystyle P_{i-1}^{2}\bigl((1-s_{i})^{2}k_{n}^{\prime}(x_{i})-2(1-s_{i})s_{i}^{\prime}k_{n}(x_{i})+2s_{i}s_{i}^{\prime}H_{i}\bigr)$ (11.21) $\displaystyle-4s_{i}^{\prime}+\min\{x_{i},0\}.$
+
+Because $0\leq P_{i-1},s_{i},H_{i}\leq 1$ , $s_{i}^{\prime}\geq 0$ , $k_{n}\geq 0$ , and $k_{n}^{\prime}\leq 0$ ,
+
+$\displaystyle\partial_{i}\varphi_{M,n}(x)$ $\displaystyle\leq P_{i-1}^{2}(1-s_{i})^{2}k_{n}^{\prime}(x_{i})-2s_{i}^{\prime}+\min\{x_{i},0\}$ (11.22) $\displaystyle\leq-2s_{i}^{\prime}\leq 0.$
+
+Consequently,
+
+$\|\nabla\varphi_{M,n}(x)\|^{2}\geq 4\sum_{i}(s_{i}^{\prime})^{2}.$ (11.23)
+
+Suppose, for a contradiction, that $\|\nabla\varphi_{M,n}(x)\|<1/256$ . Let $k$ be the smallest index for which $s_{k}\leq 1/2$ . Such an index exists because $x_{M}\leq 1/2$ and $s(1/2)=1/2$ . For $i<k$ , we have $s_{i}>1/2$ ; hence ( 11.2 ) and ( 11.23 ) give
+
+$1-s_{i}=\frac{(s_{i}^{\prime})^{2}}{\pi^{2}s_{i}}\leq\frac{2}{\pi^{2}}(s_{i}^{\prime})^{2},\qquad\sum_{i<k}(1-s_{i})\leq\frac{\|\nabla\varphi_{M,n}(x)\|^{2}}{2\pi^{2}}<\frac{1}{2}.$
+
+For $a_{i}\in[0,1]$ , repeated use of $(1-a)(1-b)\geq 1-a-b$ yields $\prod_{i}(1-a_{i})\geq 1-\sum_{i}a_{i}$ . Therefore,
+
+$P_{k-1}=\prod_{i<k}s_{i}\geq 1-\sum_{i<k}(1-s_{i})\geq\frac{1}{2}.$
+
+If $x_{k}<-1$ , then ( 11.22 ) implies $\partial_{k}\varphi_{M,n}(x)\leq x_{k}<-1$ , contradicting the assumed gradient bound. Otherwise, $s_{k}\leq 1/2$ and the definition of $s$ give $x_{k}\in[-1,1/2]$ . Applying ( 11.19 ) and ( 11.22 ), we obtain
+
+$\partial_{k}\varphi_{M,n}(x)\leq-\left(\frac{1}{2}\right)^{2}\left(\frac{1}{2}\right)^{2}\frac{1}{16}=-\frac{1}{256},$
+
+again a contradiction. ∎
+
+Let $c_{0}=1/512$ and use the curvature convention
+
+$\Phi_{M,n,2L_{0}}(x):=\min_{u}\{\varphi_{M,n}(u)+L_{0}\|u-x\|^{2}\}.$
+
+If $x_{M}=0$ , then
+
+$\|\nabla\Phi_{M,n,2L_{0}}(x)\|>c_{0}.$ (11.24)
+
+Consequently, the output of every projected zero-respecting first-order algorithm after $T<M(n+1)$ queries satisfies ( 11.24 ).
+
+Lemma 11.3 implies that $\varphi_{M,n}$ is $L_{0}$ -weakly convex: for each feasible $y$ , $\widehat{f}_{M,n}(\cdot,y)+(L_{0}/2)\|\cdot\|^{2}$ is convex, and taking its pointwise maximum preserves convexity. By ( 11.13 ), $\varphi_{M,n}$ is bounded below. Hence
+
+$p=\argmin_{u}\{\varphi_{M,n}(u)+L_{0}\|u-x\|^{2}\}$
+
+exists and is unique. Set $d=\nabla\Phi_{M,n,2L_{0}}(x)$ . The Moreau-gradient identity and the proximal optimality condition give
+
+$d=2L_{0}(x-p),\qquad 0=\nabla\varphi_{M,n}(p)+2L_{0}(p-x).$
+
+Thus $d=\nabla\varphi_{M,n}(p)$ and $p=x-d/(2L_{0})$ . If $x_{M}=0$ and $\|d\|\leq c_{0}$ , then
+
+$|p_{M}|=\frac{|d_{M}|}{2L_{0}}\leq\frac{1}{2L_{0}\cdot 512}<\frac{1}{2}.$
+
+Lemma 11.6 then gives $\|d\|=\|\nabla\varphi_{M,n}(p)\|\geq 1/256>c_{0}$ , a contradiction. The output statement follows from Lemma 11.5 . ∎
+
+11.4 Initialization for the upper-bound comparison
+
+On the scaled hard instance, initialization at the origin gives
+
+$\nabla_{x}f_{\mathrm{sc}}(0,0)=0,\qquad\nabla_{y}f_{\mathrm{sc}}(0,0)=\frac{a}{b\sqrt{n}}e_{1},\qquad\frac{a}{b\sqrt{n}}\leq\frac{LD_{Y}}{4}.$
+
+Substitution into ( 4.20 ) yields
+
+$\bar{\Delta}_{0}\leq\Delta+\frac{3}{8}LD_{Y}^{2}.$ (11.25)
+
+For fixed $L,\Delta,D_{Y}$ , Lemma 4.4 therefore bounds $\Delta_{\tau}$ uniformly for $0<\tau\leq L$ on the common class satisfying ( 5.1 ) and $\bar{\Delta}_{0}\leq\Delta+\tfrac{3}{8}LD_{Y}^{2}$ . The OS upper and lower bounds match in their $\varepsilon^{-3}$ accuracy dependence on this class. If $\Delta\geq LD_{Y}^{2}$ , the hard family also belongs to the common initialization class $\bar{\Delta}_{0}\leq 2\Delta$ , on which the leading dependence matches at order $L^{2}\Delta D_{Y}\varepsilon^{-3}$ .
+
+With all states initialized at zero, Algorithms 1 and 2 satisfy the oracle support restrictions on these domains. Their linear combinations, regularization gradients, momentum and center updates, and stored-output selection preserve revealed support. Projections preserve support by Lemma 11.1 , as do their residuals. Each gradient evaluation counts as a query; the fixed-center warm-up and its transition to the main phase introduce no new coordinates.
+
+References

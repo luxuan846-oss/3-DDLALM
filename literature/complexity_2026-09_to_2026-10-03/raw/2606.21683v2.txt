@@ -1,0 +1,1451 @@
+Content selection saved. Describe the issue below:
+
+Finite-Sample Performance of Gradient Descent in Logistic Regression with Gaussian Design
+
+We consider the parameter estimation problem in logistic regression with Gaussian design: the estimation of a fixed unknown parameter $\theta^{*}\in\mathbb{R}^{d}$ ( $\|\theta^{*}\|_{2}\geq 1$ ) from $n$ i.i.d. samples $\{(x_{i},y_{i})\}_{i=1}^{n}$ , where $x_{i}\sim N(0,I_{d})$ and $y_{i}|x_{i}\sim{\rm Bernoulli}(1/(1+\exp(-x_{i}^{\top}\theta^{*})))$ . Our main aim is to characterize the finite-sample estimation performance and convergence behavior of gradient descent (GD) on the maximum likelihood objective (i.e., the logistic loss). Under small $O(1)$ stepsize and $0$ initialization, we show that GD linearly converges to a small neighborhood of $\theta^{*}$ achieving an $\ell_{2}$ error of order $O(\sqrt{\|\theta^{*}\|_{2}^{5}d/n})$ . This substantially goes beyond existing theoretical results that lack non-asymptotic estimation error rate and exhibit much slower parameter convergence. We also establish a faster local linear convergence to the same statistical error under a large $\Theta(\|\theta^{*}\|_{2})$ stepsize. The main technical component is to show that the gradient of the logistic loss satisfies a certain approximate invertibility condition (AIC). To that end, we uniformly control the deviation of the gradient from its population counterpart by covering and peeling arguments, and then show that the population GD is a contraction by a delicate analysis based on the eigenvalues of population Hessian matrices. Finally, we build upon the recent work [ 26 ] and devise a novel efficient estimator that attains a sharper rate in high dimensions. This indicates that the existing non-asymptotic guarantees exhibit sub-optimal dependence on $\|\theta^{*}\|_{2}$ , and that in many regimes $\Theta(\sqrt{\|\theta^{*}\|_{2}d/n})$ is the tight estimation error rate. Numerical examples are provided to corroborate our theoretical results.
+
+1 Introduction
+
+Logistic regression is a foundational model in statistics, optimization and machine learning. Given $\{(x_{i},y_{i})\}_{i=1}^{n}\subset\mathbb{R}^{d}\times\{0,1\}$ with binary responses, it assumes the existence of some underlying parameter $\theta^{*}\in\mathbb{R}^{d}$ such that the data follows $y_{i}|x_{i}\sim{\rm Bernoulli}(s(x_{i}^{\top}\theta^{*})),~i\in[n]$ with the sigmoid function $s(a)=1/(1+e^{-a})$ , meaning that $\mathbb{P}(y_{i}=1)=1/(1+e^{-x_{i}^{\top}\theta^{*}})$ and $\mathbb{P}(y_{i}=0)=1/(1+e^{x_{i}^{\top}\theta^{*}})$ . A standard estimator of the true parameter $\theta^{*}$ is the maximum likelihood estimator (MLE) [ 27 ] that minimizes the logistic loss function 1 1 1 Throughout this paper, we adopt the convention that the responses $\{y_{i}\}_{i=1}^{n}$ are $\{0,1\}$ -valued. One can readily transfer our development to the (equivalent) convention of $\{-1,1\}$ -valued responses $\{\tilde{y}_{i}\}_{i=1}^{n}$ (e.g., [ 16 , 26 , 41 ] ) by letting $y_{i}=\frac{1}{2}(\tilde{y}_{i}+1)$ , under which the logistic loss reads $L(\theta)=\frac{1}{n}\sum_{i=1}^{n}\log(1+e^{-\tilde{y}_{i}x_{i}^{\top}\theta})$ .
+
+$\displaystyle L(\theta)=\frac{1}{n}\sum_{i=1}^{n}\big(\log(e^{x_{i}^{\top}\theta}+1)-\ y_{i}x_{i}^{\top}\theta\big),$
+
+given by $\hat{\theta}_{mle}=\textrm{arg}\min_{\theta\in\mathbb{R}^{d}}L(\theta)$ . Since MLE does not admit a closed form, one typically can minimize $L(\theta)$ via gradient descent (GD) with some stepsize $\eta$ ,
+
+$\displaystyle\theta_{t+1}=\theta_{t}-\eta\nabla L(\theta_{t}),\quad t=0,1,\cdots,$ (GD)
+
+where $\nabla L(\theta)=\frac{1}{n}\sum_{i=1}^{n}(s(x_{i}^{\top}\theta)-y_{i})x_{i}$ . The problems of estimation and optimization have been widely studied in logistic regression.
+
+The estimation problem is of interests to statisticians and concerned with the performance of a certain estimator in approximating the underlying $\theta^{*}$ . Perhaps a more fundamental question is to determine the minimax optimal error rate. To answer these questions with an explicit error rate depending on the model parameters $(n,d,\|\theta^{*}\|_{2})$ , 2 2 2 Here, $\|\theta^{*}\|_{2}$ indicates how likely $y_{i}$ is flipped to $-\sign(x_{i}^{\top}\theta^{*})$ and hence represents the signal-to-noise ratio (SNR). existing works assume i.i.d. samples where $x_{i}$ ’s are drawn from a specific distribution [ 21 , 7 , 16 , 26 , 19 ] .
+
+From an optimization perspective, a central question is to understand the capacity of ( GD ) in minimizing $L(\theta)$ . In light of the convexity of $L(\theta)$ , traditional optimization theory [ 31 , Sections 1, 2] yields the global convergence of ( GD ) under small enough $\eta$ , guaranteeing that $L(\theta_{t})$ decreases monotonically. The works [ 35 , 18 ] provided fine-grained characterizations under small stepsizes. A more recent line of works studied large stepsize GD in logistic regression [ 41 , 40 , 43 , 38 ] , referred to as the edge of stability regime [ 13 ] .
+
+This paper is concerned with both the estimation and optimization in logistic regression. Following [ 21 , 7 , 16 , 26 ] we assume that the covariates $x_{1},\cdots,x_{n}$ are i.i.d. standard Gaussian vectors and focus on the estimation of the true parameter $\theta^{*}$ .
+
+$\{(x_{i},y_{i})\}_{i=1}^{n}$ are i.i.d. samples with $x_{i}\sim N(0,I_{d})$ , and when conditioning on $x_{i}$ , $y_{i}\sim{\rm Bernoulli}(s(x_{i}^{\top}\theta^{*}))$ for some $\theta^{*}\in\mathbb{R}^{d}.$
+
+1.1 Related Works
+
+As it is unrealistic to cover the vast literature of logistic regression, we shall focus on two lines of works that are closest to our paper.
+
+Parameter estimation. The most relevant works are [ 21 , 7 ] that derived the non-asymptotic error rates for MLE under Assumption 1 . Kuchelmeister and Van de Geer [ 21 ] first established the finite-sample error rate of minimizing $L(\theta)$ under a Probit model. It was proved [ 21 , Theorem 2.1.1] that a constrained variant of MLE achieves $\ell_{2}$ error of $O(\sqrt{\|\theta^{*}\|_{2}^{3}\frac{d\log n}{n}})$ whenever $n\gtrsim\|\theta^{*}\|_{2}d\log n$ . More recently, Chardon et al. [ 7 ] established similar guarantee for MLE with refinement, showing [ 7 , Theorem 1, Equation (19)] that MLE exists and achieves
+
+$\displaystyle\|\hat{\theta}_{\rm mle}-\theta^{*}\|_{2}\lesssim\sqrt{\frac{\|\theta^{*}\|_{2}^{3}d}{n}}$ (1)
+
+whenever $n\gtrsim\|\theta^{*}\|_{2}d$ . On a relevant passing note, [ 6 ] derived the phase transitions for the existence of MLE in high-dimensional asymptotics.
+
+Another two closely related works [ 16 , 26 ] studied the estimation of parameter direction $r^{*}:=\frac{\theta^{*}}{\|\theta^{*}\|_{2}}$ through algorithms other than MLE. Under $\|\theta^{*}\|_{2}\gtrsim 1$ , [ 16 ] determined the minimax error rate as $\tilde{\Theta}(\max\big\{\sqrt{\frac{d}{n\|\theta^{*}\|_{2}}},\frac{d}{n}\big\})$ . This notably exhibits a transition to the classical halfspace learning result [ 23 ] as $\|\theta^{*}\|_{2}\to\infty$ . While computational tractability was not a consideration in the the upper bound in [ 16 ] (it involves nonconvex minimization routines), more recently [ 26 ] addressed this by showing that a fast iterative algorithm attains the near optimal direction estimation error rate.
+
+We emphasize all the above results study Gaussian covariates (cf. Assumption 1 ) as a benchmark. Extension to sub-Gaussian covariates is highly challenging in general [ 7 , 6 ] .
+
+Convergence of ( GD ). The optimization path of ( GD ) has been characterized [ 35 , 18 ] under small stepsizes. More recently larger stepsizes have been extensively studied, with positive results under separable data [ 41 , 40 , 42 , 44 ] while negative result under non-separable data [ 29 , 28 ] . These results typically work with data obeying separability [ 35 , 41 , 40 , 44 , 3 ] and bounded covariates $\|x_{i}\|_{2}\leq 1$ [ 18 , 41 , 40 ] . Yet, such optimization works do not touch on the estimation problem, i.e., how well GD estimates the true parameter $\theta^{*}$ (indeed some of these works do not assume existence of $\theta^{*}$ ). Also, the convergence in parameter, if obtained, is often very slow, e.g., the direction convergence rates of [ 35 , 18 ] are no faster than $O(\frac{1}{\log t})$ .
+
+[ 20 , 19 ] studied algorithms analogous to perceptron, called GLM-tron and Isotron, with the GLM-tron reducing to ( GD ) with $\eta=1$ when applied to logistic regression. Both works considered covariates independently drawn from the unit $\ell_{2}$ -ball, and that the true parameter is bounded $\|\theta^{*}\|_{2}=O(1)$ . While these methods appear more versatile, the closest result [ 19 , Theorem 1] requires $\tilde{O}(\sqrt{n})$ iterations to reach an error rate no faster than $O(n^{-1/4})$ .
+
+1.2 Our Contributions
+
+Despite the huge literature, a few questions remain open. As a practically relevant algorithm, how well does ( GD ) estimate $\theta^{*}$ ? Under Gaussian design, are there stronger convergence behaviors beyond existing results (e.g., [ 18 , 19 , 41 ] )? Statistically, is the non-asymptotic error rate of the MLE in ( 1 ) optimal? If not, what is the minimax optimal error rate then?
+
+We answer these questions by establishing the following results:
+
+Under a small stepsize $\eta\in(0,8)$ , ( GD ) with $\theta_{0}=0$ linearly converges to $\theta^{*}$ and achieves an error rate of $O(\sqrt{\|\theta^{*}\|_{2}^{5}d/n})$ (cf. Theorem 1 ). Both the estimation error rate and fast linear convergence exceed existing results for GD in logistic regression (cf. Remarks 1 , 2 ).
+
+Under a large stepsize $\eta\asymp\|\theta^{*}\|_{2}$ , ( GD ) locally achieves an acceleration–a faster linear convergence with a sharper per-iteration contraction factor (cf. Theorem 2 ).
+
+A novel efficient estimator achieves an error rate that is sharper than the best known rate $O(\sqrt{\|\theta^{*}\|_{2}^{3}d/n})$ achieved by MLE in high dimensions (cf. Theorem 3 ). This indicates that existing estimation rates are sub-optimal in terms of the dependence on $\|\theta^{*}\|_{2}$ , and that the minimax optimal rate is $\Theta(\sqrt{\|\theta^{*}\|_{2}d/n})$ in some regimes (cf. Remarks 4 , 5 ).
+
+Notation. We denote the gradient of the logistic loss by $h_{\theta^{*}}(\theta):=\frac{1}{n}\sum_{i=1}^{n}\big(s(x_{i}^{\top}\theta)-y_{i}\big)x_{i}=\nabla L(\theta).$ Let $\|u\|_{2}$ be the $\ell_{2}$ norm of $u$ . Define the unit sphere $\mathbb{S}^{d-1}=\{u\in\mathbb{R}^{d}:\|u\|_{2}=1\}$ and unit ball $\mathbb{B}_{2}^{d}=\{u\in\mathbb{R}^{d}:\|u\|_{2}\leq 1\}$ . For $r>0$ and $\theta_{0}\in\mathbb{R}^{d}$ , let $\mathbb{B}_{2}^{d}(r)=r\mathbb{B}_{2}^{d}$ and $\mathbb{B}_{2}^{d}(\theta_{0};r)=\theta_{0}+r\mathbb{B}_{2}^{d}$ . Let $\|M\|_{\mathrm{op}}$ denote the operator norm of a matrix $M$ . For a random variable $X$ , define the sub-Gaussian and sub-exponential norms by $\|X\|_{\psi_{2}}:=\inf\{K>0:\mathbb{E}[\exp(X^{2}/K^{2})]\leq 2\},~\|X\|_{\psi_{1}}:=\inf\{K>0:\mathbb{E}[\exp(|X|/K)]\leq 2\}$ , respectively. We write $T_{1}=O(T_{2})$ (or $T_{1}\lesssim T_{2}$ ) to denote $T_{1}\leq CT_{2}$ , and write $T_{1}=\Omega(T_{2})$ (or $T_{1}\gtrsim T_{2}$ ) to denote $T_{1}\geq CT_{2}$ . We also write $T_{1}=\Theta(T_{2})$ (or $T_{1}\asymp T_{2}$ ) if both $T_{1}=O(T_{2})$ and $T_{1}=\Omega(T_{2})$ hold. We use $\tilde{O}(\cdot)$ , $\tilde{\Omega}(\cdot)$ , $\tilde{\Theta}(\cdot)$ to hide log factor in the sample size $n$ . More notation will be introduced as needed.
+
+Overview. We provide the main results of GD and an overview of the proof techniques in Section 2 . A novel estimator that achieves sharper statistical error rate is developed in Section 3 . We provide numerical examples in Section 4 to corroborate our theory, and give concluding remarks to close the paper in Section 5 . The complete proofs of Theorems 1 , 2 , 3 appear in Appendices A , B , C , with supporting lemmas provided in Appendix D .
+
+2 Gradient Descent
+
+We assume that $\|\theta^{*}\|\geq 1$ throughout this paper (it can be relaxed to $\|\theta^{*}\|_{2}\geq c$ for some small constant $c>0$ ). Note that we cover the strong signal regime with $\|\theta^{*}\|\gg 1$ as in recent works [ 16 , 21 , 7 , 26 ] .
+
+$\theta^{*}\in\mathbb{R}^{d}$ is an unknown fixed parameter satisfying $\|\theta^{*}\|_{2}\geq 1$ .
+
+We formalize the gradient descent in the following Algorithm 1 , which is also a specific instance of GLM-tron [ 19 ] . Due to the simplicity this has been one of the most commonly used algorithm in logistic regression, and we study under Gaussian designs the following question:
+
+What are the finite-sample estimation performance and convergence behavior of Algorithm 1 ?
+
+Algorithm 1 Gradient Descent for Logistic Regression
+
+$\displaystyle\theta_{t+1}=\theta_{t}-\eta\cdot\frac{1}{n}\sum_{i=1}^{n}(s(x_{i}^{\top}\theta_{t})-y_{i})x_{i}$
+
+While a large body of convergence results exist, little is known about the estimation performance of Algorithm 1 . We shall see that our results are novel to the literature in many ways.
+
+2.1 Small Stepsize
+
+Traditional convex optimization theory [ 31 ] guarantees that Algorithm 1 converges globally under $\eta\leq 2/\beta$ , where the smoothness parameter $\beta:=\sup_{\theta\in\mathbb{R}^{d}}\|\nabla^{2}L(\theta)\|_{op}=\sup_{\theta\in\mathbb{R}^{d}}\|\frac{1}{n}\sum_{i=1}^{n}s^{\prime}(x_{i}^{\top}\theta)x_{i}x_{i}^{\top}\|_{op}$ . By $s^{\prime}(a)\leq s^{\prime}(0)=\frac{1}{4}$ we obtain $\beta=\|\frac{1}{4n}\sum_{i=1}^{n}x_{i}x_{i}^{\top}\|_{op}$ , and under Gaussian designs with $n\gtrsim d$ one has $\beta\approx\frac{1}{4}$ (cf. Lemma 13 ). Therefore GD with any fixed $\eta\in(0,8)$ converges globally and achieves a monotonically decreasing logistic loss, referred to as the stable regime.
+
+But how close are the iterates to the true parameter $\theta^{*}$ ? In the same stable regime we answer this question by the following result (Theorem 1 ). Note that we put $\eta\in[0.1,7.9]$ to avoid the dependence of the contraction factor on $\eta$ , but it can be observed from our proof that, under $\eta\in(0,8)$ , we obtain a contraction factor of $1-\tilde{c}\|\theta^{*}\|_{2}^{-3}\eta(8-\eta)$ for some universal constant $\tilde{c}$ . Also, our result is essentially a global convergence (although we consider $\theta_{0}=0$ for concreteness). We show that $\{\theta_{t}\}_{t\geq 0}$ linearly converges to a small radius- $O(\sqrt{\|\theta^{*}\|_{2}^{5}d/n})$ $\ell_{2}$ ball surrounding $\theta^{*}$ within $O(\|\theta^{*}\|_{2}^{3}\log\frac{n}{d})$ iterations, whenever $n=\tilde{\Omega}_{\|\theta^{*}\|_{2}}(d)$ .
+
+Under Assumptions 1 – 2 , for any $\eta\in[0.1,7.9]$ , there exist some universal constants $C,c,\tilde{C}>0$ such that the following holds. If
+
+$\displaystyle n\geq C\Big(\|\theta^{*}\|_{2}^{6}d\log n+\|\theta^{*}\|_{2}^{6}\log\|\theta^{*}\|_{2}\Big),$ (2)
+
+then with probability at least $1-2e^{-d}$ , $\{\theta_{t}\}_{t\geq 0}$ generated by Algorithm 1 with $\theta_{0}=0$ and stepsize $\eta$ satisfies
+
+$\displaystyle\|\theta_{t}-\theta^{*}\|_{2}\leq\bigg(1-\frac{c}{\|\theta^{*}\|_{2}^{3}}\bigg)^{t}\|\theta^{*}\|_{2}+\tilde{C}\sqrt{\frac{\|\theta^{*}\|_{2}^{5}d}{n}},\quad\forall t=0,1,\cdots.$ (3)
+
+To position our result we provide two remarks from the angles of estimation and optimization.
+
+To our best knowledge, the only existing estimation guarantee of GD with logistic loss is [ 19 , Theorem 1] for bounded designs (i.e., $\|x_{i}\|_{2}\leq 1$ ), and our Theorem 1 provides the first non-asymptotic estimation error rate to GD in logistic regression with Gaussian designs. We believe that there are major differences between Gaussian designs and bounded designs, for instance, the bounded designs bypass the curse of dimensionality and as a result $d$ does not appear in their error rate. Moreover, a naive comparison finds that our Theorem 1 offers the following improvements: (i) Our error decay rate $O(n^{-1/2})$ is faster than their $O(n^{-1/4})$ ; (ii) To attain the final error rates our iteration complexity is $\tilde{O}(\|\theta^{*}\|_{2}^{3})$ while theirs reads $\tilde{O}(\|\theta^{*}\|_{2}\sqrt{n})$ .
+
+Theorem 1 is also interesting from the optimization aspect in terms of the fast linear convergence in parameter. Specifically, recent works [ 35 , 18 , 30 ] also established the convergence of $\theta_{t}/\|\theta_{t}\|_{2}$ to a specific point, but the convergence rates, such as $O(\frac{\ln\ln t}{\ln t})$ from [ 18 , Theorem 1] , are much slower than ours. More are known about convergence in loss, such as the decreasing logistic loss with rate $E(\theta_{t}):=L(\theta_{t})-\min_{\theta}L(\theta)=O(\frac{1}{t})$ [ 31 ] , a comparable $E(\theta_{t})=O(\frac{\log^{2}t}{t})$ of recent work [ 18 ] , and the more recent linear convergence $E(\theta_{t})<0.1\min_{\theta}L(\theta)+\varepsilon$ whenever $t=\Omega(\log\frac{n}{\varepsilon})$ [ 3 ] . In light of a standard estimate $\mathcal{L}(\theta)-\mathcal{L}(\theta^{*})\leq\frac{1}{8}\|\theta-\theta^{*}\|_{2}^{2}$ (where $\mathcal{L}(\theta)=\mathbb{E}L(\theta)$ is the population risk), our Equation ( 3 ) immediately yields the linear convergence in excess risk
+
+$\displaystyle\mathcal{L}(\theta_{t})-\mathcal{L}(\theta^{*})\leq\bigg(1-\frac{c^{\prime}}{\|\theta^{*}\|_{2}^{3}}\bigg)^{t}\|\theta^{*}\|_{2}^{2}+C^{\prime}\frac{\|\theta^{*}\|_{2}^{5}d}{n},\quad\forall t=0,1,\cdots.$ (4)
+
+We expect that $\mathcal{L}(\theta_{t})-\mathcal{L}(\theta^{*})$ is comparable to $L(\theta_{t})-\min_{\theta}L(\theta)$ up to some concentration error terms and $\mathcal{L}(\theta_{mle})-\mathcal{L}(\theta^{*})=O(d/n)$ [ 7 , Theorem 1] . Therefore, our linear convergence in risk is comparable to [ 3 ] and faster than [ 31 , 18 ] .
+
+Continuing from Remark 2 , we however emphasize that these convergence results are established under different assumptions and therefore a close comparison may not be possible. In particular, the aforementioned prior results do not rely on Gaussian data, but rather some of them assume bounded designs and/or separable data (possibly with a margin) [ 3 , 18 , 35 , 30 ] . We believe that all these results are complementary to each other.
+
+2.2 Large Stepsize
+
+Due to the ubiquitousness of large stepsize GD in machine learning optimization [ 13 ] , large stepsize GD for logistic regression receives significant recent interests [ 41 , 40 , 44 , 42 ] . Our second main result, the following Theorem 2 , establishes the local linear convergence of GD with a stepsize that can be much larger than $2/\beta\approx 8$ .
+
+Under Assumptions 1 – 2 , there exist some universal constants $c_{0},c,C,\tilde{C}>0$ such that the following holds. Fix any $\eta>0$ such that
+
+$\displaystyle\frac{c}{\|\theta^{*}\|_{2}^{2}q^{\prime}(\|\theta^{*}\|_{2})}<\eta<\frac{2-c\|\theta^{*}\|_{2}^{-2}}{m(\|\theta^{*}\|_{2})}$ (5)
+
+where $m(\tau)=\mathbb{E}_{g\sim N(0,1)}[s^{\prime}(\tau g)]$ , $q(\tau)=\mathbb{E}_{g\sim N(0,1)}[s(\tau g)g]$ and $q^{\prime}(\tau)=\mathbb{E}_{g\sim N(0,1)}[s^{\prime}(\tau g)g^{2}]$ , if
+
+$\displaystyle n\geq C\bigg(\|\theta^{*}\|_{2}^{6}d\log n+\|\theta^{*}\|_{2}^{7}d\bigg),$ (6)
+
+then with probability at least $1-2e^{-d}$ , $\{\theta_{t}\}_{t\geq 0}$ generated by Algorithm 1 with $\theta_{0}\in\mathbb{B}_{2}^{d}(\theta^{*};\frac{c_{0}}{\|\theta^{*}\|_{2}})$ and stepsize $\eta$ satisfies
+
+$\displaystyle\|\theta_{t}-\theta^{*}\|_{2}\leq\bigg(1-\frac{c}{\|\theta^{*}\|_{2}^{2}}\bigg)^{t}\frac{c_{0}}{\|\theta^{*}\|_{2}}+\tilde{C}\sqrt{\frac{\|\theta^{*}\|_{2}^{5}d}{n}},\quad\forall t=0,1,\cdots.$ (7)
+
+Moreover, a specific stepsize $\eta=\frac{1}{m(\|\theta^{*}\|_{2})}$ satisfies ( 5 ).
+
+In light of $m(\tau)\asymp 1/\tau$ and $q^{\prime}(\tau)\asymp 1/\tau^{3}$ for $\tau\geq 1$ (cf. Lemma 15 ), the stepsize in Equation ( 5 ) is of order $\|\theta^{*}\|_{2}$ , which is hence much larger than $\eta\in(0,8)$ (the stable regime) when $\|\theta^{*}\|_{2}\gtrsim 1$ (e.g., the specific $\eta=1/m(\|\theta^{*}\|_{2})$ already exceeds $8$ under $\|\theta^{*}\|_{2}\geq 2$ ). Under $\|\theta^{*}\|_{2}\gg 1$ , the large stepsize offers a notable acceleration, achieving a per-iteration contraction factor $1-\Theta(\|\theta^{*}\|_{2}^{-2})$ that improves on $1-\Theta(\|\theta^{*}\|_{2}^{-3})$ in Theorem 1 . Yet the costs are that an accurate $\theta_{0}$ and a slightly higher sample complexity are needed, and that the stepsize $\eta$ requires some tuning according to $\|\theta^{*}\|_{2}.$ The estimation error rate remains the same.
+
+Similar to Equation ( 4 ) in Remark 2 , we also have a linear convergence in population risk
+
+$\displaystyle\mathcal{L}(\theta_{t})-\mathcal{L}(\theta^{*})\leq\bigg(1-\frac{c^{\prime}}{\|\theta^{*}\|_{2}^{2}}\bigg)^{t}\frac{c_{0}^{\prime}}{\|\theta^{*}\|_{2}^{2}}+C^{\prime}\frac{\|\theta^{*}\|_{2}^{5}d}{n},\quad\forall t=0,1,\cdots.$ (8)
+
+We now put our result in perspective.
+
+[ 41 ] first showed that large stepsize GD minimizes logistic loss and attains $E(\theta_{t})=L(\theta_{t})-\min_{\theta}L(\theta)=O(1/t)$ , then [ 40 ] provided finer optimization-theoretic characterizations and established a faster convergence $E(\theta_{t})=\tilde{O}(1/t^{2})$ (cf. their Corollary 2). See also further developments using adaptive stepsizes [ 44 ] or in a regularized setting [ 42 ] . While the faster convergence is commonly uncovered as a benefit of large stepsize, we emphasize that the settings in this line of works and in our paper are essentially different: [ 41 , 40 , 44 , 42 ] assume bounded covariates and separable data with margin $\gamma$ (see, e.g., [ 40 , Assumption 1] ), while we treat Gaussian designs and, under the sample complexity ( 6 ), our data $\{(x_{i},y_{i})\}_{i=1}^{n}$ is provably non-separable (cf. [ 7 , Theorem 1] ). A naive comparison finds that our ( 8 ) is faster than [ 41 , 40 ] and comparable to [ 44 ] using adaptive large stepsizes.
+
+Concerning large stepsizes, there is an essential difference between separable data and non-separable data [ 38 , 42 ] : for linearly separable data the logistic loss is minimized at infinity, which enables arbitrarily large stepsize (e.g., [ 40 ] ); in contrast, under non-separable data (and mild condition) logistic loss admits a finite, unique minimizer, thus the GD iterates are necessarily unstable if $\eta$ exceeds some threshold [ 15 ] . Indeed the behaviors of large stepsize GD in non-separable data are much more intricate, for instance, under $d\geq 2$ , it was shown [ 29 , Theorem 3] that GD with $\eta=c\|\nabla^{2}L(\theta_{mle})\|_{op}^{-1}$ , $c\in(0,1]$ may converge to a stable cycle. Our Theorem 2 complements the negative results of [ 29 ] with a positive radius- $\Theta(\|\theta^{*}\|_{2}^{-1})$ local convergence under Gaussian designs.
+
+Finally, while the different assumptions may forbid a close comparison, we again emphasize that the finite-sample statistical rate, $O_{\|\theta^{*}\|_{2}}(\sqrt{d/n})$ , is unique to our paper (see also Remark 1 ).
+
+2.3 Technical Overview
+
+The proofs of Theorems 1 , 2 essentially depart from the related works that we have compared with. Our major technical component is a structured condition — the approximate invertibility condition (AIC) of the gradient $h_{\theta^{*}}(u)$ — which implies the linear convergence of the GD iterates to a small neighborhood of the true parameter $\theta^{*}$ , hence simultaneously settling the estimation and convergence. We note in passing that recent works [ 25 , 26 , 11 , 8 , 14 , 1 , 12 , 9 ] have leveraged similar structured conditions to analyze different nonlinear regression problems.
+
+Specifically, our AIC in Theorem 1 states that, for $\eta\in[0.1,7.9]$ and some universal constants $c,C$ ,
+
+$\displaystyle\|u-\theta^{*}-\eta\cdot h_{\theta^{*}}(u)\|_{2}\leq\bigg(1-\frac{c}{\|\theta^{*}\|_{2}^{3}}\bigg)\|u-\theta^{*}\|_{2}+C\bigg(\sqrt{\frac{d}{n\|\theta^{*}\|_{2}}}+\frac{d}{n}\bigg)$ (AIC)
+
+holds for all $u\in\mathbb{B}_{2}^{d}(2\|\theta^{*}\|_{2})$ . Note that the ( AIC ) uniformly controls how much the actual gradient descent step, $\eta\cdot h_{\theta^{*}}(u)$ , deviates from the ideal invertibility step $u-\theta^{*}$ . 3 3 3 Suppose we were at $u$ , then taking a descent step of $u-\theta^{*}$ brings us to $u-(u-\theta^{*})=\theta^{*}$ , which is the desired parameter. As such the AIC alone is enough to yield the claimed guarantee in Theorem 1 (cf. Appendix A.3 ). Similarly, a “local” AIC over $\mathbb{B}_{2}^{n}(\theta^{*};\frac{c_{0}}{\|\theta^{*}\|_{2}})$ yields the local convergence of Theorem 2 . See ( AIC2 ) in Appendix B.3 .
+
+The main technical work lies in the establishment of ( AIC ) under Gaussian designs. To that end we start with a decomposition
+
+$\|u-\theta^{*}-\eta\cdot h_{\theta^{*}}(u)\|_{2}\leq\eta\cdot\underbrace{\|h_{\theta^{*}}(u)-\mathbb{E}[h_{\theta^{*}}(u)]\|_{2}}_{:=T_{c}}+\underbrace{\|u-\theta^{*}-\eta\mathbb{E}[h_{\theta^{*}}(u)]\|_{2}}_{:=T_{e}}.$
+
+Bounding $T_{c}$ . We start with a further decomposition $T_{c}\leq T_{c1}+T_{c2}$ , where $T_{c1}:=\big\|\frac{1}{n}\sum_{i=1}^{n}\big(\big(s(x_{i}^{\top}\theta^{*})-y_{i}\big)x_{i}-\mathbb{E}\big[\big(s(x_{i}^{\top}\theta^{*})-y_{i}\big)x_{i}\big]\big)\big\|_{2}$ and $T_{c2}:=\big\|\frac{1}{n}\sum_{i=1}^{n}\big(\big(s(x_{i}^{\top}u)-s(x_{i}^{\top}\theta^{*})\big)x_{i}-\mathbb{E}\big[\big(s(x_{i}^{\top}u)-s(x_{i}^{\top}\theta^{*})\big)x_{i}\big]\big)\big\|_{2}.$ It turns out that establishing sharp bounds on the two terms requires rather different techniques. For $T_{c1}$ , a direct application of the sub-Gaussianity of $\frac{1}{n}\sum_{i=1}^{n}(s(x_{i}^{\top}\theta^{*})-y_{i})x_{i}-\mathbb{E}\big[\big(s(x_{i}^{\top}\theta^{*})-y_{i}\big)x_{i}\big]$ does not give the tight bound since this overlooks the fact that the variance of the multiplier, $s(x_{i}^{\top}\theta^{*})-y_{i}$ , decreases as $\|\theta^{*}\|_{2}$ increases. To capture the effect of $\|\theta^{*}\|_{2}$ we have to use the Bernstein’s inequality under moment conditions along with a covering argument (cf. Appendix A.1.1 ). In contrast, the key feature of $T_{c2}$ is that it becomes smaller for $u$ being close to $\theta^{*}$ , thus requiring the technique of localization. A standard approach to this end is via symmetrization, Talagrand’s contraction and concentration of empirical process (e.g., [ 22 , 4 ] ), while following this route leads to intricacy in the contraction due to the product process structure of $T_{c2}$ . We instead return to a more elementary peeling argument and decompose $\mathbb{B}_{2}^{d}(2\|\theta^{*}\|_{2})$ into a small number of shells, over each of which $\|u-\theta^{*}\|_{2}$ either roughly remains at a constant (up to a factor of $2$ ) or is too small to have an impact. We then control $T_{c2}$ over each shell via covering argument. See Appendix A.1.2 for details.
+
+Bounding $T_{e}$ . This part of analysis is more elementary but remains rather subtle. Setting the stage, we first (i) use Stein’s identity [ 37 , 36 ] to write the population gradient $\mathbb{E}[h_{\theta^{*}}(u)]$ as $F(u)-F(\theta^{*})$ where $F(u)=m(\|u\|_{2})u$ , and $m(\tau)=\mathbb{E}_{g\sim N(0,1)}[s^{\prime}(\tau g)]$ is defined as in Theorem 2 , and then (ii) introduce a useful integral representation $F(u)-F(\theta^{*})=\int_{0}^{1}\nabla F(\theta^{*}+t(u-\theta^{*}))(u-\theta^{*})\,dt$ (cf. Lemma 18 ). Based on this, the main bulk of techniques lies an eigenvalue analysis of $\nabla F(z)=m(\|z\|_{2})I_{d}+\frac{m^{\prime}(\|z\|_{2})}{\|z\|_{2}}zz^{\top}$ , the population Hessian matrix, along with a careful account of how well the linear map $\nabla F(\theta^{*})(u-\theta^{*})$ approximates $F(u)-F(\theta^{*})$ . Note that the eigenvalues of $\nabla F(z)$ are $q^{\prime}(\|z\|_{2})$ in the direction of $z/\|z\|_{2}$ and $m(\|z\|_{2})$ in the orthogonal space. Due to $m(\tau)\asymp\tau^{-1},~q^{\prime}(\tau)\asymp\tau^{-3}$ for $\tau\geq 1$ (cf. Lemma 15 ), $\nabla F(\|\theta^{*}\|_{2})$ is highly anisotropic when $\|\theta^{*}\|_{2}\gg 1$ , which is exactly what dictates the different convergence behaviors under small and large stepsizes (cf. Appendices A.2 and B.2 ).
+
+3 Sharper Error Rate
+
+In this section, we ask a more fundamental question: What is the best possible error rate for the estimation of $\theta^{*}$ ? 4 4 4 Note that the result of this section has been substantially improved by the authors’ follow-up work [ 10 ] , which nonetheless builds upon some of the ideas proposed here, such as separate estimation of the direction and norm via sample splitting. In particular, we explore to what extent existing non-asymptotic error rates — including ( 1 ) for MLE [ 21 ] and our $O(\sqrt{\|\theta^{*}\|_{2}^{5}d/n})$ for GD — are (sub-)optimal. It was shown (e.g., [ 2 ] ) that the scaling of $(n,d)$ , namely $\sqrt{d/n}$ , is sharp. Therefore it remains to investigate the dependence on $\|\theta^{*}\|_{2}$ , in which the MLE rate is sharper than our GD rate. We show that even the MLE rate $O(\sqrt{\|\theta^{*}\|_{2}^{3}d/n})$ due to [ 7 ] exhibits sub-optimal dependence on $\|\theta^{*}\|_{2}$ . In fact, in this section we devise a computationally efficient estimator that attains a sharper estimation error rate in high dimensions (cf. Remark 4 ). In some regimes, this error rate reduces to $\tilde{O}(\sqrt{\|\theta^{*}\|_{2}d/n})$ and is nearly optimal in light of a matching lower bound (cf. Remark 5 ).
+
+We shall start with a potential caveat of GD and MLE in parameter estimation: both algorithms simultaneously estimate the direction $\theta^{*}/\|\theta^{*}\|_{2}$ and the norm $\|\theta^{*}\|_{2}$ . This could be problematic because when $\|\theta^{*}\|_{2}$ increases, direction estimation becomes easier while norm estimation becomes harder. In the extreme regime with $\|\theta^{*}\|_{2}\to\infty$ , logistic regression reduces to the halfspace learning problem where norm estimation is not possible [ 23 , 17 , 25 , 16 ] . Therefore, under $\|\theta^{*}\|_{2}\gg 1$ , the norm estimation error dominates the direction estimation error and dictates the final error rate.
+
+To overcome this limitation, our main idea is to estimate the direction and norm separately. For direction estimation we naturally invoke the recent near-optimal direction estimator due to [ 26 ] , which does not require knowledge of $\|\theta^{*}\|_{2}$ and, intriguingly, is essentially a (sub)gradient descent with a different loss function , the ReLU loss; more details are provided in Appendix E.1 . We restate a non-asymptotic direction estimation bound from [ 26 ] (see Appendix E.2 ), which shows an improved estimate under larger $\|\theta^{*}\|_{2}.$ In this section, we use $\polylog(n)$ to denote a generic factor bounded by $(\log n)^{C}$ for some universal constant $C>0$ .
+
+[ 26 , Corollary 7 & Theorem 5] Under Assumptions 1 – 2 and fix some $T_{0}\geq\log_{2}\log_{2}\frac{n}{d}$ , if $n\geq Cd\polylog n$ with large enough universal constant $C$ , then with probability at least $1-e^{-n}$ , $\hat{r}_{T_{0}}$ obtained by running $\tilde{r}_{t+1}=\hat{r}_{t}-\frac{\sqrt{2\pi}}{n}\sum_{i=1}^{n}\big(\frac{\sign(x_{i}^{\top}\hat{r}_{t})+1}{2}-y_{i}\big)x_{i},~\hat{r}_{t+1}=\frac{\tilde{r}_{t+1}}{\|\tilde{r}_{t+1}\|_{2}},~~t\geq 0$ (or equivalently, Equation ( 11 ) below) with an arbitrary $r_{0}\in\mathbb{S}^{d-1}$ satisfies
+
+$\displaystyle\bigg\|\hat{r}_{T_{0}}-\frac{\theta^{*}}{\|\theta^{*}\|_{2}}\bigg\|_{2}\leq\polylog(n)\bigg(\sqrt{\frac{d}{n\|\theta^{*}\|_{2}}}+\frac{d}{n}\bigg).$ (9)
+
+Before moving on to the norm estimate, we mention that we utilize sample splitting in this estimator. Particularly, for some $\nu\in[0.1,0.9]$ such that $\nu n$ is an integer, we utilize $\{(x_{i},y_{i})\}_{i=1}^{\nu n}$ to obtain the direction estimator $\hat{r}_{T_{0}}$ and then we further estimate $\|\theta^{*}\|_{2}$ using $\{(x_{i},y_{i})\}_{i=\nu n+1}^{n}$ (and $\hat{r}_{T_{0}}$ ). This ensures some independence and facilitates the analysis, and has been applied to different problems [ 32 , 24 ] . Yet we believe that the practical performance of the estimator does not rely on this.
+
+To estimate the norm, we use the remaining samples to construct the so-called “average” estimator $\hat{v}=\frac{1}{(1-\nu)n}\sum_{i=\nu n+1}^{n}y_{i}x_{i}$ [ 33 , 34 ] whose expectation is given by (cf. Lemma 23 )
+
+$\displaystyle v:=\mathbb{E}[\hat{v}]=\mathbb{E}[y_{i}x_{i}]=q(\|\theta^{*}\|_{2})\theta^{*}/\|\theta^{*}\|_{2}$ (10)
+
+where $q(\tau)=\mathbb{E}[s(\tau g)g]=\mathbb{E}[s^{\prime}(\tau g)\tau]$ has appeared in Theorem 2 . By Lemma 21 , $q$ has an inverse on $(0,\infty)$ , denoted by $q^{-1}:(0,\frac{1}{\sqrt{2\pi}})\to(0,\infty)$ . Hence we seek an estimate of $q(\|\theta^{*}\|_{2})$ and then apply $q^{-1}$ to get an estimate of $\|\theta^{*}\|_{2}$ . Due to $\|v\|_{2}=q(\|\theta^{*}\|_{2})$ from ( 10 ), a naive estimate of $q(\|\theta^{*}\|_{2})$ is $\|\hat{v}\|_{2}$ , yet the concentration of $\|\hat{v}\|_{2}$ about $\|v\|_{2}$ is under Euclidean norm and necessarily involves dimension $d$ . It turns out that a better idea is based on the inner product $\langle v,\theta^{*}/\|\theta^{*}\|_{2}\rangle$ , which leads us to using the optimal direction estimator, $\hat{r}_{T_{0}},$ as a surrogate of $\theta^{*}/\|\theta^{*}\|_{2}$ . Hence we propose to use $\langle\hat{v},\hat{r}_{T_{0}}\rangle$ to estimate $q(\|\theta^{*}\|_{2})$ , and in turn $q^{-1}(\langle\hat{v},\hat{r}_{T_{0}}\rangle)$ is our final norm estimator.
+
+Putting pieces together, we formalize the estimator in Algorithm 2 . Our main result in this section provides a non-asymptotic $\ell_{2}$ error rate achieved by this novel estimator.
+
+Algorithm 2 An Estimator with Improved Error Rate
+
+$\displaystyle\hat{r}_{t+1}=\frac{\hat{r}_{t}-\frac{\sqrt{2\pi}}{\nu n}\sum_{i=1}^{\nu n}\big(\frac{\sign(x_{i}^{\top}\hat{r}_{t})+1}{2}-y_{i}\big)x_{i}}{\|\hat{r}_{t}-\frac{\sqrt{2\pi}}{\nu n}\sum_{i=1}^{\nu n}\big(\frac{\sign(x_{i}^{\top}\hat{r}_{t})+1}{2}-y_{i}\big)x_{i}\|_{2}}$ (11)
+
+Under Assumptions 1 – 2 , if $n\geq\polylog n\big(\|\theta^{*}\|_{2}d+\|\theta^{*}\|_{2}^{4}\big)$ then with probability at least $1-n^{-1}$ , $\hat{\theta}$ obtained by Algorithm 2 with $T_{0}\geq\log_{2}\log_{2}\frac{n}{d}$ , $\hat{r}_{0}=(1,0,\cdots,0)^{\top}$ and $\nu\in[0.1,0.9]$ satisfies
+
+$\displaystyle\|\hat{\theta}-\theta^{*}\|_{2}\leq\polylog(n)\cdot\bigg(\|\theta^{*}\|_{2}^{3}\sqrt{\frac{1}{n}}+\sqrt{\frac{\|\theta^{*}\|_{2}d}{n}}+\frac{\|\theta^{*}\|_{2}^{2}d}{n}\bigg).$ (12)
+
+Note that the rate ( 12 ) improves on the best known rate, the $O(\sqrt{\|\theta^{*}\|_{2}^{3}d/n})$ for MLE [ 21 , 7 ] , as long as $\polylog(n)\|\theta^{*}\|_{2}^{3}\frac{1}{\sqrt{n}}\leq\sqrt{\|\theta^{*}\|_{2}^{3}d/n}$ , or equivalently, $d\geq\|\theta^{*}\|_{2}^{3}\polylog(n)$ , which covers most high-dimensional regimes of interest. Similarly, it improves on our GD rate, $O(\sqrt{\|\theta^{*}\|_{2}^{5}d/n})$ , whenever $d\geq\|\theta^{*}\|_{2}\polylog(n)$ .
+
+Equation ( 12 ) reduces to $\tilde{O}(\sqrt{\|\theta^{*}\|_{2}d/n})$ whenever $\|\theta^{*}\|_{2}^{3}\sqrt{\frac{1}{n}}+\frac{\|\theta^{*}\|_{2}^{2}d}{n}\lesssim\sqrt{\frac{\|\theta^{*}\|_{2}d}{n}}$ , or equivalently, $n\gtrsim\|\theta^{*}\|_{2}^{3}d+\|\theta^{*}\|_{2}^{5}.$ In this regime, the rate $\tilde{O}(\sqrt{\|\theta^{*}\|_{2}d/n})$ achieved by Algorithm 2 is nearly sharp in light of a matching lower bound $\Omega(\sqrt{\|\theta^{*}\|_{2}d/n})$ . In fact, suppose that $\tilde{\theta}$ is an estimator for $\theta^{*}$ , then $\tilde{\theta}/\|\tilde{\theta}\|_{2}$ is an estimator for $\theta^{*}/\|\theta^{*}\|_{2}$ and therefore performs no better than an existing lower bound $\|\frac{\tilde{\theta}}{\|\tilde{\theta}\|_{2}}-\frac{\theta^{*}}{\|\theta^{*}\|_{2}}\|_{2}\gtrsim\sqrt{\frac{d}{\|\theta^{*}\|_{2}n}}$ [ 16 , Theorem 1] ; combining with a known bound $\|\frac{\tilde{\theta}}{\|\tilde{\theta}\|_{2}}-\frac{\theta^{*}}{\|\theta^{*}\|_{2}}\|_{2}\leq\frac{2\|\tilde{\theta}-\theta^{*}\|_{2}}{\|\theta^{*}\|_{2}}$ (e.g., [ 26 , Fact 13] ), we obtain $\|\tilde{\theta}-\theta^{*}\|_{2}\gtrsim\sqrt{\frac{\|\theta^{*}\|_{2}d}{n}}$ . Therefore, we conclude that the tight error rate in the regime of $n\gtrsim\|\theta^{*}\|_{2}^{3}d+\|\theta^{*}\|_{2}^{5}$ scales as $\sqrt{\|\theta^{*}\|_{2}d/n}$ . Nonetheless, the fundamental question of the optimal rate under $n\lesssim\|\theta^{*}\|_{2}^{3}d+\|\theta^{*}\|_{2}^{5}$ remains open.
+
+We mention that Algorithm 2 generalizes to high-dimensional sparse case where the true parameter $\theta^{*}$ is $k$ -sparse. To that end, we only need to incorporate a hard thresholding operator into ( 11 ); see [ 26 , Algorithm 1] . Under $m=\tilde{\Omega}(\|\theta^{*}\|_{2}k+\|\theta^{*}\|_{2}^{4})$ , this sparse counterpart of Algorithm 2 achieves $\tilde{O}(\frac{\|\theta^{*}\|_{2}}{\sqrt{n}}+\sqrt{\frac{\|\theta^{*}\|_{2}k}{n}}+\frac{\|\theta^{*}\|_{2}^{2}k}{n})$ . In contrast, it appears to be much harder to extend Theorems 1 , 2 to the sparse case.
+
+4 Simulations
+
+We provide numerical examples to corroborate our theoretical results. We follow Assumptions 1 , 2 to generate $\{(x_{i},y_{i})\}_{i=1}^{n}$ , and set $\theta^{*}=\|\theta^{*}\|_{2}r^{*}$ where $r^{*}$ is uniformly distributed over $\mathbb{S}^{n-1}$ . Each result is averaged over $50$ independent trials. All experiments were implemented using Matlab R2022a on a laptop with an Intel CPU up to 2.5 GHz and 32 GB RAM.
+
+Estimation performance. We first validate the theoretical estimation error rate $O(\sqrt{\|\theta^{*}\|_{2}^{5}d/n})$ of GD. We run Algorithm 1 with $\theta_{0}=0$ , $\eta=4$ , and use $\theta_{100}$ as estimator. We test $n\in\{3000,6000,12000,24000\}$ under three settings of $(d,\|\theta^{*}\|_{2})=(200,2),\,(400,2),\,(200,3)$ . The log-log plots in Figure 1(a) validate the predicted $O(n^{-1/2})$ decay rate and confirm that the estimation error increases with both $d$ and $\|\theta^{*}\|_{2}$ .
+
+Convergence under $\eta\in(0,8)$ . To illustrate the linear convergence predicted by Theorem 1 for constant stepsizes, we run Algorithm 1 from $\theta_{0}=0$ with $\eta=1$ and $\eta=4$ under the setting $(n,d,\|\theta^{*}\|_{2})=(5000,200,4)$ . Figure 1(b) reports the estimation error $\|\theta_{t}-\theta^{*}\|_{2}$ over the first $200$ iterations on a logarithmic scale. The approximately straight-line decay in the early iterations is consistent with the linear convergence behavior established in Theorem 1 .
+
+Large stepsize. To illustrate the local acceleration predicted by Theorem 2 , we run Algorithm 1 in a high-signal setting $(n,d,\|\theta^{*}\|_{2})=(80000,100,8)$ . We initialize the iterates locally around $\theta^{*}$ by setting $\theta_{0}=\theta^{*}+u$ , where $u\sim\mathrm{Unif}(\mathbb{S}^{d-1})$ . We compare the constant stepsize $\eta=4$ with the large stepsize $\eta=1/m(8)\approx 20.63$ . Figure 1(c) reports the estimation error over the first $40$ iterations. The large-stepsize trajectory displays a much steeper initial decay and reaches the statistical error plateau within only a few iterations, consistent with the accelerated local contraction in Theorem 2 .
+
+(a) Estimation performance
+
+(b) Linear conver. $\eta=1,~4$
+
+(c) $\eta=4$ v.s. $\eta=20.63$
+
+Figure 1 : Estimation and convergence of GD under Gaussian designs.
+
+Performance of Algorithm 2 . While the aim of Algorithm 2 in this paper is primarily to understand the minimax optimal rate, we also evaluate its numerical performance. We compare Algorithm 2 (without sample splitting) and GD with $\eta=4$ and sufficiently many iterations, which converges to the MLE if it exists. Our numerical results suggest that Algorithm 2 outperforms GD in high dimensions under a moderately large $n$ . Due to page limit we defer the discussion to Appendix E.3 .
+
+5 Conclusion
+
+We provide a finite-sample analysis to gradient descent (GD) for logistic regression with Gaussian designs. We show that GD with $O(1)$ stepsize and $0$ initialization linearly converges to the true parameter $\theta^{*}$ and achieves error rate $O(\sqrt{\|\theta^{*}\|_{2}^{5}d/n})$ . We also show that GD with $\Theta(\|\theta^{*}\|_{2})$ stepsize and a good enough initialization achieves a faster linear convergence and the same estimation performance. The two results are among the first estimation performance bounds to GD in logistic regression and exhibit a convergence rate faster than most existing results. We also devise a novel estimator whose estimation error rate improves on MLE, GD in high dimensions and is nearly sharp when $n\gtrsim\|\theta^{*}\|_{2}^{3}d+\|\theta^{*}\|_{2}^{5}$ . There remain many interesting problems worth further investigations, including extension of our GD results to sparse logistic regression, a finite-sample analysis of GD with adaptive stepsizes, estimator with error rate sharper than Algorithm 2 , among many others.
+
+Acknowledgment
+
+The authors used AI for polishing the language only. The work was done while JC was affiliated with Department of Mathematics at the University of Maryland, College Park.
+
+References
+
+Appendix A Proof of Theorem 1 (GD with Small Stepsize)
+
+The main ingredient is an approximate invertibility condition (AIC) that controls
+
+$\displaystyle\|u-\theta^{*}-\eta\cdot h_{\theta^{*}}(u)\|_{2},\quad\forall u\in\mathbb{B}_{2}^{d}(2\|\theta^{*}\|_{2}).$
+
+We start with a decomposition
+
+$\displaystyle\|u-\theta^{*}-\eta\cdot h_{\theta^{*}}(u)\|_{2}\leq\eta\cdot\underbrace{\|h_{\theta^{*}}(u)-\mathbb{E}[h_{\theta^{*}}(u)]\|_{2}}_{:=T_{c}}+\underbrace{\|u-\theta^{*}-\eta\mathbb{E}[h_{\theta^{*}}(u)]\|_{2}}_{:=T_{e}},$ (13)
+
+where $T_{c}$ is a concentration term and $T_{e}$ is a bias term.
+
+A.1 Bounding $T_{c}$ (concentration term)
+
+By substituting $h_{\theta^{*}}(u)=\frac{1}{n}\sum_{i=1}^{n}(s(x_{i}^{\top}u)-y_{i})x_{i}$ and a further decomposition,
+
+$\displaystyle T_{c}:$ $\displaystyle=\bigg\|\frac{1}{n}\sum_{i=1}^{n}\bigg(\big(s(x_{i}^{\top}u)-y_{i}\big)x_{i}-\mathbb{E}\Big[\big(s(x_{i}^{\top}u)-y_{i}\big)x_{i}\Big]\bigg)\bigg\|_{2}$ $\displaystyle\leq\bigg\|\frac{1}{n}\sum_{i=1}^{n}\bigg(\big(s(x_{i}^{\top}\theta^{*})-y_{i}\big)x_{i}-\mathbb{E}\Big[\big(s(x_{i}^{\top}\theta^{*})-y_{i}\big)x_{i}\Big]\bigg)\bigg\|_{2}$ $\displaystyle+\bigg\|\frac{1}{n}\sum_{i=1}^{n}\bigg(\big(s(x_{i}^{\top}u)-s(x_{i}^{\top}\theta^{*})\big)x_{i}-\mathbb{E}\Big[\big(s(x_{i}^{\top}u)-s(x_{i}^{\top}\theta^{*})\big)x_{i}\Big]\bigg)\bigg\|_{2}$ $\displaystyle:$ $\displaystyle=T_{c1}+T_{c2}.$ (14)
+
+Conditioning on $x_{i}$ , Assumption 1 ensures $\mathbb{E}[s(x_{i}^{\top}\theta^{*})-y_{i}]=0$ , hence $T_{c1}$ can be written as
+
+$\displaystyle T_{c1}=\bigg\|\frac{1}{n}\sum_{i=1}^{n}\big(s(x_{i}^{\top}\theta^{*})-y_{i}\big)x_{i}\bigg\|_{2}$
+
+A.1.1 Bounding $T_{c1}$
+
+We shall establish that
+
+$\displaystyle T_{c1}\lesssim\sqrt{\frac{d}{n\|\theta^{*}\|_{2}}}+\frac{d}{n}$ (15)
+
+holds with probability at least $1-e^{-d}$ . This is a consequence of the following result, where we bound the multiplier process $T_{c1}=\sup_{v\in\mathbb{S}^{d-1}}\frac{1}{n}\sum_{i=1}^{n}(s(x_{i}^{\top}\theta^{*})-y_{i})x_{i}^{\top}v$ via Bernstein’s inequality (cf. Lemma 11 ) along with a covering argument.
+
+There exist universal constants $C,c>0$ such that, for every $\delta\in(0,1)$ , with probability at least $1-\delta$ ,
+
+$\left\|\frac{1}{n}\sum_{i=1}^{n}\big(s(x_{i}^{\top}\theta^{*})-y_{i}\big)x_{i}\right\|_{2}\leq C\left[\sqrt{\frac{d+\log(1/\delta)}{n\|\theta^{*}\|_{2}}}+\frac{d+\log(1/\delta)}{n}\right].$
+
+For convenience we let $R:=\|\theta^{*}\|_{2}$ and $\xi_{i}=s(x_{i}^{\top}\theta^{*})-y_{i}$ , then we seek to bound $\|\frac{1}{n}\sum_{i=1}^{n}\xi_{i}x_{i}\|_{2}$ . We now construct a $\frac{1}{2}$ -net of $\mathbb{S}^{d-1}$ , denoted by $N_{1/2}$ , such that its cardinality is bounded by $|N_{1/2}|\leq 5^{d}$ (e.g., [ 39 , Corollary 4.2.13] ). By a standard discretization argument (see, e.g., [ 39 , Exercise 4.4.2] ),
+
+$\displaystyle\bigg\|\frac{1}{n}\sum_{i=1}^{n}\xi_{i}x_{i}\bigg\|_{2}\leq 2\sup_{v\in N_{1/2}}\frac{1}{n}\sum_{i=1}^{n}\xi_{i}x_{i}^{\top}v.$ (16)
+
+Fix any unit vector $v\in\mathbb{S}^{d-1}$ we introduce a shorthand $Y_{i}(v):=\xi_{i}\,x_{i}^{\top}v$ . In light of ( 16 ), all that remains is to (i) bound $\frac{1}{n}\sum_{i=1}^{n}Y_{i}(v)$ for a fixed $v\in\mathbb{S}^{d-1}$ and then (ii) take a union bound over $N_{1/2}$ .
+
+Bounding $\frac{1}{n}\sum_{i=1}^{n}Y_{i}(v)$ .
+
+Fix $v\in\mathbb{S}^{d-1}$ . Recall that $\mathbb{E}Y_{i}(v)=0$ . Moreover, conditional on $x_{i}$ ,
+
+$\displaystyle\mathbb{E}[\xi_{i}^{2}\mid x_{i}]$ $\displaystyle=s(x_{i}^{T}\theta^{*})^{2}+s(x_{i}^{T}\theta^{*})-2s(x_{i}^{T}\theta^{*})^{2}$ $\displaystyle=s(x_{i}^{\top}\theta^{*})\big(1-s(x_{i}^{\top}\theta^{*})\big)=s^{\prime}(x_{i}^{\top}\theta^{*}),$ (17)
+
+where the last equality is due to Lemma 14 . Hence
+
+$\mathbb{E}[Y_{i}(v)^{2}]=\mathbb{E}\big[s^{\prime}(x_{i}^{\top}\theta^{*})(x_{i}^{\top}v)^{2}\big].$
+
+We now bound this variance. Let $e=\theta^{*}/\|\theta^{*}\|_{2}$ and $g_{1}:=x_{i}^{\top}e\sim N(0,1)$ , which along with $R=\|\theta^{*}\|_{2}$ deliver $x_{i}^{\top}\theta^{*}=Rg_{1}$ . By rotational invariance we can decompose $v$ along $e=\theta^{*}/\|\theta^{*}\|_{2}$ and the orthogonal directions, that is
+
+$v=(v^{\top}e)e+[v-(v^{\top}e)e],\quad\textrm{where}~\|v-(v^{\top}e)e\|_{2}=\sqrt{1-(v^{\top}e)^{2}},$
+
+and then establish
+
+$\displaystyle x_{i}^{\top}v=v^{\top}e\cdot g_{1}+\sqrt{1-(v^{\top}e)^{2}}\cdot g_{2},\quad\textrm{where $g_{2}\sim N(0,1)$ is independent of $g_{1}$}$ (18)
+
+Then
+
+$\displaystyle\mathbb{E}[Y_{i}(v)^{2}]=\mathbb{E}\big[s^{\prime}(x_{i}^{\top}\theta^{*})(x_{i}^{\top}v)^{2}\big]$ $\displaystyle=\mathbb{E}\Big[s^{\prime}(Rg_{1})\big\{v^{\top}e\cdot g_{1}+\sqrt{1-(v^{\top}e)^{2}}\cdot g_{2}\big\}^{2}\Big]$ $\displaystyle\quad\blacktriangleright\textrm{by (\ref{decomposexiv})}$ $\displaystyle=(v^{\top}e)^{2}\mathbb{E}[s^{\prime}(Rg_{1})g_{1}^{2}]+\big(1-(v^{\top}e)^{2}\big)\mathbb{E}[s^{\prime}(Rg_{1})]$ $\displaystyle\leq\mathbb{E}[s^{\prime}(Rg_{1})]$ $\displaystyle\quad\blacktriangleright\textrm{by Lemma \ref{lem:V1larger}}$ $\displaystyle\lesssim\frac{1}{R}$ (19) $\displaystyle\quad\blacktriangleright\textrm{by Lemma \ref{lem:separa} and $R=\|\theta^{*}\|_{2}\geq 1$ (cf. Assumption \ref{normge1})}$
+
+We proceed to estimate higher-order moments, $\mathbb{E}|Y_{i}(v)|^{q}$ for integer $q\geq 3$ . Similarly to ( 19 ), for any integer $q\geq 3$ ,
+
+$\displaystyle\mathbb{E}|Y_{i}(v)|^{q}=\mathbb{E}|\xi_{i}x_{i}^{\top}v|^{q}$ $\displaystyle\leq\mathbb{E}|\xi_{i}|^{2}|x_{i}^{\top}v|^{q}$ $\displaystyle\quad\blacktriangleright\textrm{by $|\xi_{i}|=|s(x_{i}^{\top}\theta^{*})-y_{i}|\leq 1$}$ $\displaystyle=\mathbb{E}\big(s^{\prime}(x_{i}^{\top}\theta^{*})|x_{i}^{\top}v|^{q}\big)$ $\displaystyle\quad\blacktriangleright\textrm{by Equation (\ref{Exi2})}$ $\displaystyle=\mathbb{E}\Big(s^{\prime}(Rg_{1})\Big|(v^{\top}e)g_{1}+\sqrt{1-(v^{\top}e)^{2}}\cdot g_{2}\Big|^{q}\Big)$ $\displaystyle\quad\blacktriangleright\textrm{by (\ref{decomposexiv}) and $g_{1}=x_{i}^{\top}e$ with $e=\theta^{*}/\|\theta^{*}\|_{2}$}$ $\displaystyle\leq 2^{q}\bigg(\mathbb{E}\Big[s^{\prime}(Rg_{1})|g_{1}|^{q}\Big]+\mathbb{E}\Big[s^{\prime}(Rg_{1})|g_{2}|^{q}\Big]\bigg)$ $\displaystyle\quad\blacktriangleright\textrm{by $(T_{1}+T_{2})^{q}\leq 2^{q}(|T_{1}|^{q}+|T_{2}|^{q})$, ~$|v^{\top}e|\leq 1$}$ $\displaystyle\leq 2^{q}\bigg(\frac{2q!}{\sqrt{2\pi}}\frac{1}{R^{q+1}}+q!\cdot\mathbb{E}[s^{\prime}(Rg_{1})]\bigg)$ $\displaystyle\quad\blacktriangleright\textrm{by Lemma \ref{lem:Hq-upper}, $g_{1}\perp g_{2}$, and $\mathbb{E}|g_{2}|^{q}\leq q!$}$ $\displaystyle\lesssim\frac{2^{q}q!}{R}$ (20) $\displaystyle\quad\blacktriangleright\textrm{by Lemma \ref{lem:separa} and $\|\theta^{*}\|_{2}\geq 1$}$
+
+Combining ( 19 ) and ( 20 ), we have validated the conditions in Bernstein’s inequality (cf. Lemma 11 ) with $X_{i}=\frac{Y_{i}(v)}{n}$ , $v\lesssim\frac{1}{nR}$ and $c\lesssim\frac{1}{n}$ , and as a result we obtain
+
+$\displaystyle\mathbb{P}\bigg(\bigg|\frac{1}{n}\sum_{i=1}^{n}Y_{i}(v)\bigg|\lesssim\sqrt{\frac{t}{nR}}+\frac{t}{n}\bigg)\geq 1-2\exp(-t),\quad\forall t>0.$
+
+Union bound.
+
+We now take a union bound over $v\in N_{1/2}$ , yielding
+
+$\displaystyle\mathbb{P}\bigg(\sup_{v\in N_{1/2}}\bigg|\frac{1}{n}\sum_{i=1}^{n}Y_{i}(v)\bigg|\lesssim\sqrt{\frac{t}{nR}}+\frac{t}{n}\bigg)\geq 1-2\exp(d\log(5)-t),\quad\forall t>0.$
+
+Setting $t=d\log(5)+2\log(1/\delta)$ proves the claim. ∎
+
+A.1.2 Bounding $T_{c2}$
+
+We seek to bound
+
+$T_{c2}:=\bigg\|\frac{1}{n}\sum_{i=1}^{n}\bigg(\big(s(x_{i}^{\top}u)-s(x_{i}^{\top}\theta^{*})\big)x_{i}-\mathbb{E}\Big[\big(s(x_{i}^{\top}u)-s(x_{i}^{\top}\theta^{*})\big)x_{i}\Big]\bigg)\bigg\|_{2}$
+
+uniformly for all $u\in\mathbb{B}_{2}^{d}(2\|\theta^{*}\|_{2})$ . Due to the multiplier $s(x_{i}^{\top}u)-s(x_{i}^{\top}\theta^{*})$ , one expects a tighter bound for $u$ being close to $\theta^{*}$ . We achieve such “localization” via a peeling argument, along with a covering argument over each shell. This establishes the following Lemma 3 .
+
+We shall pause to announce the final bound on $T_{c2}$ . Setting
+
+$\delta=\exp(-d),\qquad\rho=\frac{d}{n}$
+
+and applying a relaxation $\log\log_{2}(\frac{6\|\theta^{*}\|_{2}}{\rho})\leq\log\frac{Cn\|\theta^{*}\|_{2}}{d}$ , we reach the following: if $n\gtrsim d\log n+\log\|\theta^{*}\|_{2}$ , then with probability at least $1-e^{-d}$ ,
+
+$\displaystyle T_{c2}\lesssim\sqrt{\frac{d\log n+\log\|\theta^{*}\|_{2}}{n}}\|u-\theta^{*}\|_{2}+\frac{d}{n},\quad\forall u\in\mathbb{B}_{2}^{d}(2\|\theta^{*}\|_{2}).$ (21)
+
+For $u\in\mathbb{R}^{d}$ , define
+
+$Z_{n}(u):=\frac{1}{n}\sum_{i=1}^{n}\big(s(x_{i}^{\top}u)-s(x_{i}^{\top}\theta^{*})\big)x_{i}-\mathbb{E}\big[\big(s(x^{\top}u)-s(x^{\top}\theta^{*})\big)x\big].$
+
+Fix $0<\rho\leq 3\|\theta^{*}\|_{2}$ . Then there exists a universal constant $C>0$ such that, with probability at least $1-\delta$ ,
+
+$\|Z_{n}(u)\|_{2}\leq C\left[\sqrt{\frac{d\log(Cn)+\log\!\left(\frac{\log_{2}(6\|\theta^{*}\|_{2}/\rho)}{\delta}\right)}{n}}+\frac{d\log(Cn)+\log\!\left(\frac{\log_{2}(6\|\theta^{*}\|_{2}/\rho)}{\delta}\right)}{n}\right]\max\{\|u-\theta^{*}\|_{2},\rho\}$
+
+holds uniformly over all $u$ satisfying $\|u\|_{2}\leq 2\|\theta^{*}\|_{2}$ .
+
+Let $R_{0}=3\|\theta^{*}\|_{2}$ and write $h:=u-\theta^{*}.$ In light of
+
+$\|u-\theta^{*}\|_{2}\leq\|u\|_{2}+\|\theta^{*}\|_{2}\leq 3\|\theta^{*}\|_{2}=R_{0},$
+
+we shall restrict our attention to
+
+$\|h\|_{2}\leq R_{0}.$
+
+For $w\in\mathbb{S}^{d-1}$ , define the scalar process $Z_{n}(h,w):=\langle w,Z_{n}(\theta^{*}+h)\rangle,$ i.e.,
+
+$Z_{n}(h,w)=\frac{1}{n}\sum_{i=1}^{n}\left[\big(s(x_{i}^{\top}(\theta^{*}+h))-s(x_{i}^{\top}\theta^{*})\big)(x_{i}^{\top}w)-\mathbb{E}\big(s(x^{\top}(\theta^{*}+h))-s(x^{\top}\theta^{*})\big)(x^{\top}w)\right],$
+
+and note that
+
+$\|Z_{n}(u)\|_{2}=\sup_{w\in\mathbb{S}^{d-1}}Z_{n}(u-\theta^{*},w).$
+
+Non-uniform bound.
+
+We first establish a fixed- $(h,w)$ concentration bound for $Z_{n}(h,w)$ for $w\in\mathbb{S}^{d-1}$ . Since $\sup_{a\in\mathbb{R}}|s^{\prime}(a)|\leq 1/4$ , we have $\left|s(x_{i}^{\top}(\theta^{*}+h))-s(x_{i}^{\top}\theta^{*})\right|\leq\frac{1}{4}|x_{i}^{\top}h|,$ and therefore
+
+$\left|\big(s(x_{i}^{\top}(\theta^{*}+h))-s(x_{i}^{\top}\theta^{*})\big)(x_{i}^{\top}w)\right|\leq\frac{1}{4}|x_{i}^{\top}h|\,|x_{i}^{\top}w|.$
+
+Suppose that $\|h\|_{2}\leq 2\tilde{r}$ and $\|a\|_{2}=1$ , then $x_{i}^{\top}h$ is sub-Gaussian with $\psi_{2}$ norm $O(\tilde{r})$ . Also, $x_{i}^{\top}a$ is sub-Gaussian with $\psi_{2}$ norm $O(1)$ . Hence, the product is sub-exponential with $\psi_{1}$ norm $O(\tilde{r})$ :
+
+$\|\big(s(x_{i}^{\top}(\theta^{*}+h))-s(x_{i}^{\top}\theta^{*})\big)(x_{i}^{\top}a)\|_{\psi_{1}}\lesssim\|(x_{i}^{T}h)(x_{i}^{T}w)\|_{\psi_{1}}\leq\|x_{i}^{T}h\|_{\psi_{2}}\|x_{i}^{T}w\|_{\psi_{2}}\lesssim\tilde{r}.$
+
+See [ 39 , Section 2] for details. By Bernstein’s inequality for sub-exponential variables (cf. Lemma 12 ), for every fixed pair $(h,w)$ with $\|h\|_{2}\leq 2\tilde{r}$ and $w\in\mathbb{S}^{d-1}$ ,
+
+$\displaystyle\mathbb{P}\left(|Z_{n}(h,w)|\gtrsim t\right)\leq 2\exp\bigg(-cn\min\bigg\{(\frac{t}{\tilde{r}})^{2},\frac{t}{\tilde{r}}\bigg\}\bigg),\quad\forall t>0.$ (22) $\displaystyle\Longrightarrow~$ $\displaystyle\mathbb{P}\left(|Z_{n}(h,w)|\gtrsim\tilde{r}\left(\sqrt{\frac{t}{n}}+\frac{t}{n}\right)\right)\leq 2e^{-t},\quad\forall t>0.$ (23)
+
+Peeling argument: $\|h\|_{2}\geq\rho$ .
+
+We now apply a peeling argument. For the fixed $0<\rho\leq R_{0}:=3\|\theta^{*}\|_{2}$ and
+
+$j=0,1,\ldots,J,\qquad J:=\left\lceil\log_{2}(R_{0}/\rho)\right\rceil,$
+
+define
+
+$r_{j}:=2^{j}\rho,\qquad\mathcal{S}_{j}:=\left\{h:\ r_{j}\leq\|h\|_{2}\leq 2r_{j}\right\}.$
+
+Let $\mathcal{N}_{j}$ be an $(r_{j}/n)$ -net of $\mathcal{S}_{j}=\left\{h:\ r_{j}\leq\|h\|_{2}\leq 2r_{j}\right\}$ , and we may choose $|\mathcal{N}_{j}|\leq(Cn)^{d}$ [ 39 , Corollary 4.2.13] . Also let $\mathcal{M}$ be a $1/2$ -net of $\mathbb{S}^{d-1}$ with $|\mathcal{M}|\leq 5^{d}$ [ 39 , Corollary 4.2.13] . Applying the fixed- $(h,w)$ Bernstein bound in ( 23 ) to all pairs
+
+$(h_{0},w_{0})\in\mathcal{N}_{j}\times\mathcal{M}$
+
+and taking a union bound over $j=0,\ldots,J$ , along with a suitable choice of $t$ to offset the effect of the union bound, we obtain that
+
+$\displaystyle|Z_{n}(h_{0},w_{0})|\leq Cr_{j}\underbrace{\bigg(\sqrt{\frac{d\log(Cn)+\log\!\left(\frac{J+1}{\delta}\right)}{n}}+\frac{d\log(Cn)+\log\!\left(\frac{J+1}{\delta}\right)}{n}\bigg)}_{:=A_{n}},$ (24) $\displaystyle\forall h_{0}\in\mathcal{N}_{j},~\forall w_{0}\in\mathcal{M},\forall j=0,\cdots,J$ (25)
+
+holds with probability at least $1-\delta/2$ .
+
+It remains to pass from the nets to all points in each shell. For any $h,h^{\prime}\in\mathbb{R}^{d}$ and any $w\in\mathbb{S}^{d-1}$ , using again $\sup_{a\in\mathbb{R}}|s^{\prime}(a)|\leq 1/4$ , we obtain
+
+$|Z_{n}(h,w)-Z_{n}(h^{\prime},w)|\leq\frac{1}{4}\left[\frac{1}{n}\sum_{i=1}^{n}|x_{i}^{\top}(h-h^{\prime})|\,|x_{i}^{\top}w|+\mathbb{E}|x^{\top}(h-h^{\prime})|\,|x^{\top}w|\right].$
+
+By Cauchy–Schwarz,
+
+$\displaystyle\frac{1}{n}\sum_{i=1}^{n}|x_{i}^{\top}(h-h^{\prime})|\,|x_{i}^{\top}w|$ $\displaystyle\leq\left(\frac{1}{n}\sum_{i=1}^{n}(x_{i}^{\top}(h-h^{\prime}))^{2}\right)^{1/2}\left(\frac{1}{n}\sum_{i=1}^{n}(x_{i}^{\top}w)^{2}\right)^{1/2}$ $\displaystyle=\left((h-h^{\prime})^{\top}\widehat{\Sigma}(h-h^{\prime})\right)^{1/2}\left(w^{\top}\widehat{\Sigma}w\right)^{1/2},$
+
+where $\widehat{\Sigma}:=\frac{1}{n}\sum_{i=1}^{n}x_{i}x_{i}^{\top}=\frac{1}{n}XX^{\top}~~(X=[x_{1},...,x_{n}])$ is the sample covariance. Therefore,
+
+$\frac{1}{n}\sum_{i=1}^{n}|x_{i}^{\top}(h-h^{\prime})|\,|x_{i}^{\top}w|\leq\|\widehat{\Sigma}\|_{\mathrm{op}}\|h-h^{\prime}\|_{2}\|w\|_{2}=\|\widehat{\Sigma}\|_{\mathrm{op}}\|h-h^{\prime}\|_{2}=\frac{\|X\|_{op}^{2}}{n}\|h-h^{\prime}\|_{2}.$
+
+Similarly, since $x\sim N(0,I_{d})$ ,
+
+$\mathbb{E}|x^{\top}(h-h^{\prime})|\,|x^{\top}w|\leq\left(\mathbb{E}(x^{\top}(h-h^{\prime}))^{2}\right)^{1/2}\left(\mathbb{E}(x^{\top}w)^{2}\right)^{1/2}=\|h-h^{\prime}\|_{2}\|w\|_{2}=\|h-h^{\prime}\|_{2}.$
+
+Also,
+
+$\mathbb{E}|x^{\top}(h-h^{\prime})|\,|x^{\top}w|\leq\|h-h^{\prime}\|_{2}.$
+
+Thus
+
+$|Z_{n}(h,w)-Z_{n}(h^{\prime},w)|\leq C\Big(1+\frac{\|X\|_{op}^{2}}{n}\Big)\|h-h^{\prime}\|_{2}.$
+
+By Lemma 13 , with probability at least $1-\delta/2$ ,
+
+$\left\|X\right\|_{\mathrm{op}}\lesssim C\sqrt{n+d+\log(1/\delta)}.$
+
+On the intersection of the these high-probability events, fix any $h\in\mathcal{S}_{j}$ and choose $h_{0}\in\mathcal{N}_{j}$ with $\|h-h_{0}\|_{2}\leq\frac{r_{j}}{n}.$ Then uniformly over $w\in\mathbb{S}^{d-1}$ ,
+
+$|Z_{n}(h,w)-Z_{n}(h_{0},w)|\lesssim\bigg(1+\frac{n+d+\log(1/\delta)}{n}\bigg)\frac{r_{j}}{n}\lesssim r_{j}A_{n},$
+
+This extends the bound in ( 24 ) to $\forall h_{0}\in\mathcal{S}_{j}$ , $a_{0}\in\mathcal{M}$ , $j\in 0,\cdots,J$ , yielding
+
+$\displaystyle|Z_{n}(h,w_{0})|\leq Cr_{j}A_{j},\quad\forall h\in\mathcal{S}_{j},~\forall w_{0}\in\mathcal{M},~\forall j=0,\cdots,J,$ (26)
+
+so long as the constant $C$ is increased accordingly.
+
+It remains to show that $w_{0}\in\mathcal{M}$ is sufficient for bounding
+
+$\|Z_{n}(\theta^{*}+h)\|_{2}=\sup_{w\in\mathbb{S}^{d-1}}Z_{n}(h,w).$
+
+Indeed, a standard discretization argument (see, e.g., [ 39 , Exercise 4.4.2] ) yields
+
+$\|Z_{n}(\theta^{*}+h)\|_{2}\leq 2\sup_{w_{0}\in\mathcal{M}}|\langle w_{0},Z_{n}(\theta^{*}+h)\rangle|=2\sup_{w_{0}\in\mathcal{M}}|Z_{n}(h,w_{0})|.$
+
+Therefore, by the bound in ( 26 ), for every $h\in\mathcal{S}_{j}$ ,
+
+$\|Z_{n}(\theta^{*}+h)\|_{2}\leq Cr_{j}A_{n}.$
+
+Since $\|h\|_{2}\geq r_{j}$ on $\mathcal{S}_{j}$ by definition, we get
+
+$\|Z_{n}(\theta^{*}+h)\|_{2}\leq CA_{n}\|h\|_{2},\quad\forall\rho\leq\|h\|_{2}\leq R_{0}$
+
+Handling $\|h\|_{2}\leq\rho$ .
+
+It remains to handle the small ball $\|h\|_{2}\leq\rho$ . The same argument as above, applied with $\tilde{r}=\rho$ in Equation ( 23 ) and the $(\rho/n)$ -net of the ball $\{h:\|h\|_{2}\leq\rho\},$ gives
+
+$\|Z_{n}(\theta^{*}+h)\|_{2}\lesssim A_{n}\rho,\qquad\forall h\textrm{ ~obeying~~}\|h\|_{2}\leq\rho.$
+
+We omit further details for this step.
+
+Combining the shell bound and the small-ball bound, we obtain uniformly over all $\|u\|_{2}\leq 2\|\theta^{*}\|_{2}$ ,
+
+$\|Z_{n}(u)\|_{2}\leq CA_{n}\max\{\|u-\theta^{*}\|_{2},\rho\}.$
+
+Since $J+1\leq C\log_{2}(2R_{0}/\rho)$ , this proves the claim. ∎
+
+A.1.3 Final bound on $T_{c}$
+
+We now substitute the bounds in Equations ( 15 ) and ( 21 ) into ( 14 ) to obtain our final bound on the concentration term $T_{c}$ : if $n\gtrsim d\log n+\log\|\theta^{*}\|_{2}$ , then with probability at least $1-2e^{-d}$ , we have
+
+$\displaystyle\|h_{\theta^{*}}(u)-\mathbb{E}[h_{\theta^{*}}(u)]\|_{2}\lesssim\sqrt{\frac{d\log n+\log\|\theta^{*}\|_{2}}{n}}\|u-\theta^{*}\|_{2}+\sqrt{\frac{d}{n\|\theta^{*}\|_{2}}}+\frac{d}{n},~~\forall u\in\mathbb{B}_{2}^{d}(2\|\theta^{*}\|_{2}).$ (27)
+
+A.2 Bounding $T_{e}$ (bias term)
+
+We now control the bias term
+
+$\displaystyle T_{e}:=\big\|u-\theta^{*}-\eta\cdot\mathbb{E}[h_{\theta^{*}}(u)]\big\|_{2},$
+
+where by $h_{\theta^{*}}(u)=\frac{1}{n}\sum_{i=1}^{n}(s(x_{i}^{\top}u)-y_{i})x_{i}$ and $\mathbb{E}[y_{i}|x_{i}]=s(x_{i}^{\top}\theta^{*})$
+
+$\displaystyle\mathbb{E}[h_{\theta^{*}}(u)]=\mathbb{E}\big[\big(s(x_{i}^{\top}u)-s(x_{i}^{\top}\theta^{*})\big)x_{i}\big].$
+
+Now an important step is to apply stein’s identity,
+
+$\displaystyle\mathbb{E}[h_{\theta^{*}}(u)]$ $\displaystyle=\mathbb{E}[x_{i}s(x_{i}^{\top}u)]-\mathbb{E}[x_{i}s(x_{i}^{\top}\theta^{*})]$ $\displaystyle=\mathbb{E}[s^{\prime}(x_{i}^{\top}u)]u-\mathbb{E}[s^{\prime}(x_{i}^{\top}\theta^{*})]\theta^{*}$ $\displaystyle\quad\blacktriangleright\textrm{by Equation (\ref{stein3}) in Lemma \ref{lem:stein}}$ $\displaystyle=F(u)-F(\theta^{*}).$ $\displaystyle\quad\blacktriangleright\textrm{we introduce $F(u):=\mathbb{E}[s^{\prime}(x_{i}^{\top}u)]u=m(\|u\|_{2})u$}$
+
+Recall that $m(\tau):=\mathbb{E}_{g\sim N(0,1)}s^{\prime}(\tau g)$ . The main work of the analysis on this bias term is to identify $\eta$ such that
+
+$\displaystyle T_{e}:=\big\|u-\theta^{*}-\eta\cdot\mathbb{E}[h_{\theta^{*}}(u)]\big\|_{2}=\big\|u-\theta^{*}-\eta(F(u)-F(\theta^{*}))\big\|_{2}$ (28)
+
+is a contraction. Under the small stepsize $\eta\in(0,8)$ , we establish the following result by the main idea of approximating $F(u)-F(\theta^{*})$ via a linear map on $u-\theta^{*}$ .
+
+We shall pause to see the implication on $T_{e}$ . By ( 28 ), we shall set $v=\theta^{*}$ in Lemma 4 to establish that, under $\eta\in[0.1,7.9]$ (as chosen in Theorem 1 ),
+
+$\displaystyle T_{e}\leq\bigg(1-\frac{c}{\|\theta^{*}\|_{2}^{3}}\bigg)\|u-\theta^{*}\|_{2},\quad\forall u\in\mathbb{B}_{2}^{d}(2\|\theta^{*}\|_{2}).$ (29)
+
+holds for some universal constant $c>0$ .
+
+Let $F(z)=m(\|z\|_{2})z$ and $m(\tau)=\mathbb{E}_{g\sim N(0,1)}[s^{\prime}(\tau g)]$ . Fix $0<\eta<8$ . Let $v\in\mathbb{R}^{d}$ satisfy $\|v\|_{2}=R\geq 1$ . For any $u\in\mathbb{R}^{d}$ satisfying $\|u\|_{2}\leq 2R,$ we have that
+
+$\|\eta(F(u)-F(v))-(u-v)\|_{2}\leq\left(1-\frac{c\eta\left(2-\frac{\eta}{4}\right)}{R^{3}}\right)\|u-v\|_{2}.$
+
+Let $h:=u-v$ , then by Lemma 18 , we have
+
+$F(u)-F(v)=\int_{0}^{1}\nabla F(v+th)h\,dt$
+
+where
+
+$\displaystyle\nabla F(z)=m(\|z\|_{2})I+\frac{m^{\prime}(\|z\|_{2})}{\|z\|_{2}}zz^{\top},~~z\neq 0\quad\textrm{ with the convention $\nabla F(0)=m(0)I_{d}$.}$ (30)
+
+Define the matrix
+
+$\displaystyle A:=\int_{0}^{1}\nabla F(v+th)\,dt,$ (31)
+
+then
+
+$\displaystyle F(u)-F(v)=Ah.$ (32)
+
+Spectrum of $A.$
+
+For every $t\in[0,1]$ , since $\|u\|_{2}\leq 2R$ and $\|v\|_{2}=R$ , and $v+th=(1-t)v+tu$ , we have
+
+$\|v+th\|_{2}\leq(1-t)\|v\|_{2}+t\|u\|_{2}\leq 2R.$
+
+In light of ( 30 ), if $z\neq 0$ , then the eigenvalues of $\nabla F(z)$ are $m(\|z\|_{2})$ in directions orthogonal to $z$ , and
+
+$\displaystyle m(\|z\|_{2})+\|z\|_{2}m^{\prime}(\|z\|_{2})=q^{\prime}(\|z\|_{2})$ (33)
+
+in the direction of $\frac{z}{\|z\|_{2}}$ ; we mention that this extends to $z=0$ . Note that in ( 33 ), we introduce
+
+$q(\tau)=\tau m(\tau)$
+
+as in Lemma 15 , so that
+
+$\displaystyle q^{\prime}(\|z\|_{2})=m(\|z\|_{2})+\|z\|_{2}m^{\prime}(\|z\|_{2})=\mathbb{E}[s^{\prime}(\|z\|_{2}g)g^{2}]\leq\frac{1}{4}\mathbb{E}[g^{2}]=\frac{1}{4}.$ (34)
+
+By Lemma 15 , we have $m(\tau)\asymp\frac{1}{1+\tau},~q^{\prime}(\tau)\asymp\frac{1}{(1+\tau)^{3}}$ for $\tau>0$ . Combining with $\|v+th\|_{2}\leq 2R$ and $R\geq 1$ , we obtain that all the eigenvalues of $\nabla F(v+th)$ , for any $t\in[0,1]$ , are of order $\Omega(R^{-3})$ . This means that
+
+$\displaystyle\nabla F(v+th)\succeq\frac{c}{R^{3}}I\quad\textrm{for some absolute constant $c$.}$ (35)
+
+and therefore for any $w\in\mathbb{R}^{d}$ ,
+
+$\displaystyle\langle w,Aw\rangle$ $\displaystyle=\int_{0}^{1}w^{\top}\nabla F(v+th)w\,dt\geq\frac{c\|w\|_{2}^{2}}{R^{3}}$ (36) $\displaystyle\quad\blacktriangleright\textrm{by Equations (\ref{defineA}) and (\ref{pdnablaF})}$
+
+On the other hand, since $s^{\prime}(a)\leq 1/4$ , in light of ( 33 ) and ( 34 ) we have
+
+$\displaystyle\|\nabla F(v+th)\|_{op}\leq m(\|v+th\|_{2})\leq\frac{1}{4}$
+
+which then yields
+
+$\displaystyle\langle w,Aw\rangle=\int_{0}^{1}w^{\top}\nabla F(v+th)w\,dt\leq\frac{1}{4}\|w\|_{2}^{2},\quad\forall w\in\mathbb{R}^{d}.$ (37)
+
+Combining ( 36 ) and ( 37 ), we conclude that the positive definite matrix $A$ satisfies
+
+$\displaystyle\frac{c}{R^{3}}I_{d}\preceq A\preceq\frac{1}{4}I_{d},$
+
+and we can eigenvalue decomposition of $A$ as
+
+$\displaystyle A=O^{\top}\Lambda O$ (38)
+
+for some orthonormal matrix $O$ and a diagonal matrix
+
+$\Lambda=\diag(\lambda_{1},\cdots,\lambda_{d}),\quad\lambda_{i}\in\Big[\frac{c_{1}}{R^{3}},\frac{1}{4}\Big],~i\in[d].$
+
+Now using ( 32 ) and $h=u-v$ ,
+
+$\eta(F(u)-F(v))-(u-v)=(\eta A-I)h.$
+
+Hence
+
+$\displaystyle\|\eta(F(u)-F(v))-(u-v)\|_{2}^{2}$ $\displaystyle=\|(\eta A-I)h\|_{2}^{2}=\|h\|_{2}^{2}-2\eta\langle h,Ah\rangle+\eta^{2}\langle h,A^{2}h\rangle.$ (39)
+
+To bound $\langle h,A^{2}h\rangle$ , we shall use the eigenvalue decomposition of $A$ in ( 38 ) to obtain
+
+$\displaystyle h^{\top}\Big(A^{2}-\frac{1}{4}A\Big)h=(Oh)^{\top}\Big(\Lambda^{2}-\frac{\Lambda}{4}\Big)(Oh)\leq 0~~\Longrightarrow~~h^{\top}A^{2}h\leq\frac{1}{4}h^{\top}Ah.$ (40)
+
+To lower bound $\langle h,Ah\rangle$ , Equation ( 36 ) yields
+
+$\displaystyle\langle h,Ah\rangle\geq\frac{c\|h\|_{2}^{2}}{R^{3}}.$ (41)
+
+Substituting ( 40 ) and ( 41 ) into ( 39 ), we obtain
+
+$\displaystyle\|\eta(F(u)-F(v))-(u-v)\|_{2}^{2}\leq\|h\|_{2}^{2}-(2\eta-\frac{\eta^{2}}{4})h^{\top}Ah\leq\bigg(1-\frac{c\eta(2-\eta/4)}{R^{3}}\bigg)\|h\|_{2}^{2}$
+
+Taking square roots and using $\sqrt{1-a}\leq 1-\frac{a}{2}$ for $a\in[0,1)$ , we arrive at
+
+$\|\eta(F(u)-F(v))-(u-v)\|_{2}\leq\sqrt{1-\frac{c\eta(2-\eta/4)}{R^{3}}}\|u-v\|_{2}\leq\bigg(1-\frac{c\eta(2-\eta/4)}{2R^{3}}\bigg)\|u-v\|_{2}.$
+
+The result follows. ∎
+
+A.3 AIC and Convergence
+
+We are now ready to put pieces together to establish our main structure condition, the approximate invertibility condition (AIC). Under $m\gtrsim d\log n+\log\|\theta^{*}\|_{2}$ , the bound ( 27 ) on $T_{c}$ holds with probability at least $1-2e^{-d}$ , and also under $\eta\in[0.1,7.9]$ the bound ( 29 ) on $T_{e}$ holds deterministically. We now substitute these two bounds into ( 13 ) to obtain
+
+$\displaystyle\|u-\theta^{*}-\eta\cdot h_{\theta^{*}}(u)\|_{2}$ $\displaystyle\leq\bigg(1-\frac{c}{\|\theta^{*}\|_{2}^{3}}+C\sqrt{\frac{d\log n+\log\|\theta^{*}\|_{2}}{n}}\bigg)\|u-\theta^{*}\|_{2}$ $\displaystyle+C^{\prime}\bigg(\sqrt{\frac{d}{n\|\theta^{*}\|_{2}}}+\frac{d}{n}\bigg),\qquad\forall u\in\mathbb{B}_{2}^{d}(2\|\theta^{*}\|_{2}).$ (42)
+
+Following recent works [ 25 , 26 , 8 , 14 , 1 ] , ( 42 ) is referred to as an approximate invertibility condition (AIC) in the sense that it essentially controls the difference between the ideal descent step $u-\theta^{*}$ and the actual gradient step $\eta\cdot h_{\theta^{*}}(u)$ . To imply the desired convergence, we need the linear term, $(1-\frac{c}{\|\theta^{*}\|_{2}^{3}}+\sqrt{\frac{d\log n+\log\|\theta^{*}\|_{2}}{n}})\cdot\|u-\theta^{*}\|_{2}$ , to be a contraction. To that end we enforce the sample complexity
+
+$\displaystyle n\gtrsim\|\theta^{*}\|_{2}^{6}d\log n+\|\theta^{*}\|_{2}^{6}\log\|\theta^{*}\|_{2},$ (43)
+
+under which the AIC ( 42 ) simplifies to
+
+$\displaystyle\|u-\theta^{*}-\eta\cdot h_{\theta^{*}}(u)\|_{2}\leq\bigg(1-\frac{c^{\prime}}{\|\theta^{*}\|_{2}^{3}}\bigg)\|u-\theta^{*}\|_{2}+C^{\prime}\bigg(\sqrt{\frac{d}{n\|\theta^{*}\|_{2}}}+\frac{d}{n}\bigg),~~\forall u\in\mathbb{B}_{2}^{d}(2\|\theta^{*}\|_{2}).$ (AIC1)
+
+To complete the proof of Theorem 1 , all that remains is to show that the above ( AIC1 ) implies the claimed linear convergence. We address this via the following lemma by an argument similar to [ 8 , Theorem 3.1] , which is to control $\{\|\theta_{t}-\theta^{*}\|_{2}\}_{t=0}^{\infty}$ by a sequence defined iteratively.
+
+Under ( 43 ) and ( AIC1 ), $\{\theta_{t}\}_{t\geq 0}$ generated by Algorithm 1 with $\theta_{0}=0$ (and the $\eta$ in ( AIC1 )) satisfies
+
+$\displaystyle\|\theta_{t}-\theta^{*}\|_{2}\leq\bigg(1-\frac{c^{\prime}}{\|\theta^{*}\|_{2}^{3}}\bigg)^{t}\|\theta^{*}\|_{2}+\tilde{C}\sqrt{\frac{\|\theta^{*}\|_{2}^{5}d}{n}},\qquad\forall t=0,1,\cdots.$
+
+We define a sequence by $\{f_{t}\}_{t=0}^{\infty}$ by the recurrence and the initial value
+
+$f_{t+1}=\bigg(1-\frac{c^{\prime}}{\|\theta^{*}\|_{2}^{3}}\bigg)f_{t}+C^{\prime}\bigg(\sqrt{\frac{d}{n\|\theta^{*}\|_{2}}}+\frac{d}{n}\bigg),~t\geq 0,\quad\textrm{and}\quad f_{0}=\|\theta^{*}\|_{2}.$
+
+It is not hard to observe the formula
+
+$\displaystyle f_{t}=\bigg(1-\frac{c^{\prime}}{\|\theta^{*}\|_{2}^{3}}\bigg)^{t}\|\theta^{*}\|_{2}+\bigg[1-\Big(1-\frac{c^{\prime}}{\|\theta^{*}\|_{2}^{3}}\Big)^{t}\bigg]\frac{C^{\prime}}{c^{\prime}}\bigg(\sqrt{\frac{d\|\theta^{*}\|_{2}^{5}}{n}}+\frac{d\|\theta^{*}\|_{2}^{3}}{n}\bigg),\quad\forall t\geq 0.$ (44)
+
+Hence, under ( 43 ) and $\|\theta^{*}\|_{2}\geq 1$ , we have that
+
+$\displaystyle f_{t}\leq\bigg(1-\frac{c^{\prime}}{\|\theta^{*}\|_{2}^{3}}\bigg)^{t}\|\theta^{*}\|_{2}+O\bigg(\sqrt{\frac{\|\theta^{*}\|_{2}^{5}d}{n}}\bigg),\quad\forall t\geq 0,$
+
+and in turn we only need to prove $\|\theta_{t}-\theta^{*}\|_{2}\leq f_{t}$ for any $t\geq 0.$ Before that, we further observe that ( 43 ) and $\|\theta^{*}\|_{2}\geq 1$ imply
+
+$\frac{C^{\prime}}{c^{\prime}}\bigg(\sqrt{\frac{d\|\theta^{*}\|_{2}^{5}}{n}}+\frac{d\|\theta^{*}\|_{2}^{3}}{n}\bigg)\leq\|\theta^{*}\|_{2},$
+
+hence ( 44 ) also yields $f_{t}\leq\|\theta^{*}\|_{2}$ for any $t\geq 0.$
+
+It remains to prove $\|\theta_{t}-\theta^{*}\|_{2}\leq f_{t}$ for any $t\geq 0$ . We accomplish this by induction. Since $\theta_{0}=0$ and $f_{0}=\|\theta^{*}\|_{2}$ , $\|\theta_{0}-\theta^{*}\|_{2}\leq f_{0}$ holds trivially. Now suppose that $\|\theta_{t}-\theta^{*}\|_{2}\leq f_{t}$ , and we seek to prove $\|\theta_{t+1}-\theta^{*}\|_{2}\leq f_{t+1}$ . First by $f_{t}\leq\|\theta^{*}\|_{2}$ , the hypothesis yields $\|\theta_{t}\|_{2}\leq f_{t}+\|\theta^{*}\|_{2}\leq 2\|\theta^{*}\|_{2}$ . Therefore we can apply ( AIC1 ) with $u=\theta_{t}$ , yielding
+
+$\|\theta_{t}-\theta^{*}-\eta\cdot h_{\theta^{*}}(\theta_{t})\|_{2}\leq\bigg(1-\frac{c^{\prime}}{\|\theta^{*}\|_{2}^{3}}\bigg)\|\theta_{t}-\theta^{*}\|_{2}+C^{\prime}\bigg(\sqrt{\frac{d}{n\|\theta^{*}\|_{2}}}+\frac{d}{n}\bigg).$
+
+Since $\theta_{t+1}=\theta_{t}-\eta\cdot h_{\theta^{*}}(\theta_{t})$ , and also using the hypothesis $\|\theta_{t}-\theta^{*}\|_{2}\leq f_{t}$ , the above display yields
+
+$\|\theta_{t+1}-\theta^{*}\|_{2}\leq\bigg(1-\frac{c^{\prime}}{\|\theta^{*}\|_{2}^{3}}\bigg)f_{t}+C^{\prime}\bigg(\sqrt{\frac{d}{n\|\theta^{*}\|_{2}}}+\frac{d}{n}\bigg)=f_{t+1}.$
+
+This completes the induction. ∎
+
+Appendix B Proof of Theorem 2 (GD with Large Stepsize)
+
+The overall proof architecture remains the same as Theorem 1 , that is to establish an AIC and then use it to imply the desired convergence. The first main difference is that the AIC for Theorem 2 only holds “locally” over a small radius- $O(\|\theta^{*}\|_{2}^{-1})$ neighborhood of $\theta^{*}$ . Again we start with ( 13 ), i.e., the decomposition
+
+$\displaystyle\|u-\theta^{*}-\eta\cdot h_{\theta^{*}}(u)\|_{2}\leq\eta\cdot\underbrace{\|h_{\theta^{*}}(u)-\mathbb{E}[h_{\theta^{*}}(u)]\|_{2}}_{:=T_{c}}+\underbrace{\|u-\theta^{*}-\eta\mathbb{E}[h_{\theta^{*}}(u)]\|_{2}}_{:=T_{e}},$ (45)
+
+and we shall restrict to $u\in\mathbb{B}_{2}^{d}(\theta^{*};\frac{c_{0}}{\|\theta^{*}\|_{2}})$ for some small enough constant $c_{0}$ . The major technical difference arises in the analysis of the bias term $T_{e}$ .
+
+B.1 Bounding $T_{c}$ (concentration term)
+
+While re-iterating the arguments in Appendix A.1 (especially Appendix A.1.2 ) over a smaller range of $u$ , namely $\mathbb{B}_{2}^{d}(\theta^{*};\frac{c_{0}}{\|\theta^{*}\|_{2}})$ , may lead to slightly tighter bound, such improvement is marginal and can only refine log factors. Therefore, we directly reuse the previous bound, which we restate here (cf. Appendix A.1.3 ): if $n\gtrsim d\log n+\log\|\theta^{*}\|_{2}$ , then with probability at least $1-2e^{-d}$ , we have
+
+$\displaystyle\|h_{\theta^{*}}(u)-\mathbb{E}[h_{\theta^{*}}(u)]\|_{2}\lesssim\sqrt{\frac{d\log n+\log\|\theta^{*}\|_{2}}{n}}\|u-\theta^{*}\|_{2}+\sqrt{\frac{d}{n\|\theta^{*}\|_{2}}}+\frac{d}{n},~~\forall u\in\mathbb{B}_{2}^{d}(\theta^{*};\frac{c_{0}}{\|\theta^{*}\|_{2}}).$ (46)
+
+B.2 Bounding $T_{e}$ (bias term)
+
+We shall now bound $T_{e}$ over $u\in\mathbb{B}_{2}^{d}(\theta^{*};\frac{c_{0}}{\|\theta^{*}\|_{2}})$ . The main ingredient is the following Lemma 6 , which involves two functions that are recurring in our analysis:
+
+$m(\tau)=\mathbb{E}[s^{\prime}(\tau g)]$ and $q^{\prime}(\tau)=\mathbb{E}[s^{\prime}(\tau g)g^{2}]$
+
+See,e.g., Theorem 2 and Lemma 15 . An important starting point is, again, the transform in ( 28 ) based on stein’s identity:
+
+$\displaystyle T_{e}:=\big\|u-\theta^{*}-\eta\cdot\mathbb{E}[h_{\theta^{*}}(u)]\big\|_{2}=\big\|u-\theta^{*}-\eta(F(u)-F(\theta^{*}))\big\|_{2},$ (47)
+
+where $F:\mathbb{R}^{d}\to\mathbb{R}^{d}$ is defined as $F(u)=m(\|u\|_{2})u$ .
+
+Let us pause to see the implied bound of Lemma 6 on $T_{e}$ . We set $v=\theta^{*}$ in Lemma 6 , then ( 49 ) is also the stepsize assumption in Theorem 2 , and the conclusion
+
+$\left\|\eta(F(u)-F(\theta^{*}))-(u-\theta^{*})\right\|_{2}\leq\left(1-\frac{c_{1}}{R^{2}}\right)\|u-\theta^{*}\|_{2},\quad\forall u\in\mathbb{B}_{2}^{d}(\theta^{*};\frac{c_{0}}{\|\theta^{*}\|_{2}}),$
+
+in light of ( 47 ), yields
+
+$\displaystyle T_{e}\leq\left(1-\frac{c_{1}}{\|\theta^{*}\|_{2}^{2}}\right)\|u-\theta^{*}\|_{2},\quad\forall u\in\mathbb{B}_{2}^{d}(\theta^{*};\frac{c_{0}}{\|\theta^{*}\|_{2}}).$ (48)
+
+This is final bound on the bias term $T_{e}.$
+
+There exist universal constants $c,c_{0},c_{1}>0$ such that the following holds. Let $v\in\mathbb{R}^{d}$ satisfy $R:=\|v\|_{2}\geq 1.$ If
+
+$\displaystyle\frac{c}{R^{2}q^{\prime}(R)}<\eta<\frac{2-cR^{-2}}{m(R)},$ (49)
+
+then for any $\|u-v\|_{2}\leq\frac{c_{0}}{R}$ we have
+
+$\left\|\eta(F(u)-F(v))-(u-v)\right\|_{2}\leq\left(1-\frac{c_{1}}{R^{2}}\right)\|u-v\|_{2}.$
+
+Moreover, $\eta=\frac{1}{m(R)}$ is a specific choice satisfying ( 49 ).
+
+Let $h:=u-v.$ If $h=0$ , the result is trivial, so we assume $h\neq 0$ . Let $e:=\frac{v}{\|v\|_{2}},$ and we shall decompose $h$ along $e$ and an orthogonal direction $\frac{w}{\|w\|_{2}}$ (here, $\{e,\frac{w}{\|w\|_{2}}\}$ is orthonormal basis for ${\rm span}(u,v)$ , and in the case of $u=\lambda v$ for some $\lambda\in\mathbb{R}$ we can choose $w/\|w\|_{2}$ as an arbitrary unit vector orthogonal to $v$ ):
+
+$\displaystyle h=\alpha e+w,\qquad\textrm{for some }w\perp e.$ (50)
+
+With these conventions and $R=\|v\|_{2}\geq 1$ we have
+
+$\displaystyle u=v+h=(R+\alpha)e+w,$ (51)
+
+and hence $\rho:=\|u\|_{2}$ equals
+
+$\displaystyle\rho:=\|u\|_{2}=\sqrt{(R+\alpha)^{2}+\|w\|_{2}^{2}}.$ (52)
+
+Since $\|h\|_{2}\leq\frac{c_{0}}{R}$ and $R\geq 1$ , choosing sufficiently small $c_{0}$ (together with triangle inequality) ensures
+
+$\displaystyle\frac{R}{2}\leq R-\|h\|_{2}\leq\rho\leq R+\|h\|_{2}\leq 2R$ (53)
+
+The above conventions, along with $q(\tau)=\tau m(\tau)$ (cf. Lemma 15 ), also allow us to write
+
+$\displaystyle F(v)=m(\|v\|_{2})v=m(R)Re=q(R)e,$
+
+and in light of ( 51 )
+
+$\displaystyle F(u)=m(\|u\|_{2})u=m(\rho)\big((R+\alpha)e+w\big).$
+
+Hence
+
+$\displaystyle F(u)-F(v)=\Big(m(\rho)(R+\alpha)-q(R)\Big)e+m(\rho)w.$ (54)
+
+Approximating $F(u)-F(v)$ via linear map.
+
+We now come to the most technical step in this proof, which approximates $F(u)-F(v)$ via a linear map on $h$ . We introduce
+
+$\displaystyle J_{v}=q^{\prime}(R)ee^{\top}+m(R)(I-ee^{\top}).$ (55)
+
+Then for $h=\alpha e+w$ with $w\perp e$ (cf. Equation ( 50 )), we have
+
+$ee^{\top}h=\alpha e,\qquad(I-ee^{\top})h=w,$
+
+and hence
+
+$\displaystyle J_{v}h=q^{\prime}(R)ee^{\top}h+m(R)(I-ee^{\top})h=q^{\prime}(R)\alpha e+m(R)w.$ (56)
+
+We want to use $J_{v}h$ to approximate $F(u)-F(v)=F(v+h)-F(v)$ , with the intuition behind being that $J_{v}$ in ( 55 ) is just the Jacobian matrix $\nabla F(v)$ (see Lemma 18 ). Our main claim is that
+
+$\displaystyle F(u)-F(v)=J_{v}h+\mathcal{R},\quad\textrm{with ~$\|\mathcal{R}\|_{2}\leq C\frac{\|h\|_{2}^{2}}{R^{2}}.$}$ (57)
+
+Proof of ( 57 ).
+
+In light of ( 54 ) and ( 56 ),
+
+$\displaystyle F(u)-F(v)-J_{v}h=\underbrace{\Big(m(\rho)(R+\alpha)-q(R)-q^{\prime}(R)\alpha\Big)}_{:=T_{1}}e+\underbrace{\big(m(\rho)-m(R)\big)}_{T_{2}}w$ (58)
+
+and we shall treat the components of $e$ and of $w$ separately.
+
+For the $e$ -component, by $q(\rho)=\rho m(\rho)$ we have
+
+$\displaystyle T_{1}=\underbrace{q(\rho)-q(R)-q^{\prime}(R)(\rho-R)}_{:=T_{1}^{\prime}}+\underbrace{\big(q^{\prime}(R)-m(\rho)\big)(\rho-R-\alpha)}_{T^{\prime\prime}_{1}}.$
+
+To bound $T_{1}^{\prime}$ , we have
+
+$\displaystyle|T^{\prime}_{1}|=\big|q(\rho)-q(R)-q^{\prime}(R)(\rho-R)\big|$ $\displaystyle\lesssim\Big(\sup_{\tau\geq\frac{R}{2}}|q^{\prime\prime}(\tau)|\Big)\cdot|\rho-R|^{2}$ $\displaystyle\quad\blacktriangleright\textrm{by Taylor's theorem and Equation (\ref{rhioatR})}$ $\displaystyle\lesssim\frac{\|h\|_{2}^{2}}{R^{4}}$ (59) $\displaystyle\quad\blacktriangleright\textrm{by $q^{\prime\prime}(\tau)\asymp\frac{1}{\tau^{4}}$ and $|\rho-R|\leq\|h\|_{2}$}$
+
+We now bound $|T^{\prime\prime}_{1}|=|q^{\prime}(R)-m(\rho)||\rho-R-\alpha|$ . The bounds in Lemma 15 give
+
+$|q^{\prime}(R)-m(\rho)|\leq|q^{\prime}(R)|+|m(\rho)|\lesssim\frac{1}{R}.$
+
+Combining with
+
+$|\rho-R-\alpha|=\frac{\rho^{2}-(R+\alpha)^{2}}{\rho+R+\alpha}\stackrel{{\scriptstyle(\ref{rhoequa})}}{{=}}\frac{\|w\|_{2}^{2}}{\rho+R+\alpha}\stackrel{{\scriptstyle(\ref{decomposeh})}}{{\lesssim}}\frac{\|w\|_{2}^{2}}{R}\stackrel{{\scriptstyle(\ref{decomposeh})}}{{\leq}}\frac{\|h\|_{2}^{2}}{R},$
+
+we obtain
+
+$\displaystyle|T_{1}^{\prime\prime}|\lesssim\frac{1}{R}\cdot\frac{\|h\|_{2}^{2}}{R}=\frac{\|h\|_{2}^{2}}{R^{2}}.$ (60)
+
+Combining ( 59 ) and ( 60 ) yields
+
+$\displaystyle|T_{1}|=O\left(\frac{\|h\|_{2}^{2}}{R^{2}}\right).$ (61)
+
+For $T_{2}$ , by using $|m^{\prime}(\tau)|\lesssim\tau^{-2}$ for $\tau\geq\frac{1}{2}$ (cf. Lemma 19 ), we obtain
+
+$|T_{2}|=|m(\rho)-m(R)|\stackrel{{\scriptstyle(\ref{rhioatR})}}{{\leq}}\sup_{\tau\geq R/2}|m^{\prime}(\tau)|\cdot|\rho-R|\lesssim\frac{|\rho-R|}{R^{2}}\stackrel{{\scriptstyle(\ref{rhioatR})}}{{\leq}}\frac{\|h\|_{2}}{R^{2}}.$
+
+Together with $\|w\|_{2}\leq\|h\|_{2}$ from ( 50 ), we reach
+
+$\displaystyle\|T_{2}w\|_{2}\lesssim\frac{\|h\|_{2}}{R^{2}}\|w\|_{2}\leq\frac{\|h\|_{2}^{2}}{R^{2}}.$ (62)
+
+We are now ready to establish the claimed approximation guarantee in ( 57 ):
+
+$\displaystyle\big\|F(u)-F(v)-J_{v}h\big\|_{2}$ $\displaystyle\stackrel{{\scriptstyle(\ref{seset})}}{{\leq}}|T_{1}|+|T_{2}|\|w\|_{2}$ $\displaystyle~\leq\frac{\|h\|_{2}^{2}}{R^{2}}.$ $\displaystyle\quad\blacktriangleright\textrm{by Equations (\ref{T1bound}) and (\ref{T2bound1})}$
+
+Concluding the proof.
+
+In view of ( 55 ), $J_{v}$ has eigenvalue $\lambda_{\parallel}:=q^{\prime}(R)$ in the direction $e$ and eigenvalue $\lambda_{\perp}=m(R)$ on the orthogonal subspace. Hence Lemma 16 yields $\lambda_{\|}<\lambda_{\perp}$ . Note that our choice of stepsize in ( 49 ) is equivalent to
+
+$\displaystyle-\bigg(1-\frac{c}{R^{2}}\bigg)<1-\eta\lambda_{\perp}<1-\eta\lambda_{\parallel}<1-\frac{c}{R^{2}},$
+
+which then also ensures
+
+$\displaystyle\|\eta J_{v}-I_{d}\|_{op}\leq 1-\frac{c}{R^{2}}.$ (63)
+
+Using ( 57 ), we get
+
+$\displaystyle\|\eta(F(u)-F(v))-(u-v)\|_{2}$ $\displaystyle=\|\eta J_{v}h+\mathcal{R}-h\|_{2}$ $\displaystyle\leq\|(\eta J_{v}-I_{d})h\|_{2}+\eta\|\mathcal{R}\|_{2}$ $\displaystyle\leq\left(1-\frac{c}{R^{2}}\right)\|h\|_{2}+\eta C\frac{\|h\|_{2}^{2}}{R^{2}}$ $\displaystyle\leq\left(1-\frac{c}{R^{2}}\right)\|h\|_{2}+C^{\prime}\frac{\|h\|_{2}^{2}}{R}$ $\displaystyle\quad\blacktriangleright\textrm{By $m(R)\asymp\frac{1}{R}$ from Lemma \ref{lem:separa}, we have $\eta\lesssim R$}$ $\displaystyle\leq\left(1-\frac{c}{R^{2}}\right)\|h\|_{2}+\frac{C^{\prime}c_{0}\|h\|_{2}}{R^{2}}$ $\displaystyle\quad\blacktriangleright\textrm{by $\|h\|_{2}\leq\frac{c_{0}}{R}$ as assumed}$ $\displaystyle\leq\left(1-\frac{c}{2R^{2}}\right)\|h\|_{2}.$ $\displaystyle\quad\blacktriangleright\textrm{Taking $c_{0}$ sufficiently small}$
+
+This proves the claim.
+
+Specific stepsize $\eta=\frac{1}{m(R)}$ .
+
+Finally, we prove the “moreover” part of the statement. We claim that the simpler choice $\eta=\frac{1}{m(R)}$ also belongs to the feasible interval $\left[\frac{c}{R^{2}q^{\prime}(R)},\,\frac{2-cR^{-2}}{m(R)}\right]$ provided $c>0$ is sufficiently small. Indeed, the upper bound is immediate. Since $R\geq 1$ , if $c\leq 1$ , then $1\leq 2-cR^{-2},$ and hence $\frac{1}{m(R)}\leq\frac{2-cR^{-2}}{m(R)}.$ For the lower bound, we need $\frac{c}{R^{2}q^{\prime}(R)}\leq\frac{1}{m(R)}.$ Since $m(R),q^{\prime}(R)>0$ , this is equivalent to $c\,m(R)\leq R^{2}q^{\prime}(R).$ Using the estimates from Lemma 15 , we have
+
+$\frac{R^{2}q^{\prime}(R)}{m(R)}\gtrsim\frac{R^{2}R^{-3}}{R^{-1}}\gtrsim 1~~\Longrightarrow~~\inf_{R\geq 1}\frac{R^{2}q^{\prime}(R)}{m(R)}>0.$
+
+Choosing $c>0$ smaller than this infimum and also $c\leq 1$ yields $\frac{1}{m(R)}\in\left[\frac{c}{R^{2}q^{\prime}(R)},\,\frac{2-cR^{-2}}{m(R)}\right]$ for all $R\geq 1$ . ∎
+
+B.3 AIC and Convergence
+
+We are in a position to establish the AIC. Substituting ( 46 ) and ( 47 ) into ( 45 ), along with $\eta\leq\frac{2}{m(\|\theta^{*}\|_{2})}\asymp\|\theta^{*}\|_{2}$ (cf. Lemma 15 ), it follows that
+
+$\displaystyle\|u-\theta^{*}-\eta\cdot h_{\theta^{*}}(u)\|_{2}\leq C^{\prime}\|\theta^{*}\|_{2}\sqrt{\frac{d\log n+\log\|\theta^{*}\|_{2}}{n}}\|u-\theta^{*}\|_{2}$ $\displaystyle\quad+\bigg(1-\frac{c_{1}}{\|\theta^{*}\|_{2}^{2}}\bigg)\|u-\theta^{*}\|_{2}+C^{\prime\prime}\bigg(\sqrt{\frac{\|\theta^{*}\|_{2}d}{n}}+\frac{\|\theta^{*}\|_{2}d}{n}\bigg),\quad\forall u\in\mathbb{B}_{2}^{d}(\theta^{*};\frac{c_{0}}{\|\theta^{*}\|_{2}}).$ (64)
+
+To ensure that the pre-factor of $\|u-\theta^{*}\|_{2}$ is bounded away from $1$ , i.e.,
+
+$1-\frac{c_{1}}{\|\theta^{*}\|_{2}^{2}}+C^{\prime}\|\theta^{*}\|_{2}\sqrt{\frac{d\log n+\log\|\theta^{*}\|_{2}}{n}}<1-\frac{c_{1}}{2\|\theta^{*}\|_{2}^{2}},$
+
+we enforce the sample complexity
+
+$\displaystyle n\gtrsim\|\theta^{*}\|_{2}^{6}d\log n+\|\theta^{*}\|_{2}^{6}\log\|\theta^{*}\|_{2},$ (65)
+
+which is (surprisingly) identical to ( 43 ). Then, the AIC in ( 64 ) leads to the following local AIC:
+
+$\displaystyle\|u-\theta^{*}-\eta\cdot h_{\theta^{*}}(u)\|_{2}\leq\bigg(1-\frac{c^{\prime}}{\|\theta^{*}\|_{2}^{2}}\bigg)\|u-\theta^{*}\|_{2}+C^{\prime}\bigg(\sqrt{\frac{\|\theta^{*}\|_{2}d}{n}}+\frac{\|\theta^{*}\|_{2}d}{n}\bigg),~~\forall u\in\mathbb{B}_{2}^{d}(\theta^{*};\frac{c_{0}}{\|\theta^{*}\|_{2}})$ (AIC2)
+
+for some universal constants $c^{\prime},C^{\prime},c_{0}$ (after updating the value of $C^{\prime}$ ).
+
+To conclude the proof of Theorem 2 , it remains to show ( AIC2 ) leads to the claimed convergence. An argument similar to Lemma 5 works, but since ( AIC2 ) only holds locally over $\mathbb{B}_{2}^{d}(\theta^{*};\frac{c}{\|\theta^{*}\|_{2}})$ , there are two differences of (i) requiring a warm initialization and (ii) requiring a sample complexity slightly higher than ( 65 ).
+
+Under ( AIC2 ) and
+
+$\displaystyle n\gtrsim\|\theta^{*}\|_{2}^{7}d~~~\textrm{with large enough hidden constant}$ (66)
+
+$\{\theta_{0}\}_{t\geq 0}$ generated by Algorithm 1 with $\theta_{0}\in\mathbb{B}_{2}^{d}(\theta^{*};\frac{c_{0}}{\|\theta^{*}\|_{2}})$ (and the $\eta$ in ( AIC2 )) satisfies
+
+$\displaystyle\|\theta_{t}-\theta^{*}\|_{2}\leq\bigg(1-\frac{c^{\prime}}{\|\theta^{*}\|_{2}^{2}}\bigg)^{t}\frac{c_{0}}{\|\theta^{*}\|_{2}}+\tilde{C}\sqrt{\frac{\|\theta^{*}\|_{2}^{5}d}{n}},\quad\forall t=0,1,\cdots.$
+
+We introduce a sequence $\{f_{t}\}_{t\geq 0}$ by the recurrence and the initial value
+
+$\displaystyle f_{t+1}=\bigg(1-\frac{c^{\prime}}{\|\theta^{*}\|_{2}^{2}}\bigg)f_{t}+C^{\prime}\bigg(\sqrt{\frac{\|\theta^{*}\|_{2}d}{n}}+\frac{\|\theta^{*}\|_{2}d}{n}\bigg),\quad t\geq 0,\quad\textrm{and}\quad f_{0}=\frac{c_{0}}{\|\theta^{*}\|_{2}}.$ (67)
+
+One can find the closed-form expression
+
+$\displaystyle f_{t}=\left(1-\frac{c^{\prime}}{\|\theta^{*}\|_{2}^{2}}\right)^{t}\frac{c_{0}}{\|\theta^{*}\|_{2}}+\left[1-\left(1-\frac{c^{\prime}}{\|\theta^{*}\|_{2}^{2}}\right)^{t}\right]\frac{C^{\prime}}{c^{\prime}}\left(\sqrt{\frac{\|\theta^{*}\|_{2}^{5}d}{n}}+\frac{\|\theta^{*}\|_{2}^{3}d}{n}\right),\quad t\geq 0.$ (68)
+
+Under ( 66 ), we have $\frac{\|\theta^{*}\|_{2}^{3}d}{n}\leq\sqrt{\frac{\|\theta^{*}\|_{2}^{5}d}{n}}$ , hence it is sufficient to prove $\|\theta_{t}-\theta^{*}\|_{2}\leq f_{t}$ for any $t\geq 0.$ Also under ( 66 ) we have
+
+$\frac{C^{\prime}}{c^{\prime}}\left(\sqrt{\frac{\|\theta^{*}\|_{2}^{5}d}{n}}+\frac{\|\theta^{*}\|_{2}^{3}d}{n}\right)\leq\frac{c_{0}}{\|\theta^{*}\|_{2}},$
+
+and as such ( 68 ) gives $f_{t}\leq\frac{c_{0}}{\|\theta^{*}\|_{2}}$ for any $t\geq 0$ .
+
+All that remains is to prove $\|\theta_{t}-\theta^{*}\|_{2}\leq f_{t}$ , $t\geq 0$ , and we shall achieve this by induction. Due to $\theta_{0}\in\mathbb{B}_{2}^{d}(\theta^{*};\frac{c_{0}}{\|\theta^{*}\|_{2}})$ , this holds trivially for $t=0$ . Suppose that $\|\theta_{t}-\theta^{*}\|_{2}\leq f_{t}$ , we then have $\|\theta_{t}-\theta^{*}\|_{2}\leq\frac{c_{0}}{\|\theta^{*}\|_{2}}$ , thus $\theta_{t}\in\mathbb{B}_{2}^{d}(\theta^{*};\frac{c_{0}}{\|\theta^{*}\|_{2}})$ . Therefore we can set $u=\theta_{t}$ in ( AIC2 ), yielding
+
+$\|\theta_{t}-\theta^{*}-\eta\cdot h_{\theta^{*}}(\theta_{t})\|_{2}\leq\bigg(1-\frac{c^{\prime}}{\|\theta^{*}\|_{2}^{2}}\bigg)\|\theta_{t}-\theta^{*}\|_{2}+C^{\prime}\bigg(\sqrt{\frac{\|\theta^{*}\|_{2}d}{n}}+\frac{\|\theta^{*}\|_{2}d}{n}\bigg).$
+
+By $\theta_{t+1}=\theta_{t}-\eta\cdot h_{\theta^{*}}(\theta_{t})$ and $\|\theta_{t}-\theta^{*}\|_{2}\leq f_{t}$ , the above display gives
+
+$\displaystyle\|\theta_{t+1}-\theta^{*}\|_{2}\leq\bigg(1-\frac{c^{\prime}}{\|\theta^{*}\|_{2}^{2}}\bigg)f_{t}+C^{\prime}\bigg(\sqrt{\frac{\|\theta^{*}\|_{2}d}{n}}+\frac{\|\theta^{*}\|_{2}d}{n}\bigg)\stackrel{{\scriptstyle(\ref{defft})}}{{=}}f_{t+1},$
+
+thus completing the induction. The claim is proved. ∎
+
+Appendix C Proof of Theorem 3 (Performance of Algorithm 2 )
+
+In this proof, for simplicity in notation, we denote $\hat{r}_{T_{0}}$ by $\hat{r}$ and in turn $\hat{\theta}=\hat{\lambda}\cdot\hat{r}$ . We start with a decomposition
+
+$\displaystyle\|\hat{\theta}-\theta^{*}\|_{2}$ $\displaystyle\leq\bigg\|\hat{\lambda}\hat{r}-\|\theta^{*}\|_{2}\hat{r}\bigg\|_{2}+\bigg\|\|\theta^{*}\|_{2}\hat{r}-\theta^{*}\bigg\|_{2}$ $\displaystyle=\big|\hat{\lambda}-\|\theta^{*}\|_{2}\big|+\|\theta^{*}\|_{2}\bigg\|\hat{r}-\frac{\theta^{*}}{\|\theta^{*}\|_{2}}\bigg\|_{2},$ (69)
+
+where the first term captures the norm estimation error while the second term accounts for the direction estimation error.
+
+Due to Lemma 1 , we immediately obtain the bound on $\|\theta^{*}\|_{2}\big\|\hat{r}-\frac{\theta^{*}}{\|\theta^{*}\|_{2}}\big\|_{2}$ . In fact, by assuming the bound in Lemma 1 holds (this is within the probability promised in Theorem 3 ), then we have
+
+$\displaystyle\|\theta^{*}\|_{2}\bigg\|\hat{r}-\frac{\theta^{*}}{\|\theta^{*}\|_{2}}\bigg\|_{2}\lesssim\polylog(n)\bigg(\sqrt{\frac{\|\theta^{*}\|_{2}d}{n}}+\frac{\|\theta^{*}\|_{2}d}{n}\bigg).$ (70)
+
+In the remainder of this appendix, we focus on bounding the norm estimation error, $|\hat{\lambda}-\|\theta^{*}\|_{2}|$ .
+
+C.1 Bounding $|\hat{\lambda}-\|\theta^{*}\|_{2}|$ (norm estimation error)
+
+In order to bound $|\hat{\lambda}-\|\theta^{*}\|_{2}|=\Big|q^{-1}(\hat{v}^{\top}\hat{r})-\|\theta^{*}\|_{2}\Big|,$ we shall start with bounding
+
+$\Big|\hat{v}^{\top}\hat{r}-q(\|\theta^{*}\|_{2})\Big|.$
+
+If $n\gtrsim d$ and $\|\theta^{*}\|_{2}\geq 1$ , then it holds with probability at least $1-n^{-2}$ that
+
+$\displaystyle\Big|\hat{v}^{\top}\hat{r}-q(\|\theta^{*}\|_{2})\Big|\leq\polylog(n)\bigg(\frac{1}{\sqrt{n}}+\frac{d}{n\|\theta^{*}\|_{2}}+\frac{d^{2}}{n^{2}}\bigg).$ (71)
+
+We shall start with the decomposition
+
+$\displaystyle\big|\langle\hat{v},\hat{r}\rangle-q(\|\theta^{*}\|_{2})\big|\leq\underbrace{\bigg|\bigg\langle\hat{v},\frac{\theta^{*}}{\|\theta^{*}\|_{2}}\bigg\rangle-q(\|\theta^{*}\|_{2})\bigg|}_{I_{1}}+\underbrace{\bigg|\bigg\langle\hat{v},\hat{r}-\frac{\theta^{*}}{\|\theta^{*}\|_{2}}\bigg\rangle\bigg|}_{:=I_{2}}.$
+
+Bounding $I_{1}.$
+
+Due to $\hat{v}=\frac{1}{(1-\nu)n}\sum_{i=\nu n+1}^{n}y_{i}x_{i}$ and ( 10 ) we can write
+
+$\displaystyle I_{1}:$ $\displaystyle=\bigg|\frac{1}{(1-\nu)n}\sum_{i=\nu n+1}^{n}y_{i}\bigg\langle x_{i},\frac{\theta^{*}}{\|\theta^{*}\|_{2}}\bigg\rangle-\mathbb{E}\Big(y_{i}\Big\langle x_{i},\frac{\theta^{*}}{\|\theta^{*}\|_{2}}\Big\rangle\Big)\bigg|.$
+
+By $|y_{i}|\leq 1$ ,
+
+$\Big\|y_{i}\Big\langle x_{i},\frac{\theta^{*}}{\|\theta^{*}\|_{2}}\Big\rangle\Big\|_{\psi_{2}}\lesssim\Big\|\Big\langle x_{i},\frac{\theta^{*}}{\|\theta^{*}\|_{2}}\Big\rangle\Big\|_{\psi_{2}}\lesssim 1,$
+
+and by centering [ 39 , Lemma 2.6.8] ,
+
+$\displaystyle\Big\|y_{i}\Big\langle x_{i},\frac{\theta^{*}}{\|\theta^{*}\|_{2}}\Big\rangle-\mathbb{E}\Big(y_{i}\Big\langle x_{i},\frac{\theta^{*}}{\|\theta^{*}\|_{2}}\Big\rangle\Big)\Big\|_{\psi_{2}}\lesssim 1,$ (72)
+
+and moreover by property of sum of independent, zero-mean sub-Gaussian variables [ 39 , Proposition 2.6.1] ,
+
+$\displaystyle\Big\|\frac{1}{(1-\nu)n}\sum_{i=\nu n+1}^{n}y_{i}\Big\langle x_{i},\frac{\theta^{*}}{\|\theta^{*}\|_{2}}\Big\rangle-\mathbb{E}\Big(y_{i}\Big\langle x_{i},\frac{\theta^{*}}{\|\theta^{*}\|_{2}}\Big\rangle\Big)\Big\|_{\psi_{2}}\lesssim\frac{1}{\sqrt{n}}.$ (73)
+
+In turn, a standard sub-Gaussian tail bounds yields that
+
+$\displaystyle\mathbb{P}\bigg(I_{1}\lesssim\sqrt{\frac{\log n}{n}}\bigg)\geq 1-\frac{1}{n^{2}}.$ (74)
+
+Bounding $I_{2}$ .
+
+We first substitute $\hat{v}$ to write
+
+$\displaystyle I_{2}=\bigg|\frac{1}{(1-\nu)n}\sum_{i=\nu n+1}^{n}y_{i}\Big\langle x_{i},\hat{r}-\frac{\theta^{*}}{\|\theta^{*}\|_{2}}\Big\rangle\bigg|$
+
+We now let $e=\hat{r}-\frac{\theta^{*}}{\|\theta^{*}\|_{2}}$ and decompose it along $\frac{\theta^{*}}{\|\theta^{*}\|_{2}}$ and orthogonal space,
+
+$\displaystyle e=\Big\langle e,\frac{\theta^{*}}{\|\theta^{*}\|_{2}}\Big\rangle\frac{\theta^{*}}{\|\theta^{*}\|_{2}}+\underbrace{e-\Big\langle e,\frac{\theta^{*}}{\|\theta^{*}\|_{2}}\Big\rangle\frac{\theta^{*}}{\|\theta^{*}\|_{2}}}_{e_{\theta^{*}}^{\perp}}.$
+
+Therefore,
+
+$\displaystyle I_{2}=\bigg|\frac{1}{(1-\nu)n}\sum_{i=\nu n+1}^{n}y_{i}\langle x_{i},e\rangle\bigg|$ $\displaystyle\leq\underbrace{\bigg|\frac{1}{(1-\nu)n}\sum_{i=\nu n}^{n}y_{i}\Big\langle x_{i},\frac{\theta^{*}}{\|\theta^{*}\|_{2}}\Big\rangle\bigg|\bigg|\Big\langle e,\frac{\theta^{*}}{\|\theta^{*}\|_{2}}\Big\rangle\bigg|}_{:=I_{21}}+\underbrace{\bigg|\frac{1}{(1-\nu)n}\sum_{i=\nu n+1}^{n}y_{i}\langle x_{i},e_{\theta^{*}}^{\perp}\rangle\bigg|}_{:=I_{22}}.$ (75)
+
+To bound $I_{11}$ , observe that
+
+$\displaystyle\bigg|\Big\langle e,\frac{\theta^{*}}{\|\theta^{*}\|_{2}}\Big\rangle\bigg|=\bigg|\Big\langle\hat{r},\frac{\theta^{*}}{\|\theta^{*}\|_{2}}\Big\rangle-1\bigg|=\frac{\|\hat{r}-\frac{\theta^{*}}{\|\theta^{*}\|_{2}}\|_{2}^{2}}{2}$
+
+Also, by ( 74 ) and Lemma 21 ,
+
+$\displaystyle\bigg|\frac{1}{(1-\nu)n}\sum_{i=\nu n+1}^{n}y_{i}\bigg\langle x_{i},\frac{\theta^{*}}{\|\theta^{*}\|_{2}}\bigg\rangle\bigg|\leq q(\|\theta^{*}\|_{2})+O\bigg(\sqrt{\frac{\log n}{n}}\bigg)\lesssim 1.$
+
+Therefore, by the direction error bound in Lemma 1 ,
+
+$\displaystyle I_{21}\lesssim\bigg\|\hat{r}-\frac{\theta^{*}}{\|\theta^{*}\|_{2}}\bigg\|_{2}^{2}\leq\polylog(n)\max\bigg\{\frac{d}{n\|\theta^{*}\|_{2}},\frac{d^{2}}{n^{2}}\bigg\}.$ (76)
+
+To bound $I_{12}$ , notice that it is zero-mean and satisfies
+
+$\displaystyle\bigg\|\frac{1}{(1-\nu)n}\sum_{i=\nu n+1}^{n}y_{i}\langle x_{i},e^{\perp}_{\theta^{*}}\rangle\bigg\|_{\psi_{2}}=\bigg\|\bigg\langle\frac{1}{(1-\nu)n}\sum_{i=\nu n+1}^{n}\big\{y_{i}x_{i}-\mathbb{E}(y_{i}x_{i})\big\},e^{\perp}_{\theta^{*}}\bigg\rangle\bigg\|_{\psi_{2}}\lesssim\frac{\|e\|_{2}}{\sqrt{n}}$
+
+by a reasoning similar to Equations ( 72 )–( 73 ). Combining with the bound on $\|e\|_{2}$ in Lemma 1 , we reach
+
+$\bigg\|\frac{1}{(1-\nu)n}\sum_{i=\nu n+1}^{n}y_{i}\langle x_{i},e^{\perp}_{\theta^{*}}\rangle\bigg\|_{\psi_{2}}\lesssim\sqrt{\frac{\polylog n}{n}}\bigg(\sqrt{\frac{d}{n\|\theta^{*}\|_{2}}}+\frac{d}{n}\bigg).$
+
+Hence, by a sub-Gaussian tail bound similarly to ( 74 ),
+
+$\displaystyle I_{22}\lesssim\sqrt{\frac{\polylog n}{n}}\max\bigg\{\sqrt{\frac{d}{n\|\theta^{*}\|_{2}}},\frac{d}{n}\bigg\}$ (77)
+
+holds with probability at least $1-\frac{1}{n^{2}}$ . Substituting ( 76 ) and ( 77 ) into ( 75 ) yields
+
+$\displaystyle I_{2}\leq\polylog(n)\bigg(\frac{\sqrt{d}}{n\sqrt{\|\theta^{*}\|_{2}}}+\frac{d}{n^{3/2}}+\frac{d^{2}}{n^{2}}+\frac{d}{n\|\theta^{*}\|_{2}}\bigg)$ (78)
+
+Combining ( 74 ) and ( 78 ), under $n\gtrsim d$ and $\|\theta^{*}\|_{2}\geq 1$ , we obtain
+
+$\displaystyle\big|\langle\hat{v},\hat{r}\rangle-q(\|\theta^{*}\|_{2})\big|\leq\polylog(n)\bigg(\frac{1}{\sqrt{n}}+\frac{d}{n\|\theta^{*}\|_{2}}+\frac{d^{2}}{n^{2}}\bigg)$
+
+as claimed. ∎
+
+We now examine the effect of applying $q^{-1}$ and seek to bound $|\hat{\lambda}-\|\theta^{*}\|_{2}|=|q^{-1}(\hat{v}^{\top}\hat{r})-q^{-1}(q(\|\theta^{*}\|_{2}))|.$
+
+Assume that the event ( 71 ) in Lemma 8 holds, i.e.,
+
+$\displaystyle\Big|\hat{v}^{\top}\hat{r}-q(\|\theta^{*}\|_{2})\Big|\leq\polylog(n)\bigg(\frac{1}{\sqrt{n}}+\frac{d}{n\|\theta^{*}\|_{2}}+\frac{d^{2}}{n^{2}}\bigg).$ (79)
+
+Under
+
+$\displaystyle n\geq\polylog(n)\bigg(\|\theta^{*}\|_{2}^{4}+\|\theta^{*}\|_{2}d\bigg)$ (80)
+
+we have
+
+$\displaystyle|\hat{\lambda}-\|\theta^{*}\|_{2}|\leq\polylog(n)\bigg(\|\theta^{*}\|_{2}^{3}\sqrt{\frac{1}{n}}+\frac{\|\theta^{*}\|_{2}^{2}d}{n}\bigg)$ (81)
+
+Letting $q(\infty)=\frac{1}{\sqrt{2\pi}}$ , a key fact in this proof is the order of the asymptotic gap (cf. Lemma 22 )
+
+$\displaystyle G(\tau):=q(\infty)-q(\tau)\asymp\frac{1}{\tau^{2}},\qquad\forall\tau\geq\frac{1}{2},$ (82)
+
+which implies
+
+$\displaystyle q(\infty)-q(\|\theta^{*}\|_{2})\asymp\frac{1}{\|\theta^{*}\|_{2}^{2}}.$ (83)
+
+On the other hand, ( 80 ) and ( 79 ) together ensure that
+
+$\displaystyle|\hat{v}^{\top}\hat{r}-q(\|\theta^{*}\|_{2})|\leq\frac{c_{*}}{\|\theta^{*}\|_{2}^{2}}\quad\textrm{for some small enough $c_{*}.$}$ (84)
+
+Combining ( 83 ) and ( 84 ) gives
+
+$\displaystyle\hat{v}^{\top}\hat{r}<q(\infty)-\frac{c_{1}}{\|\theta^{*}\|_{2}^{2}}\quad\textrm{for some universal constant $c_{1},$}$
+
+hence it is meaningful to apply $q^{-1}$ to $\hat{v}^{\top}\hat{r}$ .
+
+Now we write the right-hand side of ( 79 ) as $E$ , which satisfies $E\leq\frac{c_{*}}{\|\theta^{*}\|_{2}^{2}}$ , then we have
+
+$q(\|\theta^{*}\|_{2})-E\leq\hat{v}^{\top}\hat{r}\leq q(\|\theta^{*}\|_{2})+E$
+
+and moreover
+
+$\displaystyle|\hat{\lambda}-\|\theta^{*}\|_{2}|=\big|q^{-1}(\hat{v}^{\top}\hat{r})-q^{-1}(q(\|\theta^{*}\|_{2}))\big|$ $\displaystyle\leq\max\left\{q^{-1}\Big(q(\|\theta^{*}\|_{2})+E\Big)-\|\theta^{*}\|_{2},\|\theta^{*}\|_{2}-q^{-1}\Big(q(\|\theta^{*}\|_{2})-E\Big)\right\}$ (85) $\displaystyle\quad\blacktriangleright\textrm{by the monotonicity of $q$ and $q^{-1}$ (cf. Lemma \ref{lem:mono})}$
+
+We shall first bound
+
+$\displaystyle\hat{\lambda}_{\max}:=q^{-1}\Big(q(\|\theta^{*}\|_{2})+E\Big)$
+
+which satisfies
+
+$\displaystyle q(\hat{\lambda}_{\max})=q(\|\theta^{*}\|_{2})+E$ (86)
+
+The asymptotic gap is given by
+
+$\displaystyle G(\hat{\lambda}_{\max})=q(\infty)-q(\hat{\lambda}_{\max})=q(\infty)-q(\|\theta^{*}\|_{2})-E=G(\|\theta^{*}\|_{2})-E.$ (87)
+
+Now using ( 82 ) and $E\leq\frac{c_{*}}{\|\theta^{*}\|_{2}^{2}}$ for some small enough $c_{*}$ ,
+
+$\displaystyle\frac{1}{\hat{\lambda}_{\max}^{2}}\asymp G(\hat{\lambda}_{\max})=G(\|\theta^{*}\|_{2})-E\gtrsim\frac{1}{\|\theta^{*}\|_{2}^{2}}~\Longrightarrow~\hat{\lambda}_{\max}\lesssim\|\theta^{*}\|_{2}$ (88)
+
+By the mean value theorem and the derivative for an inverse function,
+
+$\displaystyle q^{-1}\Big(q(\|\theta^{*}\|_{2})+E\Big)-\|\theta^{*}\|_{2}$ $\displaystyle=q^{-1}\Big(q(\|\theta^{*}\|_{2})+E\Big)-q^{-1}\big(q(\|\theta^{*}\|_{2})\big)$ $\displaystyle=q^{-1}(q(\hat{\lambda}_{\max}))-q^{-1}\big(q(\|\theta^{*}\|_{2})\big)$ $\displaystyle\quad\blacktriangleright\textrm{by Equation (\ref{whatisqmax})}$ $\displaystyle\leq(q^{-1})^{\prime}(\xi_{0})\big(q(\hat{\lambda}_{\max})-q(\|\theta^{*}\|_{2})\big)$ $\displaystyle\quad\blacktriangleright\textrm{by mean value theorem, $\xi_{0}\in[q(\|\theta^{*}\|_{2}),q(\hat{\lambda}_{\max})]$}$ $\displaystyle=\frac{E}{q^{\prime}(\hat{\xi}_{0})}$ $\displaystyle\quad\blacktriangleright\textrm{by derivative of inverse function, $\hat{\xi}_{0}\in[\|\theta^{*}\|_{2},\hat{\lambda}_{\max}]$, and (\ref{whatisqmax})}$ $\displaystyle\lesssim\|\theta^{*}\|_{2}^{3}E.$ $\displaystyle\quad\blacktriangleright\textrm{By (\ref{uplambdamax}) and Lemma \ref{lem:separa}}$
+
+We now similarly bound the second term in ( 85 ),
+
+$\displaystyle\|\theta^{*}\|_{2}-q^{-1}\Big(q(\|\theta^{*}\|_{2})-E\Big)$ $\displaystyle=q^{-1}(q(\|\theta^{*}\|_{2}))-q^{-1}\Big(q(\|\theta^{*}\|_{2})-E\Big)$ $\displaystyle=(q^{-1})^{\prime}(\xi_{1})\cdot E$ $\displaystyle\quad\blacktriangleright\textrm{by mean value theorem, $\xi_{1}\in[q(\|\theta^{*}\|_{2})-E,q(\|\theta^{*}\|_{2})]$}$ $\displaystyle=\frac{1}{q^{\prime}(\hat{\xi}_{1})}E$ $\displaystyle\quad\blacktriangleright\textrm{by derivative of inverse function, $\hat{\xi}_{1}<\|\theta^{*}\|_{2}$}$ $\displaystyle\lesssim\|\theta^{*}\|_{2}^{3}E.$ $\displaystyle\quad\blacktriangleright\textrm{By Lemma \ref{lem:separa}}$
+
+Substituting the past two displays and $E=\polylog(n)\big(\frac{1}{\sqrt{n}}+\frac{d}{n\|\theta^{*}\|_{2}}+\frac{d^{2}}{n^{2}}\big)$ into ( 85 ) gives
+
+$\displaystyle|\hat{\lambda}-\|\theta^{*}\|_{2}|\leq\polylog(n)\bigg(\frac{\|\theta^{*}\|_{2}^{3}}{\sqrt{n}}+\frac{\|\theta^{*}\|_{2}^{2}d}{n}+\frac{\|\theta^{*}\|_{2}^{3}d^{2}}{n^{2}}\bigg)$
+
+which together with $\frac{\|\theta^{*}\|_{2}^{3}d^{2}}{n^{2}}\leq\frac{\|\theta^{*}\|_{2}^{2}d}{n}$ under $n\gtrsim\|\theta^{*}\|_{2}d$ concludes the proof. ∎
+
+We now substitute ( 70 ) and ( 81 ) into ( 69 ) to complete the proof of Theorem 3 .
+
+Appendix D Technical Lemmas
+
+Let $g\sim N(0,1)$ and let $\phi:\mathbb{R}\to\mathbb{R}$ be absolutely continuous with $\mathbb{E}|\phi^{\prime}(g)|<\infty,~\mathbb{E}|g\phi(g)|<\infty.$ Then
+
+$\displaystyle\mathbb{E}[g\phi(g)]=\mathbb{E}[\phi^{\prime}(g)].$ (89)
+
+Moreover, let $x\sim N(0,I_{d})$ and let $\Phi:\mathbb{R}^{d}\to\mathbb{R}$ be continuously differentiable with $\mathbb{E}\|\nabla\Phi(x)\|_{2}<\infty,~\mathbb{E}\|x\Phi(x)\|_{2}<\infty.$ Then
+
+$\displaystyle\mathbb{E}[x\Phi(x)]=\mathbb{E}[\nabla\Phi(x)].$ (90)
+
+In particular, for $\Phi(x)=f(x^{\top}\theta)$ ,
+
+$\displaystyle\mathbb{E}[xf(x^{\top}\theta)]=\mathbb{E}[f^{\prime}(x^{\top}\theta)]\theta,$ (91)
+
+provided both sides are well-defined.
+
+[ 5 , Theorem 2.10] Let $X_{1},...,X_{n}$ be independent random variables, and assume that for some $v,c>0$ ,
+
+$\displaystyle\sum_{i=1}^{n}\mathbb{E}X_{i}^{2}\leq v,$ $\displaystyle\sum_{i=1}^{n}\mathbb{E}|X_{i}|^{q}\leq\frac{q!}{2}vc^{q-2},\quad\textrm{for all integers }q\geq 3,$
+
+then we have
+
+$\displaystyle\mathbb{P}\bigg(\bigg|\sum_{i=1}^{n}(X_{i}-\mathbb{E}X_{i})\bigg|\geq\sqrt{2vt}+ct\bigg)\leq 2\exp(-t),\quad\forall t>0.$
+
+[ 39 , Theorem 2.8.1] Let $X_{1},...,X_{N}$ be independent, zero-mean, sub-exponential random variables. Then for every $t\geq 0$ , for some absolute constant $c$ we have
+
+$\mathbb{P}\left(\Big|\sum_{i=1}^{N}X_{i}\Big|\geq t\right)\leq 2\exp\left(-c\min\Big\{\frac{t^{2}}{\sum_{i=1}^{N}\|X_{i}\|_{\psi_{1}}^{2}},\frac{t}{\max_{1\leq i\leq N}\|X_{i}\|_{\psi_{1}}}\Big\}\right)$
+
+[ 39 , Theorem 7.3.1 & Corollary 7.3.3] Let $X\in R^{n\times d}$ be a matrix with independent $N(0,1)$ entries. Then $\mathbb{E}\|X\|_{op}\leq\sqrt{n}+\sqrt{d}$ and
+
+$\mathbb{P}\bigg(\|X\|_{op}\geq\sqrt{n}+\sqrt{d}+t\bigg)\leq 2\exp(-ct^{2}),\quad\forall t\geq 0.$
+
+D.1 Functions Arising in the Proofs
+
+For $s(a)=\frac{1}{1+e^{-a}}$ , we have
+
+$s^{\prime}(a)=\frac{e^{-a}}{(1+e^{-a})^{2}}=s(a)\big(1-s(a)\big)$
+
+and $\sup_{a\in\mathbb{R}}|s^{\prime}(a)|\leq\frac{1}{4}$ .
+
+It can be shown by direct differentiation. ∎
+
+Let $g\sim N(0,1)$ and
+
+$\displaystyle m(\tau)=\mathbb{E}[s^{\prime}(\tau g)],$ $\displaystyle q(\tau)=\tau m(\tau)=\mathbb{E}[\tau s^{\prime}(\tau g)]=\mathbb{E}[s(\tau g)g].$
+
+Then, for all $\tau\geq 0$ ,
+
+$m(\tau)\asymp\frac{1}{1+\tau},\qquad q^{\prime}(\tau)=\mathbb{E}[s^{\prime}(\tau g)g^{2}]\asymp\frac{1}{(1+\tau)^{3}}.$
+
+We first note that $s^{\prime}(a)=\frac{1}{(e^{a/2}+e^{-a/2})^{2}},$ hence there exist universal constants $c,C>0$ such that
+
+$\displaystyle ce^{-|a|}\leq s^{\prime}(a)\leq Ce^{-|a|},\qquad\forall a\in\mathbb{R}.$ (92)
+
+Proof of $m(\tau)\asymp\frac{1}{1+\tau}$ .
+
+In view of ( 92 ),
+
+$m(\tau)=\mathbb{E}[s^{\prime}(\tau g)]\asymp\mathbb{E}[e^{-\tau|g|}].$
+
+To show $m(\tau)\asymp\frac{1}{1+\tau}$ , all that remains is to establish $\mathbb{E}[e^{-\tau|g|}]\asymp\frac{1}{1+\tau}.$ To show this, note that
+
+$\mathbb{E}[e^{-\tau|g|}]=\frac{2}{\sqrt{2\pi}}\int_{0}^{\infty}e^{-\tau x}e^{-x^{2}/2}\,dx.$
+
+For the upper bound, since $e^{-x^{2}/2}\leq 1$ ,
+
+$\int_{0}^{\infty}e^{-\tau x}e^{-x^{2}/2}\,dx\leq\int_{0}^{\infty}e^{-\tau x}\,dx=\frac{1}{\tau}$
+
+for $\tau>0$ . While for $0\leq\tau\leq 1$ the integral is bounded by an absolute constant. Taken collectively,
+
+$\mathbb{E}[e^{-\tau|g|}]\lesssim\frac{1}{1+\tau}.$
+
+For the lower bound, integrate over $0\leq x\leq(1+\tau)^{-1}$ . On this interval, we have
+
+$\tau x\leq 1,\qquad x^{2}/2\leq 1/2,$
+
+and in turn $e^{-\tau x}e^{-x^{2}/2}\geq e^{-3/2}$ , which yields
+
+$\int_{0}^{\infty}e^{-\tau x}e^{-x^{2}/2}\,dx\geq\int_{0}^{(1+\tau)^{-1}}e^{-\tau x}e^{-x^{2}/2}\,dx\gtrsim\frac{1}{1+\tau}.$
+
+This proves $m(\tau)\asymp\frac{1}{1+\tau}.$
+
+Proof of $q^{\prime}(\tau)\asymp\frac{1}{(1+\tau)^{3}}$ .
+
+By Stein’s identity (cf. Equation ( 89 ) of Lemma 10 ),
+
+$q(\tau)=\tau\mathbb{E}[s^{\prime}(\tau g)]=\mathbb{E}[s(\tau g)g],$
+
+and differentiating gives $q^{\prime}(\tau)=\mathbb{E}[s^{\prime}(\tau g)g^{2}].$ Using again $s^{\prime}(a)\asymp e^{-|a|}$ from ( 92 ), we get
+
+$q^{\prime}(\tau)\asymp\mathbb{E}[g^{2}e^{-\tau|g|}].$
+
+Now
+
+$\mathbb{E}[g^{2}e^{-\tau|g|}]=\frac{2}{\sqrt{2\pi}}\int_{0}^{\infty}x^{2}e^{-\tau x}e^{-x^{2}/2}\,dx.$
+
+For the upper bound, since $e^{-x^{2}/2}\leq 1$ ,
+
+$\int_{0}^{\infty}x^{2}e^{-\tau x}e^{-x^{2}/2}\,dx\leq\int_{0}^{\infty}x^{2}e^{-\tau x}\,dx=\frac{2}{\tau^{3}}$
+
+for $\tau>0$ . For $0\leq\tau\leq 1$ , the expectation is bounded by an absolute constant. Hence
+
+$\mathbb{E}[g^{2}e^{-\tau|g|}]\lesssim\frac{1}{(1+\tau)^{3}}.$
+
+For the lower bound, we shall integrate over $0\leq x\leq(1+\tau)^{-1}$ . On this interval, we have $e^{-\tau x}e^{-x^{2}/2}\geq e^{-3/2}.$ Thus
+
+$\int_{0}^{\infty}x^{2}e^{-\tau x}e^{-x^{2}/2}\,dx\geq\int_{0}^{(1+\tau)^{-1}}x^{2}e^{-\tau x}e^{-x^{2}/2}\,dx\gtrsim\int_{0}^{(1+\tau)^{-1}}x^{2}\,dx\asymp\frac{1}{(1+\tau)^{3}}.$
+
+Therefore
+
+$q^{\prime}(\tau)=\mathbb{E}[s^{\prime}(\tau g)g^{2}]\asymp\frac{1}{(1+\tau)^{3}}.$
+
+This completes the proof. ∎
+
+Define $m(\tau)$ and $q^{\prime}(\tau)$ as in Lemma 15 . We have
+
+$m(\tau)>q^{\prime}(\tau),\quad\forall\tau>0.$
+
+In view of Lemma 14 , $s^{\prime}$ is an even function and is strictly decreasing in $|a|$ . Let $X:=g^{2}.$ Then $X\geq 0$ and $\mathbb{E}X=1$ . For each fixed $\tau\geq 0$ , define
+
+$\varphi_{\tau}(x):=s^{\prime}(\tau\sqrt{x}),\qquad x\geq 0.$
+
+Since $s^{\prime}(a)$ is decreasing in $|a|$ , the function $\varphi_{\tau}$ is nonincreasing on $[0,\infty)$ . Moreover, if $\tau>0$ , then $\varphi_{\tau}$ is strictly decreasing. With this notation,
+
+$m(\tau)=\mathbb{E}[\varphi_{\tau}(X)],\qquad q^{\prime}(\tau)=\mathbb{E}[X\varphi_{\tau}(X)].$
+
+Therefore
+
+$\displaystyle q^{\prime}(\tau)-m(\tau)=\mathbb{E}[X\varphi_{\tau}(X)]-\mathbb{E}[X]\mathbb{E}[\varphi_{\tau}(X)]=\operatorname{Cov}(X,\varphi_{\tau}(X)).$ (93)
+
+We claim this covariance is not greater than $0$ . Indeed, let $X^{\prime}$ be an independent copy of $X$ . Then
+
+$\operatorname{Cov}(X,\varphi_{\tau}(X))=\frac{1}{2}\mathbb{E}\Big[(X-X^{\prime})(\varphi_{\tau}(X)-\varphi_{\tau}(X^{\prime}))\Big].$
+
+Since $\varphi_{\tau}$ is nonincreasing, we have $(X-X^{\prime})(\varphi_{\tau}(X)-\varphi_{\tau}(X^{\prime}))\leq 0$ , which yields
+
+$\operatorname{Cov}(X,\varphi_{\tau}(X))\leq 0.$
+
+In light of ( 93 ),
+
+$q^{\prime}(\tau)-m(\tau)\leq 0,$
+
+which gives $m(\tau)\geq q^{\prime}(\tau).$ If $\tau>0$ , then $\varphi_{\tau}$ is strictly decreasing and $X=g^{2}$ is nondegenerate, so the covariance is strictly negative. Therefore
+
+$m(\tau)>q^{\prime}(\tau),\qquad\forall\tau>0,$
+
+as claimed. ∎
+
+For every integer $q\geq 3$ and every $\tau\geq 1$ ,
+
+$\mathbb{E}_{g\sim N(0,1)}\big[s^{\prime}(\tau g)|g|^{q}\big]\leq\frac{2q!}{\sqrt{2\pi}}\frac{1}{\tau^{q+1}}.$
+
+Let $H_{q}(\tau):=\mathbb{E}_{g\sim N(0,1)}\big[s^{\prime}(\tau g)|g|^{q}\big]$ for convenience. In light of ( 92 ),
+
+$H_{q}(\tau)\leq\mathbb{E}\big[e^{-\tau|g|}|g|^{q}\big]=\frac{2}{\sqrt{2\pi}}\int_{0}^{\infty}e^{-\tau x}x^{q}e^{-x^{2}/2}\,dx.$
+
+Since $e^{-x^{2}/2}\leq 1$ , we have
+
+$\mathbb{E}\big[e^{-\tau|g|}|g|^{q}\big]\leq\frac{2}{\sqrt{2\pi}}\int_{0}^{\infty}e^{-\tau x}x^{q}\,dx.$
+
+By the change of variables $u=\tau x$ ,
+
+$\int_{0}^{\infty}e^{-\tau x}x^{q}\,dx=\frac{1}{\tau^{q+1}}\int_{0}^{\infty}e^{-u}u^{q}\,du=\frac{\Gamma(q+1)}{\tau^{q+1}}=\frac{q!}{\tau^{q+1}}.$
+
+Therefore,
+
+$H_{q}(\tau)\leq\frac{2q!}{\sqrt{2\pi}}\frac{1}{\tau^{q+1}}.$
+
+This proves the claim. ∎
+
+Let $F(z)=m(\|z\|_{2})z$ for $z\in\mathbb{R}^{d}$ where $m(\tau)=\mathbb{E}_{g\sim(0,1)}(s^{\prime}(\tau g))$ . Then we have:
+
+The Jacobian of $F$ at $z\neq 0$ is given by
+
+$\displaystyle\nabla F(z)=m(\|z\|_{2})I_{d}+\frac{m^{\prime}(\|z\|_{2})}{\|z\|_{2}}zz^{\top}.$ (94)
+
+With the convention $\nabla F(0):=m(0)I_{d}$ , we have the integral representation
+
+$\displaystyle F(u)-F(v)=\int_{0}^{1}\nabla F(v+th)h\,dt$ (95)
+
+where $h=u-v$ .
+
+We first compute the Jacobian ( 94 ). Write $\rho:=\|z\|_{2}=\left(\sum_{k=1}^{d}z_{k}^{2}\right)^{1/2}.$ The $i$ -th component of $F$ is $F_{i}(z)=m(\rho)z_{i}.$ For $z\neq 0$ , we have $\frac{\partial\rho}{\partial z_{j}}=\frac{z_{j}}{\rho}.$ Therefore, by the product rule and the chain rule,
+
+$\frac{\partial F_{i}(z)}{\partial z_{j}}=\frac{\partial}{\partial z_{j}}\big(m(\rho)z_{i}\big)=m^{\prime}(\rho)\frac{\partial\rho}{\partial z_{j}}z_{i}+m(\rho)\frac{\partial z_{i}}{\partial z_{j}}=m^{\prime}(\rho)\frac{z_{j}}{\rho}z_{i}+m(\rho)\mathbf{1}_{\{i=j\}}.$
+
+Thus the $(i,j)$ -th entry of the Jacobian matrix is
+
+$(\nabla F(z))_{ij}=m(\rho)\mathbf{1}_{\{i=j\}}+\frac{m^{\prime}(\rho)}{\rho}z_{i}z_{j}.$
+
+In matrix form, this is exactly
+
+$\nabla F(z)=m(\rho)I_{d}+\frac{m^{\prime}(\rho)}{\rho}zz^{\top}=m(\|z\|_{2})I_{d}+\frac{m^{\prime}(\|z\|_{2})}{\|z\|_{2}}zz^{\top}.$
+
+We next prove the integral representation ( 95 ). Let $h:=u-v$ and define the line segment $\gamma(t):=v+th,~~t\in[0,1].$ We shall assume that $\gamma(t)\neq 0$ for $t\in[0,1]$ ; we can cover the remaining cases by a separate treatment (or an approximation argument) and the convention $\nabla F(0)=m(0)I_{d}$ does not affect the value of the integral. For each coordinate $i=1,\ldots,d$ , define the one-dimensional function $\psi_{i}(t):=F_{i}(\gamma(t))=F_{i}(v+th).$ By the chain rule,
+
+$\psi_{i}^{\prime}(t)=\sum_{j=1}^{d}\frac{\partial F_{i}(\gamma(t))}{\partial z_{j}}h_{j}.$
+
+This is the $i$ -th component of the vector $\nabla F(\gamma(t))h.$ Hence, by the fundamental theorem of calculus,
+
+$F_{i}(u)-F_{i}(v)=\psi_{i}(1)-\psi_{i}(0)=\int_{0}^{1}\psi_{i}^{\prime}(t)\,dt=\int_{0}^{1}\left(\nabla F(v+th)h\right)_{i}\,dt.$
+
+Since this holds for every coordinate $i$ , we obtain the vector identity in ( 95 ). This completes the proof. ∎
+
+For $m(\tau):=\mathbb{E}_{g\sim N(0,1)}[s^{\prime}(\tau g)],$ we have
+
+$|m^{\prime}(\tau)|\lesssim\frac{1}{\tau^{2}},\qquad\tau\geq\frac{1}{2}.$
+
+Differentiating under the expectation gives
+
+$m^{\prime}(\tau)=\mathbb{E}[s^{\prime\prime}(\tau g)g].$
+
+We now use the explicit formula for $s^{\prime\prime}$ . Since $s^{\prime}(a)=\frac{1}{(e^{a/2}+e^{-a/2})^{2}},$ we have
+
+$s^{\prime\prime}(a)=-\frac{e^{a/2}-e^{-a/2}}{(e^{a/2}+e^{-a/2})^{3}}=\frac{e^{-a/2}-e^{a/2}}{(e^{a/2}+e^{-a/2})^{3}}.$
+
+Therefore,
+
+$|s^{\prime\prime}(a)|=\frac{|e^{a/2}-e^{-a/2}|}{(e^{a/2}+e^{-a/2})^{3}}.$
+
+If $a\geq 0$ , then
+
+$|s^{\prime\prime}(a)|\leq\frac{e^{a/2}}{e^{3a/2}}=e^{-a}.$
+
+If $a<0$ , then
+
+$|s^{\prime\prime}(a)|\leq\frac{e^{-a/2}}{e^{-3a/2}}=e^{a}=e^{-|a|}.$
+
+Hence, for all $a\in\mathbb{R}$ ,
+
+$\displaystyle|s^{\prime\prime}(a)|\leq e^{-|a|}.$ (96)
+
+It follows that, for $\tau\geq 1/2$ ,
+
+$|m^{\prime}(\tau)|\leq\mathbb{E}[|s^{\prime\prime}(\tau g)||g|]\leq\mathbb{E}[e^{-\tau|g|}|g|].$
+
+Using the Gaussian density,
+
+$\mathbb{E}[e^{-\tau|g|}|g|]=\frac{2}{\sqrt{2\pi}}\int_{0}^{\infty}xe^{-\tau x}e^{-x^{2}/2}\,dx.$
+
+Since $e^{-x^{2}/2}\leq 1$ , we obtain
+
+$\mathbb{E}[e^{-\tau|g|}|g|]\leq C\int_{0}^{\infty}xe^{-\tau x}\,dx.$
+
+Finally,
+
+$\int_{0}^{\infty}xe^{-\tau x}\,dx=\frac{1}{\tau^{2}}\int_{0}^{\infty}ue^{-u}\,du=\frac{1}{\tau^{2}},$
+
+where we used the change of variables $u=\tau x$ . Therefore,
+
+$|m^{\prime}(\tau)|\leq\frac{C}{\tau^{2}},\qquad\tau\geq\frac{1}{2}.$
+
+This proves the claim. ∎
+
+For $q(\tau)$ defined in Lemma 15 , we have
+
+$|q^{\prime\prime}(\tau)|\lesssim\frac{1}{\tau^{4}},\qquad\tau\geq\frac{1}{2}.$
+
+Recall that $q^{\prime}(\tau)=\mathbb{E}[s^{\prime}(\tau g)g^{2}].$ Differentiating under the expectation gives
+
+$q^{\prime\prime}(\tau)=\mathbb{E}[s^{\prime\prime}(\tau g)g^{3}].$
+
+Recall from Equation ( 96 ) in the proof of Theorem 19 that, for all $a\in\mathbb{R}$ ,
+
+$|s^{\prime\prime}(a)|\leq e^{-|a|}.$
+
+It follows that, for $\tau\geq 1/2$ ,
+
+$|q^{\prime\prime}(\tau)|\leq\mathbb{E}[|s^{\prime\prime}(\tau g)||g|^{3}]\leq\mathbb{E}[e^{-\tau|g|}|g|^{3}].$
+
+Using the Gaussian density,
+
+$\mathbb{E}[e^{-\tau|g|}|g|^{3}]=\frac{2}{\sqrt{2\pi}}\int_{0}^{\infty}x^{3}e^{-\tau x}e^{-x^{2}/2}\,dx.$
+
+Since $e^{-x^{2}/2}\leq 1$ , we get
+
+$\mathbb{E}[e^{-\tau|g|}|g|^{3}]\leq C\int_{0}^{\infty}x^{3}e^{-\tau x}\,dx.$
+
+Finally,
+
+$\int_{0}^{\infty}x^{3}e^{-\tau x}\,dx=\frac{1}{\tau^{4}}\int_{0}^{\infty}u^{3}e^{-u}\,du=\frac{6}{\tau^{4}},$
+
+where we used the change of variables $u=\tau x$ . Therefore,
+
+$|q^{\prime\prime}(\tau)|\leq\frac{C}{\tau^{4}},\qquad\tau\geq\frac{1}{2}.$
+
+This proves the claim. ∎
+
+Let $q(\tau)$ be defined as in Lemma 15 . $q(\tau)$ is strictly increasing on $[0,\infty)$ and satisfies
+
+$q(0)=0,\qquad\lim_{\tau\to\infty}q(\tau)=\frac{1}{\sqrt{2\pi}}.$
+
+Consequently, $q$ admits an inverse on $(0,\frac{1}{\sqrt{2\pi}}),$ which we denote by $q^{-1}:(0,\frac{1}{\sqrt{2\pi}})\to(0,\infty)$ .
+
+By Lemma 15 , for every $\tau\geq 0$ ,
+
+$q(\tau)=\tau\mathbb{E}[s^{\prime}(\tau g)]=\mathbb{E}[s(\tau g)g].$
+
+We first prove monotonicity. Differentiating $q(\tau)=\mathbb{E}[s(\tau g)g]$ gives
+
+$q^{\prime}(\tau)=\mathbb{E}[s^{\prime}(\tau g)g^{2}].$
+
+Since $s^{\prime}(a)=\frac{1}{(e^{a/2}+e^{-a/2})^{2}}>0$ for every $a\in\mathbb{R}$ , and since $\mathbb{P}(g\neq 0)=1$ , we have
+
+$q^{\prime}(\tau)=\mathbb{E}[s^{\prime}(\tau g)g^{2}]>0$
+
+for every $\tau\geq 0$ . Hence $q$ is strictly increasing on $[0,\infty)$ .
+
+Next,
+
+$q(0)=0\cdot m(0)=0.$
+
+For the limit as $\tau\to\infty$ , using again the representation
+
+$q(\tau)=\mathbb{E}[s(\tau g)g],$
+
+we note that for every $g\neq 0$ ,
+
+$s(\tau g)\to\mathbf{1}_{\{g>0\}}\qquad\text{as ~}\tau\to\infty.$
+
+Moreover, we have $|s(\tau g)g|\leq|g|$ and $\mathbb{E}|g|<\infty$ . Thus, by dominated convergence,
+
+$\lim_{\tau\to\infty}q(\tau)=\mathbb{E}[g\mathbf{1}_{\{g>0\}}]=\frac{1}{\sqrt{2\pi}}\int_{0}^{\infty}xe^{-x^{2}/2}\,dx=\frac{1}{\sqrt{2\pi}}.$
+
+Since $q$ is continuous and strictly increasing from $0$ to $1/\sqrt{2\pi}$ , it admits an inverse on $\left(0,\frac{1}{\sqrt{2\pi}}\right).$ ∎
+
+Let $q(\tau)$ be defined as in Lemma 15 . For every $\tau\geq 1/2$ ,
+
+$\frac{1}{\sqrt{2\pi}}-q(\tau)\asymp\frac{1}{\tau^{2}}.$
+
+In light of Lemma 15 ,
+
+$q(\tau)=\tau\mathbb{E}[s^{\prime}(\tau g)]=\mathbb{E}[s(\tau g)g].$
+
+Therefore,
+
+$\frac{1}{\sqrt{2\pi}}-q(\tau)=\mathbb{E}[g\mathbf{1}_{\{g>0\}}]-\mathbb{E}[s(\tau g)g].$
+
+Using the symmetry of the standard Gaussian distribution, we can write
+
+$\displaystyle\frac{1}{\sqrt{2\pi}}-q(\tau)$ $\displaystyle=\int_{0}^{\infty}x\phi(x)\,dx-\int_{\mathbb{R}}s(\tau x)x\phi(x)\,dx$ $\displaystyle=\int_{0}^{\infty}x\phi(x)\,dx-\int_{0}^{\infty}x\phi(x)\big(s(\tau x)-s(-\tau x)\big)\,dx,$
+
+where
+
+$\phi(x)=\frac{1}{\sqrt{2\pi}}e^{-x^{2}/2}$
+
+is the density function of $N(0,1).$ Since $s(a)-s(-a)=2s(a)-1,$ we get
+
+$1-\big(s(\tau x)-s(-\tau x)\big)=1-(2s(\tau x)-1)=2(1-s(\tau x))=\frac{2}{1+e^{\tau x}}.$
+
+Hence
+
+$\frac{1}{\sqrt{2\pi}}-q(\tau)=2\int_{0}^{\infty}\frac{x\phi(x)}{1+e^{\tau x}}\,dx.$
+
+Changing variables $u=\tau x$ gives
+
+$\frac{1}{\sqrt{2\pi}}-q(\tau)=\frac{2}{\tau^{2}}\int_{0}^{\infty}\frac{u\phi(u/\tau)}{1+e^{u}}\,du.$
+
+We now prove matching upper and lower bounds. For the upper bound, since
+
+$\phi(u/\tau)\leq\phi(0)=\frac{1}{\sqrt{2\pi}},$
+
+we have
+
+$\frac{1}{\sqrt{2\pi}}-q(\tau)\leq\frac{2\phi(0)}{\tau^{2}}\int_{0}^{\infty}\frac{u}{1+e^{u}}\,du\leq\frac{C}{\tau^{2}}.$
+
+For the lower bound, restrict the integral to $u\in[0,1]$ . Since $\tau\geq 1/2$ , we have $u/\tau\leq 2$ for $u\in[0,1]$ . Thus
+
+$\phi(u/\tau)\geq\phi(2)>0\qquad\text{for }0\leq u\leq 1.$
+
+Therefore,
+
+$\frac{1}{\sqrt{2\pi}}-q(\tau)\geq\frac{2\phi(2)}{\tau^{2}}\int_{0}^{1}\frac{u}{1+e^{u}}\,du\geq\frac{c}{\tau^{2}}.$
+
+Combining the two bounds proves the claim. ∎
+
+Under Assumptions 1 – 2 , we have
+
+$v=\mathbb{E}[y_{i}x_{i}]=q(\|\theta^{*}\|_{2})\frac{\theta^{*}}{\|\theta^{*}\|_{2}},$
+
+where $q(\tau):=\mathbb{E}_{g\sim N(0,1)}[s(\tau g)g].$ Note that by Stein’s identity $q(\tau)=\mathbb{E}[\tau s^{\prime}(\tau g)]$ and thus coincides with the definition in Lemma 15 .
+
+By conditioning on $x_{i}$ ,
+
+$\mathbb{E}[y_{i}x_{i}]=\mathbb{E}[s(x_{i}^{\top}\theta^{*})x_{i}].$
+
+If $\theta^{*}=0$ , the claim is immediate since the expectation is zero. Assume $\theta^{*}\neq 0$ and set $e:=\frac{\theta^{*}}{\|\theta^{*}\|_{2}}.$ By rotational invariance of the standard Gaussian distribution, $\mathbb{E}[s(x_{i}^{\top}\theta^{*})x_{i}]$ must be parallel to $\theta^{*}$ , and its component along $e$ is
+
+$\left\langle\mathbb{E}[s(x_{i}^{\top}\theta^{*})x_{i}],e\right\rangle=\mathbb{E}[s(\|\theta^{*}\|_{2}g)g]=q(\|\theta^{*}\|_{2}),$
+
+where $g=x_{i}^{\top}e\sim N(0,1)$ . Hence $\mathbb{E}[y_{i}x_{i}]=q(\|\theta^{*}\|_{2})e=q(\|\theta^{*}\|_{2})\frac{\theta^{*}}{\|\theta^{*}\|_{2}}.$ ∎
+
+Appendix E Estimator in [ 26 ] and Algorithm 2
+
+In this small appendix we provide more details on the estimator of [ 26 ] , in order to support Equation ( 11 ) and Lemma 1 in the main text.
+
+E.1 Sub-Gradient Descent
+
+We first explain that Equation ( 11 ), or equivalently
+
+$\displaystyle\tilde{r}_{t+1}=\hat{r}_{t}-\frac{\sqrt{2\pi}}{n}\sum_{i=1}^{n}\big(\frac{\sign(x_{i}^{\top}\hat{r}_{t})+1}{2}-y_{i}\big)x_{i},$ (97) $\displaystyle\hat{r}_{t+1}=\frac{\tilde{r}_{t+1}}{\|\tilde{r}_{t+1}\|_{2}}$ (98)
+
+as written in Lemma 1 , can be viewed as a (sub-)gradient descent algorithm with respect to the ReLU loss. To see this, we transition to the $\{-1,1\}$ -valued responses $\tilde{y}_{i}=2y_{i}-1$ , consider the Hamming distance loss
+
+$L_{\rm ham}(u)=\frac{1}{n}\sum_{i=1}^{n}\mathbf{1}\big(\tilde{y_{i}}\neq\sign(x_{i}^{\top}u)\big)=\frac{1}{n}\sum_{i=1}^{n}\mathbf{1}\big(-\tilde{y}_{i}x_{i}^{\top}u\geq 0\big)$
+
+and then consider its convex relaxation, the ReLU loss obtained by replacing $\mathbf{1}(a>0)$ to ${\rm ReLU}(a)=\max\{a,0\}=\frac{a+|a|}{2}$ ,
+
+$L_{\rm ReLU}(u)=\frac{1}{2n}\sum_{i=1}^{n}\Big(|x_{i}^{\top}u|-\tilde{y}_{i}x_{i}^{\top}u\Big).$
+
+It is easy to see that a sub-gradient of the ReLU loss is given by
+
+$\partial L_{\rm ReLU}(u)=\frac{1}{2n}\sum_{i=1}^{n}\Big(\sign(x_{i}^{\top}u)-\tilde{y}_{i}\Big)x_{i}=\frac{1}{n}\sum_{i=1}^{n}\Big(\frac{\sign(x_{i}^{\top}u)+1}{2}-y_{i}\Big)x_{i}.$
+
+As such, ( 97 ) is exactly the sub-gradient descent with ReLU loss. Moreover, the additional normalization step, ( 98 ), is natural since the desired true direction $\theta^{*}/\|\theta^{*}\|_{2}$ resides in $\mathbb{S}^{d-1}$ .
+
+E.2 Derivation of Lemma 1
+
+We show the derivation of Lemma 1 from Corollary 7 and Theorem 5 of [ 26 ] with the sparsity level $k$ therein set as $d$ . To start, we note that $\beta$ in [ 26 ] denotes the signal norm $\|\theta^{*}\|_{2}$ . Hence $\beta\geq 1$ under Assumption 2 .
+
+We first show that ( 9 ) follows from the error rate of [ 26 , Corollary 7] . In particular, Equation (17) therein shows that, to achieve $\epsilon$ estimation error, we require a sample size of
+
+$\displaystyle n=\tilde{\Omega}\bigg(\frac{d}{\epsilon^{2}\|\theta^{*}\|_{2}}\bigg),\qquad\textrm{if ~}1\leq\|\theta^{*}\|_{2}\leq\frac{C_{0}}{\epsilon};$ (99) $\displaystyle n=\tilde{\Omega}\bigg(\frac{d}{\epsilon}\bigg),\qquad\textrm{if ~}\|\theta^{*}\|_{2}>\frac{C_{0}}{\epsilon}.$ (100)
+
+This implies an error rate of
+
+$\epsilon_{0}=\tilde{O}\bigg(\sqrt{\frac{d}{n\|\theta^{*}\|_{2}}}+\frac{d}{n}\bigg)$
+
+under any $\|\theta^{*}\|_{2}\geq 1$ , as with our Equation ( 9 ).
+
+We then show the probability of $1-e^{-n}$ and the iteration complexity of $\log_{2}\log_{2}\frac{n}{d}$ , as stated in our Lemma 1 . In fact, we can set $\rho$ of [ 26 , Theorem 5] , the probability parameter therein, as $e^{-n}$ . In view of Equation (14) therein, this can only add factor of $\polylog(n)$ to the sample complexity, which remains at $n\gtrsim d\polylog n$ , as assumed in our Lemma 1 . Moreover, in view of Equation (16) of [ 26 ] , the sequence of direction estimates $\{\hat{r}_{t}\}_{t\geq 0}$ achieves a very fast convergence rate,
+
+$\bigg\|\hat{r}_{t}-\frac{\theta^{*}}{\|\theta^{*}\|_{2}}\bigg\|_{2}\leq 2^{2^{-t}}\epsilon_{0}^{1-2^{-t}},\qquad\forall t\geq 0.$
+
+A direct calculation then finds that $\hat{r}_{t}$ with $t\geq\log_{2}\log_{2}\frac{n}{d}$ already achieves the desired direction estimation error of $\tilde{O}(\epsilon_{0})$ .
+
+E.3 Numerical Performance of Algorithm 2
+
+We compare the estimation performance of Algorithm 2 with GD under the following settings:
+
+We set $T_{0}=30$ in Algorithm 2 and run it without sample splitting — i.e., both Step 1 and Step 2 use all the $n$ samples.
+
+We run GD in Algorithm 1 with $\theta_{0}=0$ , $\eta=4$ for $400$ iterations. Suppose that the MLE exists, then traditional optimization theory [ 31 ] guarantees that the GD iterates converge to MLE, and as we run sufficiently many iterations we expect that the estimator, $\theta_{400}$ , well approximates MLE.
+
+Consistent with Remark 4 , our numerical simulations suggest that Algorithm 2 outperforms GD, and possibly also MLE, in high-dimensional setting, especially when $n$ is only moderately large. We provide two numerical examples to illustrate this phenomenon:
+
+We first test both algorithms in a high-dimensional regime with $(d,\|\theta^{*}\|_{2})=(1000,2)$ and $n\in\{3000,5000,8000,10000,15000,20000,30000\}$ . The log-log plots in Figure 2(a) suggest that Algorithm 2 yields more accurate estimates than GD when $n<10000$ , while GD becomes slightly better when $n>10000$ . The reference dashed line further confirms the $O(n^{-1/2})$ error decay rate of Algorithm 2 .
+
+We next consider the setting $(n,d)=(5000,1000)$ and vary $\|\theta^{*}\|_{2}$ over $\{1,2,4,6,8\}$ . The results in Figure 2(b) again show that Algorithm 2 can substantially outperform GD in high-dimensional, moderate-sample regimes.
+
+(a) Error v.s. $n$
+
+(b) Error v.s. $\|\theta^{*}\|_{2}$
+
+Figure 2 : Comparing Algorithm 2 with small stepsize GD.

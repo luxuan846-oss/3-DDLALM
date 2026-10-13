@@ -1,0 +1,72 @@
+[
+  {
+    "anchor": "S2.Thmtheorem1",
+    "kind": "ltx_theorem ltx_theorem_assumption",
+    "text": "Assumption 2.1 (Base NC–SC regularity) . The following conditions hold for constants $\\ell_{f},\\ell_{g},\\rho_{1},\\mu>0$ : (i) $f$ is differentiable with a jointly $\\ell_{f}$ -Lipschitz gradient, and $g$ is twice differentiable with a jointly $\\ell_{g}$ -Lipschitz gradient. (ii) $g(x,\\cdot)$ is $\\mu$ -strongly convex for every $x$ . (iii) The Hessian block $\\nabla^{2}_{yy}g$ and the mixed derivative $\\nabla^{2}_{xy}g$ are each $\\rho_{1}$ -Lipschitz in the joint variable $(x,y)$ with respect to the operator norm. (iv) $\\left\\lVert\\nabla_{y}f(x,y)\\right\\rVert\\leq B_{f}$ for all $(x,y)$ , and $\\Phi$ is bounded below."
+  },
+  {
+    "anchor": "S2.Thmtheorem2",
+    "kind": "ltx_theorem ltx_theorem_assumption",
+    "text": "Assumption 2.2 (Lower-variable order- $p$ smoothness) . Fix an integer $p\\geq 1$ and a constant $L_{p}>0$ . For each $\\ell\\in\\{x,y\\}$ , the map $\\nabla_{\\ell}g(x,\\cdot)$ is $p$ times differentiable for every $x$ and satisfies $\\left\\lVert\\nabla_{y}^{p}\\nabla_{\\ell}g(x,y)-\\nabla_{y}^{p}\\nabla_{\\ell}g(x,y^{\\prime})\\right\\rVert_{\\mathrm{op}}\\leq L_{p}\\left\\lVert y-y^{\\prime}\\right\\rVert,\\text{ for all }x,y,y^{\\prime}.$ (5)"
+  },
+  {
+    "anchor": "S2.Thmtheorem3",
+    "kind": "ltx_theorem ltx_theorem_assumption",
+    "text": "Assumption 2.3 (Unbiased oracle with bounded variance) . The query rules and oracle responses are measurable. Let $\\mathcal{H}$ denote the history before an oracle call, and let $(x,y)$ be an $\\mathcal{H}$ -measurable query point. For each $\\ell\\in\\{x,y\\}$ , the returned estimates satisfy $\\displaystyle\\mathbb{E}[\\hat{F}_{\\ell}(x,y)\\mid\\mathcal{H}]=\\nabla_{\\ell}f(x,y),\\qquad\\mathbb{E}[\\hat{G}_{\\ell}(x,y)\\mid\\mathcal{H}]=\\nabla_{\\ell}g(x,y),$ (6) $\\displaystyle\\sum_{\\ell\\in\\{x,y\\}}\\mathbb{E}\\!\\left[\\|\\hat{F}_{\\ell}(x,y)-\\nabla_{\\ell}f(x,y)\\|^{2}+\\|\\hat{G}_{\\ell}(x,y)-\\nabla_{\\ell}g(x,y)\\|^{2}\\,\\middle|\\,\\mathcal{H}\\right]\\leq\\sigma^{2},$ (7) almost surely, for a constant $\\sigma\\geq 0$ . Each call uses fresh randomness. Calls at query points fixed by a common conditioning history are conditionally independent given that history. No independence is assumed among the four estimates $\\hat{F}_{x},\\hat{F}_{y},\\hat{G}_{x},\\hat{G}_{y}$ returned by a single call."
+  },
+  {
+    "anchor": "S3.Thmtheorem1",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 3.1 . Suppose Assumptions 2.1 – 2.3 hold. There exist constants $\\alpha>0$ and $C_{\\star}\\geq 1$ , depending only on $p$ and $\\ell_{f},\\ell_{g},\\rho_{1},\\mu,B_{f},L_{p},\\sigma$ , such that the following holds. Run Algorithm 1 from fixed $x_{0},y_{0}$ and $z_{0}=0$ , with $R_{z}=4B_{f}/\\mu$ , $\\eta_{y}=\\eta_{z}=1/(2\\ell_{g})$ , and $\\eta_{x}=\\alpha$ . For any $0<\\tau\\leq 1$ and positive integers $m,K$ , the output satisfies $\\mathbb{E}\\|\\nabla\\Phi(x_{R})\\|^{2}\\leq C_{\\star}\\left(\\frac{\\Delta_{0}}{K}+\\tau^{2p}+\\frac{1}{m\\tau^{2}}\\right).$ (18) With the parameter choices in ( 17 ), we obtain $\\mathbb{E}\\|\\nabla\\Phi(x_{R})\\|^{2}\\leq{\\epsilon}^{2}$ using at most $(2p+5)mK=\\mathcal{O}\\!\\left({\\epsilon}^{-4-2/p}\\right)$ oracle calls, for any fixed finite $p$ ."
+  },
+  {
+    "anchor": "S4.Thmtheorem1",
+    "kind": "ltx_theorem ltx_theorem_proposition",
+    "text": "Proposition 4.1 (Hard objective and comparison oracle) . There are numerical constants $c,C,{\\epsilon}_{0}>0$ such that, for every $0<{\\epsilon}<{\\epsilon}_{0}$ and $0<\\varpi\\leq 1/2$ , the construction ( 20 ) admits $T=\\Theta({\\epsilon}^{-2})$ , $d\\geq T$ , and a distribution of $U$ with the following properties. Both $\\nabla A$ and $\\nabla u$ are $C$ -Lipschitz, $P(0)-\\inf P\\leq 1/4$ , and $\\sup_{x}|u(x)|\\leq C{\\epsilon}^{2},\\qquad\\sup_{x}\\|\\nabla u(x)\\|\\leq C{\\epsilon}.$ (23) Every adaptive randomized algorithm using at most $cT/\\varpi$ calls to $\\mathcal{R}_{\\varpi}$ , with arbitrary queries and final output, satisfies $\\mathbb{P}\\bigl(\\|\\nabla P(x_{\\rm out})\\|\\geq 2{\\epsilon}\\bigr)\\geq\\frac{3}{4}.$ (24) The rotation $U$ is independent of the algorithm seed and oracle draws; probability includes all three sources of randomness."
+  },
+  {
+    "anchor": "S4.Thmtheorem2",
+    "kind": "ltx_theorem ltx_theorem_proposition",
+    "text": "Proposition 4.2 (Bilevel gradient and primitive variance) . For each pair in Proposition 4.1 , every ${\\epsilon}\\leq\\delta\\leq 1$ , and sufficiently small ${\\epsilon}$ , the family ( 25 ) satisfies Assumption 2.1 with uniformly bounded constants, has $\\Phi_{\\delta}(0)-\\inf\\Phi_{\\delta}\\leq 1$ and $|y_{\\delta}^{\\star}(0)|\\leq 1$ , and obeys $\\sup_{x}\\|\\nabla\\Phi_{\\delta}(x)-\\nabla P(x)\\|\\leq C_{\\rm lift}{\\epsilon}^{5}/\\delta^{2}\\leq C_{\\rm lift}{\\epsilon}^{3}$ (27) for a numerical $C_{\\rm lift}>0$ . The oracle ( 26 ) is conditionally unbiased, has joint variance at most $C_{\\rm lift}\\delta^{2}{\\epsilon}^{2}/\\varpi$ , and is simulated by one call to $\\mathcal{R}_{\\varpi}$ ."
+  },
+  {
+    "anchor": "S4.Thmtheorem3",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 4.3 (Lower bound for bilevel problems) . There exist numerical constants $M_{0}\\geq 1$ , $c>0$ , and ${\\epsilon}_{0}>0$ such that the following holds for every integer $p\\geq 1$ and $0<{\\epsilon}<{\\epsilon}_{0}$ . For any adaptive randomized algorithm using at most $c{\\epsilon}^{-4-2/p}$ primitive oracle calls, there is a pair in $\\mathcal{P}_{p}(M_{0})$ on which its output satisfies $\\mathbb{E}\\|\\nabla\\Phi(x_{\\rm out})\\|^{2}>{\\epsilon}^{2}.$ (31)"
+  },
+  {
+    "anchor": "A1.Thmtheorem8",
+    "kind": "ltx_theorem ltx_theorem_proposition",
+    "text": "Proposition A.8 (A uniform one-step inequality) . Under Assumptions 2.1 – 2.3 and the step choices ( 37 ), for every $\\tau>0$ and positive integer $m$ , $\\mathbb{E}_{k}\\mathcal{V}_{k+1}\\leq\\mathcal{V}_{k}-\\frac{\\alpha}{4}\\|\\nabla\\Phi(x_{k})\\|^{2}-\\alpha CT_{k}+\\alpha S_{\\rm b}\\beta^{2}+\\alpha S_{\\rm v}v.$ (68) All constants are given in Appendix A.1 ; in particular, the step sizes do not depend on the target accuracy."
+  },
+  {
+    "anchor": "A2.Thmtheorem3",
+    "kind": "ltx_theorem ltx_theorem_corollary",
+    "text": "Corollary B.3 (Two-vector probability- $\\varpi$ zero-chain) . For any $\\varpi\\in(0,1]$ , let $\\zeta\\sim\\mathrm{Bernoulli}(\\varpi)$ and define $a^{(1)}(v,\\zeta):=\\nabla B_{T}(v),\\qquad a^{(2)}(v,\\zeta):=\\frac{\\zeta}{\\varpi}\\nabla W_{T}(v).$ Then, simultaneously for every $v$ , $\\max_{\\ell\\in\\{1,2\\}}\\operatorname{prog}_{0}(a^{(\\ell)}(v,\\zeta))\\leq\\operatorname{prog}_{1/4}(v)+1,$ and on the event $\\{\\zeta=0\\}$ , $\\max_{\\ell\\in\\{1,2\\}}\\operatorname{prog}_{0}(a^{(\\ell)}(v,\\zeta))\\leq\\operatorname{prog}_{1/4}(v).$ The exceptional event is independent of $v$ and has probability $\\varpi$ ."
+  },
+  {
+    "anchor": "A2.Thmtheorem6",
+    "kind": "ltx_theorem ltx_theorem_proposition",
+    "text": "Proposition B.6 (Properties of the scaled pair) . There are numerical constants $C_{u,0},C_{u,1},C_{u,2}$ such that, uniformly in $U,T,{\\epsilon}$ , $\\left\\lVert u_{U}\\right\\rVert_{\\infty}\\leq C_{u,0}{\\epsilon}^{2},\\qquad\\sup_{x}\\left\\lVert\\nabla u_{U}(x)\\right\\rVert\\leq C_{u,1}{\\epsilon},\\qquad\\sup_{x}\\left\\lVert\\nabla^{2}u_{U}(x)\\right\\rVert_{\\mathrm{op}}\\leq C_{u,2}.$ (115) Moreover, $\\sup_{x}\\left\\lVert\\nabla^{2}{A_{U}}(x)\\right\\rVert_{\\mathrm{op}}\\leq 1,$ (116) $P_{U}(0)-\\inf_{x}P_{U}(x)\\leq\\frac{1}{4},$ (117) and $\\operatorname{prog}_{1/4}\\!\\left(U^{\\top}\\rho_{R}(x/{\\lambda_{\\rm lb}})\\right)<T\\quad\\Longrightarrow\\quad\\left\\lVert\\nabla P_{U}(x)\\right\\rVert\\geq 2{\\epsilon}.$ (118)"
+  },
+  {
+    "anchor": "A2.Thmtheorem7",
+    "kind": "ltx_theorem ltx_theorem_definition",
+    "text": "Definition B.7 (Uniform finite-channel probability- $\\varpi$ zero-chain) . Fix $\\varpi\\in[0,1]$ . Let $\\mathcal{Y},\\Xi,\\mathcal{S}$ be standard Borel spaces, let $\\xi\\sim\\nu$ , and let $s:\\mathbb{R}^{T}\\times\\mathcal{Y}\\times\\Xi\\to\\mathcal{S},$ $a^{(\\ell)}:\\mathbb{R}^{T}\\times\\mathcal{Y}\\times\\Xi\\to\\mathbb{R}^{T},\\qquad\\ell\\in[m],$ be Borel maps. We call $(s,a^{(1)},\\ldots,a^{(m)})$ a uniform finite-channel probability- $\\varpi$ zero-chain if there is a measurable event $E\\subseteq\\Xi$ with $\\nu(E)\\leq\\varpi$ such that, for every $(v,y,\\xi)$ , $\\max_{\\ell\\in[m]}\\operatorname{prog}_{0}(a^{(\\ell)}(v,y,\\xi))\\leq\\operatorname{prog}_{1/4}(v)+1,$ (119) and, whenever $\\xi\\notin E$ , $\\max_{\\ell\\in[m]}\\operatorname{prog}_{0}(a^{(\\ell)}(v,y,\\xi))\\leq\\operatorname{prog}_{1/4}(v).$ (120) The map $s$ collects all non-ambient channels. It may depend on the hidden rotation only through the latent query $v$ ."
+  },
+  {
+    "anchor": "A2.Thmtheorem14",
+    "kind": "ltx_theorem ltx_theorem_corollary",
+    "text": "Corollary B.14 (Terminal output) . Under the assumptions of Lemma B.13 , suppose $d>N+1+T$ and, after $N$ calls, the algorithm outputs an $\\sigma(\\xi_{0},\\mathcal{T}_{N})$ -measurable point $x_{\\rm out}$ with $\\left\\lVert x_{\\rm out}\\right\\rVert\\leq R$ . Then $\\displaystyle\\mathbb{P}\\left(\\max\\left\\{\\max_{t\\leq N}\\operatorname{prog}_{1/4}(U^{\\top}x_{t}),\\operatorname{prog}_{1/4}(U^{\\top}x_{\\rm out})\\right\\}\\geq T\\right)$ $\\displaystyle\\qquad\\leq e^{2\\varpi N-T}+2(N+1)T\\exp\\!\\left(-\\frac{d-(N+1)-T}{32R^{2}(N+1)}\\right).$ (146)"
+  },
+  {
+    "anchor": "A2.Thmtheorem15",
+    "kind": "ltx_theorem ltx_theorem_corollary",
+    "text": "Corollary B.15 (Soft projection and known postprocessing) . Let $\\rho:\\mathbb{R}^{d}\\to\\mathbb{R}^{d}$ be Borel with $\\left\\lVert\\rho(x)\\right\\rVert\\leq R$ for all $x$ . Let $(x,y,o)\\mapsto\\mathsf{P}_{x,y}(o)$ be a jointly Borel map independent of $U$ , and suppose the actual response is $\\mathsf{P}_{x,y}\\!\\left(\\widetilde{\\mathcal{O}}_{U}(\\rho(x),y;\\xi)\\right).$ Then Lemma B.13 and Corollary B.14 hold with $U^{\\top}x$ replaced by $U^{\\top}\\rho(x)$ ."
+  },
+  {
+    "anchor": "A2.Thmtheorem19",
+    "kind": "ltx_theorem ltx_theorem_corollary",
+    "text": "Corollary B.19 (Controlled perturbation of the hard objective) . There are universal constants $C_{F},C_{\\nabla}>0$ such that $\\displaystyle\\sup_{x}|\\Phi_{U}(x)-P_{U}(x)|$ $\\displaystyle\\leq C_{F}\\frac{{\\epsilon}^{6}}{\\delta^{2}}\\leq C_{F}{\\epsilon}^{4},$ (165) $\\displaystyle\\sup_{x}\\left\\lVert\\nabla\\Phi_{U}(x)-\\nabla P_{U}(x)\\right\\rVert$ $\\displaystyle\\leq C_{\\nabla}\\frac{{\\epsilon}^{5}}{\\delta^{2}}\\leq C_{\\nabla}{\\epsilon}^{3}.$ (166) After decreasing ${\\epsilon}_{0}$ universally if necessary, $\\Phi_{U}(0)-\\inf_{x}\\Phi_{U}(x)\\leq 1,\\qquad|y_{U}^{\\star}(0)|\\leq 1,$ (167) and $\\|\\nabla P_{U}(x)\\|\\geq 2{\\epsilon}\\quad\\Longrightarrow\\quad\\left\\lVert\\nabla\\Phi_{U}(x)\\right\\rVert\\geq\\frac{3}{2}{\\epsilon}.$ (168)"
+  }
+]

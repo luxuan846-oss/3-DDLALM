@@ -1,0 +1,74 @@
+[
+  [
+    "2026-10-12",
+    "Google",
+    "账号安全提醒",
+    "luxuanli26@gmail.com 在 Windows 设备有新的登录活动",
+    "账号安全",
+    "需要本人确认",
+    "仅记录，不点击、不修改账号；Mail 读取摘要"
+  ],
+  [
+    "2026-10-12",
+    "Facebook / Reddit",
+    "社交通知",
+    "公共主页、群组推荐与 Reddit 通知",
+    "社交",
+    "一般阅读",
+    "与研究无关"
+  ],
+  [
+    "2026-10-11",
+    "Google Scholar Alerts",
+    "\"nonsmooth optimization\" OR \"constrained optimization\" 搜索提醒",
+    "2610.11961 Bregman proximal linearized ADMM；2610.10927 Weakly Quasar-Convex Optimization；2610.10495 Optimal Second-Order Algorithm；2610.10218 Hessian-Guided Wasserstein Flows；2610.11491 Lagrange multipliers",
+    "非光滑/约束/二阶/最优传输",
+    "优先阅读",
+    "邮件正文列出 2026-10-11 的相关结果；含期刊与 arXiv 混合条目"
+  ],
+  [
+    "2026-10-11",
+    "Google Scholar Alerts",
+    "Yangyang Xu 新的相关研究工作",
+    "2610.07814 SGDA is Suboptimal for Nonconvex-PL Min-Max Games；2610.08087 Logarithmic-dual-update Bregman ADMM；2609.17089 covariance matrices with parameterized metric",
+    "极小极大/ADMM/流形优化",
+    "优先阅读",
+    "含 tight complexity、最优传输与 Riemannian metric"
+  ],
+  [
+    "2026-10-11",
+    "Google Scholar Alerts",
+    "Quoc Tran-Dinh 新增引用",
+    "Strong convergence of a golden ratio proximal algorithm；Scalable first-order methods for weakly convex optimization and dynamic optimal transport；Random Reshuffling for Smooth Convex Optimization",
+    "近端/凸优化/最优传输",
+    "优先阅读",
+    "部分为正式论文或学位论文，链接按邮件原始页面保留在备注中"
+  ],
+  [
+    "2026-10-11",
+    "Google Scholar Alerts",
+    "Jiajin Li 新增引用",
+    "2610.07814 SGDA is Suboptimal；Review on robust optimization theories and applications for energy sustainability",
+    "极小极大/鲁棒优化",
+    "优先阅读",
+    "一篇 arXiv 论文与一篇综述"
+  ],
+  [
+    "2026-10-12",
+    "IKEA / Revolut",
+    "购物与金融通知",
+    "IKEA Family 邮件；Revolut 转账与账单提醒",
+    "非研究",
+    "归档阅读",
+    "未进行任何金融操作"
+  ],
+  [
+    "2026-10-12",
+    "ResearchGate / 学校通知",
+    "学术活动与网络动态",
+    "学术报告、ResearchGate 专利动态、邮件拦截提醒",
+    "其他学术信息",
+    "一般阅读",
+    "学校报告时间：2026-10-15；与优化文献分开记录"
+  ]
+]

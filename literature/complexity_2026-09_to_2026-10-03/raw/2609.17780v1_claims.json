@@ -1,0 +1,27 @@
+[
+  {
+    "anchor": "S2.Thmtheorem1",
+    "kind": "ltx_theorem ltx_theorem_definition",
+    "text": "Definition 2.1 ( Zhang et al., 2020 ) . A point $\\mathbf{x}$ is a $(\\delta,\\epsilon)$ -Goldstein stationary point of $f$ if $\\mathrm{dist}(\\mathbf{0},\\partial_{\\delta}f(\\mathbf{x}))\\leq\\epsilon$ ."
+  },
+  {
+    "anchor": "S2.Thmtheorem2",
+    "kind": "ltx_theorem ltx_theorem_definition",
+    "text": "Definition 2.2 ( Zhang and Cutkosky, 2024 ) . A point $\\mathbf{x}$ is a $(\\lambda,\\epsilon)$ -stationary point of $f$ if $\\mathcal{P}_{\\lambda}f(\\mathbf{x})\\leq\\epsilon$ ."
+  },
+  {
+    "anchor": "S2.Thmtheorem3",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 2.3 . Zhang and Cutkosky (2024) included an additional requirement in the definition of $\\mathcal{P}_{\\lambda}$ that $\\mathbb{E}[\\mathbf{y}]=\\mathbf{x}$ , which we chose not to include for a more direct comparison to Goldstein stationarity. Note that omitting this condition makes the definition easier to satisfy, hence only implies a stronger lower bound."
+  },
+  {
+    "anchor": "S3.Thmtheorem1",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 3.1 . For some absolute constant $c>0$ the following holds: For any $L,\\Delta,\\delta,\\epsilon>0$ satisfying $\\epsilon\\leq c\\cdot\\min\\{L,\\delta L^{2}\\Delta^{-1},\\Delta\\delta^{-1}\\}$ , there exists an $L$ -Lipschitz function $f:\\mathbb{R}^{d}\\to\\mathbb{R}$ , where $d=\\Theta({\\Delta L^{2}}{\\delta^{-1}\\epsilon^{-3}})$ , satisfying $f(\\mathbf{0})-\\inf f\\leq\\Delta$ , such that for any zero-respecting first-order algorithm, all of its first $T$ iterates are not $(\\delta,\\epsilon)$ -Goldstein stationary points of $f$ , unless $T\\geq c\\cdot\\frac{\\Delta L^{2}}{\\delta\\epsilon^{3}}~.$"
+  },
+  {
+    "anchor": "S3.Thmtheorem2",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 3.2 . For some absolute constant $c>0$ the following holds: For any $L,\\Delta,\\lambda,\\epsilon>0$ satisfying $\\epsilon\\leq c\\cdot\\min\\{L,\\Delta^{2/3}\\lambda^{1/3},L^{4}\\Delta^{-2}\\lambda^{-1}\\}$ , there exists an $L$ -Lipschitz function $f:\\mathbb{R}^{d}\\to\\mathbb{R}$ , where $d=\\Theta({\\Delta L^{2}\\sqrt{\\lambda}}{\\epsilon^{-7/2}})$ , satisfying $f(\\mathbf{0})-\\inf f\\leq\\Delta$ , such that for any zero-respecting first-order algorithm, all of its first $T$ iterates are not $(\\lambda,\\epsilon)$ -stationary points of $f$ , unless $T\\geq c\\cdot\\frac{\\Delta L^{2}\\sqrt{\\lambda}}{\\epsilon^{7/2}}~.$"
+  }
+]

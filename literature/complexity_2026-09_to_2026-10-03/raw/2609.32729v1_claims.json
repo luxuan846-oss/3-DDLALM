@@ -1,0 +1,107 @@
+[
+  {
+    "anchor": "Thmassumption1",
+    "kind": "ltx_theorem ltx_theorem_assumption",
+    "text": "Assumption 1 . For some $L>0$ , for all $x,y\\in\\mathbb{R}^{d}$ , $\\|\\nabla f(x)-\\nabla f(y)\\|\\leq L\\|x-y\\|.$"
+  },
+  {
+    "anchor": "Thmassumption2",
+    "kind": "ltx_theorem ltx_theorem_assumption",
+    "text": "Assumption 2 . The oracle satisfies $\\mathbb{E}[g_{t}\\mid\\mathcal{F}_{t-1}]=\\nabla f(x_{t})$ ."
+  },
+  {
+    "anchor": "Thmassumption3",
+    "kind": "ltx_theorem ltx_theorem_assumption",
+    "text": "Assumption 3 (Sub-Gaussian-square noise) . For some $\\sigma>0$ , $\\mathbb{E}\\!\\left[\\exp\\!\\left(\\frac{\\|\\xi_{t}\\|^{2}}{\\sigma^{2}}\\right)\\middle|\\mathcal{F}_{t-1}\\right]\\leq e.$"
+  },
+  {
+    "anchor": "Thmassumption4",
+    "kind": "ltx_theorem ltx_theorem_assumption",
+    "text": "Assumption 4 (Bounded variance) . For some $\\sigma\\geq 0$ , $\\mathbb{E}[\\|\\xi_{t}\\|^{2}\\mid\\mathcal{F}_{t-1}]\\leq\\sigma^{2}$ ."
+  },
+  {
+    "anchor": "Thmassumption5",
+    "kind": "ltx_theorem ltx_theorem_assumption",
+    "text": "Assumption 5 (ABC condition) . There are $A,B,C\\geq 0$ such that $\\mathbb{E}[\\|g_{t}\\|^{2}\\mid\\mathcal{F}_{t-1}]\\leq A\\Delta_{t}+B\\|\\nabla f(x_{t})\\|^{2}+C.$ (2.1)"
+  },
+  {
+    "anchor": "S2.Thmtheorem1",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 2.1 . Conditional Jensen’s inequality shows that Assumption 3 implies Assumption 4 . Together with unbiasedness, bounded variance implies the ABC condition with $(A,B,C)=(0,1,\\sigma^{2})$ . The ABC framework therefore includes both preceding noise models [ 21 ] . The case $C=0$ permits state-dependent noise; it does not require every gradient to be deterministic."
+  },
+  {
+    "anchor": "S3.Thmtheorem1",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 3.1 (Arbitrarily slow last-iterate convergence) . Fix $L,\\sigma,b_{0},\\eta,D>0$ . For every prescribed sequence $r_{T}>0$ with $r_{T}\\to 0$ , there exist a single convex $L$ -smooth quadratic $f:\\mathbb{R}\\to\\mathbb{R}$ , a single infinite-horizon oracle satisfying Assumptions 2 and 3 , and deterministic $T_{n}\\to\\infty$ , such that both algorithms, initialized at $x_{1}=x^{\\star}=0$ , satisfy $|x_{t}-x^{\\star}|\\leq D$ almost surely for all $t\\geq 1$ and $\\frac{\\mathbb{E}[f(x_{T_{n}})-f^{\\star}]}{r_{T_{n}}}\\longrightarrow\\infty.$ (3.1)"
+  },
+  {
+    "anchor": "S3.Thmtheorem2",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 3.2 . The quantifiers select an instance after the proposed sequence $r_{T}$ , but then hold it fixed for all evaluation times. Thus the theorem is stronger than excluding every polynomial exponent separately, and is not a horizon-by-horizon change of oracle. The quantifier is $\\forall(r_{T}\\to 0)\\,\\exists\\mathcal{I}\\,\\exists(T_{n})$ , not the existence of one instance slower than every possible sequence. The constructed instance satisfies $\\mathbb{E}[\\Delta_{t}]\\to 0$ ; no general qualitative convergence theorem is asserted. An explicit schedule, independent of a proposed rate, gives $\\mathbb{E}[\\Delta_{T_{n}}]\\geq\\frac{c}{(1+\\log\\log T_{n})^{2}},\\qquad T_{n}=\\lceil\\exp(\\exp n)\\rceil+1,$ (3.2) where $c>0$ depends only on $L,\\sigma,b_{0},\\eta,D$ . The schedule for an arbitrary $r_{T}$ need not be this particular one. The obstruction uses delayed, time- and history-dependent noise, not unbounded pulse magnitudes; it does not rule out rates under additional oracle restrictions."
+  },
+  {
+    "anchor": "S3.Thmtheorem3",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 3.3 . The construction uses a fixed objective and bounded pulses. The objective is a strongly convex quadratic with curvature $\\ell=\\min\\{L,b_{0}/(2\\eta)\\}$ , independent of the proposed rate. Its minimizer, the initialization, the radius, and the pulse magnitude $M$ are also fixed independently of $r_{T}$ . In fact, the construction satisfies the stronger pathwise bounds $|\\xi_{t}|\\leq M$ and $|g_{t}|\\leq\\ell d_{0}+M$ , with $d_{0}\\leq D$ . Only the scheduled pulse times depend on $r_{T}$ . Thus the obstruction is neither a flattening sequence of objectives nor increasingly large gradients. It arises because elapsed time need not force growth of the adaptive accumulator: the oracle can remain noiseless at a minimizer for an arbitrarily long interval. The uniform moment assumptions control pulse size and probability but do not impose a clock on when stochastic variation must occur."
+  },
+  {
+    "anchor": "S3.Thmtheorem4",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 3.4 . Averaging can still have a rate because it dilutes a late excursion: before the pulse, the objective error is zero and the accumulator stays at $b_{0}$ ; immediately afterward, the last iterate has a fixed error. A late evaluation can therefore detect the entire displacement, whereas uniform averaging dilutes a short late excursion by the horizon. This explains why Theorem 3.14 can give an explicit expected average-iterate rate on the same class. An average-iterate upper bound cannot be converted into a last-iterate rate merely by substituting the final point."
+  },
+  {
+    "anchor": "S3.Thmtheorem5",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 3.5 (No polynomial average-iterate rate with polylogarithmic confidence) . Fix $L,\\sigma,b_{0},\\eta,D>0$ . There exist a fixed one-dimensional convex $L$ -smooth quadratic and a fixed infinite-horizon oracle satisfying Assumptions 2 and 4 , such that both algorithms, initialized at $x_{1}=x^{\\star}=0$ , satisfy $|x_{t}-x^{\\star}|\\leq D$ almost surely for every $t\\geq 1$ . There also exist deterministic $T_{n}\\to\\infty$ , $\\delta_{n}\\in(0,1/2)$ , and constants $c_{\\star},K>0$ such that $\\displaystyle\\mathbb{P}\\{f(\\bar{x}_{T_{n}})-f^{\\star}\\geq c_{\\star}\\}$ $\\displaystyle\\geq 2\\delta_{n},$ (3.3) $\\displaystyle\\log(1/\\delta_{n})$ $\\displaystyle\\leq K(1+\\log T_{n})^{2}.$ Consequently, no bound $f(\\bar{x}_{T})-f^{\\star}\\leq K_{0}\\bigl[T^{-a}+P(\\log(1/\\delta))T^{-b}\\bigr],\\qquad a,b>0,$ (3.4) can hold with probability at least $1-\\delta$ for every $T\\geq 1$ and $\\delta\\in(0,1/2)$ , with $K_{0}<\\infty$ and a fixed polynomial $P$ , nonnegative on $[\\log 2,\\infty)$ , independent of $T,\\delta$ ."
+  },
+  {
+    "anchor": "S3.Thmtheorem6",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 3.6 . Our result concerns the averaged output on one fixed bounded instance. The last-iterate event in Chezhegov et al. [5, Theorem B.4] does not by itself lower-bound $f(\\bar{x}_{T})-f^{\\star}$ . Convexity gives an upper bound on $f(\\bar{x}_{T})$ by the mean of the iterate values, not the lower bound needed here. Our cascade instead creates a displacement that persists for a substantial fraction of the horizon. On the designated event all iterates are nonpositive and the late ones have magnitude at least $d_{0}/2$ , so their uniform average has magnitude at least $d_{0}/4$ ; see ( B.8 ). The argument directly excludes the stated confidence dependence even for this more forgiving output. The fixed-instance quantifier is particularly strong here. Once the cascade law has been chosen from $L,\\sigma,b_{0},\\eta,D$ , the same instance excludes every pair of positive exponents and every fixed polynomial appearing in ( 3.4 ). It is not retuned for a proposed confidence bound. Small oscillations consume normalization while leaving little net displacement; after the last designated pulse, the accumulated normalization prevents rapid recovery. This separates trajectory containment from concentration of the averaged objective error. In contrast, a single large initial pulse need not respect a prescribed radius smaller than $\\eta$ ."
+  },
+  {
+    "anchor": "S3.Thmtheorem7",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 3.7 . The obstruction concerns confidence dependence rather than nonconvergence: the levels $\\delta_{n}$ shrink with the horizons. The theorem does not say that the averaged error fails to vanish for a fixed $\\delta$ , nor that averaging fails almost surely on the hard instance. Indeed, Theorem 3.14 and Markov’s inequality give, in dimension one, for every $\\delta>0$ , $\\mathbb{P}\\!\\left\\{f(\\bar{x}_{T})-f^{\\star}>\\frac{1}{\\delta}\\left(\\frac{2L\\Gamma^{2}+\\Gamma b_{0}}{T}+\\frac{\\Gamma\\sigma}{\\sqrt{T}}\\right)\\right\\}\\leq\\delta,\\quad\\Gamma=\\frac{D^{2}}{2\\eta}+\\eta.$ (3.5) Its $1/\\delta$ dependence is outside the class excluded by ( 3.4 ). Thus the substantive distinction is that uniform averaging does not upgrade finite variance to a polynomial rate with polylogarithmic confidence dependence , even on one fixed bounded instance."
+  },
+  {
+    "anchor": "S3.Thmtheorem8",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 3.8 (Constant worst-case error under bounded variance) . Fix $\\sigma,b_{0},\\eta>0$ . For every sufficiently large integer $T$ , there exist a one-dimensional convex $1$ -smooth function $f_{T}$ with $f_{T}^{\\star}=0$ and an oracle with independent identically distributed additive noise satisfying Assumptions 2 and 4 , such that both algorithms, initialized at $x_{1}=1$ with $x^{\\star}=0$ , satisfy $\\mathbb{E}[f_{T}(\\bar{x}_{T})-f_{T}^{\\star}]\\geq\\frac{\\eta\\sigma^{2}}{256\\sqrt{b_{0}^{2}+\\sigma^{2}/16}}.$ (3.6) The objective and noise law may depend on $T$ , but the initial distance, algorithm parameters, variance bound, and displayed lower-bound constant do not."
+  },
+  {
+    "anchor": "S3.Thmtheorem9",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 3.9 . This horizon-wise lower bound concerns uniform worst-case convergence, not a failure of convergence on one fixed instance. Unlike the preceding pulse constructions, it uses independent identically distributed additive noise on every fixed instance. The initial distance remains one across the family; the obstruction cannot be attributed to a growing initialization error."
+  },
+  {
+    "anchor": "S3.Thmtheorem10",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 3.10 (A scalar logarithmic average-error lower bound) . Fix $L,\\sigma,b_{0},\\eta>0$ . For every sufficiently large integer $T$ , there exist a convex $L$ -smooth function $f_{T}:\\mathbb{R}\\to\\mathbb{R}$ with $f_{T}^{\\star}=0$ and an oracle satisfying Assumptions 2 and 3 , such that both AdaGrad-Norm and AdaGrad, initialized at $x_{1}=x^{\\star}=0$ , satisfy $\\mathbb{E}[f_{T}(\\bar{x}_{T})-f_{T}^{\\star}]\\geq c\\eta\\sigma\\frac{\\log T}{\\sqrt{T}},$ (3.7) where $c>0$ is universal. The objective and oracle may depend on $T$ , but $L,\\sigma,b_{0},\\eta$ do not. No horizon-independent bounded-iterate radius is assumed."
+  },
+  {
+    "anchor": "S3.Thmtheorem11",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 3.11 . The scope of the logarithmic lower bound is smooth-convex average function value, rather than the nonconvex stationarity metric of Jiang et al. [17] . It does not exclude horizon-dependent parameter tuning, alternative outputs, or modifications such as projection. In particular, it does not establish that every logarithm in every AdaGrad upper bound is necessary."
+  },
+  {
+    "anchor": "S3.Thmtheorem12",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 3.12 . The same construction has a consequence for inverse-square-root SGD: since $g_{t}^{2}=\\gamma^{2}$ on this oracle, AdaGrad is exactly unprojected SGD with deterministic stepsizes $\\eta/\\sqrt{b_{0}^{2}+t\\gamma^{2}}$ . More generally, fix $L,\\sigma,\\lambda,\\tau>0$ and consider $x_{t+1}=x_{t}-\\frac{\\lambda}{\\sqrt{t+\\tau}}g_{t}.$ (3.8) For every sufficiently large $T$ , there exists a convex $L$ -smooth scalar objective $f_{T}$ , with $x_{1}=x^{\\star}=0$ , for which even the independent additive-noise oracle $g_{t}=f_{T}^{\\prime}(x_{t})+\\xi_{t}$ , $\\mathbb{P}(\\xi_{t}=\\sigma/2)=\\mathbb{P}(\\xi_{t}=-\\sigma/2)=1/2$ , satisfies $\\mathbb{E}[f_{T}(\\bar{x}_{T})-f_{T}^{\\star}]\\geq c_{\\mathrm{SGD}}\\lambda\\sigma^{2}\\frac{\\log T}{\\sqrt{T}},$ (3.9) where $c_{\\mathrm{SGD}}>0$ is universal. The final part of Appendix D gives the full reduction and checks the independent-noise version. This is a lower bound for a smooth-convex average iterate , not the nonsmooth last-iterate lower bound of Harvey et al. [14] . We are not aware of an earlier result for this exact combination of assumptions and schedule. The qualification on the schedule is essential: the claim does not extend to all SGD stepsizes, suffix averages, or projected variants."
+  },
+  {
+    "anchor": "S3.Thmtheorem13",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 3.13 . The stepsize schedule matters and cannot be omitted from the statement. For example, for SGD with a constant step $0<\\alpha\\leq 1/(2L)$ on a fixed horizon and a conditionally unbiased oracle of variance at most $\\sigma^{2}$ , the squared-distance recursion and $\\|\\nabla f(x)\\|^{2}\\leq 2L(f(x)-f^{\\star})$ give $\\mathbb{E}[f(\\bar{x}_{T})-f^{\\star}]\\leq\\frac{\\|x_{1}-x^{\\star}\\|^{2}}{\\alpha T}+\\alpha\\sigma^{2}.$ (3.10) Indeed, one update decreases expected squared distance by at least $\\alpha\\mathbb{E}[\\Delta_{t}]-\\alpha^{2}\\sigma^{2}$ ; summation and convexity prove the display. A horizon-dependent choice $\\alpha\\asymp T^{-1/2}$ therefore gives $O(T^{-1/2})$ . On the lower-bound instance $x_{1}=x^{\\star}$ , even the initial-distance term vanishes. The logarithm in ( 3.9 ) is a limitation of the fixed inverse-square-root schedule with uniform averaging, not of the stochastic oracle problem itself. The final part of Appendix D also verifies the integrability and distance calculation behind ( 3.10 )."
+  },
+  {
+    "anchor": "S3.Thmtheorem14",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 3.14 (Noise-adaptive average-iterate upper bounds) . Under Assumptions 1 , 2 , and 5 , let $Q=A+2LB$ . For every integer $T\\geq 1$ : 1. AdaGrad-Norm. If $\\|x_{t}-x^{\\star}\\|\\leq D$ almost surely for all $t$ , set $\\Gamma=D^{2}/(2\\eta)+\\eta$ . Then $\\mathbb{E}[f(\\bar{x}_{T})-f^{\\star}]\\leq\\frac{\\Gamma^{2}Q+\\Gamma b_{0}}{T}+\\Gamma\\sqrt{\\frac{C}{T}}.$ (3.11) 2. AdaGrad. If $|x_{t,i}-x_{i}^{\\star}|\\leq D_{i}$ almost surely for all $t,i$ , set $\\Gamma_{i}=D_{i}^{2}/(2\\eta)+\\eta$ , $\\Lambda=(\\sum_{i}\\Gamma_{i}^{2})^{1/2}$ , and $\\beta_{0}=(\\sum_{i}b_{0,i}^{2})^{1/2}$ . Then $\\mathbb{E}[f(\\bar{x}_{T})-f^{\\star}]\\leq\\frac{\\Lambda^{2}Q+\\Lambda\\beta_{0}}{T}+\\Lambda\\sqrt{\\frac{C}{T}}.$ (3.12) The radii are nonnegative, finite, and independent of $t$ . In particular, $C=0$ gives $O(T^{-1})$ ; bounded variance permits $Q=2L$ , $C=\\sigma^{2}$ and gives $O(T^{-1}+\\sigma T^{-1/2})$ ."
+  },
+  {
+    "anchor": "S3.Thmtheorem15",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 3.15 . Noise adaptation here is conditional on stability, although the algorithms need not know $A,B,C,L$ or the stability radii. For a common coordinate initialization, $\\beta_{0}=\\sqrt{d}\\,b_{0}$ . The case $C=0$ permits state-dependent stochastic noise; it does not require a deterministic oracle. The root-form refinements and the two separate algorithm proofs are in Appendix E . The theorem assumes stability and therefore does not contradict the lower bounds in Sections 3.3 and 3.4 , where a common trajectory radius is absent."
+  }
+]

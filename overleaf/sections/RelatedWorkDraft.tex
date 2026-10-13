@@ -1,0 +1,122 @@
+\section{Introduction and Related Work Draft}
+\label{sec:rw-draft}
+
+\paragraph{Problem and motivation.}
+We consider first-order methods for smooth nonconvex optimization with
+nonlinear equality constraints.  Augmented Lagrangian methods provide a
+natural mechanism for coupling stationarity and feasibility, but their
+nonconvex complexity analysis is delicate: large penalty parameters improve
+feasibility while worsening conditioning, and proximal augmented Lagrangian
+schemes often obtain their guarantees through inner subproblems that must be
+solved with increasing accuracy.  This tension motivates single-loop
+linearized schemes whose iterations remain explicit, while still retaining a
+provable mechanism for controlling both the multiplier sequence and the
+constraint residual.
+
+\paragraph{Our perspective.}
+The proposed DDLALM framework introduces a dual proximal damping term and
+eliminates the damped multiplier in closed form.  This produces a reduced
+augmented Lagrangian with an effective penalty
+$\rho_{s_k}=\rho+s_k$, while the anchor multiplier $\bmu^k$ evolves through a
+damped dual update.  The resulting method separates two roles that are often
+entangled in standard ALM analyses: the effective penalty controls feasibility,
+whereas the anchor multiplier is the stable dual object used in the descent
+argument.  Under a compact working-set assumption and a uniform LICQ condition,
+we prove a weighted finite-length estimate; with
+$\rho_{s_k}\asymp k^{1/3}$ and $\eta_k\asymp k^{-1/3}$, this yields the
+standard $O(\epsilon^{-3})$ complexity for finding an approximate KKT point.
+
+\paragraph{Penalty and proximal augmented Lagrangian methods.}
+Worst-case complexity for nonconvex constrained optimization has been studied
+extensively through penalty, proximal-point, and augmented-Lagrangian
+frameworks.  For nonlinear equality constraints, the proximal augmented
+Lagrangian method of \citet{xie2021proximal} is a central reference point:
+the proximal term stabilizes the subproblem sequence and enables
+non-asymptotic complexity guarantees.  Related inexact augmented Lagrangian
+schemes, including \citet{li2021rate} and
+\citet{sahinInexactAugmentedLagrangian2019}, further clarify how approximate
+subproblem solutions and penalty growth affect stationarity and feasibility.
+Quadratic penalty methods offer another classical route, and recent analyses
+with adaptive subproblem accuracy show that feasibility-aware stopping rules
+can reduce unnecessary inner work when the iterate is far from feasible.
+These methods provide strong theoretical baselines, but they still rely on a
+penalty or augmented-Lagrangian subproblem viewpoint.  In contrast, our method
+keeps each primal step fully linearized and explicit, and the effective
+penalty appears through dual damping rather than through a conventional
+outer-loop penalty update.
+
+\paragraph{Linearized ALM and single-loop primal-dual methods.}
+Single-loop first-order methods avoid expensive nonconvex subproblem solves,
+but their analysis must compensate for the loss of exact subproblem
+minimization.  \citet{kimNewLagrangianbasedFirstorder2023} introduced a
+Lagrangian-based first-order method for nonlinear equality constraints using a
+proximal-perturbed dual structure that yields bounded primal-dual iterates
+without directly assuming bounded multipliers.  In stochastic settings,
+\citet{alacaoglu2024complexity} studied single-loop algorithms for nonlinear
+programming with stochastic objective and constraints, while
+\citet{shi2025momentum} developed a momentum-based linearized augmented
+Lagrangian method for stochastic nonconvex constrained optimization.  These
+works show that linearization can be made theoretically meaningful, but the
+main complexity objectives are different from ours: several results address
+stochastic oracle complexity, expectation constraints, or broader functional
+constraints.  Our analysis focuses on the deterministic nonlinear equality
+case and derives the complexity from a reduced-potential finite-length
+mechanism induced by dual damping.
+
+\paragraph{Proximal-perturbed Lagrangian frameworks.}
+The proximal-perturbed Lagrangian viewpoint has recently emerged as a useful
+way to modify the geometry of the dual variables.  Kim's false-penalty and
+P-Lagrangian constructions \citep{kimLagrangianBasedMethodFalse2023,
+kimNewLagrangianbasedFirstorder2023} introduce strong concavity in the dual
+variables and help avoid explicit bounded-multiplier assumptions.  More
+recently, \citet{anonymous2026beyond} proposed proximal-perturbed augmented
+Lagrangian methods for nonconvex functional constrained optimization and
+obtained a single-loop first-order method with
+$\widetilde O(\epsilon^{-2})$ iteration complexity under their functional
+constraint setting.  Our method is aligned with this general principle, but
+uses the perturbation differently: the dual damping variable is eliminated
+to expose an effective penalty schedule $\rho_{s_k}=\rho+s_k$, and the proof
+tracks a stable anchor multiplier separately from the virtual multiplier.
+This distinction is central to the descent and residual analysis.
+
+\paragraph{Stochastic constrained optimization.}
+Stochastic constrained optimization provides another perspective on why
+penalty growth is costly.  In semi-stochastic settings, variance-reduction and
+momentum mechanisms have been used to reach improved oracle complexities;
+representative examples include stochastic inexact ALM
+\citep{li2024stochastic}, momentum-based linearized ALM
+\citep{shi2025momentum}, and variance-reduced first-order methods for
+deterministically constrained stochastic nonconvex optimization
+\citep{lu2026variance}.  Adaptive directional decomposition methods further
+organize the search direction into objective-reduction and
+constraint-reduction components \citep{shi2025adaptive}.  These papers pursue
+stochastic oracle guarantees, whereas the present work is deterministic.
+Nevertheless, they highlight the same structural difficulty: if feasibility
+is enforced mainly through a large merit or penalty parameter, then the
+smoothness constants and variance terms can become the dominant bottleneck.
+DDLALM isolates this issue in the deterministic setting by using a scheduled
+effective penalty together with a damped multiplier anchor.
+
+\paragraph{ADMM and Bregman-type variants.}
+ADMM and proximal ADMM variants are closely related to augmented Lagrangian
+methods, especially for linearly constrained and block-separable nonconvex
+composite problems.  Recent work on dual-descent ALM/ADMM
+\citep{sun2024dual_descent_alm_admm}, proximal-perturbed ADMM, and Bregman
+ADMM studies how proximal or Bregman regularization stabilizes nonconvex
+block updates.  These methods are most natural when the model has linear
+constraints or a separable block structure.  Our target problem has nonlinear
+equality constraints and does not rely on an ADMM splitting.  We therefore use
+this literature as methodological background, while positioning DDLALM as a
+linearized augmented-Lagrangian method for nonlinear equality-constrained
+nonconvex optimization.
+
+\paragraph{Positioning.}
+The closest conceptual neighbors are proximal ALM for nonlinear equality
+constraints, P-Lagrangian methods that regularize the dual geometry, and
+linearized ALM methods that avoid inner minimization.  DDLALM combines these
+threads in a different way: it keeps the primal step explicit, introduces a
+virtual multiplier through dual proximal damping, updates only a damped
+anchor multiplier, and analyzes the method through a reduced potential with a
+scheduled effective penalty.  This gives a clean deterministic route to an
+$O(\epsilon^{-3})$ approximate-KKT complexity while preserving a genuinely
+single-loop first-order iteration.

@@ -1,0 +1,1525 @@
+Content selection saved. Describe the issue below:
+
+Optimal Stochastic Bilevel Optimization with First-Order Oracles
+
+We study nonconvex–strongly-convex bilevel optimization under a stochastic first-order oracle. We introduce MRT-FD, a single-loop first-order method that simultaneously tracks the upper-level variable, the lower-level solution, and the auxiliary response arising from implicit differentiation of the hyperobjective. MRT-FD performs one update of each variable per iteration and approximates the second-order derivative actions using order- $p$ finite differences. For any fixed finite smoothness order $p\geq 1$ in the lower-level variable, MRT-FD finds an $\varepsilon$ -stationary point using $\mathcal{O}(\varepsilon^{-4-2/p})$ stochastic gradient queries. We also prove a matching $\Omega(\varepsilon^{-4-2/p})$ oracle lower bound. The lower-bound construction starts from a hard nonconvex minimization chain with a stronger stochastic oracle, and lifts it to a bilevel problem through a sinusoidal coupling with a scalar lower-level variable. Consequently, the dependence on $\varepsilon$ is optimal for every fixed finite $p$ , closing the upper–lower complexity gap in this stochastic first-order oracle setting.
+
+1 Introduction
+
+Bilevel optimization models problems in which the performance of one decision depends on the solution of another optimization problem. We study the stochastic nonconvex–strongly-convex (NC–SC) setting
+
+$\min_{x\in\mathbb{R}^{d_{x}}}\ \Phi(x):=f(x,y^{\star}(x)),\qquad y^{\star}(x):=\operatorname*{arg\,min}_{y\in\mathbb{R}^{d_{y}}}g(x,y),$ (1)
+
+where $g(x,\cdot)$ is strongly convex and the hyperobjective $\Phi$ may be nonconvex. This formulation captures applications including hyperparameter optimization ( Franceschi et al., 2018 ) , data reweighting ( Pan et al., 2025 ) , and meta-learning ( Finn et al., 2017 ) .
+
+Under standard smoothness conditions, $\Phi$ is a smooth nonconvex function. Writing $H(x,y):=\nabla^{2}_{yy}g(x,y)$ and $J(x,y):=\nabla^{2}_{xy}g(x,y)$ , implicit differentiation gives
+
+$\nabla\Phi(x)=\nabla_{x}f(x,y^{\star}(x))-J(x,y^{\star}(x))H(x,y^{\star}(x))^{-1}\nabla_{y}f(x,y^{\star}(x)).$ (2)
+
+The hypergradient therefore involves second-order derivatives of $g$ , motivating methods based on Hessian- and Jacobian-vector products ( Ghadimi and Wang, 2018 ; Ji et al., 2021 ) . When such second-order stochastic derivative information is available, an $\mathcal{O}({\epsilon}^{-4})$ oracle complexity is achievable for finding an ${\epsilon}$ -stationary point, matching the ${\epsilon}$ dependence inherited from the lower bound for stochastic nonconvex optimization ( Arjevani et al., 2023 ) .
+
+For large-scale problems, however, even Hessian-vector products may be expensive or unavailable, motivating methods that use only first-order queries. This restriction substantially changes the known complexity. Under standard smoothness assumptions, the best first-order methods achieve an $\mathcal{O}({\epsilon}^{-6})$ stochastic oracle complexity ( Chen et al., 2025 ; Gu et al., 2026b ) . Recently, Chen et al. (2026b) show that additional $p$ th-order smoothness with respect to the lower variable $y$ can improve the upper bound to $\widetilde{\mathcal{O}}({\epsilon}^{-4-2/p})$ . As $p$ increases, this rate interpolates between the ${\epsilon}^{-6}$ complexity under base smoothness and the ${\epsilon}^{-4}$ benchmark available with second-order information.
+
+This improvement raises a fundamental question. Existing lower bounds do not characterize how the complexity of a first-order stochastic bilevel oracle depends on the available smoothness order $p$ . It remains unclear whether the exponent $4+2/p$ reflects an intrinsic information-theoretic barrier.
+
+What is the optimal complexity of stochastic NC–SC bilevel optimization under a first-order oracle, and how does higher-order smoothness in the lower variable change this complexity?
+
+We answer the question above by sharpening both the upper and lower complexity bounds.
+
+A single-loop first-order algorithm.
+
+We develop Moving-Target Tracking with Finite Differences (MRT-FD), a single-loop method that requires order- $p$ smoothness only for $g$ with respect to the lower variable $y$ , for any $p\geq 1$ . We introduce the auxiliary vector $z^{\star}(x)$ as the unique solution of
+
+$H(x,y^{\star}(x))z^{\star}(x)=\nabla_{y}f(x,y^{\star}(x)).$
+
+MRT-FD maintains $y_{k}$ and $z_{k}$ to track the moving targets $y^{\star}(x_{k})$ and $z^{\star}(x_{k})$ while simultaneously updating the outer variable $x_{k}$ . It uses order- $p$ finite differences to reconstruct the required second-order derivative actions from first-order queries, while projection keeps $z_{k}$ bounded and controls the resulting finite-difference errors. Our analysis couples objective descent with the tracking errors $\|y_{k}-y^{\star}(x_{k})\|^{2}$ and $\|z_{k}-z^{\star}(x_{k})\|^{2}$ through a moving-target Lyapunov function that jointly controls target motion, finite-difference bias, and stochastic variance. For fixed $p$ , it achieves $\mathcal{O}({\epsilon}^{-4-2/p})$ complexity, matching the ${\epsilon}$ dependence of Chen et al. (2026b) while removing the logarithmic factor.
+
+Lower bound for finite smoothness order $p$ .
+
+We establish a matching lower bound under the same assumptions and oracle model. The construction embeds a hard nonconvex chain into a bilevel problem with a scalar lower-level variable through a sinusoidal coupling. Setting a coupling scale to $\delta={\epsilon}^{1/p}$ preserves the required order- $p$ smoothness while keeping the resulting hyperobjective close to the hard chain. We then construct a stochastic oracle in which informative observations occur only through a rare Bernoulli event with probability $\varpi=\Theta(\delta^{2}{\epsilon}^{2})$ . A random-rotation argument limits progress along the hidden chain for arbitrary adaptive randomized algorithms. Combining a chain of length $T=\Theta({\epsilon}^{-2})$ with the reveal probability gives the lower bound of $\Omega(T/\varpi)=\Omega({\epsilon}^{-4-2/p})$ .
+
+1.1 Related Work
+
+Bilevel optimization with second-order information.
+
+Classical bilevel methods compute the hypergradient using second-order information. Iterative differentiation (ITD) differentiates through a finite lower-level trajectory ( Domke, 2012 ; Shaban et al., 2019 ; Bolte et al., 2021 ) , whereas approximate implicit differentiation (AID) approximates the inverse-Hessian–gradient product through linear-system or Neumann-type solvers ( Pedregosa, 2016 ; Ghadimi and Wang, 2018 ; Grazzi et al., 2020 ; Ji et al., 2021 ) .
+
+In stochastic NC–SC bilevel optimization, methods such as stocBiO ( Ji et al., 2021 ) and SUSTAIN ( Khanduri et al., 2021 ) construct hypergradient estimators using Hessian- and Jacobian-vector products. SOBA/SABA ( Dagréou et al., 2022 ) and MA-SOBA ( Chen et al., 2024b ) instead track the associated linear-system solution jointly with the lower and upper-level variables. These methods are structurally related to MRT-FD through linear-system tracking, but require second-order derivative information.
+
+First-order bilevel optimization.
+
+Fully first-order methods often rely on value-function or penalty reformulations, including BOME ( Liu et al., 2022 ) , penalty-based bilevel gradient methods ( Shen and Chen, 2023 ) , and F 2 SA ( Kwon et al., 2023 ) . Subsequent work improves the first-order oracle complexity through refined penalty and two-timescale schemes ( Kwon et al., 2024 ; Chen et al., 2025 ) . More recently, SGHA ( Gu et al., 2026b ) develops a single-loop method based on a constrained reformulation of lower-level stationarity and finite-difference approximations, achieving $\mathcal{O}({\epsilon}^{-6})$ complexity, but requires additional assumptions in the boundedness.
+
+FdeHBO ( Yang et al., 2023 ) is the closest structural comparison to MRT-FD: it tracks the auxiliary linear-system solution using projection and finite-difference Hessian-vector approximations. Its guarantees, however, rely on stronger stochastic assumptions, including stochastic smoothness and unbiased stochastic Hessian estimates with bounded variance. FdeHBO uses variance reduction and reuses the same sample across multiple query points, whereas MRT-FD uses fresh independent samples and order- $p$ finite differences. Their analyses track different auxiliary errors: FdeHBO uses the current lower-level linear-system solution, while we directly control $\|z_{k}-z^{\star}(x_{k})\|^{2}$ .
+
+Chen et al. (2026b) show that $p$ th-order smoothness in the lower variable can improve the complexity from $\widetilde{\mathcal{O}}({\epsilon}^{-6})$ to $\widetilde{\mathcal{O}}({\epsilon}^{-4-2/p})$ . Their F 2 SA- $p$ method uses high-order finite differences within a penalty formulation over perturbed lower-level problems, and assumes higher-order smoothness of both $f$ and $g$ in $y$ . In contrast, our additional order- $p$ smoothness condition is imposed only on $g$ .
+
+Lower bounds.
+
+Ji and Liang (2023) established lower complexity bounds for convex–strongly-convex and strongly-convex–strongly-convex bilevel problems, while Dagréou et al. (2024) derived matching lower bounds for finite-sum bilevel empirical-risk minimization. Beyond the strongly-convex lower-level setting, Chen et al. (2024a) showed hardness results for finding stationary points of the hyperobjective when the lower-level problem is only convex. For stochastic NC–SC bilevel optimization, Kwon et al. (2024) establish lower bounds under a $y^{\star}$ -aware oracle, where unbiased bounded-variance stochastic gradients are guaranteed only locally around $y^{\star}(x)$ , making their setting not directly comparable to ours. More recently, Chen et al. (2026a) prove an $\Omega(\kappa^{4.5}{\epsilon}^{-4})$ lower bound for NC–SC bilevel optimization, where $\kappa$ denotes the condition number, while concurrent work by Gu et al. (2026a) establishes an $\Omega(\kappa^{8}{\epsilon}^{-6})$ lower bound. Our result complements these works by characterizing the effect of higher-order smoothness in the lower variable: for a fixed $p$ , we prove a $\Omega({\epsilon}^{-4-2/p})$ lower bound.
+
+2 Problem Setting and Oracle Model
+
+We consider the bilevel optimization problem
+
+$\min_{x\in\mathbb{R}^{d_{x}}}\ \Phi(x):=f(x,y^{\star}(x)),\qquad y^{\star}(x):=\operatorname*{arg\,min}_{y\in\mathbb{R}^{d_{y}}}g(x,y),$ (3)
+
+where $f$ and $g$ are the upper- and lower-level objectives, respectively. We use the notation
+
+$H(x,y):=\nabla^{2}_{yy}g(x,y),\qquad J(x,y):=\nabla^{2}_{xy}g(x,y),\qquad b(x,y):=\nabla_{y}f(x,y).$
+
+Thus $H(x,y)\in\mathbb{R}^{d_{y}\times d_{y}}$ and $J(x,y)\in\mathbb{R}^{d_{x}\times d_{y}}$ , so both matrices act on vectors in $\mathbb{R}^{d_{y}}$ . We define the auxiliary linear-system solutions at a generic point $(x,y)$ and at the lower-level minimizer, respectively, as
+
+$z(x,y):=H(x,y)^{-1}b(x,y),\qquad z^{\star}(x):=z(x,y^{\star}(x)).$
+
+Under Assumption 2.1 below, $H(x,y)\succeq\mu I$ , and implicit differentiation yields the hypergradient
+
+$\nabla\Phi(x)=\nabla_{x}f(x,y^{\star}(x))-J(x,y^{\star}(x))z^{\star}(x).$ (4)
+
+Our goal is to find an approximately stationary point of $\Phi$ . For a possibly random output $x_{R}$ , we refer to $\mathbb{E}\left\lVert\nabla\Phi(x_{R})\right\rVert^{2}\leq{\epsilon}^{2}$ as an ${\epsilon}$ -stationarity guarantee.
+
+2.1 Assumptions
+
+We study smooth nonconvex–strongly-convex (NC–SC) bilevel optimization under the following regularity assumptions.
+
+The following conditions hold for constants $\ell_{f},\ell_{g},\rho_{1},\mu>0$ :
+
+$f$ is differentiable with a jointly $\ell_{f}$ -Lipschitz gradient, and $g$ is twice differentiable with a jointly $\ell_{g}$ -Lipschitz gradient.
+
+$g(x,\cdot)$ is $\mu$ -strongly convex for every $x$ .
+
+The Hessian block $\nabla^{2}_{yy}g$ and the mixed derivative $\nabla^{2}_{xy}g$ are each $\rho_{1}$ -Lipschitz in the joint variable $(x,y)$ with respect to the operator norm.
+
+$\left\lVert\nabla_{y}f(x,y)\right\rVert\leq B_{f}$ for all $(x,y)$ , and $\Phi$ is bounded below.
+
+These assumptions are standard in the literature ( Kwon et al., 2024 ; Chen et al., 2025 ; Chen et al., 2026a ) and are weaker than those used in some prior work ( Kwon et al., 2023 ) . Assumption 2.1 implies that, for every $(x,y)$ ,
+
+$\left\lVert z(x,y)\right\rVert\leq B_{f}/\mu,\qquad\left\lVert z^{\star}(x)\right\rVert\leq B_{f}/\mu.$
+
+We define the closed Euclidean ball centered at the origin with radius $R_{z}$ by
+
+$Q:=\{z\in\mathbb{R}^{d_{y}}:\left\lVert z\right\rVert\leq R_{z}\},\qquad R_{z}:=4B_{f}/\mu.$
+
+The algorithm will project its auxiliary updates onto $Q$ . This choice of radius ensures that both the current-point linear-system solution $z(x,y)$ and the target $z^{\star}(x)$ lie in $Q$ .
+
+Fix an integer $p\geq 1$ and a constant $L_{p}>0$ . For each $\ell\in\{x,y\}$ , the map $\nabla_{\ell}g(x,\cdot)$ is $p$ times differentiable for every $x$ and satisfies
+
+$\left\lVert\nabla_{y}^{p}\nabla_{\ell}g(x,y)-\nabla_{y}^{p}\nabla_{\ell}g(x,y^{\prime})\right\rVert_{\mathrm{op}}\leq L_{p}\left\lVert y-y^{\prime}\right\rVert,\text{ for all }x,y,y^{\prime}.$ (5)
+
+This assumption imposes order- $p$ smoothness on the gradients of the lower-level objective with respect to the lower variable. For $p=1$ , it follows from Assumption 2.1 (iii) with $L_{1}=\rho_{1}$ , recovering the standard setting. Beyond the base regularity conditions, we impose an explicit Lipschitz condition only at order $p$ , without separately imposing such conditions at each intermediate derivative order. The additional higher-order condition concerns only $g$ ; in contrast, prior work also imposes higher-order smoothness on $f$ with respect to $y$ ( Chen et al., 2026b ) .
+
+2.2 Stochastic gradient oracle
+
+We now specify the stochastic gradient oracle used for both the upper and lower complexity bounds. At a query point $(x,y)$ , a single oracle call returns four gradient estimates:
+
+$\mathcal{O}(x,y)=\bigl(\hat{F}_{x}(x,y),\hat{F}_{y}(x,y),\hat{G}_{x}(x,y),\hat{G}_{y}(x,y)\bigr).$
+
+For $\ell\in\{x,y\}$ , $\hat{F}_{\ell}(x,y)$ estimates $\nabla_{\ell}f(x,y)$ , and $\hat{G}_{\ell}(x,y)$ estimates $\nabla_{\ell}g(x,y)$ . These estimates are assumed to be unbiased and to have bounded variance, as specified below.
+
+The query rules and oracle responses are measurable. Let $\mathcal{H}$ denote the history before an oracle call, and let $(x,y)$ be an $\mathcal{H}$ -measurable query point. For each $\ell\in\{x,y\}$ , the returned estimates satisfy
+
+$\displaystyle\mathbb{E}[\hat{F}_{\ell}(x,y)\mid\mathcal{H}]=\nabla_{\ell}f(x,y),\qquad\mathbb{E}[\hat{G}_{\ell}(x,y)\mid\mathcal{H}]=\nabla_{\ell}g(x,y),$ (6) $\displaystyle\sum_{\ell\in\{x,y\}}\mathbb{E}\!\left[\|\hat{F}_{\ell}(x,y)-\nabla_{\ell}f(x,y)\|^{2}+\|\hat{G}_{\ell}(x,y)-\nabla_{\ell}g(x,y)\|^{2}\,\middle|\,\mathcal{H}\right]\leq\sigma^{2},$ (7)
+
+almost surely, for a constant $\sigma\geq 0$ . Each call uses fresh randomness. Calls at query points fixed by a common conditioning history are conditionally independent given that history. No independence is assumed among the four estimates $\hat{F}_{x},\hat{F}_{y},\hat{G}_{x},\hat{G}_{y}$ returned by a single call.
+
+For the upper-bound analysis, we use the following shorthand for minibatch estimates obtained by averaging $m$ fresh oracle calls at a fixed query point $(x,y)$ :
+
+$\bar{F}_{\ell}(x,y):=\frac{1}{m}\sum_{i=1}^{m}\hat{F}_{\ell,i}(x,y),\qquad\bar{G}_{\ell}(x,y):=\frac{1}{m}\sum_{i=1}^{m}\hat{G}_{\ell,i}(x,y),\qquad\ell\in\{x,y\}.$
+
+3 A Single-Loop First-Order Algorithm
+
+In this section, we introduce our single-loop first-order algorithm and establish its convergence guarantee. We begin with a finite-difference procedure for estimating the matrix–vector products appearing in ( 4 ), together with the bias and variance of the finite-difference approximation.
+
+3.1 Estimating matrix–vector products from first-order queries
+
+We approximate the indirect term in ( 4 ) by tracking $z^{\star}(x)$ and forming $J(x,y)z$ . At an available pair $(x,y)$ , the tracking update for $z$ is driven by the linear-system residual $H(x,y)z-b(x,y)$ . Thus, both $H(x,y)z$ and $J(x,y)z$ must be estimated using only first-order information.
+
+For $z\neq 0$ , define $u:=z/\|z\|$ , and set $u:=0$ when $z=0$ . The two matrix–vector products admit the directional-derivative representations
+
+$\displaystyle H(x,y)z$ $\displaystyle=\|z\|\lim_{t\to 0}\frac{\nabla_{y}g(x,y+tu)-\nabla_{y}g(x,y-tu)}{2t},$ (8) $\displaystyle J(x,y)z$ $\displaystyle=\|z\|\lim_{t\to 0}\frac{\nabla_{x}g(x,y+tu)-\nabla_{x}g(x,y-tu)}{2t}.$ (9)
+
+Evaluating these quotients at a finite radius $\tau>0$ yields a first-order finite-difference approximation. For example, $H(x,y)z\ \approx\ \frac{\|z\|}{2\tau}\bigl[\nabla_{y}g(x,y+\tau u)-\nabla_{y}g(x,y-\tau u)\bigr],$ and replacing $\nabla_{y}g$ by $\nabla_{x}g$ gives the corresponding approximation of $J(x,y)z$ .
+
+To exploit the higher-order regularity in Assumption 2.2 , we use a higher-order finite-difference stencil that combines gradients evaluated at several points $y+j\tau u$ along the same line. Such interpolation-based finite-difference formulas are classical; see, e.g., ( Atkinson and Han, 2001 ; Khan and Ohba, 1999 ; Fornberg, 1988 ) . Let $\mathcal{I}_{1}=\{-1,1\},$ and, for $p\geq 2$ , let $\mathcal{I}_{p}=\{-\lfloor p/2\rfloor,\ldots,\lceil p/2\rceil\}.$ Choose the unique interpolation weights $\{a_{j}\}_{j\in\mathcal{I}_{p}}$ satisfying
+
+$\sum_{j\in\mathcal{I}_{p}}a_{j}=0,\qquad\sum_{j\in\mathcal{I}_{p}}ja_{j}=1,\qquad\sum_{j\in\mathcal{I}_{p}}j^{r}a_{j}=0\quad(2\leq r\leq p).$ (10)
+
+These moment conditions preserve the first-order term in the Taylor expansion while canceling all polynomial terms of orders $0,2,\ldots,p$ .
+
+For $\ell\in\{x,y\}$ , define
+
+$\mathrm{FD}_{\ell}(x,y;z):=\frac{\|z\|}{\tau}\sum_{j\in\mathcal{I}_{p}}a_{j}\nabla_{\ell}g(x,y+j\tau u).$ (11)
+
+We suppress the dependence on $p$ and $\tau$ in the notation. For $p=1$ and $p=2$ , the zero coefficients can be omitted, and ( 11 ) reduces to the same two-point central difference. For every $p$ , the stencil contains at most $p+1$ query locations. A similar high-order finite-difference construction is used by Chen et al. (2026b) , but for a different purpose. Their differences are applied to quantities arising from perturbed lower-level problems within a penalty-based construction, whereas our differences act directly on the original lower-level gradients along the direction $z$ to estimate the actions $Hz$ and $Jz$ .
+
+Stochastic estimates.
+
+At each node $j\in\mathcal{I}_{p}$ , we average $m$ fresh observations of $\hat{G}_{\ell}$ into $\bar{G}_{\ell,j}$ , using separate batches across nodes. We then define the stochastic finite-difference estimator
+
+$\widehat{\mathrm{FD}}_{\ell}(x,y;z):=\frac{\|z\|}{\tau}\sum_{j\in\mathcal{I}_{p}}a_{j}\bar{G}_{\ell,j}(x,y+j\tau u).$ (12)
+
+Let $\mathcal{H}$ be a history that fixes $(x,y,z)$ before these batches are drawn. Then
+
+$\mathbb{E}[\widehat{\mathrm{FD}}_{\ell}(x,y;z)\mid\mathcal{H}]=\mathrm{FD}_{\ell}(x,y;z).$
+
+Define $A_{p}:=\sum_{j\in\mathcal{I}_{p}}a_{j}^{2}$ . Under Assumptions 2.2 and 2.3 , for each $\ell\in\{x,y\}$ ,
+
+$\displaystyle\|\mathrm{FD}_{\ell}(x,y;z)-\nabla_{\ell y}^{2}g(x,y)z\|\leq C_{p}L_{p}\tau^{p}\|z\|,$ (13) $\displaystyle\mathbb{E}\!\left[\|\widehat{\mathrm{FD}}_{\ell}(x,y;z)-\mathrm{FD}_{\ell}(x,y;z)\|^{2}\,\middle|\,\mathcal{H}\right]\leq\frac{A_{p}\sigma^{2}\|z\|^{2}}{m\tau^{2}},$ (14)
+
+where $C_{p}$ depends only on the stencil nodes and weights. Explicit expressions for $C_{p}$ and $A_{p}$ are given in Lemma A.3 . Related expressions follow from classical finite-difference formulas; see, e.g., Li (2005) ; Bai et al. (2009) . For completeness, we provide a self-contained proof in the appendix.
+
+Equations ( 13 ) and ( 14 ) reveal the bias–variance tradeoff induced by finite differencing. A smaller $\tau$ decreases the deterministic bias at rate $\tau^{p}$ , but amplifies the stochastic variance at rate $\tau^{-2}$ . Increasing the batch size $m$ controls this variance amplification. The dependence of $C_{p}$ and $A_{p}$ on the stencil therefore enters the constants in the resulting complexity bounds.
+
+3.2 Algorithm
+
+We present our algorithm, Moving-Target Tracking with Finite Differences (MRT-FD), in Algorithm 1 . The intuition behind the single-loop design is similar to that of SOBA ( Dagréou et al., 2022 ) : rather than solving the lower-level problem and the auxiliary linear system to high accuracy at every outer iteration, the algorithm maintains and updates the variables $x$ , $y$ , and $z$ simultaneously. Compared with SOBA, MRT-FD requires only an unbiased, bounded-variance first-order oracle. Finite differences replace Hessian- and Jacobian-vector products without requiring samplewise smoothness or sample reuse across query points. Projection controls the resulting estimation errors.
+
+Algorithm 1 MRT-FD: projected single-loop tracking with order- $p$ differences
+
+The $x$ update: estimate the outer gradient.
+
+The outer update uses a stochastic approximation of $\nabla\Phi(x_{k})$ . In ( 4 ), replacing the unavailable $y^{\star}(x_{k})$ and $z^{\star}(x_{k})$ by the current lower iterate $y_{k}$ and the newly updated auxiliary iterate $z_{k+1}$ gives
+
+$\nabla_{x}f(x_{k},y_{k})-J(x_{k},y_{k})z_{k+1}.$ (15)
+
+The two terms in ( 15 ) are estimated by $\bar{F}_{x,k}:=\bar{F}_{x}(x_{k},y_{k})$ and $\widehat{\mathrm{FD}}_{x}(x_{k},y_{k};z_{k+1})$ , respectively. Accordingly, define $\hat{h}_{k}:=\bar{F}_{x,k}-\widehat{\mathrm{FD}}_{x}(x_{k},y_{k};z_{k+1})$ to approximate hypergradient, and then the outer update can be written as $x_{k+1}=x_{k}-\eta_{x}\hat{h}_{k}$ . The discrepancy between $\hat{h}_{k}$ and $\nabla\Phi(x_{k})$ comes from four sources: the tracking errors of $y_{k}$ and $z_{k+1}$ , the finite-difference bias, and the stochastic sampling noise. The $y$ - and $z$ -updates are designed to control the two tracking errors. Since the outer iterate $x_{k}$ changes over time, the corresponding targets $y^{\star}(x_{k})$ and $z^{\star}(x_{k})$ also evolve; MRT-FD therefore treats them as moving targets.
+
+The $z$ update: track the inverse-Hessian–gradient product.
+
+At the available pair $(x_{k},y_{k})$ , the vector $z(x_{k},y_{k})$ minimizes the strongly convex quadratic
+
+$z\ \longmapsto\ \tfrac{1}{2}z^{\top}H(x_{k},y_{k})z-b(x_{k},y_{k})^{\top}z.$ (16)
+
+The gradient of this quadratic is the linear-system residual $H(x_{k},y_{k})z-b(x_{k},y_{k})$ , whose unique zero is $z(x_{k},y_{k})$ . Moreover, $z(x_{k},y_{k})$ approaches the target $z^{\star}(x_{k})$ as $y_{k}$ approaches $y^{\star}(x_{k})$ . With $\bar{F}_{y,k}:=\bar{F}_{y}(x_{k},y_{k})$ , Line 3 estimates the residual at $z_{k}$ using $\widehat{\mathrm{FD}}_{y}(x_{k},y_{k};z_{k})-\bar{F}_{y,k}$ and performs one projected stochastic gradient step. Since $\|z(x_{k},y_{k})\|\leq B_{f}/\mu$ , choosing $R_{z}\geq B_{f}/\mu$ ensures that the current linear-system solution lies in $Q$ . The projection also guarantees $\|z_{k}\|\leq R_{z}$ for every $k$ , which is crucial for uniformly controlling the finite-difference bias and variance in ( 13 )–( 14 ).
+
+The $y$ update: track the lower solution.
+
+With $\bar{G}_{y,k}:=\bar{G}_{y}(x_{k},y_{k})$ , Line 5 performs one stochastic gradient step on $g(x_{k},\cdot)$ at $y_{k}$ , namely $y_{k+1}=y_{k}-\eta_{y}\bar{G}_{y,k}$ , to track $y^{\star}(x_{k})$ . This tracking controls the evaluation-point error in both the outer direction and the coefficients $H(x_{k},y_{k})$ and $b(x_{k},y_{k})$ of the auxiliary linear system.
+
+3.3 Convergence guarantee
+
+Let $\Phi_{\inf}:=\inf_{x}\Phi(x)$ , and let $\Delta_{0}$ denote an upper bound on the initial objective gap and tracking errors:
+
+$\Delta_{0}\geq\Phi(x_{0})-\Phi_{\inf}+\|y_{0}-y^{\star}(x_{0})\|^{2}+(B_{f}/\mu)^{2},$
+
+where the last term bounds the squared auxiliary tracking error at $z_{0}=0$ . Let $\alpha>0$ and $C_{\star}\geq 1$ be the constants specified in Theorem 3.1 . We set the projection radius to $R_{z}=4B_{f}/\mu$ , choose the tracking stepsizes $\eta_{y}=\eta_{z}=1/(2\ell_{g})$ , and set the outer stepsize $\eta_{x}=\alpha$ . For a target accuracy $0<{\epsilon}\leq 1$ , choose the finite-difference radius, minibatch size, and number of iterations as
+
+$\tau=\left(\frac{{\epsilon}^{2}}{3C_{\star}}\right)^{1/(2p)},\qquad m=\left\lceil\frac{3C_{\star}}{{\epsilon}^{2}\tau^{2}}\right\rceil,\qquad K=\left\lceil\frac{3C_{\star}(1+\Delta_{0})}{{\epsilon}^{2}}\right\rceil.$ (17)
+
+The role of the smoothness order $p$ is apparent from these choices. Since the finite-difference bias scales as $\tau^{2p}$ , a larger $p$ allows a larger difference radius $\tau$ while maintaining the same target bias. This reduces the variance amplification $1/\tau^{2}$ and, consequently, the required minibatch size $m$ . The resulting convergence and oracle complexity are summarized below.
+
+Suppose Assumptions 2.1 – 2.3 hold. There exist constants $\alpha>0$ and $C_{\star}\geq 1$ , depending only on $p$ and $\ell_{f},\ell_{g},\rho_{1},\mu,B_{f},L_{p},\sigma$ , such that the following holds. Run Algorithm 1 from fixed $x_{0},y_{0}$ and $z_{0}=0$ , with $R_{z}=4B_{f}/\mu$ , $\eta_{y}=\eta_{z}=1/(2\ell_{g})$ , and $\eta_{x}=\alpha$ . For any $0<\tau\leq 1$ and positive integers $m,K$ , the output satisfies
+
+$\mathbb{E}\|\nabla\Phi(x_{R})\|^{2}\leq C_{\star}\left(\frac{\Delta_{0}}{K}+\tau^{2p}+\frac{1}{m\tau^{2}}\right).$ (18)
+
+With the parameter choices in ( 17 ), we obtain $\mathbb{E}\|\nabla\Phi(x_{R})\|^{2}\leq{\epsilon}^{2}$ using at most
+
+$(2p+5)mK=\mathcal{O}\!\left({\epsilon}^{-4-2/p}\right)$
+
+oracle calls, for any fixed finite $p$ .
+
+Appendix A provides the proof and explicit admissible choices of $\alpha$ and $C_{\star}$ . For $p=1$ , Theorem 3.1 gives an $\mathcal{O}({\epsilon}^{-6})$ sample complexity, matching existing upper bounds ( Chen et al., 2025 ; Gu et al., 2026a ) . The single-loop method of Gu et al. (2026b) attains the same dependence under additional boundedness assumptions. For $p\geq 2$ , our rate matches the ${\epsilon}^{-4-2/p}$ dependence of Chen et al. (2026b) while removing the logarithmic factor. Moreover, Chen et al. (2026b) assumes higher-order smoothness of both $f$ and $g$ in $y$ , as their finite-difference estimator is applied to the gradient of a penalty function that combines the upper- and lower-level objectives.
+
+4 Matching Lower Bound under First-Order Oracles
+
+We first recall a hard instance construction for stochastic nonconvex minimization and establish its lower bound under a stronger oracle notion. We then lift this construction to a bilevel instance and show that the bilevel oracle call can be simulated by the oracle in the minimization hard instance.
+
+4.1 A stochastic nonconvex minimization hard instance
+
+Consider a smooth objective $P:\mathbb{R}^{d}\to\mathbb{R}$ whose gradient Lipschitz constant is bounded by a numerical constant and $P(0)-\inf P\leq 1$ . An ordinary stochastic-gradient oracle returns $\widehat{\nabla P}(x)$ such that, for each query $x$ selected from the history $\mathcal{H}$ ,
+
+$\mathbb{E}[\widehat{\nabla P}(x)\mid\mathcal{H}]=\nabla P(x),\qquad\mathbb{E}[\|\widehat{\nabla P}(x)-\nabla P(x)\|^{2}\mid\mathcal{H}]\leq 1.$
+
+The construction below recovers the standard minimization lower bound under a strengthened oracle and provides the functions and mechanism used later in our bilevel hard instance.
+
+The objective and its decomposition.
+
+The standard smooth chain $C_{T}(v)=\sum_{i=1}^{T}\psi_{i}(v)$ , $v\in\mathbb{R}^{T}$ , couples neighboring coordinates: each $\psi_{i}$ depends only on $(v_{i-1},v_{i})$ , with $v_{0}=1$ ( Carmon et al., 2020 ) . At a point supported on the first $k$ coordinates, its gradient is supported on at most the first $k+1$ . Moreover, $|v_{T}|\leq 1$ implies $\|\nabla C_{T}(v)\|\geq 1$ . Thus a small gradient requires reaching the last coordinate, while gradients expose at most one new coordinate at a time along such queries.
+
+Following ( Arjevani et al., 2023 ) , we introduce smooth weights $\Theta_{i}(v)\in[0,1]$ to isolate the component that can reveal the next coordinate:
+
+$W_{T}(v):=-\sum_{i=1}^{T}\Theta_{i}(v)\psi_{i}(v),\qquad B_{T}(v):=C_{T}(v)+W_{T}(v).$ (19)
+
+The weight $\Theta_{i}$ equals one if $|v_{j}|\leq 1/4$ for every $j\geq i$ , and zero if some $|v_{j}|\geq 1/2$ with $j\geq i$ . For queries supported on the first $k$ coordinates, $\nabla B_{T}$ stays within those coordinates, whereas $\nabla W_{T}$ can reach coordinate $k+1$ . The specific weights also keep $W_{T}$ , its gradient, and its Hessian bounded independently of $T$ . Appendix B.1 gives the formulas for $\psi_{i},\Theta_{i}$ and proves these properties.
+
+Choose $T=\Theta({\epsilon}^{-2})$ and numerical scalings $a=\Theta({\epsilon}^{2})$ and $\lambda_{\rm lb}=\Theta({\epsilon})$ . Let $U\in\mathbb{R}^{d\times T}$ satisfy $U^{\top}U=I_{T}$ ; in the lower-bound argument, $U$ is drawn uniformly at random to hide the chain directions from an adaptive algorithm ( Arjevani et al., 2023 ; Woodworth and Srebro, 2017 ) . Define the soft compression map
+
+$\rho_{R}(w):=\frac{w}{\sqrt{1+\|w\|^{2}/R^{2}}},\qquad R=230\sqrt{T},$
+
+and the corresponding latent coordinate $v(x):=U^{\top}\rho_{R}(x/\lambda_{\rm lb})$ . The hard objective and the pair $(A,u)$ are
+
+$\displaystyle P(x)$ $\displaystyle:=aC_{T}(v(x))+\frac{a}{10\lambda_{\rm lb}^{2}}\|x\|^{2},$ (20) $\displaystyle u(x)$ $\displaystyle:=aW_{T}(v(x)),\qquad A(x):=P(x)+u(x).$
+
+Here $u:\mathbb{R}^{d}\to\mathbb{R}$ carries the next-coordinate information and $P=A-u$ . The soft compression bounds the points seen by the chain, while the quadratic term prevents large-norm queries from having a small gradient. Although $A,u,P$ depend on the chosen $U$ through $v(x)$ , we omit this dependence from the notation. Appendix B.2 verifies the scaling constants.
+
+The gradient oracle and a comparison oracle.
+
+At each call, draw a fresh $\zeta\sim\mathrm{Bernoulli}(\varpi)$ and define the stochastic gradient estimator
+
+$\widehat{\nabla P}(x):=\nabla A(x)-\frac{\zeta}{\varpi}\nabla u(x).$ (21)
+
+Since $\mathbb{E}[\zeta/\varpi]=1$ , this estimator is unbiased, while the informative correction $\nabla u(x)$ is suppressed with probability $1-\varpi$ . For the lower-bound argument, we introduce a richer oracle response,
+
+$\mathcal{R}_{\varpi}(x):=\left(\nabla A(x),\frac{\zeta}{\varpi}u(x),\frac{\zeta}{\varpi}\nabla u(x)\right),$ (22)
+
+which we call the comparison oracle . It is stronger than ( 21 ), since subtracting its third component from its first recovers the stochastic gradient estimate in one call. The additional scalar component $\frac{\zeta}{\varpi}u(x)$ is included because it will be used to reproduce the lower-gradient oracle $\hat{G}_{y}$ in the bilevel construction. The next proposition establishes a lower bound directly for this stronger oracle.
+
+There are numerical constants $c,C,{\epsilon}_{0}>0$ such that, for every $0<{\epsilon}<{\epsilon}_{0}$ and $0<\varpi\leq 1/2$ , the construction ( 20 ) admits $T=\Theta({\epsilon}^{-2})$ , $d\geq T$ , and a distribution of $U$ with the following properties. Both $\nabla A$ and $\nabla u$ are $C$ -Lipschitz, $P(0)-\inf P\leq 1/4$ , and
+
+$\sup_{x}|u(x)|\leq C{\epsilon}^{2},\qquad\sup_{x}\|\nabla u(x)\|\leq C{\epsilon}.$ (23)
+
+Every adaptive randomized algorithm using at most $cT/\varpi$ calls to $\mathcal{R}_{\varpi}$ , with arbitrary queries and final output, satisfies
+
+$\mathbb{P}\bigl(\|\nabla P(x_{\rm out})\|\geq 2{\epsilon}\bigr)\geq\frac{3}{4}.$ (24)
+
+The rotation $U$ is independent of the algorithm seed and oracle draws; probability includes all three sources of randomness.
+
+The two vector responses in $\mathcal{R}_{\varpi}$ arise from $U\nabla B_{T}(v)$ and $U(\zeta/\varpi)\nabla W_{T}(v)$ . Along an exposed coordinate prefix, these vectors can add at most one direction, and only when $\zeta=1$ (Corollary B.3 ), giving a mean waiting time $1/\varpi$ between opportunities for progress. For arbitrary queries, the proof conditions on the past latent coordinates $v(x_{t})$ , oracle draws, and exposed directions, which together determine all past scalar responses. The residual parts of unrevealed directions orthogonal to past queries and exposed directions remain spherically symmetric, allowing high-dimensional concentration to control accidental progress (Lemmas B.11 – B.13 ). The same geometric bound covers the final output as an additional point without an oracle call (Corollary B.14 ). Appendix B.4 gives the full proof.
+
+Choosing $\varpi=2(1+C^{2}){\epsilon}^{2}$ recovers the classical $\Omega({\epsilon}^{-4})$ lower bound for stochastic nonconvex minimization under an ordinary first-order oracle; see Appendix B.4.1 . More importantly, the comparison-oracle construction enables a stronger bilevel lower bound: after lifting the hard instance to a bilevel problem, we can choose a even smaller reveal probability $\varpi$ while preserving bounded variance, which increases the number of oracle calls required.
+
+4.2 A bilevel hard instance
+
+We use the same pair $(A,u)$ to construct a bilevel hard instance and its primitive first-order oracle. For a scale ${\epsilon}\leq\delta\leq 1$ , let $x\in\mathbb{R}^{d}$ and let the lower-level variable be scalar, $y\in\mathbb{R}$ . Define the upper- and lower-level objectives by
+
+$f_{\delta}(x,y):=A(x)+y,\qquad g_{\delta}(x,y):=\tfrac{1}{2}y^{2}+\delta\sin(y/\delta)u(x).$ (25)
+
+At a query point $(x,y)$ , draw one response from the comparison oracle, $(r_{1},r_{2},r_{3})=\mathcal{R}_{\varpi}(x)=\left(\nabla A(x),\frac{\zeta}{\varpi}u(x),\frac{\zeta}{\varpi}\nabla u(x)\right)$ , and transform it into the primitive bilevel oracle response:
+
+$\hat{F}_{x}=r_{1},\qquad\hat{F}_{y}=1,\qquad\hat{G}_{x}=\delta\sin(y/\delta)r_{3},\qquad\hat{G}_{y}=y+\cos(y/\delta)r_{2}.$ (26)
+
+These are exactly the stochastic gradients of $f_{\delta}$ and $g_{\delta}$ , with the same Bernoulli variable $\zeta$ appearing in both lower-level gradient blocks. Hence, one comparison-oracle call exactly simulates one primitive bilevel oracle call, including its joint randomness.
+
+The terms carrying the hidden correction $u$ are $\delta\sin(y/\delta)\nabla u(x)$ and $\cos(y/\delta)u(x)$ . Their joint norm is $O(\delta{\epsilon})$ uniformly over $(x,y)$ , since $\|\nabla u\|=O({\epsilon})$ , $|u|=O({\epsilon}^{2})$ , and $\delta\geq{\epsilon}$ . We refer to this quantity as the signal size : it measures the magnitude of the deterministic terms involving $u$ before multiplication by $\zeta/\varpi$ . These terms contain the information needed to recover the correction $-\nabla u$ in $\nabla P=\nabla A-\nabla u$ .
+
+The hyperobjective is $\Phi_{\delta}(x)=A(x)+y_{\delta}^{\star}(x)$ , where
+
+$y_{\delta}^{\star}+u(x)\cos(y_{\delta}^{\star}/\delta)=0,\qquad|y_{\delta}^{\star}|\leq|u(x)|.$
+
+Since $|u|/\delta=O({\epsilon})$ , the lower solution is close to $-u$ . Implicit differentiation gives the corresponding gradient estimate. The following proposition verifies that the bilevel construction satisfies Assumption 2.1 and that its hyperobjective remains close to the hard minimization objective $P$ .
+
+For each pair in Proposition 4.1 , every ${\epsilon}\leq\delta\leq 1$ , and sufficiently small ${\epsilon}$ , the family ( 25 ) satisfies Assumption 2.1 with uniformly bounded constants, has $\Phi_{\delta}(0)-\inf\Phi_{\delta}\leq 1$ and $|y_{\delta}^{\star}(0)|\leq 1$ , and obeys
+
+$\sup_{x}\|\nabla\Phi_{\delta}(x)-\nabla P(x)\|\leq C_{\rm lift}{\epsilon}^{5}/\delta^{2}\leq C_{\rm lift}{\epsilon}^{3}$ (27)
+
+for a numerical $C_{\rm lift}>0$ . The oracle ( 26 ) is conditionally unbiased, has joint variance at most $C_{\rm lift}\delta^{2}{\epsilon}^{2}/\varpi$ , and is simulated by one call to $\mathcal{R}_{\varpi}$ .
+
+Appendix B.5 proves the proposition. Choosing $\varpi_{\delta}=\Theta(\delta^{2}{\epsilon}^{2})$ keeps the primitive variance at most one. On the event $\|\nabla P\|\geq 2{\epsilon}$ , the gradient estimate gives $\|\nabla\Phi_{\delta}\|\geq 3{\epsilon}/2$ for small enough ${\epsilon}$ . The one-call simulation therefore transfers Proposition 4.1 to the bilevel objective, giving
+
+$\Omega(T/\varpi_{\delta})=\Omega({\epsilon}^{-4}\delta^{-2})$ (28)
+
+primitive calls. The intuition is that the sinusoidal lower-level construction attenuates the primitive signal while preserving the relevant hypergradient information, allowing the same variance budget to support a smaller reveal probability.
+
+4.3 Lower bound and minimax complexity
+
+Decreasing $\delta$ increases the higher-order smoothness constants of $g$ with respect to the lower variable. For the construction in ( 25 ), the order- $p$ smoothness constants in Assumption 2.2 are bounded by $C{\epsilon}\delta^{-p}$ for $\ell=x$ and $C{\epsilon}^{2}\delta^{-(p+1)}$ for $\ell=y$ , where $C$ is a numerical constant independent of $p$ . Choosing $\delta={\epsilon}^{1/p}$ keeps these quantities, as well as the base regularity constants, uniformly bounded. Substituting this choice into ( 28 ) yields the exponent $4+2/p$ .
+
+For $M\geq 1$ , let $\mathcal{P}_{p}(M)$ be the class of problem–oracle pairs satisfying Assumptions 2.1 – 2.3 , in arbitrary finite dimensions, with
+
+$\displaystyle\max\{\ell_{f},\ell_{g},\rho_{1},L_{p},B_{f},\sigma,\mu^{-1}\}\leq M,$ (29) $\displaystyle\Phi(0)-\Phi_{\inf}\leq 1,\qquad\|y^{\star}(0)\|\leq 1.$ (30)
+
+Queries and the final output may be arbitrary measurable functions of past oracle responses and the algorithm’s internal randomness.
+
+There exist numerical constants $M_{0}\geq 1$ , $c>0$ , and ${\epsilon}_{0}>0$ such that the following holds for every integer $p\geq 1$ and $0<{\epsilon}<{\epsilon}_{0}$ . For any adaptive randomized algorithm using at most $c{\epsilon}^{-4-2/p}$ primitive oracle calls, there is a pair in $\mathcal{P}_{p}(M_{0})$ on which its output satisfies
+
+$\mathbb{E}\|\nabla\Phi(x_{\rm out})\|^{2}>{\epsilon}^{2}.$ (31)
+
+Appendix B.6 gives the proof. The hard instances have $d_{y}=1$ and can be constructed with $d_{x}=O({\epsilon}^{-6-2/p}\log(1/{\epsilon}))$ . Theorem 4.3 shows that the upper bound in Theorem 3.1 is tight in its dependence on ${\epsilon}$ for every fixed finite $p$ and fixed problem constants.
+
+AI use statement
+
+We used OpenAI GPT-5.5 to assist with literature search and reference checking, manuscript drafting and revision, and selected mathematical computations and proof checking. The algorithmic design and the main convergence proof were developed by the authors; GPT-5.5 was used to help verify intermediate calculations, and improve the presentation. The initial lower-bound construction emerged through iterative discussions between the authors and GPT-5.5. The authors subsequently simplified the argument, reorganized the proof, and developed the current comparison-oracle and bilevel-lifting framework. The authors take full responsibility for the final manuscript, including all mathematical claims, proofs, references, and interpretations.
+
+References
+
+Appendix A Proof of Theorem 3.1
+
+This appendix proves the guarantee for Algorithm 1 with a common difference radius and batch size. We first collect constants, then establish regularity, control the three updates, and sum a Lyapunov inequality. Throughout, Assumptions 2.1 – 2.3 hold, and the initial points $x_{0},y_{0}$ are fixed with $z_{0}=0$ .
+
+A.1 Constants and parameter choices
+
+Write $L=\ell_{g}$ and use $\Phi_{\inf}=\inf_{x}\Phi(x)$ , as in Section 3.3 . Define the geometry constants
+
+$q_{0}:=\frac{B_{f}}{\mu},\quad L_{y}:=\frac{L}{\mu},\quad B:=\ell_{f}+\rho_{1}q_{0},\quad L_{z}:=\frac{(1+L_{y})B}{\mu},\quad L_{\Phi}:=(1+L_{y})B+LL_{z}.$ (32)
+
+The projection radius is $R_{z}=4q_{0}$ , as in Section 2 . The chosen nodes and weights define finite constants
+
+$A_{p}:=\sum_{j\in\mathcal{I}_{p}}a_{j}^{2},\qquad C_{p}:=\frac{1}{(p+1)!}\sum_{j\in\mathcal{I}_{p}}|a_{j}|\,|j|^{p+1}.$ (33)
+
+For the lower and auxiliary steps, set
+
+$\eta:=\frac{1}{2L},\qquad r:=\mu\eta,\qquad\omega:=1+\frac{36B^{2}}{\mu^{2}},\qquad\rho:=\frac{r}{4}.$ (34)
+
+The remaining constants used in the proof are
+
+$\displaystyle{C_{\rm a}}$ $\displaystyle:=3\left(1+\frac{3L}{\mu}\right),$ $\displaystyle C$ $\displaystyle:=3L^{2}+\frac{B^{2}{C_{\rm a}}}{\omega},$ $\displaystyle D$ $\displaystyle:=\frac{3}{r}\left(L_{z}^{2}+\omega L_{y}^{2}\right),$ (35) $\displaystyle N_{\rm b}$ $\displaystyle:=\frac{9\eta}{\mu},$ $\displaystyle N_{\rm v}$ $\displaystyle:=\frac{3}{2}(1+\omega)\eta^{2}.$ (36)
+
+All step-size denominators below are positive. In particular, strong convexity and gradient Lipschitzness imply $0<\mu\leq L$ , and $0<r\leq 1/2$ . Choose
+
+$\eta_{y}=\eta_{z}=\eta,\qquad\eta_{x}=\alpha:=\min\left\{\frac{1}{2L_{\Phi}},\sqrt{\frac{\rho}{16CD}}\right\},\qquad\lambda:=\frac{2\alpha C}{\rho}.$ (37)
+
+Define the error and accuracy constants
+
+$\displaystyle S_{\rm b}$ $\displaystyle:={C_{\rm a}}+\frac{2CN_{\rm b}}{\rho},$ $\displaystyle S_{\rm v}$ $\displaystyle:=2+\frac{2CN_{\rm v}}{\rho},$ (38) $\displaystyle C_{\rm b}$ $\displaystyle:=4S_{\rm b}(C_{p}L_{p}R_{z})^{2},$ $\displaystyle C_{\rm v}$ $\displaystyle:=4S_{\rm v}\sigma^{2}(1+A_{p}R_{z}^{2}).$ (39)
+
+For the constant in Theorem 3.1 , take
+
+$C_{\star}:=\max\left\{1,\frac{4}{\alpha}\max\{1,\lambda\omega\},C_{\rm b},C_{\rm v}\right\}.$
+
+These quantities depend only on the problem parameters and $p$ , not on ${\epsilon}$ , the batch size, or the iteration count.
+
+The errors below use the target at $x_{k}$ , including after the $z$ update:
+
+$\displaystyle\delta_{k}$ $\displaystyle:=y_{k}-y^{\star}(x_{k}),$ $\displaystyle e_{k}$ $\displaystyle:=z_{k}-z^{\star}(x_{k}),$ $\displaystyle\bar{e}_{k}$ $\displaystyle:=z_{k+1}-z^{\star}(x_{k}),$ (40) $\displaystyle T_{k}$ $\displaystyle:=\|e_{k}\|^{2}+\omega\|\delta_{k}\|^{2},$ $\displaystyle\mathcal{V}_{k}$ $\displaystyle:=\Phi(x_{k})-\Phi_{\inf}+\lambda T_{k}.$ (41)
+
+Since $z_{0}=0$ , we have $\|e_{0}\|\leq q_{0}$ . Using $\omega\geq 1$ and the initial bound in Section 3.3 ,
+
+$\displaystyle\mathcal{V}_{0}$ $\displaystyle\leq\max\{1,\lambda\omega\}\left(\Phi(x_{0})-\Phi_{\inf}+q_{0}^{2}+\|y_{0}-y^{\star}(x_{0})\|^{2}\right)$ (42) $\displaystyle\leq\max\{1,\lambda\omega\}\Delta_{0}.$
+
+An upper bound suffices; the algorithm does not need to query the exact lower solution or the objective value to implement the parameter rule.
+
+We will prove, for $0<\tau\leq 1$ and positive integers $m,K$ , that
+
+$\frac{1}{K}\sum_{k=0}^{K-1}\mathbb{E}\|\nabla\Phi(x_{k})\|^{2}\leq C_{\star}\left(\frac{\Delta_{0}}{K}+\tau^{2p}+\frac{1}{m\tau^{2}}\right).$ (43)
+
+A.2 Geometry and errors from the lower iterate
+
+Under Assumption 2.1 , the lower solution exists uniquely for every $x$ . Moreover,
+
+$\displaystyle\|y^{\star}(x)-y^{\star}(x^{\prime})\|$ $\displaystyle\leq L_{y}\|x-x^{\prime}\|,$ (44) $\displaystyle\|z(x,y)\|,\ \|z^{\star}(x)\|$ $\displaystyle\leq q_{0},$ (45) $\displaystyle\|z^{\star}(x)-z^{\star}(x^{\prime})\|$ $\displaystyle\leq L_{z}\|x-x^{\prime}\|.$ (46)
+
+The hypergradient identity ( 4 ) holds, and $\nabla\Phi$ is $L_{\Phi}$ -Lipschitz.
+
+Strong convexity gives a coercive quadratic lower bound for $g(x,\cdot)$ , so continuity gives existence and strong convexity gives uniqueness. The first-order condition is $\nabla_{y}g(x,y^{\star}(x))=0$ . For $a=y^{\star}(x)$ and $a^{\prime}=y^{\star}(x^{\prime})$ , strong monotonicity implies
+
+$\mu\|a-a^{\prime}\|^{2}\leq\langle\nabla_{y}g(x,a)-\nabla_{y}g(x,a^{\prime}),a-a^{\prime}\rangle.$
+
+Substitute the two first-order conditions and apply the Lipschitz bound in $x$ . The right-hand side is at most $L\|x-x^{\prime}\|\|a-a^{\prime}\|$ , proving ( 44 ), including the case $a=a^{\prime}$ .
+
+Differentiability of the Lipschitz gradient and lower strong convexity give
+
+$\mu I\preceq H(x,y)\preceq LI,\qquad\|J(x,y)\|_{\mathrm{op}}\leq L,\qquad\|H(x,y)^{-1}\|_{\mathrm{op}}\leq\mu^{-1}.$
+
+The bound on $\nabla_{y}f$ now proves ( 45 ). The derivatives of $(x,y)\mapsto\nabla_{y}g(x,y)$ are $J(x,y)^{\top}$ and $H(x,y)$ ; their continuity follows from the matrix Lipschitz bounds in Assumption 2.1 (iii). The implicit-function theorem therefore applies locally at each lower solution. Uniqueness makes these local solution maps agree. It follows that
+
+$D_{x}y^{\star}(x)=-H(x,y^{\star}(x))^{-1}J(x,y^{\star}(x))^{\top}.$
+
+The chain rule proves ( 4 ).
+
+For brevity in the remaining estimates, let $s=(x,y^{\star}(x))$ , $s^{\prime}=(x^{\prime},y^{\star}(x^{\prime}))$ , $q=z^{\star}(x)$ , and $q^{\prime}=z^{\star}(x^{\prime})$ . Subtracting the two auxiliary systems gives
+
+$H(s)(q-q^{\prime})=b(s)-b(s^{\prime})-[H(s)-H(s^{\prime})]q^{\prime}.$
+
+By Assumption 2.1 (iii), $\|H(s)-H(s^{\prime})\|_{\mathrm{op}}\leq\rho_{1}\|s-s^{\prime}\|$ . Use this bound, $\|q^{\prime}\|\leq q_{0}$ , $\|H(s)^{-1}\|_{\mathrm{op}}\leq\mu^{-1}$ , and
+
+$\|s-s^{\prime}\|\leq\|x-x^{\prime}\|+\|y^{\star}(x)-y^{\star}(x^{\prime})\|\leq(1+L_{y})\|x-x^{\prime}\|.$
+
+The resulting bound is $\|q-q^{\prime}\|\leq B(1+L_{y})\|x-x^{\prime}\|/\mu$ , proving ( 46 ).
+
+Finally, the difference of the hypergradients equals
+
+$\nabla_{x}f(s)-\nabla_{x}f(s^{\prime})-[J(s)-J(s^{\prime})]q^{\prime}-J(s)(q-q^{\prime}).$
+
+The first two terms have combined norm at most $B(1+L_{y})\|x-x^{\prime}\|$ , and the last term has norm at most $LL_{z}\|x-x^{\prime}\|$ . Their sum gives $L_{\Phi}$ . ∎
+
+For every $x,y,z$ , under Assumption 2.1 ,
+
+$\displaystyle\|H(x,y)z^{\star}(x)-b(x,y)\|$ $\displaystyle\leq B\|y-y^{\star}(x)\|,$ (47) $\displaystyle\|\nabla_{x}f(x,y)-J(x,y)z-\nabla\Phi(x)\|$ $\displaystyle\leq L\|z-z^{\star}(x)\|+B\|y-y^{\star}(x)\|.$ (48)
+
+Write $y^{\star}=y^{\star}(x)$ and $q=z^{\star}(x)$ . The identity $H(x,y^{\star})q=b(x,y^{\star})$ gives
+
+$H(x,y)q-b(x,y)=[H(x,y)-H(x,y^{\star})]q+b(x,y^{\star})-b(x,y).$
+
+The operator-norm Lipschitz bound on $H$ and $\|q\|\leq q_{0}$ give the bound $(\rho_{1}q_{0}+\ell_{f})\|y-y^{\star}\|$ , proving ( 47 ). For the second bound, subtract ( 4 ) to obtain
+
+$\displaystyle\nabla_{x}f(x,y)-J(x,y)z-\nabla\Phi(x)$ $\displaystyle\quad=\nabla_{x}f(x,y)-\nabla_{x}f(x,y^{\star})-[J(x,y)-J(x,y^{\star})]q-J(x,y)(z-q).$
+
+The three terms have norms bounded respectively by $\ell_{f}\|y-y^{\star}\|$ , $\rho_{1}q_{0}\|y-y^{\star}\|$ , and $L\|z-q\|$ . Their sum is ( 48 ). ∎
+
+A.3 Finite differences and conditional sampling
+
+The weights in ( 10 ) exist uniquely for every integer $p\geq 1$ . Under Assumptions 2.2 and 2.3 , the finite differences and their sampled estimates satisfy ( 13 )–( 14 ) with $C_{p},A_{p}$ from ( 33 ). More precisely, if $x,y,z$ are measurable with respect to a history $\mathcal{F}$ and the endpoint batches use fresh calls after that history, then, for $\ell\in\{x,y\}$ ,
+
+$\displaystyle\mathbb{E}[\widehat{\mathrm{FD}}_{\ell}(x,y;z)\mid\mathcal{F}]$ $\displaystyle=\mathrm{FD}_{\ell}(x,y;z),$ (49) $\displaystyle\|\mathrm{FD}_{\ell}(x,y;z)-\nabla^{2}_{\ell y}g(x,y)z\|$ $\displaystyle\leq C_{p}L_{p}\tau^{p}\|z\|,$ (50) $\displaystyle\mathbb{E}[\|\widehat{\mathrm{FD}}_{\ell}(x,y;z)-\mathrm{FD}_{\ell}(x,y;z)\|^{2}\mid\mathcal{F}]$ $\displaystyle\leq\frac{A_{p}\sigma^{2}\|z\|^{2}}{m\tau^{2}}.$ (51)
+
+These statements include $z=0$ .
+
+The set $\mathcal{I}_{p}$ has $p+1$ distinct nodes, including for $p=1$ . Let $l_{j}(t)$ be its Lagrange basis polynomials. Differentiating the interpolation identity for a polynomial of degree at most $p$ shows that $a_{j}=l_{j}^{\prime}(0)$ satisfies ( 10 ). The Vandermonde matrix of distinct nodes is invertible, giving uniqueness.
+
+Suppose first that $z\neq 0$ and condition on $\mathcal{F}$ . Write $u=z/\|z\|$ and $\varphi(t)=\nabla_{\ell}g(x,y+tu)$ . By Assumption 2.2 , $\nabla_{y}^{p}\nabla_{\ell}g(x,\cdot)$ is $L_{p}$ -Lipschitz. Since $\|u\|=1$ , the $p$ th derivative of $\varphi$ is also $L_{p}$ -Lipschitz. Taylor’s formula with an integral remainder gives, for every real $t$ ,
+
+$\displaystyle\varphi(t)$ $\displaystyle=\sum_{r=0}^{p}\frac{t^{r}}{r!}\varphi^{(r)}(0)+\mathcal{R}_{p}(t),$ $\displaystyle\mathcal{R}_{p}(t)$ $\displaystyle=\frac{t^{p}}{(p-1)!}\int_{0}^{1}(1-s)^{p-1}[\varphi^{(p)}(st)-\varphi^{(p)}(0)]\,ds.$
+
+In particular, including when $t<0$ ,
+
+$\|\mathcal{R}_{p}(t)\|\leq\frac{L_{p}|t|^{p+1}}{(p-1)!}\int_{0}^{1}s(1-s)^{p-1}\,ds=\frac{L_{p}|t|^{p+1}}{(p+1)!}.$
+
+Thus this argument does not require a $(p+1)$ st derivative. Insert the expansion at $t=j\tau$ into ( 11 ). All polynomial terms except the first derivative vanish by the moment identities. The retained term is $\|z\|\varphi^{\prime}(0)=\nabla^{2}_{\ell y}g(x,y)z$ . The remainder has norm at most
+
+$\frac{\|z\|}{\tau}\sum_{j}|a_{j}|\frac{L_{p}|j\tau|^{p+1}}{(p+1)!}=C_{p}L_{p}\tau^{p}\|z\|.$
+
+For each node $j$ , set $\nu_{j}:=\bar{G}_{\ell,j}(x,y+j\tau u)-\nabla_{\ell}g(x,y+j\tau u)$ . Every summand in ( 7 ) is nonnegative, so each block $\hat{G}_{\ell}(x,y)$ has conditional variance at most $\sigma^{2}$ . Averaging $m$ independent calls reduces this bound to $\sigma^{2}/m$ . Together with ( 6 ), this gives
+
+$\mathbb{E}[\nu_{j}\mid\mathcal{F}]=0,\qquad\mathbb{E}[\|\nu_{j}\|^{2}\mid\mathcal{F}]\leq\sigma^{2}/m,\qquad\mathbb{E}[\langle\nu_{i},\nu_{j}\rangle\mid\mathcal{F}]=0\quad(i\neq j).$
+
+The cross terms vanish because distinct nodes use distinct calls; no independence between blocks within a single call is required. Consequently,
+
+$\displaystyle\mathbb{E}[\|\widehat{\mathrm{FD}}_{\ell}-\mathrm{FD}_{\ell}\|^{2}\mid\mathcal{F}]$ $\displaystyle=\frac{\|z\|^{2}}{\tau^{2}}\sum_{j}a_{j}^{2}\mathbb{E}[\|\nu_{j}\|^{2}\mid\mathcal{F}]$ $\displaystyle\leq\frac{A_{p}\sigma^{2}\|z\|^{2}}{m\tau^{2}},$
+
+and the same centered-noise representation proves ( 49 ). If $z=0$ , both differences and both exact matrix–vector products are zero by definition, so every assertion follows without endpoint calls. ∎
+
+We make the sampling convention for Algorithm 1 explicit. Each occurrence of a center or node average uses a separate batch of $m$ fresh calls, including when query locations coincide. The $z$ update is sampled first. After $z_{k+1}$ is computed, new batches are drawn for the $x$ update; a final fresh batch is then drawn for the $y$ update. All center batches are evaluated at $(x_{k},y_{k})$ , as in the algorithm. Thus the outer finite difference uses $z_{k+1}$ , whereas the auxiliary finite difference uses $z_{k}$ . At termination, the output index $R$ is drawn uniformly and independently of all oracle calls.
+
+Let $\mathcal{F}_{k}$ contain all calls before iteration $k$ , let $\mathcal{F}_{k}^{z}$ additionally contain the calls used to compute $z_{k+1}$ , and let $\mathcal{F}_{k}^{x}$ additionally contain those used to compute $x_{k+1}$ . The final lower-gradient batch completes $\mathcal{F}_{k+1}$ . Thus
+
+$\mathcal{F}_{k}\subseteq\mathcal{F}_{k}^{z}\subseteq\mathcal{F}_{k}^{x}\subseteq\mathcal{F}_{k+1}.$
+
+In particular, $\mathbb{P}(R=j\mid\mathcal{F}_{K})=1/K$ for $j=0,\ldots,K-1$ . Write $\mathbb{E}_{k}[\cdot]=\mathbb{E}[\cdot\mid\mathcal{F}_{k}]$ and introduce the uniform error bounds
+
+$\beta:=C_{p}L_{p}R_{z}\tau^{p},\qquad v:=\frac{\sigma^{2}}{m}\left(1+\frac{A_{p}R_{z}^{2}}{\tau^{2}}\right),\qquad v_{y}:=\frac{\sigma^{2}}{m}\leq v.$ (52)
+
+Put $H_{k}=H(x_{k},y_{k})$ , $J_{k}=J(x_{k},y_{k})$ , and $b_{k}=b(x_{k},y_{k})$ . The sampled directions in Algorithm 1 can be written as
+
+$\displaystyle\hat{r}_{k}$ $\displaystyle:=\widehat{\mathrm{FD}}_{y}(x_{k},y_{k};z_{k})-\bar{F}_{y,k}=H_{k}z_{k}-b_{k}+d_{k}^{z}+\xi_{k}^{z},$ (53) $\displaystyle\hat{h}_{k}$ $\displaystyle=\nabla_{x}f(x_{k},y_{k})-J_{k}z_{k+1}+d_{k}^{x}+\xi_{k}^{x},$ (54) $\displaystyle\bar{G}_{y,k}$ $\displaystyle=\nabla_{y}g(x_{k},y_{k})+\xi_{k}^{y}.$ (55)
+
+Here $d_{k}^{z}$ is $\mathcal{F}_{k}$ -measurable, $d_{k}^{x}$ is $\mathcal{F}_{k}^{z}$ -measurable, and $\|d_{k}^{z}\|,\|d_{k}^{x}\|\leq\beta$ . The noises satisfy
+
+$\displaystyle\mathbb{E}[\xi_{k}^{z}\mid\mathcal{F}_{k}]$ $\displaystyle=0,$ $\displaystyle\mathbb{E}[\|\xi_{k}^{z}\|^{2}\mid\mathcal{F}_{k}]$ $\displaystyle\leq v,$ (56) $\displaystyle\mathbb{E}[\xi_{k}^{x}\mid\mathcal{F}_{k}^{z}]$ $\displaystyle=0,$ $\displaystyle\mathbb{E}[\|\xi_{k}^{x}\|^{2}\mid\mathcal{F}_{k}^{z}]$ $\displaystyle\leq v,$ (57) $\displaystyle\mathbb{E}[\xi_{k}^{y}\mid\mathcal{F}_{k}^{x}]$ $\displaystyle=0,$ $\displaystyle\mathbb{E}[\|\xi_{k}^{y}\|^{2}\mid\mathcal{F}_{k}^{x}]$ $\displaystyle\leq v_{y}.$ (58)
+
+Every $z_{k}$ belongs to $Q$ , since $z_{0}=0$ and every auxiliary update is projected. Define
+
+$\displaystyle d_{k}^{z}$ $\displaystyle:=\mathrm{FD}_{y}(x_{k},y_{k};z_{k})-H_{k}z_{k},$ $\displaystyle d_{k}^{x}$ $\displaystyle:=J_{k}z_{k+1}-\mathrm{FD}_{x}(x_{k},y_{k};z_{k+1}).$
+
+Lemma A.3 gives their measurability and bounds. Notice the opposite signs: the outer direction subtracts its finite difference.
+
+For $\xi_{k}^{z}$ , subtract the finite differences and exact center gradients from their sampled counterparts in $\hat{r}_{k}$ . The center term $\bar{F}_{y,k}-b_{k}$ is conditionally centered with variance at most $\sigma^{2}/m$ by the $\hat{F}_{y}$ block of ( 6 )–( 7 ) and fresh batching. It uses a separate batch from the finite difference, so their conditional variances add, giving at most
+
+$\frac{A_{p}\sigma^{2}\|z_{k}\|^{2}}{m\tau^{2}}+\frac{\sigma^{2}}{m}\leq v.$
+
+For the outer direction, condition on $\mathcal{F}_{k}^{z}$ . Its input $z_{k+1}$ is now fixed and lies in $Q$ . Entirely new center and node batches give the same argument using the $\hat{F}_{x}$ block and $z_{k+1}$ in place of $z_{k}$ . Finally, $\bar{G}_{y,k}$ is drawn after $\mathcal{F}_{k}^{x}$ at the already selected point $(x_{k},y_{k})$ . The $\hat{G}_{y}$ block of ( 6 )–( 7 ) gives its conditional mean $\nabla_{y}g(x_{k},y_{k})$ and variance bound $v_{y}$ after averaging. These arguments also cover repeated query locations because their batches are distinct. ∎
+
+All expectations used below are finite. To see this without assuming bounded iterates, start with the fixed $x_{0},y_{0}$ . The gradients of $f$ and $g$ grow at most linearly by Assumption 2.1 (i), while the mean finite differences have norm at most $LR_{z}+\beta$ by Lemma A.3 . The noises above have uniformly bounded second moments. Since $z_{k}$ is bounded, induction through the three updates shows that $x_{k},y_{k}$ have finite second moments at every finite $k$ . Lemma A.1 then gives finite second moments for the tracking errors and the outer gradient. Finally, smoothness of $\Phi$ bounds $|\Phi(x)|$ by a constant times $1+\|x\|^{2}$ , so the objective and potential are integrable as well.
+
+A.4 One-step descent and tracking estimates
+
+With $\eta_{z}=\eta=1/(2L)$ , the auxiliary update satisfies
+
+$\mathbb{E}_{k}\|\bar{e}_{k}\|^{2}\leq(1-r)\|e_{k}\|^{2}+\frac{6\eta}{\mu}\bigl(B^{2}\|\delta_{k}\|^{2}+\beta^{2}\bigr)+\eta^{2}v.$ (59)
+
+The target in $\bar{e}_{k}$ is $z^{\star}(x_{k})$ , before the outer point moves.
+
+Set $q=z^{\star}(x_{k})$ and $w_{k}=H_{k}q-b_{k}+d_{k}^{z}$ . These are $\mathcal{F}_{k}$ -measurable, and Lemmas A.2 and A.4 give
+
+$\|w_{k}\|^{2}\leq 2B^{2}\|\delta_{k}\|^{2}+2\beta^{2}.$ (60)
+
+Because $q\in Q$ and Euclidean projection is nonexpansive,
+
+$\|\bar{e}_{k}\|^{2}\leq\|(I-\eta H_{k})e_{k}-\eta w_{k}-\eta\xi_{k}^{z}\|^{2}.$
+
+Take conditional expectation only after this inequality. The noise is centered before projection, so
+
+$\mathbb{E}_{k}\|\bar{e}_{k}\|^{2}\leq\|(I-\eta H_{k})e_{k}-\eta w_{k}\|^{2}+\eta^{2}v.$ (61)
+
+No unbiasedness property of the projected iterate is needed.
+
+The eigenvalues of $H_{k}$ lie in $[\mu,L]$ , and $\eta=1/(2L)$ implies $\|I-\eta H_{k}\|_{\mathrm{op}}\leq 1-r$ . Apply Young’s inequality $\|a+b\|^{2}\leq(1+s)\|a\|^{2}+(1+s^{-1})\|b\|^{2}$ with $s=r/2$ to the deterministic term in ( 61 ). Since $0<r\leq 1/2$ ,
+
+$(1+r/2)(1-r)^{2}\leq 1-r,\qquad 1+2/r\leq 3/r.$
+
+It follows that
+
+$\mathbb{E}_{k}\|\bar{e}_{k}\|^{2}\leq(1-r)\|e_{k}\|^{2}+\frac{3\eta^{2}}{r}\|w_{k}\|^{2}+\eta^{2}v.$
+
+Substitute ( 60 ) and use $r=\mu\eta$ to obtain ( 59 ). ∎
+
+Let $h_{k}=\nabla\Phi(x_{k})$ and $d_{k}=\mathbb{E}[\hat{h}_{k}\mid\mathcal{F}_{k}^{z}]-h_{k}$ . With the steps in ( 37 ),
+
+$\displaystyle\mathbb{E}_{k}\|d_{k}\|^{2}$ $\displaystyle\leq CT_{k}+{C_{\rm a}}\beta^{2}+\tfrac{3}{4}v,$ (62) $\displaystyle\mathbb{E}_{k}\|\hat{h}_{k}\|^{2}$ $\displaystyle\leq 2\|h_{k}\|^{2}+2CT_{k}+2{C_{\rm a}}\beta^{2}+\tfrac{5}{2}v,$ (63) $\displaystyle\mathbb{E}_{k}\Phi(x_{k+1})$ $\displaystyle\leq\Phi(x_{k})-\tfrac{\alpha}{2}\|h_{k}\|^{2}+\tfrac{\alpha C}{2}T_{k}+\tfrac{\alpha{C_{\rm a}}}{2}\beta^{2}+\tfrac{7\alpha}{8}v.$ (64)
+
+In particular, $\mathbb{E}_{k}\|x_{k+1}-x_{k}\|^{2}=\alpha^{2}\mathbb{E}_{k}\|\hat{h}_{k}\|^{2}$ .
+
+By Lemmas A.2 and A.4 ,
+
+$\|d_{k}\|\leq L\|\bar{e}_{k}\|+B\|\delta_{k}\|+\beta.$
+
+Squaring, taking $\mathbb{E}_{k}$ , and applying Lemma A.5 yields
+
+$\displaystyle\mathbb{E}_{k}\|d_{k}\|^{2}$ $\displaystyle\leq 3L^{2}\mathbb{E}_{k}\|\bar{e}_{k}\|^{2}+3B^{2}\|\delta_{k}\|^{2}+3\beta^{2}$ $\displaystyle\leq 3L^{2}\|e_{k}\|^{2}+3B^{2}\left(1+\frac{6L^{2}\eta}{\mu}\right)\|\delta_{k}\|^{2}+3\left(1+\frac{6L^{2}\eta}{\mu}\right)\beta^{2}+3L^{2}\eta^{2}v$ $\displaystyle=3L^{2}\|e_{k}\|^{2}+B^{2}{C_{\rm a}}\|\delta_{k}\|^{2}+{C_{\rm a}}\beta^{2}+\tfrac{3}{4}v.$
+
+The last equality uses $\eta=1/(2L)$ and the definition of ${C_{\rm a}}$ . By definition of $C$ and $T_{k}$ , $3L^{2}\|e_{k}\|^{2}+B^{2}{C_{\rm a}}\|\delta_{k}\|^{2}\leq CT_{k}$ . This proves ( 62 ).
+
+Conditional on $\mathcal{F}_{k}^{z}$ , the mean of $\hat{h}_{k}$ is $h_{k}+d_{k}$ and its centered second moment is at most $v$ . Therefore
+
+$\mathbb{E}[\|\hat{h}_{k}\|^{2}\mid\mathcal{F}_{k}^{z}]\leq\|h_{k}+d_{k}\|^{2}+v\leq 2\|h_{k}\|^{2}+2\|d_{k}\|^{2}+v.$
+
+Taking $\mathbb{E}_{k}$ and using ( 62 ) proves ( 63 ).
+
+By $L_{\Phi}$ -smoothness and the outer update,
+
+$\displaystyle\mathbb{E}[\Phi(x_{k+1})\mid\mathcal{F}_{k}^{z}]\leq\Phi(x_{k})-\alpha\langle h_{k},h_{k}+d_{k}\rangle+\frac{L_{\Phi}\alpha^{2}}{2}\bigl(\|h_{k}+d_{k}\|^{2}+v\bigr).$
+
+The exact identity
+
+$-\langle h,h+d\rangle=-\tfrac{1}{2}\|h\|^{2}-\tfrac{1}{2}\|h+d\|^{2}+\tfrac{1}{2}\|d\|^{2}$
+
+and $\alpha L_{\Phi}\leq 1$ give
+
+$\mathbb{E}[\Phi(x_{k+1})\mid\mathcal{F}_{k}^{z}]\leq\Phi(x_{k})-\frac{\alpha}{2}\|h_{k}\|^{2}+\frac{\alpha}{2}\|d_{k}\|^{2}+\frac{L_{\Phi}\alpha^{2}}{2}v.$
+
+Take $\mathbb{E}_{k}$ , insert ( 62 ), and bound $L_{\Phi}\alpha^{2}/2\leq\alpha/2$ . The variance coefficient becomes $3\alpha/8+\alpha/2=7\alpha/8$ , which proves ( 64 ). The movement identity follows directly from $x_{k+1}-x_{k}=-\alpha\hat{h}_{k}$ . ∎
+
+With the steps in ( 37 ), the two tracking errors satisfy
+
+$\displaystyle\mathbb{E}_{k}\|e_{k+1}\|^{2}$ $\displaystyle\leq(1-r/2)\|e_{k}\|^{2}+\frac{9\eta B^{2}}{\mu}\|\delta_{k}\|^{2}+\frac{9\eta}{\mu}\beta^{2}+\frac{3}{2}\eta^{2}v+\frac{3L_{z}^{2}}{r}\mathbb{E}_{k}\|x_{k+1}-x_{k}\|^{2},$ (65) $\displaystyle\mathbb{E}_{k}\|\delta_{k+1}\|^{2}$ $\displaystyle\leq(1-r/2)\|\delta_{k}\|^{2}+\frac{3}{2}\eta^{2}v_{y}+\frac{3L_{y}^{2}}{r}\mathbb{E}_{k}\|x_{k+1}-x_{k}\|^{2}.$ (66)
+
+Consequently, with $T_{k}$ from ( 41 ),
+
+$\mathbb{E}_{k}T_{k+1}\leq(1-\rho)T_{k}+N_{\rm b}\beta^{2}+N_{\rm v}v+D\mathbb{E}_{k}\|x_{k+1}-x_{k}\|^{2}.$ (67)
+
+For the auxiliary target, the exact decomposition is
+
+$e_{k+1}=\bar{e}_{k}-[z^{\star}(x_{k+1})-z^{\star}(x_{k})].$
+
+Apply Young’s inequality with $s=r/2$ and use the $L_{z}$ -Lipschitz bound:
+
+$\mathbb{E}_{k}\|e_{k+1}\|^{2}\leq(1+r/2)\mathbb{E}_{k}\|\bar{e}_{k}\|^{2}+\frac{3L_{z}^{2}}{r}\mathbb{E}_{k}\|x_{k+1}-x_{k}\|^{2}.$
+
+Insert ( 59 ) and use $(1+r/2)(1-r)\leq 1-r/2$ and $1+r/2\leq 3/2$ . This gives ( 65 ); no independence between $\bar{e}_{k}$ and the target movement was used.
+
+For the lower variable, write $y_{k}^{\star}=y^{\star}(x_{k})$ and define
+
+$\widetilde{\delta}_{k}:=\delta_{k}-\eta\nabla_{y}g(x_{k},y_{k}).$
+
+By the fundamental theorem of calculus and $\nabla_{y}g(x_{k},y_{k}^{\star})=0$ ,
+
+$\nabla_{y}g(x_{k},y_{k})=\bar{H}_{k}\delta_{k},\qquad\bar{H}_{k}:=\int_{0}^{1}H(x_{k},y_{k}^{\star}+t\delta_{k})\,dt.$
+
+The symmetric matrix $\bar{H}_{k}$ has eigenvalues in $[\mu,L]$ . Thus $\|\widetilde{\delta}_{k}\|\leq(1-r)\|\delta_{k}\|$ . Put $\Delta_{k}^{y}=y^{\star}(x_{k+1})-y^{\star}(x_{k})$ . The lower update gives $\delta_{k+1}=\widetilde{\delta}_{k}-\Delta_{k}^{y}-\eta\xi_{k}^{y}$ . Both $\widetilde{\delta}_{k}$ and $\Delta_{k}^{y}$ are $\mathcal{F}_{k}^{x}$ -measurable. Centering the final fresh noise at this history therefore yields
+
+$\mathbb{E}_{k}\|\delta_{k+1}\|^{2}\leq\mathbb{E}_{k}\|\widetilde{\delta}_{k}-\Delta_{k}^{y}\|^{2}+\eta^{2}v_{y}.$
+
+Young’s inequality with $s=r/2$ and the $L_{y}$ -Lipschitz bound imply
+
+$\mathbb{E}_{k}\|\delta_{k+1}\|^{2}\leq(1+r/2)(1-r)^{2}\|\delta_{k}\|^{2}+\frac{3L_{y}^{2}}{r}\mathbb{E}_{k}\|x_{k+1}-x_{k}\|^{2}+\eta^{2}v_{y}.$
+
+Relaxing $(1+r/2)(1-r)^{2}\leq 1-r\leq 1-r/2$ and $\eta^{2}v_{y}\leq(3/2)\eta^{2}v_{y}$ proves ( 66 ).
+
+Finally, multiply ( 66 ) by $\omega$ and add ( 65 ). The only coupling term is absorbed because
+
+$\frac{\omega r}{4}=\frac{r}{4}+\frac{9\eta B^{2}}{\mu}\geq\frac{9\eta B^{2}}{\mu}.$
+
+The coefficient of $\|\delta_{k}\|^{2}$ is therefore at most $\omega(1-r/4)$ , and that of $\|e_{k}\|^{2}$ is at most $1-r/4$ . Use $v_{y}\leq v$ and the definitions of $\rho,N_{\rm b},N_{\rm v},D$ to obtain ( 67 ). ∎
+
+A.5 Lyapunov descent
+
+Under Assumptions 2.1 – 2.3 and the step choices ( 37 ), for every $\tau>0$ and positive integer $m$ ,
+
+$\mathbb{E}_{k}\mathcal{V}_{k+1}\leq\mathcal{V}_{k}-\frac{\alpha}{4}\|\nabla\Phi(x_{k})\|^{2}-\alpha CT_{k}+\alpha S_{\rm b}\beta^{2}+\alpha S_{\rm v}v.$ (68)
+
+All constants are given in Appendix A.1 ; in particular, the step sizes do not depend on the target accuracy.
+
+Add ( 64 ) to $\lambda$ times ( 67 ), and subtract $\Phi(x_{k})+\lambda T_{k}$ . This gives
+
+$\displaystyle\mathbb{E}_{k}\mathcal{V}_{k+1}-\mathcal{V}_{k}\leq{}$ $\displaystyle-\frac{\alpha}{2}\|h_{k}\|^{2}+\left(\frac{\alpha C}{2}-\lambda\rho\right)T_{k}+\lambda D\mathbb{E}_{k}\|x_{k+1}-x_{k}\|^{2}$ $\displaystyle+\left(\frac{\alpha{C_{\rm a}}}{2}+\lambda N_{\rm b}\right)\beta^{2}+\left(\frac{7\alpha}{8}+\lambda N_{\rm v}\right)v.$
+
+Use the movement identity and ( 63 ) to bound the third term by
+
+$\lambda D\alpha^{2}\left(2\|h_{k}\|^{2}+2CT_{k}+2{C_{\rm a}}\beta^{2}+\tfrac{5}{2}v\right).$
+
+For an explicit check of every coefficient, put $\chi=CD\alpha^{2}/\rho$ . Our choice of $\alpha$ implies $0<\chi\leq 1/16$ , and $\lambda=2\alpha C/\rho$ . Substitution yields
+
+$\displaystyle\mathbb{E}_{k}\mathcal{V}_{k+1}-\mathcal{V}_{k}\leq{}$ $\displaystyle\alpha\left(-\tfrac{1}{2}+4\chi\right)\|h_{k}\|^{2}+\alpha C\left(-\tfrac{3}{2}+4\chi\right)T_{k}$ $\displaystyle+\alpha\left[{C_{\rm a}}\left(\tfrac{1}{2}+4\chi\right)+\frac{2CN_{\rm b}}{\rho}\right]\beta^{2}$ $\displaystyle+\alpha\left[\tfrac{7}{8}+5\chi+\frac{2CN_{\rm v}}{\rho}\right]v.$
+
+The four numerical coefficients obey
+
+$-\tfrac{1}{2}+4\chi\leq-\tfrac{1}{4},\quad-\tfrac{3}{2}+4\chi\leq-\tfrac{5}{4}\leq-1,\quad\tfrac{1}{2}+4\chi\leq\tfrac{3}{4}\leq 1,\quad\tfrac{7}{8}+5\chi\leq\tfrac{19}{16}\leq 2.$
+
+The definitions of $S_{\rm b}$ and $S_{\rm v}$ now give ( 68 ). ∎
+
+A.6 Finite-time bound and query complexity
+
+Take total expectations in ( 68 ), discard the nonpositive $-\alpha CT_{k}$ term, and sum from $k=0$ to $K-1$ . Since $\mathcal{V}_{K}\geq 0$ , this gives
+
+$\frac{\alpha}{4}\sum_{k=0}^{K-1}\mathbb{E}\|\nabla\Phi(x_{k})\|^{2}\leq\mathcal{V}_{0}+K\alpha S_{\rm b}\beta^{2}+K\alpha S_{\rm v}v.$
+
+After division by $\alpha K/4$ and substitution of ( 52 ),
+
+$\displaystyle\frac{1}{K}\sum_{k=0}^{K-1}\mathbb{E}\|\nabla\Phi(x_{k})\|^{2}$ $\displaystyle\leq\frac{4\mathcal{V}_{0}}{\alpha K}+4S_{\rm b}(C_{p}L_{p}R_{z})^{2}\tau^{2p}+\frac{4S_{\rm v}\sigma^{2}}{m}\left(1+\frac{A_{p}R_{z}^{2}}{\tau^{2}}\right)$ $\displaystyle\leq\frac{4\mathcal{V}_{0}}{\alpha K}+C_{\rm b}\tau^{2p}+\frac{C_{\rm v}}{m\tau^{2}}$ $\displaystyle\leq C_{\star}\left(\frac{\Delta_{0}}{K}+\tau^{2p}+\frac{1}{m\tau^{2}}\right).$
+
+The second inequality uses $\tau\leq 1$ , and the last follows from ( 42 ) and the definition of $C_{\star}$ . The output rule gives
+
+$\mathbb{E}\!\left[\|\nabla\Phi(x_{R})\|^{2}\mid\mathcal{F}_{K}\right]=\frac{1}{K}\sum_{k=0}^{K-1}\|\nabla\Phi(x_{k})\|^{2}.$
+
+Taking total expectations proves the finite-time output bound ( 18 ) for every $0<\tau\leq 1$ and all positive integers $m,K$ .
+
+Now use the parameters in ( 17 ). They satisfy $0<\tau\leq 1$ and
+
+$\displaystyle\frac{C_{\star}\Delta_{0}}{K}$ $\displaystyle\leq\frac{\Delta_{0}}{3(1+\Delta_{0})}{\epsilon}^{2}\leq\frac{{\epsilon}^{2}}{3},$ $\displaystyle C_{\star}\tau^{2p}$ $\displaystyle=\frac{{\epsilon}^{2}}{3},$ $\displaystyle\frac{C_{\star}}{m\tau^{2}}$ $\displaystyle\leq\frac{{\epsilon}^{2}}{3}.$
+
+The conditions $C_{\star}\geq 1$ and $1+\Delta_{0}>0$ also cover zero variance, zero finite-difference bias, or zero initial gap. Adding the three bounds yields $\mathbb{E}\|\nabla\Phi(x_{R})\|^{2}\leq{\epsilon}^{2}$ .
+
+It remains to count primitive queries. For fixed $p$ , problem parameters, and $\Delta_{0}$ , the definitions give
+
+$\tau^{-2}=(3C_{\star})^{1/p}{\epsilon}^{-2/p},\qquad m=\mathcal{O}_{p}({\epsilon}^{-2-2/p}),\qquad K=\mathcal{O}_{p}({\epsilon}^{-2}).$
+
+Ceilings preserve these bounds for $0<{\epsilon}\leq 1$ . Each of the two finite differences uses at most $(p+1)m$ calls, and the three center batches use $3m$ more. No samples are shared between these groups. The total number is therefore at most $(2p+5)mK=\mathcal{O}_{p}({\epsilon}^{-4-2/p})$ . At $p=1$ and $p=2$ the exponents are respectively $6$ and $5$ . ∎
+
+The constants are not optimized in the condition number or uniformly over $p$ . Section 4 combines this guarantee with a matching lower bound for the same function class and oracle.
+
+Appendix B Proof of Theorem 4.3
+
+We construct $(A,u)$ in Sections B.1 – B.2 and prove the comparison-oracle bound in Sections B.3 – B.4 . Lemma B.16 then gives the ordinary first-order benchmark. Section B.5 verifies the bilevel construction, and Section B.6 combines its oracle simulation and gradient estimate with the same comparison bound.
+
+For a scalar function $h$ , $\|h\|_{\infty}:=\sup_{w}|h(w)|$ ; for a vector $v$ , $\|v\|_{\infty}:=\max_{j}|v_{j}|$ . Unsubscripted vector norms are Euclidean. The seed $\xi_{0}$ includes all private randomness of the algorithm and is independent of the instance and oracle randomness. The transcript $\mathcal{T}_{N}$ contains the first $N$ queries and their responses. All conditional laws are taken on standard Borel spaces.
+
+B.1 The chain and its decomposition
+
+B.1.1 The Carmon–Arjevani chain
+
+For $v\in\mathbb{R}^{T}$ and $\alpha\geq 0$ , define
+
+$\operatorname{prog}_{\alpha}(v):=\max\bigl(\{0\}\cup\{j\in[T]:|v_{j}|>\alpha\}\bigr).$
+
+Let $v_{0}:=1$ , and define
+
+$\Psi(t):=\begin{cases}0,&t\leq\frac{1}{2},\\[2.84526pt] \displaystyle\exp\!\left(1-\frac{1}{(2t-1)^{2}}\right),&t>\frac{1}{2},\end{cases}$
+
+and
+
+$\varphi(t):=\sqrt{e}\int_{-\infty}^{t}e^{-s^{2}/2}\,ds.$
+
+For $i\in[T]$ , put
+
+$\psi_{i}(v):=\Psi(-v_{i-1})\varphi(-v_{i})-\Psi(v_{i-1})\varphi(v_{i}),$ (69)
+
+and
+
+$C_{T}(v):=\sum_{i=1}^{T}\psi_{i}(v).$ (70)
+
+The convention $v_{0}=1$ makes $\psi_{1}(v)=-\Psi(1)\varphi(v_{1})$ .
+
+We use the following standard properties of this chain. The constants below are numerical and their precise values are immaterial for our scaling.
+
+There exist numerical constants $\Delta_{\rm c},L_{0},G_{\infty}>0$ such that, for every $T$ :
+
+$C_{T}(0)-\inf_{v}C_{T}(v)\leq\Delta_{\rm c}T$ ;
+
+$\nabla C_{T}$ is $L_{0}$ -Lipschitz;
+
+$\left\lVert\nabla C_{T}(v)\right\rVert_{\infty}\leq G_{\infty}$ for all $v$ ;
+
+$\operatorname{prog}_{0}(\nabla C_{T}(v))\leq\operatorname{prog}_{1/2}(v)+1$ ;
+
+if $k:=\operatorname{prog}_{1}(v)<T$ , then
+
+$\left|\partial_{k+1}C_{T}(v)\right|\geq 1,$ (71)
+
+and hence $\left\lVert\nabla C_{T}(v)\right\rVert\geq 1$ .
+
+One may take $\Delta_{\rm c}=12$ , $L_{0}=152$ , and $G_{\infty}=23$ .
+
+B.1.2 A smooth decomposition for the gradient oracle
+
+The decomposition $C_{T}=B_{T}-W_{T}$ separates the part of the gradient that may expose the next coordinate. We define its deterministic weights below; randomness enters through ( 77 ).
+
+Fix once and for all a nondecreasing function $\Gamma\in C^{\infty}(\mathbb{R};[0,1])$ such that
+
+$\Gamma(t)=0\quad(t\leq 1/4),\qquad\Gamma(t)=1\quad(t\geq 1/2).$ (72)
+
+Set
+
+$\gamma(t):=\Gamma(|t|).$
+
+This is smooth because it vanishes on a neighborhood of the origin. For $i\in[T]$ , define
+
+$r_{i}(v):=\left(\sum_{j=i}^{T}\gamma(v_{j})^{2}\right)^{1/2},\qquad\Theta_{i}(v):=\Gamma(1-r_{i}(v)).$ (73)
+
+The deterministic weight $\Theta_{i}$ equals one when the entire tail $v_{\geq i}$ is below the $1/4$ progress threshold, and it equals zero once that tail contains a coordinate of magnitude at least $1/2$ .
+
+Define the quiet base and frontier correction by
+
+$B_{T}(v):=\sum_{i=1}^{T}\psi_{i}(v)(1-\Theta_{i}(v)),$ (74)
+
+$W_{T}(v):=-\sum_{i=1}^{T}\psi_{i}(v)\Theta_{i}(v).$ (75)
+
+Then, identically,
+
+$C_{T}=B_{T}-W_{T}.$ (76)
+
+Equivalently, for any $\varpi\in(0,1]$ , if $\zeta\sim\mathrm{Bernoulli}(\varpi)$ , the random scalar function
+
+$h_{T}(v;\zeta):=B_{T}(v)-\frac{\zeta}{\varpi}W_{T}(v)$ (77)
+
+satisfies $\mathbb{E}h_{T}(v;\zeta)=C_{T}(v)$ . This is the stochastic function construction of Arjevani et al. (2023) , written as a deterministic base and a randomly retained correction.
+
+For $k\in\{0,\ldots,T\}$ , let $P_{k}$ denote the orthogonal projection onto $\operatorname{span}\{e_{1},\ldots,e_{k}\}$ , with $P_{0}=0$ and $P_{T+1}=I_{T}$ . For a $C^{2}$ scalar function $h$ , write
+
+$\mathcal{J}_{v}^{2}h:=\bigl(h(v),\nabla h(v),\nabla^{2}h(v)\bigr).$
+
+There exist numerical constants $C_{W,0},C_{W,1},C_{W,2},L_{B}<\infty$ , independent of $T$ , such that:
+
+(a) Uniform correction bounds.
+
+$\left\lVert W_{T}\right\rVert_{\infty}\leq C_{W,0},\qquad\sup_{v}\left\lVert\nabla W_{T}(v)\right\rVert\leq C_{W,1},\qquad\sup_{v}\left\lVert\nabla^{2}W_{T}(v)\right\rVert_{\mathrm{op}}\leq C_{W,2},$ (78)
+
+and
+
+$\sup_{v}\left\lVert\nabla^{2}B_{T}(v)\right\rVert_{\mathrm{op}}\leq L_{B}.$ (79)
+
+(b) Single-frontier jet identity. If $r=\operatorname{prog}_{1/2}(v)$ , then, with $\psi_{T+1}\equiv\Theta_{T+1}\equiv 0$ ,
+
+$\mathcal{J}_{v}^{2}W_{T}=-\mathcal{J}_{v}^{2}\bigl(\psi_{r+1}\Theta_{r+1}\bigr).$ (80)
+
+Thus the complete second-order jet of $W_{T}$ is contributed by at most one chain summand.
+
+(c) Quiet-base truncation. If $k=\operatorname{prog}_{1/4}(v)$ , then
+
+$\displaystyle B_{T}(v)$ $\displaystyle=B_{T}(P_{k}v),$ (81) $\displaystyle\nabla B_{T}(v)$ $\displaystyle=P_{k}\nabla B_{T}(P_{k}v),$ (82) $\displaystyle\nabla^{2}B_{T}(v)$ $\displaystyle=P_{k}\nabla^{2}B_{T}(P_{k}v)P_{k}.$ (83)
+
+In particular,
+
+$\operatorname{supp}\nabla B_{T}(v)\subseteq\{1,\ldots,k\}.$ (84)
+
+(d) One-step correction truncation. For the same $k$ , the following identities hold; when $k=T$ , they are understood with the convention $P_{T+1}=I_{T}$ and are tautological:
+
+$\displaystyle W_{T}(v)$ $\displaystyle=W_{T}(P_{k+1}v),$ (85) $\displaystyle\nabla W_{T}(v)$ $\displaystyle=P_{k+1}\nabla W_{T}(P_{k+1}v),$ (86) $\displaystyle\nabla^{2}W_{T}(v)$ $\displaystyle=P_{k+1}\nabla^{2}W_{T}(P_{k+1}v)P_{k+1}.$ (87)
+
+Consequently,
+
+$\operatorname{supp}\nabla W_{T}(v)\subseteq\{1,\ldots,\min\{k+1,T\}\}.$ (88)
+
+(e) Removal of the next-coordinate term from the base. If $k<T$ , then
+
+$\Theta_{k+1}(v)=1,\qquad\nabla\Theta_{k+1}(v)=0,\qquad\nabla^{2}\Theta_{k+1}(v)=0,$ (89)
+
+and hence
+
+$\mathcal{J}_{v}^{2}\bigl(\psi_{k+1}(1-\Theta_{k+1})\bigr)=0.$ (90)
+
+We divide the proof into four steps.
+
+Step 1: dimension-free derivative bounds for the weights.
+
+Let
+
+${C_{\Gamma,1}}:=\left\lVert\Gamma^{\prime}\right\rVert_{\infty},\qquad{C_{\Gamma,2}}:=\left\lVert\Gamma^{\prime\prime}\right\rVert_{\infty}.$
+
+Fix $i$ and set $w_{j}(v):=\gamma(v_{j})$ for $j=i,\ldots,T$ . Write
+
+$w(v):=(w_{i}(v),\ldots,w_{T}(v)),\qquad r(v):=\left\lVert w(v)\right\rVert_{2}.$
+
+Then $\Theta_{i}(v)=\Gamma(1-r(v))$ . The composition is smooth at $r=0$ because it is constant whenever $r\leq 1/2$ . Its first and second derivatives vanish for $r\leq 1/2$ and for $r\geq 3/4$ ; at the two endpoints this follows from the smooth flatness of $\Gamma$ , rather than from a two-sided neighborhood of constancy. Therefore derivatives can be nonzero only on
+
+$\frac{1}{2}<r<\frac{3}{4}.$ (91)
+
+On this region,
+
+$\nabla r=Dw(v)^{\top}\frac{w(v)}{r},\qquad\left\lVert\nabla r\right\rVert\leq{C_{\Gamma,1}}.$
+
+Moreover,
+
+$\nabla^{2}r=\frac{1}{r}Dw(v)^{\top}\left(I-\frac{w(v)w(v)^{\top}}{r^{2}}\right)Dw(v)+\sum_{j=i}^{T}\frac{w_{j}(v)}{r}\nabla^{2}w_{j}(v).$
+
+The first term has operator norm at most $2{C_{\Gamma,1}}^{2}$ by ( 91 ). The second term is diagonal, and its operator norm is at most ${C_{\Gamma,2}}$ . Hence
+
+$\left\lVert\nabla r\right\rVert\leq{C_{\Gamma,1}},\qquad\left\lVert\nabla^{2}r\right\rVert_{\mathrm{op}}\leq 2{C_{\Gamma,1}}^{2}+{C_{\Gamma,2}}$ (92)
+
+uniformly in $T$ and $i$ on the only region where the derivatives of $\Theta_{i}$ can be nonzero. The chain rule gives numerical constants $C_{\Theta,1},C_{\Theta,2}$ such that
+
+$\sup_{T,i,v}\left\lVert\nabla\Theta_{i}(v)\right\rVert\leq C_{\Theta,1},\qquad\sup_{T,i,v}\left\lVert\nabla^{2}\Theta_{i}(v)\right\rVert_{\mathrm{op}}\leq C_{\Theta,2}.$ (93)
+
+Step 2: only one product has a nonzero second-order jet.
+
+Fix $v$ and let $r=\operatorname{prog}_{1/2}(v)$ . If $i\leq r$ , the tail $v_{\geq i}$ contains $v_{r}$ with $|v_{r}|>1/2$ . Thus $\gamma(v_{r})=1$ , so $r_{i}(v)\geq 1$ and $1-r_{i}(v)\leq 0$ . Since $\Gamma$ is identically zero on $(-\infty,1/4]$ ,
+
+$\mathcal{J}_{v}^{2}\Theta_{i}=0\qquad(i\leq r).$ (94)
+
+If $i\geq r+2$ , then $|v_{i-1}|\leq 1/2$ . Both $v_{i-1}$ and $-v_{i-1}$ lie in the flat-zero region of $\Psi$ , and therefore
+
+$\mathcal{J}_{v}^{2}\psi_{i}=0\qquad(i\geq r+2).$ (95)
+
+Combining ( 94 ) and ( 95 ), every summand of $W_{T}$ has zero second-order jet except possibly the one indexed by $r+1$ . This proves ( 80 ).
+
+Step 3: uniform bounds.
+
+Each $\psi_{i}$ is a translate of a fixed two-coordinate smooth template. Hence there are numerical constants $C_{\psi,0},C_{\psi,1},C_{\psi,2}$ such that
+
+$|\psi_{i}(v)|\leq C_{\psi,0},\qquad\left\lVert\nabla\psi_{i}(v)\right\rVert\leq C_{\psi,1},\qquad\left\lVert\nabla^{2}\psi_{i}(v)\right\rVert_{\mathrm{op}}\leq C_{\psi,2}$
+
+uniformly in $T,i,v$ . By the single-frontier identity,
+
+$|W_{T}(v)|\leq C_{\psi,0},$
+
+$\left\lVert\nabla W_{T}(v)\right\rVert\leq C_{\psi,1}+C_{\psi,0}C_{\Theta,1},$
+
+and
+
+$\left\lVert\nabla^{2}W_{T}(v)\right\rVert_{\mathrm{op}}\leq C_{\psi,2}+2C_{\psi,1}C_{\Theta,1}+C_{\psi,0}C_{\Theta,2}.$
+
+This proves ( 78 ). Since $B_{T}=C_{T}+W_{T}$ and Lemma B.1 gives a dimension-free Hessian bound for $C_{T}$ , ( 79 ) follows.
+
+Step 4: the truncation identities.
+
+Let $k=\operatorname{prog}_{1/4}(v)$ . For every $j>k$ , $|v_{j}|\leq 1/4$ , and flatness of $\Gamma$ gives
+
+$\gamma(v_{j})=\gamma^{\prime}(v_{j})=\gamma^{\prime\prime}(v_{j})=0.$ (96)
+
+For $i\leq k$ , the summand $\psi_{i}$ uses only $v_{i-1},v_{i}$ , and all dependence of $\Theta_{i}$ on coordinates after $k$ has zero second-order jet by ( 96 ). If $k<T$ , then $r_{k+1}(v)=0$ , hence $\Theta_{k+1}(v)=\Gamma(1)=1$ with zero first and second derivatives. This proves ( 89 )–( 90 ). For $i\geq k+2$ , the predecessor satisfies $|v_{i-1}|\leq 1/4<1/2$ , so $\mathcal{J}_{v}^{2}\psi_{i}=0$ . If $k=T$ , there are no indices after $k$ and the truncation identities are immediate. Thus, in every case, the value, gradient, and Hessian of $B_{T}$ are unchanged when all coordinates after $k$ are set to zero, proving ( 81 )–( 83 ).
+
+For $W_{T}$ , if $k<T$ , the only potentially active product has index $r+1$ , where $r=\operatorname{prog}_{1/2}(v)\leq k$ , and its chain summand depends on at most coordinates $r,r+1$ . The projection $P_{k+1}$ deletes only coordinates $j>k+1$ , all of which satisfy ( 96 ); in particular it leaves the frontier index $r=\operatorname{prog}_{1/2}(v)$ unchanged. On every deleted coordinate, $\gamma,\gamma^{\prime}$ , and $\gamma^{\prime\prime}$ vanish, so evaluating at $P_{k+1}v$ selects the same frontier product and preserves its complete second-order jet. When $k=T$ , the claimed identities are tautological under $P_{T+1}=I_{T}$ . This proves ( 85 )–( 87 ). ∎
+
+For any $\varpi\in(0,1]$ , let $\zeta\sim\mathrm{Bernoulli}(\varpi)$ and define
+
+$a^{(1)}(v,\zeta):=\nabla B_{T}(v),\qquad a^{(2)}(v,\zeta):=\frac{\zeta}{\varpi}\nabla W_{T}(v).$
+
+Then, simultaneously for every $v$ ,
+
+$\max_{\ell\in\{1,2\}}\operatorname{prog}_{0}(a^{(\ell)}(v,\zeta))\leq\operatorname{prog}_{1/4}(v)+1,$
+
+and on the event $\{\zeta=0\}$ ,
+
+$\max_{\ell\in\{1,2\}}\operatorname{prog}_{0}(a^{(\ell)}(v,\zeta))\leq\operatorname{prog}_{1/4}(v).$
+
+The exceptional event is independent of $v$ and has probability $\varpi$ .
+
+B.2 Construction and scaling of the smooth pair
+
+For $R>0$ , define the soft projection
+
+$\rho_{R}(w):=\frac{w}{\sqrt{1+\left\lVert w\right\rVert^{2}/R^{2}}},$ (97)
+
+and let $J_{R}(w)=D\rho_{R}(w)$ . We use the standard choices
+
+$R:=230\sqrt{T},\qquad{\eta_{\rm r}}:=\frac{1}{5}.$ (98)
+
+Let $\operatorname{Ortho}(d,T):=\{U\in\mathbb{R}^{d\times T}:U^{\top}U=I_{T}\}$ . For $U\in\operatorname{Ortho}(d,T)$ , define
+
+$\displaystyle{C_{U}^{\rm c}}(w)$ $\displaystyle:=C_{T}(U^{\top}\rho_{R}(w))+\frac{\eta_{\rm r}}{2}\left\lVert w\right\rVert^{2},$ (99) $\displaystyle{B_{U}^{\rm c}}(w)$ $\displaystyle:=B_{T}(U^{\top}\rho_{R}(w))+\frac{\eta_{\rm r}}{2}\left\lVert w\right\rVert^{2},$ (100) $\displaystyle{W_{U}^{\rm c}}(w)$ $\displaystyle:=W_{T}(U^{\top}\rho_{R}(w)).$ (101)
+
+Then
+
+${C_{U}^{\rm c}}={B_{U}^{\rm c}}-{W_{U}^{\rm c}}.$ (102)
+
+There is a numerical constant $L_{\rm hc}$ such that, uniformly over $T,d,U$ :
+
+${C_{U}^{\rm c}}(0)-\inf_{w}{C_{U}^{\rm c}}(w)\leq\Delta_{\rm c}T$ ;
+
+$\nabla{C_{U}^{\rm c}}$ is $L_{\rm hc}$ -Lipschitz;
+
+if
+
+$\operatorname{prog}_{1/4}(U^{\top}\rho_{R}(w))<T,$ (103)
+
+then
+
+$\left\lVert\nabla{C_{U}^{\rm c}}(w)\right\rVert\geq\frac{1}{2};$ (104)
+
+$\left\lVert J_{R}(w)\right\rVert_{\mathrm{op}}\leq 1$ and
+
+$\left\lVert J_{R}(w)-J_{R}(w^{\prime})\right\rVert_{\mathrm{op}}\leq\frac{3}{R}\left\lVert w-w^{\prime}\right\rVert.$ (105)
+
+One may take $L_{\rm hc}=155$ .
+
+The compression estimates in Lemma 15 of Arjevani et al. (2023) give (iv) and show that $\rho_{R}$ is $1$ -Lipschitz. The nonnegative quadratic term vanishes at zero, so (i) follows from Lemma B.1 . For (ii), the chain rule gives the gradient Lipschitz bound
+
+$L_{0}+\frac{3G_{\infty}\sqrt{T}}{R}+{\eta_{\rm r}}=152+\frac{3}{10}+\frac{1}{5}<155.$
+
+It remains to prove (iii). Put
+
+$v:=\rho_{R}(w),\qquad h:=U^{\top}v,\qquad{v_{g}}:=U\nabla C_{T}(h),\qquad c:=\sqrt{1+\left\lVert w\right\rVert^{2}/R^{2}}.$
+
+Then $w=cv$ , $\left\lVert v_{g}\right\rVert\leq G_{\infty}\sqrt{T}=23\sqrt{T}$ , and
+
+$\nabla{C_{U}^{\rm c}}(w)=\frac{I-vv^{\top}/R^{2}}{c}\,{v_{g}}+{\eta_{\rm r}}w.$ (106)
+
+First suppose $\left\lVert w\right\rVert\leq R/2$ . Condition ( 103 ) implies $k:=\operatorname{prog}_{1}(h)<T$ . Set $j:=k+1$ . Then $|h_{j}|\leq 1$ , while Lemma B.1 gives $|\left\langle u_{j},{v_{g}}\right\rangle|=|\partial_{j}C_{T}(h)|\geq 1$ . Since $c\leq\sqrt{5}/2$ and $\left\lVert v\right\rVert\leq R/2$ , equation ( 106 ) yields
+
+$\displaystyle\left\lVert\nabla{C_{U}^{\rm c}}(w)\right\rVert$ $\displaystyle\geq\left|\left\langle u_{j},\nabla{C_{U}^{\rm c}}(w)\right\rangle\right|$ $\displaystyle\geq\frac{1}{c}-\frac{|h_{j}|\,|\left\langle v,v_{g}\right\rangle|}{R^{2}c}-{\eta_{\rm r}}c|h_{j}|$ $\displaystyle\geq\frac{2}{\sqrt{5}}-\frac{23\sqrt{T}}{2R}-\frac{{\eta_{\rm r}}\sqrt{5}}{2}$ $\displaystyle=\frac{2}{\sqrt{5}}-\frac{1}{20}-\frac{\sqrt{5}}{10}>\frac{1}{2},$
+
+where the equality uses $R=230\sqrt{T}$ and ${\eta_{\rm r}}=1/5$ .
+
+Now suppose $\left\lVert w\right\rVert>R/2$ . Lemma 15 of Arjevani et al. (2023) gives $\left\lVert J_{R}(w)\right\rVert_{\mathrm{op}}\leq c^{-1}\leq 2/\sqrt{5}$ , so
+
+$\displaystyle\left\lVert\nabla{C_{U}^{\rm c}}(w)\right\rVert$ $\displaystyle\geq{\eta_{\rm r}}\left\lVert w\right\rVert-\left\lVert J_{R}(w)\right\rVert_{\mathrm{op}}\left\lVert v_{g}\right\rVert$ $\displaystyle>\frac{R}{10}-\frac{46}{\sqrt{5}}\sqrt{T}$ $\displaystyle=\left(23-\frac{46}{\sqrt{5}}\right)\sqrt{T}>\frac{1}{2}.$
+
+This proves ( 104 ). The numerical smoothness constant $L_{\rm hc}=155$ is the corresponding bound obtained from the same compression estimates. ∎
+
+There are numerical constants ${C_{W,0}^{\rm c}},{C_{W,1}^{\rm c}},{C_{W,2}^{\rm c}}$ such that, uniformly in $T,d,U$ ,
+
+$\left\lVert{W_{U}^{\rm c}}\right\rVert_{\infty}\leq{C_{W,0}^{\rm c}},\qquad\sup_{w}\left\lVert\nabla{W_{U}^{\rm c}}(w)\right\rVert\leq{C_{W,1}^{\rm c}},$ (107)
+
+$\sup_{w}\left\lVert\nabla^{2}{W_{U}^{\rm c}}(w)\right\rVert_{\mathrm{op}}\leq{C_{W,2}^{\rm c}}.$ (108)
+
+Consequently, $\nabla{B_{U}^{\rm c}}$ is $(L_{\rm hc}+{C_{W,2}^{\rm c}})$ -Lipschitz.
+
+The value bound follows from Lemma B.2 . By the chain rule,
+
+$\nabla{W_{U}^{\rm c}}(w)=J_{R}(w)^{\top}U\nabla W_{T}(U^{\top}\rho_{R}(w)),$
+
+so the gradient bound follows from $\left\lVert J_{R}(w)\right\rVert_{\mathrm{op}}\leq 1$ . For $w,w^{\prime}$ , use Lemma B.2 , the $1$ -Lipschitzness of $\rho_{R}$ , and ( 105 ) to obtain
+
+$\displaystyle\left\lVert\nabla{W_{U}^{\rm c}}(w)-\nabla{W_{U}^{\rm c}}(w^{\prime})\right\rVert$ $\displaystyle\quad\leq\frac{3C_{W,1}}{R}\left\lVert w-w^{\prime}\right\rVert+C_{W,2}\left\lVert w-w^{\prime}\right\rVert.$
+
+Since $R\geq 1$ for $T\geq 1$ , this gives a numerical Hessian bound. Finally, ${B_{U}^{\rm c}}={C_{U}^{\rm c}}+{W_{U}^{\rm c}}$ . ∎
+
+Set
+
+$\ell_{\star}:=L_{\rm hc}+{C_{W,2}^{\rm c}}+1.$ (109)
+
+For sufficiently small ${\epsilon}$ , choose
+
+$T:=\left\lfloor c_{T}{\epsilon}^{-2}\right\rfloor,\qquad c_{T}:=\frac{1}{64\Delta_{\rm c}\ell_{\star}},$ (110)
+
+so $T\geq 4$ . Define
+
+${\lambda_{\rm lb}}:=4\ell_{\star}{\epsilon},\qquad a:=\frac{{\lambda_{\rm lb}}^{2}}{\ell_{\star}}=16\ell_{\star}{\epsilon}^{2}.$ (111)
+
+Define the base, correction, and nonconvex objective by
+
+$\displaystyle{A_{U}}(x)$ $\displaystyle:=a{B_{U}^{\rm c}}(x/{\lambda_{\rm lb}}),$ (112) $\displaystyle u_{U}(x)$ $\displaystyle:=a{W_{U}^{\rm c}}(x/{\lambda_{\rm lb}}),$ (113) $\displaystyle P_{U}(x)$ $\displaystyle:={A_{U}}(x)-u_{U}(x)=a{C_{U}^{\rm c}}(x/{\lambda_{\rm lb}}).$ (114)
+
+There are numerical constants $C_{u,0},C_{u,1},C_{u,2}$ such that, uniformly in $U,T,{\epsilon}$ ,
+
+$\left\lVert u_{U}\right\rVert_{\infty}\leq C_{u,0}{\epsilon}^{2},\qquad\sup_{x}\left\lVert\nabla u_{U}(x)\right\rVert\leq C_{u,1}{\epsilon},\qquad\sup_{x}\left\lVert\nabla^{2}u_{U}(x)\right\rVert_{\mathrm{op}}\leq C_{u,2}.$ (115)
+
+Moreover,
+
+$\sup_{x}\left\lVert\nabla^{2}{A_{U}}(x)\right\rVert_{\mathrm{op}}\leq 1,$ (116)
+
+$P_{U}(0)-\inf_{x}P_{U}(x)\leq\frac{1}{4},$ (117)
+
+and
+
+$\operatorname{prog}_{1/4}\!\left(U^{\top}\rho_{R}(x/{\lambda_{\rm lb}})\right)<T\quad\Longrightarrow\quad\left\lVert\nabla P_{U}(x)\right\rVert\geq 2{\epsilon}.$ (118)
+
+The three correction scales follow from Lemma B.5 and
+
+$a=16\ell_{\star}{\epsilon}^{2},\qquad\frac{a}{\lambda_{\rm lb}}=4{\epsilon},\qquad\frac{a}{{\lambda_{\rm lb}}^{2}}=\frac{1}{\ell_{\star}}.$
+
+The same identities and the definition of $\ell_{\star}$ give ( 116 ). By Lemma B.4 and ( 110 ),
+
+$P_{U}(0)-\inf P_{U}\leq a\Delta_{\rm c}T\leq 16\ell_{\star}{\epsilon}^{2}\Delta_{\rm c}c_{T}{\epsilon}^{-2}=\frac{1}{4}.$
+
+Finally,
+
+$\nabla P_{U}(x)=\frac{a}{\lambda_{\rm lb}}\nabla{C_{U}^{\rm c}}(x/{\lambda_{\rm lb}})=4{\epsilon}\nabla{C_{U}^{\rm c}}(x/{\lambda_{\rm lb}}),$
+
+and ( 118 ) follows from Lemma B.4 . ∎
+
+B.3 Finite-channel random rotation
+
+The comparison oracle returns two ambient vectors and a scalar. We prove a random-rotation bound that permits these separate channels, including the scalar information, and applies to arbitrary adaptive queries and final outputs.
+
+Fix $\varpi\in[0,1]$ . Let $\mathcal{Y},\Xi,\mathcal{S}$ be standard Borel spaces, let $\xi\sim\nu$ , and let
+
+$s:\mathbb{R}^{T}\times\mathcal{Y}\times\Xi\to\mathcal{S},$
+
+$a^{(\ell)}:\mathbb{R}^{T}\times\mathcal{Y}\times\Xi\to\mathbb{R}^{T},\qquad\ell\in[m],$
+
+be Borel maps. We call $(s,a^{(1)},\ldots,a^{(m)})$ a uniform finite-channel probability- $\varpi$ zero-chain if there is a measurable event $E\subseteq\Xi$ with $\nu(E)\leq\varpi$ such that, for every $(v,y,\xi)$ ,
+
+$\max_{\ell\in[m]}\operatorname{prog}_{0}(a^{(\ell)}(v,y,\xi))\leq\operatorname{prog}_{1/4}(v)+1,$ (119)
+
+and, whenever $\xi\notin E$ ,
+
+$\max_{\ell\in[m]}\operatorname{prog}_{0}(a^{(\ell)}(v,y,\xi))\leq\operatorname{prog}_{1/4}(v).$ (120)
+
+The map $s$ collects all non-ambient channels. It may depend on the hidden rotation only through the latent query $v$ .
+
+For $U\in\operatorname{Ortho}(d,T)$ , define the canonical rotated response
+
+$\widetilde{\mathcal{O}}_{U}(x,y;\xi):=\left(s(U^{\top}x,y,\xi),Ua^{(1)}(U^{\top}x,y,\xi),\ldots,Ua^{(m)}(U^{\top}x,y,\xi)\right).$ (121)
+
+Fix integers $n,T\geq 1$ , orthonormal vectors $u_{1},\ldots,u_{T}\in\mathbb{R}^{d}$ , and vectors $x_{1},\ldots,x_{n}\in\mathbb{R}^{d}$ with $\left\lVert x_{i}\right\rVert\leq R$ . For $i\in\{0,\ldots,n\}$ and $j\in\{0,\ldots,T\}$ , let
+
+$\mathsf{S}_{j}^{(i)}:=\operatorname{span}\{u_{1},\ldots,u_{j},x_{1},\ldots,x_{i}\},$
+
+let $P_{j}^{(i)}$ be the orthogonal projection onto $(\mathsf{S}_{j}^{(i)})^{\perp}$ , and put $\Pi_{j}^{(i)}:=I-P_{j}^{(i)}$ . For $i\in[n]$ and $j\in[T]$ , define
+
+$\mathcal{G}_{j}^{(i)}:=\left\{\left\lVert\Pi_{j-1}^{(i)}P_{j-1}^{(i-1)}u_{j}\right\rVert<\frac{1}{4R\sqrt{n}}\right\}.$ (122)
+
+Then, for every $i\in[n]$ and $j\in[T]$ ,
+
+$\bigcap_{q=1}^{i}\mathcal{G}_{j}^{(q)}\quad\Longrightarrow\quad|\left\langle u_{j},x_{i}\right\rangle|\leq\frac{\left\lVert x_{i}\right\rVert}{4R}\sqrt{\frac{i}{n}}\leq\frac{1}{4}.$ (123)
+
+For fixed $j$ , the spaces $\mathsf{S}_{j-1}^{(q)}$ are nested in $q$ . Consequently,
+
+$\Pi_{j-1}^{(q-1)}+P_{j-1}^{(q-1)}\Pi_{j-1}^{(q)}P_{j-1}^{(q-1)}=\Pi_{j-1}^{(q)}.$
+
+Iterating this identity gives
+
+$\Pi_{j-1}^{(i)}=\sum_{r=1}^{j-1}u_{r}u_{r}^{\top}+\sum_{q=1}^{i}P_{j-1}^{(q-1)}\Pi_{j-1}^{(q)}P_{j-1}^{(q-1)}.$ (124)
+
+Since $x_{i}\in\mathsf{S}_{j-1}^{(i)}$ and $u_{j}\perp u_{r}$ for $r<j$ , ( 124 ) and Cauchy–Schwarz yield
+
+$\displaystyle|\left\langle u_{j},x_{i}\right\rangle|$ $\displaystyle\leq\left(\sum_{q=1}^{i}\left\lVert\Pi_{j-1}^{(q)}P_{j-1}^{(q-1)}u_{j}\right\rVert^{2}\right)^{1/2}$ $\displaystyle\qquad\times\left(\sum_{q=1}^{i}\left\lVert\Pi_{j-1}^{(q)}P_{j-1}^{(q-1)}x_{i}\right\rVert^{2}\right)^{1/2}.$ (125)
+
+On $\cap_{q=1}^{i}\mathcal{G}_{j}^{(q)}$ , the first squared factor is less than $i/(16R^{2}n)$ . Moreover, subtracting the first term on the right of ( 124 ) shows that
+
+$\sum_{q=1}^{i}P_{j-1}^{(q-1)}\Pi_{j-1}^{(q)}P_{j-1}^{(q-1)}\preceq I.$
+
+The second squared factor in ( 125 ) is therefore at most $\left\lVert x_{i}\right\rVert^{2}$ . This proves ( 123 ). ∎
+
+For the remaining geometric lemmas, fix an adaptive algorithm and a horizon $n$ . Assume that $U$ has the uniform invariant Stiefel distribution on $\operatorname{Ortho}(d,T)$ , independently of the algorithm seed and the i.i.d. oracle seeds, and write $U=[u_{1},\ldots,u_{T}]$ and
+
+$v_{i}:=U^{\top}x_{i},\qquad a_{i}^{(\ell)}:=a^{(\ell)}(v_{i},y_{i},\xi_{i}),$
+
+$\gamma_{i}:=\max_{\begin{subarray}{c}1\leq q\leq i\\ 1\leq\ell\leq m\end{subarray}}\operatorname{prog}_{0}(a_{q}^{(\ell)}),\qquad\gamma_{0}:=0.$
+
+Thus $\gamma_{i}$ is the largest hidden coordinate index appearing in a canonical vector response by call $i$ . It is a proof bookkeeping quantity; the algorithm need not identify the individual hidden basis vectors or observe $\gamma_{i}$ . For $i\in\{0,\ldots,n\}$ and $j\in\{0,\ldots,T\}$ , define
+
+$\mathcal{U}_{j}^{(i)}:=\sigma\!\left(\xi_{0},u_{1},\ldots,u_{j},v_{1},\xi_{1},\ldots,v_{i},\xi_{i}\right),$ (126)
+
+where the list after $u_{j}$ is empty for $i=0$ , and define
+
+$\mathcal{T}_{j}^{(i)}:=\{j>\gamma_{i}\}.$ (127)
+
+Crucially, $\mathcal{U}_{j-1}^{(i-1)}$ contains only the past latent queries $v_{1},\ldots,v_{i-1}$ ; it does not contain the current latent query $v_{i}$ . All conditional laws below are regular conditional laws, whose existence follows from the standard-Borel hypotheses.
+
+Let $\mathsf{C},\mathsf{X},\mathsf{Z}$ be standard Borel spaces, let $G$ be a compact second-countable group with normalized Haar probability $\lambda_{G}$ , and let
+
+$\tau:\mathsf{C}\times G\times\mathsf{X}\to\mathsf{X}$
+
+be a Borel map such that $g\mapsto\tau_{c,g}$ is a group action for every $c$ . Let $K(c,dx)$ be a Borel probability kernel satisfying
+
+$K(c,\tau_{c,g}^{-1}A)=K(c,A)\qquad(c\in\mathsf{C},\ g\in G)$ (128)
+
+for every Borel $A\subseteq\mathsf{X}$ . Suppose that the Borel observation $H:\mathsf{C}\times\mathsf{X}\to\mathsf{Z}$ is invariant:
+
+$H(c,\tau_{c,g}x)=H(c,x).$ (129)
+
+Then there is a Borel regular conditional kernel $L(c,v,dx)$ for $x$ given $v=H(c,x)$ under $K(c,dx)$ such that
+
+$L(c,v,\tau_{c,g}^{-1}A)=L(c,v,A)$ (130)
+
+for every $g\in G$ and for $H(c,\cdot)_{\#}K(c)$ -almost every $v$ .
+
+Let $L_{0}(c,v,dx)$ be any Borel disintegration of $K(c,dx)$ over the map $H(c,\cdot)$ , and define
+
+$L(c,v,A):=\int_{G}L_{0}(c,v,\tau_{c,g}^{-1}A)\,\lambda_{G}(dg).$ (131)
+
+This is a Borel kernel. If $M(c,dv):=H(c,\cdot)_{\#}K(c)$ , then for Borel $A\subseteq\mathsf{X}$ and $B\subseteq\mathsf{Z}$ ,
+
+$\displaystyle\int_{B}L(c,v,A)M(c,dv)$ $\displaystyle=\int_{G}K\bigl(c,\tau_{c,g}^{-1}A\cap H(c,\cdot)^{-1}B\bigr)\,\lambda_{G}(dg)$ $\displaystyle=\int_{G}K\bigl(c,\tau_{c,g}^{-1}(A\cap H(c,\cdot)^{-1}B)\bigr)\,\lambda_{G}(dg)$ $\displaystyle=K\bigl(c,A\cap H(c,\cdot)^{-1}B\bigr),$
+
+where the second line uses ( 129 ) and the third uses ( 128 ). Hence $L$ is a regular conditional kernel. Equation ( 130 ) follows directly from ( 131 ) and left/right invariance of Haar probability on the compact group $G$ . ∎
+
+Let $U=[u_{1},\ldots,u_{T}]$ have the uniform invariant Stiefel distribution on $\operatorname{Ortho}(d,T)$ , and let $\vartheta$ be an independent random element of a standard Borel space. Fix $j\in[T]$ and an integer $r\geq 0$ . Suppose that Borel maps $\chi_{q}$ define recursively
+
+$x_{q}=\chi_{q}(\vartheta,u_{1},\ldots,u_{j-1},v_{1},\ldots,v_{q-1}),\qquad v_{q}=U^{\top}x_{q},\qquad q\in[r].$ (132)
+
+Let
+
+$C_{q}:=(\vartheta,u_{1},\ldots,u_{j-1},v_{1},\ldots,v_{q}),$
+
+with $C_{0}=(\vartheta,u_{1},\ldots,u_{j-1})$ , and set
+
+$\mathsf{S}_{q}:=\operatorname{span}\{u_{1},\ldots,u_{j-1},x_{1},\ldots,x_{q}\}.$
+
+Regular conditional kernels $K_{q}(C_{q},dU)$ of $U$ given $C_{q}$ may be chosen so that, for almost every $C_{q}=c_{q}$ , the kernel is invariant under every orthogonal map fixing $\mathsf{S}_{q}(c_{q})$ pointwise:
+
+$K_{q}(c_{q},W^{-1}A)=K_{q}(c_{q},A)\quad\text{whenever }Ws=s\text{ for all }s\in\mathsf{S}_{q}(c_{q}).$ (133)
+
+We construct the kernels inductively. Conditional on $u_{1},\ldots,u_{j-1}$ , the remaining columns of a uniform Stiefel frame have the standard invariant-completion law. Explicitly, after choosing a Borel orthonormal frame $Q_{\perp}(u_{<j})$ for $\operatorname{span}(u_{1},\ldots,u_{j-1})^{\perp}$ , this law is the image of the uniform invariant probability measure on the Stiefel manifold $\operatorname{Ortho}(d-j+1,T-j+1)$ under
+
+$V\longmapsto[u_{1},\ldots,u_{j-1},Q_{\perp}(u_{<j})V].$
+
+It is invariant under every orthogonal map fixing $\mathsf{S}_{0}=\operatorname{span}\{u_{1},\ldots,u_{j-1}\}$ pointwise. Independence of $\vartheta$ gives the required kernel $K_{0}$ .
+
+Assume that $K_{q-1}$ has been chosen. Let $\mathsf{C}_{q-1}^{\rm good}$ be a Borel full-measure subset of the conditioning space on which the induction hypothesis holds. We first restrict the conditioning parameter and the kernel to this good set; only after constructing the next posterior there will we extend it arbitrarily over the null complement. Once $C_{q-1}=c_{q-1}\in\mathsf{C}_{q-1}^{\rm good}$ is fixed, the vector $x_{q}$ in ( 132 ) is fixed. Put
+
+$\mathsf{S}_{q}=\operatorname{span}(\mathsf{S}_{q-1},x_{q}).$
+
+On each stratum on which $\dim\mathsf{S}_{q}=s$ , choose a Borel orthogonal completion $Q_{\perp}(c_{q-1})$ of $\mathsf{S}_{q}$ . For $R\in O(d-s)$ define
+
+$W_{c_{q-1},R}:=P_{\mathsf{S}_{q}}+Q_{\perp}(c_{q-1})RQ_{\perp}(c_{q-1})^{\top}.$
+
+This is a Borel action of the fixed compact group $O(d-s)$ on the conditional Stiefel fiber. Because it fixes $\mathsf{S}_{q}$ pointwise, it belongs to the stabilizer from the induction hypothesis. Moreover, the new observation
+
+$H_{q}(c_{q-1},U):=U^{\top}x_{q}$
+
+is invariant under this action:
+
+$(W_{c_{q-1},R}U)^{\top}x_{q}=U^{\top}W_{c_{q-1},R}^{\top}x_{q}=U^{\top}x_{q}.$
+
+Apply Lemma B.9 , separately on each Borel rank stratum of $\mathsf{C}_{q-1}^{\rm good}$ , to disintegrate $K_{q-1}$ over $H_{q}$ . The finitely many resulting kernels paste into a Borel kernel on the good set; extend that kernel arbitrarily over the null complement. The resulting $K_{q}$ is a regular conditional law given $C_{q}$ and, for almost every $C_{q}$ , is invariant under the full pointwise stabilizer of $\mathsf{S}_{q}$ . This closes the induction. Every orthogonal transformation used in this argument is fixed only after $C_{q-1}$ has been conditioned upon; no state-dependent global change of variables is invoked. ∎
+
+Fix $i\in[n]$ and $j\in[T]$ . On the event $\mathcal{T}_{j}^{(i-1)}$ , the past transcript and the current query $(x_{i},y_{i})$ are measurable from $\mathcal{U}_{j-1}^{(i-1)}$ . In particular, $\mathcal{T}_{j}^{(i-1)}$ , the space
+
+$\mathsf{S}:=\operatorname{span}\{u_{1},\ldots,u_{j-1},x_{1},\ldots,x_{i-1}\},$
+
+and its orthogonal projector are measurable under this conditioning. There is an $\mathcal{U}_{j-1}^{(i-1)}$ -measurable radius $r_{i,j}\in[0,1]$ such that, outside a null event and on $\mathcal{T}_{j}^{(i-1)}$ ,
+
+$\mathcal{L}\!\left(P_{\mathsf{S}^{\perp}}u_{j}\,\middle|\,\mathcal{U}_{j-1}^{(i-1)}\right)=\begin{cases}\delta_{0},&r_{i,j}=0,\\[2.84526pt] \operatorname{Unif}\!\left(\{v\in\mathsf{S}^{\perp}:\left\lVert v\right\rVert=r_{i,j}\}\right),&r_{i,j}>0.\end{cases}$ (134)
+
+Moreover, $r_{i,j}=\left\lVert P_{\mathsf{S}^{\perp}}u_{j}\right\rVert$ almost surely. Thus normalization is used only on $\{r_{i,j}>0\}$ .
+
+We first construct globally Borel quiet-simulated queries. For fixed $u_{<j}:=(u_{1},\ldots,u_{j-1})$ , define the truncated canonical response
+
+$\displaystyle\overline{\mathcal{O}}_{<j}(v,y;\xi,u_{<j}):=\biggl($ $\displaystyle s(v,y,\xi),\sum_{r<j}[a^{(1)}(v,y,\xi)]_{r}u_{r},\ldots,\sum_{r<j}[a^{(m)}(v,y,\xi)]_{r}u_{r}\biggr).$ (135)
+
+Feed these responses recursively to the algorithm. Since all algorithm and oracle maps are Borel, there are Borel maps $\chi_{q}$ such that, for $\vartheta:=(\xi_{0},\xi_{1},\ldots,\xi_{i-1})$ ,
+
+$(\bar{x}_{q},\bar{y}_{q})=\chi_{q}(\vartheta,u_{<j},\bar{v}_{1},\ldots,\bar{v}_{q-1}),\qquad\bar{v}_{q}:=U^{\top}\bar{x}_{q},\qquad q\leq i.$ (136)
+
+For $q<i$ , let $\bar{\gamma}_{q}$ be the progress computed from the corresponding latent coefficients $a^{(\ell)}(\bar{v}_{q},\bar{y}_{q},\xi_{q})$ .
+
+A first-disagreement induction gives
+
+$\{j>\gamma_{i-1}\}=\{j>\bar{\gamma}_{i-1}\},\qquad(x_{q},y_{q},v_{q})=(\bar{x}_{q},\bar{y}_{q},\bar{v}_{q})\quad(q\leq i)$ (137)
+
+on this common event. For the first implication, suppose $j>\gamma_{i-1}$ . Then every actual latent coefficient before time $i$ is supported in $\{1,\ldots,j-1\}$ . Starting from the common first query, the actual ambient response therefore equals ( 135 ); induction gives equality of the two trajectories and hence $\bar{\gamma}_{i-1}=\gamma_{i-1}<j$ . The reverse implication is identical with the roles of the actual and quiet trajectories interchanged.
+
+For completeness, measurability from the actual conditioning tuple can be checked without referring to the random quiet trajectory. Given $(\xi_{0},u_{<j},v_{1},\xi_{1},\ldots,v_{i-1},\xi_{i-1})$ , recursively compute the query, the non-ambient channel, and the latent coefficients at each past round. If a coefficient first has support reaching $j$ , declare $\mathcal{T}_{j}^{(i-1)}$ false; while all coefficients remain supported below $j$ , every ambient response is computable from $u_{<j}$ and the recursion continues. The declaration is correct by induction and, on the true event, also reconstructs $(x_{i},y_{i})$ . Hence $\mathcal{T}_{j}^{(i-1)}$ and the current query are $\mathcal{U}_{j-1}^{(i-1)}$ -measurable.
+
+Apply Lemma B.10 to the quiet recursion ( 136 ), with $r=i-1$ . It yields a regular conditional kernel of $U$ given
+
+$(\vartheta,u_{1},\ldots,u_{j-1},\bar{v}_{1},\ldots,\bar{v}_{i-1}).$
+
+Transport this kernel through the fixed Borel coordinate reordering and write the conditioning tuple, in exactly the order used in ( 126 ), as
+
+$\bar{C}:=(\xi_{0},u_{1},\ldots,u_{j-1},\bar{v}_{1},\xi_{1},\ldots,\bar{v}_{i-1},\xi_{i-1}).$
+
+Denote the transported kernel by $\bar{K}(\bar{C},dU)$ . It is invariant under every orthogonal map fixing
+
+$\bar{\mathsf{S}}:=\operatorname{span}\{u_{1},\ldots,u_{j-1},\bar{x}_{1},\ldots,\bar{x}_{i-1}\}$
+
+pointwise. Let
+
+$C:=(\xi_{0},u_{1},\ldots,u_{j-1},v_{1},\xi_{1},\ldots,v_{i-1},\xi_{i-1}),$
+
+the tuple generating $\mathcal{U}_{j-1}^{(i-1)}$ . By ( 137 ), on $\mathcal{T}_{j}^{(i-1)}$ we now have the literal equality $\bar{C}=C$ , and $\bar{\mathsf{S}}=\mathsf{S}$ . Write $\bar{K}\phi(c):=\int\phi(U)\bar{K}(c,dU)$ . Because the events and the conditioning tuples agree in ( 137 ), for every bounded Borel $h$ and $\phi$ ,
+
+$\displaystyle\mathbb{E}\!\left[\mathbf{1}_{\mathcal{T}_{j}^{(i-1)}}h(C)\phi(U)\right]$ $\displaystyle=\mathbb{E}\!\left[\mathbf{1}_{\{j>\bar{\gamma}_{i-1}\}}h(\bar{C})\phi(U)\right]$ $\displaystyle=\mathbb{E}\!\left[\mathbf{1}_{\{j>\bar{\gamma}_{i-1}\}}h(\bar{C})\bar{K}\phi(\bar{C})\right]$ $\displaystyle=\mathbb{E}\!\left[\mathbf{1}_{\mathcal{T}_{j}^{(i-1)}}h(C)\bar{K}\phi(C)\right].$
+
+Thus $\bar{K}(C,\cdot)$ is a version of the actual conditional law on $\mathcal{T}_{j}^{(i-1)}$ . We have therefore obtained, by a sequential posterior-kernel induction, the conditional invariance of $U$ under the pointwise stabilizer of $\mathsf{S}$ . In particular, the conditional law of $u_{j}$ is invariant under that stabilizer.
+
+It remains to identify its orbit. The conditioning fixes all inner products of $u_{j}$ with the spanning vectors of $\mathsf{S}$ : they are zero against $u_{1},\ldots,u_{j-1}$ , and
+
+$\left\langle u_{j},x_{q}\right\rangle=[v_{q}]_{j},\qquad q<i.$
+
+These values determine $b:=P_{\mathsf{S}}u_{j}$ uniquely, even when the spanning vectors are linearly dependent. Since $\left\lVert u_{j}\right\rVert=1$ , they also determine the Borel radius
+
+$r_{i,j}:=\sqrt{1-\left\lVert b\right\rVert^{2}}=\left\lVert P_{\mathsf{S}^{\perp}}u_{j}\right\rVert.$
+
+The residual conditional law is supported on the radius- $r_{i,j}$ sphere in $\mathsf{S}^{\perp}$ and is invariant under its full orthogonal group. For $r_{i,j}>0$ , uniqueness of rotation-invariant spherical probability gives the second case of ( 134 ); for $r_{i,j}=0$ , the sphere is the singleton $\{0\}$ and the law is $\delta_{0}$ . ∎
+
+Use the projections and events $\mathcal{G}_{j}^{(i)}$ from Lemma B.8 , with the random query sequence $x_{1},\ldots,x_{n}$ . If $d>n+T$ , then, for every $i\in[n]$ and $j\in[T]$ ,
+
+$\mathbb{P}\left((\mathcal{G}_{j}^{(i)})^{c},\mathcal{T}_{j}^{(i-1)}\right)\leq 2\exp\!\left(-\frac{d-i-j}{32R^{2}n}\right)\leq 2\exp\!\left(-\frac{d-n-T}{32R^{2}n}\right).$ (138)
+
+Work on $\mathcal{T}_{j}^{(i-1)}$ and condition on $\mathcal{U}_{j-1}^{(i-1)}$ . Put
+
+$\mathsf{S}=\operatorname{span}\{u_{1},\ldots,u_{j-1},x_{1},\ldots,x_{i-1}\},\qquad P=P_{\mathsf{S}^{\perp}}=P_{j-1}^{(i-1)},$
+
+and let $r=r_{i,j}$ be the conditional radius from Lemma B.11 . If $r=0$ , then $Pu_{j}=0$ and hence
+
+$\Pi_{j-1}^{(i)}P_{j-1}^{(i-1)}u_{j}=0;$
+
+the conditional probability of the bad event is therefore zero.
+
+Suppose now that $r>0$ and define $\widehat{u}_{j}:=Pu_{j}/r$ . By Lemma B.11 , $\widehat{u}_{j}$ is uniform on the unit sphere of $\mathsf{S}^{\perp}$ . The current query $x_{i}$ is measurable under the conditioning, and the restriction of $\Pi_{j-1}^{(i)}$ to $\mathsf{S}^{\perp}$ has rank at most one: it is the projection onto the residual direction of $x_{i}$ modulo $\mathsf{S}$ . Since $r\leq 1$ ,
+
+$\displaystyle\mathbb{P}\left(\left\lVert\Pi_{j-1}^{(i)}P_{j-1}^{(i-1)}u_{j}\right\rVert\geq\frac{1}{4R\sqrt{n}}\ \middle|\ \mathcal{U}_{j-1}^{(i-1)}\right)$ $\displaystyle\qquad\leq\mathbb{P}\left(\left\lVert\Pi_{j-1}^{(i)}\widehat{u}_{j}\right\rVert\geq\frac{1}{4R\sqrt{n}}\ \middle|\ \mathcal{U}_{j-1}^{(i-1)}\right).$
+
+Let $d^{\prime}:=\dim(\mathsf{S}^{\perp})$ . Since $\dim\mathsf{S}\leq(i-1)+(j-1)$ , we may use the conservative lower bound $d^{\prime}\geq d-i-j$ . For a uniform vector $v$ on $\mathbb{S}^{d^{\prime}-1}$ , the standard spherical-coordinate estimate
+
+$\mathbb{P}(v_{1}^{2}\geq\alpha)\leq 2e^{-\alpha d^{\prime}/2}$
+
+gives the first inequality in ( 138 ) with $\alpha=(16R^{2}n)^{-1}$ . Averaging over the conditioning, including the $r=0$ fibers, proves the claim. ∎
+
+Let $U$ have the uniform invariant Stiefel distribution on $\operatorname{Ortho}(d,T)$ , independently of i.i.d. seeds $\xi_{1},\xi_{2},\ldots$ and the private randomness of an adaptive randomized algorithm. Suppose the algorithm makes queries $(x_{t},y_{t})$ satisfying $\left\lVert x_{t}\right\rVert\leq R$ almost surely and observes the canonical responses ( 121 ). Put
+
+$\pi_{N}:=\max_{1\leq t\leq N}\operatorname{prog}_{1/4}(U^{\top}x_{t}).$
+
+If the latent kernel is a uniform finite-channel probability- $\varpi$ zero-chain and $d>N+T$ , then
+
+$\mathbb{P}(\pi_{N}\geq T)\leq e^{2\varpi N-T}+2NT\exp\!\left(-\frac{d-N-T}{32R^{2}N}\right).$ (139)
+
+The bound does not depend on the finite number $m$ of vector channels.
+
+We separate rare progress from geometric guessing.
+
+Rare progress.
+
+For $t\in[N]$ , let
+
+$\mathcal{V}_{t}:=\{\operatorname{prog}_{1/4}(v_{t})\leq\gamma_{t-1}\}.$
+
+Use the filtration
+
+$\mathcal{H}_{t}:=\sigma(U,\xi_{0},\xi_{1},\ldots,\xi_{t}),\qquad\mathcal{H}_{0}:=\sigma(U,\xi_{0}).$ (140)
+
+Because the algorithm is deterministic after fixing $\xi_{0}$ , $U$ , and the past seeds, $(x_{t},y_{t})$ , $v_{t}$ , $\gamma_{t-1}$ , and $\mathcal{V}_{t}$ are $\mathcal{H}_{t-1}$ -measurable. On $\mathcal{V}_{t}$ , ( 119 ) gives $\gamma_{t}-\gamma_{t-1}\in\{0,1\}$ . If additionally $\xi_{t}\notin E$ , then ( 120 ) gives $\gamma_{t}=\gamma_{t-1}$ . Equivalently,
+
+$0\leq\gamma_{t}-\gamma_{t-1}\leq\mathbf{1}_{\{\xi_{t}\in E\}}\qquad\text{on }\mathcal{V}_{t}.$ (141)
+
+For the Bernoulli constructions, the right side is $\zeta_{t}$ . Thus an open gate is necessary for progress on $\mathcal{V}_{t}$ , but need not be sufficient. Freshness of $\xi_{t}$ implies
+
+$\mathbb{P}\left(\gamma_{t}-\gamma_{t-1}=1,\mathcal{V}_{t}\mid\mathcal{H}_{t-1}\right)\leq\varpi.$ (142)
+
+Set $\iota_{t}:=\gamma_{t}-\gamma_{t-1}$ . Iterated conditioning gives
+
+$\displaystyle\mathbb{E}\left[e^{\sum_{t=1}^{N}\iota_{t}}\mathbf{1}_{\cap_{t=1}^{N}\mathcal{V}_{t}}\right]$ $\displaystyle\leq(1-\varpi+\varpi e)^{N}\leq e^{2\varpi N}.$
+
+Hence
+
+$\mathbb{P}\left(\gamma_{N}\geq T,\bigcap_{t=1}^{N}\mathcal{V}_{t}\right)\leq e^{2\varpi N-T}.$ (143)
+
+On $\cap_{t}\mathcal{V}_{t}$ , the event $\{\pi_{N}\geq T\}$ implies $\{\gamma_{N}\geq T\}$ .
+
+Geometric guessing.
+
+Apply Lemmas B.8 and B.12 with horizon $n=N$ . Since $\gamma_{t}$ is nondecreasing,
+
+$\bigcap_{i=1}^{N}\bigcap_{j=1}^{T}\left(\mathcal{G}_{j}^{(i)}\cup(\mathcal{T}_{j}^{(i-1)})^{c}\right)\subseteq\bigcap_{i=1}^{N}\mathcal{V}_{i}.$ (144)
+
+Indeed, fix $i$ and $j>\gamma_{i-1}$ . Then $j>\gamma_{q-1}$ for every $q\leq i$ , so the event on the left of ( 144 ) supplies $\cap_{q=1}^{i}\mathcal{G}_{j}^{(q)}$ . Lemma B.8 then gives $|\left\langle u_{j},x_{i}\right\rangle|\leq 1/4$ . This holds for every $j>\gamma_{i-1}$ , which is exactly $\mathcal{V}_{i}$ .
+
+A union bound and Lemma B.12 now give
+
+$\mathbb{P}\left(\left[\bigcap_{i=1}^{N}\mathcal{V}_{i}\right]^{c}\right)\leq 2NT\exp\!\left(-\frac{d-N-T}{32R^{2}N}\right).$ (145)
+
+Combining ( 143 ) and ( 145 ) proves ( 139 ). The argument never counts the number of vector channels: on $\mathcal{T}_{j}^{(i-1)}$ , every one of them lies in $\operatorname{span}\{u_{1},\ldots,u_{j-1}\}$ , and all non-ambient channels are already determined by the conditioned latent queries and seeds. ∎
+
+Under the assumptions of Lemma B.13 , suppose $d>N+1+T$ and, after $N$ calls, the algorithm outputs an $\sigma(\xi_{0},\mathcal{T}_{N})$ -measurable point $x_{\rm out}$ with $\left\lVert x_{\rm out}\right\rVert\leq R$ . Then
+
+$\displaystyle\mathbb{P}\left(\max\left\{\max_{t\leq N}\operatorname{prog}_{1/4}(U^{\top}x_{t}),\operatorname{prog}_{1/4}(U^{\top}x_{\rm out})\right\}\geq T\right)$ $\displaystyle\qquad\leq e^{2\varpi N-T}+2(N+1)T\exp\!\left(-\frac{d-(N+1)-T}{32R^{2}(N+1)}\right).$ (146)
+
+Set $x_{N+1}:=x_{\rm out}$ and regard it only as an additional point in the geometric argument. No oracle call is made at this point: no new seed is drawn, no response is returned, and the revealed progress is fixed at $\gamma_{N+1}:=\gamma_{N}$ . Thus the rare-progress estimate remains exactly $e^{2\varpi N-T}$ . Repeat the projection-accumulation, conditional-residual-law, and union bound arguments with the $N+1$ vectors $x_{1},\ldots,x_{N},x_{\rm out}$ . For each $j$ , on $\mathcal{T}_{j}^{(N)}$ , the quiet-simulation argument in Lemma B.11 reconstructs the transcript from $\mathcal{U}_{j-1}^{(N)}$ . The output is therefore measurable from this field on that event. The same conditional-law argument applies to the final point without a new seed. Taking $n=N+1$ in the geometric term gives ( 146 ). ∎
+
+Let $\rho:\mathbb{R}^{d}\to\mathbb{R}^{d}$ be Borel with $\left\lVert\rho(x)\right\rVert\leq R$ for all $x$ . Let $(x,y,o)\mapsto\mathsf{P}_{x,y}(o)$ be a jointly Borel map independent of $U$ , and suppose the actual response is
+
+$\mathsf{P}_{x,y}\!\left(\widetilde{\mathcal{O}}_{U}(\rho(x),y;\xi)\right).$
+
+Then Lemma B.13 and Corollary B.14 hold with $U^{\top}x$ replaced by $U^{\top}\rho(x)$ .
+
+An algorithm interacting with the actual oracle can be simulated by an algorithm interacting with the richer canonical oracle: the simulator queries $\rho(x)$ , receives the canonical response, applies the known postprocessing, and passes the result to the original algorithm. At termination it returns $\rho(x_{\rm out})$ , with no additional call. Joint measurability makes this a valid adaptive simulation. ∎
+
+B.4 The comparison oracle and the first-order benchmark
+
+Take the scaled pair $(A_{U},u_{U})$ from Proposition B.6 , with $T$ as in ( 110 ). For $0<\varpi\leq 1/2$ , put $N_{\mathrm{s}}:=\lfloor T/(8\varpi)\rfloor$ and choose
+
+$d:=\left\lceil N_{\mathrm{s}}+1+T+32R^{2}(N_{\mathrm{s}}+1)\log\bigl(64(N_{\mathrm{s}}+1)T\bigr)\right\rceil.$ (147)
+
+Draw $U$ uniformly from $\operatorname{Ortho}(d,T)$ , independently of the algorithm seed and oracle draws. The functions are smooth; their Lipschitz, value, and gap bounds follow from ( 115 )–( 117 ).
+
+At a bounded query $\bar{r}\in\mathbb{R}^{d}$ , write $v=U^{\top}\bar{r}$ and consider
+
+$(w,v_{B},v_{W}):=\left(\frac{\zeta}{\varpi}W_{T}(v),\,U\nabla B_{T}(v),\,U\frac{\zeta}{\varpi}\nabla W_{T}(v)\right).$ (148)
+
+By Corollary B.3 , its two vector channels satisfy Definition B.7 with exceptional event $\{\zeta=1\}$ . The scalar channel is a Borel function of the latent query $v$ and the seed, as allowed by that definition. Hence the full response, including the scalar value, is covered by Corollary B.14 .
+
+One comparison call at an arbitrary $x$ is obtained by querying ( 148 ) at $\bar{r}=\rho_{R}(x/\lambda_{\rm lb})$ and returning
+
+$\displaystyle r_{A}$ $\displaystyle:=\frac{a}{\lambda_{\rm lb}}J_{R}(x/\lambda_{\rm lb})^{\top}v_{B}+\frac{a\eta_{\rm r}}{\lambda_{\rm lb}^{2}}x,$ (149) $\displaystyle r_{u}$ $\displaystyle:=aw,\qquad r_{\nabla u}:=\frac{a}{\lambda_{\rm lb}}J_{R}(x/\lambda_{\rm lb})^{\top}v_{W}.$
+
+Differentiating ( 112 )–( 113 ) shows that $(r_{A},r_{u},r_{\nabla u})$ is exactly $\mathcal{R}_{\varpi}(x)$ in ( 22 ). These transformations are jointly continuous and independent of $U$ . The compressed final output $\bar{r}_{\rm out}=\rho_{R}(x_{\rm out}/\lambda_{\rm lb})$ has norm at most $R$ and costs no oracle call.
+
+For any algorithm using at most $N_{\mathrm{s}}$ comparison calls, pad a shorter run with ignored calls. Corollaries B.15 and B.14 and the dimension choice give
+
+$\mathbb{P}\bigl(\operatorname{prog}_{1/4}(U^{\top}\bar{r}_{\rm out})\geq T\bigr)\leq e^{2\varpi N_{\mathrm{s}}-T}+\frac{1}{32}\leq e^{-3T/4}+\frac{1}{32}<\frac{1}{4},$ (150)
+
+since $T\geq 4$ . Equation ( 118 ) now gives ( 24 ). Thus $c=1/8$ is admissible, and a common numerical $C$ bounds the remaining quantities. ∎
+
+B.4.1 Variance and the ordinary first-order lower bound
+
+For each pair in Proposition 4.1 , ( 21 ) is conditionally unbiased and
+
+$\mathbb{E}[\|\widehat{\nabla P}(x)-\nabla P(x)\|^{2}\mid\mathcal{H}]=\frac{1-\varpi}{\varpi}\|\nabla u(x)\|^{2}\leq\frac{C^{2}{\epsilon}^{2}}{\varpi}.$ (151)
+
+Choosing $\varpi=2(1+C^{2}){\epsilon}^{2}\leq 1/2$ gives a family with variance at most one for which guaranteeing $\mathbb{E}\|\nabla P(x_{\rm out})\|^{2}\leq{\epsilon}^{2}$ requires $\Omega({\epsilon}^{-4})$ queries.
+
+Fix $U$ and condition on the history $\mathcal{H}$ , which fixes the query $x$ . The fresh Bernoulli seed satisfies $\mathbb{E}[\zeta/\varpi]=1$ , so ( 21 ) is conditionally unbiased. Moreover,
+
+$\mathbb{E}[\|\widehat{\nabla P_{U}}(x)-\nabla P_{U}(x)\|^{2}\mid\mathcal{H}]=\frac{1-\varpi}{\varpi}\|\nabla u_{U}(x)\|^{2}\leq\frac{C^{2}{\epsilon}^{2}}{\varpi},$
+
+where $C$ is the constant in Proposition 4.1 . If $\mathcal{R}_{\varpi}(x)=(r_{A},r_{u},r_{\nabla u})$ , then $r_{A}-r_{\nabla u}$ has exactly this stochastic-gradient law, with one comparison call per gradient call.
+
+Set $\varpi=2(1+C^{2}){\epsilon}^{2}$ . For sufficiently small ${\epsilon}$ this lies in $(0,1/2]$ , and the conditional variance is at most $1/2$ . The objective has gradient Lipschitz constant at most $2C$ and initial gap at most $1/4$ , by Proposition 4.1 . Simulating any stochastic-gradient algorithm with at most $T/(8\varpi)$ calls therefore gives a comparison-oracle algorithm with the same budget and output law. Proposition 4.1 yields
+
+$\mathbb{P}\bigl(\|\nabla P_{U}(x_{\rm out})\|\geq 2{\epsilon}\bigr)\geq\frac{3}{4}.$
+
+Averaging this probability over $U$ gives a fixed rotation on which the probability, now over algorithm and oracle randomness, is at least $3/4$ . On that instance, $\mathbb{E}\|\nabla P_{U}(x_{\rm out})\|^{2}\geq 3{\epsilon}^{2}>{\epsilon}^{2}$ . Finally, $T/\varpi=\Theta({\epsilon}^{-4})$ . ∎
+
+B.5 The bilevel construction
+
+Fix $0<{\epsilon}\leq\delta\leq 1$ and a scaled pair $(A_{U},u_{U})$ from Proposition B.6 . With $x\in\mathbb{R}^{d}$ and $y\in\mathbb{R}$ , set
+
+$f_{U}(x,y):=A_{U}(x)+y,$ (152)
+
+$g_{U}(x,y):=\frac{1}{2}y^{2}+\delta\sin(y/\delta)u_{U}(x).$ (153)
+
+The dependence on $\delta$ is suppressed in this appendix.
+
+B.5.1 Primitive oracle: simulation and variance
+
+For $0<\varpi\leq 1/2$ , draw a fresh $\zeta\sim\mathrm{Bernoulli}(\varpi)$ at each call and return
+
+$\displaystyle\hat{F}_{x}$ $\displaystyle:=\nabla A_{U}(x),$ $\displaystyle\hat{F}_{y}$ $\displaystyle:=1,$ (154) $\displaystyle\hat{G}_{x}$ $\displaystyle:=\delta\sin(y/\delta)\frac{\zeta}{\varpi}\nabla u_{U}(x),$ $\displaystyle\hat{G}_{y}$ $\displaystyle:=y+\cos(y/\delta)\frac{\zeta}{\varpi}u_{U}(x).$ (155)
+
+The seeds are independent across calls and independent of $U$ and the algorithm seed. Define the numerical constant
+
+$C_{\rm var}:=C_{u,1}^{2}+C_{u,0}^{2}.$ (156)
+
+For every fixed $U$ and selected query $(x,y)$ , the four estimates are conditionally unbiased and their joint conditional variance is at most $C_{\rm var}\delta^{2}{\epsilon}^{2}/\varpi$ . One primitive call is a known measurable transformation of one comparison call $\mathcal{R}_{\varpi}(x)$ .
+
+Condition on the history, fixing $(x,y)$ . Unbiasedness follows from $\mathbb{E}[\zeta/\varpi]=1$ and direct differentiation of ( 152 )–( 153 ). The upper estimates are exact. The sum of the conditional squared errors in the lower estimates is
+
+$\displaystyle\frac{1-\varpi}{\varpi}\left(\delta^{2}\sin^{2}(y/\delta)\|\nabla u_{U}(x)\|^{2}+\cos^{2}(y/\delta)|u_{U}(x)|^{2}\right)$ $\displaystyle\qquad\leq\frac{C_{u,1}^{2}\delta^{2}{\epsilon}^{2}+C_{u,0}^{2}{\epsilon}^{4}}{\varpi}\leq\frac{C_{\rm var}\delta^{2}{\epsilon}^{2}}{\varpi}.$ (157)
+
+Here Proposition B.6 supplies the uniform bounds, and ${\epsilon}\leq\delta$ controls the scalar contribution.
+
+If $\mathcal{R}_{\varpi}(x)=(r_{A},r_{u},r_{\nabla u})$ , return
+
+$\left(r_{A},\ 1,\ \delta\sin(y/\delta)r_{\nabla u},\ y+\cos(y/\delta)r_{u}\right).$ (158)
+
+This reproduces the full joint law of ( 154 )–( 155 ), including the common Bernoulli draw. The transformation is continuous and independent of $U$ . Applying it after every comparison call simulates an adaptive primitive-oracle algorithm, with the same query choices and output law. ∎
+
+B.5.2 Lower solution and outer gradient
+
+For $|s|/\delta\leq 1/4$ , let $Y_{\delta}(s)$ denote the unique solution of
+
+$Y+s\cos(Y/\delta)=0.$ (159)
+
+For $|s|/\delta\leq 1/4$ , the response $Y_{\delta}(s)$ is continuously differentiable and obeys
+
+$\displaystyle|Y_{\delta}(s)|$ $\displaystyle\leq|s|,$ (160) $\displaystyle|Y_{\delta}(s)+s|$ $\displaystyle\leq\frac{|s|^{3}}{2\delta^{2}},$ (161) $\displaystyle|Y_{\delta}^{\prime}(s)+1|$ $\displaystyle\leq\frac{2s^{2}}{\delta^{2}}.$ (162)
+
+For all sufficiently small ${\epsilon}$ , uniformly over ${\epsilon}\leq\delta\leq 1$ , the lower solution of ( 153 ) is
+
+$y_{U}^{\star}(x)=Y_{\delta}(u_{U}(x)),$ (163)
+
+and $\nabla^{2}_{yy}g_{U}(x,y)\geq 3/4$ globally.
+
+The derivative in $Y$ of the left side of ( 159 ) is
+
+$1-(s/\delta)\sin(Y/\delta)\geq\frac{3}{4}.$
+
+Hence that function is strictly increasing and crosses zero exactly once; the implicit-function theorem gives differentiability. Equation ( 159 ) gives $|Y_{\delta}(s)|\leq|s|$ , and
+
+$|Y_{\delta}(s)+s|=|s|\,|1-\cos(Y_{\delta}(s)/\delta)|\leq\frac{|s|^{3}}{2\delta^{2}}.$
+
+Implicit differentiation yields
+
+$Y_{\delta}^{\prime}(s)=-\frac{\cos(Y_{\delta}(s)/\delta)}{1-(s/\delta)\sin(Y_{\delta}(s)/\delta)}.$
+
+With $t=Y_{\delta}(s)/\delta$ and $\beta=s/\delta$ ,
+
+$|Y_{\delta}^{\prime}(s)+1|=\left|\frac{1-\cos t-\beta\sin t}{1-\beta\sin t}\right|\leq\frac{\tfrac{1}{2}\beta^{2}+\beta^{2}}{3/4}=2\beta^{2},$
+
+where we used $|t|\leq|\beta|$ , $|1-\cos t|\leq t^{2}/2$ , and $|\sin t|\leq|t|$ . This proves ( 162 ). Finally, Proposition B.6 and $\delta\geq{\epsilon}$ imply
+
+$\frac{\left\lVert u_{U}\right\rVert_{\infty}}{\delta}\leq C_{u,0}{\epsilon}\leq\frac{1}{4}$
+
+for a universal choice of ${\epsilon}_{0}$ . Since
+
+$\nabla_{y}g_{U}=y+\cos(y/\delta)u_{U},\qquad\nabla^{2}_{yy}g_{U}=1-\delta^{-1}\sin(y/\delta)u_{U},$
+
+the claims follow. ∎
+
+Define the actual hyperobjective
+
+$\Phi_{U}(x):=f_{U}(x,y_{U}^{\star}(x))={A_{U}}(x)+Y_{\delta}(u_{U}(x)).$ (164)
+
+There are universal constants $C_{F},C_{\nabla}>0$ such that
+
+$\displaystyle\sup_{x}|\Phi_{U}(x)-P_{U}(x)|$ $\displaystyle\leq C_{F}\frac{{\epsilon}^{6}}{\delta^{2}}\leq C_{F}{\epsilon}^{4},$ (165) $\displaystyle\sup_{x}\left\lVert\nabla\Phi_{U}(x)-\nabla P_{U}(x)\right\rVert$ $\displaystyle\leq C_{\nabla}\frac{{\epsilon}^{5}}{\delta^{2}}\leq C_{\nabla}{\epsilon}^{3}.$ (166)
+
+After decreasing ${\epsilon}_{0}$ universally if necessary,
+
+$\Phi_{U}(0)-\inf_{x}\Phi_{U}(x)\leq 1,\qquad|y_{U}^{\star}(0)|\leq 1,$ (167)
+
+and
+
+$\|\nabla P_{U}(x)\|\geq 2{\epsilon}\quad\Longrightarrow\quad\left\lVert\nabla\Phi_{U}(x)\right\rVert\geq\frac{3}{2}{\epsilon}.$ (168)
+
+The first estimate follows from ( 161 ), $P_{U}={A_{U}}-u_{U}$ , and ( 115 ). The chain rule and ( 162 ) give
+
+$\nabla\Phi_{U}=\nabla{A_{U}}+Y_{\delta}^{\prime}(u_{U})\nabla u_{U},$
+
+and hence the second estimate. Here $\delta\geq{\epsilon}$ makes both displayed upper bounds uniform over ${\epsilon}\leq\delta\leq 1$ . Combining the value estimate with ( 117 ) gives the objective-gap bound. The initial lower solution satisfies $|y_{U}^{\star}(0)|\leq C_{u,0}{\epsilon}^{2}\leq 1$ for small enough ${\epsilon}$ , proving ( 167 ). If $\|\nabla P_{U}(x)\|\geq 2{\epsilon}$ , the gradient estimate gives $\|\nabla\Phi_{U}(x)\|\geq 2{\epsilon}-C_{\nabla}{\epsilon}^{3}\geq 3{\epsilon}/2$ for a numerical sufficiently small ${\epsilon}_{0}$ . ∎
+
+The gradient estimate can also be read directly from the implicit hypergradient. In the notation of Section 2 ,
+
+$b=1,\qquad H_{U}(x,y)=1-\delta^{-1}\sin(y/\delta)u_{U}(x),\qquad J_{U}(x,y)=\cos(y/\delta)\nabla u_{U}(x).$
+
+At $y=y_{U}^{\star}(x)$ , implicit differentiation gives
+
+$\displaystyle J_{U}(x,y_{U}^{\star}(x))z_{U}^{\star}(x)$ $\displaystyle=-Y_{\delta}^{\prime}(u_{U}(x))\nabla u_{U}(x),$ (169) $\displaystyle\|J_{U}(x,y_{U}^{\star}(x))z_{U}^{\star}(x)-\nabla u_{U}(x)\|$ $\displaystyle\leq 2C_{u,0}^{2}C_{u,1}\frac{{\epsilon}^{5}}{\delta^{2}}.$
+
+Thus the mixed-derivative term in the hypergradient retains the correction $\nabla u_{U}$ even though the primitive signal is smaller.
+
+B.5.3 Base and higher-order regularity
+
+The Hessian blocks of $g_{U}$ are
+
+$\nabla^{2}_{xx}g_{U}=\delta\sin(y/\delta)\nabla^{2}u_{U}(x),\qquad\nabla^{2}_{xy}g_{U}=\cos(y/\delta)\nabla u_{U}(x),$
+
+$\nabla^{2}_{yy}g_{U}=1-\delta^{-1}\sin(y/\delta)u_{U}(x).$
+
+They are bounded by numerical constants for all $(x,y)$ , by Proposition B.6 and ${\epsilon}\leq\delta\leq 1$ . Hence the full gradient of $g_{U}$ is jointly Lipschitz. The $x$ - and $y$ -Lipschitz moduli of $J_{U}$ are bounded by $C_{u,2}$ and $C_{u,1}{\epsilon}/\delta$ , respectively; those of $H_{U}$ are bounded by $C_{u,1}{\epsilon}/\delta$ and $C_{u,0}{\epsilon}^{2}/\delta^{2}$ . Combining the two moduli in each case gives a numerical joint Lipschitz bound, uniformly over ${\epsilon}\leq\delta\leq 1$ . Lemma B.18 gives strong convexity with $\mu=3/4$ . Also $\nabla_{y}f_{U}=1$ , and ( 116 ) bounds the full Hessian of $f_{U}$ by one. The objective is bounded below and obeys ( 30 ) by Corollary B.19 . This proves Assumption 2.1 .
+
+The same corollary proves ( 27 ), while Lemma B.17 supplies conditional unbiasedness, variance, and one-call simulation. A numerical constant $C_{\rm lift}\geq\max\{C_{\nabla},C_{\rm var}\}$ bounds both quantities in the proposition. ∎
+
+For an integer $p\geq 1$ , choose
+
+$\delta:={\epsilon}^{1/p}\in[{\epsilon},1].$ (170)
+
+With ( 170 ), the family satisfies Assumptions 2.1 and 2.2 with a numerical bound on every constant, independent of $T,d,U,{\epsilon}$ , and $p$ .
+
+Proposition 4.2 proves the base regularity. For $p\geq 2$ , write $t=y/\delta$ and denote derivatives of sine by $\sin^{(j)}$ . Direct differentiation gives
+
+$\displaystyle\nabla_{y}^{p}\nabla_{x}g_{U}(x,y)$ $\displaystyle=\delta^{1-p}\sin^{(p)}(t)\nabla u_{U}(x),$ (171) $\displaystyle\nabla_{y}^{p}\nabla_{y}g_{U}(x,y)$ $\displaystyle=\delta^{-p}\sin^{(p+1)}(t)u_{U}(x).$
+
+Every derivative of sine has absolute value at most one. Since the lower variable is scalar, the operator norms in Assumption 2.2 are respectively the Euclidean norm and absolute value. The Lipschitz moduli in $y$ are therefore at most
+
+$C_{u,1}{\epsilon}\delta^{-p}=C_{u,1},\qquad C_{u,0}{\epsilon}^{2}\delta^{-(p+1)}=C_{u,0}{\epsilon}^{1-1/p}\leq C_{u,0}.$
+
+For $p=1$ , the base Lipschitz bounds for $J_{U}$ and $H_{U}$ imply the same assumption. All constants are independent of $p$ . ∎
+
+Finally, set
+
+$c_{\rm rr}:=2(1+C_{\rm var}),$ (172)
+
+and take
+
+$\varpi:=c_{\rm rr}\delta^{2}{\epsilon}^{2}=c_{\rm rr}{\epsilon}^{2+2/p}\leq\frac{1}{2}.$ (173)
+
+The last inequality holds for a numerical sufficiently small ${\epsilon}_{0}$ , uniformly in $p$ , since $\delta\leq 1$ .
+
+With ( 173 ), the oracle ( 154 )–( 155 ) satisfies Assumption 2.3 with $\sigma^{2}\leq 1/2$ .
+
+Lemma B.17 gives conditional unbiasedness and joint variance at most $C_{\rm var}\delta^{2}{\epsilon}^{2}/\varpi=C_{\rm var}/c_{\rm rr}\leq 1/2$ . The response is a Borel function of the query and fresh Bernoulli seed; its pushforward law is a Borel kernel. Independent seeds give the required conditional independence between fresh calls. ∎
+
+B.6 Completion of the lower bound
+
+Fix an integer $p\geq 1$ and $0<{\epsilon}<{\epsilon}_{0}$ . Take $T$ from ( 110 ), $\delta={\epsilon}^{1/p}$ , and $\varpi=c_{\rm rr}\delta^{2}{\epsilon}^{2}$ as in ( 173 ). Use the distribution of $(A_{U},u_{U})$ in Proposition 4.1 , and form the bilevel pair and primitive oracle in Section B.5 . Define
+
+$N_{0}:=\left\lfloor\frac{T}{8\varpi}\right\rfloor,$ (174)
+
+and the numerical constant
+
+$c_{\rm lb}:=\frac{c_{T}}{64c_{\rm rr}}.$ (175)
+
+For a numerical sufficiently small ${\epsilon}_{0}$ , we have $T\geq(c_{T}/2){\epsilon}^{-2}$ and $T/(8\varpi)\geq 2$ , uniformly in $p$ . Consequently,
+
+$N_{0}\geq\frac{T}{16\varpi}\geq\frac{c_{T}}{32c_{\rm rr}}{\epsilon}^{-4-2/p}\geq c_{\rm lb}{\epsilon}^{-4-2/p}.$ (176)
+
+Let an arbitrary adaptive randomized algorithm use at most $N_{0}$ primitive calls. Lemma B.17 simulates it with the same number of calls to $\mathcal{R}_{\varpi}$ and preserves its output law. Proposition 4.1 , whose proof permits $c=1/8$ , therefore gives
+
+$\mathbb{P}\bigl(\|\nabla P_{U}(x_{\rm out})\|\geq 2{\epsilon}\bigr)\geq\frac{3}{4}.$ (177)
+
+By ( 168 ), on this event, $\|\nabla\Phi_{U}(x_{\rm out})\|\geq 3{\epsilon}/2$ . Averaging the event probability over $U$ gives a fixed rotation for which this event has probability at least $3/4$ over the algorithm and oracle randomness. For that fixed instance,
+
+$\mathbb{E}\|\nabla\Phi_{U}(x_{\rm out})\|^{2}\geq\frac{3}{4}\left(\frac{3}{2}{\epsilon}\right)^{2}=\frac{27}{16}{\epsilon}^{2}>{\epsilon}^{2}.$
+
+Equation ( 176 ) covers every integer budget in Theorem 4.3 with $c=c_{\rm lb}$ .
+
+It remains to check that the fixed instance lies in the stated class. Proposition 4.2 gives the numerical base regularity and initial bounds. Lemma B.20 bounds the order- $p$ constant independently of $p$ , and Lemma B.21 gives $\sigma^{2}\leq 1/2$ . Taking $M_{0}$ to be the maximum of one and these numerical bounds places the pair in $\mathcal{P}_{p}(M_{0})$ . Every smallness condition on ${\epsilon}$ used above is numerical and independent of $p$ , so a common ${\epsilon}_{0}>0$ suffices.
+
+The construction is finite dimensional. In ( 147 ), $N_{\mathrm{s}}=N_{0}$ and $R^{2}=\Theta(T)$ , hence
+
+$d=O\!\left(\frac{T^{2}}{\varpi}\log\frac{T}{\varpi}\right)=O\!\left({\epsilon}^{-6-2/p}\log(1/{\epsilon})\right).$
+
+∎

@@ -1,0 +1,855 @@
+Content selection saved. Describe the issue below:
+
+Efficient Parameter-Free First-Order Methods for Nonsmooth Composite Minimax Optimization
+
+In this paper we propose first-order methods for a class of nonsmooth composite strongly convex–strongly concave and nonconvex–concave minimax optimization. We first develop an inexact proximal method and an accumulative regularizated method for strongly convex–strongly concave problems. The latter achieves the optimal dependence on the curvature parameters and places the smaller curvature inside the accuracy logarithm. Using this method as a subsolver, we propose a proximal point method for nonconvex–concave problems. Under suitable assumptions, it finds an $\epsilon$ -stationary point with an operation complexity of $O(\epsilon^{-5/2})$ , which improves the best-known $O(\epsilon^{-5/2}\log(1/\epsilon))$ bounds by removing the logarithmic factor. We further develop parameter-free variants for both problem classes, and achieve the same complexity without knowledge of any problem constants. All proposed methods are equipped with verifiable termination criteria.
+
+Keywords: Minimax optimization, parameter free, first-order methods, accelerated proximal methods, accumulated regularization, operation complexity.
+
+Mathematics Subject Classification: 90C47, 90C26, 90C25, 65K05.
+
+1 Introduction
+
+In this paper, we consider the composite minimax problem
+
+$\min_{x}\max_{y}\{H(x,y):=h(x,y)+p(x)-q(y)\}.$ (1)
+
+Throughout the paper, we let $\mathcal{X}:=\dom p$ and $\mathcal{Y}:=\dom q$ . We make the following assumptions.
+
+$p:\mathbb{R}^{m}\to(-\infty,+\infty]$ and $q:\mathbb{R}^{n}\to(-\infty,+\infty]$ are proper closed convex functions, and the proximal operator of $p$ and $q$ can be exactly evaluated.
+
+The set $\mathcal{Y}$ is bounded, namely, we have $\|y\|\leq D_{\mathbf{y}}$ for some $D_{\mathbf{y}}\geq 1$ .
+
+$h:\mathbb{R}^{m+n}\to\mathbb{R}$ is $L_{\nabla h}$ -smooth on $\mathcal{X}\times\mathcal{Y}$ for some $L_{\nabla h}>0$ . For any $x\in\mathcal{X}$ , $h(x,\cdot)$ is concave on $\mathcal{Y}$ .
+
+Problem ( 1 ) has at least one optimal solution with finite optimal value $H^{*}=\min_{x}\max_{y}H(x,y)$ .
+
+Problem ( 1 ) provides a common formulation for several learning and decision problems. Examples include distributionally robust learning [ 1 , 2 , 3 ] and learning with nondecomposable losses, including area-under-the-curve maximization [ 3 , 4 ] . In these applications, the minimization variable represents a prediction model, while the maximization variable describes an uncertain distribution or arises from a variational representation of the loss. The convex terms $p$ and $q$ incorporate constraints and nonsmooth regularization. Problems of this form also arise as subproblems in methods for constrained minimax optimization [ 5 ] . Their scale and composite structure motivate methods based on evaluations of $h$ , $\nabla h$ , and the proximal operators of $p$ and $q$ .
+
+There have been numerous studies on structured special cases of ( 1 ). When $h(\cdot,y)$ is convex for every $y\in\mathcal{Y}$ , its saddle-point optimality conditions form a monotone inclusion (MI). More generally, consider finding $u$ such that $0\in(F+B)(u)$ , where $F$ is monotone and $L_{F}$ -Lipschitz continuous, and $B$ is maximally monotone with an exactly computable resolvent. Proximal-point, splitting, extragradient, and extrapolation methods have been extensively studied for monotone inclusions and their saddle-point special cases [ 6 , 7 , 8 , 9 , 10 , 11 ] . More recent work establishes accelerated pointwise residual guarantees through anchoring and related extrapolation schemes [ 12 , 13 , 14 , 15 ] . Under $\mu$ -strong monotonicity, an $O((L_{F}/\mu)\log(1/\epsilon))$ bound, with the remaining problem data fixed, can be obtained for the numbers of evaluations of $F$ and the resolvent of $B$ , respectively, to find an $\epsilon$ -residual solution [ 11 ] . Such methods apply to strongly convex–strongly concave (SCSC) minimax problems, but treating these problems as general strongly monotone inclusions only uses the smaller of their two curvature parameters.
+
+More specifically, consider an SCSC problem with the same composite structure as ( 1 ), with $h$ replaced by an $L_{\nabla f}$ -smooth function $f$ that is $\mu_{x}$ -strongly convex in $x$ and $\mu_{y}$ -strongly concave in $y$ , where $0<\mu_{y}\leq\mu_{x}\leq L_{\nabla f}$ . Neither $\mathcal{X}$ nor $\mathcal{Y}$ needs to be bounded. A direct application of the above MI complexity has a dependence on $L_{\nabla f}/\mu_{y}$ . Accelerated methods exploit the separate primal and dual curvatures to improve this dependence [ 16 , 17 , 18 , 19 ] , while lower bounds characterize the attainable dependence on the smoothness and curvature parameters [ 20 ] . In particular, the method in [ 19 ] attains the optimal factor $L_{\nabla f}/\sqrt{\mu_{x}\mu_{y}}$ by combining a pointwise-conjugate reformulation with acceleration and an MI subsolver. A modification with a verifiable termination criterion for approximate primal-dual stationarity was developed in [ 5 ] . Nevertheless, when SCSC problems serve as subproblems and $\mu_{y}$ decreases with the target accuracy, the scale inside the accuracy logarithm also matters.
+
+We address this issue with two SCSC methods. The first applies an accelerated inexact proximal scheme to a strongly convex reformulation of the saddle problem. It builds on the reformulation in [ 19 ] , proximal acceleration [ 21 , 22 , 23 ] , and relative-error criteria for inexact proximal methods [ 24 , 25 , 26 ] . The resulting subproblems have comparable primal and dual curvatures and can be solved using an MI subsolver that returns a computed pointwise residual. Our analysis requires only a residual bound proportional to $L_{F}\|u^{0}-u^{*}\|/N$ , where $N$ bounds the separate evaluation counts. The second method combines this contraction with accumulated regularization. This approach is related to recursive regularization for gradient minimization [ 27 ] and, more directly, the accumulated-regularization framework in [ 28 ] . By increasing the regularization and updating its center to retain the preceding quadratic terms, we obtain a bound with the smaller curvature $\mu_{y}$ inside the accuracy logarithm. This improvement is essential for the nonconvex–concave application.
+
+When $h(\cdot,y)$ is nonconvex, most existing methods aim to find an approximate stationary point. This setting has been studied through multistep and two-timescale gradient descent-ascent [ 29 , 30 ] , proximal-point methods [ 3 , 16 , 31 , 32 , 33 ] , and smoothing methods [ 34 , 35 , 36 ] . Alternating proximal and projected-gradient methods have also been developed for composite and constrained formulations [ 37 , 38 ] . The intermediate nonconvex–strongly concave setting has also received substantial attention, including near-optimal algorithms and lower bounds [ 16 , 39 ] . Two commonly studied criteria in the nonconvex–concave setting are stationarity of the primal value function $\max_{y}H(\cdot,y)$ , measured through its Moreau envelope, and approximate satisfaction of the first-order conditions in both variables. The latter is the $\epsilon$ -stationarity criterion used in this paper and is defined in Subsection 1.1. These criteria and the oracles used to attain them must be distinguished when comparing complexity bounds.
+
+For stationarity of the primal value function, the method in [ 16 ] achieves an $O(\epsilon^{-3}\log^{2}(1/\epsilon))$ complexity for smooth constrained problems. For stationarity in both variables, the accelerated inexact proximal point smoothing method in [ 32 ] achieves an $O(\epsilon^{-5/2})$ bound under an oracle that exactly solves a regularized maximization problem involving the coupling function. Such an oracle generally requires more than a gradient or a proximal evaluation. Using gradients and the separate proximal operators, an $O(\epsilon^{-5/2}\log(1/\epsilon))$ bound was established in [ 5 ] ; see also [ 36 ] for a smoothing and perturbation approach with the same dependence on $\epsilon$ for game stationarity. Removing this logarithmic factor while retaining computable stopping criteria is the main objective of our nonconvex analysis.
+
+We propose an inexact proximal point method that uses the new SCSC solver to attain this objective. The smaller-curvature residual bound allows the total inner cost to be controlled by the descent over the outer iterations. Consequently, the method finds an $\epsilon$ -stationary point with an operation complexity $O(\epsilon^{-5/2})$ . To the best of our knowledge, this paper is the first to remove the logarithmic factor for the general problem class in ( 1 ). Independent and concurrent work [ 40 ] also removes this factor for a special case of ( 1 ) using a substantially different approach. Moreover, our framework accommodates proximable nonsmooth terms and admits a parameter-free variant that achieves the same complexity bound.
+
+Implementing minimax methods often requires smoothness and curvature parameters or a bound on the dual domain. Adaptive methods have been studied for monotone inclusions and convex optimization [ 11 , 12 , 28 , 41 ] . Methods that adapt to unknown smoothness and strong concavity parameters have also been developed for nonconvex–strongly concave problems [ 42 , 43 ] , and parameter-free line-search methods have been proposed for the nonconvex–concave setting [ 44 ] . We develop parameter-free variants for both problem classes considered here. The SCSC method accepts tentative parameters through a computed residual-reduction test. The nonconvex–concave method adapts its smoothness estimate through a verifiable model inequality, and its parameter-free variant also selects a dual-radius estimate. Their complexity bounds count unsuccessful trials as well as successful ones. The main contributions are summarized below.
+
+We develop an accelerated inexact proximal method that reduces the solution distance by a fixed factor within $O(L_{\nabla f}/\sqrt{\mu_{x}\mu_{y}})$ evaluations of $\nabla f$ , $\prox_{p}$ , and $\prox_{q}$ , respectively. Using it as a subsolver, our accumulative regularization method finds an $\epsilon$ -stationary point within $O((L_{\nabla f}/\sqrt{\mu_{x}\mu_{y}})\log(1/\epsilon))$ evaluations of each oracle. This bound retains the optimal dependence on the curvature parameters and places the smaller curvature $\mu_{y}$ inside the accuracy logarithm, which is essential for removing the logarithmic factor in the nonconvex–concave complexity. We also propose a parameter-free variant that preserves the optimal complexity for SCSC minimax problem. All proposed algorithms are equipped with verifiable termination criteria.
+
+We develop a proximal point method that finds an $\epsilon$ -stationary point of ( 1 ) within $O(\epsilon^{-5/2})$ evaluations of $h$ , $\nabla h$ , $\prox_{p}$ , and $\prox_{q}$ , respectively, for fixed problem data. To the best of our knowledge, this paper is the first to remove the logarithmic factor from the best-known $O(\epsilon^{-5/2}\log(1/\epsilon))$ complexity bound for the general problem class ( 1 ), while the independent and concurrent work [ 40 ] obtains the same improvement for a special case of ( 1 ) using a substantially different approach. Moreover, our method is parameter-free and equipped with a verifiable termination criterion.
+
+The rest of this paper is organized as follows. In Subsection 1.1, we introduce some notation and terminology. In Section 2, we propose first-order methods for SCSC minimax optimization and study their complexity. In Section 3, we propose a first-order method for problem ( 1 ) and its parameter-free variant, and present complexity results for them. Finally, we provide the proofs of the main results in Section 4.
+
+1.1 Notation and preliminaries
+
+The following notation will be used throughout this paper. Let $\mathbb{R}^{d}$ denote the Euclidean space of dimension $d$ , $\langle\cdot,\cdot\rangle$ denote the standard inner product, and $\|\cdot\|$ denote the Euclidean norm. We write $\mathbb{N}=\{1,2,\ldots\}$ . For any $a\in\mathbb{R}$ , let $a_{+}=\max\{a,0\}$ , and let $\lceil a\rceil$ and $\lfloor a\rfloor$ denote the least integer greater than or equal to $a$ and the greatest integer less than or equal to $a$ , respectively. The notation $\log$ denotes the natural logarithm, and $\log_{b}$ denotes the logarithm to base $b$ . Given a point $u\in\mathbb{R}^{d}$ and a set $S\subseteq\mathbb{R}^{d}$ , let $\mathrm{dist}(u,S)=\inf_{v\in S}\|u-v\|$ , with $\mathrm{dist}(u,\varnothing)=+\infty$ .
+
+Given a proper closed convex function $g:\mathbb{R}^{d}\to(-\infty,+\infty]$ , its domain is $\dom g=\{u:g(u)<+\infty\}$ , and its subdifferential is
+
+$\partial g(u)=\{v:g(z)\geq g(u)+\langle v,z-u\rangle\ \text{for all }z\in\mathbb{R}^{d}\}\qquad\forall u\in\dom g,$
+
+with $\partial g(u)=\varnothing$ for $u\notin\dom g$ . The proximal operator associated with $g$ is denoted by $\prox_{g}$ and defined as
+
+$\prox_{g}(u)=\argmin_{z\in\mathbb{R}^{d}}\left\{g(z)+\frac{1}{2}\|z-u\|^{2}\right\}\qquad\forall u\in\mathbb{R}^{d}.$
+
+We count the evaluation of $\prox_{\gamma g}(u)$ as one evaluation of the proximal operator of $g$ for any $\gamma>0$ and $u\in\mathbb{R}^{d}$ .
+
+A mapping $G$ is said to be $L_{G}$ -Lipschitz continuous on a set $S$ if $\|G(u)-G(v)\|\leq L_{G}\|u-v\|$ for all $u,v\in S$ . A function $g$ is said to be $L_{\nabla g}$ -smooth on $S$ if $\nabla g$ exists on $S$ and is $L_{\nabla g}$ -Lipschitz continuous there. A function $g$ is $\mu$ -strongly convex on a convex set $S$ if $g-\mu\|\cdot\|^{2}/2$ is convex on $S$ , and $L$ -weakly convex on $S$ if $g+L\|\cdot\|^{2}/2$ is convex on $S$ . It is $\mu$ -strongly concave if $-g$ is $\mu$ -strongly convex.
+
+For $\epsilon\geq 0$ , a point $(x,y)\in\mathcal{X}\times\mathcal{Y}$ is called an $\epsilon$ -stationary point of the minimax problem ( 1 ) if
+
+$\mathrm{dist}(0,\nabla_{x}h(x,y)+\partial p(x))\leq\epsilon,\qquad\mathrm{dist}(0,\nabla_{y}h(x,y)-\partial q(y))\leq\epsilon.$
+
+We use the same definition for other composite minimax problems, with $h$ replaced by the corresponding smooth coupling.
+
+For a set-valued operator $T:\mathbb{R}^{d}\rightrightarrows\mathbb{R}^{d}$ , let $\dom T=\{u:T(u)\neq\varnothing\}$ . The operator $T$ is $\mu$ -strongly monotone if
+
+$\langle v-w,u-z\rangle\geq\mu\|u-z\|^{2}\qquad\forall u,z\in\dom T,\ v\in T(u),\ w\in T(z),$
+
+and monotone if the same inequality holds with $\mu=0$ . It is maximally monotone if its graph is not properly contained in the graph of another monotone operator. Let $I$ denote the identity operator. For maximally monotone $T$ and $\gamma>0$ , the resolvent $(I+\gamma T)^{-1}$ is single-valued, defined on $\mathbb{R}^{d}$ , and nonexpansive, that is, $1$ -Lipschitz continuous. We count the evaluation of $(I+\gamma T)^{-1}(u)$ as one evaluation of the resolvent of $T$ for any $\gamma>0$ and $u\in\mathbb{R}^{d}$ .
+
+Define
+
+$A(x,y)=\begin{pmatrix}\nabla_{x}h(x,y)\\ -\nabla_{y}h(x,y)\end{pmatrix},\qquad B(x,y)=\begin{pmatrix}\partial p(x)\\ \partial q(y)\end{pmatrix}.$
+
+The KKT system of ( 1 ) is $0\in(A+B)(u)$ . By Assumption 1 (iii), $A$ is $L_{\nabla h}$ -Lipschitz continuous on $\mathcal{X}\times\mathcal{Y}$ , and $A+L_{\nabla h}I$ is monotone there. By Assumption 1 (i), $B$ is maximally monotone, and for every $\gamma>0$ ,
+
+$(I+\gamma B)^{-1}(x,y)=(\prox_{\gamma p}(x),\prox_{\gamma q}(y)).$
+
+2 First-order methods for strongly convex–strongly concave minimax optimization
+
+In this section we consider the strongly convex–strongly concave minimax problem
+
+$\min_{x}\max_{y}\{f(x,y)+p(x)-q(y)\},$ (2)
+
+where $p:\mathbb{R}^{m}\to(-\infty,+\infty]$ and $q:\mathbb{R}^{n}\to(-\infty,+\infty]$ are proper, closed, convex, and proximable. No boundedness assumption is imposed on their domains. We make the following assumption on $f$ .
+
+The function $f$ is $\mu_{x}$ -strongly convex in $x$ , $\mu_{y}$ -strongly concave in $y$ , and $L_{\nabla f}$ -smooth on $\mathcal{X}\times\mathcal{Y}$ , where $0<\mu_{y}\leq\mu_{x}\leq L_{\nabla f}$ .
+
+The ordering $\mu_{y}\leq\mu_{x}$ entails no loss of generality. If $\mu_{x}<\mu_{y}$ , exchanging the two variable blocks and reversing the objective sign yields the equivalent saddle-point with the curvature bounds and proximal mappings interchanged.
+
+Under Assumption 2 , problem ( 2 ) has a unique saddle point. For $u=(x,y)$ , set
+
+$F(u)=\begin{pmatrix}\nabla_{x}f(x,y)\\ -\nabla_{y}f(x,y)\end{pmatrix},\qquad B(u)=\begin{pmatrix}\partial p(x)\\ \partial q(y)\end{pmatrix}.$ (3)
+
+The KKT system of ( 2 ) is $0\in(F+B)(u)$ . Under Assumption 2 , $F$ is $L_{\nabla f}$ -Lipschitz and $\mu_{y}$ -strongly monotone on $\mathcal{X}\times\mathcal{Y}$ . Moreover, $B$ is maximally monotone, and its resolvent is evaluated by the proximal operators of $p$ and $q$ .
+
+More generally, consider monotone inclusion $0\in(F+B)(u)$ , where $B$ is maximally monotone with an exactly computable resolvent, $F$ is monotone and $L_{F}$ -Lipschitz on $\dom B$ , and $F+B$ is $\mu$ -strongly monotone on $\dom B$ , with $0<\mu\leq L_{F}$ . Suppose this inclusion has a solution $u^{*}$ , which is unique. Although linearly convergent methods are available for strongly monotone inclusions [ 11 ] , a sublinear pointwise residual bound of order $L_{F}\|u^{0}-u^{*}\|/(k+1)$ suffices for our analysis. We therefore impose the following requirement on the subsolver.
+
+There exist an algorithm $\mathcal{A}(F,B,u^{0},L_{F},\mu)$ and constants $\mathcal{C}_{\mathcal{A}}>0$ and $N_{\mathcal{A}}\in\mathbb{N}$ , with $N_{\mathcal{A}}\geq 1$ , such that the following holds. From any $u^{0}\in\dom B$ , one run of $\mathcal{A}$ generates, for every $\vartheta>0$ , a computed pair $(u,r)$ with
+
+$r\in(F+B)(u),\qquad\|r\|\leq\vartheta\|u^{0}-u^{*}\|,$
+
+using at most $N_{\mathcal{A}}+\lceil\mathcal{C}_{\mathcal{A}}L_{F}/\vartheta\rceil$ evaluations of $F$ and of the resolvent of $B$ , respectively. Every evaluation of $F$ is at a point of $\dom B$ . Both counts include initialization and computation of $r$ . The constants depend only on $\mathcal{A}$ , not on the inclusion, its parameters, or its initial point. Neither $u^{*}$ nor its distance from $u^{0}$ is an input.
+
+For the subdifferential operator $B$ used here, the EAG and past-EAG methods in [ 45 , Corollary 3.1] , with one forward–backward initialization step, satisfy Assumption 3 . With $\tau_{k}=1/(k+2)$ , one may take $(N_{\mathcal{A}},\mathcal{C}_{\mathcal{A}})=(4,22)$ for EAG with stepsize $1/(2L_{F})$ , and $(N_{\mathcal{A}},\mathcal{C}_{\mathcal{A}})=(4,28)$ for past-EAG with stepsize $1/(3L_{F})$ .
+
+2.1 An inexact proximal method for SCSC problems
+
+We first develop an accelerated inexact proximal method for the SCSC problem ( 2 ). Our approach applies the accelerated proximal point framework of [ 25 ] to a strongly convex reformulation of the saddle-point problem. Specifically, we consider
+
+$\min_{\xi,y}\Phi(\xi,y)\quad\mbox{where}\quad\Phi(\xi,y)=q(y)+\sup_{x}\left\{\frac{\mu_{x}}{2}\|x-\xi\|^{2}-f(x,y)-p(x)\right\}\qquad\forall y\in\mathcal{Y},$ (4)
+
+with $\Phi(\xi,y)=+\infty$ for $y\notin\mathcal{Y}$ . The function $\Phi$ is proper, closed, and $\mu_{y}$ -strongly convex, and its unique minimizer coincides with the saddle point $u^{*}$ of ( 2 ). The key to implementing this approach is that the proximal step
+
+$\min_{v\in\mathbb{R}^{m+n}}\left\{\Phi(v)+\frac{\mu_{x}}{2}\|v-c^{k}\|^{2}\right\}$
+
+can be computed through the balanced saddle problem
+
+$\min_{x}\max_{y}\left\{f(x,y)+p(x)-q(y)-\frac{\mu_{x}}{4}\|x-c_{x}^{k}\|^{2}-\frac{\mu_{x}}{2}\|y-c_{y}^{k}\|^{2}\right\}.$ (5)
+
+For $\mu_{y}\leq\mu_{x}$ , the quadratic terms balance the primal and dual curvatures at order $\mu_{x}$ . Moreover, an approximate KKT pair for this problem yields, after a simple correction, an inexact proximal certificate for $\Phi$ ; see Lemma 2 .
+
+We control the accuracy of the inner solves through a relative-error criterion with an additional absolute allowance, based on the mixed-error setting studied in [ 26 ] . Combining these inexact proximal steps with residual-corrected extrapolation yields Algorithm 1 below. The algorithm requires neither evaluating $\Phi$ nor computing the supremum defining it.
+
+Algorithm 1 An inexact proximal method for SCSC contraction
+
+$F_{k}(x,y)=\begin{pmatrix}\nabla_{x}f(x,y)-\dfrac{\mu_{x}}{2}(x-c_{x}^{k})\\[2.84526pt] -\nabla_{y}f(x,y)+\mu_{x}(y-c_{y}^{k})\end{pmatrix}\qquad\forall(x,y)\in\mathcal{X}\times\mathcal{Y},$ (6)
+
+$\widehat{c}^{k}=(I+\gamma_{k}B)^{-1}\bigl(c^{k}-\gamma_{k}F_{k}(u^{0})\bigr),\qquad\gamma_{k}=\frac{1}{(L_{\nabla f}+\mu_{x})(k+2)^{2}}.$
+
+$\|r^{k+1}\|\leq\frac{\mu_{x}}{64}\left(\|u^{k+1}-c^{k}\|+\frac{\|c^{k}-u^{0}\|}{(k+2)^{2}}\right).$ (7)
+
+$\displaystyle e^{k+1}=(e_{x}^{k+1},e_{y}^{k+1})=F(u^{k+1})+r^{k+1}-F_{k}(u^{k+1}),$ (8) $\displaystyle\tilde{u}^{k+1}=u^{k+1}-\frac{1}{\mu_{x}}(e_{x}^{k+1},0),$ (9) $\displaystyle c^{k+1}=\tilde{u}^{k+1}+\frac{k}{k+3}(\tilde{u}^{k+1}-\tilde{u}^{k})+\frac{k+2}{(k+3)\mu_{x}}(2r_{x}^{k+1},-r_{y}^{k+1}).$ (10)
+
+$\|e^{k+1}\|\leq\mu_{x}\left(\frac{1}{9}-\frac{3}{k+2}\sqrt{\frac{\mu_{x}}{\mu_{y}}}\right)_{+}\|u^{k+1}-u^{0}\|.$ (11)
+
+It can be observed from ( 8 )–( 10 ) that $e^{k+1}$ is the original KKT residual, $\tilde{u}^{k+1}$ is an inexact proximal point for $\Phi$ , and $c^{k+1}$ is the next extrapolation center. Moreover, the inner test ( 7 ) controls the proximal inexactness, while ( 11 ) determines when the algorithm returns. The decreasing parameter $\gamma_{k}$ is used only in the initialization resolvent.
+
+The following theorem presents our results on the above algorithm, whose proof is deferred to Subsection 4.1 .
+
+Suppose Assumptions 2 and 3 hold. Then Algorithm 1 is well-defined and terminates within $\lceil 128\sqrt{\mu_{x}/\mu_{y}}\rceil$ iterations. If it terminates at iteration $k$ , its output satisfies $e^{k+1}\in(F+B)(u^{k+1})$ and
+
+$\|u^{k+1}-u^{*}\|\leq\frac{1}{8}\|u^{0}-u^{*}\|,\qquad\|e^{k+1}\|\leq\frac{\mu_{x}}{8}\|u^{0}-u^{*}\|.$ (12)
+
+The numbers of evaluations of $\nabla f$ , $\prox_{p}$ , and $\prox_{q}$ are bounded, respectively, by
+
+$1+\left\lceil 128\sqrt{\frac{\mu_{x}}{\mu_{y}}}\right\rceil\left(1+N_{\mathcal{A}}+\left\lceil\frac{128\mathcal{C}_{\mathcal{A}}(L_{\nabla f}+\mu_{x})}{\mu_{x}}\right\rceil\right)=O\!\left(\frac{L_{\nabla f}}{\sqrt{\mu_{x}\mu_{y}}}\right).$ (13)
+
+The hidden constant depends only on $N_{\mathcal{A}}$ and $\mathcal{C}_{\mathcal{A}}$ .
+
+The proof is given in Section 4.1 . The iteration bound is used only in the analysis; the algorithm stops by ( 11 ).
+
+2.2 An accumulative regularizated method for SCSC problems
+
+In this subsection we use Algorithm 1 to find an $\epsilon$ -stationary point of ( 2 ), where $\epsilon>0$ is given. Algorithm 1 reduces the initial solution distance by an absolute factor. Its residual bound, however, involves $\mu_{x}$ . We combine these contractions with accumulated regularization to obtain an evaluation bound involving the smaller curvature $\mu_{y}$ inside the accuracy logarithm.
+
+At each regularized iteration we approximately solve a saddle problem with center $\bar{u}=(\bar{u}_{x},\bar{u}_{y})$ of the form
+
+$\min_{x}\max_{y}\left\{f(x,y)+p(x)-q(y)+\frac{\lambda}{2}\|x-\bar{u}_{x}\|^{2}-\frac{\lambda}{2}\|y-\bar{u}_{y}\|^{2}\right\},\qquad\lambda>0.$
+
+Following the accumulated-center construction in [ 28 , Algorithm 2.1] , we increase $\lambda$ and update $\bar{u}$ so that the preceding quadratic terms are retained. One preliminary call to Algorithm 1 bounds the remaining solution distance by its computed displacement. We use this displacement and $\epsilon$ to choose the initial regularization, and then continue the accumulation until the original residual is at most $\epsilon$ .
+
+Algorithm 2 Am accumulated regularizated method for SCSC minimax optimization
+
+$f_{k}(x,y)=f(x,y)+\frac{\lambda_{k}}{2}\|x-\bar{u}_{x}^{k}\|^{2}-\frac{\lambda_{k}}{2}\|y-\bar{u}_{y}^{k}\|^{2}.$
+
+The preliminary call determines $\lambda_{1}$ from the computed displacement. At each regularized iteration, $r^{k+1}$ is the residual of the regularized subproblem, and step 4 converts it to the original residual $e^{k+1}$ used in the stopping test.
+
+The following theorem presents our results on the above algorithm, whose proof is deferred to Subsection 4.2 .
+
+Suppose Assumptions 2 and 3 hold. Then Algorithm 2 is well-defined and terminates. Its output $(u^{k+1},e^{k+1})$ , with $k=0$ for a return in step 1, satisfies $e^{k+1}\in(F+B)(u^{k+1})$ and $\|e^{k+1}\|\leq\epsilon$ . The numbers of evaluations of $\nabla f$ , $\prox_{p}$ , and $\prox_{q}$ are bounded, respectively, by
+
+$\displaystyle 2^{11}(N_{\mathcal{A}}+256\mathcal{C}_{\mathcal{A}}+3)\frac{L_{\nabla f}}{\sqrt{\mu_{x}\mu_{y}}}\left(1+\log_{4}\!\left(1+\frac{\mu_{y}\|u^{0}-u^{*}\|}{\epsilon}\right)\right)$ (14) $\displaystyle=O\!\left(\frac{L_{\nabla f}}{\sqrt{\mu_{x}\mu_{y}}}\left(1+\log\!\left(1+\frac{\mu_{y}\|u^{0}-u^{*}\|}{\epsilon}\right)\right)\right),$
+
+where $u^{*}$ is the saddle point of ( 2 ) and the hidden constant depends only on $N_{\mathcal{A}}$ and $\mathcal{C}_{\mathcal{A}}$ .
+
+2.3 A parameter-free method for SCSC problems
+
+In this subsection we develop a variant of Algorithm 2 for solving ( 2 ) without knowing $L_{\nabla f}$ , $\mu_{x}$ , or $\mu_{y}$ . We call Algorithm 2 with tentative smoothness and curvature parameters and accept its output when the residual is sufficiently reduced.
+
+In addition to Assumption 3 , we require an implementation of $\mathcal{A}$ that is well-defined for all positive supplied parameters and can be interrupted before an evaluation of $F$ or the resolvent of $B$ . These requirements apply to every supplied inclusion, even when its smoothness and curvature parameters are invalid. No convergence guarantee is required for invalid parameters.
+
+For the simplicity of our discussion, let $\mathcal{I}$ be the list of integer triples $(i,j,k)$ with $i\geq 0$ and $0\leq j\leq k$ , ordered by increasing $2i+j+k$ , with any fixed order for ties. Each call to Algorithm 2 below is called a trial. Its evaluation limit applies separately to the numbers of evaluations of $\nabla f$ , $\prox_{p}$ , and $\prox_{q}$ , including all inner calls, initializations, and residual computations.
+
+Algorithm 3 A parameter-free method for SCSC minimax optimization
+
+For the update of $(i_{t+1},j_{t+1},k_{t+1})$ in step 11, one may choose $(i,j,k)$ lexicographically among triples with the same value of $2i+j+k$ . The resulting list $\mathcal{I}$ starts with $(0,0,0),(0,0,1),(0,0,2),(0,1,1),(1,0,0),\ldots$ . A successful trial retains the current triple, while an unsuccessful trial advances to the next triple and retains the current point and residual.
+
+The following theorem presents our results on the above algorithm, whose proof is deferred to Subsection 4.3 .
+
+Suppose Assumption 2 holds, and $\mathcal{A}$ satisfies Assumption 3 and the additional execution requirements in this subsection. Then Algorithm 3 is well-defined and terminates with an $\epsilon$ -stationary point of ( 2 ) for every input satisfying its requirements. The numbers of evaluations of $\nabla f$ , $\prox_{p}$ , and $\prox_{q}$ are bounded, respectively, by
+
+$\displaystyle 3+4(\widetilde{\mathcal{C}}_{\mathcal{A}}+1)\frac{L_{\nabla f}}{\sqrt{\mu_{x}\mu_{y}}}\left((2+\sqrt{2})\left(2\log_{2}\frac{L_{\nabla f}}{\sqrt{\mu_{x}\mu_{y}}}+6\right)^{2}+\left\lceil\log_{2}\!\left(1+\frac{4L_{\nabla f}^{2}\|u^{0}-u^{*}\|}{\mu_{x}\epsilon}\right)\right\rceil\right)$ (15) $\displaystyle=O\!\left(\frac{L_{\nabla f}}{\sqrt{\mu_{x}\mu_{y}}}\left(\log^{2}\!\left(2+\frac{L_{\nabla f}}{\sqrt{\mu_{x}\mu_{y}}}\right)+\log\!\left(1+\frac{\mu_{y}\|u^{0}-u^{*}\|}{\epsilon}\right)\right)\right),$
+
+where $u^{*}$ is the saddle point of ( 2 ) and $\widetilde{\mathcal{C}}_{\mathcal{A}}$ is defined in step 6 of Algorithm 3 .
+
+A successful trial verifies residual reduction, not the validity of its global parameter estimates. The parameter search contributes the first term in ( 15 ), which is additive to the accuracy term.
+
+The logarithmic term in ( 15 ) satisfies
+
+$\left\lceil\log_{2}\!\left(1+\frac{4L_{\nabla f}^{2}\|u^{0}-u^{*}\|}{\mu_{x}\epsilon}\right)\right\rceil\leq 3+2\log_{2}\frac{L_{\nabla f}}{\sqrt{\mu_{x}\mu_{y}}}+\log_{2}\!\left(1+\frac{\mu_{y}\|u^{0}-u^{*}\|}{\epsilon}\right).$
+
+Since $L_{\nabla f}/\sqrt{\mu_{x}\mu_{y}}\geq 1$ , the constant and the additional logarithm of $L_{\nabla f}/\sqrt{\mu_{x}\mu_{y}}$ are absorbed into the squared logarithm in ( 15 ). This yields the stated $O(\cdot)$ expression, whose hidden constant depends only on $N_{\mathcal{A}}$ and $\mathcal{C}_{\mathcal{A}}$ .
+
+3 First-order method for nonconvex–concave minimax optimization
+
+3.1 A proximal point method for NCC problems without knowledge of $L_{\nabla L}$
+
+We first develop a method for ( 1 ) that uses a supplied radius $D\geq 1$ and calls Algorithm 2 without knowing $L_{\nabla h}$ . By Assumption 1 (ii), $\|y-y^{0}\|\leq 2D_{\mathbf{y}}$ for every $y\in\mathcal{Y}$ . Thus, with $D=2D_{\mathbf{y}}$ , the method finds an $\epsilon$ -stationary point of ( 1 ). We impose the additional execution requirements on $\mathcal{A}$ stated in Subsection 2.3 , including when the supplied subproblems are not SCSC.
+
+Each call to Algorithm 2 is called a trial. The dual regularization parameter $\mu$ remains fixed. We maintain a primal center $x^{t}$ , an initial pair $(\hat{x},\hat{y})$ for the inner call, and a residual $r^{t}$ of the subproblem ( 16 ) at that pair. After an accepted trial, the returned primal point becomes the next center and the returned pair initializes the next call. A rejected trial retains the center and initial pair and doubles $\beta_{t}$ . A trial is called accepted if its call returns, passes the radius test in step 5, fails the stopping test in step 6, and satisfies ( 18 ). The radius test returns failure when the supplied radius is exceeded and Algorithm 5 uses this outcome to select the radius.
+
+Algorithm 4 A proximal point method for nonconvex–concave minimax optimization without knowledge of $L_{\nabla h}$
+
+$\displaystyle(\hat{x},\hat{y})=(I+\beta_{1}^{-1}B)^{-1}\bigl((x^{0},y^{0})-\beta_{1}^{-1}A(x^{0},y^{0})\bigr)$ $\displaystyle r^{1}=A(\hat{x},\hat{y})-A(x^{0},y^{0})+\bigl(\beta_{1}(\hat{x}-x^{0}),(\mu-\beta_{1})(\hat{y}-y^{0})\bigr).$
+
+$h_{t}(x,y)=h(x,y)+\beta_{t}\|x-x^{t}\|^{2}-\frac{\mu}{2}\|y-y^{0}\|^{2},$ (16)
+
+$\left\lceil\widetilde{\mathcal{C}}_{\mathcal{A}}\sqrt{\frac{\beta_{t}}{\mu}}\left(1+\log_{4}\!\left(1+\frac{64}{\epsilon}\sqrt{\|r_{x}^{t}\|^{2}+\frac{\beta_{t}}{\mu}\|r_{y}^{t}\|^{2}}\right)\right)\right\rceil$ (17)
+
+$h(x^{t},y^{t+1})-h(x^{t+1},y^{t+1})+\langle\nabla_{x}h(x^{t+1},y^{t+1}),x^{t+1}-x^{t}\rangle+\frac{\beta_{t}}{2}\|x^{t+1}-x^{t}\|^{2}\geq 0,$ (18)
+
+The following theorem establishes the evaluation complexity with the radius $D=2D_{\mathbf{y}}$ , whose proof is deferred to Subsection 4.4 .
+
+Suppose Assumption 1 holds, and $\mathcal{A}$ satisfies Assumption 3 and the additional execution requirements in Subsection 2.3 . Let $0<\epsilon<32L_{\nabla h}$ . Then Algorithm 4 with $D=2D_{\mathbf{y}}$ is well-defined and terminates with an $\epsilon$ -stationary point $(x,y)$ of ( 1 ). The numbers of evaluations of $h$ , $\nabla h$ , $\prox_{p}$ , and $\prox_{q}$ , including all unsuccessful trials, are bounded, respectively, by
+
+$\displaystyle 2+2^{13}(1+\sqrt{2})\widetilde{\mathcal{C}}_{\mathcal{A}}\sqrt{\frac{L_{\nabla h}D_{\mathbf{y}}}{\epsilon}}\left(1+\frac{L_{\nabla h}\Delta_{0}}{\epsilon^{2}}+\frac{L_{\nabla h}D_{\mathbf{y}}}{\epsilon}\right)$ (19) $\displaystyle=O\!\left(1+\sqrt{\frac{L_{\nabla h}D_{\mathbf{y}}}{\epsilon}}\left(1+\frac{L_{\nabla h}\Delta_{0}}{\epsilon^{2}}+\frac{L_{\nabla h}D_{\mathbf{y}}}{\epsilon}\right)\right),$
+
+where $\Delta_{0}=\max_{y}H(x^{0},y)-H^{*}$ , and $D_{\mathbf{y}}$ and $L_{\nabla h}$ are given in Assumption 1 (ii) and (iii), respectively.
+
+The first primal center is $x^{0}$ , so $\Delta_{0}$ is the original objective gap. The pair $(\hat{x},\hat{y})$ is used only as the initial point for the inner calls and is updated after each accepted trial. Algorithm 4 uses the radius bound $D_{\mathbf{y}}$ , but does not require $L_{\nabla h}$ or $\Delta_{0}$ . Its radius test cannot return failure when $D=2D_{\mathbf{y}}$ .
+
+3.2 A parameter-free proximal point method for SCSC problems
+
+We now remove the need for $D_{\mathbf{y}}$ by calling Algorithm 4 with successively doubled radius estimates. Each call starts from the original point $(x^{0},y^{0})$ and initializes its own smoothness estimate. A phase is one complete call to Algorithm 4 : its supplied radius remains fixed, and failure starts the next phase with twice that radius.
+
+Algorithm 5 A parameter-free proximal point method for nonconvex–concave minimax optimization
+
+The following theorem presents our results on the above algorithm, whose proof is deferred to Subsection 4.4 .
+
+Suppose Assumption 1 holds, and $\mathcal{A}$ satisfies Assumption 3 and the additional execution requirements in Subsection 2.3 . Let $0<\epsilon<32L_{\nabla h}$ . Then Algorithm 5 is well-defined and terminates with an $\epsilon$ -stationary point $(x,y)$ of ( 1 ). The numbers of evaluations of $h$ , $\nabla h$ , $\prox_{p}$ , and $\prox_{q}$ , including all calls to Algorithm 4 , are bounded, respectively, by
+
+$O\!\left(1+\sqrt{\frac{L_{\nabla h}D_{\mathbf{y}}}{\epsilon}}\left(1+\frac{L_{\nabla h}\Delta_{0}}{\epsilon^{2}}+\frac{L_{\nabla h}D_{\mathbf{y}}}{\epsilon}\right)\right),$ (20)
+
+where $\Delta_{0}$ is defined in Theorem 4 , and $D_{\mathbf{y}}$ and $L_{\nabla h}$ are given in Assumption 1 (ii) and (iii), respectively.
+
+It can be observer from the above theorem that ALgorithm 5 enjoys a $O(\epsilon^{-5/2})$ operation complexity for finding an $\epsilon$ -stationary point $(x,y)$ of ( 1 ). To the best of our knowledge, this improves the best known complexity be a logarithmic factor for the first time. Moreover, our method is parameter-free and equipped with a verifiable termination criterion.
+
+4 Proof of the main results
+
+In this section we provide a proof of our main results presented in Sections 2 and 3 , which are particularly Theorems 1 – 5 .
+
+4.1 Proof of the main result in Subsection 2.1
+
+In this subsection we first establish several lemmas and then prove Theorem 1 . All iteration indices in this subsection refer to iterations reached by Algorithm 1 . Throughout this subsection, $u^{*}$ denotes the saddle point of ( 2 ), and $u_{*}^{k}$ denotes the solution of the balanced subproblem at $c^{k}$ .
+
+The following lemma establishes that the call to the subsolver terminates in finitely many evaluations.
+
+Suppose Assumptions 2 and 3 hold. For every iteration $k$ reached by Algorithm 1 , its subsolver initial point $\widehat{c}^{k}$ belongs to $\mathcal{X}\times\mathcal{Y}$ , and its call in step 2 terminates and outputs a pair satisfying the termination criteria ( 7 ) within
+
+$1+N_{\mathcal{A}}+\left\lceil\frac{128\mathcal{C}_{\mathcal{A}}(L_{\nabla f}+\mu_{x})}{\mu_{x}}\right\rceil$
+
+evaluations of $\nabla f$ , $\prox_{p}$ , and $\prox_{q}$ , respectively.
+
+Fix any reached iteration $k$ . The definition of $\widehat{c}^{k}$ in step 2 implies that $\widehat{c}^{k}\in\mathcal{X}\times\mathcal{Y}$ . Thus $\widehat{c}^{k}$ is an valid initial point for $\mathcal{A}$ . It follows from Assumption 2 that the balanced subproblem ( 5 ) has a unique saddle point $u_{*}^{k}$ . By ( 6 ), $F_{k}$ is $(L_{\nabla f}+\mu_{x})$ -Lipschitz and $\mu_{x}/2$ -strongly monotone on $\mathcal{X}\times\mathcal{Y}$ , so the parameters in step 2 are valid. Since $0\in(F_{k}+B)(u_{*}^{k})$ , we have $u_{*}^{k}=(I+\gamma_{k}B)^{-1}(u_{*}^{k}-\gamma_{k}F_{k}(u_{*}^{k}))$ . By the definition of $\widehat{c}^{k}$ in step 2 and the nonexpansivity of the resolvent, one has
+
+$\displaystyle\|\widehat{c}^{k}-u_{*}^{k}\|\leq\|c^{k}-u_{*}^{k}-\gamma_{k}(F_{k}(u^{0})-F_{k}(u_{*}^{k}))\|$ $\displaystyle\leq\|c^{k}-u_{*}^{k}\|+\gamma_{k}(L_{\nabla f}+\mu_{x})\|u^{0}-u_{*}^{k}\|$ $\displaystyle=\|c^{k}-u_{*}^{k}\|+\frac{\|u^{0}-u_{*}^{k}\|}{(k+2)^{2}}\leq\left(1+\frac{1}{(k+2)^{2}}\right)\|c^{k}-u_{*}^{k}\|+\frac{\|c^{k}-u^{0}\|}{(k+2)^{2}},$
+
+where the first inequality follows from the nonexpansivity of the resolvent, the second inequality follows from the Lipschitz continuity of $F_{k}$ , and the equality follows from $\gamma_{k}(L_{\nabla f}+\mu_{x})=(k+2)^{-2}$ . Unless the call has already terminated, Assumption 3 with $\vartheta=\mu_{x}/128$ implies that the current call of $\mathcal{A}$ generates a pair $(u,r)$ satisfying $r\in(F_{k}+B)(u)$ and
+
+$\|r\|\leq\frac{\mu_{x}}{128}\|\widehat{c}^{k}-u_{*}^{k}\|\leq\frac{5\mu_{x}}{512}\|c^{k}-u_{*}^{k}\|+\frac{\mu_{x}}{128(k+2)^{2}}\|c^{k}-u^{0}\|,$ (21)
+
+where the last inequality follows from $(k+2)^{-2}\leq 1/4$ . This pair is generated in at most $N_{\mathcal{A}}+\lceil 128\mathcal{C}_{\mathcal{A}}(L_{\nabla f}+\mu_{x})/\mu_{x}\rceil$ evaluations of $F_{k}$ and of the resolvent of $B$ , respectively. By strong monotonicity and $0\in(F_{k}+B)(u_{*}^{k})$ , one has
+
+$\frac{\mu_{x}}{2}\|u-u_{*}^{k}\|^{2}\leq\langle r,u-u_{*}^{k}\rangle\leq\|r\|\|u-u_{*}^{k}\|,$
+
+and hence $\|c^{k}-u_{*}^{k}\|\leq\|u-c^{k}\|+\|u-u_{*}^{k}\|\leq\|u-c^{k}\|+2\|r\|/\mu_{x}$ . Substituting this into ( 21 ), we obtain
+
+$\|r\|\leq\frac{5\mu_{x}}{512}\left(\|u-c^{k}\|+\frac{2\|r\|}{\mu_{x}}\right)+\frac{\mu_{x}}{128(k+2)^{2}}\|c^{k}-u^{0}\|.$
+
+Rearranging, we obtain
+
+$\displaystyle\|r\|\leq\frac{5\mu_{x}}{502}\|u-c^{k}\|+\frac{2\mu_{x}}{251(k+2)^{2}}\|c^{k}-u^{0}\|\leq\frac{\mu_{x}}{64}\left(\|u-c^{k}\|+\frac{\|c^{k}-u^{0}\|}{(k+2)^{2}}\right).$
+
+Hence, this pair satisfies ( 7 ). By ( 6 ),
+
+$F_{k}(u^{0})=F(u^{0})+\left(-\frac{\mu_{x}}{2}(x^{0}-c_{x}^{k}),\mu_{x}(y^{0}-c_{y}^{k})\right).$
+
+Thus the initialization evaluates each of $\prox_{p}$ and $\prox_{q}$ once and computes $F_{k}(u^{0})$ from the previously evaluated $F(u^{0})$ by affine arithmetic. Each subsequent evaluation of $F_{k}$ requires one evaluation of $\nabla f$ , and each resolvent evaluation requires one evaluation of each proximal mapping. The conclusion then follows from these. ∎
+
+The next lemma establishes the inclusions and relative-error bound for $e^{k+1}$ and $\tilde{u}^{k+1}$ in ( 8 ) and ( 9 ), respectively.
+
+Suppose Assumptions 2 and 3 hold. Let $F$ and $B$ be defined in ( 3 ), and $\Phi$ in ( 4 ). For the sequence generated by Algorithm 1 from $u^{0}$ , let $e^{k+1}$ , $\tilde{u}^{k+1}$ , and $c^{k+1}$ be defined by ( 8 )–( 10 ). Then $e^{k+1}\in(F+B)(u^{k+1})$ and $(-e_{x}^{k+1},e_{y}^{k+1})\in\partial\Phi(\tilde{u}^{k+1})$ at every reached iteration $k$ . Moreover, we have
+
+$\left\|\mu_{x}(\tilde{u}^{k+1}-c^{k})+(-e_{x}^{k+1},e_{y}^{k+1})\right\|\leq\frac{\mu_{x}}{8}\left(\|\tilde{u}^{k+1}-c^{k}\|+\frac{\|c^{k}-u^{0}\|}{(k+2)^{2}}\right).$ (22)
+
+Fix any reached iteration $k$ . By step 2 of Algorithm 1 and ( 8 ), $r^{k+1}-F_{k}(u^{k+1})\in B(u^{k+1})$ and
+
+$e^{k+1}=F(u^{k+1})+\bigl(r^{k+1}-F_{k}(u^{k+1})\bigr)\in(F+B)(u^{k+1}).$
+
+In particular, $e_{x}^{k+1}\in\nabla_{x}f(u^{k+1})+\partial p(x^{k+1})$ . In addition, it follows from ( 9 ) that $e_{x}^{k+1}=\mu_{x}(x^{k+1}-\tilde{u}_{x}^{k+1})$ . Using this and strong convexity, we obtain that for every $x\in\mathcal{X}$ ,
+
+$\displaystyle f(x,y^{k+1})+p(x)\geq f(u^{k+1})+p(x^{k+1})+\langle e_{x}^{k+1},x-x^{k+1}\rangle+\frac{\mu_{x}}{2}\|x-x^{k+1}\|^{2}$ (23) $\displaystyle=f(u^{k+1})+p(x^{k+1})+\langle e_{x}^{k+1},x-\tilde{u}_{x}^{k+1}-e_{x}^{k+1}/\mu_{x}\rangle+\frac{\mu_{x}}{2}\|x-\tilde{u}_{x}^{k+1}-e_{x}^{k+1}/\mu_{x}\|^{2}$ $\displaystyle=f(u^{k+1})+p(x^{k+1})+\frac{\mu_{x}}{2}\|x-\tilde{u}_{x}^{k+1}\|^{2}-\frac{\|e_{x}^{k+1}\|^{2}}{2\mu_{x}},$
+
+where the first equality follows from $e_{x}^{k+1}=\mu_{x}(x^{k+1}-\tilde{u}_{x}^{k+1})$ . Notice that equality holds in the first inequality at $x=x^{k+1}$ . Thus the supremum in $\Phi(\tilde{u}^{k+1})$ in ( 4 ) is attained at $x^{k+1}$ . Since $\tilde{u}_{y}^{k+1}=y^{k+1}$ ,
+
+$\displaystyle\Phi(\tilde{u}^{k+1})=q(y^{k+1})+\sup_{x}\left\{\frac{\mu_{x}}{2}\|x-\tilde{u}_{x}^{k+1}\|^{2}-f(x,y^{k+1})-p(x)\right\}$ (24) $\displaystyle=q(y^{k+1})-f(u^{k+1})-p(x^{k+1})+\frac{\mu_{x}}{2}\|x^{k+1}-\tilde{u}_{x}^{k+1}\|^{2}$ $\displaystyle=q(y^{k+1})-f(u^{k+1})-p(x^{k+1})+\frac{\|e_{x}^{k+1}\|^{2}}{2\mu_{x}},$
+
+where the second equality follows from ( 23 ), and the last uses $x^{k+1}-\tilde{u}_{x}^{k+1}=e_{x}^{k+1}/\mu_{x}$ . For any $(\xi,y)\in\dom\Phi$ , it follows from $x^{k+1}=\tilde{u}_{x}^{k+1}+e_{x}^{k+1}/\mu_{x}$ that
+
+$\frac{\mu_{x}}{2}\|x^{k+1}-\xi\|^{2}=\frac{\|e_{x}^{k+1}\|^{2}}{2\mu_{x}}-\langle e_{x}^{k+1},\xi-\tilde{u}_{x}^{k+1}\rangle+\frac{\mu_{x}}{2}\|\xi-\tilde{u}_{x}^{k+1}\|^{2}.$ (25)
+
+Using this, ( 4 ), and ( 24 ), we obtain
+
+$\displaystyle\Phi(\xi,y)\geq q(y)-f(x^{k+1},y)-p(x^{k+1})+\frac{\mu_{x}}{2}\|x^{k+1}-\xi\|^{2}$ $\displaystyle\geq q(y^{k+1})-f(u^{k+1})-p(x^{k+1})+\langle e_{y}^{k+1},y-y^{k+1}\rangle$ $\displaystyle\quad+\frac{\mu_{y}}{2}\|y-y^{k+1}\|^{2}+\frac{\mu_{x}}{2}\|x^{k+1}-\xi\|^{2}$ $\displaystyle=\Phi(\tilde{u}^{k+1})+\langle(-e_{x}^{k+1},e_{y}^{k+1}),(\xi,y)-\tilde{u}^{k+1}\rangle+\frac{\mu_{x}}{2}\|\xi-\tilde{u}_{x}^{k+1}\|^{2}+\frac{\mu_{y}}{2}\|y-y^{k+1}\|^{2},$
+
+where the first inequality follows from the definition of the supremum and the choice $x^{k+1}$ , the second inequality is due to the $\mu_{y}$ -strong convexity of $q(\cdot)-f(x^{k+1},\cdot)$ with subgradient $e_{y}^{k+1}$ at $y^{k+1}$ , and the equality follows from ( 24 ) and ( 25 ). Hence, $(-e_{x}^{k+1},e_{y}^{k+1})\in\partial\Phi(\tilde{u}^{k+1})$ .
+
+We next show that ( 22 ) holds. By ( 6 ) and ( 8 ), one has
+
+$e^{k+1}=r^{k+1}+\left(\frac{\mu_{x}}{2}(x^{k+1}-c_{x}^{k}),-\mu_{x}(y^{k+1}-c_{y}^{k})\right).$
+
+Using this and ( 9 ), we obtain
+
+$\tilde{u}^{k+1}=\left(x^{k+1}-\frac{e_{x}^{k+1}}{\mu_{x}},y^{k+1}\right)=\left(x^{k+1}-\frac{r_{x}^{k+1}}{\mu_{x}}-\frac{x^{k+1}-c_{x}^{k}}{2},y^{k+1}\right)=\left(\frac{x^{k+1}+c_{x}^{k}}{2}-\frac{r_{x}^{k+1}}{\mu_{x}},y^{k+1}\right),$ (26)
+
+where the second equality follows from $e_{x}^{k+1}=r_{x}^{k+1}+\mu_{x}(x^{k+1}-c_{x}^{k})/2$ . In addition, we have
+
+$\displaystyle\mu_{x}(\tilde{u}^{k+1}-c^{k})+(-e_{x}^{k+1},e_{y}^{k+1})=\bigl(\mu_{x}(x^{k+1}-c_{x}^{k})-2e_{x}^{k+1},\mu_{x}(y^{k+1}-c_{y}^{k})+e_{y}^{k+1}\bigr)$ (27) $\displaystyle=\left(\mu_{x}(x^{k+1}-c_{x}^{k})-2\left(r_{x}^{k+1}+\frac{\mu_{x}}{2}(x^{k+1}-c_{x}^{k})\right),r_{y}^{k+1}\right)=(-2r_{x}^{k+1},r_{y}^{k+1}),$
+
+where the first equality follows from $\tilde{u}_{x}^{k+1}=x^{k+1}-e_{x}^{k+1}/\mu_{x}$ and $\tilde{u}_{y}^{k+1}=y^{k+1}$ , and the second follows from ( 6 ) and ( 8 ).
+
+By ( 26 ), $x^{k+1}-c_{x}^{k}=2(\tilde{u}_{x}^{k+1}-c_{x}^{k})+2r_{x}^{k+1}/\mu_{x}$ and $y^{k+1}-c_{y}^{k}=\tilde{u}_{y}^{k+1}-c_{y}^{k}$ . Using these, we obtain
+
+$\displaystyle\|u^{k+1}-c^{k}\|=\left\|\bigl(2(\tilde{u}_{x}^{k+1}-c_{x}^{k}),\tilde{u}_{y}^{k+1}-c_{y}^{k}\bigr)+\left(\frac{2r_{x}^{k+1}}{\mu_{x}},0\right)\right\|$ $\displaystyle\leq\sqrt{4\|\tilde{u}_{x}^{k+1}-c_{x}^{k}\|^{2}+\|\tilde{u}_{y}^{k+1}-c_{y}^{k}\|^{2}}+\frac{2}{\mu_{x}}\|r_{x}^{k+1}\|\leq 2\|\tilde{u}^{k+1}-c^{k}\|+\frac{2}{\mu_{x}}\|r^{k+1}\|.$
+
+Substituting this bound into ( 7 ) yields
+
+$\displaystyle\|r^{k+1}\|\leq\frac{\mu_{x}}{64}\left(\|u^{k+1}-c^{k}\|+\frac{\|c^{k}-u^{0}\|}{(k+2)^{2}}\right)\leq\frac{\mu_{x}}{32}\|\tilde{u}^{k+1}-c^{k}\|+\frac{1}{32}\|r^{k+1}\|+\frac{\mu_{x}}{64(k+2)^{2}}\|c^{k}-u^{0}\|,$
+
+which further implies that
+
+$\|r^{k+1}\|\leq\frac{\mu_{x}}{31}\|\tilde{u}^{k+1}-c^{k}\|+\frac{\mu_{x}}{62(k+2)^{2}}\|c^{k}-u^{0}\|.$ (28)
+
+Using this and ( 27 ), we have
+
+$\displaystyle\left\|\mu_{x}(\tilde{u}^{k+1}-c^{k})+(-e_{x}^{k+1},e_{y}^{k+1})\right\|=\sqrt{4\|r_{x}^{k+1}\|^{2}+\|r_{y}^{k+1}\|^{2}}\leq 2\|r^{k+1}\|$ $\displaystyle\leq\frac{2\mu_{x}}{31}\|\tilde{u}^{k+1}-c^{k}\|+\frac{\mu_{x}}{31(k+2)^{2}}\|c^{k}-u^{0}\|\leq\frac{\mu_{x}}{8}\left(\|\tilde{u}^{k+1}-c^{k}\|+\frac{\|c^{k}-u^{0}\|}{(k+2)^{2}}\right),$
+
+where the second inequality follows from ( 28 ). Hence, ( 22 ) holds. ∎
+
+The next three lemmas establish an energy estimate, a uniform bound, and the point and residual bounds for Algorithm 1 .
+
+Suppose Assumptions 2 and 3 hold. Let $u^{*}$ be the unique saddle point of ( 2 ), and let $\Phi$ be defined in ( 4 ). For the sequence generated by Algorithm 1 , define
+
+$\bar{u}^{i}=\frac{i+2}{2}c^{i}-\frac{i}{2}\tilde{u}^{i}$ (29)
+
+at each generated index $i$ . Then, at every reached iteration $k$ ,
+
+$\displaystyle\frac{(k+2)^{2}}{4\mu_{x}}\bigl(\Phi(\tilde{u}^{k+1})-\Phi(u^{*})\bigr)+\frac{1}{2}\|\bar{u}^{k+1}-u^{*}\|^{2}+\frac{31}{256}\sum_{i=0}^{k}(i+2)^{2}\|\tilde{u}^{i+1}-c^{i}\|^{2}$ (30) $\displaystyle\leq\frac{1}{2}\|u^{0}-u^{*}\|^{2}+\frac{1}{256}\sum_{i=0}^{k}\frac{\|c^{i}-u^{0}\|^{2}}{(i+2)^{2}}.$
+
+Fix any reached iteration $k$ . By Lemma 2 , $(-e_{x}^{i+1},e_{y}^{i+1})\in\partial\Phi(\tilde{u}^{i+1})$ for $0\leq i\leq k$ . By the subgradient inequality, one has
+
+$\Phi(\tilde{u}^{i+1})-\Phi(\tilde{u}^{i})\leq\langle(-e_{x}^{i+1},e_{y}^{i+1}),\tilde{u}^{i+1}-\tilde{u}^{i}\rangle\qquad\forall 1\leq i\leq k.$ (31)
+
+In addition, by the $\mu_{y}$ -strong convexity of $\Phi$ and $0\in\partial\Phi(u^{*})$ , we have
+
+$\frac{\mu_{y}}{2}\|\tilde{u}^{i+1}-u^{*}\|^{2}\leq\Phi(\tilde{u}^{i+1})-\Phi(u^{*})\leq\langle(-e_{x}^{i+1},e_{y}^{i+1}),\tilde{u}^{i+1}-u^{*}\rangle\qquad\forall 0\leq i\leq k.$ (32)
+
+By ( 29 ), $\bar{u}^{0}=u^{0}$ . Using this definition and ( 10 ), we obtain, for $0\leq i\leq k$ ,
+
+$\displaystyle\bar{u}^{i+1}=\frac{i+3}{2}\left(\tilde{u}^{i+1}+\frac{i}{i+3}(\tilde{u}^{i+1}-\tilde{u}^{i})+\frac{i+2}{(i+3)\mu_{x}}(2r_{x}^{i+1},-r_{y}^{i+1})\right)-\frac{i+1}{2}\tilde{u}^{i+1}$ $\displaystyle=\frac{i+2}{2}\tilde{u}^{i+1}-\frac{i}{2}\tilde{u}^{i}+\frac{i+2}{2\mu_{x}}(2r_{x}^{i+1},-r_{y}^{i+1}).$
+
+Recall from ( 27 ) that $(2r_{x}^{i+1},-r_{y}^{i+1})=-\mu_{x}(\tilde{u}^{i+1}-c^{i})-(-e_{x}^{i+1},e_{y}^{i+1})$ . Substituting this identity into the displayed expression for $\bar{u}^{i+1}$ and using ( 29 ), we obtain
+
+$\bar{u}^{i+1}=\frac{i+2}{2}c^{i}-\frac{i}{2}\tilde{u}^{i}-\frac{i+2}{2\mu_{x}}(-e_{x}^{i+1},e_{y}^{i+1})=\bar{u}^{i}-\frac{i+2}{2\mu_{x}}(-e_{x}^{i+1},e_{y}^{i+1}).$
+
+It then follows that
+
+$\frac{1}{2}\|\bar{u}^{i+1}-u^{*}\|^{2}-\frac{1}{2}\|\bar{u}^{i}-u^{*}\|^{2}=-\frac{i+2}{2\mu_{x}}\langle(-e_{x}^{i+1},e_{y}^{i+1}),\bar{u}^{i}-u^{*}\rangle+\frac{(i+2)^{2}}{8\mu_{x}^{2}}\|e^{i+1}\|^{2}.$ (33)
+
+For $1\leq i\leq k$ , multiplying ( 31 ) by $i(i+2)/(4\mu_{x})$ and the upper bound in ( 32 ) by $(i+2)/(2\mu_{x})$ and adding them, we obtain
+
+$\displaystyle\frac{(i+2)^{2}}{4\mu_{x}}\bigl(\Phi(\tilde{u}^{i+1})-\Phi(u^{*})\bigr)-\frac{i(i+2)}{4\mu_{x}}\bigl(\Phi(\tilde{u}^{i})-\Phi(u^{*})\bigr)$ (34) $\displaystyle=\frac{i(i+2)}{4\mu_{x}}\bigl(\Phi(\tilde{u}^{i+1})-\Phi(\tilde{u}^{i})\bigr)+\frac{i+2}{2\mu_{x}}\bigl(\Phi(\tilde{u}^{i+1})-\Phi(u^{*})\bigr)$ $\displaystyle\leq\frac{i(i+2)}{4\mu_{x}}\langle(-e_{x}^{i+1},e_{y}^{i+1}),\tilde{u}^{i+1}-\tilde{u}^{i}\rangle+\frac{i+2}{2\mu_{x}}\langle(-e_{x}^{i+1},e_{y}^{i+1}),\tilde{u}^{i+1}-u^{*}\rangle$ $\displaystyle=\frac{i+2}{4\mu_{x}}\langle(-e_{x}^{i+1},e_{y}^{i+1}),(i+2)\tilde{u}^{i+1}-i\tilde{u}^{i}-2u^{*}\rangle$ $\displaystyle=\frac{(i+2)^{2}}{4\mu_{x}}\langle(-e_{x}^{i+1},e_{y}^{i+1}),\tilde{u}^{i+1}-c^{i}\rangle+\frac{i+2}{2\mu_{x}}\langle(-e_{x}^{i+1},e_{y}^{i+1}),\bar{u}^{i}-u^{*}\rangle,$
+
+where the inequality follows from ( 31 ) and ( 32 ) and the last equality follows from ( 29 ). Using ( 22 ) to bound the sum of ( 33 ) and ( 34 ), we obtain
+
+$\displaystyle\frac{(i+2)^{2}}{4\mu_{x}}\bigl(\Phi(\tilde{u}^{i+1})-\Phi(u^{*})\bigr)+\frac{1}{2}\|\bar{u}^{i+1}-u^{*}\|^{2}-\frac{(i+1)^{2}}{4\mu_{x}}\bigl(\Phi(\tilde{u}^{i})-\Phi(u^{*})\bigr)-\frac{1}{2}\|\bar{u}^{i}-u^{*}\|^{2}$ (35) $\displaystyle\leq\frac{(i+2)^{2}}{4\mu_{x}}\langle(-e_{x}^{i+1},e_{y}^{i+1}),\tilde{u}^{i+1}-c^{i}\rangle+\frac{(i+2)^{2}}{8\mu_{x}^{2}}\|e^{i+1}\|^{2}$ $\displaystyle=\frac{(i+2)^{2}}{8\mu_{x}^{2}}\left(\left\|\mu_{x}(\tilde{u}^{i+1}-c^{i})+(-e_{x}^{i+1},e_{y}^{i+1})\right\|^{2}-\mu_{x}^{2}\|\tilde{u}^{i+1}-c^{i}\|^{2}\right)$ $\displaystyle\leq\frac{(i+2)^{2}}{512}\left(\|\tilde{u}^{i+1}-c^{i}\|+\frac{\|c^{i}-u^{0}\|}{(i+2)^{2}}\right)^{2}-\frac{(i+2)^{2}}{8}\|\tilde{u}^{i+1}-c^{i}\|^{2}$ $\displaystyle\leq-\frac{31(i+2)^{2}}{256}\|\tilde{u}^{i+1}-c^{i}\|^{2}+\frac{\|c^{i}-u^{0}\|^{2}}{256(i+2)^{2}},$
+
+where the first inequality also uses $i(i+2)\leq(i+1)^{2}$ and $\Phi(\tilde{u}^{i})\geq\Phi(u^{*})$ , the second inequality follows from ( 22 ), and the last inequality is due to the convexity of $|\cdot|^{2}$ .
+
+At $i=0$ , multiplying the upper bound in ( 32 ) by $1/\mu_{x}$ and adding ( 33 ), we obtain
+
+$\displaystyle\frac{1}{\mu_{x}}\left(\Phi(\tilde{u}^{1})-\Phi(u^{*})\right)+\frac{1}{2}\|\bar{u}^{1}-u^{*}\|^{2}-\frac{1}{2}\|u^{0}-u^{*}\|^{2}\leq\frac{1}{\mu_{x}}\langle(-e_{x}^{1},e_{y}^{1}),\tilde{u}^{1}-c^{0}\rangle+\frac{1}{2\mu_{x}^{2}}\|e^{1}\|^{2}$ $\displaystyle=\frac{1}{2\mu_{x}^{2}}\left(\left\|\mu_{x}(\tilde{u}^{1}-c^{0})+(-e_{x}^{1},e_{y}^{1})\right\|^{2}-\mu_{x}^{2}\|\tilde{u}^{1}-c^{0}\|^{2}\right)\leq\frac{1}{2}\left(\frac{1}{64}-1\right)\|\tilde{u}^{1}-c^{0}\|^{2}\leq-\frac{31}{64}\|\tilde{u}^{1}-c^{0}\|^{2},$
+
+where the first inequality follows from $\bar{u}^{0}=c^{0}=u^{0}$ and ( 33 ), and the second inequality follows from ( 22 ) and $c^{0}=u^{0}$ . Summing this inequality and ( 35 ) for $i=1,\ldots,k$ yields ( 30 ). ∎
+
+The following lemma bounds the accumulated error in ( 30 ).
+
+Suppose Assumptions 2 and 3 hold. Let $u^{*}$ be the unique saddle point of ( 2 ), $\Phi$ be defined in ( 4 ), and $\bar{u}^{i}$ be defined by ( 29 ). Then the sequence generated by Algorithm 1 satisfies $\|c^{k}-u^{0}\|\leq 3\|u^{0}-u^{*}\|$ and
+
+$\frac{(k+2)^{2}}{4\mu_{x}}\bigl(\Phi(\tilde{u}^{k+1})-\Phi(u^{*})\bigr)+\frac{1}{2}\|\bar{u}^{k+1}-u^{*}\|^{2}+\frac{1}{16}\sum_{i=0}^{k}(i+2)^{2}\|\tilde{u}^{i+1}-c^{i}\|^{2}\leq\|u^{0}-u^{*}\|^{2}$ (36)
+
+at every reached iteration $k$ .
+
+Fix any reached iteration $k$ . We show by induction that
+
+$\|\tilde{u}^{i}-u^{*}\|\leq 2\|u^{0}-u^{*}\|,\qquad\|\bar{u}^{i}-u^{*}\|\leq\sqrt{2}\|u^{0}-u^{*}\|\qquad\forall 0\leq i\leq k+1.$ (37)
+
+Both bounds hold at $i=0$ by definition. Suppose that they hold through some $t\leq k$ . By ( 29 ), one has for $0\leq i\leq t$ that
+
+$\displaystyle\|c^{i}-u^{0}\|=\left\|\frac{i}{i+2}(\tilde{u}^{i}-u^{*})+\frac{2}{i+2}(\bar{u}^{i}-u^{*})+(u^{*}-u^{0})\right\|$ (38) $\displaystyle\leq\left(\frac{2i+2\sqrt{2}}{i+2}+1\right)\|u^{0}-u^{*}\|\leq 3\|u^{0}-u^{*}\|,$
+
+where the first inequality follows from the induction hypothesis. Using this, we obtain
+
+$\displaystyle\frac{1}{2}\|u^{0}-u^{*}\|^{2}+\frac{1}{256}\sum_{i=0}^{t}\frac{\|c^{i}-u^{0}\|^{2}}{(i+2)^{2}}\leq\left(\frac{1}{2}+\frac{9}{256}\sum_{i=0}^{t}\frac{1}{(i+2)^{2}}\right)\|u^{0}-u^{*}\|^{2}\leq\|u^{0}-u^{*}\|^{2},$
+
+where the last inequality follows from $\sum_{i=0}^{t}(i+2)^{-2}\leq 1$ . By this, ( 30 ), and $31/256\geq 1/16$ , the bound ( 36 ) holds with $k=t$ . Since all terms on the left are nonnegative, one has
+
+$\|\bar{u}^{t+1}-u^{*}\|\leq\sqrt{2}\|u^{0}-u^{*}\|,\qquad\|\tilde{u}^{t+1}-c^{t}\|\leq\frac{4}{t+2}\|u^{0}-u^{*}\|.$ (39)
+
+In addition, by ( 10 ) and ( 29 ), we obtain
+
+$\displaystyle\|\tilde{u}^{t+1}-u^{*}\|=\left\|\frac{t}{t+2}(\tilde{u}^{t}-u^{*})+\frac{2}{t+2}(\bar{u}^{t+1}-u^{*})+\frac{1}{\mu_{x}}(-2r_{x}^{t+1},r_{y}^{t+1})\right\|$ $\displaystyle\leq\frac{t}{t+2}\|\tilde{u}^{t}-u^{*}\|+\frac{2}{t+2}\|\bar{u}^{t+1}-u^{*}\|+\frac{1}{8}\left(\|\tilde{u}^{t+1}-c^{t}\|+\frac{\|c^{t}-u^{0}\|}{(t+2)^{2}}\right)$ $\displaystyle\leq\frac{2t+2\sqrt{2}+3/4}{t+2}\|u^{0}-u^{*}\|\leq 2\|u^{0}-u^{*}\|,$
+
+where the first inequality follows from ( 22 ) and ( 27 ), and the second follows from ( 38 ), ( 39 ), the induction hypothesis, and $t+2\geq 2$ . This completes the induction and establishes ( 36 ). Finally, by ( 29 ) and ( 37 ), one has
+
+$\|c^{k}-u^{0}\|\leq\frac{k}{k+2}\|\tilde{u}^{k}-u^{*}\|+\frac{2}{k+2}\|\bar{u}^{k}-u^{*}\|+\|u^{0}-u^{*}\|\leq 3\|u^{0}-u^{*}\|.$ (40)
+
+Hence, the conclusion follows. ∎
+
+We can now establish the point and residual bounds.
+
+Suppose Assumptions 2 and 3 hold. Let $u^{*}$ be the unique saddle point of ( 2 ), and let $e^{k+1}$ and $\tilde{u}^{k+1}$ be defined by ( 8 ) and ( 9 ), respectively, in Algorithm 1 . Then, at every reached iteration $k$ , we have
+
+$\|\tilde{u}^{k+1}-u^{*}\|\leq\frac{3}{k+2}\sqrt{\frac{\mu_{x}}{\mu_{y}}}\|u^{0}-u^{*}\|,\qquad\|e^{k+1}\|\leq\frac{5\mu_{x}}{k+2}\|u^{0}-u^{*}\|.$ (41)
+
+Fix any reached iteration $k$ . By the lower bound in ( 32 ) and ( 36 ), one has
+
+$\frac{(k+2)^{2}\mu_{y}}{8\mu_{x}}\|\tilde{u}^{k+1}-u^{*}\|^{2}\leq\frac{(k+2)^{2}}{4\mu_{x}}\bigl(\Phi(\tilde{u}^{k+1})-\Phi(u^{*})\bigr)\leq\|u^{0}-u^{*}\|^{2}.$
+
+The first bound in ( 41 ) follows from this and $\sqrt{8}\leq 3$ . In addition, we have
+
+$\displaystyle\|e^{k+1}\|\leq\left\|\mu_{x}(\tilde{u}^{k+1}-c^{k})+(-e_{x}^{k+1},e_{y}^{k+1})\right\|+\mu_{x}\|\tilde{u}^{k+1}-c^{k}\|$ $\displaystyle\leq\frac{9\mu_{x}}{8}\|\tilde{u}^{k+1}-c^{k}\|+\frac{\mu_{x}}{8(k+2)^{2}}\|c^{k}-u^{0}\|$ $\displaystyle\leq\left(\frac{9}{2(k+2)}+\frac{3}{8(k+2)^{2}}\right)\mu_{x}\|u^{0}-u^{*}\|\leq\frac{5\mu_{x}}{k+2}\|u^{0}-u^{*}\|,$
+
+where the first inequality follows from the triangle inequality, the second inequality follows from ( 22 ), and the third inequality follows from ( 36 ) and ( 40 ). Hence, the second bound in ( 41 ) holds. ∎
+
+We are now ready to prove Theorem 1 .
+
+By Lemma 1 , each call in step 2 starts at a point in $\mathcal{X}\times\mathcal{Y}$ and terminates with a pair satisfying ( 7 ). Since the remaining updates are explicit, Algorithm 1 is well-defined at every reached iteration. In addition, it follows from Lemma 2 that $e^{k+1}\in(F+B)(u^{k+1})$ .
+
+Suppose that Algorithm 1 terminates at iteration $k$ . If $e^{k+1}=0$ , then the strong monotonicity of $F+B$ yields $u^{k+1}=u^{*}$ , so ( 12 ) holds. Otherwise, by ( 11 ), one has $1/9-3\sqrt{\mu_{x}/\mu_{y}}/(k+2)>0$ . Using this, ( 9 ), and ( 41 ), we obtain
+
+$\displaystyle\|u^{k+1}-u^{*}\|=\left\|\tilde{u}^{k+1}-u^{*}+\frac{1}{\mu_{x}}(e_{x}^{k+1},0)\right\|\leq\|\tilde{u}^{k+1}-u^{*}\|+\frac{\|e^{k+1}\|}{\mu_{x}}$ $\displaystyle\leq\frac{3}{k+2}\sqrt{\frac{\mu_{x}}{\mu_{y}}}\|u^{0}-u^{*}\|+\left(\frac{1}{9}-\frac{3}{k+2}\sqrt{\frac{\mu_{x}}{\mu_{y}}}\right)\|u^{k+1}-u^{0}\|$ $\displaystyle\leq\frac{3}{k+2}\sqrt{\frac{\mu_{x}}{\mu_{y}}}\|u^{0}-u^{*}\|+\left(\frac{1}{9}-\frac{3}{k+2}\sqrt{\frac{\mu_{x}}{\mu_{y}}}\right)\bigl(\|u^{k+1}-u^{*}\|+\|u^{0}-u^{*}\|\bigr)$ $\displaystyle=\frac{1}{9}\|u^{0}-u^{*}\|+\left(\frac{1}{9}-\frac{3}{k+2}\sqrt{\frac{\mu_{x}}{\mu_{y}}}\right)\|u^{k+1}-u^{*}\|,$
+
+where the second inequality follows from ( 11 ) and ( 41 ). Rearranging, we obtain $\|u^{k+1}-u^{*}\|\leq\|u^{0}-u^{*}\|/8$ . Using this and ( 11 ), we obtain
+
+$\|e^{k+1}\|\leq\frac{\mu_{x}}{9}\|u^{k+1}-u^{0}\|\leq\frac{\mu_{x}}{9}\bigl(\|u^{k+1}-u^{*}\|+\|u^{0}-u^{*}\|\bigr)\leq\frac{\mu_{x}}{8}\|u^{0}-u^{*}\|.$
+
+Thus ( 12 ) holds whenever the algorithm terminates.
+
+We next establish the iteration bound. Suppose that it reaches iteration $k=\lceil 128\sqrt{\mu_{x}/\mu_{y}}\rceil-1$ . By ( 9 ) and ( 41 ), one has
+
+$\displaystyle\|u^{k+1}-u^{*}\|\leq\|\tilde{u}^{k+1}-u^{*}\|+\frac{\|e^{k+1}\|}{\mu_{x}}\leq\frac{3\sqrt{\mu_{x}/\mu_{y}}+5}{k+2}\|u^{0}-u^{*}\|$ $\displaystyle\leq\frac{8\sqrt{\mu_{x}/\mu_{y}}}{128\sqrt{\mu_{x}/\mu_{y}}}\|u^{0}-u^{*}\|=\frac{1}{16}\|u^{0}-u^{*}\|,$
+
+where the last inequality follows from $k+2\geq 128\sqrt{\mu_{x}/\mu_{y}}$ and $\mu_{x}\geq\mu_{y}$ . It then follows that
+
+$\|u^{k+1}-u^{0}\|\geq\|u^{0}-u^{*}\|-\|u^{k+1}-u^{*}\|\geq\frac{15}{16}\|u^{0}-u^{*}\|.$
+
+Using this and the second bound in ( 41 ), we obtain
+
+$\displaystyle\|e^{k+1}\|\leq\frac{5\mu_{x}}{k+2}\|u^{0}-u^{*}\|\leq\frac{5\mu_{x}}{128}\|u^{0}-u^{*}\|\leq\frac{\mu_{x}}{24}\|u^{k+1}-u^{0}\|\leq\mu_{x}\left(\frac{1}{9}-\frac{3}{k+2}\sqrt{\frac{\mu_{x}}{\mu_{y}}}\right)\|u^{k+1}-u^{0}\|,$
+
+where the last inequality follows from $1/9-3\sqrt{\mu_{x}/\mu_{y}}/(k+2)\geq 1/9-3/128\geq 1/24$ . Thus ( 11 ) holds, and the algorithm terminates within $\lceil 128\sqrt{\mu_{x}/\mu_{y}}\rceil$ iterations.
+
+The iteration bound and Lemma 1 yield the explicit evaluation bound in ( 13 ). Its leading term $1$ accounts for the initial evaluation of $\nabla f$ and is not needed for $\prox_{p}$ or $\prox_{q}$ . Since $L_{\nabla f}/\mu_{x}\geq 1$ and $\mu_{x}/\mu_{y}\geq 1$ , the same bound has the stated asymptotic order. ∎
+
+4.2 Proof of the main result in Subsection 2.2
+
+In this subsection we first prove two lemmas for Algorithm 2 and then prove Theorem 2 .
+
+Suppose that Assumptions 2 and 3 hold. Let $u^{*}$ be the unique saddle point of ( 2 ), and let $F$ and $B$ be defined in ( 3 ). Then Algorithm 2 , initialized at $u^{0}$ , is well-defined at every reached iteration. The pair $(u^{1},e^{1})$ generated in step 1 satisfies $e^{1}\in(F+B)(u^{1})$ and
+
+$7\|u^{1}-u^{*}\|\leq\|u^{1}-u^{0}\|\leq\frac{9}{8}\|u^{0}-u^{*}\|.$ (42)
+
+At every reached regularized iteration $k\geq 1$ , the subproblem in step 3 has a unique saddle point $u_{*}^{k}$ . Moreover, $u^{k+1}$ and $e^{k+1}$ , defined in steps 3 and 4, respectively, satisfy $u^{k+1}\in\mathcal{X}\times\mathcal{Y}$ and $e^{k+1}\in(F+B)(u^{k+1})$ .
+
+By Theorem 1 , the preliminary call terminates with $u^{1}\in\mathcal{X}\times\mathcal{Y}$ , $e^{1}\in(F+B)(u^{1})$ , and $\|u^{1}-u^{*}\|\leq\|u^{0}-u^{*}\|/8$ . Using this and the triangle inequality, we obtain
+
+$8\|u^{1}-u^{*}\|\leq\|u^{1}-u^{0}\|+\|u^{1}-u^{*}\|,\qquad\|u^{1}-u^{0}\|\leq\frac{9}{8}\|u^{0}-u^{*}\|.$
+
+It then follows that ( 42 ) holds. If $u^{1}=u^{0}$ , this inequality implies $u^{0}=u^{*}$ . By this and ( 12 ), one has $e^{1}=0$ , and hence the algorithm terminates in step 1. Therefore, whenever the regularized loop is reached, $\|u^{1}-u^{0}\|>0$ , and the definitions of $\lambda_{1}$ and $\bar{u}^{1}$ in step 1 are well-defined with $\lambda_{1}>0$ and $\bar{u}^{1}=u^{1}$ .
+
+We next show by induction that $u^{k}\in\mathcal{X}\times\mathcal{Y}$ , $\lambda_{k}>0$ , and $\bar{u}^{k}$ is well-defined at every reached regularized iteration $k$ . These properties hold at $k=1$ by step 1. Suppose that they hold at some reached iteration $k\geq 1$ . By Assumption 2 and the definition of $f_{k}$ in step 3, $f_{k}$ has an $(L_{\nabla f}+\lambda_{k})$ -Lipschitz gradient and is $(\mu_{x}+\lambda_{k})$ -strongly convex in $x$ and $(\mu_{y}+\lambda_{k})$ -strongly concave in $y$ on $\mathcal{X}\times\mathcal{Y}$ . Hence the regularized problem satisfies Assumption 2 with the supplied parameters and has a unique saddle point $u_{*}^{k}$ . It then follows from Theorem 1 that the call in step 3 terminates with $u^{k+1}\in\mathcal{X}\times\mathcal{Y}$ and
+
+$r^{k+1}\in(F+B)(u^{k+1})+\lambda_{k}(u^{k+1}-\bar{u}^{k}).$
+
+Using this and the definition of $e^{k+1}$ in step 4, we obtain $e^{k+1}\in(F+B)(u^{k+1})$ . If the algorithm does not terminate in step 5, then $\lambda_{k+1}=4\lambda_{k}>0$ and $\bar{u}^{k+1}=(\bar{u}^{k}+3u^{k+1})/4$ are well-defined. Thus the induction hypothesis holds at iteration $k+1$ . Hence the induction is completed and the conclusion of this lemma holds. ∎
+
+The next lemma bounds the residual $e^{k+1}$ defined in step 4 of Algorithm 2 .
+
+Suppose that Assumptions 2 and 3 hold. Let $u^{*}$ be the unique saddle point of ( 2 ). For the sequence generated by Algorithm 2 , let $u^{1}$ and $\lambda_{1}$ be defined in step 1, $\lambda_{k}$ by step 5 for $k\geq 2$ , and $e^{k+1}$ by step 4. Then, at every reached regularized iteration $k\geq 1$ , we have
+
+$\|e^{k+1}\|\leq\left(\frac{9}{4}\lambda_{1}+(\mu_{x}+2\lambda_{k})8^{-k}\right)\|u^{1}-u^{*}\|.$ (43)
+
+Fix any reached regularized iteration $k\geq 1$ . Let $u_{*}^{i}$ be the unique saddle point of the subproblem in step 3 at iteration $i$ , whose existence follows from Lemma 6 . By steps 1 and 5 of Algorithm 2 , one has $\bar{u}^{1}=u^{1}$ and
+
+$\displaystyle\lambda_{i}=4^{i-1}\lambda_{1}\qquad\forall 1\leq i\leq k,$ (44) $\displaystyle\lambda_{i}\bar{u}^{i}=4\lambda_{i-1}\frac{\bar{u}^{i-1}+3u^{i}}{4}=\lambda_{i-1}\bar{u}^{i-1}+(\lambda_{i}-\lambda_{i-1})u^{i}\qquad\forall 2\leq i\leq k.$ (45)
+
+By the definition of $f_{i}$ in step 3 and the KKT condition at $u_{*}^{i}$ , one has
+
+$0\in(F+B)(u_{*}^{i})-\lambda_{i}(\bar{u}^{i}-u_{*}^{i})\quad\Rightarrow\quad\lambda_{i}(\bar{u}^{i}-u_{*}^{i})\in(F+B)(u_{*}^{i})\qquad\forall 1\leq i\leq k.$ (46)
+
+Using $\bar{u}^{1}=u^{1}$ , $0\in(F+B)(u^{*})$ , and ( 46 ) at $i=1$ , we obtain
+
+$0\leq 2\langle u^{1}-u_{*}^{1},u_{*}^{1}-u^{*}\rangle=\|u^{1}-u^{*}\|^{2}-\|u^{1}-u_{*}^{1}\|^{2}-\|u_{*}^{1}-u^{*}\|^{2}\quad\Rightarrow\quad\|u^{1}-u_{*}^{1}\|\leq\|u^{1}-u^{*}\|,$ (47)
+
+where the first inequality follows from the monotonicity of $F+B$ and $\lambda_{1}>0$ . For $1\leq i\leq k$ , applying Theorem 1 to the call in step 3 with initial point $u^{i}$ and strong convexity parameter $\mu_{x}+\lambda_{i}$ , we obtain
+
+$\|u^{i+1}-u_{*}^{i}\|\leq\frac{1}{8}\|u^{i}-u_{*}^{i}\|,\qquad\|r^{i+1}\|\leq\frac{\mu_{x}+\lambda_{i}}{8}\|u^{i}-u_{*}^{i}\|.$ (48)
+
+For $2\leq i\leq k$ , it follows from ( 45 ) and ( 46 ) that
+
+$(\lambda_{i}-\lambda_{i-1})(u^{i}-u_{*}^{i})\in(F+B)(u_{*}^{i})+\lambda_{i-1}(u_{*}^{i}-\bar{u}^{i-1}).$
+
+In addition, ( 46 ) at $i-1$ implies $0\in(F+B)(u_{*}^{i-1})+\lambda_{i-1}(u_{*}^{i-1}-\bar{u}^{i-1})$ . By these inclusions, the monotonicity of $u\mapsto(F+B)(u)+\lambda_{i-1}(u-\bar{u}^{i-1})$ , and $\lambda_{i}>\lambda_{i-1}$ , one has
+
+$0\leq 2\langle u^{i}-u_{*}^{i},u_{*}^{i}-u_{*}^{i-1}\rangle=\|u^{i}-u_{*}^{i-1}\|^{2}-\|u^{i}-u_{*}^{i}\|^{2}-\|u_{*}^{i}-u_{*}^{i-1}\|^{2}.$
+
+Using this and ( 48 ) at $i-1$ , we obtain
+
+$\|u^{i}-u_{*}^{i}\|\leq\|u^{i}-u_{*}^{i-1}\|\leq\frac{1}{8}\|u^{i-1}-u_{*}^{i-1}\|\qquad\forall 2\leq i\leq k.$
+
+By ( 47 ), the first bound in ( 49 ) below holds at $i=1$ . Suppose that it holds at some $i<k$ . Using the displayed inequality at $i+1$ , we obtain $\|u^{i+1}-u_{*}^{i+1}\|\leq\|u^{i}-u_{*}^{i}\|/8\leq 8^{-i}\|u^{1}-u^{*}\|$ . Hence the induction is completed. Using this and ( 48 ), we obtain
+
+$\|u^{i}-u_{*}^{i}\|\leq 8^{-(i-1)}\|u^{1}-u^{*}\|,\qquad\|u^{i+1}-u_{*}^{i}\|\leq 8^{-i}\|u^{1}-u^{*}\|\qquad\forall 1\leq i\leq k.$ (49)
+
+In addition, by ( 48 ) and the first bound in ( 49 ), one has
+
+$\|r^{i+1}\|\leq(\mu_{x}+\lambda_{i})8^{-i}\|u^{1}-u^{*}\|\qquad\forall 1\leq i\leq k.$ (50)
+
+We next bound the accumulated regularization term. By ( 45 ), one has, for $2\leq i\leq k$ ,
+
+$\lambda_{i}(\bar{u}^{i}-u_{*}^{i})-\lambda_{i-1}(\bar{u}^{i-1}-u_{*}^{i-1})=\lambda_{i}(u^{i}-u_{*}^{i})-\lambda_{i-1}(u^{i}-u_{*}^{i-1}).$
+
+Summing this equality over $i=2,\ldots,k$ and using $\bar{u}^{1}=u^{1}$ , we obtain
+
+$\displaystyle\|\lambda_{k}(\bar{u}^{k}-u_{*}^{k})\|=\left\|\lambda_{1}(u^{1}-u_{*}^{1})+\sum_{i=2}^{k}\left(\lambda_{i}(u^{i}-u_{*}^{i})-\lambda_{i-1}(u^{i}-u_{*}^{i-1})\right)\right\|$ (51) $\displaystyle\leq\lambda_{1}\|u^{1}-u_{*}^{1}\|+\sum_{i=2}^{k}\left(\lambda_{i}\|u^{i}-u_{*}^{i}\|+\lambda_{i-1}\|u^{i}-u_{*}^{i-1}\|\right)$ $\displaystyle\leq\left(\lambda_{1}+\sum_{i=2}^{k}(\lambda_{i}+\lambda_{i-1})8^{-(i-1)}\right)\|u^{1}-u^{*}\|=\left(1+\frac{5}{4}\sum_{i=2}^{k}2^{-(i-1)}\right)\lambda_{1}\|u^{1}-u^{*}\|\leq\frac{9}{4}\lambda_{1}\|u^{1}-u^{*}\|,$
+
+where the first inequality follows from the triangle inequality, the second inequality follows from ( 47 ) and the two bounds in ( 49 ) at $i$ and $i-1$ , respectively, the second equality follows from $\lambda_{i}=4^{i-1}\lambda_{1}$ , and the last inequality follows from $\sum_{i=2}^{k}2^{-(i-1)}\leq 1$ . The sums are empty when $k=1$ . Finally, by step 4 of Algorithm 2 , one has
+
+$\displaystyle\|e^{k+1}\|=\|r^{k+1}-\lambda_{k}(u^{k+1}-u_{*}^{k})+\lambda_{k}(\bar{u}^{k}-u_{*}^{k})\|$ $\displaystyle\leq\|r^{k+1}\|+\lambda_{k}\|u^{k+1}-u_{*}^{k}\|+\|\lambda_{k}(\bar{u}^{k}-u_{*}^{k})\|\leq\left(\frac{9}{4}\lambda_{1}+(\mu_{x}+2\lambda_{k})8^{-k}\right)\|u^{1}-u^{*}\|,$
+
+where the first inequality follows from the triangle inequality and the second follows from ( 49 ), ( 50 ), and ( 51 ). Hence the conclusion of this lemma holds. ∎
+
+Let $u^{*}$ be the unique saddle point of ( 2 ), and let $F$ and $B$ be defined in ( 3 ). By Lemma 6 , Algorithm 2 is well-defined and $e^{k+1}\in(F+B)(u^{k+1})$ at every reached iteration, including the preliminary output at $k=0$ . By the stopping conditions in steps 1 and 5, its output also satisfies $\|e^{k+1}\|\leq\epsilon$ whenever the algorithm terminates.
+
+We next show that the algorithm terminates. Suppose that it does not terminate in step 1. For any reached regularized iteration $k$ with $\lambda_{k}\geq\mu_{x}$ , using ( 42 ), ( 43 ), and ( 44 ), we obtain
+
+$\displaystyle\|e^{k+1}\|\leq\left(\frac{9}{4}\lambda_{1}+3\lambda_{k}8^{-k}\right)\|u^{1}-u^{*}\|=\left(\frac{9}{4}+\frac{3}{8}\,2^{-(k-1)}\right)\lambda_{1}\|u^{1}-u^{*}\|$ $\displaystyle\leq\frac{21}{8}\lambda_{1}\|u^{1}-u^{*}\|\leq\frac{3}{8}\lambda_{1}\|u^{1}-u^{0}\|\leq\frac{3}{8}\epsilon,$
+
+where the first inequality also uses $\lambda_{k}\geq\mu_{x}$ , the equality follows from $\lambda_{k}=4^{k-1}\lambda_{1}$ , the second inequality follows from $k\geq 1$ , the third follows from ( 42 ), and the last follows from the definition of $\lambda_{1}$ in step 1. Thus the stopping condition in step 5 holds whenever $\lambda_{k}\geq\mu_{x}$ . In addition, every call terminates by Lemma 6 , and ( 44 ) implies $\lambda_{k}\geq\mu_{x}$ for all sufficiently large $k$ if the algorithm does not terminate. Hence Algorithm 2 terminates no later than the first iteration with $\lambda_{k}\geq\mu_{x}$ .
+
+We next prove the evaluation bound. For a call of Algorithm 1 with regularization parameter $\lambda\geq 0$ , the supplied smoothness and curvature parameters are $(L_{\nabla f}+\lambda,\mu_{x}+\lambda,\mu_{y}+\lambda)$ . Each evaluation of the gradient of the regularized smooth part requires one evaluation of $\nabla f$ . By this and ( 13 ), the numbers of evaluations of $\nabla f$ , $\prox_{p}$ , and $\prox_{q}$ for this call are bounded, respectively, by
+
+$129(N_{\mathcal{A}}+256\mathcal{C}_{\mathcal{A}}+3)\frac{L_{\nabla f}+\lambda}{\sqrt{(\mu_{x}+\lambda)(\mu_{y}+\lambda)}},$ (52)
+
+where we used $\lceil a\rceil\leq a+1$ and $L_{\nabla f}\geq\mu_{x}\geq\mu_{y}>0$ . The preliminary call corresponds to $\lambda=0$ , so ( 14 ) holds if the algorithm terminates in step 1. Otherwise, let $k\geq 1$ be its terminating regularized iteration.
+
+By ( 44 ), there are at most $\lceil(\log_{4}(\mu_{y}/\lambda_{1}))_{+}\rceil$ iterations with $\lambda_{i}<\mu_{y}$ . Since $\mu_{y}\leq L_{\nabla f}$ , one has, at each such iteration,
+
+$\frac{L_{\nabla f}+\lambda_{i}}{\sqrt{(\mu_{x}+\lambda_{i})(\mu_{y}+\lambda_{i})}}\leq\frac{2L_{\nabla f}}{\sqrt{\mu_{x}\mu_{y}}}.$
+
+For the iterations with $\mu_{y}\leq\lambda_{i}<\mu_{x}$ , we have
+
+$\frac{L_{\nabla f}+\lambda_{i}}{\sqrt{(\mu_{x}+\lambda_{i})(\mu_{y}+\lambda_{i})}}\leq\frac{2L_{\nabla f}}{\sqrt{\mu_{x}\lambda_{i}}},$ (53)
+
+where the inequality follows from $\lambda_{i}<\mu_{x}\leq L_{\nabla f}$ , $\mu_{x}+\lambda_{i}\geq\mu_{x}$ , and $\mu_{y}+\lambda_{i}\geq\lambda_{i}$ . By ( 44 ), the right-hand side of ( 53 ) decreases by a factor of two at each successive iteration. Its sum over these iterations is at most $4L_{\nabla f}/\sqrt{\mu_{x}\mu_{y}}$ , where we used $\lambda_{i}\geq\mu_{y}$ at the first such iteration. In addition, the termination argument implies that at most one reached iteration satisfies $\lambda_{i}\geq\mu_{x}$ . At this iteration, one has
+
+$\frac{L_{\nabla f}+\lambda_{i}}{\sqrt{(\mu_{x}+\lambda_{i})(\mu_{y}+\lambda_{i})}}\leq\frac{L_{\nabla f}}{\lambda_{i}}+1\leq\frac{L_{\nabla f}}{\mu_{x}}+1\leq\frac{2L_{\nabla f}}{\sqrt{\mu_{x}\mu_{y}}},$
+
+where the first inequality follows from $\sqrt{(\mu_{x}+\lambda_{i})(\mu_{y}+\lambda_{i})}\geq\lambda_{i}$ , the second follows from $\lambda_{i}\geq\mu_{x}$ , and the last follows from $L_{\nabla f}\geq\mu_{x}\geq\mu_{y}$ . Adding the bounds over the three ranges, we obtain
+
+$\sum_{i=1}^{k}\frac{L_{\nabla f}+\lambda_{i}}{\sqrt{(\mu_{x}+\lambda_{i})(\mu_{y}+\lambda_{i})}}\leq\left(2\left\lceil\left(\log_{4}\frac{\mu_{y}}{\lambda_{1}}\right)_{+}\right\rceil+6\right)\frac{L_{\nabla f}}{\sqrt{\mu_{x}\mu_{y}}}\leq\left(8+2\left(\log_{4}\frac{\mu_{y}}{\lambda_{1}}\right)_{+}\right)\frac{L_{\nabla f}}{\sqrt{\mu_{x}\mu_{y}}},$ (54)
+
+where the second inequality follows from $\lceil t\rceil\leq t+1$ . In addition, by step 1 of Algorithm 2 and ( 42 ), one has
+
+$\frac{\mu_{y}}{\lambda_{1}}=\frac{\mu_{y}\|u^{1}-u^{0}\|}{\epsilon}\leq\frac{9\mu_{y}\|u^{0}-u^{*}\|}{8\epsilon}.$
+
+Using this, ( 52 ), and ( 54 ), and including the preliminary call, we obtain that the numbers of evaluations of $\nabla f$ , $\prox_{p}$ , and $\prox_{q}$ are bounded, respectively, by
+
+$\displaystyle 129(N_{\mathcal{A}}+256\mathcal{C}_{\mathcal{A}}+3)\left(9+2\log_{4}\!\left(1+\frac{9\mu_{y}\|u^{0}-u^{*}\|}{8\epsilon}\right)\right)\frac{L_{\nabla f}}{\sqrt{\mu_{x}\mu_{y}}}$ $\displaystyle\leq 2^{11}(N_{\mathcal{A}}+256\mathcal{C}_{\mathcal{A}}+3)\frac{L_{\nabla f}}{\sqrt{\mu_{x}\mu_{y}}}\left(1+\log_{4}\!\left(1+\frac{\mu_{y}\|u^{0}-u^{*}\|}{\epsilon}\right)\right),$
+
+where the first bound follows from $(\log_{4}a)_{+}\leq\log_{4}(1+a)$ for $a>0$ , and the inequality follows from $1+9a/8\leq 9(1+a)/8$ for $a\geq 0$ and $129(9+2\log_{4}(9/8))<2^{11}$ . Hence ( 14 ) holds and the proof is completed. ∎
+
+4.3 Proof of the main result in Subsection 2.3
+
+In this subsection we provide a proof of Theorem 3 . We first establish the residual inclusion and evaluation bound for each trial of Algorithm 3 .
+
+Suppose Assumptions 2 and 3 hold. Let $F$ and $B$ be defined in ( 3 ). For any reached trial $t$ of Algorithm 3 , let $(u^{t},r^{t})$ be the pair generated by the algorithm and let $U_{t}$ , $\alpha_{t}$ , and $\nu_{t}$ be defined in step 5. Then any output $(\tilde{u}^{t+1},e^{t+1})$ of the call in step 6 satisfies $e^{t+1}\in(F+B)(\tilde{u}^{t+1})$ . Moreover, if
+
+$U_{t}\geq L_{\nabla f},\qquad 0<\nu_{t}\leq\mu_{y},\qquad\nu_{t}\leq\alpha_{t}\leq\mu_{x},$ (55)
+
+then the trial completes within its evaluation limits and returns a pair satisfying
+
+$\|e^{t+1}\|\leq\max\{\epsilon,\|r^{t}\|/8\}.$ (56)
+
+Fix any reached trial $t$ . By the stopping tests and updates in Algorithm 3 , one has $\|r^{t}\|>\epsilon>0$ . The execution requirements on $\mathcal{A}$ and the residual corrections in ( 8 ) and step 4 of Algorithm 2 imply $e^{t+1}\in(F+B)(\tilde{u}^{t+1})$ whenever the call returns.
+
+Suppose that ( 55 ) holds, and let $u^{*}$ be the saddle point of ( 2 ). Since $r^{t}\in(F+B)(u^{t})$ and $0\in(F+B)(u^{*})$ , the $\nu_{t}$ -strong monotonicity of $F+B$ implies $\nu_{t}\|u^{t}-u^{*}\|\leq\|r^{t}\|$ . By Theorem 2 with parameters $(U_{t},\alpha_{t},\nu_{t})$ , initial point $u^{t}$ , and tolerance $\max\{\epsilon,\|r^{t}\|/8\}$ , the call in step 6 without evaluation limits terminates with a pair satisfying ( 56 ). In addition, by ( 14 ), its numbers of evaluations of $\nabla f$ , $\prox_{p}$ , and $\prox_{q}$ are bounded, respectively, by
+
+$\displaystyle 2^{11}(N_{\mathcal{A}}+256\mathcal{C}_{\mathcal{A}}+3)\frac{U_{t}}{\sqrt{\alpha_{t}\nu_{t}}}\left(1+\log_{4}\!\left(1+\frac{\nu_{t}\|u^{t}-u^{*}\|}{\max\{\epsilon,\|r^{t}\|/8\}}\right)\right)$ $\displaystyle\leq 2^{11}(N_{\mathcal{A}}+256\mathcal{C}_{\mathcal{A}}+3)\frac{U_{t}}{\sqrt{\alpha_{t}\nu_{t}}}(1+\log_{4}9)<\widetilde{\mathcal{C}}_{\mathcal{A}}\frac{U_{t}}{\sqrt{\alpha_{t}\nu_{t}}},$
+
+where the first inequality follows from $\nu_{t}\|u^{t}-u^{*}\|\leq\|r^{t}\|$ and $\max\{\epsilon,\|r^{t}\|/8\}\geq\|r^{t}\|/8$ , and the last inequality follows from $\log_{4}9<2$ and the definition of $\widetilde{\mathcal{C}}_{\mathcal{A}}$ in step 6 of Algorithm 3 . Thus the call completes within its evaluation limits. Hence the conclusion follows. ∎
+
+We now prove Theorem 3 .
+
+Let $u^{*}$ be the saddle point of ( 2 ). By step 1 of Algorithm 3 , one has
+
+$\displaystyle\mu_{x}\|d\|^{2}\leq\langle\nabla_{x}f(u_{x}^{0}+d,u_{y}^{0})-\nabla_{x}f(u_{x}^{0},u_{y}^{0}),d\rangle\leq\|\nabla_{x}f(u_{x}^{0}+d,u_{y}^{0})-\nabla_{x}f(u_{x}^{0},u_{y}^{0})\|\|d\|=\rho\|d\|^{2},$
+
+where the first inequality follows from the $\mu_{x}$ -strong convexity of $f(\cdot,u_{y}^{0})$ , the second follows from the Cauchy–Schwarz inequality, and the equality follows from the definition of $\rho$ . Since $d\neq 0$ and both points belong to $\mathcal{X}\times\mathcal{Y}$ , we obtain $\mu_{x}\leq\rho$ . Using this, Assumption 2 , and the Lipschitz continuity of $\nabla f$ , we have $0<\mu_{y}\leq\mu_{x}\leq\rho\leq L_{\nabla f}$ .
+
+By step 2 and the resolvent identity, one has
+
+$\rho(u^{0}-u^{1})-F(u^{0})\in B(u^{1}),\qquad r^{1}=\rho(u^{0}-u^{1})+F(u^{1})-F(u^{0})\in(F+B)(u^{1}).$
+
+Thus $u^{1}\in\mathcal{X}\times\mathcal{Y}$ , and the initialization is well-defined. In addition, one has
+
+$\displaystyle\rho\|u^{0}-u^{1}\|^{2}$ $\displaystyle\leq\langle\rho(u^{0}-u^{*})+F(u^{0})-F(u^{*}),u^{0}-u^{1}\rangle$ $\displaystyle\leq(\rho+L_{\nabla f})\|u^{0}-u^{*}\|\|u^{0}-u^{1}\|,$
+
+where the first inequality follows from $\rho(u^{0}-u^{1})-F(u^{0})\in B(u^{1})$ , $-F(u^{*})\in B(u^{*})$ , and the monotonicity of $F$ and $B$ , and the second follows from the Cauchy–Schwarz inequality and the Lipschitz continuity of $F$ . Dividing by $\rho\|u^{0}-u^{1}\|$ when it is positive, with the zero case immediate, we obtain $\|u^{0}-u^{1}\|\leq(1+L_{\nabla f}/\rho)\|u^{0}-u^{*}\|$ . Using this and the definition of $r^{1}$ in step 2, we obtain
+
+$\|r^{1}\|\leq(\rho+L_{\nabla f})\|u^{0}-u^{1}\|\leq\frac{(\rho+L_{\nabla f})^{2}}{\rho}\|u^{0}-u^{*}\|\leq\frac{4L_{\nabla f}^{2}}{\mu_{x}}\|u^{0}-u^{*}\|,$ (57)
+
+where the first inequality follows from the triangle inequality and the Lipschitz continuity of $F$ , the second follows from $\|u^{0}-u^{1}\|\leq(1+L_{\nabla f}/\rho)\|u^{0}-u^{*}\|$ , and the last follows from $\mu_{x}\leq\rho\leq L_{\nabla f}$ .
+
+The computations in steps 1 and 2 use at most three evaluations of $\nabla f$ and one of each proximal mapping. If $\|r^{1}\|\leq\epsilon$ , step 3 returns $u^{1}$ , which is an $\epsilon$ -stationary point by Definition 1 , and the conclusion follows. Suppose now that $\|r^{1}\|>\epsilon$ . The parameters and evaluation limits in every reached trial are positive and finite. By the execution requirements on $\mathcal{A}$ , each call can therefore be executed up to its limit. Since $r^{1}\in(F+B)(u^{1})$ , Lemma 8 and the updates in steps 9 and 11 imply $r^{t}\in(F+B)(u^{t})$ at every reached trial $t$ . Thus Algorithm 3 is well-defined.
+
+We next prove finite termination. By steps 9 and 11, an unsuccessful trial advances to the next triple in $\mathcal{I}$ , and a successful trial keeps the triple unchanged. Let
+
+$i_{*}=\left\lceil\log_{2}\frac{L_{\nabla f}}{\rho}\right\rceil,\qquad j_{*}=\left\lceil\log_{2}\frac{\rho}{\mu_{x}}\right\rceil,\qquad k_{*}=\left\lceil\log_{2}\frac{\rho}{\mu_{y}}\right\rceil.$
+
+By $\mu_{y}\leq\mu_{x}\leq\rho\leq L_{\nabla f}$ and the definition of the ceiling function, one has $i_{*}\geq 0$ , $0\leq j_{*}\leq k_{*}$ , and
+
+$\rho 2^{i_{*}}\geq L_{\nabla f},\qquad\rho 2^{-j_{*}}\leq\mu_{x},\qquad\rho 2^{-k_{*}}\leq\mu_{y}.$
+
+It follows that $(i_{*},j_{*},k_{*})\in\mathcal{I}$ and the corresponding parameters satisfy ( 55 ). By Lemma 8 , every trial with this triple either terminates in step 7 or passes the acceptance test in step 8. Hence no later triple is reached. Let $q_{*}=2i_{*}+j_{*}+k_{*}$ . Using the definitions of $i_{*}$ , $j_{*}$ , and $k_{*}$ and $\lceil a\rceil\leq a+1$ , we obtain
+
+$\displaystyle q_{*}\leq 2\log_{2}\frac{L_{\nabla f}}{\rho}+\log_{2}\frac{\rho}{\mu_{x}}+\log_{2}\frac{\rho}{\mu_{y}}+4=2\log_{2}\!\left(\frac{L_{\nabla f}}{\sqrt{\mu_{x}\mu_{y}}}\right)+4\quad\Rightarrow\quad 2^{q_{*}/2}\leq\frac{4L_{\nabla f}}{\sqrt{\mu_{x}\mu_{y}}}.$ (58)
+
+Suppose that $s$ successful trials precede a reached trial $t$ . By the stopping and acceptance tests in steps 7 and 8 and the updates in steps 9 and 11, one has $\epsilon<\|r^{t}\|\leq 2^{-s}\|r^{1}\|$ and hence $s<\log_{2}(\|r^{1}\|/\epsilon)$ . Thus there are at most $\lceil\log_{2}(\|r^{1}\|/\epsilon)\rceil$ successful trials, including the terminating trial. In addition, each unsuccessful trial advances to a new triple, and there are finitely many triples up to $(i_{*},j_{*},k_{*})$ in $\mathcal{I}$ . By these and the fact that no later triple is reached, Algorithm 3 terminates in finitely many trials. By Lemma 8 , the stopping test in step 7, and Definition 1 , the returned point is an $\epsilon$ -stationary point of ( 2 ).
+
+It remains to establish the evaluation bound. For a fixed level $q$ , the indices satisfy $2i+j+k=q$ and $0\leq j\leq k$ . For every $0\leq i\leq\lfloor q/2\rfloor$ , there are $\lfloor q/2\rfloor-i+1$ choices of $j$ , and each determines $k=q-2i-j$ . Thus the number of triples at level $q$ satisfies
+
+$\sum_{i=0}^{\lfloor q/2\rfloor}(\lfloor q/2\rfloor-i+1)=\frac{(\lfloor q/2\rfloor+1)(\lfloor q/2\rfloor+2)}{2}\leq(q+2)^{2}.$ (59)
+
+By step 5, every trial $t$ at level $q$ has $2i_{t}+j_{t}+k_{t}=q$ and $U_{t}/\sqrt{\alpha_{t}\nu_{t}}=2^{q/2}$ . Using this, $q\geq 0$ , and the evaluation limit in step 6, we obtain that the numbers of evaluations of $\nabla f$ , $\prox_{p}$ , and $\prox_{q}$ in that trial are bounded, respectively, by $(\widetilde{\mathcal{C}}_{\mathcal{A}}+1)2^{q/2}$ . Since there is at most one unsuccessful trial at each triple, ( 59 ) bounds the number of unsuccessful trials at level $q$ . In addition, each successful trial has level at most $q_{*}$ , and there are at most $\lceil\log_{2}(\|r^{1}\|/\epsilon)\rceil$ such trials. Combining these bounds and the initialization cost, we obtain that the total numbers of evaluations of $\nabla f$ , $\prox_{p}$ , and $\prox_{q}$ are bounded, respectively, by
+
+$\displaystyle 3+(\widetilde{\mathcal{C}}_{\mathcal{A}}+1)\left(\sum_{q=0}^{q_{*}}(q+2)^{2}2^{q/2}+\left\lceil\log_{2}\frac{\|r^{1}\|}{\epsilon}\right\rceil 2^{q_{*}/2}\right)$ $\displaystyle\leq 3+(\widetilde{\mathcal{C}}_{\mathcal{A}}+1)2^{q_{*}/2}\left((2+\sqrt{2})(q_{*}+2)^{2}+\left\lceil\log_{2}\frac{\|r^{1}\|}{\epsilon}\right\rceil\right)$ $\displaystyle\leq 3+4(\widetilde{\mathcal{C}}_{\mathcal{A}}+1)\frac{L_{\nabla f}}{\sqrt{\mu_{x}\mu_{y}}}\left((2+\sqrt{2})\left(2\log_{2}\frac{L_{\nabla f}}{\sqrt{\mu_{x}\mu_{y}}}+6\right)^{2}+\left\lceil\log_{2}\!\left(1+\frac{4L_{\nabla f}^{2}\|u^{0}-u^{*}\|}{\mu_{x}\epsilon}\right)\right\rceil\right),$
+
+where the term $3$ accounts for the evaluations in steps 1 and 2, the first inequality follows from $(q+2)^{2}\leq(q_{*}+2)^{2}$ for $q\leq q_{*}$ and $\sum_{q=0}^{q_{*}}2^{-(q_{*}-q)/2}\leq 2+\sqrt{2}$ , and the last inequality follows from ( 57 ), ( 58 ), and the monotonicity of the logarithm and ceiling functions. Hence ( 15 ) holds, and the conclusion follows.
+
+∎
+
+4.4 Proof of the main result in Subsections 3.1 and 3.2
+
+.
+
+In this subsection we first establish four lemmas and then prove Theorems 4 and 5 . Accepted trials are defined before Algorithm 4 . In particular, an accepted trial updates the primal center, inner initial point, and stored residual in step 7 without terminating or changing the smoothness estimate. For $\mu>0$ , define
+
+$H_{\mu}(x,y)=H(x,y)-\frac{\mu}{2}\|y-y^{0}\|^{2}.$ (60)
+
+By Assumption 1 (i)–(iii), the maxima of $H(x,\cdot)$ and $H_{\mu}(x,\cdot)$ are finite and attained for every $x\in\mathcal{X}$ .
+
+Suppose that Assumption 1 holds. For the sequence generated by Algorithm 4 , let $\tau_{t}$ be defined in step 4. Then the algorithm is well-defined at every reached trial $t$ , and its call in step 4 returns or is interrupted after finitely many evaluations. If the call returns, the returned point is a $\tau_{t}$ -stationary point of the subproblem in step 4.
+
+We prove by induction that, at the beginning of every reached trial $t$ , one has $x^{t}\in\mathcal{X}$ , $(\hat{x},\hat{y})\in\mathcal{X}\times\mathcal{Y}$ , and
+
+$r^{t}\in\begin{pmatrix}\nabla_{x}h_{t}(\hat{x},\hat{y})\\ -\nabla_{y}h_{t}(\hat{x},\hat{y})\end{pmatrix}+B(\hat{x},\hat{y}),$ (61)
+
+where $(\hat{x},\hat{y})$ denotes the inner initial point at that trial. By step 2 and the resolvent identity,
+
+$\beta_{1}\bigl((x^{0},y^{0})-(\hat{x},\hat{y})\bigr)-A(x^{0},y^{0})\in B(\hat{x},\hat{y}).$
+
+Together with $x^{1}=x^{0}$ , ( 16 ), and the definition of $r^{1}$ in step 2, this proves the induction hypothesis at $t=1$ .
+
+Suppose that the hypothesis holds at a reached trial $t$ . By the parameter updates, $0<\mu\leq\epsilon/32\leq\beta_{t}$ and $\tau_{t}>0$ . Thus the bound in ( 17 ) is finite. The execution requirements on $\mathcal{A}$ ensure that the call in step 4 is well-defined and returns or is interrupted within this bound. If it returns, its residual corrections and stopping tests imply that $\|e^{t+1}\|\leq\tau_{t}$ and, before any reset in step 7,
+
+$e^{t+1}\in\begin{pmatrix}\nabla_{x}h_{t}(x^{t+1},y^{t+1})\\ -\nabla_{y}h_{t}(x^{t+1},y^{t+1})\end{pmatrix}+B(x^{t+1},y^{t+1}).$ (62)
+
+Hence $(x^{t+1},y^{t+1})\in\mathcal{X}\times\mathcal{Y}$ is a $\tau_{t}$ -stationary point of the subproblem in step 4.
+
+If the trial is accepted, the center changes to $x^{t+1}$ and the inner initial point changes to $(x^{t+1},y^{t+1})$ . Subtracting $\bigl(2\beta_{t}(x^{t+1}-x^{t}),0\bigr)$ from ( 62 ) proves ( 61 ) at trial $t+1$ . If step 7 rejects the trial, the center and inner initial point are retained, while $\beta_{t+1}=2\beta_{t}$ . Adding $\bigl(2\beta_{t}(\hat{x}-x^{t}),0\bigr)$ to ( 61 ) proves the same inclusion at trial $t+1$ . The feasibility statements are also preserved. This completes the induction and proves the conclusion. ∎
+
+The next two lemmas bound the decrease at an accepted trial and its sum within a run, respectively.
+
+Suppose Assumptions 1 and 3 hold. For the sequence generated by Algorithm 4 , let $\mu$ and $\tau_{t}$ be defined in steps 1 and 4, respectively, and let $H_{\mu}$ be defined in ( 60 ). Then, at every accepted trial $t$ , one has
+
+$\max_{y}H_{\mu}(x^{t},y)-\max_{y}H_{\mu}(x^{t+1},y)\geq\beta_{t}\|x^{t+1}-x^{t}\|^{2}>\frac{\epsilon^{2}}{16\beta_{t}}.$ (63)
+
+Fix any accepted trial $t$ . By Lemma 9 and step 6 of Algorithm 4 , one has $\|e^{t+1}\|\leq\tau_{t}$ and $\|x^{t+1}-x^{t}\|>\epsilon/(4\beta_{t})$ . By ( 62 ), $e_{y}^{t+1}\in\partial(-H_{\mu}(x^{t+1},\cdot))(y^{t+1})$ . Using this and the $\mu$ -strong convexity of $-H_{\mu}(x^{t+1},\cdot)$ , we obtain that for every $y\in\mathcal{Y}$ ,
+
+$\displaystyle H_{\mu}(x^{t+1},y)$ $\displaystyle\leq H_{\mu}(x^{t+1},y^{t+1})-\langle e_{y}^{t+1},y-y^{t+1}\rangle-\frac{\mu}{2}\|y-y^{t+1}\|^{2}$ $\displaystyle\leq H_{\mu}(x^{t+1},y^{t+1})+\frac{\|e_{y}^{t+1}\|^{2}}{2\mu}.$
+
+Taking the maximum over $y$ and using the convexity of $p$ and ( 62 ), we obtain
+
+$\displaystyle\max_{y}H_{\mu}(x^{t},y)-\max_{y}H_{\mu}(x^{t+1},y)$ $\displaystyle\geq h(x^{t},y^{t+1})-h(x^{t+1},y^{t+1})+p(x^{t})-p(x^{t+1})-\frac{\|e_{y}^{t+1}\|^{2}}{2\mu}$ $\displaystyle\geq h(x^{t},y^{t+1})-h(x^{t+1},y^{t+1})+\langle\nabla_{x}h(x^{t+1},y^{t+1})-e_{x}^{t+1},x^{t+1}-x^{t}\rangle+2\beta_{t}\|x^{t+1}-x^{t}\|^{2}-\frac{\|e_{y}^{t+1}\|^{2}}{2\mu}$ $\displaystyle\geq\frac{3\beta_{t}}{2}\|x^{t+1}-x^{t}\|^{2}-\tau_{t}\|x^{t+1}-x^{t}\|-\frac{\tau_{t}^{2}}{2\mu}$ $\displaystyle>\left(\frac{3}{2}-\frac{1}{16}-\frac{1}{512}\right)\beta_{t}\|x^{t+1}-x^{t}\|^{2}\geq\beta_{t}\|x^{t+1}-x^{t}\|^{2}>\frac{\epsilon^{2}}{16\beta_{t}},$
+
+where the third inequality follows from ( 18 ) and $\|e^{t+1}\|\leq\tau_{t}$ , and the fourth follows from $\tau_{t}\leq\epsilon/64$ , $\tau_{t}^{2}/(2\mu)=\epsilon^{2}/(8192\beta_{t})$ , and $\|x^{t+1}-x^{t}\|>\epsilon/(4\beta_{t})$ . Hence, ( 63 ) holds. ∎
+
+Suppose Assumptions 1 and 3 hold. For the sequence generated by Algorithm 4 , let $\mathcal{T}$ be the set of accepted trials up to any reached trial. Then
+
+$\sum_{t\in\mathcal{T}}\beta_{t}\|x^{t+1}-x^{t}\|^{2}\leq\Delta_{0}+\frac{\epsilon D_{\mathbf{y}}}{8},$ (64)
+
+where $\Delta_{0}$ is defined in Theorem 4 and $D_{\mathbf{y}}$ is given in Assumption 1 (ii). Moreover, any consecutive trials with fixed $\beta_{t}$ contain at most $1+16\beta_{t}(\Delta_{0}+\epsilon D_{\mathbf{y}}/8)/\epsilon^{2}$ calls to Algorithm 2 .
+
+Fix any accepted trial $t$ . By ( 62 ), one has
+
+$e_{y}^{t+1}-\mu(y^{t+1}-y^{0})\in\partial q(y^{t+1})-\nabla_{y}h(x^{t+1},y^{t+1}).$
+
+By Lemma 9 and steps 1, 4, and 5 of Algorithm 4 , $\|e^{t+1}\|\leq\tau_{t}$ , $\mu\leq\beta_{t}$ , and $\|y^{t+1}-y^{0}\|\leq D$ . Thus
+
+$\|e_{y}^{t+1}-\mu(y^{t+1}-y^{0})\|\leq\tau_{t}+\mu D=\frac{\epsilon}{64}\sqrt{\frac{\mu}{\beta_{t}}}+\frac{\epsilon}{32}\leq\frac{3\epsilon}{64}.$
+
+By the convexity of $q-h(x^{t+1},\cdot)$ , one has
+
+$H(x^{t+1},y)\leq H(x^{t+1},y^{t+1})+\langle\mu(y^{t+1}-y^{0})-e_{y}^{t+1},y-y^{t+1}\rangle,\qquad\forall y\in\mathcal{Y}.$
+
+Using these inequalities and $\|y-y^{t+1}\|\leq 2D_{\mathbf{y}}$ from Assumption 1 (ii), we obtain
+
+$\displaystyle\max_{y}H(x^{t+1},y)\leq H(x^{t+1},y^{t+1})+\frac{3\epsilon D_{\mathbf{y}}}{32}$ (65) $\displaystyle\leq\max_{y}H_{\mu}(x^{t+1},y)+\frac{\mu}{2}\|y^{t+1}-y^{0}\|^{2}+\frac{3\epsilon D_{\mathbf{y}}}{32}\leq\max_{y}H_{\mu}(x^{t+1},y)+\frac{\epsilon D_{\mathbf{y}}}{8},$
+
+where the second inequality follows from ( 60 ), and the last follows from $\mu\|y^{t+1}-y^{0}\|^{2}/2\leq\mu DD_{\mathbf{y}}=\epsilon D_{\mathbf{y}}/32$ , by the radius test and Assumption 1 (ii).
+
+If $\mathcal{T}=\varnothing$ , ( 64 ) follows from $\Delta_{0}\geq 0$ . Suppose now that $\mathcal{T}\neq\varnothing$ , and let $a=\max\mathcal{T}$ . Since $\mu$ is fixed, $x^{1}=x^{0}$ , and step 7 implies $x^{k+1}=x^{k}$ at every rejected trial, summing ( 63 ) over $t\in\mathcal{T}$ yields
+
+$\displaystyle\sum_{t\in\mathcal{T}}\beta_{t}\|x^{t+1}-x^{t}\|^{2}\leq\max_{y}H_{\mu}(x^{0},y)-\max_{y}H_{\mu}(x^{a+1},y)$ $\displaystyle\leq\max_{y}H(x^{0},y)-\max_{y}H(x^{a+1},y)+\frac{\epsilon D_{\mathbf{y}}}{8}\leq\max_{y}H(x^{0},y)-H^{*}+\frac{\epsilon D_{\mathbf{y}}}{8}=\Delta_{0}+\frac{\epsilon D_{\mathbf{y}}}{8},$
+
+where the second inequality follows from $H_{\mu}\leq H$ and ( 65 ), and the last inequality and equality follow from the definitions of $H^{*}$ and $\Delta_{0}$ , respectively. Hence, ( 64 ) holds.
+
+By Lemma 10 and ( 64 ), the number of accepted trials with fixed $\beta_{t}$ is at most $16\beta_{t}(\Delta_{0}+\epsilon D_{\mathbf{y}}/8)/\epsilon^{2}$ . Any other trial either terminates the run or doubles $\beta_{t}$ . Thus consecutive trials with fixed $\beta_{t}$ contain at most one additional trial, which proves the remaining conclusion. ∎
+
+Suppose Assumptions 1 and 3 hold, and $0<\epsilon<32L_{\nabla h}$ . Let Algorithm 4 be run with $1\leq D\leq 4D_{\mathbf{y}}$ . Then the algorithm terminates with an $\epsilon$ -stationary point of ( 1 ) or with failure, and failure occurs only if $D<2D_{\mathbf{y}}$ .
+
+Fix any reached trial $t$ with $\beta_{t}\geq L_{\nabla h}$ . By Assumption 1 (iii), ( 16 ), and $\mu\leq\beta_{t}$ , the subproblem in step 4 is $\beta_{t}$ -strongly convex in $x$ and $\mu$ -strongly concave in $y$ , and $\nabla h_{t}$ is $3\beta_{t}$ -Lipschitz continuous. Let $(x_{*}^{t},y_{*}^{t})$ be its unique saddle point and $(\hat{x},\hat{y})$ its initial point. By ( 61 ), strong monotonicity, one has
+
+$\beta_{t}\|\hat{x}-x_{*}^{t}\|^{2}+\mu\|\hat{y}-y_{*}^{t}\|^{2}\leq\langle r^{t},(\hat{x},\hat{y})-(x_{*}^{t},y_{*}^{t})\rangle\leq\left(\frac{\|r_{x}^{t}\|^{2}}{\beta_{t}}+\frac{\|r_{y}^{t}\|^{2}}{\mu}\right)^{1/2}\left(\beta_{t}\|\hat{x}-x_{*}^{t}\|^{2}+\mu\|\hat{y}-y_{*}^{t}\|^{2}\right)^{1/2}.$
+
+Using this, $\mu\leq\beta_{t}$ , and $\tau_{t}=(\epsilon/64)\sqrt{\mu/\beta_{t}}$ , we obtain
+
+$\frac{\mu}{\tau_{t}}\|(\hat{x},\hat{y})-(x_{*}^{t},y_{*}^{t})\|\leq\frac{64}{\epsilon}\sqrt{\|r_{x}^{t}\|^{2}+\frac{\beta_{t}}{\mu}\|r_{y}^{t}\|^{2}}.$
+
+By Theorem 2 with $(L_{\nabla f},\mu_{x},\mu_{y})=(3\beta_{t},\beta_{t},\mu)$ and $3\cdot 2^{11}(N_{\mathcal{A}}+256\mathcal{C}_{\mathcal{A}}+3)\leq\widetilde{\mathcal{C}}_{\mathcal{A}}$ , the call finishes within the limit ( 17 ). In addition, the $L_{\nabla h}$ -weak convexity of $h(\cdot,y^{t+1})$ implies
+
+$\displaystyle h(x^{t},y^{t+1})-h(x^{t+1},y^{t+1})+\langle\nabla_{x}h(x^{t+1},y^{t+1}),x^{t+1}-x^{t}\rangle+\frac{\beta_{t}}{2}\|x^{t+1}-x^{t}\|^{2}\geq\frac{\beta_{t}-L_{\nabla h}}{2}\|x^{t+1}-x^{t}\|^{2}\geq 0.$
+
+Thus ( 18 ) holds, so the trial either terminates the run or is accepted. Since $\beta_{1}=\epsilon/32<L_{\nabla h}$ , step 7 can double $\beta_{t}$ only when $\beta_{t}<L_{\nabla h}$ . Together with $\mu=\epsilon/(32D)$ and $1\leq D\leq 4D_{\mathbf{y}}$ , this implies
+
+$\frac{\epsilon}{128D_{\mathbf{y}}}\leq\mu\leq\beta_{1}=\frac{\epsilon}{32}\leq\beta_{t}<2L_{\nabla h}.$ (66)
+
+By ( 66 ), only finitely many rejected trials occur. Lemmas 9 and 11 ensure that each call is finite and that only finitely many consecutive trials retain the same $\beta_{t}$ . Hence the run terminates.
+
+If the run returns a point in step 6, then ( 16 ) and ( 62 ) imply
+
+$e^{t+1}-\bigl(2\beta_{t}(x^{t+1}-x^{t}),\mu(y^{t+1}-y^{0})\bigr)\in(A+B)(x^{t+1},y^{t+1}).$
+
+By Lemma 9 and steps 5 and 6, the norm of this residual is at most
+
+$\|e^{t+1}-\bigl(2\beta_{t}(x^{t+1}-x^{t}),\mu(y^{t+1}-y^{0})\bigr)\|\leq\tau_{t}+2\beta_{t}\|x^{t+1}-x^{t}\|+\mu\|y^{t+1}-y^{0}\|\leq\frac{\epsilon}{64}+\frac{\epsilon}{2}+\frac{\epsilon}{32}=\frac{35\epsilon}{64}<\epsilon.$
+
+Thus the returned point is an $\epsilon$ -stationary point of ( 1 ) by Definition 1 . If the run returns failure in step 5, Assumption 1 (ii) and Lemma 9 imply $D<\|y^{t+1}-y^{0}\|\leq 2D_{\mathbf{y}}$ .
+
+∎
+
+We first bound the numbers of evaluations in a run of Algorithm 4 with any $1\leq D\leq 4D_{\mathbf{y}}$ . By Lemma 12 , the run terminates.
+
+The tests in steps 5–7 require at most two evaluations of $h$ and one additional evaluation of $\nabla h$ . By ( 17 ), $\beta_{s}\geq\mu$ , and $\widetilde{\mathcal{C}}_{\mathcal{A}}\geq 3$ , the numbers of evaluations of $h$ , $\nabla h$ , $\prox_{p}$ , and $\prox_{q}$ at every trial $s$ , including its tests, are bounded, respectively, by
+
+$2\widetilde{\mathcal{C}}_{\mathcal{A}}\sqrt{\frac{\beta_{s}}{\mu}}\left(1+\log_{4}\!\left(1+\frac{64}{\epsilon}\sqrt{\|r_{x}^{s}\|^{2}+\frac{\beta_{s}}{\mu}\|r_{y}^{s}\|^{2}}\right)\right).$ (67)
+
+Fix a maximal group of consecutive trials with the same $\beta_{t}$ , and let $t$ be its first index. We first bound the logarithm in ( 67 ) at trial $t$ .
+
+Suppose no trial before $t$ has been accepted. Then $x^{t}=x^{0}$ and $(\hat{x},\hat{y})$ is the point computed in step 2. Its optimality condition and the convexity of $p$ imply
+
+$p(\hat{x})-p(x^{0})\leq-\langle\nabla_{x}h(x^{0},y^{0}),\hat{x}-x^{0}\rangle-\beta_{1}\|\hat{x}-x^{0}\|^{2}.$
+
+Using this, $0<\beta_{1}/L_{\nabla h}<1$ , the convexity of $p$ , and the Lipschitz continuity of $\nabla h$ , we obtain that for every $y\in\mathcal{Y}$ ,
+
+$\displaystyle H\!\left(x^{0}+\frac{\beta_{1}}{L_{\nabla h}}(\hat{x}-x^{0}),y\right)\leq H(x^{0},y)+\frac{\beta_{1}}{L_{\nabla h}}\left(\langle\nabla_{x}h(x^{0},y),\hat{x}-x^{0}\rangle+p(\hat{x})-p(x^{0})\right)+\frac{\beta_{1}^{2}}{2L_{\nabla h}}\|\hat{x}-x^{0}\|^{2}$ $\displaystyle\leq H(x^{0},y)+\frac{\beta_{1}}{L_{\nabla h}}\langle\nabla_{x}h(x^{0},y)-\nabla_{x}h(x^{0},y^{0}),\hat{x}-x^{0}\rangle-\frac{\beta_{1}^{2}}{2L_{\nabla h}}\|\hat{x}-x^{0}\|^{2}$ $\displaystyle\leq H(x^{0},y)+2\beta_{1}D_{\mathbf{y}}\|\hat{x}-x^{0}\|-\frac{\beta_{1}^{2}}{2L_{\nabla h}}\|\hat{x}-x^{0}\|^{2},$
+
+where the last inequality follows from $\|y-y^{0}\|\leq 2D_{\mathbf{y}}$ by Assumption 1 (ii). Taking the maximum over $y$ and using the definitions of $H^{*}$ and $\Delta_{0}$ , we obtain
+
+$\frac{\beta_{1}^{2}}{2L_{\nabla h}}\|\hat{x}-x^{0}\|^{2}-2\beta_{1}D_{\mathbf{y}}\|\hat{x}-x^{0}\|\leq\Delta_{0}.$
+
+Solving this quadratic inequality and using $\|\hat{y}-y^{0}\|\leq 2D_{\mathbf{y}}$ yields
+
+$\displaystyle\|(\hat{x},\hat{y})-(x^{0},y^{0})\|$ $\displaystyle\leq 2D_{\mathbf{y}}+\frac{2L_{\nabla h}D_{\mathbf{y}}+\sqrt{4L_{\nabla h}^{2}D_{\mathbf{y}}^{2}+2L_{\nabla h}\Delta_{0}}}{\beta_{1}}\leq 2D_{\mathbf{y}}+\frac{4L_{\nabla h}D_{\mathbf{y}}+\sqrt{2L_{\nabla h}\Delta_{0}}}{\beta_{1}}.$
+
+Moreover, steps 2 and 7 imply
+
+$r^{t}=A(\hat{x},\hat{y})-A(x^{0},y^{0})+\bigl((2\beta_{t}-\beta_{1})(\hat{x}-x^{0}),(\mu-\beta_{1})(\hat{y}-y^{0})\bigr).$
+
+By ( 66 ), $\|r^{t}\|\leq(L_{\nabla h}+2\beta_{t})\|(\hat{x},\hat{y})-(x^{0},y^{0})\|\leq 5L_{\nabla h}\|(\hat{x},\hat{y})-(x^{0},y^{0})\|$ . Combining these inequalities, we obtain
+
+$\displaystyle\frac{64}{\epsilon}\sqrt{\|r_{x}^{t}\|^{2}+\frac{\beta_{t}}{\mu}\|r_{y}^{t}\|^{2}}\leq\frac{320L_{\nabla h}}{\epsilon}\sqrt{\frac{\beta_{t}}{\mu}}\left(2D_{\mathbf{y}}+\frac{4L_{\nabla h}D_{\mathbf{y}}+\sqrt{2L_{\nabla h}\Delta_{0}}}{\beta_{1}}\right).$ (68)
+
+Suppose now that a trial before $t$ has been accepted, and let $i<t$ be the last such trial. Then $(\hat{x},\hat{y})=(x^{i+1},y^{i+1})$ and $x^{t}=x^{i+1}$ . The residual correction in every intervening rejected trial is zero, so step 7 implies $r^{t}=e^{i+1}-\bigl(2\beta_{i}(x^{i+1}-x^{i}),0\bigr)$ . Using this, $\|e^{i+1}\|\leq(\epsilon/64)\sqrt{\mu/\beta_{i}}$ , ( 64 ), and ( 66 ), we obtain
+
+$\displaystyle\frac{64}{\epsilon}\sqrt{\|r_{x}^{t}\|^{2}+\frac{\beta_{t}}{\mu}\|r_{y}^{t}\|^{2}}$ $\displaystyle\leq\sqrt{\frac{\beta_{t}}{\beta_{i}}}+\frac{128\beta_{i}}{\epsilon}\|x^{i+1}-x^{i}\|\leq\sqrt{\frac{2L_{\nabla h}}{\beta_{1}}}+\frac{128}{\epsilon}\sqrt{2L_{\nabla h}\left(\Delta_{0}+\frac{\epsilon D_{\mathbf{y}}}{8}\right)}.$
+
+Using this, ( 66 ), ( 68 ), and $D_{\mathbf{y}}\geq 1$ , we obtain in both cases
+
+$\displaystyle 1+\log_{4}\!\left(1+\frac{64}{\epsilon}\sqrt{\|r_{x}^{t}\|^{2}+\frac{\beta_{t}}{\mu}\|r_{y}^{t}\|^{2}}\right)$ (69) $\displaystyle\leq 1+\log_{4}\!\left(2^{20}\left(1+\frac{L_{\nabla h}\Delta_{0}}{\epsilon^{2}}+\frac{L_{\nabla h}D_{\mathbf{y}}}{\epsilon}\right)^{5/2}\right)$ $\displaystyle=11+\frac{5}{2}\log_{4}\!\left(1+\frac{L_{\nabla h}\Delta_{0}}{\epsilon^{2}}+\frac{L_{\nabla h}D_{\mathbf{y}}}{\epsilon}\right)\leq 11+\frac{2L_{\nabla h}\Delta_{0}}{\epsilon^{2}}+\frac{2L_{\nabla h}D_{\mathbf{y}}}{\epsilon},$
+
+where the last inequality follows from $\log(1+v)\leq v$ for $v\geq 0$ . Combining ( 67 ) and ( 69 ), we obtain that the numbers of evaluations at trial $t$ are bounded, respectively, by
+
+$2\widetilde{\mathcal{C}}_{\mathcal{A}}\sqrt{\frac{\beta_{t}}{\mu}}\left(11+\frac{2L_{\nabla h}\Delta_{0}}{\epsilon^{2}}+\frac{2L_{\nabla h}D_{\mathbf{y}}}{\epsilon}\right).$ (70)
+
+Every later trial $s$ in this group follows an accepted trial $s-1$ with the same parameters. By step 7 and $\|e^{s}\|\leq\tau_{t}$ , one has
+
+$\frac{64}{\epsilon}\sqrt{\|r_{x}^{s}\|^{2}+\frac{\beta_{t}}{\mu}\|r_{y}^{s}\|^{2}}\leq 1+\frac{128\beta_{t}}{\epsilon}\|x^{s}-x^{s-1}\|.$
+
+By ( 63 ), $\beta_{t}\|x^{s}-x^{s-1}\|/\epsilon>1/4$ . Using this, ( 67 ), and $1+\log_{4}(2+128v)\leq 64v^{2}$ for $v\geq 1/4$ , we obtain that the numbers of evaluations at trial $s$ are bounded, respectively, by
+
+$128\widetilde{\mathcal{C}}_{\mathcal{A}}\sqrt{\frac{\beta_{t}}{\mu}}\,\frac{\beta_{t}^{2}\|x^{s}-x^{s-1}\|^{2}}{\epsilon^{2}}.$ (71)
+
+Each such trial follows a distinct accepted trial. By ( 64 ), ( 66 ), ( 70 ), and ( 71 ), summing the trial bounds yields the following respective bounds for the numbers of evaluations of $h$ , $\nabla h$ , $\prox_{p}$ , and $\prox_{q}$ in this group:
+
+$\displaystyle\widetilde{\mathcal{C}}_{\mathcal{A}}\sqrt{\frac{\beta_{t}}{\mu}}\left(22+\frac{260L_{\nabla h}\Delta_{0}}{\epsilon^{2}}+\frac{36L_{\nabla h}D_{\mathbf{y}}}{\epsilon}\right)\leq 2^{9}\widetilde{\mathcal{C}}_{\mathcal{A}}\sqrt{\frac{\beta_{t}}{\mu}}\left(1+\frac{L_{\nabla h}\Delta_{0}}{\epsilon^{2}}+\frac{L_{\nabla h}D_{\mathbf{y}}}{\epsilon}\right).$ (72)
+
+Let $s_{1}<\cdots<s_{J}$ be the first indices of these groups. By step 7, $\beta_{s_{j+1}}=2\beta_{s_{j}}$ for every $1\leq j<J$ . Using this, ( 66 ), and $\mu=\epsilon/(32D)$ , we obtain
+
+$\displaystyle\sum_{j=1}^{J}\sqrt{\frac{\beta_{s_{j}}}{\mu}}$ $\displaystyle=\sqrt{\frac{\beta_{s_{J}}}{\mu}}\sum_{j=1}^{J}2^{-(J-j)/2}\leq(2+\sqrt{2})\sqrt{\frac{2L_{\nabla h}}{\mu}}=8(2+\sqrt{2})\sqrt{\frac{L_{\nabla h}D}{\epsilon}}.$
+
+Summing ( 72 ) and adding the two gradient evaluations and one evaluation of each proximal mapping in step 2, we obtain that the numbers of evaluations of $h$ , $\nabla h$ , $\prox_{p}$ , and $\prox_{q}$ in the run are bounded, respectively, by
+
+$2+2^{12}(2+\sqrt{2})\widetilde{\mathcal{C}}_{\mathcal{A}}\sqrt{\frac{L_{\nabla h}D}{\epsilon}}\left(1+\frac{L_{\nabla h}\Delta_{0}}{\epsilon^{2}}+\frac{L_{\nabla h}D_{\mathbf{y}}}{\epsilon}\right).$ (73)
+
+With $D=2D_{\mathbf{y}}$ , Lemma 12 excludes failure, so Algorithm 4 returns an $\epsilon$ -stationary point of ( 1 ). Since $D_{\mathbf{y}}\geq 1$ and $\epsilon<32L_{\nabla h}$ , ( 73 ) implies ( 19 ). Hence the conclusion follows. ∎
+
+We first prove by induction that every reached phase $k$ satisfies $D_{k}\leq 4D_{\mathbf{y}}$ and its call to Algorithm 4 terminates. Since $D_{1}=1\leq D_{\mathbf{y}}$ , the claim holds for $k=1$ by Lemma 12 . Suppose it holds at a reached phase $k$ . If phase $k+1$ is reached, the call at phase $k$ returned failure. By Lemma 12 , $D_{k}<2D_{\mathbf{y}}$ and hence $D_{k+1}=2D_{k}<4D_{\mathbf{y}}$ . Applying the same lemma at phase $k+1$ proves the induction claim.
+
+Since $D_{k}=2^{k-1}$ and Lemma 12 excludes failure when $D_{k}\geq 2D_{\mathbf{y}}$ , only finitely many phases are reached. Let $K$ be the last phase. By Lemma 12 , its output is an $\epsilon$ -stationary point of ( 1 ). Moreover, $D_{K}\leq 4D_{\mathbf{y}}$ , so
+
+$\sum_{k=1}^{K}\sqrt{D_{k}}=\sqrt{D_{K}}\sum_{k=1}^{K}2^{-(K-k)/2}\leq(2+\sqrt{2})\sqrt{D_{K}}\leq(2+\sqrt{2})\sqrt{4D_{\mathbf{y}}}.$
+
+Every phase starts from $(x^{0},y^{0})$ with the same tolerance, so $\Delta_{0}$ is unchanged. Since $D_{k}\geq 1$ and $\epsilon<32L_{\nabla h}$ , summing ( 73 ) with $D=D_{k}$ and using the last inequality yields ( 20 ), including the initialization in every phase. Hence the conclusion follows. ∎
+
+References

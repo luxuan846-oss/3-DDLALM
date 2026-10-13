@@ -1,0 +1,77 @@
+[
+  {
+    "anchor": "S2.Thmtheorem1",
+    "kind": "ltx_theorem ltx_theorem_definition",
+    "text": "Definition 2.1 (Nonconvex–(strongly)concave function class) . Given $L>0$ , $\\mu\\geq 0$ , $\\Delta>0$ , and $D>0$ , let $\\mathcal{F}_{\\mathrm{NC}\\text{-}\\mu\\mathrm{C}}(L,\\mu,\\Delta,D)$ denote the class of continuously differentiable objectives $F:X\\times Y\\to\\mathbb{R}$ , over all finite dimensions, satisfying: (i) $X\\subseteq\\mathbb{R}^{d_{x}}$ and $Y\\subseteq\\mathbb{R}^{d_{y}}$ are nonempty closed convex sets containing zero, and $\\operatorname{diam}(Y)\\leq D.$ (ii) $F$ is jointly $L$ -smooth: $\\|\\nabla F(z)-\\nabla F(z^{\\prime})\\|\\leq L\\|z-z^{\\prime}\\|,\\qquad z,z^{\\prime}\\in X\\times Y.$ (iii) For every $x\\in X$ , the function $F(x,\\cdot)$ is concave on $Y$ . (iv) The primal value function $\\Phi(x):=\\max_{y\\in Y}F(x,y)$ satisfies $\\Phi(0)-\\inf_{x\\in X}\\Phi(x)\\leq\\Delta.$ (v) For every $x\\in X$ and $y,y^{\\prime}\\in Y$ , $F(x,y^{\\prime})\\leq F(x,y)+\\langle\\nabla_{y}F(x,y),y^{\\prime}-y\\rangle-\\frac{\\mu}{2}\\|y^{\\prime}-y\\|^{2}.$"
+  },
+  {
+    "anchor": "S2.Thmtheorem2",
+    "kind": "ltx_theorem ltx_theorem_definition",
+    "text": "Definition 2.2 (Zero-respecting first-order algorithm) . Let $(\\boldsymbol{x}^{0},\\boldsymbol{y}^{0})=(0,0)$ . For every $t\\geq 0$ , let $\\mathcal{S}_{x}^{t}:=\\bigcup_{i=0}^{t}\\left(\\operatorname{supp}(\\boldsymbol{x}^{i})\\cup\\operatorname{supp}(\\boldsymbol{g}_{x}^{i})\\right),\\qquad\\mathcal{S}_{y}^{t}:=\\bigcup_{i=0}^{t}\\left(\\operatorname{supp}(\\boldsymbol{y}^{i})\\cup\\operatorname{supp}(\\boldsymbol{g}_{y}^{i})\\right),$ where $(\\boldsymbol{g}_{x}^{i},\\boldsymbol{g}_{y}^{i})$ is the gradient response returned by the oracle at the $i$ -th query. A first-order algorithm is called zero-respecting if every feasible iterate $(\\boldsymbol{x}^{t+1},\\boldsymbol{y}^{t+1})\\in X\\times Y$ satisfies $\\operatorname{supp}(\\boldsymbol{x}^{t+1})\\subseteq\\mathcal{S}_{x}^{t},\\qquad\\operatorname{supp}(\\boldsymbol{y}^{t+1})\\subseteq\\mathcal{S}_{y}^{t}.$"
+  },
+  {
+    "anchor": "S2.Thmtheorem3",
+    "kind": "ltx_theorem ltx_theorem_definition",
+    "text": "Definition 2.3 (Stochastic first-order oracle) . The stochastic first-order oracle of a differentiable function $f:\\mathcal{X}\\times\\mathcal{Y}\\rightarrow\\mathbb{R}$ returns $\\mathcal{O}_{f}^{\\text{sfo}}(x,y)=(f(x,y),\\widehat{\\nabla}_{x}f(x,y;\\xi),\\widehat{\\nabla}_{y}f(x,y;\\xi)),\\qquad(x,y)\\in\\mathcal{X}\\times\\mathcal{Y},$ where $\\xi$ is a random variable satisfying $\\mathbb{E}_{\\xi}[\\widehat{\\nabla}f(x,y;\\xi)]=\\nabla f(x,y),\\qquad\\mathbb{E}_{\\xi}\\left[\\|\\widehat{\\nabla}f(x,y;\\xi)-\\nabla f(x,y)\\|^{2}\\right]\\leq\\sigma^{2}.$ Under the mean-square smoothness (MSS) assumption, we additionally require $\\mathbb{E}_{\\xi}\\!\\left[\\left\\|\\widehat{\\nabla}f(x,y;\\xi)-\\widehat{\\nabla}f(x^{\\prime},y^{\\prime};\\xi)\\right\\|^{2}\\right]\\leq\\bar{L}^{2}\\left\\|(x,y)-(x^{\\prime},y^{\\prime})\\right\\|^{2},\\qquad(x,y),(x^{\\prime},y^{\\prime})\\in\\mathcal{X}\\times\\mathcal{Y},$ where the same random variable $\\xi$ is used at both query points."
+  },
+  {
+    "anchor": "S2.Thmtheorem4",
+    "kind": "ltx_theorem ltx_theorem_definition",
+    "text": "Definition 2.4 (Zero-respecting first-order algorithm) . Let $(\\boldsymbol{x}^{0},\\boldsymbol{y}^{0})=(0,0)$ . For every $t\\geq 0$ , let $\\mathcal{S}_{x}^{t}:=\\bigcup_{i=0}^{t}\\left(\\operatorname{supp}(\\boldsymbol{x}^{i})\\cup\\operatorname{supp}(\\boldsymbol{g}_{x}^{i})\\right),\\qquad\\mathcal{S}_{y}^{t}:=\\bigcup_{i=0}^{t}\\left(\\operatorname{supp}(\\boldsymbol{y}^{i})\\cup\\operatorname{supp}(\\boldsymbol{g}_{y}^{i})\\right),$ where $(\\boldsymbol{g}_{x}^{i},\\boldsymbol{g}_{y}^{i})$ is the gradient response returned by the oracle at the $i$ -th query. A first-order algorithm is called zero-respecting if every feasible iterate $(\\boldsymbol{x}^{t+1},\\boldsymbol{y}^{t+1})\\in X\\times Y$ satisfies $\\operatorname{supp}(\\boldsymbol{x}^{t+1})\\subseteq\\mathcal{S}_{x}^{t},\\qquad\\operatorname{supp}(\\boldsymbol{y}^{t+1})\\subseteq\\mathcal{S}_{y}^{t}.$"
+  },
+  {
+    "anchor": "S2.Thmtheorem5",
+    "kind": "ltx_theorem ltx_theorem_definition",
+    "text": "Definition 2.5 (First-order zero-chain) . For $z\\in\\mathbb{R}^{d}$ , define $\\operatorname{prog}_{0}(z):=\\max\\bigl(\\{j\\in[d]:z_{j}\\neq 0\\}\\cup\\{0\\}\\bigr).$ A differentiable function $F:\\mathbb{R}^{d}\\to\\mathbb{R}$ is a first-order zero-chain if, for every $z\\in\\mathbb{R}^{d}$ , $\\operatorname{prog}_{0}(\\nabla F(z))\\leq\\min\\{\\operatorname{prog}_{0}(z)+1,d\\}.$"
+  },
+  {
+    "anchor": "S2.Thmtheorem6",
+    "kind": "ltx_theorem ltx_theorem_definition",
+    "text": "Definition 2.6 (Probability- $p$ zero-chain) . Let $p\\in(0,1]$ , and let $f:\\mathcal{X}\\subseteq\\mathbb{R}^{d}\\rightarrow\\mathbb{R}$ be a differentiable function equipped with a stochastic first-order oracle $\\mathcal{O}_{f}^{\\text{sfo}}(\\boldsymbol{x})=(f(\\boldsymbol{x}),\\widehat{\\nabla}f(\\boldsymbol{x};\\xi))$ . We call $f$ a probability- $p$ zero-chain with respect to this oracle if, for every $\\boldsymbol{x}\\in\\mathcal{X}$ with $r:=\\text{prog}_{0}(\\boldsymbol{x})<d$ , $\\mathbb{P}_{\\xi}\\left(\\text{prog}_{0}(\\widehat{\\nabla}f(\\boldsymbol{x};\\xi))=r+1\\right)\\leq p,\\qquad\\mathbb{P}_{\\xi}\\left(\\text{prog}_{0}(\\widehat{\\nabla}f(\\boldsymbol{x};\\xi))>r+1\\right)=0.$ Here, the probability is taken over the randomness of the oracle."
+  },
+  {
+    "anchor": "S4.Thmtheorem4",
+    "kind": "ltx_theorem ltx_theorem_proposition",
+    "text": "Proposition 4.4 (Deterministic zero-respecting lower bound) . There exist universal constants $c_{\\mathrm{d}},c_{\\mathrm{acc}}>0$ such that, for every $L,D,\\Delta>0$ and every $0<\\varepsilon\\leq c_{\\mathrm{acc}}\\min\\{\\sqrt{L\\Delta},LD\\},$ there exist finite-dimensional closed convex sets $\\mathcal{X}_{\\mathrm{d}},\\mathcal{Y}_{\\mathrm{d}}$ and an instance $F_{\\mathrm{d}}:\\mathcal{X}_{\\mathrm{d}}\\times\\mathcal{Y}_{\\mathrm{d}}\\to\\mathbb{R}$ defined in ( 4.11 ), which is jointly $L$ -smooth and concave in $y$ , satisfies $\\operatorname{diam}(\\mathcal{Y}_{\\mathrm{d}})\\leq D$ and $\\Phi_{\\mathrm{d}}(0)-\\inf_{x\\in\\mathcal{X}_{\\mathrm{d}}}\\Phi_{\\mathrm{d}}(x)\\leq\\Delta$ , where $\\Phi_{\\mathrm{d}}(x):=\\max_{y\\in\\mathcal{Y}_{\\mathrm{d}}}F_{\\mathrm{d}}(x,y)$ . For every deterministic zero-respecting first-order algorithm, if its primal output $\\widehat{x}\\in\\mathcal{X}_{\\mathrm{d}}$ is obtained after $q<c_{\\mathrm{d}}L^{2}D\\Delta\\varepsilon^{-3}$ calls to the exact-gradient oracle, then $S_{\\mathrm{OS}}(\\widehat{x})>\\varepsilon,$ Consequently, the deterministic zero-respecting first-order oracle complexity of finding an $\\varepsilon$ -stationary point is $\\Omega\\!\\left(L^{2}D\\Delta\\varepsilon^{-3}\\right).$"
+  },
+  {
+    "anchor": "S4.Thmtheorem7",
+    "kind": "ltx_theorem ltx_theorem_proposition",
+    "text": "Proposition 4.7 . There are universal constants $c_{\\rm s},c_{\\rm acc}>0$ such that, under ( 4.19 ) and $0<\\varepsilon\\leq c_{\\rm acc}\\min\\{\\sqrt{L\\Delta},LD\\},$ the instance ( 4.14 ) belongs to $\\mathcal{F}_{\\rm NC\\text{-}C}(L,\\Delta,D)$ , and the sample function ( 4.17 ) defines an MSS oracle. Every zero-respecting algorithm using at most $c_{\\rm s}\\frac{L^{3}D^{2}\\Delta\\sigma^{2}}{\\varepsilon^{6}}$ (4.21) shared-sample calls satisfies $\\mathbb{E}S_{\\rm OS}(\\widehat{x})>\\varepsilon$ ."
+  },
+  {
+    "anchor": "S4.Thmtheorem8",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 4.8 . There are constants $c,c_{0}>0$ such that the following holds. Let $L,\\Delta,D>0$ , $\\bar{L}\\geq L$ , and $0\\leq\\sigma\\leq D\\bar{L}/4$ , and suppose that $0<\\varepsilon\\leq c_{0}\\min\\{\\sqrt{L\\Delta},LD\\}.$ There is a hard instance in $\\mathcal{F}_{\\rm NC\\text{-}C}(L,\\Delta,D)$ , equipped with an unbiased stochastic gradient oracle of variance at most $\\sigma^{2}$ and mean-square smoothness at most $\\bar{L}$ , such that every zero-respecting randomized first-order algorithm using at most $c\\left(\\frac{L^{2}D\\Delta}{\\varepsilon^{3}}+\\frac{L^{3}D^{2}\\Delta\\sigma^{2}}{\\varepsilon^{6}}\\right)$ (4.22) shared-sample oracle calls returns a primal output satisfying $\\mathbb{E}S_{\\rm OS}(\\widehat{x})>\\varepsilon$ . The expectation is over both oracle and algorithmic randomness."
+  },
+  {
+    "anchor": "S5.Thmtheorem3",
+    "kind": "ltx_theorem ltx_theorem_proposition",
+    "text": "Proposition 5.3 . Let $\\kappa\\geq 32L_{\\rm d}$ and $0<\\varepsilon\\leq c_{\\rm acc,d}\\sqrt{L\\Delta},\\qquad c_{\\rm acc,d}=\\frac{c_{d}}{\\sqrt{10240L_{\\rm d}}}.$ There is a fixed deterministic instance in the NC–SC class of Definition such that every zero-respecting algorithm making at most $N\\leq c_{\\rm det}\\frac{L\\Delta\\sqrt{\\kappa}}{\\varepsilon^{2}},\\qquad c_{\\rm det}=\\frac{c_{d}^{2}}{10240L_{\\rm d}\\sqrt{8L_{\\rm d}}},$ oracle calls satisfies $\\|\\nabla\\Phi(\\widehat{x})\\|\\geq 16\\varepsilon$ ."
+  },
+  {
+    "anchor": "S6.Thmtheorem4",
+    "kind": "ltx_theorem ltx_theorem_proposition",
+    "text": "Proposition 6.4 . Under ( 6.2 ), $\\frac{m}{2p}\\geq c_{\\rm bv}\\left(\\frac{L\\Delta}{\\varepsilon^{2}}+\\frac{L\\Delta\\kappa\\sigma^{2}}{\\varepsilon^{4}}\\right),\\qquad c_{\\rm bv}=\\min\\left\\{\\frac{c_{b}^{2}}{5120C_{*}},\\frac{c_{b}^{4}}{1310720\\nu^{2}C_{*}^{2}}\\right\\}.$"
+  },
+  {
+    "anchor": "S6.Thmtheorem5",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 6.5 (Bounded-variance lower bound) . There are absolute constants $\\kappa_{0},c_{\\rm BV},c_{\\rm acc}>0$ such that the following holds. Fix $L,\\mu,\\Delta>0$ and write $\\kappa=L/\\mu$ . For $\\kappa\\geq\\kappa_{0}$ , $\\sigma\\geq 0$ , and $0<\\varepsilon\\leq c_{\\rm acc}\\sqrt{L\\Delta}$ , there is one fixed instance and oracle in the NC–SC bounded-variance class for which every zero-respecting first-order algorithm using at most $N\\leq c_{\\rm BV}\\left(\\frac{L\\Delta\\sqrt{\\kappa}}{\\varepsilon^{2}}+\\frac{L\\Delta\\kappa\\sigma^{2}}{\\varepsilon^{4}}\\right)$ oracle calls satisfies $\\mathbb{E}\\|\\nabla\\Phi(\\widehat{x})\\|>\\varepsilon$ ."
+  },
+  {
+    "anchor": "S7.Thmtheorem4",
+    "kind": "ltx_theorem ltx_theorem_proposition",
+    "text": "Proposition 7.4 . Under ( 7.3 ), $\\frac{m}{2p}\\geq c_{\\rm mss}\\frac{\\Delta\\bar{L}\\sigma\\kappa^{3/2}}{\\varepsilon^{3}},\\qquad c_{\\rm mss}=\\frac{c_{b}^{3}}{40960\\sqrt{8}\\,C_{\\lambda}V_{0}^{2}}.$"
+  },
+  {
+    "anchor": "S7.Thmtheorem6",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 7.6 . There exist universal constants $\\kappa_{0},c_{\\rm MS}>0$ such that the following holds. Fix $L,\\mu,\\Delta>0$ , $\\bar{L}\\geq L$ , and $\\sigma>0$ , and write $\\kappa=L/\\mu$ . Suppose that $\\kappa\\geq\\kappa_{0}$ and that $0<\\varepsilon\\leq c_{\\rm acc,d}\\sqrt{L\\Delta},$ where $c_{\\rm acc,d}$ is defined in Proposition 5.3 . Assume also the stochastic accuracy range ( 7.3 ), with $a=\\sqrt{\\kappa/8}$ and the universal constants defined below. Then there is a fixed finite-dimensional instance and oracle in the NC–SC mean-square-smooth instance class of Definitions and 2.3 for which every zero-respecting randomized first-order algorithm using at most $N\\leq c_{\\rm MS}\\left(\\frac{L\\Delta\\sqrt{\\kappa}}{\\varepsilon^{2}}+\\frac{\\Delta\\bar{L}\\sigma\\kappa^{3/2}}{\\varepsilon^{3}}\\right)$ shared-sample batch calls satisfies $\\mathbb{E}\\|\\nabla\\Phi(\\widehat{x})\\|>\\varepsilon$ . The claim holds for every finite batch size and every primal output allowed by Definition 2.4 . The instance is chosen using only the problem parameters, independently of the algorithm and its randomness."
+  },
+  {
+    "anchor": "S7.Thmtheorem7",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 7.7 . When $\\sigma=0$ , Proposition 5.3 and Lemma 7.5 give the deterministic $\\Omega(L\\Delta\\sqrt{\\kappa}/\\varepsilon^{2})$ lower bound under the deterministic accuracy condition alone. The positive- $\\sigma$ range ( 7.3 ) is used only for the Bernoulli-gated construction."
+  }
+]

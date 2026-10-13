@@ -1,0 +1,791 @@
+Content selection saved. Describe the issue below:
+
+ADMM and Linearized ADMM for Weakly Convex Minimization
+
+We study a class of weakly convex optimization problems in which the objective is the sum of a smooth convex term and a weakly convex term that may be nonsmooth. To exploit this structure, we develop a splitting technique based on the alternating direction method of multipliers (ADMM), which decouples the minimization of the two components into tractable subproblems. Because the update associated with the smooth term may require an inner iterative solver, we further linearize this term, yielding a linearized ADMM (LADMM) scheme with an inexpensive one - step update. Under mild conditions, we establish the subsequence convergence of both ADMM and LADMM methods to directional stationary solutions, which are equivalent to critical points and Clarke stationary solutions for our weakly convex problem. Numerical experiments on two low-dimensional test functions and a high-dimensional logarithmic regularized logistic regression model demonstrate that the proposed approaches are computationally efficient and produce solutions of comparable quality to baseline methods.
+
+Keywords: Weakly convex optimization; ADMM; linearized ADMM; convergence analysis; directional stationary point.
+
+1 Introduction
+
+Optimization is a fundamental tool in applied mathematics and scientific computing, with broad applications in machine learning, signal processing, statistics, and operations research. Within the diverse landscape of optimization methods, convex optimization has become particularly prominent and influential. It rests on a mature theoretical foundation with strong guarantees (e.g., any local minimizer is globally optimal) and supports the design of efficient, reliable algorithms that scale to high - dimensional problems ( Boyd and Vandenberghe, 2004 ; Nesterov, 2004 ; Beck, 2017 ) . Consequently, convex optimization has become both a standard modeling approach and a practical computational technique across a wide range of applications.
+
+In practice, however, convexity can be overly restrictive: many modern modeling choices involve objective functions that are nonconvex, yet still possess structure that algorithms can exploit. Consequently, a variety of structured nonconvex optimization approaches along with convergence analysis have also been developed ( Gao and Wen, 2023 ; Davis and Drusvyatskiy, 2019 ; Sun et al., 2018 ) . An important class that lies between convex and fully nonconvex functions is that of weakly convex (WC) functions, namely functions that become convex after adding a quadratic term ( Rockafellar and Wets, 1998 ) . On the theoretical side, weak convexity admits a well-developed first-order variational framework, e.g., directional derivatives and generalized subdifferentials, which gives rise to rigorous stationarity concepts and supports convergence analysis for optimization algorithms. At the same time, the WC assumption is prevalent in large-scale machine learning, for instance in the analysis of stochastic and proximal-type methods for nonsmooth nonconvex objectives ( Davis and Drusvyatskiy, 2019 ) , as well as in min-max formulations motivated by modern machine-learning applications ( Liu et al., 2021 ) .
+
+In this paper, we study a broad class of composite optimization problems whose objective can be written as the sum of two components: a smooth convex function and a (potentially nonsmooth) WC function. The smooth convex term typically models data fidelity or physics - based consistency, while the WC term is used to encode additional modeling structure, such as sparsity, robustness, or other forms of regularization. This composite formulation encompasses many widely used models in statistical learning, inverse problems, and signal/image processing ( Liu et al., 2009 ; Shi et al., 2012 ) . For example, nonlinear regression and classification losses combined with weakly convex penalties fall naturally into this framework. Popular WC regularizers include smoothly clipped absolute deviation (SCAD) ( Fan and Li, 2001 ) , the minimax concave penalty (MCP) ( Zhang, 2010 ) , logarithmic (LOG) regularization ( Ke et al., 2021 ; Ke et al., 2024 ) , and the transformed $\ell_{1}$ penalty ( Nikolova, 2000 ; Lv and Fan, 2009 ; Zhang and Xin, 2017 ) .
+
+We employ a variable-splitting method, namely the alternating direction method of multipliers (ADMM) ( Gabay and Mercier, 1976 ; Boyd et al., 2011 ) , taking advantage of the two-term structure: the smooth term supplies gradient information, while the WC term preserves useful variational properties. Although the original formulation is unconstrained, introducing an auxiliary variable allows the convex term and the weakly convex term to be handled separately. Majorization-minimization (MM) ( Hunter and Lange, 2004 ) , difference-of-convex algorithm (DCA) ( Pham Dinh and Le Thi, 1997 ) , and related first-order methods such as proximal gradient are also natural alternatives for unconstrained composite problems; however, these methods typically take a single forward step on the smooth term with a size capped by its Lipschitz constant, which can be conservative when this constant is large or difficult to estimate tightly. ADMM instead solves the smooth-term subproblem to high accuracy at each iteration, which can yield faster practical progress in such settings.
+
+Despite its flexibility, a practical bottleneck in applying ADMM to our problem setting is that the subproblem associated with the smooth term may not admit a closed-form solution. Consequently, it is often necessary to run an inner iterative solver at each outer iteration, which can dominate the overall computational cost. To mitigate this issue, we further adopt a linearized ADMM (LADMM) ( Wang and Yuan, 2012 ) scheme, in which the smooth term in the corresponding subproblem is replaced by its first-order approximation. This modification preserves the splitting structure while yielding an inexpensive closed-form update, thereby significantly reducing the per-iteration cost.
+
+Prior convergence analyses for ADMM were largely limited to convex problem settings, but there has been growing interest in extending such guarantees to nonconvex problems. For example, Hong et al. (2016) established convergence of the classical ADMM for certain classes of linearly constrained nonconvex problems with possibly nonsmooth terms, and Li and Pong (2015) proved global convergence of splitting methods (including ADMM) for nonconvex composite problems under a semi-algebraic assumption. Analogous guarantees have since been developed for the linearized variant (LADMM): Liu et al. (2019) analyzed a linearly constrained nonconvex nonsmooth setting and proved that both the constraint violation and first-order optimality residuals vanish; Yashtini (2022) proved global convergence of a proximal linearized ADMM under the Kurdyka–Łojasiewicz (KL) assumption; and, under the same KL assumption, Sun et al. (2018) proposed an ADMM-based method that convexifies the resulting nonconvex subproblems via a linearization technique inspired by the difference-of-convex algorithm (DCA), establishing convergence to a critical point. For problems with nonlinear constraints, El Bourkhissi and Necoara (2026) investigated an inexact, linearized ADMM in which both the smooth objective term and the nonlinear constraints are linearized within the augmented Lagrangian, with one of the resulting subproblems solved only approximately at each iteration.
+
+There has been prior work on ADMM-type convergence analysis for strongly and weakly convex composite models with linear constraints ( Hong et al., 2016 ; Zhang and Shen, 2019 ) . In contrast, we focus on an unconstrained formulation and establish convergence to a directional stationary (d-stationary) point (see Definition 4 ). In general nonconvex optimization, d-stationary points can be a stronger notion of optimality than critical points because it requires the directional derivative to be nonnegative in every direction. For example, it has been shown that d-stationarity implies critical points for certain DC programs, and serves as a necessary condition for local optimality ( Cui and Pang, 2021 ; Pang et al., 2017 ) . For the specific weakly convex composite structure studied here, these notions in fact coincide (Section 3.1 ); we discuss the implications of this equivalence for our contribution there.
+
+Although the unconstrained setting may appear simpler, it eliminates the consensus structure induced by linear constraints that is heavily exploited in prior analyses such as Hong et al. (2016) . As a result, our analysis requires a different sufficient-decrease argument that directly leverages the weak convexity modulus. For ADMM, we establish a sufficient-decrease property of the augmented Lagrangian under explicit parameter conditions. For LADMM, we further introduce a modified augmented Lagrangian to control the lagged-gradient effect arising from linearization, which is critical for the convergence analysis. These developments lead to explicit parameter conditions under which the sequences generated by both ADMM and LADMM admit convergent subsequences whose limit points are d-stationary solutions.
+
+We further corroborate the theory with three numerical case studies, including smooth low-dimensional test functions and a high-dimensional sparse logistic regression model ( Liu et al., 2009 ) . These experiments illustrate (i) the effectiveness of ADMM/LADMM on the two-term structure, (ii) the practical benefit of linearization in reducing per-iteration cost when inner solves are expensive, and (iii) the resulting trade-off between computational time and solution quality across methods, showing that ADMM/LADMM achieve comparable accuracy with significantly reduced runtime in our test problems.
+
+We summarize the main contributions of this work as follows:
+
+We apply ADMM to the unconstrained WC composite problem. Since this eliminates the consensus structure exploited by existing linearly constrained nonconvex ADMM analyses (e.g., Hong et al. (2016) ), we develop a sufficient-decrease argument that directly leverages the weak convexity modulus.
+
+We develop a linearized variant (LADMM) that replaces the smooth-term subproblem with an inexpensive closed-form update. To control the resulting lagged-gradient effect, we introduce a Lyapunov correction sequence that avoids the additional structural assumptions, required by existing linearized/proximal ADMM analyses.
+
+We establish subsequential convergence of both ADMM and LADMM to a d-stationary point of the original problem, under explicit, verifiable parameter conditions on $\rho$ , avoiding the KL or semi-algebraic assumptions typically required for nonconvex ADMM-type convergence guarantees.
+
+We conduct numerical experiments on three case studies, ranging from low-dimensional smooth test functions to a high-dimensional sparse logistic regression model, which confirm the practical efficiency of both methods.
+
+The remainder of the paper is organized as follows. In Section 2 , we introduce the weakly convex setting, presenting the ADMM and LADMM algorithms. Section 3 develops the optimality notions, characterizes weak convexity used in our analysis, and establishes convergence guarantees for both methods. Section 4 provides a detailed account of the numerical experiments to validate the performance of ADMM and LADMM. Finally, Section 5 summarizes the paper.
+
+2 Formulation and algorithms
+
+We consider the problem
+
+$\displaystyle\min\limits_{\mathbf{x}\in\mathbb{R}^{n}}\ \zeta(\mathbf{x})\triangleq f(\mathbf{x})+g(\mathbf{x}),$ (1)
+
+where $f$ is convex and differentiable and $g$ is a weakly convex function that is not necessarily differentiable. The notion of weak convexity is defined in Definition 1 .
+
+A function $g(\mathbf{x})$ is weakly convex if there exists a constant $\sigma_{g}>0$ such that $g(\mathbf{x})+\frac{\sigma_{g}}{2}\|\mathbf{x}\|_{2}^{2}$ is convex. The constant $\sigma_{g}$ is often referred to as the weakly convex modulus of the function $g$ .
+
+To take advantage of the special structure of the two functions $f$ and $g$ , we apply ADMM to solve ( 1 ), as detailed in Section 2.1 , and further accelerate it using LADMM in Section 2.2 . The convergence analysis for both methods is given in Section 3 .
+
+2.1 ADMM
+
+We rewrite ( 1 ) into an equivalent constrained formulation,
+
+$\displaystyle\min_{\mathbf{x},\mathbf{z}}\quad f(\mathbf{z})+g(\mathbf{x})\quad\text{s.t.}\quad\mathbf{x}=\mathbf{z},$ (2)
+
+with its corresponding augmented Lagrangian function given by
+
+$\displaystyle\mathcal{L}(\mathbf{x},\mathbf{z};\mathbf{v})\triangleq f(\mathbf{z})+g(\mathbf{x})+\rho\langle\mathbf{v},\mathbf{x}-\mathbf{z}\rangle+\frac{\rho}{2}\|\mathbf{x}-\mathbf{z}\|_{2}^{2},$ (3)
+
+where $\mathbf{v}\in\mathbb{R}^{n}$ is a dual variable and $\rho>0$ is a parameter. The ADMM iterations proceed as follows:
+
+$\left\{\begin{array}[]{l}\mathbf{x}^{t+1}\in\operatornamewithlimits{argmin}_{\mathbf{x}}\mathcal{L}(\mathbf{x},\mathbf{z}^{t};\mathbf{v}^{t})\\ \mathbf{z}^{t+1}\in\operatornamewithlimits{argmin}_{\mathbf{z}}\mathcal{L}(\mathbf{x}^{t+1},\mathbf{z};\mathbf{v}^{t})\\ \mathbf{v}^{t+1}=\mathbf{v}^{t}+\mathbf{x}^{t+1}-\mathbf{z}^{t+1},\end{array}\right.$ (4)
+
+where the superscript $t$ counts the iteration number. By algebraic manipulation, the $\mathbf{x}$ -subproblem in ( 4 ) can be expressed equivalently as
+
+$\displaystyle\min_{\mathbf{x}}\quad\widehat{g}(\mathbf{x})\triangleq g(\mathbf{x})+\frac{\rho}{2}\|\mathbf{x}-\mathbf{z}^{t}+\mathbf{v}^{t}\|_{2}^{2}.$ (5)
+
+Proposition 1 guarantees that ( 5 ) is a convex problem if the parameter $\rho$ is greater than or equal to the weakly convexity modulus of $g$ (defined in Definition 1 ).
+
+Algorithm 1 ADMM for weakly convex minimization
+
+Suppose $g$ is weakly convex with modulus $\sigma_{g}>0$ . If $\rho\geq\sigma_{g}$ , then the problem ( 5 ) is convex.
+
+We can rewrite $\widehat{g}$ as follows,
+
+$\displaystyle\widehat{g}(\mathbf{x})$ $\displaystyle=g(\mathbf{x})+\frac{\rho}{2}\|\mathbf{x}\|_{2}^{2}+\rho\langle\mathbf{x},-\mathbf{z}^{t}+\mathbf{v}^{t}\rangle+\frac{\rho}{2}\|-\mathbf{z}^{t}+\mathbf{v}^{t}\|_{2}^{2}$ $\displaystyle=\Big(g(\mathbf{x})+\frac{\sigma_{g}}{2}\|\mathbf{x}\|_{2}^{2}\Big)+\frac{\rho-\sigma_{g}}{2}\|\mathbf{x}\|_{2}^{2}+\rho\langle\mathbf{x},-\mathbf{z}^{t}+\mathbf{v}^{t}\rangle+\frac{\rho}{2}\|-\mathbf{z}^{t}+\mathbf{v}^{t}\|_{2}^{2}.$
+
+Since $g$ is weakly convex with modulus $\sigma_{g}>0$ , the first term in the above equation is convex, and hence $\widehat{g}$ is a convex function if $\rho\geq\sigma_{g}$ . ∎
+
+Likewise, the $\mathbf{z}$ -subproblem in ( 4 ) can be written as
+
+$\displaystyle\min_{\mathbf{z}}\quad\hat{f}(\mathbf{z})\triangleq f(\mathbf{z})+\frac{\rho}{2}\|\mathbf{x}^{t+1}-\mathbf{z}+\mathbf{v}^{t}\|_{2}^{2},$
+
+which is a convex problem, due to the convexity assumption of $f(\cdot)$ . Consequently, if $\rho\geq\sigma_{g}$ , both the $\mathbf{x}$ - and $\mathbf{z}$ -subproblems in ( 4 ) are convex, and their global optima can be obtained by standard optimization methods such as gradient descent (GD) ( Dem’yanov, 1978 ) or Newton’s method ( Boyd and Vandenberghe, 2004 ) . The overall procedure is summarized in Algorithm 1 . Please refer to Supplementary Material (Appendices A.1, B.1, and C.1) for additional algorithmic details for specific choices of $f$ and $g$ .
+
+2.2 Linearized ADMM
+
+In many applications, the $\mathbf{x}$ -subproblem in ( 4 ) can be computed in a single step using a proximal operator, whereas the $\mathbf{z}$ -subproblem involves the smooth term $f$ and typically has no closed-form solution; as a result, it may require an inner iterative routine at each outer iteration, which can dominate the overall runtime. To avoid nested loops, we consider a linearized ADMM variant that replaces $f(\mathbf{z})$ in the $\mathbf{z}$ -subproblem with a first-order approximation at $\mathbf{z}^{t}$ , i.e.,
+
+$f(\mathbf{z})\approx f(\mathbf{z}^{t})+\langle\nabla f(\mathbf{z}^{t}),\,\mathbf{z}-\mathbf{z}^{t}\rangle.$
+
+LADMM preserves the ADMM splitting structure, so the $\mathbf{x}$ -subproblem and the dual update remain unchanged. It iterates as follows,
+
+$\left\{\begin{array}[]{l}\mathbf{x}^{t+1}\in\operatornamewithlimits{argmin}_{\mathbf{x}}\mathcal{L}(\mathbf{x},\mathbf{z}^{t};\mathbf{v}^{t})\\ \mathbf{z}^{t+1}\in\operatornamewithlimits{argmin}_{\mathbf{z}}\ \widehat{f}(\mathbf{z};\,\mathbf{z}^{t})\\ \mathbf{v}^{t+1}=\mathbf{v}^{t}+\mathbf{x}^{t+1}-\mathbf{z}^{t+1},\end{array}\right.$ (6)
+
+where $\widehat{f}(\mathbf{z};\,\mathbf{z}^{t})=f(\mathbf{z}^{t})+\langle\nabla f(\mathbf{z}^{t}),\mathbf{z}-\mathbf{z}^{t}\rangle+\frac{\rho}{2}\|\mathbf{x}^{t+1}-\mathbf{z}+\mathbf{v}^{t}\|_{2}^{2}$ . The $\mathbf{z}$ -update from ( 6 ) can be computed in a single closed-form step,
+
+$\displaystyle\mathbf{z}^{t+1}=\mathbf{x}^{t+1}+\mathbf{v}^{t}-\frac{\nabla f(\mathbf{z}^{t})}{\rho}.$ (7)
+
+Compared with ADMM, LADMM avoids iterative inner solves for the $\mathbf{z}$ -subproblem, often reducing per-iteration cost while preserving the same $\mathbf{x}$ -subproblem and dual step. The overall procedure is summarized in Algorithm 2 . Detailed updates for the specified forms of $f$ and $g$ are provided in Supplementary Material (Appendices A.2, B.2, and C.2).
+
+Algorithm 2 LADMM for weakly convex minimization
+
+3 Theoretical analysis
+
+This section is devoted to the convergence analysis of ADMM and LADMM. Specifically, in Section 3.1 , we characterize weak convexity of a function and review the notion of a stationary solution, which forms the foundation of our subsequent analysis. With these tools in place, we establish convergence guarantees for ADMM in Section 3.2 and extend the analysis to the LADMM scheme in Section 3.3 .
+
+3.1 Characterizing weak convexity and stationarity
+
+In the literature, there are a number of stationary solutions used for analyzing nonconvex and nondifferentiable problems. It turns out some of widely used stationary solutions are equivalent for the problem ( 1 ). This can be shown by rewriting ( 1 ) as a difference-of-convex (DC) function (see Definition 2 , then apply the results from the literature ( Pang et al., 2017 ; Joki et al., 2018 ; Cui and Pang, 2021 ) . To do so, we introduce a DC function in Definition 2 .
+
+A function is called difference-of-convex (DC) if one can rewrite the function as a difference of two convex functions. A DC program is defined by
+
+$\displaystyle\min_{\mathbf{x}\in\mathbb{R}^{n}}\theta(\mathbf{x})\triangleq\phi(\mathbf{x})-\psi(\mathbf{x}),$ (8)
+
+where both functions $\phi$ and $\psi$ are convex.
+
+It is straightforward that weakly convex functions are a special case of DC functions: if $g$ is weakly convex with modulus $\sigma_{g}$ , then
+
+$\displaystyle\zeta(\mathbf{x})=\underbrace{\zeta(\mathbf{x})+\frac{\sigma_{g}}{2}\|\mathbf{x}\|_{2}^{2}}_{\rm{convex}}-\frac{\sigma_{g}}{2}\|\mathbf{x}\|_{2}^{2},$ (9)
+
+so the objective function $\zeta$ admits a DC decomposition. Since the problem ( 1 ) has a trivial DC representation ( 9 ) with a differentiable concave component, one can apply Cui and Pang (2021, Proposition 6.1.10) , which establishes the equivalence among directional stationary solutions, critical points, and Clarke stationary solutions of ( 9 ). We refer to Cui and Pang (2021) for a detailed discussion of these notions. These stationary concepts, defined respectively via the subdifferential, directional derivatives, and the Clarke subdifferential ( Bazaraa et al., 2006 ; Clarke, 1983 ) , are standard in the DC programming literature. Leveraging their equivalence, we adopt the directional stationary solution for our analysis, as formalized in Definition 4 . Consequently, proving that ADMM or LADMM produces a directional stationary point immediately establishes the other two stationarity properties.
+
+We provide an equivalent characterization of weakly convex functions (see Definition 1 ). As shown in Proposition 2 , this result is a specialization of ( Vial, 1983 , Proposition 4.8) and is stated using the directional derivative (Definition 3 ) so that the existing result can be applied directly in our analysis.
+
+The directional derivative of a function $g$ at a point $\mathbf{x}$ in the direction $\mathbf{d}$ , denoted $g^{\prime}(\mathbf{x};\mathbf{d})$ , is defined as
+
+$\displaystyle g^{\prime}(\mathbf{x};\mathbf{d})=\lim\limits_{\tau\downarrow 0}\frac{g(\mathbf{x}+\tau\mathbf{d})-g(\mathbf{x})}{\tau},$
+
+if the limit exists. In this case, the function $g(x)$ is directionally differentiable.
+
+A point $\mathbf{x}^{*}\in\mathbb{R}^{n}$ is a directional-stationary solution (or d-stationary for short) of ( 1 ) if $\zeta^{\prime}(\mathbf{x}^{*};\mathbf{x}-\mathbf{x}^{*})\geq 0$ for all $\mathbf{x}\in\mathbb{R}^{n}$ .
+
+For any directionally differentiable function, we present an equivalence condition of the weakly convexity of the function. We include a proof to make the paper self-contained.
+
+The function $g$ is weakly convex if and only if $g$ is directionally differentiable and there exists $\sigma_{g}>0$ for which
+
+$\displaystyle-g(\mathbf{x})+g(\mathbf{y})+g^{\prime}(\mathbf{y};\mathbf{x}-\mathbf{y})\leq\frac{\sigma_{g}}{2}\|\mathbf{x}-\mathbf{y}\|_{2}^{2},\text{ for all }\mathbf{x},\mathbf{y}\in\mathbb{R}^{n}.$ (10)
+
+If $g$ is weakly convex, then it is DC and therefore directionally differentiable, since the directional derivative of a DC function equals the difference of the directional derivatives of its convex components ( Bazaraa et al., 2006 ) . By applying the first-order condition of a convex function to $g(\mathbf{x})+\frac{\sigma_{g}}{2}\|\mathbf{x}\|_{2}^{2}$ , we have
+
+$\displaystyle g(\mathbf{y})+\frac{\sigma_{g}}{2}\|\mathbf{y}\|_{2}^{2}+g^{\prime}(\mathbf{y};\mathbf{x}-\mathbf{y})+\sigma_{g}\langle\mathbf{y},\mathbf{x}-\mathbf{y}\rangle\leq g(\mathbf{x})+\frac{\sigma_{g}}{2}\|\mathbf{x}\|_{2}^{2}\quad\forall\mathbf{x},\mathbf{y},$
+
+which is equivalent to ( 10 ).
+
+For the other direction, we assume $g$ is directionally differentiable and there exists $\sigma_{g}>0$ such that ( 10 ) holds. Define $\tilde{g}(\mathbf{x})=g(\mathbf{x})+\frac{\sigma_{g}}{2}\|\mathbf{x}\|_{2}^{2}$ . Since $\frac{\sigma_{g}}{2}\|\mathbf{x}\|_{2}^{2}$ is differentiable, $\tilde{g}$ is directionally differentiable and
+
+$\tilde{g}^{\prime}(\mathbf{y};\mathbf{x}-\mathbf{y})=g^{\prime}(\mathbf{y};\mathbf{x}-\mathbf{y})+\sigma_{g}\langle\mathbf{y},\mathbf{x}-\mathbf{y}\rangle.$
+
+Rearranging ( 10 ) gives
+
+$g(\mathbf{x})\geq g(\mathbf{y})+g^{\prime}(\mathbf{y};\mathbf{x}-\mathbf{y})-\frac{\sigma_{g}}{2}\|\mathbf{x}-\mathbf{y}\|_{2}^{2}.$
+
+Adding $\frac{\sigma_{g}}{2}\|\mathbf{x}\|_{2}^{2}$ to both sides and using $\|\mathbf{x}\|_{2}^{2}-\|\mathbf{x}-\mathbf{y}\|_{2}^{2}=\|\mathbf{y}\|_{2}^{2}+2\langle\mathbf{y},\mathbf{x}-\mathbf{y}\rangle$ yields
+
+$\tilde{g}(\mathbf{x})\geq\tilde{g}(\mathbf{y})+\tilde{g}^{\prime}(\mathbf{y};\mathbf{x}-\mathbf{y}),\quad\forall\mathbf{x},\mathbf{y}.$
+
+By the standard directional-derivative characterization of convexity, $\tilde{g}$ is convex. Therefore $g$ is weakly convex with modulus $\sigma_{g}$ . ∎
+
+Before proceeding, we highlight the technical features that distinguish our analysis from existing convergence results for nonconvex ADMM and DC programming methods. First, the weakly convex structure of $g$ makes the $\mathbf{x}$ -subproblem nonconvex unless the penalty parameter satisfies $\rho\geq\sigma_{g}$ ; this parameter condition is essential and enters explicitly in our sufficient-decrease argument (Lemma 1 ). Our splitting constraint $\mathbf{x}=\mathbf{z}$ in ( 2 ) is a special case of the general linear constraint studied for nonconvex ADMM by Hong et al. (2016) ; however, their convergence theory requires the nonconvex term to be differentiable with a Lipschitz-continuous gradient, an assumption our possibly nonsmooth weakly convex $g$ need not satisfy. Consequently, introducing the splitting variable in ( 2 ) does not by itself bring problem ( 1 ) within the scope of Hong et al. (2016) ; our sufficient-decrease argument instead directly exploits the weak convexity modulus $\sigma_{g}$ .
+
+Second, for LADMM, linearizing $f$ in the $\mathbf{z}$ -subproblem introduces a lagged-gradient term that prevents the augmented Lagrangian from decreasing monotonically. To address this, we introduce the auxiliary sequence $\{\kappa_{t}\}$ (defined in ( 32 )), which absorbs the lagged-gradient effect and restores a sufficient-decrease property (Lemma 3 ). This differs in both mechanism and assumptions from existing linearized and proximal ADMM analyses: Sun et al. (2018) convexifies the nonconvex subproblem via a DCA-inspired linearization, but requires the concave component of the DC decomposition to be Lipschitz, which our weakly convex $g$ need not satisfy; Yashtini (2022) establishes global convergence of a proximal linearized ADMM under the Kurdyka–Łojasiewicz (KL) property, but requires the nonsmooth term to decompose as the sum of a proper lower-semicontinuous function and a coercive function, a structural assumption we do not impose.
+
+Third, although directional stationarity coincides with critical-point and Clarke stationarity for DC problem (Proposition 6.1.10, Cui and Pang (2021) ), our analysis reaches this common set of points directly via directional derivatives, under the explicit parameter conditions above, rather than through the Kurdyka–Łojasiewicz or semi-algebraic assumptions required by Li and Pong (2015) , Sun et al. (2018) , and Yashtini (2022) to obtain their critical-point guarantees.
+
+3.2 Convergence of ADMM
+
+We establish the convergence of ADMM in ( 4 ) based on the following assumptions about the objective function in ( 1 ),
+
+The function $\zeta$ is coercive, i.e., $\zeta(\mathbf{x})\to\infty$ as $\|\mathbf{x}\|_{2}\to\infty$ ;
+
+The function $\zeta$ is lower-bounded;
+
+The function $g$ is proper, lower semicontinuous, finite-valued, weakly convex with modulus $\sigma_{g}$ , and directionally differentiable.
+
+The function $f$ has Lipschitz continuous gradient, i.e., there exists a constant $\mathrm{Lip}_{\nabla f}>0$ such that
+
+$\displaystyle\|\nabla f(\mathbf{x})-\nabla f(\mathbf{y})\|_{2}\leq\mathrm{Lip}_{\nabla f}\|\mathbf{x}-\mathbf{y}\|_{2},\quad\forall\,\mathbf{x},\mathbf{y}.$ (11)
+
+The roles of these assumptions are as follows. The weak convexity of $g$ and the Lipschitz continuity of $\nabla f$ are used to establish the sufficient-decrease estimates for the augmented Lagrangian in ADMM. The lower boundedness assumption ensures that the corresponding sequence $\{\mathcal{L}(\mathbf{x}^{t},\mathbf{z}^{t};\mathbf{v}^{t})\}_{t=0}^{\infty}$ is lower bounded. The coercivity of $\zeta$ is used to obtain boundedness of the iterates $\{(\mathbf{x}^{t},\mathbf{z}^{t},\mathbf{v}^{t})\}_{t=0}^{\infty}$ . Together, these descent and boundedness properties allow us to extract convergent subsequences and show that the successive differences vanish. Finally, the properness, lower semicontinuity, finite-valuedness, and directional differentiability of $g$ ensure that the directional derivatives and limiting arguments used in the stationarity proof are well defined.
+
+We show in Lemma 1 that the augmented Lagrangian function ( 3 ) decreases sufficiently at each ADMM iteration under certain conditions, followed by Theorem 3 for the convergence of the iterations to a d-stationary solution of the problem ( 1 ). The key idea is that each primal update yields a descent controlled by the successive differences $\|\mathbf{x}^{t+1}-\mathbf{x}^{t}\|_{2}^{2}$ and $\|\mathbf{z}^{t+1}-\mathbf{z}^{t}\|_{2}^{2}$ ; telescoping then forces these differences to vanish.
+
+(Sufficient decrease) If $\rho>\max\{\sigma_{g},\sqrt{2}\mathrm{Lip}_{\nabla f}\}$ and Assumptions A3 – A4 hold, then each ADMM iteration ( 4 ) satisfies
+
+$\displaystyle\begin{aligned} &\mathcal{L}(\mathbf{x}^{t+1},\mathbf{z}^{t+1};\mathbf{v}^{t+1})-\mathcal{L}(\mathbf{x}^{t},\mathbf{z}^{t};\mathbf{v}^{t})\\ &\hskip 60.0pt\leq\left(\frac{\sigma_{g}-\rho}{2}\right)\|\mathbf{x}^{t+1}-\mathbf{x}^{t}\|_{2}^{2}+\left(\frac{\mathrm{Lip}_{\nabla f}^{2}}{\rho}-\frac{\rho}{2}\right)\|\mathbf{z}^{t+1}-\mathbf{z}^{t}\|_{2}^{2}.\end{aligned}$ (12)
+
+Since $\widehat{g}$ is convex by Proposition 1 and $\mathbf{x}^{t+1}\in\operatornamewithlimits{argmin}_{\mathbf{x}}\widehat{g}(\mathbf{x})$ by the ADMM scheme ( 4 ), we have $\mathbf{0}\in\partial\widehat{g}(\mathbf{x}^{t+1})$ , which implies that $\mathbf{x}^{t+1}$ is a d-stationary point of $\widehat{g}$ , i.e., $\widehat{g}^{\prime}(\mathbf{x}^{t+1};\mathbf{x}^{t}-\mathbf{x}^{t+1})\geq 0$ . Therefore, we can get
+
+$\displaystyle\mathcal{L}(\mathbf{x}^{t+1},\mathbf{z}^{t};\mathbf{v}^{t})-\mathcal{L}(\mathbf{x}^{t},\mathbf{z}^{t};\mathbf{v}^{t})$ $\displaystyle=\widehat{g}(\mathbf{x}^{t+1})-\widehat{g}(\mathbf{x}^{t})$ $\displaystyle\leq\widehat{g}(\mathbf{x}^{t+1})-\widehat{g}(\mathbf{x}^{t})+\widehat{g}^{\prime}(\mathbf{x}^{t+1};\mathbf{x}^{t}-\mathbf{x}^{t+1}).$
+
+Using the definition of $\hat{g}$ in ( 5 ), we have
+
+$\displaystyle\widehat{g}(\mathbf{x}^{t+1})-\widehat{g}(\mathbf{x}^{t})+\widehat{g}^{\prime}(\mathbf{x}^{t+1};\mathbf{x}^{t}-\mathbf{x}^{t+1})$ $\displaystyle=$ $\displaystyle g(\mathbf{x}^{t+1})+\frac{\rho}{2}\|\mathbf{x}^{t+1}-\mathbf{z}^{t}+\mathbf{v}^{t}\|_{2}^{2}-g(\mathbf{x}^{t})-\frac{\rho}{2}\|\mathbf{x}^{t}-\mathbf{z}^{t}+\mathbf{v}^{t}\|_{2}^{2}$ $\displaystyle\qquad+g^{\prime}(\mathbf{x}^{t+1};\mathbf{x}^{t}-\mathbf{x}^{t+1})+\rho\langle\mathbf{x}^{t+1}-\mathbf{z}^{t}+\mathbf{v}^{t},\ \mathbf{x}^{t}-\mathbf{x}^{t+1}\rangle$ $\displaystyle=$ $\displaystyle\left\{-g(\mathbf{x}^{t})+g(\mathbf{x}^{t+1})+g^{\prime}(\mathbf{x}^{t+1};\mathbf{x}^{t}-\mathbf{x}^{t+1})\right\}$ $\displaystyle\qquad+\frac{\rho}{2}\left\{\|\mathbf{x}^{t+1}-\mathbf{z}^{t}+\mathbf{v}^{t}\|_{2}^{2}-\|\mathbf{x}^{t}-\mathbf{z}^{t}+\mathbf{v}^{t}\|_{2}^{2}+2\langle\mathbf{x}^{t+1}-\mathbf{z}^{t}+\mathbf{v}^{t},\ \mathbf{x}^{t}-\mathbf{x}^{t+1}\rangle\right\}$ $\displaystyle=$ $\displaystyle\left\{-g(\mathbf{x}^{t})+g(\mathbf{x}^{t+1})+g^{\prime}(\mathbf{x}^{t+1};\mathbf{x}^{t}-\mathbf{x}^{t+1})\right\}-\frac{\rho}{2}\|\mathbf{x}^{t}-\mathbf{x}^{t+1}\|_{2}^{2}.$
+
+It further follows from Assumption A3 that
+
+$\displaystyle\mathcal{L}(\mathbf{x}^{t+1},\mathbf{z}^{t};\mathbf{v}^{t})-\mathcal{L}(\mathbf{x}^{t},\mathbf{z}^{t};\mathbf{v}^{t})$ $\displaystyle\leq\frac{(\sigma_{g}-\rho)}{2}\|\mathbf{x}^{t}-\mathbf{x}^{t+1}\|_{2}^{2}.$ (13)
+
+For the $\mathbf{z}$ -subproblem, the optimality of $\mathbf{z}^{t+1}$ yields
+
+$\displaystyle\nabla f(\mathbf{z}^{t+1})-\rho(\mathbf{x}^{t+1}-\mathbf{z}^{t+1}+\mathbf{v}^{t})=\mathbf{0},$ (14)
+
+which leads to the following chain of inequalities
+
+$\displaystyle\mathcal{L}(\mathbf{x}^{t+1},\mathbf{z}^{t+1};\mathbf{v}^{t})-\mathcal{L}(\mathbf{x}^{t+1},\mathbf{z}^{t};\mathbf{v}^{t})$ $\displaystyle=$ $\displaystyle f(\mathbf{z}^{t+1})-f(\mathbf{z}^{t})+\frac{\rho}{2}\Big(\,\|\mathbf{x}^{t+1}-\mathbf{z}^{t+1}+\mathbf{v}^{t}\|_{2}^{2}-\|\mathbf{x}^{t+1}-\mathbf{z}^{t}+\mathbf{v}^{t}\|_{2}^{2}\,\Big)$ $\displaystyle\leq$ $\displaystyle-\langle\nabla f(\mathbf{z}^{t+1}),\mathbf{z}^{t}-\mathbf{z}^{t+1}\rangle+\frac{\rho}{2}\langle\,\mathbf{z}^{t+1}+\mathbf{z}^{t}-2(\mathbf{x}^{t+1}+\mathbf{v}^{t}),\mathbf{z}^{t+1}-\mathbf{z}^{t}\,\rangle\text{ by convexity of }f$ $\displaystyle=$ $\displaystyle\rho\langle\mathbf{x}^{t+1}-\mathbf{z}^{t+1}+\mathbf{v}^{t},\mathbf{z}^{t+1}-\mathbf{z}^{t}\rangle+\frac{\rho}{2}\langle\,\mathbf{z}^{t+1}+\mathbf{z}^{t}-2(\mathbf{x}^{t+1}+\mathbf{v}^{t}),\mathbf{z}^{t+1}-\mathbf{z}^{t}\,\rangle\text{ by }\eqref{equality:z_opt}$ $\displaystyle=$ $\displaystyle-\frac{\rho}{2}\|\mathbf{z}^{t}-\mathbf{z}^{t+1}\|_{2}^{2}.$ (15)
+
+Lastly, using the $\mathbf{v}$ -update ( 4 ) and the optimality of $\mathbf{z}^{t+1}$ in ( 14 ), we obtain
+
+$\displaystyle\mathbf{v}^{t+1}=\mathbf{v}^{t}+\mathbf{x}^{t+1}-\mathbf{z}^{t+1}=\frac{\nabla f(\mathbf{z}^{t+1})}{\rho},$ (16)
+
+which then yields
+
+$\displaystyle\mathcal{L}(\mathbf{x}^{t+1},\mathbf{z}^{t+1};\mathbf{v}^{t+1})-\mathcal{L}(\mathbf{x}^{t+1},\mathbf{z}^{t+1};\mathbf{v}^{t})$ $\displaystyle=$ $\displaystyle\rho\langle\mathbf{v}^{t+1}-\mathbf{v}^{t},\mathbf{x}^{t+1}-\mathbf{z}^{t+1}\rangle=\rho\|\mathbf{v}^{t+1}-\mathbf{v}^{t}\|_{2}^{2}$ $\displaystyle=$ $\displaystyle\frac{1}{\rho}\|\nabla f(\mathbf{z}^{t+1})-\nabla f(\mathbf{z}^{t})\|_{2}^{2}\leq\frac{\mathrm{Lip}_{\nabla f}^{2}}{\rho}\|\mathbf{z}^{t+1}-\mathbf{z}^{t}\|_{2}^{2}.$ (17)
+
+The last inequality is obtained by Assumption A4 where the Lipschitz constant of the gradient of $f$ is defined in ( 11 ). Combining the inequalities ( 13 ), ( 15 ) and ( 17 ), we complete the proof. ∎
+
+If $\rho>\max\{\sigma_{g},\sqrt{2}\mathrm{Lip}_{\nabla f}\}$ and Assumptions A1 – A4 hold, then the iterates $\{(\mathbf{x}^{t},\mathbf{z}^{t},\mathbf{v}^{t})\}_{t=1}^{\infty}$ generated by ADMM in ( 4 ) has a subsequence convergent to a $d$ -stationary point of problem ( 1 ).
+
+Using the assumption that $\rho>\max\{\sigma_{g},\sqrt{2}\mathrm{Lip}_{\nabla f}\}$ , we have $\frac{\sigma_{g}-\rho}{2}<0$ and $\frac{\mathrm{Lip}_{\nabla f}^{2}}{\rho}-\frac{\rho}{2}<0$ . The telescoping summation of inequality ( 12 ) from $t=0$ to $T$ for an arbitrary integer $T=0,1,\cdots$ leads to
+
+$\displaystyle\mathcal{L}(\mathbf{x}^{T+1},\mathbf{z}^{T+1};\mathbf{v}^{T+1})-\mathcal{L}(\mathbf{x}^{0},\mathbf{z}^{0};\mathbf{v}^{0})$ (18) $\displaystyle\leq\left(\frac{\sigma_{g}-\rho}{2}\right)\sum_{t=0}^{T}\|\mathbf{x}^{t+1}-\mathbf{x}^{t}\|_{2}^{2}+\left(\frac{\mathrm{Lip}_{\nabla f}^{2}}{\rho}-\frac{\rho}{2}\right)\sum_{t=0}^{T}\|\mathbf{z}^{t+1}-\mathbf{z}^{t}\|_{2}^{2}\leq 0,$
+
+which means that the sequence $\{\mathcal{L}(\mathbf{x}^{t},\mathbf{z}^{t};\mathbf{v}^{t})\}_{t=0}^{\infty}$ is upper-bounded by $\mathcal{L}(\mathbf{x}^{0},\mathbf{z}^{0};\mathbf{v}^{0})$ .
+
+Additionally, using Assumptions A2 and A4 together with ( 16 ), we obtain a lower bound of $\mathcal{L}(\mathbf{x}^{T+1},\mathbf{z}^{T+1};\mathbf{v}^{T+1})$ , i.e.,
+
+$\displaystyle\mathcal{L}(\mathbf{x}^{T+1},\mathbf{z}^{T+1};\mathbf{v}^{T+1})$ $\displaystyle=$ $\displaystyle\displaystyle f(\mathbf{z}^{T+1})-f(\mathbf{x}^{T+1})+f(\mathbf{x}^{T+1})+g(\mathbf{x}^{T+1})+\rho\langle\mathbf{v}^{T+1},\mathbf{x}^{T+1}-\mathbf{z}^{T+1}\rangle+\frac{\rho}{2}\|\mathbf{x}^{T+1}-\mathbf{z}^{T+1}\|_{2}^{2}$ $\displaystyle\geq$ $\displaystyle f(\mathbf{x}^{T+1})+g(\mathbf{x}^{T+1})+\langle\rho\mathbf{v}^{T+1}-\nabla f(\mathbf{z}^{T+1}),\mathbf{x}^{T+1}-\mathbf{z}^{T+1}\rangle+\frac{\rho-\mathrm{Lip}_{\nabla f}}{2}\|\mathbf{x}^{T+1}-\mathbf{z}^{T+1}\|_{2}^{2}$ $\displaystyle=$ $\displaystyle f(\mathbf{x}^{T+1})+g(\mathbf{x}^{T+1})+\frac{\rho-\mathrm{Lip}_{\nabla f}}{2}\|\mathbf{x}^{T+1}-\mathbf{z}^{T+1}\|_{2}^{2},$ (19)
+
+which also implies that the sequence $\{f(\mathbf{x}^{t})+g(\mathbf{x}^{t})\}_{t=0}^{\infty}$ is upper-bounded if $\rho>\mathrm{Lip}_{\nabla f}$ . Assumption A1 regarding the coerciveness of $\zeta(\mathbf{x})$ guarantees that $\{\mathbf{x}^{t}\}_{t=1}^{\infty}$ is bounded, so is $\{\mathbf{z}^{t}\}_{t=1}^{\infty}$ by ( 19 ). To show the boundedness of $\{\mathbf{v}^{t}\}_{t=1}^{\infty}$ , we use ( 16 ) to obtain
+
+$\|\mathbf{v}^{T+1}-\mathbf{v}^{1}\|_{2}\leq\frac{\mathrm{Lip}_{\nabla f}}{\rho}\|\mathbf{z}^{T+1}-\mathbf{z}^{1}\|_{2},$
+
+thus leading to
+
+$\|\mathbf{v}^{T+1}\|_{2}\leq\|\mathbf{v}^{1}\|_{2}+\frac{\mathrm{Lip}_{\nabla f}}{\rho}(\|\mathbf{z}^{T+1}\|_{2}+\|\mathbf{z}^{1}\|_{2}),\;\forall\,T=0,1,\cdots$ (20)
+
+The boundedness of $\{\mathbf{z}^{t}\}_{t=1}^{\infty}$ guarantees the boundedness of $\{\mathbf{v}^{t}\}_{t=1}^{\infty}$ . Consequently, we show that the sequence $\{(\mathbf{x}^{t},\mathbf{z}^{t},\mathbf{v}^{t})\}_{t=1}^{\infty}$ is bounded. By the Bolzano-Weierstrass Theorem, it therefore admits a convergent subsequence, denoted by $(\mathbf{x}^{t_{j}},\mathbf{z}^{t_{j}},\mathbf{v}^{t_{j}})\rightarrow(\mathbf{x}^{*},\mathbf{z}^{*},\mathbf{v}^{*})$ as $t_{j}\rightarrow\infty$ .
+
+$\mathcal{L}(\mathbf{x}^{t},\mathbf{z}^{t};\mathbf{v}^{t})$ is monotonically decreasing and lower bounded due to Lemma 1 and Assumption A2 . By letting $T\rightarrow\infty$ in ( 18 ), we obtain that $\sum_{t=0}^{\infty}\|\mathbf{x}^{t+1}-\mathbf{x}^{t}\|_{2}^{2}$ and $\sum_{t=0}^{\infty}\|\mathbf{z}^{t+1}-\mathbf{z}^{t}\|_{2}^{2}$ are finite, and hence $\mathbf{x}^{t+1}-\mathbf{x}^{t}\to 0$ and $\mathbf{z}^{t+1}-\mathbf{z}^{t}\to 0$ as $t\to\infty$ . By ( 17 ), each term $\|\mathbf{v}^{t+1}-\mathbf{v}^{t}\|_{2}^{2}$ is bounded by $\|\mathbf{z}^{t+1}-\mathbf{z}^{t}\|_{2}^{2}$ , which implies that $\mathbf{v}^{t+1}-\mathbf{v}^{t}\to 0$ . Since $(\mathbf{x}^{t_{j}},\mathbf{z}^{t_{j}},\mathbf{v}^{t_{j}})\rightarrow(\mathbf{x}^{*},\mathbf{z}^{*},\mathbf{v}^{*})$ , we have $(\mathbf{x}^{t_{j}+1},\mathbf{z}^{t_{j}+1},\mathbf{v}^{t_{j}+1})\rightarrow(\mathbf{x}^{*},\mathbf{z}^{*},\mathbf{v}^{*})$ and $\mathbf{x}^{*}=\mathbf{z}^{*}$ due to the $\mathbf{v}$ -update.
+
+It remains to show $(\mathbf{x}^{*},\mathbf{z}^{*},\mathbf{v}^{*})$ is a d-stationary point of the problem ( 1 ). By the iterative scheme ( 4 ), we have
+
+$\displaystyle\mathcal{L}(\mathbf{x}^{t_{j}+1},\mathbf{z}^{t_{j}},\mathbf{v}^{t_{j}})\leq\mathcal{L}(\mathbf{x},\mathbf{z}^{t_{j}},\mathbf{v}^{t_{j}}),\quad\forall\mathbf{x},$ $\displaystyle\mathcal{L}(\mathbf{x}^{t_{j}+1},\mathbf{z}^{t_{j}+1},\mathbf{v}^{t_{j}})\leq\mathcal{L}(\mathbf{x}^{t_{j}+1},\mathbf{z},\mathbf{v}^{t_{j}}),\quad\forall\mathbf{z}.$
+
+Letting $t_{j}\to\infty$ , we have $\mathcal{L}(\mathbf{x}^{*},\mathbf{z}^{*},\mathbf{v}^{*})\leq\mathcal{L}(\mathbf{x},\mathbf{z}^{*},\mathbf{v}^{*})$ for all $\mathbf{x}$ and $\mathcal{L}(\mathbf{x}^{*},\mathbf{z}^{*},\mathbf{v}^{*})\leq\mathcal{L}(\mathbf{x}^{*},\mathbf{z},\mathbf{v}^{*})$ for all $\mathbf{z}$ , thus leading to
+
+$\displaystyle g(\mathbf{x}^{*})+\frac{\rho}{2}\|\mathbf{v}^{*}\|_{2}^{2}\leq g(\mathbf{x})+\frac{\rho}{2}\|\mathbf{x}-\mathbf{z}^{*}+\mathbf{v}^{*}\|_{2}^{2},\quad\forall\mathbf{x},$ (21)
+
+and
+
+$\displaystyle f(\mathbf{z}^{*})+\frac{\rho}{2}\|\mathbf{v}^{*}\|_{2}^{2}\leq f(\mathbf{z})+\frac{\rho}{2}\|\mathbf{x}^{*}-\mathbf{z}+\mathbf{v}^{*}\|_{2}^{2},\quad\forall\mathbf{z}.$ (22)
+
+We fix a point $\mathbf{x}$ and choose $\mathbf{z}=\mathbf{x}$ in ( 22 ). Combining ( 21 ) and ( 22 ) yields
+
+$\displaystyle f(\mathbf{x}^{*})+g(\mathbf{x}^{*})+\rho\|\mathbf{v}^{*}\|_{2}^{2}\leq f(\mathbf{x})+g(\mathbf{x})+\frac{\rho}{2}\left(\|\mathbf{x}-\mathbf{x}^{*}+\mathbf{v}^{*}\|_{2}^{2}+\|\mathbf{x}^{*}-\mathbf{x}+\mathbf{v}^{*}\|_{2}^{2}\right),$ (23)
+
+where we use $\mathbf{x}^{*}=\mathbf{z}^{*}$ . Let us define $\widehat{\zeta}(\mathbf{x})\triangleq f(\mathbf{x})+g(\mathbf{x})+\rho\|\mathbf{x}-\mathbf{x}^{*}\|_{2}^{2}$ . It follows from ( 23 ) that
+
+$\displaystyle\widehat{\zeta}(\mathbf{x}^{*})=f(\mathbf{x}^{*})+g(\mathbf{x}^{*})\leq f(\mathbf{x})+g(\mathbf{x})+\rho\|\mathbf{x}-\mathbf{x}^{*}\|_{2}^{2}=\widehat{\zeta}(\mathbf{x}),\,\forall\mathbf{x},$
+
+implying $\mathbf{x}^{*}$ is a global minimum for $\widehat{\zeta}$ and hence a d-stationary solution. We show functions $\zeta$ and $\widehat{\zeta}$ have the same directional derivative at the point $\mathbf{x}=\mathbf{x}^{*}$ by the following calculations:
+
+$\displaystyle\widehat{\zeta}^{\,\prime}(\mathbf{x}^{*};\mathbf{d})$ $\displaystyle=\lim_{h\rightarrow 0^{+}}\dfrac{\widehat{\zeta}(\mathbf{x}^{*}+h\mathbf{d})-\widehat{\zeta}(\mathbf{x}^{*})}{h}$ $\displaystyle=\lim_{h\rightarrow 0^{+}}\dfrac{\zeta(\mathbf{x}^{*}+h\mathbf{d})+\rho\|\mathbf{x}^{*}+h\mathbf{d}-\mathbf{x}^{*}\|_{2}^{2}}{h}-\lim_{h\rightarrow 0^{+}}\frac{\zeta(\mathbf{x}^{*})+\rho\|\mathbf{x}^{*}-\mathbf{x}^{*}\|_{2}^{2}}{h}$ $\displaystyle=\lim_{h\rightarrow 0^{+}}\dfrac{\zeta(\mathbf{x}^{*}+h\mathbf{d})-\zeta(\mathbf{x}^{*})+\rho h^{2}\|\mathbf{d}\|_{2}^{2}}{h}$ $\displaystyle=\lim_{h\rightarrow 0^{+}}\dfrac{\zeta(\mathbf{x}^{*}+h\mathbf{d})-\zeta(\mathbf{x}^{*})}{h}$ $\displaystyle=\zeta^{\prime}(\mathbf{x}^{*};\mathbf{d}),\quad\forall\,\mathbf{d}.$
+
+Since $\mathbf{x}^{*}$ is a d-stationary solution of $\widehat{\zeta}(\mathbf{x})$ , we have $0\leq\widehat{\zeta}^{\prime}(\mathbf{x}^{*};\mathbf{d})=\zeta^{\prime}(\mathbf{x}^{*};\mathbf{d}),$ which concludes the proof. ∎
+
+The convergence analysis above for ADMM, and the analysis for LADMM to follow, both assume that the respective subproblems are solved exactly. In practice, however, some subproblems are solved via iterative inner solvers. Extending the analysis to inexact updates would require additional assumptions on the stopping criteria, and we leave this as an important direction for future work.
+
+3.3 Convergence of Linearized ADMM
+
+In this section, we establish the convergence of LADMM in ( 6 ) under the same Assumptions A1 – A4 as those used for ADMM. The main technical challenge is that linearizing $f$ in the $\mathbf{z}$ -update breaks the monotonicity of the augmented Lagrangian $\mathcal{L}(\mathbf{x}^{t},\mathbf{z}^{t};\mathbf{v}^{t})$ , as evident in Lemma 2 . To address this issue, we introduce the sequence $\{\kappa_{t}\}_{t=1}^{\infty}$ in ( 32 ), obtained by augmenting $\mathcal{L}$ with an additional quadratic term. While linearized ADMM has been studied for nonconvex problems, the present analysis is tailored to weakly convex minimization, where the nonconvexity of $g$ is quantified by the weak convexity modulus $\sigma_{g}$ . Building on Lemma 2 , we further introduce Lemma 3 to prove that $\kappa_{t}$ admits a sufficient decrease at each iteration, which implies boundedness of the iterates and vanishing successive differences. Theorem 4 establishes that the LADMM iterates admit a subsequence converging to a d-stationary point of ( 1 ) under a suitably stronger condition on $\rho$ compared to the requirement in ADMM.
+
+Under Assumptions A3 – A4 , each LADMM iteration ( 6 ) satisfies
+
+$\displaystyle\begin{aligned} &\mathcal{L}(\mathbf{x}^{t+1},\mathbf{z}^{t+1};\mathbf{v}^{t+1})-\mathcal{L}(\mathbf{x}^{t},\mathbf{z}^{t};\mathbf{v}^{t})\\ &\hskip 60.0pt\leq\left(\frac{\sigma_{g}-\rho}{2}\right)\|\mathbf{x}^{t+1}-\mathbf{x}^{t}\|_{2}^{2}+\left(\frac{\mathrm{Lip}_{\nabla f}-\rho}{2}\right)\|\mathbf{z}^{t+1}-\mathbf{z}^{t}\|_{2}^{2}+\frac{\mathrm{Lip}_{\nabla f}^{2}}{\rho}\|\mathbf{z}^{t}-\mathbf{z}^{t-1}\|_{2}^{2}.\end{aligned}$ (24)
+
+We start with the $\mathbf{z}$ -subproblem in ( 6 ) by analyzing the following difference
+
+$\displaystyle\mathcal{L}(\mathbf{x}^{t+1},\mathbf{z}^{t+1};\mathbf{v}^{t})-\mathcal{L}(\mathbf{x}^{t+1},\mathbf{z}^{t};\mathbf{v}^{t})$ $\displaystyle=$ $\displaystyle f(\mathbf{z}^{t+1})-f(\mathbf{z}^{t})+\frac{\rho}{2}\Big(\,\|\mathbf{x}^{t+1}-\mathbf{z}^{t+1}+\mathbf{v}^{t}\|_{2}^{2}-\|\mathbf{x}^{t+1}-\mathbf{z}^{t}+\mathbf{v}^{t}\|_{2}^{2}\,\Big)$ $\displaystyle\leq$ $\displaystyle\langle\nabla f(\mathbf{z}^{t}),\mathbf{z}^{t+1}-\mathbf{z}^{t}\rangle+\displaystyle{\frac{\mathrm{Lip}_{\nabla f}}{2}}\|\mathbf{z}^{t+1}-\mathbf{z}^{t}\|_{2}^{2}+\frac{\rho}{2}\Big(\,\|\mathbf{x}^{t+1}-\mathbf{z}^{t+1}+\mathbf{v}^{t}\|_{2}^{2}-\|\mathbf{x}^{t+1}-\mathbf{z}^{t}+\mathbf{v}^{t}\|_{2}^{2}\,\Big)$ $\displaystyle=$ $\displaystyle\widehat{f}(\mathbf{z}^{t+1};\mathbf{z}^{t})-\widehat{f}(\mathbf{z}^{t};\mathbf{z}^{t})+\displaystyle{\frac{\mathrm{Lip}_{\nabla f}}{2}}\|\mathbf{z}^{t+1}-\mathbf{z}^{t}\|_{2}^{2},$ (25)
+
+where we use the definition of $\widehat{f}$ and the Lipschitz Assumption A4 that leads to
+
+$\displaystyle f(\mathbf{z}^{t+1})\leq f(\mathbf{z}^{t})+\langle\nabla f(\mathbf{z}^{t}),\mathbf{z}^{t+1}-\mathbf{z}^{t}\rangle+\displaystyle{\frac{\mathrm{Lip}_{\nabla f}}{2}}\|\mathbf{z}^{t+1}-\mathbf{z}^{t}\|_{2}^{2}.$ (26)
+
+Using the strong convexity of $\widehat{f}(\mathbf{z};\,\mathbf{z}^{t})$ with respect to $\mathbf{z}$ and the optimality condition $\nabla\widehat{f}(\mathbf{z}^{t+1};\,\mathbf{z}^{t})=\mathbf{0}$ , we have
+
+$\displaystyle\widehat{f}(\mathbf{z}^{t};\,\mathbf{z}^{t})$ $\displaystyle\geq\widehat{f}(\mathbf{z}^{t+1};\,\mathbf{z}^{t})+\langle\nabla\widehat{f}(\mathbf{z}^{t+1};\,\mathbf{z}^{t}),\mathbf{z}^{t}-\mathbf{z}^{t+1}\rangle+\displaystyle{\frac{\rho}{2}}\|\mathbf{z}^{t}-\mathbf{z}^{t+1}\|_{2}^{2}$ $\displaystyle=\widehat{f}(\mathbf{z}^{t+1};\,\mathbf{z}^{t})+\displaystyle{\frac{\rho}{2}}\|\mathbf{z}^{t}-\mathbf{z}^{t+1}\|_{2}^{2}.$ (27)
+
+It follows from ( 25 ) and ( 27 ) that
+
+$\mathcal{L}(\mathbf{x}^{t+1},\mathbf{z}^{t+1};\mathbf{v}^{t})-\mathcal{L}(\mathbf{x}^{t+1},\mathbf{z}^{t};\mathbf{v}^{t})\leq\frac{\mathrm{Lip}_{\nabla f}-\rho}{2}\|\mathbf{z}^{t+1}-\mathbf{z}^{t}\|_{2}^{2}.$ (28)
+
+Lastly, using the optimality condition of the $\mathbf{z}$ -subproblem
+
+$\displaystyle\nabla f(\mathbf{z}^{t})-\rho(\mathbf{x}^{t+1}-\mathbf{z}^{t+1}+\mathbf{v}^{t})=\mathbf{0},$ (29)
+
+we have
+
+$\mathbf{v}^{t+1}=\mathbf{v}^{t}+\mathbf{x}^{t+1}-\mathbf{z}^{t+1}=\frac{\nabla f(\mathbf{z}^{t})}{\rho},$ (30)
+
+from which the last term in ( 24 ) follows by applying the following inequality
+
+$\displaystyle\mathcal{L}(\mathbf{x}^{t+1},\mathbf{z}^{t+1};\mathbf{v}^{t+1})-\mathcal{L}(\mathbf{x}^{t+1},\mathbf{z}^{t+1};\mathbf{v}^{t})\leq\frac{\mathrm{Lip}_{\nabla f}^{2}}{\rho}\|\mathbf{z}^{t}-\mathbf{z}^{t-1}\|_{2}^{2}.$ (31)
+
+Combining ( 13 ), ( 28 ), and ( 31 ) completes the proof. ∎
+
+Unlike ADMM, the descent argument in Lemma 1 cannot be applied directly to LADMM, because the $\mathbf{v}$ -update in LADMM involves $\nabla f(\mathbf{z}^{t})$ in ( 30 ) rather than $\nabla f(\mathbf{z}^{t+1})$ in ( 16 ). As a result, an additional lagged-gradient term appears, and the augmented Lagrangian $\mathcal{L}(\mathbf{x}^{t},\mathbf{z}^{t},\mathbf{v}^{t})$ alone no longer yields a sufficient decrease. To address this issue, we introduce an auxiliary function:
+
+$\kappa_{t}\triangleq\mathcal{L}(\mathbf{x}^{t},\mathbf{z}^{t},\mathbf{v}^{t})+\mathrm{Lip}_{\nabla f}^{2}\|\mathbf{z}^{t}-\mathbf{z}^{t-1}\|_{2}^{2}.$ (32)
+
+The additional squared-difference term allows us to absorb the lagged-gradient effect and recover a sufficient - decrease property for LADMM; see Lemma 3 .
+
+If $\rho>\max\{\sigma_{g},1+\mathrm{Lip}_{\nabla f},\mathrm{Lip}_{\nabla f}(1+2\mathrm{Lip}_{\nabla f})\}$ and Assumptions A2 – A4 hold, then $\{\kappa_{t}\}_{t=1}^{\infty}$ defined in ( 32 ) is monotonically decreasing and lower bounded.
+
+Using the definition of $\kappa_{t}$ in ( 32 ) together with Lemma 2 , we obtain
+
+$\displaystyle\kappa_{t+1}-\kappa_{t}$ $\displaystyle\hskip 12.0pt=\mathcal{L}(\mathbf{x}^{t+1},\mathbf{z}^{t+1},\mathbf{v}^{t+1})-\mathcal{L}(\mathbf{x}^{t},\mathbf{z}^{t},\mathbf{v}^{t})+\mathrm{Lip}_{\nabla f}^{2}\|\mathbf{z}^{t+1}-\mathbf{z}^{t}\|_{2}^{2}-\mathrm{Lip}_{\nabla f}^{2}\|\mathbf{z}^{t}-\mathbf{z}^{t-1}\|_{2}^{2}$ $\displaystyle\hskip 12.0pt\leq\left(\frac{\sigma_{g}-\rho}{2}\right)\|\mathbf{x}^{t+1}-\mathbf{x}^{t}\|_{2}^{2}+\left(\frac{2\mathrm{Lip}_{\nabla f}^{2}+\mathrm{Lip}_{\nabla f}-\rho}{2}\right)\|\mathbf{z}^{t+1}-\mathbf{z}^{t}\|_{2}^{2}$ (33) $\displaystyle\qquad\qquad+\left(\frac{(1-\rho)\mathrm{Lip}_{\nabla f}^{2}}{\rho}\right)\|\mathbf{z}^{t}-\mathbf{z}^{t-1}\|_{2}^{2},$ (34)
+
+where the right side must be nonpositive due to the choices of parameters. This shows that $\{\kappa_{t}\}_{t=1}^{\infty}$ is monotonically decreasing. Next, we show that $\{\kappa_{t}\}$ is lower bounded. To do so, we first observe
+
+$\displaystyle\rho\langle\mathbf{v}^{t},\mathbf{x}^{t}-\mathbf{z}^{t}\rangle$ $\displaystyle=\langle\nabla f(\mathbf{z}^{t-1}),\mathbf{x}^{t}-\mathbf{z}^{t}\rangle\text{ by }\eqref{eq:v_update_ladmm}$ $\displaystyle=\langle\nabla f(\mathbf{z}^{t-1})-\nabla f(\mathbf{z}^{t}),\mathbf{x}^{t}-\mathbf{z}^{t}\rangle+\langle\nabla f(\mathbf{z}^{t}),\mathbf{x}^{t}-\mathbf{z}^{t}\rangle$ $\displaystyle\geq-\frac{1}{2}\Big(\|\nabla f(\mathbf{z}^{t-1})-\nabla f(\mathbf{z}^{t})\|_{2}^{2}+\|\mathbf{x}^{t}-\mathbf{z}^{t}\|_{2}^{2}\Big)+\langle\nabla f(\mathbf{z}^{t}),\mathbf{x}^{t}-\mathbf{z}^{t}\rangle$ $\displaystyle\geq-\frac{\mathrm{Lip}_{\nabla f}^{2}}{2}\|\mathbf{z}^{t}-\mathbf{z}^{t-1}\|_{2}^{2}-\frac{1}{2}\|\mathbf{x}^{t}-\mathbf{z}^{t}\|_{2}^{2}+f(\mathbf{x}^{t})-f(\mathbf{z}^{t})-\frac{\mathrm{Lip}_{\nabla f}}{2}\|\mathbf{x}^{t}-\mathbf{z}^{t}\|_{2}^{2},$
+
+where the last inequality is by ( 26 ). Combining the above with the definition of $\kappa_{t}$ yields
+
+$\displaystyle\kappa_{t}$ $\displaystyle=f(\mathbf{z}^{t})+g(\mathbf{x}^{t})+\rho\langle\mathbf{v}^{t},\mathbf{x}^{t}-\mathbf{z}^{t}\rangle+\frac{\rho}{2}\|\mathbf{x}^{t}-\mathbf{z}^{t}\|_{2}^{2}+\mathrm{Lip}_{\nabla f}^{2}\|\mathbf{z}^{t}-\mathbf{z}^{t-1}\|_{2}^{2}$ $\displaystyle\geq f(\mathbf{x}^{t})+g(\mathbf{x}^{t})+\frac{\mathrm{Lip}_{\nabla f}^{2}}{2}\|\mathbf{z}^{t}-\mathbf{z}^{t-1}\|_{2}^{2}+\left(\frac{\rho-1-\mathrm{Lip}_{\nabla f}}{2}\right)\|\mathbf{x}^{t}-\mathbf{z}^{t}\|_{2}^{2}.$ (35)
+
+Due to Assumption A2 , the sum $f(\mathbf{x}^{t})+g(\mathbf{x}^{t})$ is lower bounded, which implies $\kappa_{t}$ is lower bounded with the choice of parameters. This concludes the proof. ∎
+
+Note that the condition $\rho>\max\{\sigma_{g},1+\mathrm{Lip}_{\nabla f},\mathrm{Lip}_{\nabla f}(1+2\mathrm{Lip}_{\nabla f})\}$ is stronger than the ADMM condition $\rho>\max\{\sigma_{g},\sqrt{2}\mathrm{Lip}_{\nabla f}\}$ , reflecting the additional control needed to compensate for the lagged-gradient term introduced by linearization. In practice, we can estimate a lower bound of $\rho$ based on the explicit forms of both $f$ and $g$ ; see the experimental section and Supplementary Material for more details.
+
+If $\rho>\max\{\sigma_{g},1+\mathrm{Lip}_{\nabla f},\mathrm{Lip}_{\nabla f}(1+2\mathrm{Lip}_{\nabla f})\}$ and Assumptions A1 – A4 hold, then the iterates $\{(\mathbf{x}^{t},\mathbf{z}^{t},\mathbf{v}^{t})\}_{t=1}^{\infty}$ generated by ( 6 ) has a subsequence convergent to a $d$ -stationary point of problem ( 1 ).
+
+The proof is similar to that of Theorem 3 . The only difference is that we use the sequence $\{\kappa_{t}\}_{t\geq 1}$ in place of $\{\mathcal{L}(\mathbf{x}^{t},\mathbf{z}^{t};\mathbf{v}^{t})\}_{t\geq 0}$ . In particular, by telescoping summation of the inequality ( 33 ) from $t=1$ to an arbitrary integer $T$ leads to
+
+$\displaystyle\kappa_{T+1}-\kappa_{1}\leq$ $\displaystyle\left(\frac{\sigma_{g}-\rho}{2}\right)\sum\limits_{t=1}^{T}\|\mathbf{x}^{t+1}-\mathbf{x}^{t}\|_{2}^{2}+\left(\frac{2\mathrm{Lip}_{\nabla f}^{2}+\mathrm{Lip}_{\nabla f}-\rho}{2}\right)\sum\limits_{t=1}^{T}\|\mathbf{z}^{t+1}-\mathbf{z}^{t}\|_{2}^{2}$ $\displaystyle\qquad\qquad+\left(\frac{\mathrm{Lip}_{\nabla f}^{2}-\rho\mathrm{Lip}_{\nabla f}^{2}}{\rho}\right)\sum\limits_{t=1}^{T}\|\mathbf{z}^{t}-\mathbf{z}^{t-1}\|_{2}^{2},$ (36)
+
+which means that $\{\kappa_{t}\}_{t=1}^{\infty}$ is upper bounded by $\kappa_{1}$ . Therefore, with ( 35 ), the sequence $\{f(\mathbf{x}^{t})+g(\mathbf{x}^{t})\}_{t=1}^{\infty}$ is upper bounded. The coerciveness of $\zeta(\mathbf{x})$ in Assumption A1 guarantees that $\{\mathbf{x}^{t}\}_{t=1}^{\infty}$ is bounded, and so is $\{\mathbf{z}^{t}\}_{t=1}^{\infty}$ by ( 35 ). To show the boundedness of $\{\mathbf{v}^{t}\}_{t=1}^{\infty}$ , we use ( 30 ) to obtain
+
+$\displaystyle\|\mathbf{v}^{T+1}-\mathbf{v}^{2}\|_{2}\leq\frac{\mathrm{Lip}_{\nabla f}}{\rho}\|\mathbf{z}^{T}-\mathbf{z}^{1}\|_{2},$
+
+leading to
+
+$\|\mathbf{v}^{T+1}\|_{2}\leq\|\mathbf{v}^{2}\|_{2}+\frac{\mathrm{Lip}_{\nabla f}}{\rho}(\|\mathbf{z}^{T}\|_{2}+\|\mathbf{z}^{1}\|_{2}),\;\forall\,T=1,2,\cdots.$
+
+The boundedness of $\{\mathbf{z}^{t}\}_{t=1}^{\infty}$ guarantees the boundedness of $\{\mathbf{v}^{t}\}_{t=1}^{\infty}$ . The remainder of the proof follows verbatim from that of Theorem 3 . ∎
+
+The convergence results in Theorems 3 and 4 establish subsequential convergence of the generated iterates. Establishing an analogous full-sequence convergence result for the present weakly convex ADMM/LADMM framework would require additional assumptions such as the Kurdyka–Łojasiewicz (KL) property ( Attouch et al., 2013 ) beyond those used here. We therefore leave this extension for future work.
+
+The lower bounds on the penalty parameter $\rho$ in Theorems 3 and 4 are sufficient conditions for convergence. These bounds depend on the weak convexity modulus $\sigma_{g}$ and the Lipschitz constant $\mathrm{Lip}_{\nabla f}$ , which can be estimated from the analytical form of the objective function. In particular, the weak convexity modulus $\sigma_{g}$ is obtained from the regularizer or nonconvex component, while the Lipschitz constant $\mathrm{Lip}_{\nabla f}$ is estimated from the smooth term $f$ . The corresponding estimates used in the numerical experiments are reported in the Supplementary Material. We note that these theoretical bounds may be conservative in practice; and convergence was observed even for values of $\rho$ below the theoretical threshold in our experiments. Developing adaptive or problem-dependent strategies for choosing $\rho$ is an important direction for future work.
+
+4 Numerical Experiments
+
+In this section, we present numerical experiments to demonstrate the efficiency of both the ADMM and LADMM methods across three case studies. All the numerical experiments were conducted in MATLAB R2021a on a machine equipped with an 11th-Gen Intel Core i7-11370H CPU and 8 GB of memory. The first two involve two-dimensional (2D) smooth functions, where we compare ADMM/LADMM with gradient descent (GD) ( Dem’yanov, 1978 ) , heavy ball (HB) ( Polyak, 1964 ) , and Nesterov’s accelerated gradient (NAG) ( Nesterov, 1983 ) . Specifically, the update of GD is given by:
+
+$\begin{cases}\mathbf{p}^{t+1}=-\nabla\zeta(\mathbf{x}^{t})\\ \mathbf{x}^{t+1}=\mathbf{x}^{t}+\alpha^{t+1}\mathbf{p}^{t+1},\end{cases}$ (37)
+
+where the stepsize $\alpha^{t+1}>0$ is updated iteratively using the Armijo-Goldstein condition ( Armijo, 1966 ) . The iterations of HB method are
+
+$\begin{cases}\mathbf{p}^{t+1}=-\nabla\zeta(\mathbf{x}^{t})+\beta^{t+1}\mathbf{p}^{t}\\ \mathbf{x}^{t+1}=\mathbf{x}^{t}+\alpha^{t+1}\mathbf{p}^{t+1},\end{cases}$ (38)
+
+with $\alpha^{t+1}$ adaptively chosen by the Armijo-Goldstein condition and a fixed $\beta^{t+1}=\beta$ . We choose the optimal value of $\beta=0.1$ among $\{10^{-3},10^{-2},10^{-1},1,10^{1}\}$ that gives the lowest relative errors to the ground-truth. Starting with $q^{0}=1$ and an initial point $\mathbf{x}^{0}$ , the NAG method is formulated as:
+
+$\begin{cases}q^{t+1}=\frac{1+\sqrt{4(q^{t})^{2}+1}}{2}\\ \mathbf{p}^{t+1}=-\nabla\zeta(\mathbf{x}^{t})\\ \mathbf{y}^{t+1}=\mathbf{x}^{t}+\alpha^{t+1}\mathbf{p}^{t+1}\\ \mathbf{x}^{t+1}=\mathbf{y}^{t+1}+\frac{q^{t}-1}{q^{t+1}}(\mathbf{y}^{t+1}-\mathbf{y}^{t}).\end{cases}$ (39)
+
+Similar to other gradient-based methods, the step size $\alpha^{t+1}$ in NAG is updated adaptively by the Armijo-Goldstein condition.
+
+Lastly, we investigate a sparse logistic regression problem in high dimensions in Section 4.3 . Since the objective function is nondifferentiable, the gradient-based methods described above are not directly applicable; Instead, in addition to ADMM and LADMM, we compare with several representative baselines, including a majorization-minimization (MM) approach ( Hunter and Lange, 2004 ) , proximal linearized ADMM (PLADMM) ( Yashtini, 2022 ) , a proximal alternating linearized minimization (PALM) method ( Bolte et al., 2014 ) , and a standard DC algorithm (DCA) ( Pham Dinh and Le Thi, 1997 ) .
+
+For subproblems without a closed-form solution, we use iterative inner solvers. In the two low-dimensional test functions (Sections 4.1 and 4.2 ), the $\mathbf{x}$ -subproblem of ADMM is solved by gradient descent, and terminated when the gradient norm falls below $10^{-2}$ or after 8000 iterations. In the logistic regression experiment (Section 4.3 ), the $\mathbf{z}$ -subproblem of ADMM is solved by Newton’s method, and terminated when $\|\mathbf{z}_{\text{new}}-\mathbf{z}_{\text{old}}\|<10^{-3},$ or after 100 iterations. Additional implementation details are provided in the Supplementary Material.
+
+We emphasize that two different LADMM variants are used in this paper, only one of which is covered by the convergence theory in Section 3.3 . For the two low-dimensional test functions (Sections 4.1 and 4.2 ), the $\mathbf{z}$ -subproblem in ADMM admits a closed-form solution, while the $\mathbf{x}$ -subproblem does not. Accordingly, the LADMM variant implemented for these experiments linearizes $g$ in the $\mathbf{x}$ -subproblem, rather than $f$ in the $\mathbf{z}$ -subproblem as presented in Section 2.2 . This is a problem-specific deviation from the analyzed algorithms: the convergence analysis in Section 3.3 , which relies on the Lipschitz continuity of $\nabla f$ , does not directly apply to this variant; extending the theory to cover linearization of the weakly convex term is left for future work. By contrast, the logistic regression experiment in Section 4.3 implements the LADMM scheme exactly as analyzed in Section 2.2 , with the linearization applied to the smooth logistic loss $f$ in the $\mathbf{z}$ -subproblem.
+
+4.1 Three-Hump Camel Function
+
+We start with a valley-shaped testing function, called the Three-Hump Camel Function ( Molga and Smutnicki, 2005 ) , defined by,
+
+$\zeta(x_{1},x_{2})=2x_{1}^{2}-1.05x_{1}^{4}+\frac{x_{1}^{6}}{6}+x_{1}x_{2}+x_{2}^{2}.$ (40)
+
+This function has a global minimum of $\zeta(\mathbf{x}^{*})=0$ at $\mathbf{x}^{*}=(0,0)$ and is weakly convex. We set $\rho=100$ for ADMM, which satisfies the sufficient condition in Theorem 3 . We use the same parameter for LADMM; although our convergence analysis does not cover the chosen splitting strategy, empirical results indicate that LADMM still converges. Further details on the weakly convex formulation, the calculation of the relevant constants, and the implementation of ADMM and LADMM for ( 40 ) are provided in Supplementary Material (Appendix A).
+
+All competing methods start from the same initial point, chosen randomly from $[-2,2]\times[-2,2]$ . The stopping criteria are identical across methods: the algorithm terminates when the gradient norm satisfies $\|\nabla\zeta(\mathbf{x})\|_{2}<10^{-8}$ or when the number of outer iterations reaches 15,000.
+
+We evaluate performance based on the decay of the objective function defined in ( 40 ) and the decay of the norm of the iterates, i.e., $\|\mathbf{x}^{t}\|_{2},$ with respect to the elapsed time, measured in sec . Since the global optimum is attained at the origin, $\|\mathbf{x}^{t}\|_{2}$ quantifies the error to the optimal solution. Figure 1 presents the objective function values and the corresponding errors, demonstrating that LADMM and ADMM achieve the fastest descent while maintaining the highest accuracy among competing methods.
+
+Figure 1: Comparison of algorithms for minimizing the Three-Hump Camel Function ( 40 ) in terms of the objective function (left) and the decay of the estimated $\|\mathbf{x}^{t}\|_{2}$ (right) with respect to time ( sec ) on a logarithmic scale. The results are obtained from one random initialization. For ADMM and LADMM, we set $\rho=100$ and terminate the outer iterations when the gradient norm satisfies $\|\nabla\zeta(\mathbf{x})\|_{2}<10^{-8}$ or when the number of outer iterations reaches 15,000. LADMM and ADMM are the fastest among all competing methods.
+
+We further examine computation time, the number of outer iterations, the number of inner iterations (for ADMM only), and the total number of iterations across 100 random initializations. Table 1 reports the mean values over these 100 trials, with standard deviations shown in parentheses. The total number of iterations for ADMM (including both outer and inner iterations) is nearly twice that of GD and HB; nevertheless, ADMM is faster. In particular, LADMM is the fastest method and requires fewer outer iterations than ADMM, reflecting the efficiency of its linearized subproblem updates and the absence of inner solves. NAG consistently reaches the maximum number of iterations before stopping, making it the slowest method. We note that the Armijo-based step-size strategy used for NAG may not be optimal for these nonconvex objectives; a different step-size rule could improve its performance.
+
+Table 1: Computation time and (inner/outer) iteration numbers for minimizing the Three-Hump Camel Function ( 40 ), highlighting LADMM and ADMM as the most efficient. Results are reported as the mean over 100 random initializations, with standard deviations shown in parentheses. Other parameter settings are the same as in Figure 1 .
+
+To understand why LADMM and ADMM appear faster than other gradient-based methods, we plot the trajectories of ADMM and GD on the contour of the Three-Hump Camel Function, illustrating a case where ADMM outperforms GD in terms of speed. As shown in Figure 2 , the trajectories of ADMM and GD are nearly identical; however, in the beginning, the points along ADMM’s trajectory are more widely spaced than those of GD. This indicates that while ADMM requires inner iterations to solve the subproblem, resulting in a higher total iteration count, its alternating updates of two variables nonetheless lead to more effective minimization than standard gradient-based approaches that only involve a single variable.
+
+Figure 2: Example trajectories of ADMM (left) and GD (right) starting from one particular initial point with the same parameter settings as in Figure 1 . In the beginning, the points along ADMM’s trajectory are more widely spaced than those of GD, illustrating why ADMM is faster than GD.
+
+4.2 Six-Hump Camel Function
+
+Next, we examine the Six-Hump Camel Function ( Hedar, 2013 ) , defined by,
+
+$\zeta(x_{1},x_{2})=\left(4-2.1x_{1}^{2}+\frac{x_{1}^{4}}{3}\right)x_{1}^{2}+x_{1}x_{2}+(-4+4x_{2}^{2})x_{2}^{2}.$ (41)
+
+This function possesses two symmetric global minima at approximately $(0.0898,-0.7126)$ and $(-0.0898,0.7126)$ , where the minimum function value is about $-1.0316$ . The corresponding function $f$ for the the Six-Hump Camel is not globally Lipschitz continuous, and hence our theoretical guidelines for choosing $\rho$ are not applicable. We therefore adopt an empirical choice $\rho=100$ for both ADMM and LADMM. Despite the lack of theoretical guarantees, both methods exhibit stable convergence in our experiments. More details on the ADMM/LADMM formulation of ( 41 ) can be found in Supplementary Material (Appendix B).
+
+Initial points for all methods are randomly sampled from the domain $[-2,2]\times[-2,2]$ , ensuring a diverse set of starting conditions. The stopping criteria are nearly identical to those in Section 4.1 , except that the maximum number of outer iterations is set to 1,500 to keep the method difference visible, since using 15,000 iterations (as in Section 4.1 ) would make curves nearly indistinguishable. These criteria are applied uniformly across all methods.
+
+We study the convergence behavior of each method by tracking the decay of the gradient norm, $\|\nabla\zeta(\mathbf{x}^{t})\|_{2}$ , and the relative error, defined as $\frac{\|\mathbf{x}^{t}-\mathbf{x}^{*}\|_{2}}{\|\mathbf{x}^{*}\|_{2}}$ , over time. A gradient norm of $\|\nabla\zeta(\mathbf{x})\|_{2}=0$ indicates a stationary point. The relative error quantifies the deviation between the computed solution and the true global minimum. As shown in Figure 3 , the evolution of both metrics demonstrates that LADMM and ADMM converge more rapidly than the other competing methods.
+
+We conduct a quantitative evaluation of each method’s overall performance. The aggregated results, including means and standard deviations, are reported in Table 2 . Both Tables 1 and 2 further indicate that although ADMM requires more total iterations, it achieves higher computational efficiency in these experiments. LADMM is again the fastest method, requiring fewer outer iterations than ADMM.
+
+Figure 4 shows the trajectories of ADMM and HB methods on the contour of the Six-Hump Camel Function, starting from a particular initial point. The widely spaced points along ADMM’s trajectory, noted in Figure 4 , are even more evident than in Figure 2 . Both Figures 2 and 4 together suggest that ADMM identifies a descent direction more effectively in the early stages than HB.
+
+Figure 3: Comparison of algorithms for minimizing the Six-Hump Camel function ( 41 ) in terms of $\|\nabla\zeta(\mathbf{x})\|_{2}$ (left) and the decay of the relative error (right) with respect to time ( sec ) on a logarithmic scale. The results are obtained from one random initialization. For ADMM and LADMM, we set $\rho=100$ and terminate the outer iterations when the gradient norm satisfies $\|\nabla\zeta(\mathbf{x})\|_{2}<10^{-8}$ or when the number of outer iterations reaches 1,500. LADMM and ADMM are faster than other competing methods.
+
+Table 2: Computation time and (inner/outer) iteration numbers for minimizing the Six-Hump Camel function ( 41 ), highlighting LADMM and ADMM as the most efficient. Results are reported as the mean over 100 random initializations, with standard deviations shown in parentheses. Other parameter settings are the same as in Figure 3 .
+
+Figure 4: Example trajectories of ADMM (left) and HB (right) with the same parameter settings as in Figure 3 . In the initial segment, the points along ADMM’s trajectory appear more sparsely spaced than those of HB, accounting for its improved efficiency.
+
+4.3 Logistic Regression with LOG Regularization
+
+Logistic regression, which produces both a binary decision and an estimated class probability, is a widely used classification model in statistics and machine learning, with applications in many areas including medical diagnosis ( Hua et al., 2025 ) and finance ( Costa E Silva et al., 2020 ) . Yet in high-dimensional settings, such as gene expression analysis ( Dousti Mousavi et al., 2023 ) and large-vocabulary text classification ( Chalkidis et al., 2020 ) , the number of features often exceeds the number of samples, where classical logistic regression may become unstable and prone to overfitting. Enforcing sparsity on the coefficients helps address these challenges, ensuring both statistical robustness and practical interpretability. In this section, we investigate a simulated scenario for sparse logistic regression.
+
+We start by generating a sparse coefficient vector $\mathbf{x}^{*}\in\mathbb{R}^{n}$ with a sparsity level of $10\%$ , which serves as the ground-truth. In particular, for each index $j\in\{1,\cdots,n\}$ , we include $j$ in the index set $S$ independently with probability 0.1. If $j\in S$ , we assign $x_{j}^{*}$ a nonzero value drawn from the standard normal distribution; otherwise, we set $x_{j}^{*}=0$ . Then we generate an i.i.d. Gaussian matrix $X_{\text{tr}}\in\mathbb{R}^{m_{\text{tr}}\times n}$ with entries $\big(X_{\text{tr}}\big)_{ij}\stackrel{{\scriptstyle\text{iid}}}{{\sim}}\mathcal{N}(0,1)$ , where $m_{\text{tr}}$ denotes the number of training samples and $n$ denotes the number of features. We set $(m_{\text{tr}},n)=(200,50)$ in our experiment. We standardize the data matrix by subtracting column means. Specifically, we compute training column means $\mu=\frac{1}{m_{\text{tr}}}\mathbf{1}^{\top}X_{\text{tr}}\in\mathbb{R}^{1\times n}$ and define $A_{\text{tr}}=X_{\text{tr}}-\mathbf{1}\mu$ . Then the binary labels are generated by
+
+$b_{\text{tr},i}=\text{sign}\big({\mathbf{a}}_{\text{tr},i}^{\top}\mathbf{x}^{*}+\eta_{\text{tr},i}\big),\quad i=1,\dots,m_{\text{tr}},$
+
+where $\eta_{\text{tr},i}\sim\mathcal{N}(0,\nu^{2})$ acts as noise and $\nu>0$ controls the noise level. We set its variance $\nu^{2}=0.1$ in our experiments. Here, the subscript tr indicates that the matrix $A_{\text{tr}}$ and vector $\mathbf{b}_{\text{tr}}$ correspond to the training data.
+
+Given training data $(A_{\text{tr}},\mathbf{b}_{\text{tr}})\in\mathbb{R}^{m_{\text{tr}}\times n}\times\{-1,1\}^{m_{\text{tr}}}$ with rows $\mathbf{a}_{i}^{\top}$ and labels $b_{i}\in\{-1,1\}$ , the logistic regression function is defined as
+
+$\displaystyle L(\mathbf{x})=\frac{1}{m_{\text{tr}}}\sum_{i=1}^{m_{\text{tr}}}\log\left(1+\exp{\left(-b_{i}(\mathbf{a}_{i}^{\top}\mathbf{x})\right)}\right),$ (42)
+
+To mitigate overfitting, sparse logistic regression ( Liu et al., 2009 ) estimates a coefficient vector $\mathbf{x}$ by solving
+
+$\displaystyle\min_{\mathbf{x}}\ L(\mathbf{x})+\lambda R(\mathbf{x}),$ (43)
+
+where $R(\mathbf{x})$ promotes sparsity and $\lambda>0$ controls the strength of regularization. In this work, we adopt a log-composite (LOG) function ( Ke et al., 2021 ) defined on a univariable $x\in\mathbb{R},$
+
+$\displaystyle{P}_{\rm{log}}(x;\epsilon)=\log(\sqrt{x^{2}+\epsilon}+|x|),$ (44)
+
+with $\epsilon>0$ to enforce sparsity, thus leading to the following optimization problem:
+
+$\displaystyle\min_{\mathbf{x}}\ L(\mathbf{x})+\lambda\sum_{j=1}^{n}{P}_{\rm{log}}(x_{j};\epsilon).$ (45)
+
+Since $L(\cdot)$ is convex and the LOG penalty function is weakly convex, the problem ( 45 ) aligns with our formulation ( 1 ). See Supplementary Material (Appendix C) for more details on the minimization of ( 45 ) using ADMM and LADMM.
+
+We compare the proposed ADMM/LADMM schemes with several representative baselines, including a majorization-minimization (MM) method ( Hunter and Lange, 2004 ) , a proximal linearized ADMM method (PLADMM) ( Yashtini, 2022 ) , a proximal alternating linearized minimization (PALM) method ( Bolte et al., 2014 ) , and a standard DC algorithm (DCA) ( Pham Dinh and Le Thi, 1997 ) . We first describe the MM baseline in detail. In particular, we replace $P_{\rm log}(x_{j};\epsilon)$ at each iteration $t$ by its concave tangent at $x_{j}^{t}$ , thus leading to
+
+$\displaystyle\mathbf{x}^{t+1}\in\operatornamewithlimits{argmin}_{\mathbf{x}}L(\mathbf{x})+\lambda\sum_{j=1}^{n}w_{j}^{t}\,|x_{j}|,$ (46)
+
+where the weights are defined by $w_{j}^{t}\;=\;\frac{1}{\sqrt{(x_{j}^{t})^{2}+\epsilon}}.$ The subproblem ( 46 ) is convex, which can be solved via ADMM.
+
+For the PLADMM baseline, we use the same variable-splitting formulation as in ADMM/LADMM and add proximal terms to the subproblems; moreover, the smooth term $L(\mathbf{x})$ is linearized, leading to a proximal linearized ADMM update ( Yashtini, 2022 ) . For the PALM baseline, we apply a PALM scheme ( Bolte et al., 2014 ) to a quadratic penalty reformulation of the split problem. For the DCA baseline, we apply a standard DC algorithm ( Pham Dinh and Le Thi, 1997 ) based on a difference-of-convex decomposition of the LOG regularizer, so that each DCA iteration requires the solution of a convex subproblem.
+
+All algorithms start from the origin and share the same stopping rule: the algorithm is terminated when $\frac{\|\mathbf{x}^{t+1}-\mathbf{x}^{t}\|_{2}}{\|\mathbf{x}^{t}\|_{2}}<10^{-4}$ or when the prescribed maximum number of outer iterations is reached.
+
+We choose the regularization parameter $\lambda$ in ( 45 ) by $K$ -fold (we set $K=5$ ) cross validation on the training set $A_{\text{tr}}$ . Following a conventional choice of the set ( Ke et al., 2021 ) , the candidate set $\{\lambda_{i}\}_{i=1}^{50}$ is generated by
+
+$\displaystyle\lambda_{i}=\begin{cases}10^{-5},&i=1,\\ 5\lambda_{i-1},&2\leq i\leq 6,\\ 1.1\lambda_{i-1},&7\leq i\leq 44,\\ 2\lambda_{i-1},&45\leq i\leq 50,\end{cases}$ (47)
+
+which produces $50$ values starting at $10^{-5}$ , with coarse growth early, fine spacing in the middle, and a few larger steps at the end. We partition the index set $\{1,\dots,m_{\text{tr}}\}$ into $K$ disjoint folds $\{\mathcal{I}^{(k)}\}_{k=1}^{K}$ of (approximately) equal size. For each $k$ , define the training indices $\mathcal{T}^{(k)}=\bigcup_{\ell\neq k}\mathcal{I}^{(\ell)}$ and the validation indices $\mathcal{V}^{(k)}=\mathcal{I}^{(k)}$ . Given a candidate $\lambda$ , let $\widehat{\mathbf{x}}_{\lambda}^{(k)}$ denote the coefficient estimate obtained by fitting on $\mathcal{T}^{(k)}$ . We evaluate the performance of the validation fold using the average logistic regression ( Hastie et al., 2009 ) , i.e., by computing ( 42 ) on the set $\mathcal{V}^{(k)}$ :
+
+$L_{\text{val}}^{(k)}(\lambda)=\frac{1}{|\mathcal{V}^{(k)}|}\sum_{i\in\mathcal{V}^{(k)}}\log\left(1+\exp\big(-b_{\text{tr},i}\mathbf{a}_{\text{tr},i}^{\top}\widehat{\mathbf{x}}_{\lambda}^{(k)}\big)\right),$
+
+and select the optimal value of $\lambda$ that minimizes this loss,
+
+$\lambda^{*}\in\operatornamewithlimits{argmin}_{\lambda\in\{\lambda_{i}\}}\frac{1}{K}\sum_{k=1}^{K}L_{\text{val}}^{(k)}(\lambda),$
+
+then refit the model on the full training set using $\lambda^{*}$ . We observe that the optimal $\lambda$ value is relatively small, so we fix $\rho=1$ and $\epsilon=0.01$ for both ADMM and LADMM in the implementation.
+
+After selecting the optimal $\lambda$ , we refit the model on the full training set. Notably, although our analysis provides a lower bound on $\rho$ as a function of $\lambda$ (see Appendix C), we adopt the simpler choice $\rho=1$ in all runs. This is motivated by the empirical observation that the optimal $\lambda$ values are relatively small, for which $\rho=1$ is sufficient to ensure stable convergence in practice.
+
+We assess computational efficiency by examining the objective function value ( 45 ) versus elapsed time. Figure 5 shows that LADMM descends the fastest. The computational advantage of LADMM is consistent with its closed-form $\mathbf{z}$ -update, which avoids the iterative inner solves required by ADMM.
+
+Figure 5: Comparison of LADMM, ADMM, MM, PLADMM, PALM, and DCA for minimizing the LOG-regularized logistic regression ( 45 ) in terms of the objective decay with respect to time ( sec ). The reported curves are obtained from one run with $m_{\text{tr}}=200$ training samples and $n=50$ features. For ADMM and LADMM, we use $\rho=1$ , $\lambda=0.0063$ , and $\epsilon=0.01$ . The algorithm is terminated when $\frac{\|\mathbf{x}^{t+1}-\mathbf{x}^{t}\|_{2}}{\|\mathbf{x}^{t}\|_{2}}<10^{-4}$ or when the prescribed maximum number of outer iterations is reached.
+
+Then we evaluate the training performance on an independent test dataset. Consider a matrix: $X_{\text{te}}\in\mathbb{R}^{m_{\text{te}}\times n}$ with entries $\big(X_{\text{te}}\big)_{ij}\stackrel{{\scriptstyle\text{iid}}}{{\sim}}\mathcal{N}(0,1)$ , where $m_{\text{te}}$ is the number of test samples and we set $m_{\text{te}}=50$ . Using the training means $\mu$ , we center the data matrix ( Kuhn and Johnson, 2013 ) by $A_{\text{te}}=X_{\text{te}}-\mathbf{1}\mu.$ Then the true test labels are generated from the ground truth:
+
+$b_{\text{te},i}=\text{sign}\big({\mathbf{a}}_{\text{te},i}^{\top}\mathbf{x}^{*}\big),\quad i=1,\dots,m_{\text{te}}.$
+
+Suppose $\mathbf{x}$ is an estimated solution, we obtain the predicted labels $\widehat{\mathbf{b}}$ given by
+
+$\displaystyle\hat{b}_{i}=\begin{cases}+1,&(A_{\text{te}}\mathbf{x})_{i}\geq 0,\\ -1,&(A_{\text{te}}\mathbf{x})_{i}<0,\end{cases}$ (48)
+
+for $i=1,\dots m_{\text{te}}$ . Using the true labels $\mathbf{b}_{\text{te}}$ and predicted values $\widehat{\mathbf{b}}$ , we define the confusion matrix, i.e.,
+
+$\displaystyle\begin{aligned} \text{TP}&=|\{i:\hat{b}_{i}=+1,b_{\text{te},i}=+1\}|,&\text{FP}&=|\{i:\hat{b}_{i}=+1,b_{\text{te},i}=-1\,\}|,\\ \text{TN}&=|\{i:\hat{b}_{i}=-1,b_{\text{te},i}=-1\}|,&\text{FN}&=|\{i:\hat{b}_{i}=-1,b_{\text{te},i}=+1\,\}|,\end{aligned}$ (49)
+
+based on which we calculate the following evaluation metrics:
+
+$\displaystyle\text{Accuracy}=\frac{\text{TP}+\text{TN}}{m_{\text{te}}},\qquad\text{Precision}=\frac{\text{TP}}{\text{TP}+\text{FP}}\,,\qquad\text{Recall}=\frac{\text{TP}}{\text{TP}+\text{FN}}.$ (50)
+
+To further connect the numerical results with the stationarity guarantees in Section 3 , we also report a proximal-gradient mapping residual ( Nesterov, 2013 ) at the final iterate. For a final iterate $\mathbf{x}^{*}$ returned by each method, we define
+
+$\text{Res}_{\rm PG}(\mathbf{x}^{*})=\frac{1}{\sqrt{n}}\left\|\frac{1}{\eta}\left[\mathbf{x}^{*}-\textbf{prox}_{\log}\left(\mathbf{x}^{*}-\eta\nabla L(\mathbf{x}^{*});\eta\lambda\right)\right]\right\|_{2},$
+
+where $\eta$ is the step size and the closed form expression of $\textbf{prox}_{\log}$ is provided in Supplementary Material (Appendix C). This residual measures how much the final iterate would change after one proximal-gradient step. If the residual is zero, then one proximal-gradient step leaves the point unchanged. Thus, smaller values of the residual indicate that the final iterate is closer to satisfying d-stationarity.
+
+These metrics, together with computation time, and the proximal-gradient mapping residual are reported in Table 3 as mean (standard deviation) over $30$ independent train/test instances. The results show that our method is the fastest (in alignment with Figure 5 ), while still achieving comparable classification performance, with accuracy, precision, and recall all around 0.97 and standard deviations in the range of 0.02 to 0.05. In addition, LADMM attains a comparable proximal-gradient mapping residual. Among the newly included baselines, PLADMM performs similarly to LADMM in terms of accuracy, recall, precision, and Res PG , but has a slightly larger computational time. PALM also remains faster than ADMM and MM in this experiment, although its stationarity residual is larger. DCA attains slightly higher average classification metrics, but the differences are small relative to the reported standard deviations, and its average computational time is higher than that of LADMM. Taken together, these findings demonstrate that LADMM achieves competitive predictive quality and comparable stationarity residuals while delivering the lowest computational cost.
+
+Table 3: Computation time and performance metrics for LOG-regularized logistic regression ( 45 ) with $m_{\text{tr}}=200$ training samples, $n=50$ features, and $m_{\text{te}}=50$ test samples. Values are mean over 30 random instances, with standard deviations shown in parentheses. For each random instance, the regularization parameter $\lambda$ is selected by $K$ -fold (we set $K=5$ ) cross validation over a prescribed candidate set. Other parameter settings are the same as in Figure 5 .
+
+To further examine the computational behavior of the methods as the problem size increases, we perform a scaling study for LOG-regularized logistic regression ( 45 ). We set $m=4n$ and test $n\in\{50,100,200,300\}$ and we fix $\rho=1$ , $\lambda=0.0063$ , and $\epsilon=0.01$ . Table 4 reports the average computational time over ten random instances. The results show that LADMM remains among the fastest methods over the tested range. These results provide additional evidence of the computational efficiency of LADMM.
+
+Table 4: Scalability comparison for LOG-regularized logistic regression ( 45 ) with $m=4n$ and $n\in\{50,100,200,300\}$ . Values are mean over 10 random instances, with standard deviations shown in parentheses. Parameters are fixed at $\rho=1$ , $\lambda=0.0063$ , and $\epsilon=0.01$ . Other implementation settings are the same as in Figure 5 .
+
+5 Conclusion
+
+We studied an optimization problem involving the sum of two functions ( 1 ), where one function is convex and differentiable and the other is weakly convex (but not necessarily differentiable). This setting naturally captures a broader family of optimization models that go beyond the convex regime. Numerically, we applied both ADMM and its linearized variant to solve the problem, with the latter reducing the need for nested loops. Theoretically, we showed that both ADMM and LADMM iterates admit a subsequence converging to a directional stationary solution under mild conditions. Both convergence guarantees rely on explicit and verifiable conditions on the penalty parameter: $\rho>\max\{\sigma_{g},\sqrt{2}\mathrm{Lip}_{\nabla f}\}$ for ADMM (Theorem 3 ) and $\rho>\max\{\sigma_{g},1+\mathrm{Lip}_{\nabla f},\mathrm{Lip}_{\nabla f}(1+2\mathrm{Lip}_{\nabla f})\}$ for LADMM (Theorem 4 ). The stronger condition for LADMM reflects the additional control needed to absorb the lagged-gradient effect introduced by linearization. Numerical experiments on two low-dimensional smooth functions and a high-dimensional logistic regression problem demonstrate the practical efficiency of the proposed ADMM and LADMM algorithms compared with baseline methods. In the LOG-regularized logistic regression setting, LADMM achieved classification performance and proximal-gradient mapping residuals comparable to the competing baselines, while having the lowest average computational time. These results suggest that LADMM provides an efficient strategy for this weakly convex regularized logistic-regression model.
+
+Some promising extensions include inexact updates that are attractive for large-scale learning problems, acceleration and preconditioning techniques within the weakly convex ADMM framework, and extending the convergence analysis to cover linearization of the weakly convex term (as employed in Sections 4.1 and 4.2 ).
+
+Conflict of Interest Statement
+
+The authors declare that the research was conducted in the absence of any commercial or financial relationships that could be construed as a potential conflict of interest.
+
+Author Contributions
+
+SM: Methodology, software, formal analysis, writing—original draft, review and editing.
+
+CK: Investigation, software, validation, writing—review and editing.
+
+YL: Conceptualization, methodology, formal analysis, supervision, writing—review and editing.
+
+MA: Conceptualization, methodology, formal analysis, supervision, writing—review and editing.
+
+Funding
+
+Shenghan Mei and Yifei Lou were partially supported by NSF CAREER DMS-2414705, and Chengyu Ke and Miju Ahn by NSF CRII III-1948341.
+
+References
+
+Supplementary Material
+
+This Supplementary Material provides additional proofs and algorithmic details that are omitted from the main manuscript. Unless otherwise specified, equations, sections, and theorems (e.g., ( 1 ) or Section 3.1 ) refer to those in the main manuscript. Equations introduced here are numbered locally such as ( S2 ), and algorithms are likewise numbered locally such as Algorithm S1 .
+
+Appendix A Three-Hump Camel Function
+
+A.1 ADMM for Three-Hump Camel
+
+By setting $f(\mathbf{x})=2x_{1}^{2}+x_{2}^{2}$ and $g(\mathbf{x})=\frac{x_{1}^{6}}{6}+x_{1}x_{2}-1.05x_{1}^{4}$ , we express the Three-Hump Camel Function ( 40 ) into the general form of ( 1 ). It is straightforward that $f(\mathbf{x})$ is convex. Here we verify that $g(\mathbf{x})$ is weakly convex, which requires to finding a constant $\sigma>0$ such that $\hat{g}(\mathbf{x})=g(\mathbf{x})+\frac{\sigma}{2}\|\mathbf{x}\|^{2}$ is convex. We compute the Hessian matrix of $\hat{g}$
+
+$\displaystyle\nabla^{2}\hat{g}(\mathbf{x})=\begin{bmatrix}5x_{1}^{4}-12.6x_{1}^{2}+\sigma&1\\ 1&\sigma\end{bmatrix}.$ (S1)
+
+For any vector $[a,b]^{T}$ , we have
+
+$\displaystyle\begin{bmatrix}a&b\end{bmatrix}\begin{bmatrix}5x_{1}^{4}-12.6x_{1}^{2}+\sigma&1\\ 1&\sigma\end{bmatrix}\begin{bmatrix}a\\ b\end{bmatrix}=(5x_{1}^{4}-12.6x_{1}^{2}+\sigma-1)a^{2}+(a+b)^{2}+(\sigma-1)b^{2}.$
+
+Completing the square for $5x_{1}^{4}-12.6x_{1}^{2}+\sigma-1=5(x_{1}^{2}-1.26)^{2}+\sigma-8.938$ shows that the expression is nonnegative for all $x_{1}$ , provided $\sigma\geq 8.938$ . Therefore, $\hat{g}(\mathbf{x})$ is convex, and hence $g(\mathbf{x})$ is weakly convex.
+
+Next, we estimate the Lipschitz constant of the function $f(\mathbf{x})=2x_{1}^{2}+x_{2}^{2}.$ Since
+
+$\nabla f(\mathbf{x})=\begin{pmatrix}4x_{1}\\ 2x_{2}\end{pmatrix},\qquad\nabla^{2}f(\mathbf{x})=\begin{pmatrix}4&0\\ 0&2\end{pmatrix},$
+
+we have $\mathrm{Lip}_{\nabla f}=\|\nabla^{2}f\|_{2}=4,$ and hence a sufficient condition in Theorem 3 for the convergence guarantee is $\rho>\max\{\sigma_{g},\sqrt{2}\,\mathrm{Lip}_{\nabla f}\}=\max\{8.938,4\sqrt{2}\}=8.938.$ In the experiments, We set $\rho=100$ , which satisfies this condition.
+
+For the special forms of $f(\cdot)$ and $g(\cdot)$ , we elaborate on how to solve the $\mathbf{x}$ - and $\mathbf{z}$ -subproblems in the ADMM iteration ( 4 ). Specifically, the $\mathbf{x}$ -subproblem in ( 4 ) is equivalent to
+
+$\displaystyle\mathbf{x}^{t+1}\in\operatornamewithlimits{argmin}_{\mathbf{x}}g(\mathbf{x})+\frac{\rho}{2}\|\mathbf{x}-\mathbf{z}^{t}+\mathbf{v}^{t}\|_{2}^{2}\triangleq G_{1}(\mathbf{x}),$ (S2)
+
+where $G_{1}(\mathbf{x})=\frac{x_{1}^{6}}{6}+x_{1}x_{2}-1.05x_{1}^{4}+\frac{\rho}{2}\|\mathbf{x}-\mathbf{z}^{t}+\mathbf{v}^{t}\|_{2}^{2}.$ Taking the gradient of $G_{1}(\mathbf{x})$ with respect to $\mathbf{x}$ , we get
+
+$\displaystyle\nabla G_{1}(\mathbf{x})=\begin{bmatrix}x_{1}^{5}+x_{2}-4.2x_{1}^{3}\\ x_{1}\\ \end{bmatrix}+\rho\begin{bmatrix}x_{1}-z_{1}^{t}+v_{1}^{t}\\ x_{2}-z_{2}^{t}+v_{2}^{t}\end{bmatrix},$
+
+and hence the gradient descent update is given by
+
+$\displaystyle\mathbf{x}_{k+1}=\mathbf{x}_{k}-\tau_{1}\nabla G_{1}(\mathbf{x}_{k}),$ (S3)
+
+where $\tau_{1}>0$ is a constant step size and the subscript $k$ denotes the inner iteration number, as opposed to superscript $t$ for outer iterations. We repeat the gradient descent iterations in ( S3 ) until convergence is achieved, i.e., when $\nabla G_{1}(\mathbf{x}_{k})<10^{-2}$ . We then set $\mathbf{x}^{t+1}$ as the final iterate of $\mathbf{x}_{k+1}$ .
+
+The $\mathbf{z}$ -subproblem in ( 4 ) is equivalent to
+
+$\displaystyle\mathbf{z}^{t+1}\in\operatornamewithlimits{argmin}_{\mathbf{z}}f(\mathbf{z})+\frac{\rho}{2}\|\mathbf{x}^{t+1}-\mathbf{z}+\mathbf{v}^{t}\|_{2}^{2}\triangleq H_{1}(\mathbf{z}),$ (S4)
+
+where $H_{1}(\mathbf{z})=2z_{1}^{2}+z_{2}^{2}+\frac{\rho}{2}\|\mathbf{x}^{t+1}-\mathbf{z}+\mathbf{v}^{t}\|_{2}^{2}.$ By taking the gradient with respect to $\mathbf{z}$ , we obtain the optimality condition:
+
+$\displaystyle\begin{bmatrix}4z_{1}\\ 2z_{2}\\ \end{bmatrix}+\rho\begin{bmatrix}z_{1}-x_{1}^{t+1}-v_{1}^{t}\\ z_{2}-x_{2}^{t+1}-v_{2}^{t}\\ \end{bmatrix}=\begin{bmatrix}0\\ 0\end{bmatrix},$
+
+which implies a closed-form solution for $\mathbf{z}$ given by
+
+$\displaystyle\mathbf{z}^{t+1}=\begin{bmatrix}\frac{\rho(x_{1}^{t+1}+v_{1}^{t})}{\rho+4}\\ \frac{\rho(x_{2}^{t+1}+v_{2}^{t})}{\rho+2}\\ \end{bmatrix}.$ (S5)
+
+Under the stopping conditions of a maximum number of iterations and a sufficiently small gradient norm, the pseudocode for solving the Three-Hump Camel Function via ADMM is summarized in Algorithm S1 .
+
+Algorithm S1 ADMM for minimizing the Three-Hump Camel Function
+
+A.2 LADMM for Three-Hump Camel
+
+We intend to linearize the $\mathbf{x}$ -subproblem in ( S2 ) by a first-order approximation of $g(\mathbf{x})$ at $\mathbf{x}^{t}$ :
+
+$g(\mathbf{x})\approx g(\mathbf{x}^{t})+\langle\nabla g(\mathbf{x}^{t}),\,\mathbf{x}-\mathbf{x}^{t}\rangle.$ (S6)
+
+The resulting $\mathbf{x}$ -subproblem becomes
+
+$\displaystyle\mathbf{x}^{t+1}\in\operatornamewithlimits{argmin}_{\mathbf{x}}\,\langle\nabla g(\mathbf{x}^{t}),\,\mathbf{x}\rangle+\frac{\rho}{2}\|\mathbf{x}-\mathbf{z}^{t}+\mathbf{v}^{t}\|_{2}^{2}.$ (S7)
+
+Taking the gradient with respect to $\mathbf{x}$ and setting it to zero yields the optimality condition
+
+$\nabla g(\mathbf{x}^{t})+\rho\big(\mathbf{x}^{t+1}-\mathbf{z}^{t}+\mathbf{v}^{t}\big)=\mathbf{0},$ (S8)
+
+where
+
+$\nabla g(\mathbf{x}^{t})=\begin{bmatrix}(x_{1}^{t})^{5}+x_{2}^{t}-4.2(x_{1}^{t})^{3}\\[2.0pt] x_{1}^{t}\end{bmatrix}.$
+
+Solving ( S8 ) gives the closed-form update
+
+$\mathbf{x}^{t+1}=\mathbf{z}^{t}-\mathbf{v}^{t}-\frac{1}{\rho}\nabla g(\mathbf{x}^{t})=\begin{bmatrix}z_{1}^{t}-v_{1}^{t}-\dfrac{(x_{1}^{t})^{5}+x_{2}^{t}-4.2(x_{1}^{t})^{3}}{\rho}\\[8.0pt] z_{2}^{t}-v_{2}^{t}-\dfrac{x_{1}^{t}}{\rho}\end{bmatrix}.$ (S9)
+
+With the $\mathbf{z}$ -update being the same as ADMM, i.e., given by ( S5 ), the overall procedure is summarized in Algorithm S2 . Compared with Algorithm S1 , no inner iteration is required.
+
+Algorithm S2 LADMM for minimizing the Three-Hump Camel Function
+
+Note that this approach (Algorithm S2 ) differs to the LADMM scheme introduced in Section 2.2 , where the linearization is applied on the smooth term $f$ . Since the weakly convex function $g$ does not satisfy the Lipschitz - gradient assumption, the convergence analysis developed in Section 3.3 is not applicable here, and we leave this extension for future work.
+
+Appendix B Six-Hump Camel Function
+
+B.1 ADMM for Six-Hump Camel
+
+By setting $f(\mathbf{x})=4x_{1}^{2}+4x_{2}^{4}$ and $g(\mathbf{x})=\frac{x_{1}^{6}}{3}+x_{1}x_{2}-2.1x_{1}^{4}-4x_{2}^{2}$ , we express the Six-Hump Camel Function ( 41 ) in the form of ( 1 ). Clearly, $f(\mathbf{x})$ is convex. To verify the weak convexity of $g(\mathbf{x})$ , it suffices to find a constant $\sigma>0$ such that the function $\hat{g}(\mathbf{x})=g(\mathbf{x})+\frac{\sigma}{2}\|\mathbf{x}\|^{2}$ is convex. To this end, we compute the Hessian of $\hat{g}$ , leading to
+
+$\displaystyle\nabla^{2}\hat{g}(\mathbf{x})=\begin{bmatrix}10x_{1}^{4}-25.2x_{1}^{2}+\sigma&1\\ 1&-8+\sigma\end{bmatrix}.$ (S10)
+
+For an arbitrary vector $[a,b]^{\mathsf{T}}$ , we evaluate the associated quadratic form:
+
+$\displaystyle\begin{bmatrix}a&b\end{bmatrix}\begin{bmatrix}10x_{1}^{4}-25.2x_{1}^{2}+\sigma&1\\ 1&-8+\sigma\end{bmatrix}\begin{bmatrix}a\\ b\end{bmatrix}$ $\displaystyle=$ $\displaystyle(10x_{1}^{4}-25.2x_{1}^{2}+\sigma-1)a^{2}+(a+b)^{2}+(\sigma-9)b^{2}.$
+
+We complete the square for the term $10x_{1}^{4}-25.2x_{1}^{2}+\sigma-1=10(x_{1}^{2}-1.26)^{2}+\sigma-15.876$ , which is nonnegative for all $x_{1}$ provided that $\sigma\geq 15.876$ . Consequently, $\hat{g}(\mathbf{x})$ is convex, and hence $g(\mathbf{x})$ is WC.
+
+Given the specific forms of $f(\cdot)$ and $g(\cdot)$ , we outline the solution of the $\mathbf{x}$ - and $\mathbf{z}$ -subproblems in the ADMM iteration ( 4 ). The $\mathbf{x}$ -subproblem in ( 4 ) is equivalent to
+
+$\displaystyle\mathbf{x}^{t+1}\in\operatornamewithlimits{argmin}_{\mathbf{x}}g(\mathbf{x})+\frac{\rho}{2}\|\mathbf{x}-\mathbf{z}^{t}+\mathbf{v}^{t}\|_{2}^{2}\triangleq G_{1}(\mathbf{x}).$ (S11)
+
+We solve ( S11 ) using gradient descent. Taking the gradient of $G_{1}(\mathbf{x})$ with respect to $\mathbf{x}$ , we obtain
+
+$\displaystyle\nabla G_{1}(\mathbf{x})=\begin{bmatrix}2x_{1}^{5}+x_{2}-8.4x_{1}^{3}\\ x_{1}-8x_{2}\\ \end{bmatrix}+\rho\begin{bmatrix}x_{1}-z_{1}^{t}+v_{1}^{t}\\ x_{2}-z_{2}^{t}+v_{2}^{t}\end{bmatrix}.$ (S12)
+
+Then, the iterative update rule becomes:
+
+$\displaystyle\mathbf{x}_{k+1}=\mathbf{x}_{k}-\tau_{1}\nabla G_{1}(\mathbf{x}_{k}),$ (S13)
+
+where $\tau_{1}>0$ denotes the step size and $k$ indexes the inner iteration. We perform the gradient descent iterations in ( S13 ) until convergence, which is determined when the norm of the gradient satisfies $\|\nabla G_{1}(\mathbf{x}_{k})\|<10^{-2}$ . The final value of $\mathbf{x}_{k+1}$ is then assigned to $\mathbf{x}^{t+1}$ .
+
+The $\mathbf{z}$ -subproblem in ( 4 ) is given by
+
+$\displaystyle\mathbf{z}^{t+1}\in\operatornamewithlimits{argmin}_{\mathbf{z}}f(\mathbf{z})+\frac{\rho}{2}\|\mathbf{x}^{t+1}-\mathbf{z}+\mathbf{v}^{t}\|_{2}^{2}\triangleq H_{1}(\mathbf{z}).$ (S14)
+
+Differentiating $H_{1}(\mathbf{z})$ with respect to $\mathbf{z}$ yields the optimality condition:
+
+$\displaystyle\begin{bmatrix}8z_{1}\\ 16z_{2}^{3}\\ \end{bmatrix}+\rho\begin{bmatrix}z_{1}-x_{1}^{t+1}-v_{1}^{t}\\ z_{2}-x_{2}^{t+1}-v_{2}^{t}\\ \end{bmatrix}=\begin{bmatrix}0\\ 0\end{bmatrix},$ (S15)
+
+from which we obtain the closed-form solution for $z_{1}=\frac{\rho(x_{1}^{t+1}+v_{1}^{t})}{\rho+8}$ . For $z_{2}$ , we arrive at the following cubic equation:
+
+$\displaystyle 16z_{2}^{3}+\rho z_{2}-\rho(x_{2}^{t+1}+v_{2}^{t})=0.$ (S16)
+
+To solve this cubic equation, we analyze the discriminant $\Delta=-(4p^{3}+27q^{2})$ , with $p=\frac{\rho}{16}$ and $q=-\frac{\rho(x_{2}^{t+1}+v_{2}^{t})}{16}$ , which gives rise to the following three cases:
+
+Case 1: $\Delta<0$ , then the cubic equation has one real root:
+
+$\displaystyle z_{2}=u_{1}^{\frac{1}{3}}+u_{2}^{\frac{1}{3}},$
+
+with $u_{1}=-\frac{q}{2}+\sqrt{\frac{q^{2}}{4}+\frac{p^{3}}{27}}$ and $u_{2}=-\frac{q}{2}-\sqrt{\frac{q^{2}}{4}+\frac{p^{3}}{27}}$ . Note that we ignore the two complex roots.
+
+Case 2: $\Delta=0$ , then $4p^{3}+27q^{2}=0$ . If $p=0$ , then both $p=q=0$ , and $0$ is a triple root of the cubic equation ( S16 ). If $p\neq 0$ , then the cubic equation ( S16 ) has three roots $z_{2,k}$ ( $k=0,1,2$ ): a simple root $z_{2,0}=\frac{3q}{p}$ and a double root $z_{2,1}=z_{2,2}=-\frac{3q}{2p}$ .
+
+Case 3: $\Delta>0$ , then the cubic equation ( S16 ) has three real roots, which can be expressed using the trigonometric solution:
+
+$\displaystyle z_{2,k}=2\sqrt{-\frac{p}{3}}\cos\left[\arccos\left(\frac{3q}{2p}\sqrt{\frac{-3}{p}}\right)-\frac{2\pi k}{3}\right]\ \ \ \ \ \text{for}\ k=0,1,2.$
+
+Since multiple solutions exist when $\Delta=0$ or $\Delta>0$ , we choose the one that yields the smallest objective function value, i.e.,
+
+$\displaystyle z_{2}=\operatornamewithlimits{argmin}_{z_{2,k}}\ H_{1}(z_{1},z_{2,k})\ \ \ \ \text{for}\ k=0,1,2.$
+
+We summarize the update for $\mathbf{z}$ as follows,
+
+$\displaystyle\mathbf{z}^{t+1}=\begin{bmatrix}\frac{\rho(x_{1}^{t+1}+v_{1}^{t})}{\rho+8}\\ z_{2}\\ \end{bmatrix}.$ (S17)
+
+We present the pseudo-code for solving the Six-Hump Camel Function using ADMM in Algorithm S3 .
+
+Algorithm S3 ADMM for minimizing the Six-Hump Camel Function
+
+B.2 LADMM for Six-Hump Camel
+
+As in Appendix A.2 for the Three-Hump case, the ADMM $\mathbf{z}$ -subproblem for the Six-Hump Camel function ( 41 ) admits a closed-form update (see Appendix B.1 ), whereas the $\mathbf{x}$ -subproblem requires an inner iterative routine. To reduce this cost, we again consider a problem-specific linearized ADMM variant that linearizes the $\mathbf{x}$ -subproblem while keeping the $\mathbf{z}$ -update unchanged. As with the Three-Hump case, we do not provide a convergence analysis here and leave it for future work.
+
+Specifically, we linearize the $\mathbf{x}$ -subproblem by replacing $g(\mathbf{x})$ with its first-order approximation at $\mathbf{x}^{t}$ ,
+
+$g(\mathbf{x})\approx g(\mathbf{x}^{t})+\langle\nabla g(\mathbf{x}^{t}),\mathbf{x}-\mathbf{x}^{t}\rangle,$
+
+while keeping the $\mathbf{z}$ -update the same as in ( S17 ). Following the same derivation as in Appendix A.2 , the resulting $\mathbf{x}$ -update is
+
+$\mathbf{x}^{t+1}=\mathbf{z}^{t}-\mathbf{v}^{t}-\frac{1}{\rho}\nabla g(\mathbf{x}^{t})=\begin{bmatrix}z_{1}^{t}-v_{1}^{t}-\dfrac{2(x_{1}^{t})^{5}+x_{2}^{t}-8.4(x_{1}^{t})^{3}}{\rho}\\[8.0pt] z_{2}^{t}-v_{2}^{t}-\dfrac{x_{1}^{t}-8x_{2}^{t}}{\rho}\end{bmatrix}.$ (S18)
+
+Algorithm S4 outlines the LADMM procedure to solve the Six-Hump Camel Function.
+
+Algorithm S4 LADMM for minimizing the Six-Hump Camel Function
+
+Appendix C Logistic Regression with LOG Regularization
+
+C.1 ADMM: Logistic regression with LOG
+
+By setting $f(\mathbf{x})=\frac{1}{m}\sum_{i=1}^{m}\log\left(1+\exp{\left(-b_{i}(\mathbf{a}_{i}^{\top}\mathbf{x})\right)}\right)$ and $g(\mathbf{x})=\lambda\sum_{j=1}^{n}P_{\rm{log}}(x_{j};\epsilon)$ with $P_{\rm{log}}$ defined in ( 44 ), we express the LOG-regularized model into the general form of ( 1 ) in order to apply for ADMM. We start by verifying that $f(\mathbf{x})$ is convex and $g(\mathbf{x})$ is weakly convex.
+
+Define a scalar function $h(s)=\log\left(1+\exp{(-s)}\right)$ and denote the sigmoid function by $l(s)=\frac{1}{1+\exp(-s)}$ . We compute the first/second derivatives of $h(s)$ as follows,
+
+$\displaystyle h^{\prime}(s)=-\frac{1}{1+\exp{(s)}}=-l(-s)\leq 0\text{ and }h^{\prime\prime}(s)=l(s)(1-l(s))\geq 0.$
+
+Since $h^{\prime\prime}(s)\geq 0$ for all $s\in\mathbb{R}$ , the function $h(s)$ is convex. Note that the function $f(\mathbf{x})$ is a finite average of functions of the form:
+
+$f_{i}(\mathbf{x})=\log\left(1+\exp{\left(-b_{i}(\mathbf{a}_{i}^{\top}\mathbf{x})\right)}\right)=h(b_{i}\mathbf{a}_{i}^{\top}\mathbf{x}).$
+
+Since $h(s)$ is convex and non-increasing, and $b_{i}\mathbf{a}_{i}^{\top}\mathbf{x}$ is an affine function in $\mathbf{x}$ , it follows from the composition rule of convex functions that each $f_{i}(\mathbf{x})=h(b_{i}\mathbf{a}_{i}^{\top}\mathbf{x})$ is convex. Therefore, their average $f(\mathbf{x})=\frac{1}{m}\sum_{i=1}^{m}f_{i}(\mathbf{x})$ is also convex.
+
+Then we estimate the Liptschitz constant of $f(\mathbf{x})$ . Since $0\leq h^{\prime\prime}(s)=l(s)(1-l(s))\leq\frac{1}{4},\forall s\in\mathbb{R}$ and the Hessian of $f$ satisfies
+
+$\nabla^{2}f(\mathbf{x})=\frac{1}{m}\sum_{i=1}^{m}h^{\prime\prime}(b_{i}\mathbf{a}_{i}^{\top}\mathbf{x})\,\mathbf{a}_{i}\mathbf{a}_{i}^{\top}\preceq\frac{1}{4m}A^{\top}A,$
+
+we have
+
+$\mathrm{Lip}_{\nabla f}\leq\frac{\|A\|_{2}^{2}}{4m}.$ (S19)
+
+Next, we verify that $g(\mathbf{x})$ is weakly convex. As the function $g(\mathbf{x})=\lambda\sum_{j=1}^{n}P_{\rm{log}}(x_{j};\epsilon)$ is separable with respect to each component $x_{j}$ , the weak convexity of $g$ follows from that of the scaled penalty $P_{\rm{log}}$ . In particular, Ke et al. [2021, Lemma 2.1] implies that for any $\sigma\geq\frac{2}{3\sqrt{3}\,\epsilon}$ , the function
+
+$\widehat{P}_{\log}(x;\epsilon):=P_{\rm{log}}(x;\epsilon)+\frac{\sigma}{2}x^{2}$
+
+is convex for all $x\in\mathbb{R}$ . Therefore, $P_{\log}(\cdot;\epsilon)$ is $\sigma$ -weakly convex, and consequently $g$ is $\lambda\sigma$ -weakly convex on $\mathbb{R}^{n}$ . Together with the bound in ( S19 ), we obtain a sufficient condition for Theorem 3, namely
+
+$\rho>\max\left\{\frac{2\lambda}{3\sqrt{3}\,\epsilon},\frac{\sqrt{2}\,\|A\|_{2}^{2}}{4m}\right\}.$
+
+For the special forms of $f(\cdot)$ and $g(\cdot)$ , we elaborate on how to solve the $\mathbf{x}$ - and $\mathbf{z}$ -subproblems in the ADMM iteration ( 4 ). Specifically, the $\mathbf{x}$ -subproblem in ( 4 ) is equivalent to
+
+$\displaystyle\mathbf{x}^{t+1}\in\operatornamewithlimits{argmin}_{\mathbf{x}}g(\mathbf{x})+\frac{\rho}{2}\|\mathbf{x}-\mathbf{z}^{t}+\mathbf{v}^{t}\|_{2}^{2}.$ (S20)
+
+To obtain the closed-form solution of the $\mathbf{x}$ -subproblem under suitable conditions, we define the proximal operator for LOG by
+
+$\displaystyle\textbf{prox}_{\rm{log}}(y;\mu)\in\arg\min_{x}G_{y}(x)\triangleq\mu P_{\rm{log}}(x)+\frac{1}{2}(x-y)^{2},$ (S21)
+
+where $\mu>0$ . By Ke et al. [2024, Theorem 14] , if $\mu<\frac{3\sqrt{3}}{2}\,\epsilon$ , then the proximal operator of LOG is given by
+
+$\displaystyle\textbf{prox}_{\log}(y;\mu)=\begin{cases}0,&\text{if }|y|\leq\dfrac{\mu}{\sqrt{\epsilon}},\\[8.0pt] \text{sign}(y)\Big(\sqrt{t_{1}}-\big(\sqrt{t_{2}}+\sqrt{t_{3}}\big)\Big)+\dfrac{y}{2},&\text{if }|y|>\dfrac{\mu}{\sqrt{\epsilon}},\end{cases}$ (S22)
+
+where
+
+$\displaystyle t_{1}$ $\displaystyle=\sqrt[3]{-\frac{q}{2}+\sqrt{\frac{q^{2}}{4}+\frac{p^{3}}{27}}}+\sqrt[3]{-\frac{q}{2}-\sqrt{\frac{q^{2}}{4}+\frac{p^{3}}{27}}}-\frac{1}{3}\left(\frac{\epsilon}{2}-\frac{y^{2}}{4}\right),$ $\displaystyle t_{2}$ $\displaystyle=\frac{-1+\sqrt{3}\,i}{2}\,\sqrt[3]{-\frac{q}{2}+\sqrt{\frac{q^{2}}{4}+\frac{p^{3}}{27}}}+\frac{-1-\sqrt{3}\,i}{2}\,\sqrt[3]{-\frac{q}{2}-\sqrt{\frac{q^{2}}{4}+\frac{p^{3}}{27}}}-\frac{1}{3}\left(\frac{\epsilon}{2}-\frac{y^{2}}{4}\right),$ $\displaystyle t_{3}$ $\displaystyle=\frac{-1-\sqrt{3}\,i}{2}\,\sqrt[3]{-\frac{q}{2}+\sqrt{\frac{q^{2}}{4}+\frac{p^{3}}{27}}}+\frac{-1+\sqrt{3}\,i}{2}\,\sqrt[3]{-\frac{q}{2}-\sqrt{\frac{q^{2}}{4}+\frac{p^{3}}{27}}}-\frac{1}{3}\left(\frac{\epsilon}{2}-\frac{y^{2}}{4}\right),$ $\displaystyle p$ $\displaystyle=\left(\frac{\mu^{2}}{4}+\frac{\epsilon^{2}}{16}-\frac{y^{2}\epsilon}{8}\right)-\frac{1}{3}\left(\frac{\epsilon}{2}-\frac{y^{2}}{4}\right)^{2},$ $\displaystyle q$ $\displaystyle=\frac{2}{27}\left(\frac{\epsilon}{2}-\frac{y^{2}}{4}\right)^{3}-\frac{1}{3}\left(\frac{\epsilon}{2}-\frac{y^{2}}{4}\right)\left(\frac{\mu^{2}}{4}+\frac{\epsilon^{2}}{16}-\frac{y^{2}\epsilon}{8}\right)-\frac{y^{2}\epsilon^{2}}{64}.$
+
+Therefore, the $\mathbf{x}$ -subproblem admits a closed-form solution:
+
+$\displaystyle\mathbf{x}^{*}=\textbf{prox}_{\rm{log}}(\mathbf{z}^{t}-\mathbf{v}^{t},\frac{\lambda}{\rho}),$ (S23)
+
+where $\textbf{prox}_{\log}$ is applied elementwise, $\mu=\frac{\lambda}{\rho}$ and $\mathbf{y}=\mathbf{z}^{t}-\mathbf{v}^{t}$ .
+
+The $\mathbf{z}$ -subproblem in ( 4 ) is equivalent to
+
+$\displaystyle\mathbf{z}^{t+1}\in\operatornamewithlimits{argmin}_{\mathbf{z}}f(\mathbf{z})+\frac{\rho}{2}\|\mathbf{x}^{t+1}-\mathbf{z}+\mathbf{v}^{t}\|_{2}^{2}\triangleq H(\mathbf{z}).$ (S24)
+
+Recall that $\mathbf{a}_{i}\in\mathbb{R}^{n}$ is a feature vector and $b_{i}\in\{-1,1\}$ is the corresponding model, where $i=1,2,\cdots,m$ . Let $\mathbf{c}_{i}^{\top}=-b_{i}\mathbf{a}_{i}^{\top}$ , then we can rewrite ( S24 ) as
+
+$\displaystyle\mathbf{z}^{t+1}\in\operatornamewithlimits{argmin}_{\mathbf{z}}\frac{1}{m}\sum_{i=1}^{m}\log\left(1+\exp{(\mathbf{c}_{i}^{\top}\mathbf{z})}\right)+\frac{\rho}{2}\|\mathbf{x}^{t+1}-\mathbf{z}+\mathbf{v}^{t}\|_{2}^{2}.$ (S25)
+
+Thus, Newton’s method can be employed to solve ( S24 ). The gradient of the function $H(\mathbf{z})$ is given by
+
+$\displaystyle\nabla H(\mathbf{z})=\frac{1}{m}\sum_{i=1}^{m}l(\mathbf{c}_{i}^{\top}\mathbf{z})\mathbf{c}_{i}+\rho(\mathbf{z}-\mathbf{x}^{t+1}-\mathbf{v}^{t}),$ (S26)
+
+while the corresponding Hessian matrix is computed as
+
+$\displaystyle\nabla^{2}H(\mathbf{z})=\frac{1}{m}\sum_{i=1}^{m}l(\mathbf{c}_{i}^{\top}\mathbf{z})\left(1-l(\mathbf{c}_{i}^{\top}\mathbf{z})\right)\mathbf{c}_{i}\mathbf{c}_{i}^{\top}+\rho I_{d},$ (S27)
+
+where $l(s)=\frac{1}{1+\exp(-s)}$ denotes the sigmoid function, and $I_{d}$ represents the identity matrix.
+
+Accordingly, the update rule for the variable $\mathbf{z}$ takes the form
+
+$\displaystyle\mathbf{z}_{k+1}=\mathbf{z}_{k}-\tau\left[\nabla^{2}H(\mathbf{z}_{k})\right]^{-1}\nabla H(\mathbf{z}_{k}),$ (S28)
+
+where $\tau>0$ is the step size and $k$ indexes the inner iteration. The iterations of Newton’s method described in ( S28 ) are repeated until convergence is achieved. The final iterate $\mathbf{z}_{k+1}$ is then set as $\mathbf{z}^{t+1}$ . The complete ADMM algorithm used to solve the logistic regression with LOG is summarized in Algorithm S5 .
+
+Algorithm S5 ADMM for minimizing the logistic regression with LOG
+
+C.2 LADMM: Logistic regression with LOG
+
+We now apply the LADMM scheme from Section 2.2 to the logistic regression with LOG regularization ( 45 ). Using the weak convexity modulus of $g$ and the Lipschitz constant of $\nabla f$ derived in Appendix C.1 , a sufficient condition in Theorem 4 becomes
+
+$\rho>\max\left\{\frac{2\lambda}{3\sqrt{3}\,\epsilon},\;1+\frac{\|A\|_{2}^{2}}{4m},\;\frac{\|A\|_{2}^{2}}{4m}\left(1+\frac{\|A\|_{2}^{2}}{2m}\right)\right\}.$
+
+The $\mathbf{x}$ -update is identical to that in Appendix C.1 and is given by ( S23 ). For the $\mathbf{z}$ -update, applying ( 7 ) yields the explicit step
+
+$\displaystyle\mathbf{z}^{t+1}=\mathbf{x}^{t+1}+\mathbf{v}^{t}-\frac{1}{m\rho}\sum_{i=1}^{m}l(\mathbf{c}_{i}^{\top}\mathbf{z}^{t})\mathbf{c}_{i},$ (S29)
+
+where $l(s)=\frac{1}{1+\exp(-s)}$ denotes the sigmoid function, and $\mathbf{c}_{i}^{\top}=-b_{i}\mathbf{a}_{i}^{\top}$ . The LADMM procedure for solving logistic regression with LOG is summarized in Algorithm S6 .
+
+Algorithm S6 LADMM for minimizing the logistic regression with LOG

@@ -1,0 +1,1027 @@
+Content selection saved. Describe the issue below:
+
+Learning Chance-Constrained MDPs with Bellman Distributional Certificates
+
+Safe reinforcement learning (RL) commonly enforces expected-cost constraints, but such expectation safety may fail to control the probability of rare high-cost trajectories. Chance-constrained MDPs (CCMDPs) impose a stronger probability-level requirement, but are widely viewed as harder because the chance constraint is nonconvex and depends on the full trajectory rather than a Bellman-linear expectation. In this paper, we reveal that this computational difficulty does not necessarily imply a higher statistical price. For tabular discounted CCMDPs with fixed bounded successor support and access to a certified planning oracle, we establish a model-based upper bound, with a matching lower bound up to logarithmic terms. Technically, our key idea is the Bellman distributional certificate , which constructs a Bellman recursion for constraint violation probabilities before policy selection. The certificate can be reused across candidate policies; combined with shared row-wise reverse-KL confidence sets, it gives a policy-uniform trajectory-KL transfer without a union bound over policies or time–budget Bellman tables. For stochastic policies, we give a model-free variance-reduced policy-gradient algorithm with a finite-sample expected KKT-residual guarantee and independent validation of every accepted policy. Numerical experiments on synthetic CCMDPs and an IEEE 14-bus energy storage control benchmark illustrate the safety and mechanism behavior of the proposed algorithms.
+
+1 Introduction
+
+Reinforcement learning (RL) is a central framework for online decision-making in uncertain environments [ 42 ] . In safety-critical applications, however, maximizing expected reward is not sufficient: the agent must also satisfy certain safety or reliability requirements, the central concern in safe reinforcement learning [ 24 , 47 , 1 ] . A common formulation for safe reinforcement learning is constrained Markov decision processes (CMDPs), which maximize the cumulative reward subject to constraints on expected cumulative costs [ 19 , 9 , 4 ] . This expectation-form constraint is mathematically convenient and has enabled linear-programming, occupancy-measure, and Bellman-style analyses [ 4 , 23 , 46 ] . However, CMDPs control safety only through expectations. They do not directly control the probability distribution of rare high-cost events such as overloads or failures [ 13 , 10 ] .
+
+Chance-constrained Markov decision processes (CCMDPs) provide a stronger probability-level formulation of safety [ 32 , 36 ] . Instead of constraining only the average cumulative cost, a CCMDP requires the cumulative trajectory cost to remain below a prescribed threshold with high probability [ 12 ] . In the discounted setting, this takes the form
+
+$\mathbb{P}_{\pi}\left(\sum\nolimits_{t=0}^{\infty}\gamma^{t}c(s_{t},a_{t})\leq d\right)\geq 1-\delta.$
+
+Unlike an expected-cost constraint, this requirement directly limits the probability of high-cost trajectories and therefore better captures reliability requirements in applications such as energy systems, transportation, and financial markets [ 17 , 52 , 8 ] . However, this stronger safety object appears much harder to learn. A chance constraint is generally nonconvex and depends on the full trajectory distribution rather than an expectation of additive costs, so it breaks the Bellman-linear and occupancy-measure structure used in CMDP analyses and leads to a generally nonconvex feasible set [ 4 , 46 , 39 ] .
+
+Learning CCMDPs is challenging for two closely related reasons. First, chance constraints restrict the distribution of cumulative trajectory costs rather than their expectations. This breaks the Bellman-linear and occupancy-measure structure that makes CMDPs tractable, and the resulting feasible set is generally nonconvex [ 4 , 46 , 39 ] . Second, without a reusable certificate, one must estimate violation probabilities for each policy separately, leading to inefficient sample reuse [ 49 ] . Addressing these challenges is essential for developing sample-efficient RL algorithms with reliable safety guarantees. See Appendix A for a detailed literature review.
+
+To overcome these challenges, our contributions can be summarized as follows.
+
+Bellman distributional certificates for chance constraints.
+
+We introduce Bellman distributional certificates, which track a remaining safety budget to express the chance-constraint violation probability through a Bellman recursion. This replaces separate policy-level safety checks with reusable one-step Bellman updates for violation probabilities, which is the key to enable sample-efficient constraint feasibility certification across candidate policies. This Bellman-level view is what separates certification from full trajectory simulation and makes the certificate reusable after policy search.
+
+Model-based learning with Bellman certificates.
+
+We develop a model-based algorithm for learning a near-optimal deterministic policy with empirical Bellman distributional certificates in CCMDPs. Under the fixed bounded-successor-support and certified-planning conditions stated below, we prove that the returned policy is chance-feasible and near-optimal with sample complexity $\widetilde{O}(|\mathcal{S}||\mathcal{A}|[(1-\gamma)^{-3}\varepsilon^{-2}+(1-\gamma)^{-1}\rho^{-2}])$ , which significantly improves the best-known deterministic CCMDP learning result [ 49 ] . We also prove a separate deterministic-policy lower bound with the same primary parameter dependences, showing that both displayed terms are unavoidable. The proof uses shared row-wise reverse-KL confidence sets and a trajectory-level KL transfer argument, which control the safety of data-dependent policies without a union bound over policies or time–budget Bellman tables.
+
+Model-free policy-gradient algorithm with trajectory certificates.
+
+We further develop a model-free algorithm for stochastic policy learning using variance-reduced policy gradients and trajectory certificates. Under local regularity assumptions, the optimization phase attains an expected KKT-residual guarantee with $\widetilde{O}(\varepsilon_{\rm kkt}^{-3})$ dependence, and a fresh $\widetilde{O}(\rho^{-2})$ validation stage certifies every accepted policy. To our knowledge, this is the first result for finite sample stochastic policy learning with original chance constraints [ 13 , 12 , 50 , 51 ] .
+
+2 Chance-Constrained Markov Decision Processes
+
+Consider a standard infinite-horizon discounted chance-constrained MDP $\mathcal{M}=\langle\mathcal{S},\mathcal{A},P,r,\gamma,\mathcal{C},\mu\rangle$ . Here $\mathcal{S}$ is a finite state space, $\mathcal{A}$ is a finite action space, $P:\mathcal{S}\times\mathcal{A}\to\Delta(\mathcal{S})$ is the unknown transition kernel, $r:\mathcal{S}\times\mathcal{A}\to[0,1]$ is the reward function, $\gamma\in(0,1)$ is the discount factor, and $\mu$ is the initial distribution of the state. The set $\mathcal{C}=\{(c_{i},d_{i},\delta_{i})\}_{i=1}^{m}$ specifies the following chance constraints:
+
+$\displaystyle\mathbb{P}_{P,\pi,\mu}\!\left(\sum\nolimits_{t=0}^{\infty}\gamma^{t}c_{i}(s_{t},a_{t})\leq d_{i}\right)\geq 1-\delta_{i},\qquad\forall i\in[m].$ (1)
+
+where $c_{i}:\mathcal{S}\times\mathcal{A}\to[0,1]$ is the instantaneous safety cost, $d_{i}$ is the safety budget, and $\delta_{i}$ is the allowed violation probability.
+
+Since the chance constraints depend on the full trajectory, we allow the policy $\pi$ to also depend on trajectory parameters in addition to the current state. Specifically, a policy $\pi:\mathcal{S}\times\Gamma\to\Delta(\mathcal{A})$ maps current state $s$ and trajectory parameters $g\in\Gamma$ to the distribution simplex over actions. Ordinary Markov policies correspond to the special case where $\Gamma$ is a singleton.
+
+For any policy $\pi$ , let $\mathbb{P}_{P,\pi,\mu}$ and $\mathbb{E}_{P,\pi,\mu}$ denote probability and expectation for trajectories generated by $P$ , policy $\pi$ , and initial distribution $\mu$ , including updates of trajectory parameters when present. We define
+
+$q_{P,i}(\pi)=\mathbb{P}_{P,\pi,\mu}\!\left(\sum\nolimits_{t=0}^{\infty}\gamma^{t}c_{i}(s_{t},a_{t})>d_{i}\right),\qquad J_{P}(\pi)=\mathbb{E}_{P,\pi,\mu}\!\left[\sum\nolimits_{t=0}^{\infty}\gamma^{t}r(s_{t},a_{t})\right].$ (2)
+
+For a policy class $\Pi$ , the feasible set and optimal value are
+
+$\Pi^{\star}=\{\pi\in\Pi:q_{P,i}(\pi)\leq\delta_{i},\ i\in[m]\},\qquad V^{\star}_{\rm cc}=\sup\nolimits_{\pi\in\Pi^{\star}}J_{P}(\pi).$ (3)
+
+The feasible set is defined by a threshold probability, not by an expected cumulative cost. This is the main difference from a CMDP and is the source of the nonconvexity we handle below.
+
+3 Bellman Distributional Certificates
+
+In this section, we define Bellman distributional certificates for estimating the upper confidence bound of chance-constraint violation probabilities. The construction first makes the trajectory event finite by truncating the discounted tail and rounding the remaining safety budget, then computes the upper bound through a one-sided pessimistic Bellman recursion. A policy is certified safe when this bound is below the allowed violation level for every constraint.
+
+3.1 Violation-Probability Bellman Table
+
+The certificate should upper bound the probability that a chance constraint is violated. However, a policy-by-policy estimate of this probability is statistically inefficient: samples used to validate one completed policy do not directly certify another policy. We therefore build the following Bellman table whose entries are violation probabilities from a state, a rounded remaining budget, and a time index, which can be reused across different policies.
+
+To make this Bellman table finite, we truncate the discounted cost tail and discretize the remaining safety budget. Specifically, for a tail allowance $\alpha_{\rm tail}$ and grid widths $\eta_{i}>0$ , define
+
+$H_{\alpha}=\left\lceil\frac{\log(1/((1-\gamma)\alpha_{\rm tail}))}{1-\gamma}\right\rceil,\qquad b_{i}^{0}=\left\lfloor\frac{d_{i}-\alpha_{\rm tail}}{\eta_{i}}\right\rfloor,\qquad w_{i,h}(s,a)=\left\lceil\frac{\gamma^{h}c_{i}(s,a)}{\eta_{i}}\right\rceil.$ (4)
+
+Here $H_{\alpha}$ makes the discounted tail after the certificate horizon at most $\alpha_{\rm tail}$ , $b_{i}^{0}$ is the initial integer budget, and $w_{i,h}(s,a)$ is the integer charge of taking action $a$ in state $s$ at time index $h$ . The initial budget is rounded down and each one-step charge is rounded up, so the finite violation event is conservative for the original chance constraint. The finite budget state is $b=(b_{1},\ldots,b_{m})$ , where each coordinate takes integer values $0,\ldots,b_{i}^{0}$ together with the failure value $-1$ ; if $b_{i}^{0}<0$ , the coordinate starts at $-1$ . We write $\mathcal{B}$ for the product of these coordinate sets. The deterministic update used below, denoted $B_{h}(s,a,b)$ , subtracts the charges $w_{i,h}(s,a)$ coordinatewise and sets any exhausted coordinate to $-1$ . Below we write $H=H_{\alpha}$ when the tail allowance is fixed.
+
+With these finite objects in place, we define the Bellman table.
+
+For a fixed certificate horizon $H$ , policy $\pi$ , constraint $i$ , and transition kernel $P$ , define $q^{\pi}_{P,i}(s,b,h)$ as the conditional probability that the $i$ -th rounded budget coordinate becomes negative by the certificate horizon, when the rounded process starts from original state $s$ , rounded remaining-budget vector $b$ , and time index $h$ .
+
+Fix a certificate horizon $H$ , budget grid $\eta$ , and a deterministic policy $\pi$ whose actions are selected as $a_{h}=\pi_{h}(s_{h},b_{h})$ . Then, for each constraint $i$ , the conditional probability of rounded finite-prefix violation after time $h$ , given the trajectory history $\mathcal{F}_{h}$ , depends on $\mathcal{F}_{h}$ only through $(s_{h},b_{h},h)$ . In particular, there exists a function $q^{\pi}_{P,i}$ such that
+
+$\mathbb{P}_{P,\pi}\!\left(\exists t\in\{h,\ldots,H\}:b_{i,t}<0\mid\mathcal{F}_{h}\right)=q^{\pi}_{P,i}(s_{h},b_{h},h).$ (5)
+
+Moreover, $q^{\pi}_{P,i}$ satisfies the Bellman recursion
+
+$q^{\pi}_{P,i}(s,b,h)=\sum\nolimits_{s^{\prime}}P(s^{\prime}\mid s,\pi_{h}(s,b))q^{\pi}_{P,i}(s^{\prime},B_{h}(s,\pi_{h}(s,b),b),h+1),$ (6)
+
+with boundary condition $q^{\pi}_{P,i}(s,b,H)=\mathbb{I}\{b_{i}<0\}$ .
+
+The proof is given in Appendix B . This lemma is the reason the trajectory parameters used below are only the time index and the rounded remaining budget. The environment remains the original MDP with state $s$ ; $b$ and $h$ summarize the information needed to evaluate the finite chance-violation event, while the finite certified solver chooses actions at these triples. For a fixed certificate horizon $H$ and grid $\eta$ , we write $\Pi_{H,\eta}$ for deterministic policies whose actions through the certificate horizon are mappings $\pi_{h}(s,b)$ , with an arbitrary fixed continuation thereafter.
+
+3.2 Pessimistic Bellman Certificates
+
+Lemma 1 gives the exact Bellman recursion for the finite violation probability when the transition kernel is known. In learning, $P$ is unknown, so the certificate maximizes each Bellman backup over a row-wise confidence set. Since the table represents violation probabilities, this robust backup overestimates the true violation probability whenever the true transition row belongs to the confidence set.
+
+Fix a policy $\pi\in\Pi_{H,\eta}$ , an empirical transition kernel $\widehat{P}$ , and row-wise confidence sets $\{\mathcal{C}_{s,a}\}_{s,a}$ . For each constraint $i$ , define the empirical violation table $\overline{q}_{i}^{\pi}(s,b,h)$ backward by $\overline{q}_{i}^{\pi}(s,b,H)=\mathbb{I}\{b_{i}<0\},$ and for $h=H-1,\ldots,0$ by
+
+$\overline{q}_{i}^{\pi}(s,b,h)=\sup_{p\in\mathcal{C}_{s,a}}p^{\top}\overline{q}_{i}^{\pi}(\cdot,B_{h}(s,a,b),h+1),\qquad a=\pi_{h}(s,b),$ (7)
+
+The pessimistic Bellman distributional certificate of $\pi$ is $\overline{q}_{i,H,\eta}(\pi)=\sum\nolimits_{s}\mu(s)\overline{q}_{i}^{\pi}(s,b^{0},0)$ for all $i\in[m].$
+
+The certificate connects the finite Bellman table back to the original infinite-horizon chance constraint. If the empirical upper bound is below the allowed violation probability, then the true rounded violation probability is also below that level.
+
+With high probability over the shared row samples, simultaneously for every $\pi\in\Pi_{H,\eta}$ , $\overline{q}_{i,H,\eta}(\pi)\leq\delta_{i}$ for every $i\in[m]$ implies that $\pi$ is feasible for the original infinite-horizon chance-constrained MDP.
+
+Why the certificate is reusable.
+
+The key statistical point is that one confidence set is constructed for each original transition row and reused at every time and budget state. On the simultaneous row-coverage event, the robust recursion is valid for every policy, including a policy selected after observing the empirical model. Thus the statistical analysis needs neither fresh samples for different Bellman continuations nor a union bound over complete policies.
+
+4 Model-Based Learning with Bellman Certificates
+
+This section develops a model-based learning algorithm built on Bellman distributional certificates. We first describe the learning procedure and then present its finite-sample guarantee together with a separate statistical lower bound.
+
+4.1 Empirical Bellman-Certified Learning
+
+Bellman-certified model-based learning has three steps: environment model estimation, policy-wise Bellman value and certificate computation, and optimization over certified policies.
+
+Model estimation.
+
+We assume access to a standard generative model. At each original state-action pair $(s,a)$ , the learner draws $n$ independent next-state samples from $P(\cdot\mid s,a)$ and forms one empirical row $\widehat{P}_{s,a}$ . The same empirical kernel is reused across all time indices, budget states, constraints, and reward comparisons. The row reward $r(s,a)$ and the costs are known bounded functions. With the known support bound $d_{0}$ from Assumption 1 , define
+
+$\kappa_{n}:=\frac{(d_{0}-1)\log(n+1)+\log(|\mathcal{S}||\mathcal{A}|/\zeta)}{n},\qquad\mathcal{C}_{s,a}:=\{p\in\Delta(\mathcal{S}):\mathrm{KL}(\widehat{P}_{s,a}\|p)\leq\kappa_{n}\}.$ (8)
+
+The empirical-to-candidate direction of the KL divergence keeps the set well defined even when a possible successor is not observed.
+
+Bellman objects computation.
+
+Given a deterministic policy $\pi$ , the KL sets in ( 8 ) are plugged into the robust recursion from Section 3 , producing the certificate values $\{\overline{q}_{i,H_{\alpha},\eta}(\pi)\}_{i\in[m]}$ . The policy passes the empirical safety test only if $\overline{q}_{i,H_{\alpha},\eta}(\pi)\leq\delta_{i}$ for all constraints.
+
+The shared empirical kernel is also used to rank certified policies. Set $\widehat{V}_{H}^{\pi}(s,H,b)=0$ and, for $h=H-1,\ldots,0$ , compute
+
+$\widehat{V}_{H}^{\pi}(s,h,b)=r(s,\pi_{h}(s,b))+\gamma\,{\widehat{P}}(\cdot\mid s,\pi_{h}(s,b))^{\top}\widehat{V}_{H}^{\pi}(\cdot,h+1,B_{h}(s,\pi_{h}(s,b),b)),$ (9)
+
+and define $\widehat{J}(\pi)=\sum\nolimits_{s}\mu(s)\widehat{V}_{H}^{\pi}(s,0,b^{0})$ . Thus the robust Bellman distributional certificate checks feasibility, while ordinary empirical Bellman evaluation ranks the feasible candidates.
+
+Finite certified problem.
+
+Bellman-certified model-based learning then optimizes over a finite policy class $\Pi_{\mathcal{O}}$ , the class handled by the finite certified solver. It returns the policy with the largest empirical Bellman value among policies whose Bellman distributional certificates pass the chance constraints:
+
+$\max\nolimits_{\pi\in\Pi_{\mathcal{O}}}\widehat{J}(\pi)\qquad\text{s.t.}\quad\overline{q}_{i,H_{\alpha},\eta}(\pi)\leq\delta_{i},\quad i\in[m].$ (10)
+
+Thus reward and safety enter the finite problem asymmetrically: $\widehat{J}$ ranks certified policies, while $\overline{q}_{i,H_{\alpha},\eta}$ is the Bellman distributional certificate used for feasibility.
+
+For $\xi\geq 0$ , whenever the certified feasible set is nonempty, a finite certified solver returns a policy $\widehat{\pi}\in\Pi_{\mathcal{O}}$ and its Bellman reward and safety tables such that $\overline{q}_{i,H_{\alpha},\eta}(\widehat{\pi})\leq\delta_{i}$ for all $i\in[m]$ and
+
+$\widehat{J}(\widehat{\pi})\geq\max\nolimits_{\pi\in\Pi_{\mathcal{O}}:\ \overline{q}_{i,H_{\alpha},\eta}(\pi)\leq\delta_{i},\ i\in[m]}\widehat{J}(\pi)-\xi.$ (11)
+
+When $\xi=0$ , the solver is exact.
+
+There is a known integer $d_{0}\geq 2$ , independent of $|\mathcal{S}|$ , $|\mathcal{A}|$ , $\gamma$ , $\varepsilon$ , and $\rho$ , such that
+
+$|\operatorname{supp}P(\cdot\mid s,a)|\leq d_{0},\qquad(s,a)\in\mathcal{S}\times\mathcal{A}.$ (12)
+
+The finite policy class $\Pi_{\mathcal{O}}\subseteq\Pi_{H,\eta}$ is fixed before sampling. Whenever the tightened problem is feasible, the certified planner returns an $\xi$ -optimal policy in the sense of Definition 3 .
+
+The bounded-support condition restricts only the number of possible successors; their identities and probabilities remain unknown. The planning requirement is an oracle condition: it controls statistical accuracy but does not assert that the constrained deterministic optimization is polynomial-time solvable. Algorithm 1 summarizes the procedure.
+
+Algorithm 1 Bellman-certified model-based learning
+
+4.2 Sample Complexity Guarantees
+
+Now we present the sample complexity guarantees for the proposed algorithm. As is standard in finite-sample constrained RL, we state the guarantee relative to a comparator with a safety margin. Set $\bar{\eta}_{\varepsilon}:=\min\{\varepsilon/8,(1-\gamma)/128\}$ , use $\alpha_{\rm tail}=\eta_{i}=\bar{\eta}_{\varepsilon}$ in the rounded certificate, and let $q^{\rm rnd}_{P,i}(\pi)$ denote the resulting true rounded violation probability. For $\rho>0$ , define the rounded $\rho$ -interior optimal value
+
+$V_{\rho}^{\star}=\max\nolimits_{\pi\in\Pi_{\mathcal{O}}}\{J_{P}(\pi):q^{\rm rnd}_{P,i}(\pi)\leq\delta_{i}-\rho,\ i\in[m]\},$ (13)
+
+and assume this set is nonempty. Let $\pi_{\rho}^{\star}$ be a maximizer. The margin is used only for statistical certification; conservative rounding separately guarantees safety for the original chance constraint. Such interior comparators are standard in finite-sample constrained RL [ 46 , 11 ] . We provide the upper and lower bounds below, with proofs in Appendix E and Appendix F .
+
+There are universal constants $C,c>0$ such that the following holds. Fix $\zeta\in(0,1)$ , $\rho\in(0,1]$ , $\varepsilon\in(0,1)$ , and $\xi\geq 0$ , and assume the set defining $V_{\rho}^{\star}$ is nonempty. Suppose Algorithm 1 uses a solver satisfying Assumption 1 , with fixed support bound $d_{0}$ . Run it with $\alpha_{\rm tail}=\eta_{i}=\bar{\eta}_{\varepsilon}$ for every constraint and $n=\lfloor D/(|\mathcal{S}||\mathcal{A}|)\rfloor$ samples per row. If the total generative-model transition-sample budget $D$ satisfies
+
+$D\geq Cd_{0}|\mathcal{S}||\mathcal{A}|\left(\frac{1}{(1-\gamma)^{3}\varepsilon^{2}}+\frac{1}{(1-\gamma)\rho^{2}}\right)\log^{c}\!\left(\frac{8d_{0}|\mathcal{S}||\mathcal{A}|}{\zeta\varepsilon\rho(1-\gamma)}\right).$ (14)
+
+Then with probability at least $1-\zeta$ , Algorithm 1 returns a policy $\widehat{\pi}$ satisfying $q_{P,i}(\widehat{\pi})\leq\delta_{i}$ for every $i\in[m]$ and $J_{P}(\widehat{\pi})\geq V_{\rho}^{\star}-\varepsilon-\xi$ .
+
+There are universal constants $c,c_{0}>0$ such that the following holds for every fixed $d_{0}\geq 2$ , $\gamma\in[1/2,1)$ , $\varepsilon\in(0,c_{0}/(1-\gamma))$ , $\rho\in(0,c_{0})$ , $|\mathcal{S}|\geq 4$ , and $|\mathcal{A}|\geq 2$ . Use $\alpha_{\rm tail}=\eta=\bar{\eta}_{\varepsilon}$ and take $\Pi_{\mathcal{O}}=\Pi_{H,\eta}$ in ( 13 ). Let $\Pi_{\mathrm{det}}$ be the full deterministic policy class represented by the trajectory parameters in Section 2 . Any generative-model learner that, on every one-constraint CCMDP satisfying $|\operatorname{supp}P(\cdot\mid s,a)|\leq d_{0}$ and having a nonempty rounded $\rho$ -interior feasible set, returns with probability at least $2/3$ a policy $\widehat{\pi}\in\Pi_{\mathrm{det}}$ satisfying jointly $q_{P}(\widehat{\pi})\leq\delta$ and $J_{P}(\widehat{\pi})\geq V^{\star}_{\rho}-\varepsilon$ must, in the worst case, use a total number $D$ of transition samples satisfying
+
+$D\geq c|\mathcal{S}||\mathcal{A}|\left(\frac{1}{(1-\gamma)^{3}\varepsilon^{2}}+{\frac{1}{(1-\gamma)\rho^{2}}}\right).$ (15)
+
+Now we discuss further implications of our results.
+
+Sample complexity and comparison to prior CCMDP learning.
+
+Theorem 1 gives a post-selection safe policy with sample complexity
+
+$D=\widetilde{O}\!\left(d_{0}|\mathcal{S}||\mathcal{A}|\left[\frac{1}{(1-\gamma)^{3}\varepsilon^{2}}+{\frac{1}{(1-\gamma)\rho^{2}}}\right]\right),$
+
+for state space size $|\mathcal{S}|$ , action space size $|\mathcal{A}|$ , fixed successor bound $d_{0}$ , effective horizon $(1-\gamma)^{-1}$ , accuracy $\epsilon$ and constraint margin $\rho$ . The $\varepsilon^{-2}$ term is the usual value-estimation cost, while the $\rho^{-2}$ term is the cost of certifying exact chance safety near the constraint boundary. Compared with the deterministic CCMDP bound reported by [ 49 ] , the rate improves the displayed state and horizon dependences. For fixed $d_{0}$ , Theorem 2 shows that the reward term $|\mathcal{S}||\mathcal{A}|(1-\gamma)^{-3}\varepsilon^{-2}$ and the chance-boundary term $|\mathcal{S}||\mathcal{A}|(1-\gamma)^{-1}\rho^{-2}$ are both unavoidable. The upper bound and lower bound therefore have the same primary parameter dependences up to logarithmic factors. The sharp upper dependence comes from reusing one KL-controlled empirical model across all Bellman backups rather than accumulating local confidence buffers.
+
+Comparison with MDPs and CMDPs.
+
+For deterministic-policy learning, the lower bound separates two sources of statistical hardness. The reward-learning term $|\mathcal{S}||\mathcal{A}|(1-\gamma)^{-3}\varepsilon^{-2}$ matches the standard dependence for discounted MDPs and relaxed-feasibility CMDPs [ 6 , 2 , 46 ] . The chance constraint certification learning cost $|\mathcal{S}||\mathcal{A}|(1-\gamma)^{-1}\rho^{-2}$ has the same term-wise dependence as the corresponding upper-bound term. Strict-feasibility CMDP bounds use a different notion of feasibility margin and are therefore not directly comparable term by term.
+
+5 Model-Free Stochastic Policy Learning
+
+We further study the model-free stochastic policy learning without estimating the transition kernel. The goal is to optimize the same chance-violation probability directly from sampled trajectories. This section presents a variance-reduced policy-gradient algorithm and gives a finite-sample guarantee together with independent safety certification.
+
+5.1 Trajectory Violation-Probability Policy Gradient
+
+Compared with standard policy gradient for unconstrained MDPs, the chance-constrained setting requires three additional designs. First, the rollout must keep enough trajectory information to evaluate the chance event. Fix the certificate length $H$ and budget grid from Section 3 . During each rollout, the algorithm maintains the rounded remaining budget $b_{t}$ and the clipped time index $\bar{h}_{t}=\min\{t,H\}$ , and uses the stochastic policy class $\Pi_{\Theta}=\{\pi_{\theta}(a\mid s,\bar{h},b):\theta\in\Theta\subset\mathbb{R}^{p}\}$ , where $\Theta$ is an open parameter domain and $(\bar{h},b)$ are trajectory parameters rather than environment states.
+
+Second, the constraint optimized by the algorithm is the violation probability itself $q^{H}_{P,i}(\theta)=\mathbb{P}_{P,\pi_{\theta},\mu}\!\left(b_{i,H}<0\right).$ This is the trajectory-sampling analogue of the finite event used by the Bellman distributional certificate, and conservative rounding connects it back to the original infinite-horizon chance constraint with feasibility.
+
+Third, the optimization step must handle probability constraints estimated from trajectories. We design a variance-reduced policy-gradient method [ 50 , 51 ] for the finite CCMDP objective: reward gradients are estimated with the standard discounted policy-gradient oracle, while chance-violation gradients are estimated from length- $H$ violation indicators and likelihood-ratio scores. The update solves a tightened constrained problem so that optimization error and statistical safety error are separated. The final candidate is then tested on an independent validation batch: every accepted candidate is certified, while an inconclusive test returns unresolved . This gives a model-free counterpart to the Bellman certificate: optimization uses trajectory samples, while safety is still checked on the original violation event. Algorithm 2 gives the routine, and Appendix H proves the oracle identities and convergence guarantee.
+
+Algorithm 2 Model-free trajectory-sampling violation-probability policy gradient
+
+5.2 Sample Complexity Guarantees
+
+We now state the finite-sample guarantee for the proposed model-free algorithm. The optimization guarantee relies on conditions stated below with more details in Assumption 3 .
+
+We assume the local smoothness, bounded-score, bounded-variance, compact-interior-iterate, feasible-initialization, and bounded-multiplier conditions used by the trajectory oracles and variance-reduced updates [ 50 , 51 , 29 ] . The complete proof-level optimization conditions are stated in Assumption 3 . In particular, that assumption includes the additional residual-domination condition ( 35 ).
+
+Let $\bar{J}_{P}(\theta):=(1-\gamma)J_{P}(\pi_{\theta})$ , $f_{H}(\theta)=-\bar{J}_{P}(\theta)$ and $g_{i}^{H}(\theta)=q^{H}_{P,i}(\theta)+2\rho-\delta_{i}$ . The $2\rho$ tightening separates optimization error from the independent validation error used for final safety certification. For the finite tightened problem, we measure local constrained optimality by
+
+$\mathcal{R}_{H}(\theta)=\min_{\lambda\in[0,\Lambda]^{m}}\left\{\left\|\nabla f_{H}(\theta)+\sum\nolimits_{i}\lambda_{i}\nabla g_{i}^{H}(\theta)\right\|_{2}+\|[g^{H}(\theta)]_{+}\|_{1}+\sum\nolimits_{i}|\lambda_{i}g_{i}^{H}(\theta)|\right\},$ (16)
+
+where $\Lambda$ is the local multiplier bound from Assumption 2 .
+
+There is a universal constant $C_{\rm pg}>0$ such that the following holds. Fix $\alpha_{\rm tail}\in(0,(1-\gamma)^{-1})$ , grid widths $\eta_{i}>0$ , margin $\rho\in(0,1]$ , KKT accuracy $\varepsilon_{\rm kkt}\in(0,1)$ , and confidence $\zeta\in(0,1)$ . Run Algorithm 2 with $H=\left\lceil\log(1/((1-\gamma)\alpha_{\rm tail}))/(1-\gamma)\right\rceil$ , and use $M_{\rm val}=\left\lceil 2\log(2m/\zeta)/\rho^{2}\right\rceil$ fresh validation trajectories per constraint. Let $K_{\rm opt}$ denote the resulting problem-dependent local optimization constant. Under Assumptions 2 and 3 , it suffices that the expected total number $D:=\mathbb{E}[N_{\rm trans}]$ of environment transitions for optimization and validation satisfies
+
+$\displaystyle D\geq$ $\displaystyle\frac{C_{\rm pg}K_{\rm opt}G^{2}m}{\varepsilon_{\rm kkt}^{3}(1-\gamma)^{3}}\log^{3}\left(\frac{2}{(1-\gamma)\alpha_{\rm tail}}\right)\log^{4}\left(\frac{8K_{\rm opt}G^{2}m}{\varepsilon_{\rm kkt}\rho\zeta(1-\gamma)^{3}\alpha_{\rm tail}}\right)$ (17) $\displaystyle+\frac{C_{\rm pg}m}{\rho^{2}(1-\gamma)}\log\left(\frac{2}{(1-\gamma)\alpha_{\rm tail}}\right)\log\left(\frac{2m}{\zeta}\right).$
+
+Then the optimization phase returns a candidate satisfying $\mathbb{E}[\mathcal{R}_{H}(\theta_{\rm cand})]\leq\varepsilon_{\rm kkt}$ . Moreover, with probability at least $1-\zeta$ over the independent validation trajectories, Algorithm 2 either returns validation unresolved or accepts a policy feasible for the original infinite-horizon CCMDP. On the same event, if the returned candidate satisfies $q^{H}_{P,i}(\theta_{\rm cand})\leq\delta_{i}-\rho$ for all $i$ , then it is accepted.
+
+Discussion.
+
+Theorem 3 provides a finite-sample expected-KKT guarantee for the finite rounded chance problem together with an independent safety guarantee for every accepted stochastic policy. The optimization term has the explicit rollout factor $(1-\gamma)^{-3}$ , while $K_{\rm opt}$ collects the local problem-dependent constants described in Appendix H . The validation term has Bernoulli mean-estimation dependence $\widetilde{O}(m/((1-\gamma)\rho^{2}))$ . The guarantee is local, and validation may return unresolved .
+
+6 Numerical Studies
+
+We evaluate the Bellman-certification mechanism on an IEEE 14-bus energy storage control benchmark [ 45 ] . The experiment is a finite-state CCMDP constructed from a DC power-flow simulator. The state records storage state of charge, time block, and load regime; actions charge, discharge, or idle a storage device placed at bus 14. Rewards measure normalized operating benefit, while the safety cost measures normalized transmission-line overload severity. The chance constraint limits the probability that the discounted cumulative overload severity exceeds a prescribed threshold. Appendix I.2 gives the complete experimental specification.
+
+We compare a practical Bellman-buffered CCMDP selector with a Markov-CMDP expected-cost surrogate over the same structured policy class. The latter replaces the original chance constraint $q_{P}(\pi):=\mathbb{P}_{P,\pi,\mu}\!\left(C_{\pi}>d\right)\leq\delta,\ C_{\pi}:=\sum_{t=0}^{\infty}\gamma^{t}c(s_{t},a_{t})$ , by the sufficient condition $\mathbb{E}_{P,\pi,\mu}[C_{\pi}]\leq\delta d$ obtained from Markov’s inequality. We also report the true-model chance-constrained optimum over the same policy class as an oracle reference. The practical Bellman buffer used in this numerical study has the same leading $N^{-1/2}$ dependence as the theoretical concentration radius but uses a calibrated constant; its precise form is reported in Appendix I.2 . Thus, the experiment illustrates the Bellman-certification mechanism of Theorem 1 . All learned policies are selected using sampled transition models and are evaluated only afterward under the true finite simulator.
+
+Figure 1 summarizes the resulting safety–performance geometry. Panel B shows the reward–violation landscape of the structured policy class. As the number $N$ of transition samples per row increases, the average performance of the Bellman-selected policies moves toward the chance-constrained oracle. Panel C makes this behavior explicit through the optimality gap
+
+$J^{\star}_{\mathrm{chance}}-J(\widehat{\pi}_{N}).$
+
+The Bellman selector is conservative when data are scarce, but this statistical conservatism decreases with additional transition samples. In contrast, the Markov-CMDP expected-cost surrogate retains a nonzero gap even under the true transition model. Panel D explains this persistent gap: many policies satisfy the original chance constraint $q_{P}(\pi)\leq\delta$ while violating the stronger sufficient condition $\mathbb{E}[C_{\pi}]\leq\delta d$ . Hence the two methods exhibit qualitatively different forms of conservatism: finite-sample statistical conservatism for the Bellman selector and structural conservatism for the expected-cost surrogate.
+
+Figure 1: A: IEEE 14-bus DC network with the battery energy-storage system located at bus 14. B: Reward–violation landscape over the structured policy class. The labeled CCMDP points show the mean performance of the practical Bellman-buffered selector over repeated empirical-model trials as the number $N$ of transition samples per row increases; the star denotes the chance-constrained oracle, and the square denotes the Markov-CMDP expected-cost surrogate. C: Optimality gap $J^{\star}_{\mathrm{chance}}-J(\widehat{\pi}_{N})$ versus $N$ . The shaded band denotes the mean plus or minus $1.96$ standard errors across $60$ independent empirical-model trials, while the dashed Markov-CMDP line is the true-model expected-cost-surrogate benchmark. D: Violation probability versus expected discounted safety cost over the same policy class. The Markov condition $\mathbb{E}[C_{\pi}]\leq\delta d$ is sufficient for $q_{P}(\pi)\leq\delta$ but excludes many policies that are feasible for the original chance constraint, explaining its persistent performance gap. Violation probabilities in Panels B and D are estimated by Monte Carlo simulation under the true transition kernel.
+
+7 Conclusion
+
+We introduced Bellman distributional certificates for learning infinite-horizon CCMDPs. The certificate turns chance safety into local violation-probability Bellman updates. We also proved a lower bound separating the reward-learning term from the chance-boundary certification term. Under the fixed bounded-successor-support and certified-planning conditions in Assumption 1 , the model-based upper bound achieves exact safety and matches these primary dependences up to logarithmic factors. We developed a trajectory-based stochastic policy-gradient route and evaluated the resulting safety interface on both a synthetic CCMDP and an IEEE 14-bus energy-storage control benchmark.
+
+Limitations and Future Directions.
+
+The model-based guarantee is limited to deterministic policies, assumes a fixed bound on the number of successors of every state–action pair, and relies on the certified planning oracle in Assumption 1 . The model-free guarantee applies to stochastic policies, but provides only an approximate KKT-residual guarantee and may return unresolved after validation. Extending the model-based analysis to broader policy classes, transition structures, and concrete solvers, and obtaining global model-free guarantees, are left for future work.
+
+References
+
+Roadmap for the appendix
+
+The Appendix is organized as follows:
+
+Appendix A provides additional related work on CMDPs, CCMDPs, risk-sensitive RL, distributional RL, and post-selection certification.
+
+Appendix B proves the Markov sufficiency of the rounded remaining-budget state and the Bellman recursion for finite-prefix violation probabilities.
+
+Appendix C proves the conservative rounding lemma that connects the finite rounded violation event to the original infinite-horizon chance constraint.
+
+Appendix D establishes simultaneous KL row coverage and proves the certified-safety proposition.
+
+Appendix E proves the sample-complexity upper bound for Bellman-certified model-based learning.
+
+Appendix F proves the model-based CCMDP lower bound.
+
+Appendix G illustrates the computational hardness of exact deterministic planning for CCMDPs, showing that exact reward maximization over deterministic policies under a discounted chance constraint is $\mathsf{NP}$ -hard.
+
+Appendix H presents the model-free trajectory-certificate analysis, including the policy-gradient oracle identities and the proof of the model-free sample-complexity guarantee.
+
+Appendix I provides concise experimental settings for the synthetic diagnostics and the IEEE 14-bus storage-control experiment.
+
+Appendix A Related Work
+
+Our work contributes to a few key literatures within the safe RL and theoretical RL community. We discuss each in turn below.
+
+Safe RL and Constrained MDPs.
+
+Safe reinforcement learning studies sequential decision-making problems in which the learner must optimize reward while satisfying safety requirements [ 24 , 47 ] . A large part of this literature builds on constrained Markov decision processes, where safety is modeled through constraints on expected cumulative costs [ 19 , 9 , 4 ] . This formulation has enabled linear-programming and dynamic-programming characterizations in known models, as well as Lagrangian, primal-dual, policy-gradient, and Lyapunov-based methods for learning and policy optimization [ 4 , 1 , 14 , 33 , 44 , 21 ] . It has also supported finite-sample analyses for CMDP learning under exploration, generative-model, or primal-dual settings [ 22 , 46 , 20 , 11 ] . However, expected-cost constraints do not directly certify trajectory-level reliability. A policy may have small expected cost while still assigning non-negligible probability to unsafe trajectories, which motivates risk-sensitive, percentile, and chance-constrained formulations [ 26 , 10 , 13 ] . In contrast, our work focuses on chance constraints, where the safety requirement is imposed on the probability of violating a cumulative-cost threshold. This distinction changes both the algorithmic and statistical nature of the problem: the learner must control a tail-probability event rather than a first moment.
+
+Chance-Constrained MDPs.
+
+Chance-constrained MDPs provide a direct way to model trajectory-level safety by requiring the probability of cumulative cost violation to stay below a prescribed threshold [ 13 , 32 , 12 , 39 ] , which are widely adopted in various practical scenarios [ 17 , 52 , 8 ] . This formulation is substantially harder than expected-cost CMDPs: the constraint depends on the distribution of the cumulative cost around a threshold, the feasible set is generally nonconvex, and small model errors can change feasibility by moving probability mass across the threshold [ 26 , 10 , 18 , 13 , 39 , 49 ] . Known-model approaches address these difficulties through budget augmentation, dynamic programming over cost distributions, or search-based planning in fully or partially observable models [ 32 , 37 , 5 ] . Learning and control approaches often use chance-constraint approximations, model-predictive control, actor-critic or Lagrangian updates, probabilistic-constraint gradients, or risk/percentile surrogates such as CVaR [ 31 , 36 , 35 , 34 , 25 , 15 , 43 , 13 , 12 ] . These methods are useful computationally or empirically, but they typically do not give finite-sample guarantees for the original chance event after a policy has been selected from data. The closest deterministic CCMDP learning result estimates policy-level violation probabilities for stationary deterministic policies [ 49 ] . Our work keeps the chance constraint itself as the certified object. On the model-based side, we use Bellman distributional certificates to certify the policy returned by a finite planner; on the model-free side, we optimize and validate the rounded violation probability directly from trajectories.
+
+Finite-Sample Analysis for Model-Based Algorithms.
+
+Our model-based algorithm follows the standard model-based RL approach, where the learner estimates the transition model from a generative model and then plans in the empirical model. Model-based methods for discounted MDPs have been extensively studied [ 27 , 6 , 41 , 2 , 28 ] , achieving the minimax-optimal sample complexity $\widetilde{O}(|\mathcal{S}||\mathcal{A}|\varepsilon^{-2}(1-\gamma)^{-3})$ in the generative-model setting. Finite-sample guarantees have also been developed for CMDPs with expected cumulative cost constraints [ 22 , 20 , 46 , 11 ] ; in this setting, the leading sample complexity has the same $|\mathcal{S}||\mathcal{A}|\varepsilon^{-2}(1-\gamma)^{-3}$ dependence, while exact constraint satisfaction typically requires a strict-feasibility margin. Chance-constrained MDPs are harder because feasibility is determined by a tail-probability event rather than an expected cumulative cost. The closest deterministic CCMDP learning result estimates policy-level violation probabilities after model learning with sample complexity $\widetilde{\mathcal{O}}(|\mathcal{S}|^{2}|\mathcal{A}|(1-\gamma)^{-4}(\varepsilon^{-2}+\rho^{-2}))$ when translated to our notation [ 49 ] . In contrast, under fixed bounded successor support and access to a certified planning oracle, our upper bound has primary dependence $\widetilde{O}(|\mathcal{S}||\mathcal{A}|[(1-\gamma)^{-3}\varepsilon^{-2}+(1-\gamma)^{-1}\rho^{-2}])$ . The separate deterministic-policy lower bound has the same primary parameter dependences over the same bounded-successor problem class and uses the same rounded interior comparator.
+
+Finite-Sample Analysis for Model-Free Algorithms.
+
+Our model-free algorithm follows the policy-optimization view of RL, where the learner directly updates a policy from sampled trajectories without estimating the transition model [ 42 ] . Model-free methods for safe RL and CMDPs have been widely studied through Lagrangian, primal-dual, natural policy-gradient, reward-constrained, Lyapunov-based, and backward-value-function approaches [ 1 , 44 , 14 , 48 , 38 , 21 , 20 ] . These works provide important algorithmic and finite-sample guarantees for expected-cost constraints, but they do not directly control the probability of a trajectory-level violation event. A parallel line of work studies risk-sensitive or chance-constrained policy learning through CVaR objectives, chance-constraint approximations, model-predictive control, actor-critic updates, or probabilistic-constraint gradients [ 10 , 43 , 15 , 36 , 35 , 25 , 34 , 12 ] . These methods move closer to event-level safety, but their guarantees typically concern surrogate risks, approximations, asymptotic convergence, or local stationarity rather than finite-sample certification of the original chance constraint after learning. To our knowledge, our result is the first to combine an explicit finite-sample approximate-KKT bound for the direct rounded chance objective with an independent post-learning certificate for the original chance event. Technically, our algorithm combines a trajectory-level violation-probability gradient estimator with stochastic augmented-Lagrangian and variance-reduced policy-gradient ideas [ 40 , 50 , 51 , 29 ] , and then certifies the final data-dependent policy using an independent validation batch.
+
+Distributional RL and Post-Selection Certification.
+
+Distributional RL learns the distribution of cumulative return and is often used to improve value estimation or optimize risk-sensitive criteria [ 7 , 16 , 30 ] . Our use of “distributional” is different: we do not learn the full return distribution or replace the chance constraint with a surrogate risk measure. Instead, the certificate upper bounds the violation probability of the original threshold event. The main statistical issue is post-selection: the final policy is chosen after inspecting data, so fixed-policy validation is not sufficient. Our model-based algorithm addresses this by certifying Bellman violation-probability entries before policy selection, while our model-free algorithm uses an independent validation batch for the final learned policy.
+
+Appendix B Proof of Lemma 1
+
+Fix a constraint $i$ . Let $\mathcal{F}_{h}$ be the history up to time $h$ , including $s_{h}$ and $b_{h}$ . Define the future failure event
+
+$E_{i,h}=\left\{\exists t\in\{h,\ldots,H\}:b_{i,t}<0\right\}.$
+
+We show by backward induction that its conditional probability depends only on $(s_{h},b_{h},h)$ .
+
+At $h=H$ , no transition remains. Thus
+
+$\mathbb{P}_{P,\pi}(E_{i,H}\mid\mathcal{F}_{H})=\mathbb{I}\{b_{i,H}<0\}.$
+
+This is the terminal value of $q^{\pi}_{P,i}$ . Now let $h<H$ and assume the result holds at time $h+1$ . Given $\mathcal{F}_{h}$ , the action is $a_{h}=\pi_{h}(s_{h},b_{h})$ . The next state follows $P$ , and the next budget is
+
+$b_{h+1}=B_{h}(s_{h},a_{h},b_{h}).$
+
+The event from time $h$ is the event from time $h+1$ after this update. The induction hypothesis and the tower property give
+
+$\displaystyle\mathbb{P}_{P,\pi}(E_{i,h}\mid\mathcal{F}_{h})$ $\displaystyle=\sum\nolimits_{s^{\prime}}P(s^{\prime}\mid s_{h},a_{h})\,q^{\pi}_{P,i}(s^{\prime},B_{h}(s_{h},a_{h},b_{h}),h+1)=q^{\pi}_{P,i}(s_{h},b_{h},h),$
+
+where the last equality is the Bellman recursion. The last expression uses the history only through $(s_{h},b_{h},h)$ . This proves the induction step and the lemma. ∎
+
+Appendix C Conservative Rounding
+
+For every policy $\pi\in\Pi_{H,\eta}$ and constraint $i\in[m]$ , the original infinite-horizon violation probability is bounded by the rounded finite-prefix violation probability:
+
+$q_{P,i}(\pi)\leq q^{\rm rnd}_{P,i}(\pi).$ (18)
+
+Set $H=H_{\alpha}$ . Fix a trajectory and a constraint $i$ . Suppose the rounded test does not fail by time $H$ . Then
+
+$\sum\nolimits_{h=0}^{H-1}w_{i,h}(s_{h},a_{h})\leq b_{i}^{0}.$
+
+Each rounded charge is an upper bound, and $b_{i}^{0}$ is rounded down. Hence
+
+$\sum\nolimits_{h=0}^{H-1}\gamma^{h}c_{i}(s_{h},a_{h})\leq\eta_{i}\sum\nolimits_{h=0}^{H-1}w_{i,h}(s_{h},a_{h})\leq\eta_{i}b_{i}^{0}\leq d_{i}-\alpha_{\rm tail}.$
+
+The cost after time $H$ is at most
+
+$\sum\nolimits_{h=H}^{\infty}\gamma^{h}c_{i}(s_{h},a_{h})\leq\sum\nolimits_{h=H}^{\infty}\gamma^{h}=\frac{\gamma^{H}}{1-\gamma}\leq\alpha_{\rm tail}.$
+
+The two bounds give $\sum_{h=0}^{\infty}\gamma^{h}c_{i}(s_{h},a_{h})\leq d_{i}$ . Thus, if the original constraint fails, the rounded test must also fail. Taking probabilities gives $q_{P,i}(\pi)\leq q^{\rm rnd}_{P,i}(\pi)$ . ∎
+
+Appendix D Proof of Proposition 1
+
+We first show that every true transition row belongs to its KL confidence set and then apply Bellman monotonicity.
+
+Under Assumption 1 , the confidence sets in ( 8 ) satisfy
+
+$\mathbb{P}\!\left(P(\cdot\mid s,a)\in\mathcal{C}_{s,a}\text{ for every }(s,a)\right)\geq 1-\zeta.$ (19)
+
+For one row whose true support has size at most $d_{0}$ , the method-of-types bound gives $\mathbb{P}(\mathrm{KL}(\widehat{P}_{s,a}\|P_{s,a})>x)\leq(n+1)^{d_{0}-1}e^{-nx}$ ; see, e.g., Agrawal [3] . Substituting $x=\kappa_{n}$ and taking a union bound over the $|\mathcal{S}||\mathcal{A}|$ original rows proves the lemma. Notice that the unknown identities of the successors introduce no additional factor because every empirical type is supported on the true row support.
+
+Fix any realized dataset in the event of Lemma 3 , any policy $\pi\in\Pi_{H,\eta}$ , and any constraint $i$ . We show that the robust Bellman table dominates the true rounded table.
+
+We use backward induction. At $h=H$ , both tables equal $\mathbb{I}\{b_{i}<0\}$ . Suppose the bound holds at $h+1$ . For $a=\pi_{h}(s,b)$ ,
+
+$\displaystyle P(\cdot\mid s,a)^{\top}q_{P,i}^{\pi}(\cdot,B_{h}(s,a,b),h+1)$ $\displaystyle\leq P(\cdot\mid s,a)^{\top}\overline{q}_{i}^{\pi}(\cdot,B_{h}(s,a,b),h+1)$ $\displaystyle\leq\sup_{p\in\mathcal{C}_{s,a}}p^{\top}\overline{q}_{i}^{\pi}(\cdot,B_{h}(s,a,b),h+1).$
+
+The first inequality uses the induction hypothesis, and the second uses $P_{s,a}\in\mathcal{C}_{s,a}$ . Induction and averaging over $s_{0}\sim\mu$ give $q^{\rm rnd}_{P,i}(\pi)\leq\overline{q}_{i,H,\eta}(\pi)$ . If the certificate accepts $\pi$ , then
+
+$q_{P,i}(\pi)\leq q^{\rm rnd}_{P,i}(\pi)\leq\overline{q}_{i,H,\eta}(\pi)\leq\delta_{i}.$
+
+The argument is deterministic on the row-coverage event and therefore holds simultaneously for every policy and constraint. This proves the proposition. $\square$
+
+Appendix E Proof of Theorem 1
+
+The proof has four steps. We record the finite rounded problem, establish a uniform trajectory-transfer bound, prove safety, and then bound reward loss and sample size.
+
+Let
+
+$H=H_{\alpha}=\left\lceil\frac{\log(1/((1-\gamma)\alpha_{\rm tail}))}{1-\gamma}\right\rceil,\qquad R_{H}=\sum_{h=0}^{H-1}\gamma^{h},\qquad|\mathcal{B}|=\prod_{i=1}^{m}N_{i}(\alpha_{\rm tail},\eta_{i}),$
+
+Here $N_{i}(\alpha_{\rm tail},\eta_{i})$ is the number of values in budget coordinate $i$ , including failure. Fix a maximizer $\pi_{\rho}^{\star}$ of $V_{\rho}^{\star}$ . Let $J_{P,H}(\pi):=\mathbb{E}_{P,\pi,\mu}[\sum_{h=0}^{H-1}\gamma^{h}r(S_{h},A_{h})]$ and set $r_{n}:=\sqrt{H\kappa_{n}/2}$ . Under the theorem’s choice $\alpha_{\rm tail}=\eta_{i}=\bar{\eta}_{\varepsilon}$ , we have $H=\widetilde{O}((1-\gamma)^{-1})$ , $R_{H}\leq(1-\gamma)^{-1}$ , and $\gamma^{H}/(1-\gamma)\leq\bar{\eta}_{\varepsilon}\leq\varepsilon/8$ .
+
+Step 1: Record the rounded state space.
+
+Coordinate $i$ has at most $\max\{1,\lfloor(d_{i}-\bar{\eta}_{\varepsilon})/\bar{\eta}_{\varepsilon}\rfloor+2\}$ values. This finiteness makes the certified planning problem well defined, but $|\mathcal{B}|$ does not enter the confidence event because the same original-row KL set is valid for all time and budget states. The planner may still take time proportional to $|\mathcal{B}|$ .
+
+Step 2: Transfer the shared empirical model uniformly.
+
+Let $\widehat{q}_{i}^{\pi}$ be the rounded violation probability under the shared empirical kernel $\widehat{P}$ . The row event of Lemma 3 is independent of the policy selected from the data. On this event, the following deterministic transfer bound therefore holds simultaneously over the complete policy class.
+
+On the event of Lemma 3 , every $\pi\in\Pi_{H,\eta}$ and $i\in[m]$ satisfy
+
+$\displaystyle|\widehat{q}_{i}^{\pi}-q^{\rm rnd}_{P,i}(\pi)|$ $\displaystyle\leq r_{n},$ $\displaystyle 0\leq\overline{q}_{i,H,\eta}(\pi)-q^{\rm rnd}_{P,i}(\pi)$ $\displaystyle\leq 2r_{n},$ (20) $\displaystyle|\widehat{J}(\pi)-J_{P,H}(\pi)|$ $\displaystyle\leq R_{H}r_{n}.$
+
+The sample condition in the theorem permits an integer $n=D/(|\mathcal{S}||\mathcal{A}|)$ , up to rounding, such that $r_{n}\leq\rho/8$ and $R_{H}r_{n}\leq\varepsilon/8$ . Applying Lemma 4 gives, simultaneously for $\pi_{\rho}^{\star}$ and the data-dependent output $\widehat{\pi}$ ,
+
+$\left|\widehat{J}(\pi)-J_{P,H}(\pi)\right|\leq\frac{\varepsilon}{8},\qquad 0\leq\overline{q}_{i,H,\eta}(\pi)-q^{\rm rnd}_{P,i}(\pi)\leq\frac{\rho}{4}.$
+
+Step 3: Prove feasibility and safety.
+
+The rounded comparator satisfies $q^{\rm rnd}_{P,i}(\pi_{\rho}^{\star})\leq\delta_{i}-\rho$ . The uniform transfer bound therefore gives
+
+$\overline{q}_{i,H,\eta}(\pi_{\rho}^{\star})\leq\delta_{i}-\rho+\frac{\rho}{4}\leq\delta_{i}-\frac{3\rho}{4},\qquad i\in[m].$
+
+Thus $\pi_{\rho}^{\star}$ is feasible for the tightened empirical problem, so Algorithm 1 does not return unresolved on the row-coverage event. Its robust feasibility and Lemma 4 give, for each $i$ ,
+
+$q^{\rm rnd}_{P,i}(\widehat{\pi})\leq\overline{q}_{i,H,\eta}(\widehat{\pi})\leq\delta_{i}-\frac{3\rho}{4}\leq\delta_{i}.$
+
+Lemma 2 now gives $q_{P,i}(\widehat{\pi})\leq\delta_{i}$ .
+
+Step 4: Bound reward loss and count samples.
+
+Now compare rewards. Nonnegative rewards give $J_{P}(\widehat{\pi})\geq J_{P,H}(\widehat{\pi})$ . The reward after time $H$ is at most $\gamma^{H}/(1-\gamma)\leq\varepsilon/8$ . Also, $\pi_{\rho}^{\star}$ is feasible for the tightened problem, so empirical $\xi$ -optimality applies. Hence
+
+$\displaystyle J_{P}(\widehat{\pi})$ $\displaystyle\geq J_{P,H}(\widehat{\pi})\geq\widehat{J}(\widehat{\pi})-\frac{\varepsilon}{8}\geq\widehat{J}(\pi_{\rho}^{\star})-\xi-\frac{\varepsilon}{8}\geq J_{P,H}(\pi_{\rho}^{\star})-\xi-\frac{\varepsilon}{4}$ $\displaystyle\geq J_{P}(\pi_{\rho}^{\star})-\xi-\frac{3\varepsilon}{8}\geq V_{\rho}^{\star}-\xi-\varepsilon.$
+
+The next-to-last inequality uses the reward-tail bound. The last one uses $J_{P}(\pi_{\rho}^{\star})=V_{\rho}^{\star}$ and $3\varepsilon/8\leq\varepsilon$ .
+
+Finally, $r_{n}\leq\min\{\rho/8,\varepsilon/(8R_{H})\}$ follows from $n=\widetilde{O}(d_{0}H[\rho^{-2}+R_{H}^{2}\varepsilon^{-2}])$ . The algorithm draws this batch once at each original state–action row, so $D=|\mathcal{S}||\mathcal{A}|n$ . Substituting $H=\widetilde{O}((1-\gamma)^{-1})$ and $R_{H}\leq(1-\gamma)^{-1}$ gives ( 14 ). $\square$
+
+E.1 Proof of Lemma 4
+
+Fix a realized dataset in the event of Lemma 3 . For a policy $\pi$ , let $\mathbb{P}_{M,\pi}^{0:H}$ denote the law of the augmented trajectory through time $H$ under transition kernel $M$ . The KL chain rule and ( 8 ) give
+
+$\mathrm{KL}\!\left(\mathbb{P}_{\widehat{P},\pi}^{0:H}\,\middle\|\,\mathbb{P}_{P,\pi}^{0:H}\right)=\sum_{h=0}^{H-1}\mathbb{E}_{\widehat{P},\pi}\!\left[\mathrm{KL}(\widehat{P}_{S_{h},A_{h}}\|P_{S_{h},A_{h}})\right]\leq H\kappa_{n}.$
+
+Pinsker’s inequality bounds the total variation distance between these trajectory laws by $r_{n}$ . Applying it to the rounded failure indicator gives $|\widehat{q}_{i}^{\pi}-q^{\rm rnd}_{P,i}(\pi)|\leq r_{n}$ . Applying it to the truncated discounted reward, whose range is contained in $[0,R_{H}]$ , gives $|\widehat{J}(\pi)-J_{P,H}(\pi)|\leq R_{H}r_{n}$ .
+
+It remains to control the conservatism of the robust certificate. Rectangularity of the row-wise sets implies that the backward suprema in ( 7 ) are attained by a possibly nonstationary augmented-state kernel $Q_{i}^{\pi}$ satisfying $Q_{i,h}^{\pi}(\cdot\mid s,b)\in\mathcal{C}_{s,\pi_{h}(s,b)}$ at every triple $(s,b,h)$ . Its rounded failure probability equals $\overline{q}_{i,H,\eta}(\pi)$ . A second application of the KL chain rule yields
+
+$\mathrm{KL}\!\left(\mathbb{P}_{\widehat{P},\pi}^{0:H}\,\middle\|\,\mathbb{P}_{Q_{i}^{\pi},\pi}^{0:H}\right)\leq H\kappa_{n}.$
+
+Because $\widehat{P}_{s,a}\in\mathcal{C}_{s,a}$ , robust maximization and Pinsker give $0\leq\overline{q}_{i,H,\eta}(\pi)-\widehat{q}_{i}^{\pi}\leq r_{n}$ . Because $P_{s,a}\in\mathcal{C}_{s,a}$ , Proposition 1 gives $q^{\rm rnd}_{P,i}(\pi)\leq\overline{q}_{i,H,\eta}(\pi)$ . Combining these inequalities with $|\widehat{q}_{i}^{\pi}-q^{\rm rnd}_{P,i}(\pi)|\leq r_{n}$ proves the safety claim.
+
+All arguments are deterministic after conditioning on the row event and use no policy union bound. Hence they hold simultaneously for every $\pi\in\Pi_{H,\eta}$ , including a data-dependent output policy. $\square$
+
+Relation to the original CCMDP optimum.
+
+The rounded finite event is a conservative certificate, not a different safety notion. Lemma 2 gives $q_{P,i}(\pi)\leq q^{\rm rnd}_{P,i}(\pi)$ , so any policy certified by the rounded event is safe for the original infinite-horizon chance constraint. If $C_{i}^{\pi}:=\sum_{t\geq 0}\gamma^{t}c_{i}(S_{t},A_{t})$ and $\Delta_{i}:=\alpha_{\rm tail}+H_{\alpha}\eta_{i}$ , the same rounding inequalities imply
+
+$q_{P,i}(\pi)\leq q^{\rm rnd}_{P,i}(\pi)\leq\mathbb{P}_{P,\pi,\mu}\!\left(C_{i}^{\pi}>d_{i}-\Delta_{i}\right).$
+
+Thus a true $2\rho$ -interior comparator also belongs to the rounded $\rho$ -interior set whenever its probability mass on $(d_{i}-\Delta_{i},d_{i}]$ is at most $\rho$ for every constraint. Consequently, if $V_{2\rho}^{\star,\mathrm{true}}:=\max\{J_{P}(\pi):q_{P,i}(\pi)\leq\delta_{i}-2\rho,\ i\in[m]\}$ has such a maximizer, Theorem 1 also guarantees reward at least $V_{2\rho}^{\star,\mathrm{true}}-\varepsilon-\xi$ . Without this boundary condition, the rounded and original comparators need not agree, even when the transition kernel is deterministic.
+
+Appendix F Proof of Theorem 2
+
+The proof has three steps. We prove the reward lower bound, prove the safety lower bound, and add the two bounds. Every transition row in both hard families has at most two successors, so the constructions satisfy Assumption 1 for every fixed $d_{0}\geq 2$ .
+
+Step 1: Prove the reward lower bound.
+
+Set $H_{0}=\lceil(1-\gamma)^{-1}\rceil$ , $M=|\mathcal{S}|-1$ , and $B=|\mathcal{A}|$ . Build $M$ decision states $x_{1},\ldots,x_{M}$ and one absorbing state $z$ . The initial state is uniform over the decision states. The reward is one at each $x_{j}$ and zero at $z$ . Set $c\equiv 0$ , $d=1$ , and $\delta=1/2$ . Then every policy is safe under both the original and rounded events. For $c_{0}<1/2$ , the rounded $\rho$ -interior optimum is the usual reward optimum.
+
+Let $\vartheta=(\vartheta_{1},\ldots,\vartheta_{M})\in[B]^{M}$ be hidden. At $x_{j}$ , action $\vartheta_{j}$ is good. The process returns to $x_{j}$ with probability
+
+$p_{s}=1-\frac{1}{4H_{0}}\quad\text{if }a=\vartheta_{j},\qquad p_{u}=p_{s}-\Delta\quad\text{otherwise},\qquad\Delta=\frac{2048\varepsilon}{H_{0}^{2}};$
+
+and moves to $z$ otherwise. Rewards and costs are known. Thus only transition samples contain information about $\vartheta$ . Choose $c_{0}$ small enough that $\Delta\leq 1/(4H_{0})$ . Then $p_{u}\geq 1-1/(2H_{0})$ , so all probabilities are valid.
+
+Fix any deterministic output policy $\pi$ ; it may depend on history. Consider the history that starts at $x_{j}$ and stays there for $t$ transitions. Let $a_{j,t}$ be the action of $\pi$ on this history. Let $S_{j}(t)$ be the probability of staying at $x_{j}$ until time $t$ , with $S_{j}(0)=1$ . Let $W_{j}=\sum_{t=0}^{H_{0}-1}\mathbb{I}\{a_{j,t}\neq\vartheta_{j}\}$ . Also let $V^{\pi}(x_{j})$ be the value from $x_{j}$ .
+
+The all-good policy has value $V^{\star}=(1-\gamma p_{s})^{-1}$ . Since $V^{\star}=1+\gamma p_{s}V^{\star}$ , each bad action loses $\gamma\Delta V^{\star}$ . Thus the performance-difference identity gives
+
+$V^{\star}-V^{\pi}(x_{j})=\gamma\Delta V^{\star}\sum_{t\geq 0}\gamma^{t}S_{j}(t)\mathbb{I}\{a_{j,t}\neq\vartheta_{j}\}.$
+
+For $t<H_{0}$ , we have $V^{\star}\geq H_{0}/2$ , $\gamma^{t}\geq 1/4$ , and $S_{j}(t)\geq p_{u}^{t}\geq 1/2$ . Average over the initial state to get
+
+$V^{\star}-J_{P}(\pi)\geq\frac{\Delta H_{0}}{32M}\sum_{j=1}^{M}W_{j}.$
+
+If $\pi$ is $\varepsilon$ -optimal, the choice of $\Delta$ gives $\sum_{j}W_{j}\leq MH_{0}/64$ . Decode $\vartheta_{j}$ as the most common action in $(a_{j,0},\ldots,a_{j,H_{0}-1})$ . Use fixed tie-breaking. A wrong answer requires $W_{j}\geq H_{0}/2$ . Thus the decoder is correct on at least $31M/32$ coordinates.
+
+A sample from a decision row is Bernoulli with mean $p_{s}$ or $p_{u}$ . The Bernoulli KL bound gives
+
+$\kappa:=\max\!\left\{\mathrm{kl}(\mathrm{Bern}(p_{s}),\mathrm{Bern}(p_{u})),\mathrm{kl}(\mathrm{Bern}(p_{u}),\mathrm{Bern}(p_{s}))\right\}\leq CH_{0}\Delta^{2}\leq C\frac{\varepsilon^{2}}{H_{0}^{3}}.$
+
+Choose $c_{0}$ small enough for Lemma 6 . Draw $\vartheta$ uniformly from $[B]^{M}$ , and draw a hidden index $J$ uniformly from $[M]$ . The learner succeeds with probability at least $2/3$ . The decoder above then identifies $\vartheta_{J}$ with probability at least $(2/3)(31/32)>3/5$ .
+
+Now draw the hidden actions for all contexts except $J$ from the prior and simulate their samples internally. Send only queries at $J$ to the one-good-row experiment. This gives the same product-prior law. The expected number of sent queries is at most $D/M$ . Lemma 6 gives $D/M\geq cB/\kappa$ . Since $M\geq|\mathcal{S}|/2$ and $H_{0}\geq(1-\gamma)^{-1}$ ,
+
+$D\geq c\frac{MB}{\kappa}\geq c^{\prime}\frac{|\mathcal{S}||\mathcal{A}|}{(1-\gamma)^{3}\varepsilon^{2}},$
+
+This is the reward lower bound.
+
+Step 2: Prove the safety lower bound.
+
+The next lemma gives the safety lower bound. We prove it in Appendix F.1 .
+
+There are universal constants $c,c_{0}>0$ such that, for every $\gamma\in[1/2,1)$ , $\rho\in(0,c_{0})$ , $|\mathcal{S}|\geq 4$ , and $|\mathcal{A}|\geq 2$ , there exists a zero-reward, one-constraint CCMDP family with two successors per row and a nonempty rounded $\rho$ -interior feasible set for which any generative-model learner that returns an exactly safe policy in $\Pi_{\mathrm{det}}$ with probability at least $2/3$ must use, in the worst case,
+
+$D\geq c\,\frac{|\mathcal{S}||\mathcal{A}|}{(1-\gamma)\rho^{2}}$ (21)
+
+transition samples.
+
+In the family from Lemma 5 , all rewards are zero and the rounded $\rho$ -interior set is nonempty. Thus exact safety alone requires $D\geq c|\mathcal{S}||\mathcal{A}|/((1-\gamma)\rho^{2})$ .
+
+Step 3: Add the two bounds.
+
+Take the union of the two hard families. Its worst-case complexity is at least the larger bound. Since $\max\{x,y\}\geq(x+y)/2$ , this gives the sum up to a universal constant. $\square$
+
+F.1 Proof of Lemma 5
+
+The proof has four steps. We build the hard family, decode its safe actions, bound the KL of one sample, and apply a testing lower bound.
+
+Step 1: Build the hard family.
+
+Set $H_{0}=\lceil(1-\gamma)^{-1}\rceil$ , $M=|\mathcal{S}|-2$ , and $B=|\mathcal{A}|$ . Build decision states $x_{1},\ldots,x_{M}$ , a failure state $f$ , and a safe absorbing state $z$ . The initial state is uniform over $x_{1},\ldots,x_{M}$ . Let $\vartheta\in[B]^{M}$ be hidden. Action $\vartheta_{j}$ is the safe action at $x_{j}$ . Set
+
+$p_{s}=1-\frac{1}{4H_{0}},\qquad\Delta=\frac{128\rho}{H_{0}},\qquad p_{u}=p_{s}-\Delta.$
+
+At $x_{j}$ , the process stays at $x_{j}$ with probability $p_{s}$ under action $\vartheta_{j}$ and with probability $p_{u}$ under any other action. It moves to $f$ otherwise. From $f$ , it moves to $z$ in one step. State $z$ is absorbing.
+
+All rewards are zero. The cost is one at $f$ and zero elsewhere. Set
+
+$d=\frac{\gamma^{H_{0}}+\gamma^{H_{0}+1}}{2},\qquad q_{s}=1-p_{s}^{H_{0}},\qquad\delta=q_{s}+\rho.$
+
+Bernoulli’s inequality gives $p_{s}^{H_{0}}\geq 3/4$ . Choose $c_{0}$ small enough that $0<\delta<1$ .
+
+The state $f$ is visited for one step. If it is reached at time $\tau$ , the total cost is $\gamma^{\tau}$ . Since $\gamma^{H_{0}+1}<d<\gamma^{H_{0}}$ , violation means reaching $f$ by time $H_{0}$ . The all-safe policy has violation probability $q_{s}=\delta-\rho$ . Thus the $\rho$ -interior set is nonempty. Its value is zero because all rewards are zero.
+
+We verify that this is also the rounded event used in the theorem. Here each trajectory pays at most one nonzero cost. Moreover,
+
+$\frac{\gamma^{H_{0}}-\gamma^{H_{0}+1}}{2}=\frac{\gamma^{H_{0}}(1-\gamma)}{2}\geq\frac{1-\gamma}{16},\qquad\alpha_{\rm tail}+2\eta\leq\frac{3(1-\gamma)}{128}.$
+
+Also, $\alpha_{\rm tail}\leq(1-\gamma)/128$ implies $H_{\alpha}\geq\log(128/(1-\gamma)^{2})/(1-\gamma)>H_{0}+1$ . Therefore a payment at time $\tau\leq H_{0}$ crosses the rounded threshold, while a payment at time $\tau\geq H_{0}+1$ does not: the latter follows from $\gamma^{H_{0}+1}+\alpha_{\rm tail}+2\eta<d$ . Hence the original and rounded violation indicators agree trajectory by trajectory throughout this hard family, and the all-safe policy is a rounded $\rho$ -interior comparator.
+
+Step 2: Recover the safe actions.
+
+Fix a deterministic output policy $\pi$ ; it may depend on history. At $x_{j}$ , consider the history that stays at $x_{j}$ for the first $t$ transitions. Let $a^{\pi}_{j,t}$ be the action on this history. This defines an action sequence for $t=0,\ldots,H_{0}-1$ . Let $W_{j}=\sum_{t=0}^{H_{0}-1}\mathbb{I}\{a^{\pi}_{j,t}\neq\vartheta_{j}\}$ . Starting from $x_{j}$ , the probability of violation is
+
+$q_{j}(\pi)=1-\prod_{t=0}^{H_{0}-1}\left(p_{s}-\Delta\mathbb{I}\{a^{\pi}_{j,t}\neq\vartheta_{j}\}\right).$
+
+Changing one factor from $p_{s}$ to $p_{u}$ lowers survival by at least $\Delta p_{u}^{H_{0}-1}$ . A telescoping expansion gives
+
+$q_{j}(\pi)-q_{s}\geq\Delta p_{u}^{H_{0}-1}W_{j},\qquad q_{P}(\pi)-q_{s}\geq\frac{\Delta p_{u}^{H_{0}-1}}{M}\sum_{j=1}^{M}W_{j}.$
+
+Choose $c_{0}$ so that $128\rho\leq 1/4$ . Then $p_{u}\geq 1-1/(2H_{0})$ , $p_{u}^{H_{0}-1}\geq 1/2$ , and $H_{0}\Delta p_{u}^{H_{0}-1}\geq 64\rho$ . If $\pi$ is safe, $q_{P}(\pi)\leq q_{s}+\rho$ . Hence $\sum_{j}W_{j}\leq MH_{0}/64$ .
+
+Decode $\vartheta_{j}$ as the most common action in $(a^{\pi}_{j,0},\ldots,a^{\pi}_{j,H_{0}-1})$ . Use fixed tie-breaking. A wrong answer needs $W_{j}\geq H_{0}/2$ . The decoder can therefore be wrong on at most $M/32$ states. Every safe policy recovers at least $31M/32$ entries of $\vartheta$ .
+
+Step 3: Bound the KL of one sample.
+
+A decision-row sample is Bernoulli with mean $p_{s}$ or $p_{u}$ . The mean gap is $\Delta=O(\rho/H_{0})$ , and the failure probability is of order $H_{0}^{-1}$ . The Bernoulli KL bound gives
+
+$\kappa:=\max\!\left\{\mathrm{kl}(\mathrm{Bern}(p_{s}),\mathrm{Bern}(p_{u})),\mathrm{kl}(\mathrm{Bern}(p_{u}),\mathrm{Bern}(p_{s}))\right\}\leq CH_{0}\Delta^{2}\leq C\frac{\rho^{2}}{H_{0}}.$
+
+Thus one sample has only $O(\rho^{2}/H_{0})$ KL. Choose $c_{0}$ small enough for the lemma used next.
+
+Step 4: Reduce to one random state.
+
+We use the following one-context testing bound. Its proof is in Appendix F.2 .
+
+Let $B\geq 2$ , let $\Theta$ be uniform on $[B]$ , and suppose that a query to arm $a$ returns an independent Bernoulli observation with mean $p_{s}\in(0,1)$ when $a=\Theta$ and mean $p_{u}\in(0,1)$ otherwise. Define $\kappa=\max\{\mathrm{kl}(\mathrm{Bern}(p_{s}),\mathrm{Bern}(p_{u})),\mathrm{kl}(\mathrm{Bern}(p_{u}),\mathrm{Bern}(p_{s}))\}$ . For a sufficiently small universal $\kappa_{0}>0$ , every adaptive randomized procedure with $0<\kappa\leq\kappa_{0}$ that identifies $\Theta$ with probability at least $3/5$ , averaged over the uniform prior, uses an expected number $N$ of queries satisfying
+
+$\mathbb{E}[N]\geq c\,\frac{B}{\kappa}$ (22)
+
+for a universal constant $c>0$ . The conclusion is unchanged in the presence of auxiliary observations whose conditional law given the past is the same for every value of $\Theta$ .
+
+Draw $\vartheta$ uniformly from $[B]^{M}$ . Also draw a hidden index $J$ uniformly from $[M]$ . A safe output is correct on at least a $31/32$ fraction of states. The learner returns such an output with probability at least $2/3$ . Hence $\mathbb{P}(\widehat{\vartheta}_{J}=\vartheta_{J})\geq(2/3)(31/32)=31/48>3/5$ .
+
+Simulate every state except $J$ internally. Send only queries at $J$ to the one-good-row oracle. This produces the same law as the original hard family, and the learner does not know $J$ . If $N_{j}$ is the number of samples from state $j$ , then
+
+$\mathbb{E}[N_{J}]=\frac{1}{M}\sum_{j=1}^{M}\mathbb{E}[N_{j}\mid J=j]=\frac{1}{M}\sum_{j=1}^{M}\mathbb{E}_{\rm prior}[N_{j}]\leq\frac{D}{M}.$
+
+Lemma 6 gives $D/M\geq cB/\kappa\geq cBH_{0}/\rho^{2}$ . Use $M\geq|\mathcal{S}|/2$ , $B=|\mathcal{A}|$ , and $H_{0}\geq(1-\gamma)^{-1}$ to get the claimed bound. $\square$
+
+F.2 Proof of Lemma 6
+
+The proof has three steps. We truncate the run, compare it with a null model, and apply Pinsker’s inequality.
+
+Step 1: Stop the procedure.
+
+Let $n=\mathbb{E}[N]$ under the uniform prior. Stop after $\lceil 32n\rceil$ queries. By Markov’s inequality, this changes the output with probability at most $1/32$ . The stopped procedure therefore succeeds with probability at least $3/5-1/32$ .
+
+Step 2: Define a null model.
+
+Let $\mathbb{Q}_{1}$ be the law of the hidden arm and the stopped transcript. The transcript includes the algorithm’s random bits and output. Define a null law $\mathbb{Q}_{0}$ in which every arm has mean $p_{u}$ and $\Theta$ is still uniform. Under $\mathbb{Q}_{0}$ , the transcript is independent of $\Theta$ . Thus any estimate is correct with probability $1/B$ . If $N_{a}$ is the number of queries to arm $a$ , the KL chain rule gives
+
+$\mathrm{KL}(\mathbb{Q}_{0},\mathbb{Q}_{1})=\frac{1}{B}\sum_{a=1}^{B}\mathbb{E}_{0}[N_{a}]\,\mathrm{kl}(\mathrm{Bern}(p_{u}),\mathrm{Bern}(p_{s}))\leq\frac{\kappa\lceil 32n\rceil}{B}.$
+
+Given $\Theta=a$ , only samples from arm $a$ differ under the two laws. Auxiliary observations have the same law, so they add zero KL.
+
+Step 3: Apply Pinsker’s inequality.
+
+Since $1/B\leq 1/2$ , the two success probabilities differ by at least $(3/5-1/32)-1/2=11/160$ . Pinsker’s inequality gives $\kappa\lceil 32n\rceil/B\geq c_{1}$ . For small enough $\kappa_{0}$ , this implies $n\geq cB/\kappa$ . $\square$
+
+Appendix G Computational Hardness of Exact Deterministic Planning
+
+Even when the transition model is known and deterministic, exact reward maximization over deterministic policies subject to a discounted chance constraint is $\mathsf{NP-hard}$ .
+
+Reduce from 0–1 knapsack. Let the item values be $v_{j}$ , the weights be $w_{j}$ , and the capacity be $B$ . Fix a rational $\gamma\in(0,1)$ . Build a deterministic chain through states $1,\ldots,n$ . State $n+1$ is absorbing. At state $j$ , action choose gives reward $v_{j}/(M_{v}\gamma^{j-1})$ and cost $w_{j}/(M_{w}\gamma^{j-1})$ . Action skip gives zero reward and cost. Both actions move to state $j+1$ . Set
+
+$M_{v}=\gamma^{-(n-1)}\max_{j}v_{j},\qquad M_{w}=\gamma^{-(n-1)}\max_{j}w_{j},$
+
+Replace a zero maximum by one. Then all one-step rewards and costs lie in $[0,1]$ .
+
+A deterministic policy chooses a vector $x\in\{0,1\}^{n}$ . The factors $\gamma^{j-1}$ cancel, so
+
+$J(x)=\frac{1}{M_{v}}\sum_{j=1}^{n}v_{j}x_{j},\qquad C(x)=\frac{1}{M_{w}}\sum_{j=1}^{n}w_{j}x_{j}.$
+
+Set $d=B/M_{w}$ and take any $\delta\in(0,1)$ . The trajectory is deterministic, so its violation probability is zero or one. The chance constraint holds exactly when $C(x)\leq d$ , or $\sum_{j}w_{j}x_{j}\leq B$ .
+
+Thus feasible policies are exactly feasible knapsack solutions. Their discounted reward is proportional to total item value. An exact planner would solve 0–1 knapsack. The construction has polynomial size for fixed rational $\gamma$ , so the problem is $\mathsf{NP}$ -hard. ∎
+
+Appendix H Proof of Theorem 3
+
+The proof has three steps. We define the rounded problem, find a KKT candidate, and test this candidate on fresh samples.
+
+Step 1: Define the rounded problem and its oracles.
+
+Set $H$ as in Theorem 3 . A rollout starts from $b_{0}=b^{0}$ and updates the rounded budget until time $H$ . After time $H$ , set $b_{t}=b_{H}$ and $\bar{h}_{t}=H$ , so $a_{t}\sim\pi_{\theta}(\cdot\mid s_{t},\bar{h}_{t},b_{t})$ with $\bar{h}_{t}=\min\{t,H\}$ . For constraint $i$ , let $q^{H}_{P,i}(\theta)=\mathbb{P}_{P,\pi_{\theta},\mu}(b_{i,H}<0)$ and define $f_{H}(\theta)=-\bar{J}_{P}(\theta)$ and $g_{i}^{H}(\theta)=q^{H}_{P,i}(\theta)+2\rho-\delta_{i}$ . The rounded problem is
+
+$\min_{\theta\in\Theta}f_{H}(\theta)\qquad\text{s.t.}\quad g_{i}^{H}(\theta)\leq 0,\quad i\in[m].$
+
+All iterates stay inside $\mathcal{K}\Subset\Theta$ . Thus the KKT residual has no boundary term for $\theta$ . Assumption 2 gives $\|\nabla_{\theta}\log\pi_{\theta}(a\mid s,\bar{h},b)\|_{2}\leq G$ . The geometric reward rollout also has the required likelihood-ratio moment bound. The next two lemmas give the stochastic gradients used by the optimizer.
+
+Under Assumption 2 , the rollouts defined below give unbiased estimates of $f_{H}(\theta)$ , $\nabla f_{H}(\theta)$ , $g_{i}^{H}(\theta)$ , and $\nabla g_{i}^{H}(\theta)$ . Their gradient second moments satisfy
+
+$\mathbb{E}\|\widehat{\nabla f_{H}}(\theta)\|_{2}^{2}\leq\frac{2G^{2}}{(1-\gamma)^{2}},\qquad\mathbb{E}\sum\nolimits_{i=1}^{m}\|\widehat{\nabla g_{i}^{H}}(\theta)\|_{2}^{2}\leq mG^{2}H^{2},$ (23)
+
+and their value samples satisfy
+
+$|\widehat{f}_{H}(\theta)|\leq 1,\qquad|\widehat{g}_{i}^{H}(\theta)|\leq 3.$ (24)
+
+One call uses at most $(1-\gamma)^{-1}+H$ transitions in expectation. Its transition-weighted variance is therefore
+
+$\mathsf{W}_{H}=O\!\left(G^{2}\left[\frac{1}{(1-\gamma)^{3}}+mH^{3}\right]\right).$ (25)
+
+The recursive update also needs an unbiased gradient difference.
+
+For each $F\in\{g_{1}^{H},\ldots,g_{m}^{H}\}$ , sample $\tau$ under $\pi_{\theta}$ and define
+
+$L_{\theta^{\prime}\mid\theta}(\tau)=\frac{p_{\theta^{\prime}}(\tau)}{p_{\theta}(\tau)}$ (26)
+
+and $\Delta_{F}(\theta,\theta^{\prime};\tau)=\widehat{\nabla}F(\theta;\tau)-L_{\theta^{\prime}\mid\theta}(\tau)\widehat{\nabla}F(\theta^{\prime};\tau)$ . Then
+
+$\mathbb{E}_{\tau\sim p_{\theta}}\Delta_{F}(\theta,\theta^{\prime};\tau)=\nabla F(\theta)-\nabla F(\theta^{\prime}),\qquad\mathbb{E}_{\tau\sim p_{\theta}}\|\Delta_{F}(\theta,\theta^{\prime};\tau)\|_{2}^{2}\leq L_{\rm pg}^{2}\|\theta-\theta^{\prime}\|_{2}^{2}.$ (27)
+
+The same statements hold for the exact normalized reward under geometric stopping and the likelihood-ratio moment condition in Assumption 2 . They also hold for a truncated reward rollout, although Theorem 3 does not use that approximation.
+
+Lemmas 7 and 8 give the required refresh and difference estimators, with transition-weighted variance $\mathsf{W}_{H}=O\!\left(G^{2}[(1-\gamma)^{-3}+mH^{3}]\right)$ .
+
+Step 2: Find a KKT candidate.
+
+For $\min_{\theta}f(\theta)$ subject to $g_{i}(\theta)\leq 0$ , define
+
+$\mathcal{R}(\theta)=\min_{\lambda\in[0,\Lambda]^{m}}\left\{\left\|\nabla f(\theta)+\sum_{i}\lambda_{i}\nabla g_{i}(\theta)\right\|_{2}+\|[g(\theta)]_{+}\|_{1}+\sum_{i}|\lambda_{i}g_{i}(\theta)|\right\}.$
+
+The next lemma bounds this residual.
+
+Under Assumption 3 , the recursive variance-reduced method returns $\widehat{\theta}$ with $\mathbb{E}[\mathcal{R}(\widehat{\theta})]\leq\varepsilon$ after
+
+$\widetilde{O}\!\left(K_{\rm opt}\mathsf{V}\varepsilon^{-3}\right)$ (28)
+
+stochastic first-order oracle calls, where $\mathsf{V}$ and $K_{\rm opt}$ are defined in that assumption. If oracle components have different rollout lengths, the expected number of transitions is $\widetilde{O}(K_{\rm opt}\mathsf{W}\varepsilon^{-3})$ .
+
+Apply Lemma 9 to $f_{H}$ and $g_{i}^{H}$ . Assumptions 2 and 3 give all needed conditions. Their constants are in $K_{\rm opt}$ and do not depend on $\varepsilon_{\rm kkt}$ or $\zeta$ . The candidate satisfies $\mathbb{E}[\mathcal{R}_{H}(\theta_{\rm cand})]\leq\varepsilon_{\rm kkt}$ . Let $L_{\alpha}=\log(2/((1-\gamma)\alpha_{\rm tail}))$ . Then
+
+$H=\left\lceil\frac{\log(1/((1-\gamma)\alpha_{\rm tail}))}{1-\gamma}\right\rceil\leq\frac{CL_{\alpha}}{1-\gamma},$
+
+for a universal constant $C$ . Insert this bound and $\mathsf{W}_{H}$ into Lemma 9 . The optimization cost is
+
+$\frac{C_{\rm pg}K_{\rm opt}G^{2}m}{\varepsilon_{\rm kkt}^{3}(1-\gamma)^{3}}L_{\alpha}^{3}\log^{4}\!\left(\frac{8K_{\rm opt}G^{2}m}{\varepsilon_{\rm kkt}\rho\zeta(1-\gamma)^{3}\alpha_{\rm tail}}\right)$
+
+expected transitions. This is the first term of ( 17 ).
+
+Step 3: Validate safety.
+
+Now validate the candidate. Condition on the optimization data. Then $\theta_{\rm cand}$ is fixed, the validation trajectories are i.i.d., and $\widehat{q}^{H}_{i,\mathrm{val}}(\theta_{\rm cand})=M_{\rm val}^{-1}\sum_{j=1}^{M_{\rm val}}\mathbb{I}\{b_{i,H}^{(j)}<0\}$ is a Bernoulli average with mean $q^{H}_{P,i}(\theta_{\rm cand})$ . Hoeffding’s inequality gives
+
+$\mathbb{P}\!\left(\left|\widehat{q}^{H}_{i,\mathrm{val}}(\theta_{\rm cand})-q^{H}_{P,i}(\theta_{\rm cand})\right|>\sqrt{\frac{\log(2m/\zeta)}{2M_{\rm val}}}\;\middle|\;\theta_{\rm cand}\right)\leq\frac{\zeta}{m}.$
+
+A union bound over $i$ and the choice of $M_{\rm val}$ give, with probability at least $1-\zeta$ ,
+
+$q^{H}_{P,i}(\theta_{\rm cand})\leq\widehat{q}^{H}_{i,\mathrm{val}}(\theta_{\rm cand})+\sqrt{\frac{\log(2m/\zeta)}{2M_{\rm val}}}\leq\widehat{q}^{H}_{i,\mathrm{val}}(\theta_{\rm cand})+\rho/2$
+
+for every $i$ . The next lemma links the rounded event to the original event.
+
+Fix $H=\lceil\log(1/((1-\gamma)\alpha_{\rm tail}))/(1-\gamma)\rceil$ and the conservative rounded budget process used by Algorithm 2 . For any budget-aware stochastic policy $\pi_{\theta}$ ,
+
+$\left\{\sum\nolimits_{t=0}^{\infty}\gamma^{t}c_{i}(s_{t},a_{t})>d_{i}\right\}\subseteq\left\{b_{i,H}<0\right\}.$ (29)
+
+Consequently,
+
+$q_{P,i}(\theta)\leq q^{H}_{P,i}(\theta).$ (30)
+
+Suppose validation passes and set $\widehat{\theta}=\theta_{\rm cand}$ . Then $q^{H}_{P,i}(\widehat{\theta})\leq\delta_{i}$ . Lemma 10 gives $q_{P,i}(\widehat{\theta})\leq\delta_{i}$ . Thus every accepted policy is safe. If the test fails, the algorithm returns unresolved .
+
+Validation uses $mM_{\rm val}H$ transitions. The bound on $H$ gives the second term of ( 17 ).
+
+It remains to prove acceptance under a margin. Suppose $q^{H}_{P,i}(\theta_{\rm cand})\leq\delta_{i}-\rho$ for every $i$ . On the same event,
+
+$\widehat{q}^{H}_{i,\mathrm{val}}(\theta_{\rm cand})\leq q^{H}_{P,i}(\theta_{\rm cand})+\rho/2\leq\delta_{i}-\rho/2.$
+
+Thus $\widehat{q}^{H}_{i,\mathrm{val}}(\theta_{\rm cand})+\rho/2\leq\delta_{i}$ for all $i$ . The test accepts the candidate. This proves Theorem 3 .
+
+H.1 Proof of Lemma 7
+
+We handle reward and constraints separately.
+
+Step 1: Construct the reward oracle.
+
+Let $\bar{J}_{P}=(1-\gamma)J_{P}$ . Draw $\tau$ with $\mathbb{P}(\tau=t)=(1-\gamma)\gamma^{t}$ . Run the policy through time $\tau$ and set
+
+$\widehat{\bar{J}}(\theta)=r(s_{\tau},a_{\tau}),\qquad\widehat{\nabla\bar{J}}(\theta)=r(s_{\tau},a_{\tau})\sum\nolimits_{u=0}^{\tau}\nabla_{\theta}\log\pi_{\theta}(a_{u}\mid s_{u},\bar{h}_{u},b_{u}).$
+
+Then $\mathbb{E}[\widehat{\bar{J}}(\theta)]=(1-\gamma)\sum_{t\geq 0}\gamma^{t}\mathbb{E}[r(s_{t},a_{t})]=\bar{J}_{P}(\theta)$ . The score identity gives
+
+$\nabla\bar{J}_{P}(\theta)=(1-\gamma)\sum\nolimits_{t\geq 0}\gamma^{t}\nabla_{\theta}\mathbb{E}[r(s_{t},a_{t})]=\mathbb{E}[\widehat{\nabla\bar{J}}(\theta)],$
+
+Rewards and scores are bounded, so the derivative may pass through the sum. Moreover, $\|\widehat{\nabla\bar{J}}(\theta)\|_{2}^{2}\leq G^{2}(\tau+1)^{2}$ . Using $\mathbb{E}[(\tau+1)^{2}]\leq 2(1-\gamma)^{-2}$ and $\mathbb{E}[\tau+1]=(1-\gamma)^{-1}$ proves the reward bounds. For $f_{H}=-\bar{J}_{P}$ , only the sign changes, and $|\widehat{f}_{H}|\leq 1$ .
+
+Step 2: Construct the constraint oracle.
+
+One length- $H$ rollout gives all constraint samples. Define
+
+$\chi_{i}=\mathbb{I}\{b_{i,H}<0\},\qquad\widehat{g}_{i}^{H}(\theta)=\chi_{i}+2\rho-\delta_{i},\qquad\widehat{\nabla g_{i}^{H}}(\theta)=\chi_{i}\sum\nolimits_{t=0}^{H-1}\nabla_{\theta}\log\pi_{\theta}(a_{t}\mid s_{t},t,b_{t}).$
+
+Since $\mathbb{E}\chi_{i}=q^{H}_{P,i}(\theta)$ , the value sample is unbiased. For the gradient, fix a path $\omega=(s_{0},a_{0},\ldots,s_{H})$ . Its budgets and $\chi_{i}(\omega)$ are fixed. Only the policy terms depend on $\theta$ :
+
+$\displaystyle\mathbb{P}_{\theta}(\omega)$ $\displaystyle=\mu(s_{0})\prod\nolimits_{t=0}^{H-1}\pi_{\theta}(a_{t}\mid s_{t},t,b_{t})P(s_{t+1}\mid s_{t},a_{t}),$ $\displaystyle\nabla_{\theta}\mathbb{P}_{\theta}(\omega)$ $\displaystyle=\mathbb{P}_{\theta}(\omega)\sum\nolimits_{t=0}^{H-1}\nabla_{\theta}\log\pi_{\theta}(a_{t}\mid s_{t},t,b_{t}).$
+
+Sum over all paths. This gives $\mathbb{E}[\widehat{\nabla g_{i}^{H}}(\theta)]=\nabla q^{H}_{P,i}(\theta)=\nabla g_{i}^{H}(\theta)$ .
+
+Finally, $\|\widehat{\nabla g_{i}^{H}}(\theta)\|_{2}^{2}\leq G^{2}H^{2}$ and $|\widehat{g}_{i}^{H}(\theta)|\leq 3$ . A constraint rollout therefore gives $O(mG^{2}H^{3})$ transition-weighted variance. The reward rollout gives $O(G^{2}(1-\gamma)^{-3})$ . Adding them gives $\mathsf{W}_{H}$ . ∎
+
+H.2 Proof of Lemma 8
+
+The proof has two steps: unbiasedness and mean-square smoothness.
+
+Step 1: Prove unbiasedness.
+
+The path fixes the rounded budgets. Thus its law depends on $\theta$ only through the policy, with $p_{\theta}(\tau)=\mu(s_{0})\prod_{t=0}^{H-1}\pi_{\theta}(a_{t}\mid s_{t},t,b_{t})P(s_{t+1}\mid s_{t},a_{t})$ . Policy positivity makes $L_{\theta^{\prime}\mid\theta}=p_{\theta^{\prime}}/p_{\theta}$ well defined. Hence
+
+$\mathbb{E}_{\tau\sim p_{\theta}}\!\left[L_{\theta^{\prime}\mid\theta}(\tau)\widehat{\nabla}F(\theta^{\prime};\tau)\right]=\mathbb{E}_{\tau\sim p_{\theta^{\prime}}}[\widehat{\nabla}F(\theta^{\prime};\tau)]=\nabla F(\theta^{\prime}).$
+
+Lemma 7 gives the other term. Thus $\Delta_{F}(\theta,\theta^{\prime};\tau)$ is unbiased for $\nabla F(\theta)-\nabla F(\theta^{\prime})$ .
+
+Step 2: Establish mean-square smoothness.
+
+Let $R_{F}(u;\tau)=L_{u\mid\theta}(\tau)\widehat{\nabla}F(u;\tau)$ . The mean-value theorem gives
+
+$\|\Delta_{F}(\theta,\theta^{\prime};\tau)\|_{2}\leq\sup\nolimits_{u\in[\theta,\theta^{\prime}]}\|\nabla_{u}R_{F}(u;\tau)\|_{\rm op}\|\theta-\theta^{\prime}\|_{2}.$
+
+For a violation component, $\widehat{\nabla}F(u;\tau)=\chi(\tau)\sum_{t=0}^{H-1}\nabla\log\pi_{u}(a_{t}\mid s_{t},t,b_{t})$ . Thus $\nabla_{u}R_{F}$ contains likelihood ratios, scores, and score derivatives. Their second moments are bounded on the compact set. Call this bound $L_{\rm pg}^{2}$ . This proves the second-moment claim.
+
+For the reward oracle, condition on the geometric stopping time and use Assumption 2 . The same proof applies. The truncated reward case is the same, but Theorem 3 does not use it. ∎
+
+H.3 Local KKT conditions
+
+The fixed-penalty problem uses slack variables. The next lemma links its residuals to the KKT residual.
+
+Consider $\min_{\theta}f(\theta)$ subject to $g_{i}(\theta)\leq 0$ , $i\in[m]$ . For a slack variable $z\in[0,Z]^{m}$ and multiplier $y\in\mathbb{R}^{m}$ , define
+
+$r_{\theta}=\left\|\nabla f(\theta)+J_{g}(\theta)^{\top}y\right\|_{2},\quad r_{c}=\|g(\theta)+z\|_{1},\quad r_{z}=\operatorname{dist}\!\left(0,y+N_{\mathbb{R}_{+}^{m}}(z)\right).$ (31)
+
+Here $N_{\mathbb{R}_{+}^{m}}(z)$ is the normal cone. If $\|J_{g}(\theta)\|_{\mathrm{op}}\leq B_{J}$ and $\|[y]_{+}\|_{1}\leq\Lambda$ , then $\lambda=[y]_{+}$ satisfies
+
+$\mathcal{R}(\theta)\leq r_{\theta}+B_{J}r_{z}+r_{c}+\Lambda r_{c}+Z\sqrt{m}\,r_{z}.$ (32)
+
+Together with Assumption 2 , assume the following local conditions. In particular, item 4 is an additional residual-domination condition. Consider $\min_{\theta}f(\theta)$ subject to $g_{i}(\theta)\leq 0$ , $i\in[m]$ , on an open domain $\Theta$ . Every parameter iterate and every segment between consecutive iterates lies in a compact convex set $\mathcal{K}\Subset\Theta$ . Set $x=(\theta,z)$ , $z\in\mathbb{R}_{+}^{m}$ , $h(x)=\mathbb{I}_{\mathbb{R}_{+}^{m}}(z)$ , and $c(x)=g(\theta)+z$ . Thus only the slack variable is constrained by $h$ . Fix $\beta\geq 1$ , independently of the target accuracy, and let $\Phi_{\beta}(x)=f(\theta)+(\beta/2)\|c(x)\|_{2}^{2}$ and $F_{\beta}=\Phi_{\beta}+h$ . All constants below are finite and independent of the target accuracy:
+
+The initialization $x_{0}=(\theta_{0},z_{0})$ has $g(\theta_{0})\leq 0$ , $z_{0}\geq 0$ , and $F_{\beta}(x_{0})-\inf_{x}F_{\beta}(x)\leq\Delta$ .
+
+The slack error bound and the following bounds hold:
+
+$\displaystyle\nu\|c(x)\|_{2}$ $\displaystyle\leq\operatorname{dist}\!\left(-J_{c}(x)^{\top}c(x),\partial h(x)\right),$ (33) $\displaystyle\|\nabla f(\theta)\|_{2}$ $\displaystyle\leq B_{f},\qquad\|J_{g}(\theta)\|_{\mathrm{op}}\leq B_{J},\qquad\|z\|_{\infty}\leq Z.$
+
+Here $\partial h(x)=\{0\}\times N_{\mathbb{R}_{+}^{m}}(z)$ .
+
+The functions $f$ and $g_{i}$ have Lipschitz gradients, and $y=\beta c(x)$ satisfies $\|[y]_{+}\|_{1}\leq\Lambda$ along the visited iterates. The stochastic samples are unbiased; refresh estimators have bounded variance; and recursive differences are mean-square smooth. For fixed-distribution oracles, use common-random-number differences. For trajectory gradients, use the likelihood-ratio difference estimator from Lemma 8 . With $C(x,\xi)=\widehat{g}(\theta,\xi)+z$ and $J_{C}(x,\xi)=[\,\widehat{J}_{g}(\theta,\xi)\ \ I_{m}\,]$ , there are constants $K_{c},K_{J},K_{L},K_{V}$ such that
+
+$\displaystyle\mathbb{E}\|C(x,\xi)\|_{2}^{2}\leq K_{c}^{2},\qquad\mathbb{E}\|J_{C}(x,\xi)\|_{\mathrm{op}}^{2}\leq K_{J}^{2},$ (34) $\displaystyle\mathbb{E}\|C(x,\xi)-C(x^{\prime},\xi)\|_{2}^{2}\leq K_{L}^{2}\|x-x^{\prime}\|_{2}^{2},$ $\displaystyle\mathbb{E}\|J_{C}(x,\xi)-J_{C}(x^{\prime},\xi)\|_{\mathrm{op}}^{2}\leq K_{L}^{2}\|x-x^{\prime}\|_{2}^{2},$ $\displaystyle\mathbb{E}\|\widehat{\nabla}f(\theta;\xi)-\widehat{\nabla}f(\theta^{\prime};\xi)\|_{2}^{2}\leq K_{L}^{2}\|x-x^{\prime}\|_{2}^{2},$ $\displaystyle\mathbb{E}\|\widehat{\nabla}f(\theta;\xi)-\nabla f(\theta)\|_{2}^{2}\leq K_{V}\mathsf{V},$ $\displaystyle\mathbb{E}\|C(x,\xi)-c(x)\|_{2}^{2}+\mathbb{E}\|J_{C}(x,\xi)-J_{c}(x)\|_{\mathrm{op}}^{2}\leq K_{V}\mathsf{V},\quad\mathsf{V}\geq 1.$
+
+For every visited $x$ , let $y=\beta c(x)$ and define $r_{\theta},r_{z},r_{c}$ as in Lemma 11 . Assume
+
+$r_{\theta}(x)+r_{z}(x)+r_{c}(x)\leq K_{\rm res}\,\operatorname{dist}\!\left(0,\nabla\Phi_{\beta}(x)+\partial h(x)\right)$ (35)
+
+for a finite constant $K_{\rm res}$ .
+
+We write
+
+$K_{\rm opt}=\operatorname{poly}\!\left(L_{f},L_{g},B_{J},\Lambda,Z,\nu^{-1},\Delta,K_{c},K_{J},K_{L},K_{V},L_{\rm pg},K_{\rm res},\beta\right)$ (36)
+
+Here $L_{f},L_{g}$ are the Lipschitz-gradient constants and $L_{\rm pg}$ is the trajectory-difference constant. These quantities may depend on the policy class, horizon, budget grid, tightening margin, and visited set, but not on $\varepsilon$ or the confidence level. We absorb universal polynomial products of them into $K_{\rm opt}$ .
+
+This assumption is used only for the KKT bound. The safety proof uses fresh validation data.
+
+H.4 Proof of Lemma 9
+
+We first bound the KKT residual by the stationarity residual of $F_{\beta}=\Phi_{\beta}+h$ . For $x^{+}=(\theta^{+},z^{+})$ , Assumption 3 gives
+
+$r_{\theta}(x^{+})+r_{z}(x^{+})+r_{c}(x^{+})\leq K_{\rm opt}\,\operatorname{dist}\!\left(0,\nabla\Phi_{\beta}(x^{+})+\partial h(x^{+})\right).$
+
+Lemma 11 shows that it is enough to make
+
+$\operatorname{dist}\!\left(0,\nabla\Phi_{\beta}(x^{+})+\partial h(x^{+})\right)\leq c\,\varepsilon/K_{\rm opt}$
+
+for a small universal constant $c$ . The next lemma gives an oracle for $F_{\beta}$ .
+
+Under Assumption 3 , for the fixed $\beta\geq 1$ , the smooth part
+
+$\Phi_{\beta}(x)=f(\theta)+\frac{\beta}{2}\|c(x)\|_{2}^{2}$
+
+has $K_{\rm sm}\beta$ -Lipschitz gradient, an unbiased refresh-gradient oracle with variance at most $K_{\sigma}^{2}\beta^{2}\mathsf{V}$ , and a recursive gradient-difference oracle with mean-square constant $K_{\rm ms}\beta$ . Moreover, $F_{\beta}=\Phi_{\beta}+h$ satisfies $F_{\beta}(x_{0})-\inf_{x}F_{\beta}(x)\leq\Delta$ .
+
+Thus, after increasing $K_{\rm opt}$ , we have $L_{\beta}\leq K_{\rm opt}$ , $\sigma_{\beta}^{2}\leq K_{\rm opt}\mathsf{V}$ , and $L_{{\rm ms},\beta}\leq K_{\rm opt}$ . Let $\bar{\sigma}_{\beta}=\max\{1,\sigma_{\beta}\}$ . We use the next proximal bound.
+
+Let $F(x)=\Phi(x)+h(x)$ , where $\Phi$ is $L$ -smooth, $h$ is closed convex with a tractable proximal map, and $F(x_{0})-\inf_{x}F(x)\leq\Delta$ . Suppose the refresh estimator is unbiased with variance at most $\sigma^{2}$ and the gradient-difference estimator is unbiased with second moment at most $L_{\rm ms}^{2}\|x-x^{\prime}\|_{2}^{2}$ . Set $\bar{\sigma}=\max\{1,\sigma\}$ and run
+
+$x_{t+1}=\operatorname{prox}_{\eta h}(x_{t}-\eta v_{t}),$ (37)
+
+using fresh independent samples, refreshing $v_{t}$ every $q$ steps and otherwise using the recursive mini-batch update. If
+
+$\eta\leq(8L)^{-1},\qquad B\geq\frac{256\bar{\sigma}^{2}}{\varepsilon^{2}},\qquad b\geq 512q\eta^{2}L_{\rm ms}^{2},\qquad T\geq\frac{1024\Delta}{\eta\varepsilon^{2}},$ (38)
+
+then, for $R$ uniform on $\{0,\ldots,T-1\}$ , the computed iterate $x_{R+1}$ satisfies
+
+$\mathbb{E}\!\left[\operatorname{dist}(0,\nabla\Phi(x_{R+1})+\partial h(x_{R+1}))\right]\leq\varepsilon.$ (39)
+
+With $q=\lceil\bar{\sigma}/\varepsilon\rceil$ and $L_{\rm ms}=O(L)$ , the number of stochastic gradient calls is
+
+$\widetilde{O}\!\left(\frac{\bar{\sigma}L\Delta}{\varepsilon^{3}}+\frac{\bar{\sigma}^{2}}{\varepsilon^{2}}\right).$ (40)
+
+Apply the lemma to $F_{\beta}$ with $\varepsilon_{\rm int}=c\varepsilon/K_{\rm opt}$ . Choose
+
+$\eta\asymp L_{\beta}^{-1},\qquad q\asymp\bar{\sigma}_{\beta}/\varepsilon_{\rm int},\qquad B\asymp\bar{\sigma}_{\beta}^{2}/\varepsilon_{\rm int}^{2},\qquad b\asymp q\eta^{2}L_{{\rm ms},\beta}^{2},\qquad T\asymp\Delta L_{\beta}/\varepsilon_{\rm int}^{2}.$
+
+The refresh steps use $\lceil T/q\rceil B$ samples. The other steps use $Tb$ samples. Thus
+
+$\left\lceil\frac{T}{q}\right\rceil B+Tb\leq\widetilde{O}\!\left(\frac{\bar{\sigma}_{\beta}L_{\beta}\Delta}{\varepsilon_{\rm int}^{3}}+\frac{\bar{\sigma}_{\beta}^{2}}{\varepsilon_{\rm int}^{2}}\right)\leq\widetilde{O}\!\left(K_{\rm opt}\mathsf{V}\varepsilon^{-3}\right).$
+
+The last inequality uses $\varepsilon\in(0,1)$ and the definition of $K_{\rm opt}$ . The stationarity residual is at most $c\varepsilon/K_{\rm opt}$ in expectation. Set $\widehat{\theta}=\theta^{+}$ . The residual bound and Lemma 11 give $\mathbb{E}[\mathcal{R}(\widehat{\theta})]\leq\varepsilon$ . If each sample is weighted by its rollout length, $\mathsf{V}$ becomes $\mathsf{W}$ . $\square$
+
+H.5 Proof of Lemma 13
+
+The proof has two steps. We first establish descent for the inexact proximal update and then control the recursive gradient error.
+
+Step 1: Establish descent.
+
+Define the exact gradient mapping $G_{t}$ , the computed step $d_{t}$ , and the gradient error $e_{t}$ by
+
+$G_{t}=\frac{1}{\eta}\left(x_{t}-\operatorname{prox}_{\eta h}(x_{t}-\eta\nabla\Phi(x_{t}))\right),\qquad d_{t}=\frac{1}{\eta}(x_{t}-x_{t+1}),\qquad e_{t}=v_{t}-\nabla\Phi(x_{t}).$
+
+The proximal map is nonexpansive, so $\|d_{t}-G_{t}\|_{2}\leq\|e_{t}\|_{2}$ and $\|G_{t}\|_{2}^{2}\leq 2\|d_{t}\|_{2}^{2}+2\|e_{t}\|_{2}^{2}$ . Proximal optimality gives $d_{t}-v_{t}\in\partial h(x_{t+1})$ , while smoothness gives
+
+$\displaystyle h(x_{t+1})-h(x_{t})$ $\displaystyle\leq\eta\langle v_{t},d_{t}\rangle-\frac{\eta}{2}\|d_{t}\|_{2}^{2},$ $\displaystyle\Phi(x_{t+1})-\Phi(x_{t})$ $\displaystyle\leq-\eta\langle\nabla\Phi(x_{t}),d_{t}\rangle+\frac{L\eta^{2}}{2}\|d_{t}\|_{2}^{2}.$
+
+Add the last two bounds and use $v_{t}=\nabla\Phi(x_{t})+e_{t}$ :
+
+$F(x_{t+1})\leq F(x_{t})-\eta\left(\frac{1}{2}-\frac{L\eta}{2}\right)\|d_{t}\|_{2}^{2}+\eta\langle e_{t},d_{t}\rangle.$
+
+Use $\eta\leq(8L)^{-1}$ and $\langle e_{t},d_{t}\rangle\leq\frac{1}{8}\|d_{t}\|_{2}^{2}+2\|e_{t}\|_{2}^{2}$ . Then
+
+$\mathbb{E}F(x_{t+1})\leq\mathbb{E}F(x_{t})-\frac{\eta}{4}\mathbb{E}\|d_{t}\|_{2}^{2}+2\eta\mathbb{E}\|e_{t}\|_{2}^{2}.$
+
+Sum over $t$ and use $\|G_{t}\|^{2}\leq 2\|d_{t}\|^{2}+2\|e_{t}\|^{2}$ :
+
+$\sum\nolimits_{t=0}^{T-1}\mathbb{E}\|G_{t}\|_{2}^{2}\leq\frac{8\Delta}{\eta}+18\sum\nolimits_{t=0}^{T-1}\mathbb{E}\|e_{t}\|_{2}^{2}.$
+
+Step 2: Control the recursive gradient error.
+
+We next bound $e_{t}$ . We use the following SARAH/STORM recursion [ 50 , 51 ] .
+
+Let $G(\theta;\xi)$ be an unbiased refresh estimator and let $D(\theta,\theta^{\prime};\xi)$ be a stochastic difference estimator satisfying
+
+$\displaystyle\mathbb{E}[G(\theta;\xi)]$ $\displaystyle=\nabla\Phi(\theta),$ $\displaystyle\mathbb{E}\|G(\theta;\xi)-\nabla\Phi(\theta)\|_{2}^{2}$ $\displaystyle\leq\sigma^{2},$ (41) $\displaystyle\mathbb{E}[D(\theta,\theta^{\prime};\xi)]$ $\displaystyle=\nabla\Phi(\theta)-\nabla\Phi(\theta^{\prime}),$ $\displaystyle\mathbb{E}\|D(\theta,\theta^{\prime};\xi)\|_{2}^{2}$ $\displaystyle\leq L_{\rm ms}^{2}\|\theta-\theta^{\prime}\|_{2}^{2}.$
+
+At the start $s$ of an epoch and, respectively, at a recursive step $t>s$ , set
+
+$v_{s}=\frac{1}{B}\sum\nolimits_{j=1}^{B}G(\theta_{s};\xi_{j}),\qquad v_{t}=v_{t-1}+\frac{1}{b}\sum\nolimits_{j=1}^{b}D(\theta_{t},\theta_{t-1};\xi_{t,j}),$ (42)
+
+using fresh samples in every mini-batch. Then
+
+$\mathbb{E}\|v_{t}-\nabla\Phi(\theta_{t})\|_{2}^{2}\leq\frac{\sigma^{2}}{B}+\frac{L_{\rm ms}^{2}}{b}\sum\nolimits_{r=s+1}^{t}\mathbb{E}\|\theta_{r}-\theta_{r-1}\|_{2}^{2}.$ (43)
+
+Apply Lemma 14 to each epoch. If an epoch starts at $s$ , let $\ell_{s}=\min\{q,T-s\}$ . Then
+
+$\sum\nolimits_{t=s}^{s+\ell_{s}-1}\mathbb{E}\|e_{t}\|_{2}^{2}\leq\frac{\ell_{s}\sigma^{2}}{B}+\frac{qL_{\rm ms}^{2}}{b}\sum\nolimits_{r=s+1}^{s+\ell_{s}-1}\mathbb{E}\|x_{r}-x_{r-1}\|_{2}^{2}.$
+
+Sum over all epochs. Also use $\|x_{r}-x_{r-1}\|_{2}^{2}=\eta^{2}\|d_{r-1}\|_{2}^{2}\leq 2\eta^{2}\|G_{r-1}\|_{2}^{2}+2\eta^{2}\|e_{r-1}\|_{2}^{2}$ . We get
+
+$\sum\nolimits_{t=0}^{T-1}\mathbb{E}\|e_{t}\|_{2}^{2}\leq\frac{T\sigma^{2}}{B}+\frac{2q\eta^{2}L_{\rm ms}^{2}}{b}\sum\nolimits_{t=0}^{T-1}\mathbb{E}\|G_{t}\|_{2}^{2}+\frac{2q\eta^{2}L_{\rm ms}^{2}}{b}\sum\nolimits_{t=0}^{T-1}\mathbb{E}\|e_{t}\|_{2}^{2}.$
+
+Since $b\geq 512q\eta^{2}L_{\rm ms}^{2}$ , move the last term to the left:
+
+$\sum\nolimits_{t=0}^{T-1}\mathbb{E}\|e_{t}\|_{2}^{2}\leq\frac{2T\sigma^{2}}{B}+\frac{1}{128}\sum\nolimits_{t=0}^{T-1}\mathbb{E}\|G_{t}\|_{2}^{2}.$
+
+Insert this into the descent bound:
+
+$\sum\nolimits_{t=0}^{T-1}\mathbb{E}\|G_{t}\|_{2}^{2}\leq\frac{10\Delta}{\eta}+\frac{42T\sigma^{2}}{B}.$
+
+The choices of $B$ and $T$ give
+
+$\frac{1}{T}\sum_{t=0}^{T-1}\mathbb{E}\|G_{t}\|_{2}^{2}\leq\left(\frac{10}{1024}+\frac{42}{256}\right)\varepsilon^{2},\qquad\frac{1}{T}\sum_{t=0}^{T-1}\mathbb{E}\|e_{t}\|_{2}^{2}\leq\frac{2}{256}\varepsilon^{2}+\frac{1}{128T}\sum_{t=0}^{T-1}\mathbb{E}\|G_{t}\|_{2}^{2}.$
+
+Also, $\|d_{t}-G_{t}\|_{2}\leq\|e_{t}\|_{2}$ , so $T^{-1}\sum_{t}\mathbb{E}\|d_{t}\|_{2}^{2}\leq 2T^{-1}\sum_{t}\mathbb{E}(\|G_{t}\|_{2}^{2}+\|e_{t}\|_{2}^{2})$ . Proximal optimality gives
+
+$\operatorname{dist}\!\left(0,\nabla\Phi(x_{t+1})+\partial h(x_{t+1})\right)\leq(1+L\eta)\|d_{t}\|_{2}+\|e_{t}\|_{2}.$
+
+Square this bound and average over uniform $R$ . Use $L\eta\leq 1/8$ and the two bounds above. The result is at most $\varepsilon^{2}$ . Jensen’s inequality gives the stated expected residual. Finally, refresh steps use $\lceil T/q\rceil B$ samples and recursive steps use $Tb$ samples. Substitute $q=\lceil\bar{\sigma}/\varepsilon\rceil$ and $L_{\rm ms}=O(L)$ to get $\widetilde{O}(\bar{\sigma}L\Delta\varepsilon^{-3}+\bar{\sigma}^{2}\varepsilon^{-2})$ . $\square$
+
+H.6 Proof of Lemma 14
+
+At a refresh step, independence gives $\mathbb{E}\|v_{s}-\nabla\Phi(\theta_{s})\|_{2}^{2}\leq\sigma^{2}/B$ . For $t>s$ , define
+
+$\Delta_{t}=\frac{1}{b}\sum\nolimits_{j=1}^{b}D(\theta_{t},\theta_{t-1};\xi_{t,j})-\left(\nabla\Phi(\theta_{t})-\nabla\Phi(\theta_{t-1})\right).$
+
+Thus $\mathbb{E}[\Delta_{t}\mid\mathcal{F}_{t-1}]=0$ and $\mathbb{E}[\|\Delta_{t}\|_{2}^{2}\mid\mathcal{F}_{t-1}]\leq(L_{\rm ms}^{2}/b)\|\theta_{t}-\theta_{t-1}\|_{2}^{2}$ . Also, $v_{t}-\nabla\Phi(\theta_{t})=v_{t-1}-\nabla\Phi(\theta_{t-1})+\Delta_{t}$ . The cross term has conditional mean zero. Apply this identity from $s+1$ to $t$ to get the stated bound. $\square$
+
+H.7 Proof of Lemma 11
+
+Since $z_{i}\geq 0$ , we have $[g_{i}(\theta)]_{+}\leq|g_{i}(\theta)+z_{i}|$ , and hence $\|[g(\theta)]_{+}\|_{1}\leq r_{c}$ . The normal cone is
+
+$N_{\mathbb{R}_{+}}(z_{i})=\begin{cases}(-\infty,0],&z_{i}=0,\\ \{0\},&z_{i}>0.\end{cases}$
+
+Let $e_{i}=\operatorname{dist}(0,y_{i}+N_{\mathbb{R}_{+}}(z_{i}))$ . If $z_{i}=0$ , then $|[y_{i}]_{-}|\leq e_{i}$ and $y_{i}z_{i}=0$ . If $z_{i}>0$ , then $|y_{i}|\leq e_{i}$ . Hence
+
+$\|y-[y]_{+}\|_{2}\leq\|e\|_{2}\leq r_{z},\qquad\sum\nolimits_{i}[y_{i}]_{+}z_{i}\leq\sum\nolimits_{i}e_{i}z_{i}\leq Z\sqrt{m}\,r_{z}.$
+
+Set $\lambda=[y]_{+}$ . Then
+
+$\left\|\nabla f(\theta)+J_{g}(\theta)^{\top}\lambda\right\|_{2}\leq r_{\theta}+\|J_{g}(\theta)\|_{\mathrm{op}}\|y-\lambda\|_{2}\leq r_{\theta}+B_{J}r_{z}.$
+
+Let $e^{c}_{i}=g_{i}(\theta)+z_{i}$ . Since $g_{i}(\theta)=e^{c}_{i}-z_{i}$ ,
+
+$\sum\nolimits_{i}|\lambda_{i}g_{i}(\theta)|\leq\sum\nolimits_{i}\lambda_{i}|e^{c}_{i}|+\sum\nolimits_{i}\lambda_{i}z_{i}\leq\Lambda r_{c}+Z\sqrt{m}\,r_{z}.$
+
+These are the three terms in $\mathcal{R}(\theta)$ . Adding them proves the lemma. ∎
+
+H.8 Proof of Lemma 12
+
+We prove the refresh bound, the recursive bound, and the smoothness bound in this order.
+
+Step 1: Construct the refresh estimator.
+
+Let $C(x,\xi)=\widehat{g}(\theta,\xi)+z$ , whose sampled Jacobian is $J_{C}(x,\xi)=[\,\widehat{J}_{g}(\theta,\xi)\ \ I_{m}\,]$ . Use independent samples for the two factors and define
+
+$\widehat{\nabla}\Phi_{\beta}(x;\xi_{0},\xi_{1},\xi_{2})=\widehat{\nabla}f(\theta;\xi_{0})+\beta J_{C}(x,\xi_{1})^{\top}C(x,\xi_{2})$
+
+Independence gives $\mathbb{E}[J_{C}(x,\xi_{1})^{\top}C(x,\xi_{2})]=\mathbb{E}[J_{C}(x,\xi_{1})]^{\top}\mathbb{E}[C(x,\xi_{2})]=J_{c}(x)^{\top}c(x)$ . Thus this is an unbiased estimator of $\nabla\Phi_{\beta}(x)=\nabla f(\theta)+\beta J_{c}(x)^{\top}c(x)$ .
+
+For the variance, use $J_{C}^{\top}C-J_{c}^{\top}c=J_{C}^{\top}(C-c)+(J_{C}-J_{c})^{\top}c$ . The moment bounds then give $\mathbb{E}\|J_{C}^{\top}C-J_{c}^{\top}c\|_{2}^{2}\leq 2K_{J}^{2}K_{V}\mathsf{V}+2K_{c}^{2}K_{V}\mathsf{V}$ . Add the variance of $\widehat{\nabla}f$ and use $\beta\geq 1$ . This gives $K_{\sigma}^{2}\beta^{2}\mathsf{V}$ .
+
+Step 2: Construct the recursive difference estimator.
+
+Now construct the recursive difference. Draw $\xi_{1}$ and $\xi_{2}$ independently at $x$ . Let $L_{\xi_{j}}(x^{\prime}\mid x)$ be the likelihood ratio from $x$ to $x^{\prime}$ . It equals one for fixed-distribution samples. Define
+
+$\displaystyle D_{\beta}(x,x^{\prime};\xi_{0},\xi_{1},\xi_{2})={}$ $\displaystyle\widehat{\nabla}f(x;\xi_{0})-L_{\xi_{0}}(x^{\prime}\mid x)\widehat{\nabla}f(x^{\prime};\xi_{0})$ $\displaystyle+\beta\Big[J_{C}(x,\xi_{1})^{\top}C(x,\xi_{2})-L_{\xi_{1}}(x^{\prime}\mid x)L_{\xi_{2}}(x^{\prime}\mid x)J_{C}(x^{\prime},\xi_{1})^{\top}C(x^{\prime},\xi_{2})\Big].$
+
+The two ratios change measure for the two samples. Independence gives $\mathbb{E}[L_{\xi_{1}}(x^{\prime}\mid x)L_{\xi_{2}}(x^{\prime}\mid x)J_{C}(x^{\prime},\xi_{1})^{\top}C(x^{\prime},\xi_{2})]=J_{c}(x^{\prime})^{\top}c(x^{\prime})$ . The same identity holds for the objective-gradient term, so $\mathbb{E}[D_{\beta}(x,x^{\prime};\xi_{0},\xi_{1},\xi_{2})]=\nabla\Phi_{\beta}(x)-\nabla\Phi_{\beta}(x^{\prime})$ .
+
+For the second moment, define $\mathcal{P}(u;\xi_{1},\xi_{2})=L_{\xi_{1}}(u\mid x)L_{\xi_{2}}(u\mid x)J_{C}(u,\xi_{1})^{\top}C(u,\xi_{2})$ . The mean-value theorem gives $\|\mathcal{P}(x;\xi_{1},\xi_{2})-\mathcal{P}(x^{\prime};\xi_{1},\xi_{2})\|_{2}\leq\sup_{u\in[x,x^{\prime}]}\|\nabla_{u}\mathcal{P}(u;\xi_{1},\xi_{2})\|_{\rm op}\|x-x^{\prime}\|_{2}$ . Each derivative acts on one likelihood ratio, $J_{C}$ , or $C$ . Assumption 3 and Lemma 8 bound these terms. Hence
+
+$\mathbb{E}\|\mathcal{P}(x;\xi_{1},\xi_{2})-\mathcal{P}(x^{\prime};\xi_{1},\xi_{2})\|_{2}^{2}\leq K^{2}\|x-x^{\prime}\|_{2}^{2}$
+
+for a finite constant $K$ . The same argument applies to the objective-gradient term. The factor $\beta$ gives the bound $K_{\rm ms}^{2}\beta^{2}\|x-x^{\prime}\|_{2}^{2}$ .
+
+Step 3: Verify smoothness and the initial gap.
+
+The same product expansion gives the smoothness bound from $J_{C}(x)^{\top}C(x)-J_{C}(x^{\prime})^{\top}C(x^{\prime})=J_{C}(x)^{\top}(C(x)-C(x^{\prime}))+(J_{C}(x)-J_{C}(x^{\prime}))^{\top}C(x^{\prime})$ .
+
+Finally, item 1 of Assumption 3 gives $F_{\beta}(x_{0})-\inf_{x}F_{\beta}(x)\leq\Delta$ . This proves the lemma. ∎
+
+H.9 Proof of Lemma 10
+
+If $b_{i}^{0}<0$ , the result is immediate. Now suppose $b_{i,H}\geq 0$ . The budget update gives $\sum_{t=0}^{H-1}w_{i,t}(s_{t},a_{t})\leq b_{i}^{0}=\lfloor(d_{i}-\alpha_{\rm tail})/\eta_{i}\rfloor$ . Also, $\gamma^{t}c_{i}(s_{t},a_{t})\leq\eta_{i}w_{i,t}(s_{t},a_{t})$ . Thus
+
+$\sum\nolimits_{t=0}^{H-1}\gamma^{t}c_{i}(s_{t},a_{t})\leq\eta_{i}\left\lfloor\frac{d_{i}-\alpha_{\rm tail}}{\eta_{i}}\right\rfloor\leq d_{i}-\alpha_{\rm tail}.$
+
+The tail after time $H$ is at most $\gamma^{H}/(1-\gamma)\leq\alpha_{\rm tail}$ . Hence $b_{i,H}\geq 0$ implies $\sum_{t=0}^{\infty}\gamma^{t}c_{i}(s_{t},a_{t})\leq d_{i}$ . The contrapositive gives ( 29 ). Taking probabilities gives ( 30 ). ∎
+
+Appendix I Experiment Details
+
+I.1 Synthetic CCMDP diagnostics
+
+Synthetic instance and protocol.
+
+The synthetic diagnostic is a finite-state absorbing discounted MDP with random absorption time. It has eight decision states $s_{0},\ldots,s_{7}$ , one bad state $b$ , and one absorbing terminal state $s_{\mathrm{term}}$ , with initial state $s_{0}$ and discount factor $\gamma=0.95$ . At each decision state there are two actions, safe $(a=0)$ and risky $(a=1)$ . Both actions have self-loop probability $0.06$ , which makes the process genuinely infinite-horizon rather than fixed-horizon. The safe action has bad-transition probability $0.002$ and moves forward with probability $0.938$ . The risky action has bad-transition probability $p_{i}^{r}$ and moves forward with probability $0.94-p_{i}^{r}$ ; the values of $p_{i}^{r}$ and risky rewards are listed in Table A.1 . The bad state moves to $s_{\mathrm{term}}$ , and $s_{\mathrm{term}}$ is absorbing.
+
+The chance constraint is
+
+$\mathbb{P}\!\left(\sum\nolimits_{t=0}^{\infty}\gamma^{t}c(s_{t},a_{t})>0.50\right)\leq 0.13.$
+
+Only the bad state has nonzero cost, $c(b,a)=1$ , while all decision and terminal states have zero cost. The safe action reward is $0.45$ at every decision state; the bad and terminal states have zero reward. We enumerate all $2^{8}=256$ stationary deterministic policies and use the same class for both learned selectors and the oracle. For each $N\in\{500,1000,2000,5000,10000,20000,50000\}$ , we draw $N$ next-state samples from each of the 16 decision-state/action rows, giving a total budget $D=16N$ . The bad and terminal transition rows are known. Within each repetition, both methods share one empirical kernel $\widehat{P}$ , reused across time, policies, safety evaluation, and reward evaluation. We use 150 independent empirical-model draws at each budget, with random seed 20260503, and evaluate selected policies exactly under the true kernel. The datasets at different budgets are drawn separately and are not nested prefixes of one sample stream.
+
+Practical Bellman selector and comparator.
+
+Since the bad state incurs a unit cost only once, violation occurs exactly when it is visited at a time $t\leq 13$ , where $0.95^{13}>0.50$ and $0.95^{14}<0.50$ . Thus the violation recursion is exact for this instance, despite the unbounded absorption time. The method labeled CCMDP in the figure computes a buffered safe-probability recursion. Initialize $\underline{F}_{14}^{\pi}\equiv 1$ ; for $h=13,\ldots,0$ , set $\underline{F}_{h}^{\pi}(b)=0$ , $\underline{F}_{h}^{\pi}(s_{\mathrm{term}})=1$ , and, at each decision state, use
+
+$\displaystyle m_{h}^{\pi}(s)$ $\displaystyle=\widehat{P}(\cdot\mid s,\pi(s))^{\top}\underline{F}_{h+1}^{\pi},$ $\displaystyle\widehat{v}_{h}^{\pi}(s)$ $\displaystyle=\widehat{P}(\cdot\mid s,\pi(s))^{\top}(\underline{F}_{h+1}^{\pi})^{2}-(m_{h}^{\pi}(s))^{2},$ $\displaystyle\underline{F}_{h}^{\pi}(s)$ $\displaystyle=\left[m_{h}^{\pi}(s)-0.75\left(\sqrt{\frac{4\max\{0,\widehat{v}_{h}^{\pi}(s)\}}{N}}+\frac{14}{3(N-1)}\right)\right]_{[0,1]}.$
+
+The CCMDP selector maximizes the exact empirical-model discounted return $\widehat{J}(\pi)$ subject to $q_{\mathrm{buf}}(\pi):=1-\underline{F}_{0}^{\pi}(s_{0})\leq 0.13$ . The radius uses the implementation’s fixed log term 2 and scale 0.75. The resulting buffered estimate is used for policy selection and plotted in Panel C.
+
+The Markov-CMDP comparator maximizes the same $\widehat{J}(\pi)$ subject to $\mathbb{E}_{\widehat{P}}[C^{\pi}]\leq\delta d=0.065$ , where $C^{\pi}=\sum_{t\geq 0}\gamma^{t}c(s_{t},a_{t})$ . This is a sufficient chance-safety condition under the true model by Markov’s inequality, but its empirical implementation has no additional uncertainty buffer. The experiment compares the true safety and return of the policies selected by these two rules. The oracle maximizes true return subject to true chance feasibility within the same 256-policy class.
+
+Table A.1: State-dependent risky-action parameters in the synthetic CCMDP. The safe action uses reward $0.45$ and bad-transition probability $0.002$ at every decision state.
+
+Synthetic results.
+
+Figure A.1 illustrates the conservatism–return tradeoff of the two deterministic selectors. At $D=8{,}000$ , the buffered selector has lower mean true return than Markov-CMDP (3.562 versus 4.026); its mean return exceeds the comparator’s at the tested budgets $D\geq 32{,}000$ . At $D=800{,}000$ , their mean returns are 4.391 and 3.928, respectively, compared with the same-class oracle value 4.404. The buffered selector returns a truly feasible policy in all 150 trials at each tested budget. Markov-CMDP returns 148 truly feasible policies out of 150 at the smallest budget and 150 out of 150 at each remaining budget. The pointwise two-sided 95% Clopper–Pearson interval for 150 successes out of 150 is approximately $[0.9757,1]$ . Both methods return a policy in every reported trial. The return bands show the mean plus or minus 1.96 empirical standard errors across model draws.
+
+Panel A displays repetition 0 at five budgets. The selections at $D=160{,}000$ and $320{,}000$ coincide with that at $80{,}000$ and are omitted to avoid overlap. The displayed improvement is illustrative: individual repetitions need not improve monotonically with the sample budget. Panel C compares empirical and buffered violation estimates with exact values for all 256 policies in the single draw with $N=1{,}000$ , repetition 0.
+
+Figure A.1: Synthetic CCMDP diagnostic with shared transition samples. A: true violation probability and discounted return for all 256 stationary deterministic policies, with CCMDP selections from repetition 0 at the indicated budgets; the Markov-CMDP marker uses $D=16{,}000$ . The oracle is optimal within the same policy class. B: mean true return over 150 empirical-model draws per budget, with shaded bands of $\pm 1.96$ empirical standard errors. C: empirical and practically buffered violation estimates for one shared model at $D=16{,}000$ , against exact true probabilities; the diagonal indicates equality and the dotted lines mark $\delta=0.13$ .
+
+Model-free experiment.
+
+We apply the variance-reduced policy-gradient method (VR-PG) with the recursive proximal updates of Algorithm 2 to the same synthetic instance, using a stationary Bernoulli policy with one logit per decision state. The initial risky-action probability is 0.5 at every state, and the initial nonnegative slack is zero. We optimize the normalized negative return with the quadratic slack penalty, using $\rho=0.0035$ , fixed $\beta=80$ , numerical step size 0.01, and 250,000 updates. Thus the tightened training threshold is $\delta-2\rho=0.123$ . The gradient estimator is refreshed every 20 updates using 2,048 independent trajectory triples; intervening updates use 128 triples with likelihood-ratio corrections. Each triple supplies independent reward-gradient, risk-gradient, and risk-value samples. The proximal step projects the slack onto the nonnegative half-line. Training uses 168 million trajectories. True-model evaluations are used to display the trajectory of the learned policies.
+
+Figure A.2 shows the VR-PG optimization trajectory for training seed 11. The return rises from 4.16658 initially to 4.36245 at the last iterate, whose true violation probability is 0.12769. The best enumerated deterministic feasible return is 4.40376, and the multi-start numerical stochastic reference has return 4.50970 at violation probability 0.13.
+
+After training, a separate random draw selects uniformly from the 250,000 post-update policies; the selected candidate is at iteration 59,611. Its true return is 4.29506 and its true violation probability is 0.12601. An independent batch of 602,267 trajectories gives a violation estimate of 0.126168; adding the validation margin $\rho/2=0.00175$ yields 0.127918. Since this upper bound is below $\delta=0.13$ , the candidate is accepted. The selected candidate and the last iterate are marked separately in the figure.
+
+Figure A.2: VR-PG on the synthetic CCMDP with $\rho=0.0035$ and $\beta=80$ . The optimization trajectory is shown against the deterministic policy landscape and alongside the evolution of return and violation probability. The inset includes the numerical stochastic reference; the selected policy is marked in magenta on the return curve. Its independent validation upper bound lies below $\delta=0.13$ .
+
+I.2 IEEE 14-bus storage-control setting
+
+The storage-control experiment in Section 6 is a finite-state CCMDP built from an IEEE 14-bus DC power-flow simulator. The state is $s_{t}=(e_{t},\tau_{t},\ell_{t})$ , where $e_{t}\in\{0,0.1,\ldots,1.0\}$ is storage state of charge, $\tau_{t}$ is one of four time blocks, and $\ell_{t}$ is one of four load regimes with multipliers $(0.82,1.00,1.18,1.42)$ . Thus $|\mathcal{S}|=176$ . The storage device is placed at bus 14, and the action set is $\{-12,-6,0,6,12\}$ MW, where negative actions charge and positive actions discharge. Storage capacity is $48$ MWh, with charging and discharging efficiencies both equal to $0.95$ ; infeasible commands are clipped to the SOC range and rounded to the nearest SOC grid point.
+
+The time block advances deterministically, while the load regime follows a time-dependent Markov chain. With rows and columns ordered as low, normal, high, and extreme, the transition row is $P_{\rm load}(\cdot\mid\tau,\ell)=0.75P_{\rm base}(\ell,\cdot)+0.25P_{\rm time}(\tau,\cdot)$ , where
+
+$P_{\rm base}=\begin{bmatrix}0.68&0.25&0.06&0.01\\ 0.15&0.62&0.19&0.04\\ 0.04&0.20&0.58&0.18\\ 0.02&0.08&0.30&0.60\end{bmatrix},\qquad P_{\rm time}=\begin{bmatrix}0.55&0.35&0.09&0.01\\ 0.18&0.55&0.22&0.05\\ 0.05&0.25&0.45&0.25\\ 0.10&0.35&0.40&0.15\end{bmatrix}.$
+
+The initial distribution puts SOC at $0.5$ , time at night, and load-regime probabilities $(0.15,0.70,0.13,0.02)$ .
+
+Rewards measure normalized operating benefit. The time-block prices are $(0.45,0.75,1.35,1.05)$ , and the reward is an affine normalization of negative operating cost to $[0,1]$ . The safety cost is normalized line-overload severity from the DC power-flow solution: if $\rho_{\max}(s,a)$ is the maximum line-loading ratio after applying action $a$ , then $c(s,a)=\min\{1,[\rho_{\max}(s,a)-1]_{+}/0.5\}$ . The chance constraint used in the reported IEEE 14-bus experiment is
+
+$\mathbb{P}_{P,\pi,\mu}\!\left(\sum\nolimits_{t=0}^{\infty}\gamma^{t}c(s_{t},a_{t})>0.30\right)\leq 0.15,\qquad\gamma=0.85.$ (44)
+
+For the finite Bellman violation table, we use tail allowance $\alpha_{\rm tail}=0.005$ and budget-grid width $\eta=0.0015$ . By ( 4 ), these choices give
+
+$H=48,\qquad b^{0}=\left\lfloor\frac{d-\alpha_{\rm tail}}{\eta}\right\rfloor=196.$
+
+The structured policy class contains $144$ threshold storage policies together with the always-idle policy, for a total of $145$ policies. A threshold policy discharges when the load regime and SOC exceed prescribed thresholds, charges during low-price periods when the load and SOC are below prescribed thresholds, and otherwise idles. All comparisons in Figure 1 use this same policy class.
+
+For the sample-budget experiment, we use $N\in\{25,50,100,200,500,1000\}$ next-state samples per original state–action row and repeat the experiment for $60$ independent empirical-model trials. For safety certification, independent transition batches are drawn across Bellman stages. Reward ranking uses a separate empirical transition model sampled independently of the safety data.
+
+The main comparison is between the practical Bellman-buffered selector and a Markov-CMDP expected-cost benchmark over the same policy class. We write $C_{\pi}=\sum_{t=0}^{\infty}\gamma^{t}c(s_{t},a_{t})$ . By Markov’s inequality, $\mathbb{P}_{P,\pi,\mu}(C_{\pi}>d)\leq\frac{\mathbb{E}_{P,\pi,\mu}[C_{\pi}]}{d}$ , so the condition
+
+$\mathbb{E}_{P,\pi,\mu}[C_{\pi}]\leq\delta d=0.045$ (45)
+
+is sufficient for the original chance constraint. The Markov-CMDP reference in Figure 1 is the highest-return policy in the same structured class satisfying ( 45 ) under the true transition model. The chance-constrained oracle is the highest-return policy in the same class satisfying ( 44 ).
+
+True-model discounted returns and expected discounted safety costs are computed from the known finite transition kernel for evaluation only. Violation probabilities displayed in Figure 1 are estimated under the true transition kernel using $50{,}000$ Monte Carlo trajectories of length $100$ . These true-model quantities are not available to the learner and are used only for evaluation and construction of the oracle references.
+
+Practical certificate used in the plots.
+
+The IEEE 14-bus experiment uses the horizon-normalized empirical buffer $\alpha_{\rm emp}(N)=\frac{0.20}{H}\sqrt{\frac{\log\!\left(2H|\mathcal{S}||\mathcal{A}|(b^{0}+1)/0.05\right)}{2N}}$ . A candidate is accepted when its buffered Bellman violation estimate is at most $\delta=0.15$ . This numerical buffer preserves the leading $N^{-1/2}$ dependence of the theoretical concentration radius but uses a calibrated constant and does not apply the $\rho$ -tightening used in Theorem 1 . Consequently, Figure 1 should be interpreted as an empirical illustration of the Bellman-certification mechanism rather than as a numerical verification of the theorem-level coverage constants.

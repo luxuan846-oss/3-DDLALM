@@ -1,0 +1,834 @@
+[
+  {
+    "name": "Algorithm_2_1.lean",
+    "path": "ReasBook/Papers/TR_LALM_theory/Algorithm_2_1.lean",
+    "sha": "1ab96a8f5b2789fd532f513f3e7cbeb67c60db6e",
+    "size": 2219,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Algorithm_2_1.lean?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Algorithm_2_1.lean",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/blobs/1ab96a8f5b2789fd532f513f3e7cbeb67c60db6e",
+    "download_url": "https://raw.githubusercontent.com/optpku/ReasBook/v4.32.2/ReasBook/Papers/TR_LALM_theory/Algorithm_2_1.lean",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Algorithm_2_1.lean?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/blobs/1ab96a8f5b2789fd532f513f3e7cbeb67c60db6e",
+      "html": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Algorithm_2_1.lean"
+    }
+  },
+  {
+    "name": "Algorithm_2_1",
+    "path": "ReasBook/Papers/TR_LALM_theory/Algorithm_2_1",
+    "sha": "b4082fe9f1ecff332437ed831981b0d1fe60fcd7",
+    "size": 0,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Algorithm_2_1?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/Algorithm_2_1",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/trees/b4082fe9f1ecff332437ed831981b0d1fe60fcd7",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Algorithm_2_1?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/trees/b4082fe9f1ecff332437ed831981b0d1fe60fcd7",
+      "html": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/Algorithm_2_1"
+    }
+  },
+  {
+    "name": "Assumption_2_1.lean",
+    "path": "ReasBook/Papers/TR_LALM_theory/Assumption_2_1.lean",
+    "sha": "a775f03c6de0a809edaef2bca6124dc5a83f1204",
+    "size": 282,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Assumption_2_1.lean?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Assumption_2_1.lean",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/blobs/a775f03c6de0a809edaef2bca6124dc5a83f1204",
+    "download_url": "https://raw.githubusercontent.com/optpku/ReasBook/v4.32.2/ReasBook/Papers/TR_LALM_theory/Assumption_2_1.lean",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Assumption_2_1.lean?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/blobs/a775f03c6de0a809edaef2bca6124dc5a83f1204",
+      "html": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Assumption_2_1.lean"
+    }
+  },
+  {
+    "name": "Assumption_2_1",
+    "path": "ReasBook/Papers/TR_LALM_theory/Assumption_2_1",
+    "sha": "715574c21f36540fddc3c9346bedd7e3dc5e8a0e",
+    "size": 0,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Assumption_2_1?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/Assumption_2_1",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/trees/715574c21f36540fddc3c9346bedd7e3dc5e8a0e",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Assumption_2_1?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/trees/715574c21f36540fddc3c9346bedd7e3dc5e8a0e",
+      "html": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/Assumption_2_1"
+    }
+  },
+  {
+    "name": "Assumption_2_3.lean",
+    "path": "ReasBook/Papers/TR_LALM_theory/Assumption_2_3.lean",
+    "sha": "34aad817222e7c159eb0bc30c8efeb3f9d92597e",
+    "size": 10505,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Assumption_2_3.lean?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Assumption_2_3.lean",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/blobs/34aad817222e7c159eb0bc30c8efeb3f9d92597e",
+    "download_url": "https://raw.githubusercontent.com/optpku/ReasBook/v4.32.2/ReasBook/Papers/TR_LALM_theory/Assumption_2_3.lean",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Assumption_2_3.lean?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/blobs/34aad817222e7c159eb0bc30c8efeb3f9d92597e",
+      "html": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Assumption_2_3.lean"
+    }
+  },
+  {
+    "name": "Assumption_2_3",
+    "path": "ReasBook/Papers/TR_LALM_theory/Assumption_2_3",
+    "sha": "78713c20540df4c5f8bf96cdae7d51896a09a7b0",
+    "size": 0,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Assumption_2_3?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/Assumption_2_3",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/trees/78713c20540df4c5f8bf96cdae7d51896a09a7b0",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Assumption_2_3?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/trees/78713c20540df4c5f8bf96cdae7d51896a09a7b0",
+      "html": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/Assumption_2_3"
+    }
+  },
+  {
+    "name": "Assumption_2_5.lean",
+    "path": "ReasBook/Papers/TR_LALM_theory/Assumption_2_5.lean",
+    "sha": "e6e6ee48e3b2f1c549fa03de99d47c01135403dc",
+    "size": 689,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Assumption_2_5.lean?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Assumption_2_5.lean",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/blobs/e6e6ee48e3b2f1c549fa03de99d47c01135403dc",
+    "download_url": "https://raw.githubusercontent.com/optpku/ReasBook/v4.32.2/ReasBook/Papers/TR_LALM_theory/Assumption_2_5.lean",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Assumption_2_5.lean?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/blobs/e6e6ee48e3b2f1c549fa03de99d47c01135403dc",
+      "html": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Assumption_2_5.lean"
+    }
+  },
+  {
+    "name": "Assumption_2_5",
+    "path": "ReasBook/Papers/TR_LALM_theory/Assumption_2_5",
+    "sha": "635aad2e2d905eff3fd5810069daa2631ae079da",
+    "size": 0,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Assumption_2_5?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/Assumption_2_5",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/trees/635aad2e2d905eff3fd5810069daa2631ae079da",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Assumption_2_5?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/trees/635aad2e2d905eff3fd5810069daa2631ae079da",
+      "html": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/Assumption_2_5"
+    }
+  },
+  {
+    "name": "Assumption_3_1.lean",
+    "path": "ReasBook/Papers/TR_LALM_theory/Assumption_3_1.lean",
+    "sha": "6a89f6f0f57b90d29e0a0e7e58573c7db7cd0e89",
+    "size": 758,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Assumption_3_1.lean?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Assumption_3_1.lean",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/blobs/6a89f6f0f57b90d29e0a0e7e58573c7db7cd0e89",
+    "download_url": "https://raw.githubusercontent.com/optpku/ReasBook/v4.32.2/ReasBook/Papers/TR_LALM_theory/Assumption_3_1.lean",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Assumption_3_1.lean?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/blobs/6a89f6f0f57b90d29e0a0e7e58573c7db7cd0e89",
+      "html": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Assumption_3_1.lean"
+    }
+  },
+  {
+    "name": "Assumption_3_1",
+    "path": "ReasBook/Papers/TR_LALM_theory/Assumption_3_1",
+    "sha": "c0e9a9cd447ce4219c5422cab45f62ead72d9204",
+    "size": 0,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Assumption_3_1?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/Assumption_3_1",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/trees/c0e9a9cd447ce4219c5422cab45f62ead72d9204",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Assumption_3_1?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/trees/c0e9a9cd447ce4219c5422cab45f62ead72d9204",
+      "html": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/Assumption_3_1"
+    }
+  },
+  {
+    "name": "Corollary_3_8.lean",
+    "path": "ReasBook/Papers/TR_LALM_theory/Corollary_3_8.lean",
+    "sha": "24820083db7ac6e0a8cf81165256a7699093dba4",
+    "size": 119498,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Corollary_3_8.lean?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Corollary_3_8.lean",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/blobs/24820083db7ac6e0a8cf81165256a7699093dba4",
+    "download_url": "https://raw.githubusercontent.com/optpku/ReasBook/v4.32.2/ReasBook/Papers/TR_LALM_theory/Corollary_3_8.lean",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Corollary_3_8.lean?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/blobs/24820083db7ac6e0a8cf81165256a7699093dba4",
+      "html": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Corollary_3_8.lean"
+    }
+  },
+  {
+    "name": "Corollary_3_8",
+    "path": "ReasBook/Papers/TR_LALM_theory/Corollary_3_8",
+    "sha": "58d5c6b1eb1b108e06916e48f90a1e875fc2c27b",
+    "size": 0,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Corollary_3_8?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/Corollary_3_8",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/trees/58d5c6b1eb1b108e06916e48f90a1e875fc2c27b",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Corollary_3_8?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/trees/58d5c6b1eb1b108e06916e48f90a1e875fc2c27b",
+      "html": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/Corollary_3_8"
+    }
+  },
+  {
+    "name": "Corollary_4_2.lean",
+    "path": "ReasBook/Papers/TR_LALM_theory/Corollary_4_2.lean",
+    "sha": "c14b7a7e23bb5789ff9ee80e5ffa7545db0c44f6",
+    "size": 437537,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Corollary_4_2.lean?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Corollary_4_2.lean",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/blobs/c14b7a7e23bb5789ff9ee80e5ffa7545db0c44f6",
+    "download_url": "https://raw.githubusercontent.com/optpku/ReasBook/v4.32.2/ReasBook/Papers/TR_LALM_theory/Corollary_4_2.lean",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Corollary_4_2.lean?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/blobs/c14b7a7e23bb5789ff9ee80e5ffa7545db0c44f6",
+      "html": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Corollary_4_2.lean"
+    }
+  },
+  {
+    "name": "Corollary_4_2",
+    "path": "ReasBook/Papers/TR_LALM_theory/Corollary_4_2",
+    "sha": "20cbf9daf02ebd83bef5f0585254ff706629643c",
+    "size": 0,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Corollary_4_2?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/Corollary_4_2",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/trees/20cbf9daf02ebd83bef5f0585254ff706629643c",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Corollary_4_2?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/trees/20cbf9daf02ebd83bef5f0585254ff706629643c",
+      "html": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/Corollary_4_2"
+    }
+  },
+  {
+    "name": "Current.lean",
+    "path": "ReasBook/Papers/TR_LALM_theory/Current.lean",
+    "sha": "bee4e89b5095b138dcc8d451098f4a66dcf55dc7",
+    "size": 5090,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Current.lean?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Current.lean",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/blobs/bee4e89b5095b138dcc8d451098f4a66dcf55dc7",
+    "download_url": "https://raw.githubusercontent.com/optpku/ReasBook/v4.32.2/ReasBook/Papers/TR_LALM_theory/Current.lean",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Current.lean?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/blobs/bee4e89b5095b138dcc8d451098f4a66dcf55dc7",
+      "html": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Current.lean"
+    }
+  },
+  {
+    "name": "Definition_2_2.lean",
+    "path": "ReasBook/Papers/TR_LALM_theory/Definition_2_2.lean",
+    "sha": "f67bf9d0fb4fc49c77f8ef40cd2f0631970af64e",
+    "size": 2428,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Definition_2_2.lean?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Definition_2_2.lean",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/blobs/f67bf9d0fb4fc49c77f8ef40cd2f0631970af64e",
+    "download_url": "https://raw.githubusercontent.com/optpku/ReasBook/v4.32.2/ReasBook/Papers/TR_LALM_theory/Definition_2_2.lean",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Definition_2_2.lean?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/blobs/f67bf9d0fb4fc49c77f8ef40cd2f0631970af64e",
+      "html": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Definition_2_2.lean"
+    }
+  },
+  {
+    "name": "Definition_2_2",
+    "path": "ReasBook/Papers/TR_LALM_theory/Definition_2_2",
+    "sha": "789edb3ae4189cebbf4e0e92590abcfa81631160",
+    "size": 0,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Definition_2_2?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/Definition_2_2",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/trees/789edb3ae4189cebbf4e0e92590abcfa81631160",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Definition_2_2?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/trees/789edb3ae4189cebbf4e0e92590abcfa81631160",
+      "html": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/Definition_2_2"
+    }
+  },
+  {
+    "name": "Definition_3_2.lean",
+    "path": "ReasBook/Papers/TR_LALM_theory/Definition_3_2.lean",
+    "sha": "f1e844c33d1437684b9c0a0e376d720d6f931e5c",
+    "size": 2542,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Definition_3_2.lean?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Definition_3_2.lean",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/blobs/f1e844c33d1437684b9c0a0e376d720d6f931e5c",
+    "download_url": "https://raw.githubusercontent.com/optpku/ReasBook/v4.32.2/ReasBook/Papers/TR_LALM_theory/Definition_3_2.lean",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Definition_3_2.lean?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/blobs/f1e844c33d1437684b9c0a0e376d720d6f931e5c",
+      "html": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Definition_3_2.lean"
+    }
+  },
+  {
+    "name": "Definition_3_2",
+    "path": "ReasBook/Papers/TR_LALM_theory/Definition_3_2",
+    "sha": "24d18b79ea5ecd61a5842531e40b3d069d45f2b5",
+    "size": 0,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Definition_3_2?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/Definition_3_2",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/trees/24d18b79ea5ecd61a5842531e40b3d069d45f2b5",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Definition_3_2?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/trees/24d18b79ea5ecd61a5842531e40b3d069d45f2b5",
+      "html": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/Definition_3_2"
+    }
+  },
+  {
+    "name": "Legacy_Restoration.lean",
+    "path": "ReasBook/Papers/TR_LALM_theory/Legacy_Restoration.lean",
+    "sha": "4541ede424dd4aac4f68b10e9a048d9dbe67de34",
+    "size": 30959,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Legacy_Restoration.lean?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Legacy_Restoration.lean",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/blobs/4541ede424dd4aac4f68b10e9a048d9dbe67de34",
+    "download_url": "https://raw.githubusercontent.com/optpku/ReasBook/v4.32.2/ReasBook/Papers/TR_LALM_theory/Legacy_Restoration.lean",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Legacy_Restoration.lean?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/blobs/4541ede424dd4aac4f68b10e9a048d9dbe67de34",
+      "html": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Legacy_Restoration.lean"
+    }
+  },
+  {
+    "name": "Legacy_Restoration",
+    "path": "ReasBook/Papers/TR_LALM_theory/Legacy_Restoration",
+    "sha": "a92d020ec79c6dedf26fa0ae85f3375491882d8a",
+    "size": 0,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Legacy_Restoration?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/Legacy_Restoration",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/trees/a92d020ec79c6dedf26fa0ae85f3375491882d8a",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Legacy_Restoration?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/trees/a92d020ec79c6dedf26fa0ae85f3375491882d8a",
+      "html": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/Legacy_Restoration"
+    }
+  },
+  {
+    "name": "Lemma_2_11.lean",
+    "path": "ReasBook/Papers/TR_LALM_theory/Lemma_2_11.lean",
+    "sha": "6aee5dfbc208bc5b092288a37dc55d52a212273c",
+    "size": 16252,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Lemma_2_11.lean?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Lemma_2_11.lean",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/blobs/6aee5dfbc208bc5b092288a37dc55d52a212273c",
+    "download_url": "https://raw.githubusercontent.com/optpku/ReasBook/v4.32.2/ReasBook/Papers/TR_LALM_theory/Lemma_2_11.lean",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Lemma_2_11.lean?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/blobs/6aee5dfbc208bc5b092288a37dc55d52a212273c",
+      "html": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Lemma_2_11.lean"
+    }
+  },
+  {
+    "name": "Lemma_2_11",
+    "path": "ReasBook/Papers/TR_LALM_theory/Lemma_2_11",
+    "sha": "23ba166f55079e844c1e2d7698f501b9af1714d6",
+    "size": 0,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Lemma_2_11?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/Lemma_2_11",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/trees/23ba166f55079e844c1e2d7698f501b9af1714d6",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Lemma_2_11?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/trees/23ba166f55079e844c1e2d7698f501b9af1714d6",
+      "html": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/Lemma_2_11"
+    }
+  },
+  {
+    "name": "Lemma_2_6.lean",
+    "path": "ReasBook/Papers/TR_LALM_theory/Lemma_2_6.lean",
+    "sha": "52f5ce605907667d16c1d600c52265010d4130bb",
+    "size": 20010,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Lemma_2_6.lean?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Lemma_2_6.lean",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/blobs/52f5ce605907667d16c1d600c52265010d4130bb",
+    "download_url": "https://raw.githubusercontent.com/optpku/ReasBook/v4.32.2/ReasBook/Papers/TR_LALM_theory/Lemma_2_6.lean",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Lemma_2_6.lean?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/blobs/52f5ce605907667d16c1d600c52265010d4130bb",
+      "html": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Lemma_2_6.lean"
+    }
+  },
+  {
+    "name": "Lemma_2_7.lean",
+    "path": "ReasBook/Papers/TR_LALM_theory/Lemma_2_7.lean",
+    "sha": "e81e90cd8955f21d9bbcd763f8814afa479909e3",
+    "size": 17571,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Lemma_2_7.lean?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Lemma_2_7.lean",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/blobs/e81e90cd8955f21d9bbcd763f8814afa479909e3",
+    "download_url": "https://raw.githubusercontent.com/optpku/ReasBook/v4.32.2/ReasBook/Papers/TR_LALM_theory/Lemma_2_7.lean",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Lemma_2_7.lean?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/blobs/e81e90cd8955f21d9bbcd763f8814afa479909e3",
+      "html": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Lemma_2_7.lean"
+    }
+  },
+  {
+    "name": "Lemma_2_8.lean",
+    "path": "ReasBook/Papers/TR_LALM_theory/Lemma_2_8.lean",
+    "sha": "8ee375f690fe56f4cc328f6499f0d7c90f3aea32",
+    "size": 24926,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Lemma_2_8.lean?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Lemma_2_8.lean",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/blobs/8ee375f690fe56f4cc328f6499f0d7c90f3aea32",
+    "download_url": "https://raw.githubusercontent.com/optpku/ReasBook/v4.32.2/ReasBook/Papers/TR_LALM_theory/Lemma_2_8.lean",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Lemma_2_8.lean?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/blobs/8ee375f690fe56f4cc328f6499f0d7c90f3aea32",
+      "html": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Lemma_2_8.lean"
+    }
+  },
+  {
+    "name": "Lemma_3_3.lean",
+    "path": "ReasBook/Papers/TR_LALM_theory/Lemma_3_3.lean",
+    "sha": "970582b98e054b8a52bf9803d0cabb64addc5319",
+    "size": 81356,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Lemma_3_3.lean?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Lemma_3_3.lean",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/blobs/970582b98e054b8a52bf9803d0cabb64addc5319",
+    "download_url": "https://raw.githubusercontent.com/optpku/ReasBook/v4.32.2/ReasBook/Papers/TR_LALM_theory/Lemma_3_3.lean",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Lemma_3_3.lean?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/blobs/970582b98e054b8a52bf9803d0cabb64addc5319",
+      "html": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Lemma_3_3.lean"
+    }
+  },
+  {
+    "name": "Lemma_3_3",
+    "path": "ReasBook/Papers/TR_LALM_theory/Lemma_3_3",
+    "sha": "5730096583db53a2ba96b46c22e2731ccd5ab113",
+    "size": 0,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Lemma_3_3?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/Lemma_3_3",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/trees/5730096583db53a2ba96b46c22e2731ccd5ab113",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Lemma_3_3?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/trees/5730096583db53a2ba96b46c22e2731ccd5ab113",
+      "html": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/Lemma_3_3"
+    }
+  },
+  {
+    "name": "Lemma_3_4.lean",
+    "path": "ReasBook/Papers/TR_LALM_theory/Lemma_3_4.lean",
+    "sha": "b9bdb5c25e78649df3036aa27e90b3713a985143",
+    "size": 119177,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Lemma_3_4.lean?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Lemma_3_4.lean",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/blobs/b9bdb5c25e78649df3036aa27e90b3713a985143",
+    "download_url": "https://raw.githubusercontent.com/optpku/ReasBook/v4.32.2/ReasBook/Papers/TR_LALM_theory/Lemma_3_4.lean",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Lemma_3_4.lean?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/blobs/b9bdb5c25e78649df3036aa27e90b3713a985143",
+      "html": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Lemma_3_4.lean"
+    }
+  },
+  {
+    "name": "Lemma_3_4",
+    "path": "ReasBook/Papers/TR_LALM_theory/Lemma_3_4",
+    "sha": "744892e8e0bfb13aa45b623c6a7bdf2bdaffceae",
+    "size": 0,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Lemma_3_4?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/Lemma_3_4",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/trees/744892e8e0bfb13aa45b623c6a7bdf2bdaffceae",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Lemma_3_4?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/trees/744892e8e0bfb13aa45b623c6a7bdf2bdaffceae",
+      "html": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/Lemma_3_4"
+    }
+  },
+  {
+    "name": "Lemma_3_5.lean",
+    "path": "ReasBook/Papers/TR_LALM_theory/Lemma_3_5.lean",
+    "sha": "6cbf2c147cf1af704736684475a81746ef027462",
+    "size": 81505,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Lemma_3_5.lean?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Lemma_3_5.lean",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/blobs/6cbf2c147cf1af704736684475a81746ef027462",
+    "download_url": "https://raw.githubusercontent.com/optpku/ReasBook/v4.32.2/ReasBook/Papers/TR_LALM_theory/Lemma_3_5.lean",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Lemma_3_5.lean?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/blobs/6cbf2c147cf1af704736684475a81746ef027462",
+      "html": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Lemma_3_5.lean"
+    }
+  },
+  {
+    "name": "Lemma_3_5",
+    "path": "ReasBook/Papers/TR_LALM_theory/Lemma_3_5",
+    "sha": "cfc603eec88fe3532a279552ccda298157f9d116",
+    "size": 0,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Lemma_3_5?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/Lemma_3_5",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/trees/cfc603eec88fe3532a279552ccda298157f9d116",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Lemma_3_5?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/trees/cfc603eec88fe3532a279552ccda298157f9d116",
+      "html": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/Lemma_3_5"
+    }
+  },
+  {
+    "name": "Paper.lean",
+    "path": "ReasBook/Papers/TR_LALM_theory/Paper.lean",
+    "sha": "774aa9e74b05e986c15c89c126ffc76f7a0ee62d",
+    "size": 393,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Paper.lean?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Paper.lean",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/blobs/774aa9e74b05e986c15c89c126ffc76f7a0ee62d",
+    "download_url": "https://raw.githubusercontent.com/optpku/ReasBook/v4.32.2/ReasBook/Papers/TR_LALM_theory/Paper.lean",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Paper.lean?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/blobs/774aa9e74b05e986c15c89c126ffc76f7a0ee62d",
+      "html": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Paper.lean"
+    }
+  },
+  {
+    "name": "Proposition_2_4.lean",
+    "path": "ReasBook/Papers/TR_LALM_theory/Proposition_2_4.lean",
+    "sha": "4fbfe654585b56c419f3b9ec42d3b358bad77abb",
+    "size": 22048,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Proposition_2_4.lean?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Proposition_2_4.lean",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/blobs/4fbfe654585b56c419f3b9ec42d3b358bad77abb",
+    "download_url": "https://raw.githubusercontent.com/optpku/ReasBook/v4.32.2/ReasBook/Papers/TR_LALM_theory/Proposition_2_4.lean",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Proposition_2_4.lean?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/blobs/4fbfe654585b56c419f3b9ec42d3b358bad77abb",
+      "html": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Proposition_2_4.lean"
+    }
+  },
+  {
+    "name": "Proposition_4_1.lean",
+    "path": "ReasBook/Papers/TR_LALM_theory/Proposition_4_1.lean",
+    "sha": "331b295b4e0aebb9adc02c46347f0371cb81d2d6",
+    "size": 26669,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Proposition_4_1.lean?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Proposition_4_1.lean",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/blobs/331b295b4e0aebb9adc02c46347f0371cb81d2d6",
+    "download_url": "https://raw.githubusercontent.com/optpku/ReasBook/v4.32.2/ReasBook/Papers/TR_LALM_theory/Proposition_4_1.lean",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Proposition_4_1.lean?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/blobs/331b295b4e0aebb9adc02c46347f0371cb81d2d6",
+      "html": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Proposition_4_1.lean"
+    }
+  },
+  {
+    "name": "Proposition_4_1",
+    "path": "ReasBook/Papers/TR_LALM_theory/Proposition_4_1",
+    "sha": "2a840f9846545182c0d0313434f9ee31eeb6488e",
+    "size": 0,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Proposition_4_1?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/Proposition_4_1",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/trees/2a840f9846545182c0d0313434f9ee31eeb6488e",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Proposition_4_1?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/trees/2a840f9846545182c0d0313434f9ee31eeb6488e",
+      "html": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/Proposition_4_1"
+    }
+  },
+  {
+    "name": "README.md",
+    "path": "ReasBook/Papers/TR_LALM_theory/README.md",
+    "sha": "d4c433f91553d6dc5be5d8311d14a5d1a9cfe2cc",
+    "size": 10138,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/README.md?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/README.md",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/blobs/d4c433f91553d6dc5be5d8311d14a5d1a9cfe2cc",
+    "download_url": "https://raw.githubusercontent.com/optpku/ReasBook/v4.32.2/ReasBook/Papers/TR_LALM_theory/README.md",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/README.md?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/blobs/d4c433f91553d6dc5be5d8311d14a5d1a9cfe2cc",
+      "html": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/README.md"
+    }
+  },
+  {
+    "name": "Remark_C_1.lean",
+    "path": "ReasBook/Papers/TR_LALM_theory/Remark_C_1.lean",
+    "sha": "02615b06ebde1fd16f9143fc0fa1a513ca5056b0",
+    "size": 11558,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Remark_C_1.lean?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Remark_C_1.lean",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/blobs/02615b06ebde1fd16f9143fc0fa1a513ca5056b0",
+    "download_url": "https://raw.githubusercontent.com/optpku/ReasBook/v4.32.2/ReasBook/Papers/TR_LALM_theory/Remark_C_1.lean",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Remark_C_1.lean?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/blobs/02615b06ebde1fd16f9143fc0fa1a513ca5056b0",
+      "html": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Remark_C_1.lean"
+    }
+  },
+  {
+    "name": "Remark_C_2.lean",
+    "path": "ReasBook/Papers/TR_LALM_theory/Remark_C_2.lean",
+    "sha": "98f523d0ae1300ea19ea6815993a1a91d1b4c0c2",
+    "size": 35387,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Remark_C_2.lean?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Remark_C_2.lean",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/blobs/98f523d0ae1300ea19ea6815993a1a91d1b4c0c2",
+    "download_url": "https://raw.githubusercontent.com/optpku/ReasBook/v4.32.2/ReasBook/Papers/TR_LALM_theory/Remark_C_2.lean",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Remark_C_2.lean?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/blobs/98f523d0ae1300ea19ea6815993a1a91d1b4c0c2",
+      "html": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Remark_C_2.lean"
+    }
+  },
+  {
+    "name": "Theorem_2_10.lean",
+    "path": "ReasBook/Papers/TR_LALM_theory/Theorem_2_10.lean",
+    "sha": "6bc1f2385ffe9e3f91194b6d5d9cdfbb7638c1cf",
+    "size": 43094,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Theorem_2_10.lean?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Theorem_2_10.lean",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/blobs/6bc1f2385ffe9e3f91194b6d5d9cdfbb7638c1cf",
+    "download_url": "https://raw.githubusercontent.com/optpku/ReasBook/v4.32.2/ReasBook/Papers/TR_LALM_theory/Theorem_2_10.lean",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Theorem_2_10.lean?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/blobs/6bc1f2385ffe9e3f91194b6d5d9cdfbb7638c1cf",
+      "html": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Theorem_2_10.lean"
+    }
+  },
+  {
+    "name": "Theorem_2_10",
+    "path": "ReasBook/Papers/TR_LALM_theory/Theorem_2_10",
+    "sha": "ed7847f799f08cd25bae2eddf1e222d14c0923de",
+    "size": 0,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Theorem_2_10?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/Theorem_2_10",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/trees/ed7847f799f08cd25bae2eddf1e222d14c0923de",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Theorem_2_10?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/trees/ed7847f799f08cd25bae2eddf1e222d14c0923de",
+      "html": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/Theorem_2_10"
+    }
+  },
+  {
+    "name": "Theorem_2_12.lean",
+    "path": "ReasBook/Papers/TR_LALM_theory/Theorem_2_12.lean",
+    "sha": "f64fc096d457a4d6aec7355b2460a6c1c39d5b43",
+    "size": 23271,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Theorem_2_12.lean?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Theorem_2_12.lean",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/blobs/f64fc096d457a4d6aec7355b2460a6c1c39d5b43",
+    "download_url": "https://raw.githubusercontent.com/optpku/ReasBook/v4.32.2/ReasBook/Papers/TR_LALM_theory/Theorem_2_12.lean",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Theorem_2_12.lean?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/blobs/f64fc096d457a4d6aec7355b2460a6c1c39d5b43",
+      "html": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Theorem_2_12.lean"
+    }
+  },
+  {
+    "name": "Theorem_2_12",
+    "path": "ReasBook/Papers/TR_LALM_theory/Theorem_2_12",
+    "sha": "27c4483bf5d8692ec4854caa04328b9d5f240a87",
+    "size": 0,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Theorem_2_12?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/Theorem_2_12",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/trees/27c4483bf5d8692ec4854caa04328b9d5f240a87",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Theorem_2_12?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/trees/27c4483bf5d8692ec4854caa04328b9d5f240a87",
+      "html": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/Theorem_2_12"
+    }
+  },
+  {
+    "name": "Theorem_2_13.lean",
+    "path": "ReasBook/Papers/TR_LALM_theory/Theorem_2_13.lean",
+    "sha": "04c0eea1d1eaf75c0e6031bac6e3c4eab15fc7d5",
+    "size": 62976,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Theorem_2_13.lean?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Theorem_2_13.lean",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/blobs/04c0eea1d1eaf75c0e6031bac6e3c4eab15fc7d5",
+    "download_url": "https://raw.githubusercontent.com/optpku/ReasBook/v4.32.2/ReasBook/Papers/TR_LALM_theory/Theorem_2_13.lean",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Theorem_2_13.lean?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/blobs/04c0eea1d1eaf75c0e6031bac6e3c4eab15fc7d5",
+      "html": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Theorem_2_13.lean"
+    }
+  },
+  {
+    "name": "Theorem_2_13",
+    "path": "ReasBook/Papers/TR_LALM_theory/Theorem_2_13",
+    "sha": "056682fafc5cfbe99647649e882ac4e7fd885ca3",
+    "size": 0,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Theorem_2_13?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/Theorem_2_13",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/trees/056682fafc5cfbe99647649e882ac4e7fd885ca3",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Theorem_2_13?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/trees/056682fafc5cfbe99647649e882ac4e7fd885ca3",
+      "html": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/Theorem_2_13"
+    }
+  },
+  {
+    "name": "Theorem_2_9.lean",
+    "path": "ReasBook/Papers/TR_LALM_theory/Theorem_2_9.lean",
+    "sha": "82e2d4313160c327e4ca7e57491515fb98256e16",
+    "size": 8597,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Theorem_2_9.lean?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Theorem_2_9.lean",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/blobs/82e2d4313160c327e4ca7e57491515fb98256e16",
+    "download_url": "https://raw.githubusercontent.com/optpku/ReasBook/v4.32.2/ReasBook/Papers/TR_LALM_theory/Theorem_2_9.lean",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Theorem_2_9.lean?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/blobs/82e2d4313160c327e4ca7e57491515fb98256e16",
+      "html": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Theorem_2_9.lean"
+    }
+  },
+  {
+    "name": "Theorem_2_9",
+    "path": "ReasBook/Papers/TR_LALM_theory/Theorem_2_9",
+    "sha": "91a8f3609b2879cf5ffc72a524b64fb5ffce2fc7",
+    "size": 0,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Theorem_2_9?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/Theorem_2_9",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/trees/91a8f3609b2879cf5ffc72a524b64fb5ffce2fc7",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Theorem_2_9?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/trees/91a8f3609b2879cf5ffc72a524b64fb5ffce2fc7",
+      "html": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/Theorem_2_9"
+    }
+  },
+  {
+    "name": "Theorem_3_6.lean",
+    "path": "ReasBook/Papers/TR_LALM_theory/Theorem_3_6.lean",
+    "sha": "24485de0d8acdb7dbd04838973ea0d931ca30b55",
+    "size": 41733,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Theorem_3_6.lean?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Theorem_3_6.lean",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/blobs/24485de0d8acdb7dbd04838973ea0d931ca30b55",
+    "download_url": "https://raw.githubusercontent.com/optpku/ReasBook/v4.32.2/ReasBook/Papers/TR_LALM_theory/Theorem_3_6.lean",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Theorem_3_6.lean?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/blobs/24485de0d8acdb7dbd04838973ea0d931ca30b55",
+      "html": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Theorem_3_6.lean"
+    }
+  },
+  {
+    "name": "Theorem_3_6",
+    "path": "ReasBook/Papers/TR_LALM_theory/Theorem_3_6",
+    "sha": "3bd6c520bc2b34d55d0a85c7d6b063d5dadd1258",
+    "size": 0,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Theorem_3_6?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/Theorem_3_6",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/trees/3bd6c520bc2b34d55d0a85c7d6b063d5dadd1258",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Theorem_3_6?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/trees/3bd6c520bc2b34d55d0a85c7d6b063d5dadd1258",
+      "html": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/Theorem_3_6"
+    }
+  },
+  {
+    "name": "Theorem_3_7.lean",
+    "path": "ReasBook/Papers/TR_LALM_theory/Theorem_3_7.lean",
+    "sha": "86013e23163e1b54f897b93d96badb50dab49c34",
+    "size": 287548,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Theorem_3_7.lean?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Theorem_3_7.lean",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/blobs/86013e23163e1b54f897b93d96badb50dab49c34",
+    "download_url": "https://raw.githubusercontent.com/optpku/ReasBook/v4.32.2/ReasBook/Papers/TR_LALM_theory/Theorem_3_7.lean",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Theorem_3_7.lean?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/blobs/86013e23163e1b54f897b93d96badb50dab49c34",
+      "html": "https://github.com/optpku/ReasBook/blob/v4.32.2/ReasBook/Papers/TR_LALM_theory/Theorem_3_7.lean"
+    }
+  },
+  {
+    "name": "Theorem_3_7",
+    "path": "ReasBook/Papers/TR_LALM_theory/Theorem_3_7",
+    "sha": "993316bce8ff8f3102c91aca3de8c9942a630c86",
+    "size": 0,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Theorem_3_7?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/Theorem_3_7",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/trees/993316bce8ff8f3102c91aca3de8c9942a630c86",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/Theorem_3_7?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/trees/993316bce8ff8f3102c91aca3de8c9942a630c86",
+      "html": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/Theorem_3_7"
+    }
+  },
+  {
+    "name": "theorem-map",
+    "path": "ReasBook/Papers/TR_LALM_theory/theorem-map",
+    "sha": "24594a422522fcab5e074c04e465e2d71553dbcf",
+    "size": 0,
+    "url": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/theorem-map?ref=v4.32.2",
+    "html_url": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/theorem-map",
+    "git_url": "https://api.github.com/repos/optpku/ReasBook/git/trees/24594a422522fcab5e074c04e465e2d71553dbcf",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/optpku/ReasBook/contents/ReasBook/Papers/TR_LALM_theory/theorem-map?ref=v4.32.2",
+      "git": "https://api.github.com/repos/optpku/ReasBook/git/trees/24594a422522fcab5e074c04e465e2d71553dbcf",
+      "html": "https://github.com/optpku/ReasBook/tree/v4.32.2/ReasBook/Papers/TR_LALM_theory/theorem-map"
+    }
+  }
+]

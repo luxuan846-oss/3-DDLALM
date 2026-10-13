@@ -1,0 +1,47 @@
+[
+  {
+    "anchor": "S3.Thmtheorem1",
+    "kind": "ltx_theorem ltx_theorem_proposition",
+    "text": "Proposition 3.1 (Lifted Function) . Suppose $H$ is twice continuously differentiable and bounded below, with $H(0)-\\inf H\\leq D$ and $\\left\\lVert\\nabla H(0)\\right\\rVert\\leq g$ . Then $f_{H}(x,\\cdot)$ is $\\mu$ -strongly concave and $\\displaystyle\\operatorname{Lip}(\\nabla f_{H})$ $\\displaystyle\\leq\\nu(1+\\gamma^{2})+\\ell h,$ (15) $\\displaystyle\\Phi_{H}(0)-\\inf\\Phi_{H}$ $\\displaystyle\\leq\\alpha D+\\frac{q^{2}g^{2}}{2\\mu},$ (16) $\\displaystyle\\left\\lVert\\nabla H(\\beta\\gamma x)\\right\\rVert$ $\\displaystyle\\leq\\frac{1+\\ell h/\\nu}{\\gamma q}\\left\\lVert\\nabla\\Phi_{H}(x)\\right\\rVert\\qquad\\forall x.$ (17) If $g_{H}$ has variance at most $v^{2}$ , the lifted oracle has variance at most $q^{2}v^{2}$ . If $g_{H}$ has averaged-smoothness constant $S$ , the lifted constant is at most $\\nu(1+\\gamma^{2})+hS$ ."
+  },
+  {
+    "anchor": "S3.Thmtheorem2",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 3.2 . The above result is important and characterizes several important properties of the lifted function $f_{H}$ . We want to highlight Equation ( 17 ) above, with this lower bound result, we transfer the lower bound study on the primal function $\\nabla\\Phi_{H}$ to that of $\\nabla H$ , which is well-studied in nonconvex minimization lower bound literature ( Carmon et al., 2020 ; Arjevani et al., 2023 ) . Moreover, note that $G(x,y;\\xi)-\\nabla f_{H}(x,y)=\\bigl(0,q[g_{H}(\\beta y;\\xi)-\\nabla H(\\beta y)]\\bigr).$ (18) Thus the unbounded quadratic gradient contributes no noise, which allows a uniform variance bound on the whole space."
+  },
+  {
+    "anchor": "S3.Thmtheorem3",
+    "kind": "ltx_theorem ltx_theorem_definition",
+    "text": "Definition 3.3 (First-Order Zero-Chain) . A differentiable function $H:\\mathbb{R}^{T}\\to\\mathbb{R}$ is a first-order zero-chain if $\\operatorname{prog}_{0}(\\nabla H(u))\\leq\\operatorname{prog}_{0}(u)+1\\qquad\\text{for every }u\\in\\mathbb{R}^{T}.$"
+  },
+  {
+    "anchor": "S3.Thmtheorem4",
+    "kind": "ltx_theorem ltx_theorem_definition",
+    "text": "Definition 3.4 (Probability- $p$ Zero-Chain) . Let $p\\in(0,1]$ , and let $g_{H}(u;\\xi)$ be an unbiased gradient estimator of $H$ . We call $g_{H}$ a probability- $p$ zero-chain (PZC) if $\\displaystyle\\mathbb{P}_{\\xi}\\!\\left(\\exists u\\in\\mathbb{R}^{T}:\\operatorname{prog}_{0}(g_{H}(u;\\xi))=\\operatorname{prog}_{1/4}(u)+1\\right)$ $\\displaystyle\\leq p,$ (20) $\\displaystyle\\mathbb{P}_{\\xi}\\!\\left(\\exists u\\in\\mathbb{R}^{T}:\\operatorname{prog}_{0}(g_{H}(u;\\xi))>\\operatorname{prog}_{1/4}(u)+1\\right)$ $\\displaystyle=0.$"
+  },
+  {
+    "anchor": "S4.Thmtheorem1",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 4.1 (Bounded Variance) . There are universal constants $c,c_{0}>0$ such that, for $L,\\mu,\\Delta>0$ , $\\sigma\\geq 0$ , $\\kappa=L/\\mu\\geq 8$ , and $0<{\\epsilon}^{2}\\leq c_{0}L\\Delta$ , $\\mathcal{C}_{{\\epsilon},{\\rm zr}}^{(1)}\\bigl(\\mathcal{I}_{\\rm BV}(L,\\mu,\\Delta,\\sigma)\\bigr)\\geq c\\frac{L\\Delta}{{\\epsilon}^{2}}\\max\\left\\{1,\\frac{\\kappa\\sigma^{2}}{{\\epsilon}^{2}}\\right\\}.$ (21) The same order holds for the expected-norm target. The hard instances have actual smoothness-to-strong-concavity ratio within universal constant factors of $\\kappa$ ."
+  },
+  {
+    "anchor": "S5.Thmtheorem1",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 5.1 (Averaged Smoothness) . There are universal constants $c,c_{0},c_{1}>0$ such that the following holds for every fixed finite $K\\geq 1$ . Let $\\overline{L},\\mu,\\Delta>0$ , $\\sigma\\geq 0$ , $\\kappa=\\overline{L}/\\mu\\geq 8$ , and suppose $0<{\\epsilon}^{2}\\leq c_{0}\\overline{L}\\Delta,\\qquad{\\epsilon}\\sigma\\leq c_{1}\\overline{L}\\Delta\\sqrt{\\kappa}.$ (23) Then $\\mathcal{C}_{{\\epsilon},{\\rm zr}}^{(K)}\\bigl(\\mathcal{I}_{\\rm AS}(\\overline{L},\\mu,\\Delta,\\sigma)\\bigr)\\geq c\\frac{\\overline{L}\\Delta}{{\\epsilon}^{2}}\\max\\left\\{1,\\min\\left\\{\\frac{\\kappa\\sigma^{2}}{{\\epsilon}^{2}},\\frac{\\kappa^{3/2}\\sigma}{{\\epsilon}}\\right\\}\\right\\}.$ (24) The same order holds for the expected-norm target."
+  },
+  {
+    "anchor": "S5.Thmtheorem2",
+    "kind": "ltx_theorem ltx_theorem_corollary",
+    "text": "Corollary 5.2 (Moreau Envelope Lower Bounds) . The lower bounds in Theorems 4.1 and 5.1 also hold, up to universal constant factors, when the required output satisfies either $\\mathbb{E}\\left\\lVert\\nabla P_{f}(\\hat{x})\\right\\rVert^{2}\\leq{\\epsilon}^{2}\\qquad\\text{or}\\qquad\\mathbb{E}\\left\\lVert\\nabla P_{f}(\\hat{x})\\right\\rVert\\leq{\\epsilon}.$ Here the parameters, oracle protocols, and algorithm class are unchanged."
+  },
+  {
+    "anchor": "A3.Thmtheorem2",
+    "kind": "ltx_theorem ltx_theorem_proposition",
+    "text": "Proposition C.2 (Stationarity lower bound) . Let $H=F_{T}$ with $T\\geq 2$ , let ${\\epsilon}>0$ , and use either base oracle from Lemma C.1 in the lift Equation ( 14 ). Suppose $\\gamma q=8{\\epsilon}$ and $\\ell h/\\nu\\leq 1/5$ . For every admissible zero-respecting algorithm using at most $R\\leq T/(4p)$ rounds, $\\mathbb{P}\\!\\left(\\left\\lVert\\nabla\\Phi_{H}(\\hat{x})\\right\\rVert>\\frac{20}{3}{\\epsilon}\\right)\\geq\\frac{3}{4}.$ (50) Consequently, $\\mathbb{E}\\left\\lVert\\nabla\\Phi_{H}(\\hat{x})\\right\\rVert\\geq 5{\\epsilon},\\qquad\\mathbb{E}\\left\\lVert\\nabla\\Phi_{H}(\\hat{x})\\right\\rVert^{2}\\geq\\frac{100}{3}{\\epsilon}^{2}.$ (51)"
+  },
+  {
+    "anchor": "A6.Thmtheorem1",
+    "kind": "ltx_theorem ltx_theorem_proposition",
+    "text": "Proposition F.1 (Primal smoothness) . For the lift in Proposition 3.1 , $\\operatorname{Lip}(\\nabla\\Phi_{H})\\leq\\frac{\\nu\\gamma^{2}\\ell h}{\\mu}.$ (63) Under either parameter choice in Appendices D - E , this upper bound is at most $5M/64$ ."
+  }
+]

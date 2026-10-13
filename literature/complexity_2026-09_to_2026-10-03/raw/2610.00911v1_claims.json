@@ -1,0 +1,37 @@
+[
+  {
+    "anchor": "Thmremark1",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 1 . Recent work on latent linear dynamics bandits [ 11 ] analyzes expected regret defined in terms of realized rewards. In this paper, we first establish a high-probability bound on the pseudo-regret $\\mathcal{R}^{\\mathrm{pseudo}}_{T}(\\pi)$ , which is defined with respect to the action-driven mean-reward functional. For adaptive policies, this pseudo-regret need not coincide with actual expected regret, because actions may be correlated with past process noise through previously observed rewards. We then translate the pseudo-regret guarantee into an actual expected regret guarantee for our block-committed algorithm by bounding the resulting adaptation gap (Lemma 8 )."
+  },
+  {
+    "anchor": "Thmassumption1",
+    "kind": "ltx_theorem ltx_theorem_assumption",
+    "text": "Assumption 1 (Action set) . The action set is compact, i.e., $\\mathcal{U}$ is closed and for all $\\mathbf{u}\\in\\mathcal{U}$ , $\\|\\mathbf{u}\\|_{2}\\leq 1$ ."
+  },
+  {
+    "anchor": "Thmassumption2",
+    "kind": "ltx_theorem ltx_theorem_assumption",
+    "text": "Assumption 2 (Stability) . For some $\\rho\\in(0,1)$ and $M_{\\rho}\\geq 1$ , $\\|\\mathbf{A}^{h}\\|_{2}\\leq M_{\\rho}\\rho^{h}$ for all $h\\geq 0$ ."
+  },
+  {
+    "anchor": "Thmassumption3",
+    "kind": "ltx_theorem ltx_theorem_assumption",
+    "text": "Assumption 3 (Sub-Gaussian noise) . Let $\\{\\mathcal{F}_{t}\\}_{t\\geq 0}$ be a filtration containing the interaction history and the latent process. At each round $t$ , the action $\\mathbf{u}_{t}$ is $\\mathcal{F}_{t-1}$ -measurable, and the noises $(z_{t},\\mathbf{w}_{t})$ are realized after $\\mathbf{u}_{t}$ is chosen. Conditional on $\\mathcal{F}_{t-1}$ , $z_{t}$ and $\\mathbf{w}_{t}$ are independent. The reward noise $z_{t}$ is conditionally $\\sigma_{z}^{2}$ -sub-Gaussian, and the process noise $\\mathbf{w}_{t}$ is conditionally sub-Gaussian with variance proxy $\\Sigma_{w}\\succeq{\\bf 0}_{n\\times n}$ : for every $\\mathbf{v}\\in\\mathbb{R}^{n}$ and every $\\alpha\\in\\mathbb{R}$ , $\\mathbb{E}\\!\\left[\\exp(\\alpha z_{t})\\mid\\mathcal{F}_{t-1}\\right]\\leq\\exp\\!\\left(\\frac{\\alpha^{2}\\sigma_{z}^{2}}{2}\\right)\\quad\\text{and}\\quad\\mathbb{E}\\!\\left[\\exp(\\alpha\\mathbf{v}^{\\top}\\mathbf{w}_{t})\\mid\\mathcal{F}_{t-1}\\right]\\leq\\exp\\!\\left(\\frac{\\alpha^{2}\\mathbf{v}^{\\top}\\boldsymbol{\\Sigma}_{w}\\mathbf{v}}{2}\\right)\\,.$"
+  },
+  {
+    "anchor": "Thmproposition1",
+    "kind": "ltx_theorem ltx_theorem_proposition",
+    "text": "Proposition 1 (Cyclic approximation) . Suppose that Assumptions 1 and 2 hold. Then, we have $\\sup_{\\mathbf{u}_{1:T}\\in\\mathcal{U}^{T}}\\sum_{t=1}^{T}\\bar{\\mu}_{t}(\\mathbf{u}_{1:t})-\\sum_{t=1}^{T}\\bar{\\mu}_{t}\\!\\left((\\mathbf{U}^{*}_{\\mathrm{cyc}})_{1:t}\\right)\\leq\\frac{2Tm}{m+L}R_{m}\\,,$ where $R_{m}:=\\frac{\\|\\mathbf{C}\\|_{2}\\|\\mathbf{B}\\|_{2}M_{\\rho}}{1-\\rho}$ . Consequently, $\\mathrm{OPT}_{T}-\\sum_{t=1}^{T}\\mu_{t}\\!\\left((\\mathbf{U}^{*}_{\\mathrm{cyc}})_{1:t}\\right)\\leq 2T\\Delta_{m}+\\frac{2Tm}{m+L}R_{m}\\,,$ where $\\Delta_{m}$ is the finite-memory truncation error defined in Eq. ( 3 )."
+  },
+  {
+    "anchor": "Thmremark2",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 2 (Maximization oracle) . The block selection step in Algorithm 1 is formulated as an offline UCB maximization problem over $\\mathcal{U}^{m+L}$ . Our theoretical analysis assumes access to an exact maximization oracle; similar oracle-based formulations have been widely used in the previous literature [ 9 , 23 , 12 ] . This allows us to focus on the statistical learning aspect of the problem, separately from the implementation of the offline optimizer. In practice, the UCB objective can be optimized approximately, for example by gradient ascent when $\\mathcal{U}$ is continuous. Designing computationally efficient oracles tailored to the block-UCB objective, together with corresponding regret guarantees, is an interesting direction for future work."
+  },
+  {
+    "anchor": "Thmtheorem1",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 1 (Actual expected regret of Algorithm 1 ) . Suppose the assumptions of Lemma 1 hold. For a fixed $\\delta\\in(0,1)$ , let $B_{T}(\\delta)$ be the pseudo-regret bound established in Lemma 1 . Define $\\Delta_{0}:=\\sum_{h=0}^{\\infty}\\|\\mathbf{G}_{h}\\|_{2}$ . Then, we have $\\mathrm{Regret}_{T}(\\pi)\\leq B_{T}(\\delta)+2\\delta T\\Delta_{0}+\\frac{\\|\\mathbf{C}\\|_{2}M_{\\rho}}{1-\\rho}\\sqrt{\\frac{p\\lambda_{\\max}(\\boldsymbol{\\Sigma}_{w})}{1-\\rho^{2}}}\\frac{T}{m+L}\\,.$ Consequently, choosing $\\delta=T^{-2}$ and the parameters $m=-\\frac{1}{2}\\log_{\\rho}T\\,,L=\\frac{\\sqrt{mT}}{d^{3/4}}-m\\,,\\lambda=L_{\\phi}^{2}\\,,$ up to integer rounding and whenever $L\\geq 1$ , gives $\\mathrm{Regret}_{T}(\\pi)=\\widetilde{O}\\!\\left(d^{3/4}\\sqrt{mT}+d\\sqrt{T}\\right)=\\widetilde{O}\\left(\\left[\\frac{p^{3/2}}{\\log(1/\\rho)^{5/4}}+\\frac{p^{2}}{\\log(1/\\rho)}\\right]\\sqrt{T}\\right)\\,.$"
+  }
+]

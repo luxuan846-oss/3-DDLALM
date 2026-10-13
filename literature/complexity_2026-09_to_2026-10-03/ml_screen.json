@@ -1,0 +1,1884 @@
+[
+  {
+    "id": "2610.01752",
+    "version_id": "2610.01752v1",
+    "title": "Near-optimal quantum query lower bounds on bipartiteness and expansion testing in the bounded-degree graph model",
+    "abstract": "In this work, we study bipartiteness and expansion testing, two canonical problems in graph property testing in the bounded-degree model through the lens of quantum query complexity. In the classical setting, it is known that $\\widetildeΘ(\\sqrt{N})$ queries are necessary and sufficient for both these testing problems (Goldreich and Ron, 1999, 2000 & 2002), where $N$ denotes the number of vertices of the input graph. Due to their significance, (Ambainis, Childs, and Liu, 2011) initiated the study of these problems in the quantum setting and designed quantum algorithms for bipartiteness and expansion testing that perform $\\widetilde{O}(N^{1/3})$ queries, showing a polynomial speedup. They also proved that $\\widetildeΩ(N^{1/4})$ queries are necessary for expansion testing, but the possibility of an exponential quantum advantage for bipartiteness testing remained open. Despite significant effort, there has been no improvement in these results in the last decade and a half. In this work, we prove essentially tight $\\widetildeΩ(N^{1/3})$ quantum query lower bounds for both bipartiteness and expansion testing, thereby completely characterizing the quantum query complexity of these problems up to polylogarithmic factors. While our proofs use the polynomial method similarly to Ambainis, Childs, and Liu, we use intermediate problems that we relate to the main problems via reductions, and perform a more precise analysis of the resulting polynomials, leading to the near-optimal lower bounds.",
+    "published": "2026-10-01T14:18:02Z",
+    "updated": "2026-10-01T14:18:02Z",
+    "authors": [
+      "Chandrima Kayal",
+      "Sayantan Sen",
+      "Dániel Szabó"
+    ],
+    "categories": [
+      "quant-ph",
+      "cs.DS"
+    ],
+    "comment": "38 pages",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2610.01752v1",
+    "pdf": "https://arxiv.org/pdf/2610.01752v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2610.01377",
+    "version_id": "2610.01377v1",
+    "title": "Minimax Optimal Regret for Causal Logistic Bandits with Counterfactual Fairness",
+    "abstract": "We study causal logistic bandits with counterfactual fairness constraints. The causal structure is given through known factual and counterfactual feature maps that share an unknown logistic reward parameter, but the learner observes only factual rewards. Consequently, the directions determining counterfactual feasibility need not be identifiable from the available feedback. The closest prior analyses either omit a coverage condition or impose a comparatively strong one, and do not establish matching lower bounds. We first show that some coverage condition is necessary: without a coverage-type restriction, factually indistinguishable environments with different optimal fair actions force $Ω(T)$ expected joint loss. Under a weaker full-rank condition on the factual covariance pooled across actions, we identify a target-specific information scale $V_\\star$ that measures the difficulty of estimating rewards and counterfactual effects from factual feedback. We construct worst-case families satisfying this condition on which every policy incurs expected joint loss $Ω\\left(\\left[V_\\star\\min\\{\\log K,d\\}\\right]^{1/3}T^{2/3}\\right)$. We also give an explore--then--exploit procedure tuned using $V_\\star$ and an adaptive algorithm that does not require its value. Both algorithms achieve $\\max\\{R_T,V_T\\}=\\widetilde{O}\\left(\\left[V_\\star\\min\\{\\log K,d\\}\\right]^{1/3}T^{2/3}+κd/σ_0^2\\right)$, where $R_T$ is regret relative to the best fair action and $V_T$ denotes the cumulative stage-wise positive violations. Thus the upper and lower bounds match in their leading dependence on $T$, $V_\\star$, and $\\min\\{\\log K,d\\}$, up to logarithmic factors.",
+    "published": "2026-10-01T09:44:44Z",
+    "updated": "2026-10-01T09:44:44Z",
+    "authors": [
+      "Junhyuk Huh",
+      "Seoungbin Bae",
+      "Dabeen Lee"
+    ],
+    "categories": [
+      "cs.LG"
+    ],
+    "comment": "",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2610.01377v1",
+    "pdf": "https://arxiv.org/pdf/2610.01377v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2610.00927",
+    "version_id": "2610.00927v1",
+    "title": "Rate-Optimal Algorithm for Adversarial Linear CMDPs",
+    "abstract": "We study episodic adversarial linear constrained Markov decision processes (CMDPs) with unknown transitions, where both the loss and constraint functions may vary adversarially across episodes. The best previous algorithm achieves $\\widetilde{\\mathcal{O}}(K^{3/4})$ regret and cumulative constraint violation, leaving a gap to the optimal $\\widetilde{\\mathcal{O}}(\\sqrt{K})$ dependence on the number of episodes $K$. We close this gap by proposing a new primal dual algorithm that achieves $\\widetilde{\\mathcal{O}}(\\sqrt{K})$ regret and cumulative constraint violation without assuming Slater's condition. The main challenge is that learning linear CMDPs requires uniform concentration over a value function class with a controlled covering number, whereas standard techniques in constrained online learning, such as policy mixing, can make this class more complex. Our algorithm combines adaptive Follow the Regularized Leader (FTRL), contracted value estimation, and an exponential Lyapunov function. An adaptive dual regularizer offsets the dependence on the dual weights in the primal regret bound, removing the need for policy mixing. We further show that the normalization in the FTRL update bounds the policy parameters independently of the magnitudes of the dual weights, which explains why the resulting policy class remains compatible with uniform concentration. Under feature access, the computational complexity is independent of the size of the state space.",
+    "published": "2026-10-01T02:03:07Z",
+    "updated": "2026-10-01T02:03:07Z",
+    "authors": [
+      "Kihyun Yu",
+      "Honghao Wei",
+      "Dabeen Lee"
+    ],
+    "categories": [
+      "cs.LG"
+    ],
+    "comment": "",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2610.00927v1",
+    "pdf": "https://arxiv.org/pdf/2610.00927v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2610.00911",
+    "version_id": "2610.00911v1",
+    "title": "Block Optimism for Nonstationary Bandits with Latent Linear Dynamics",
+    "abstract": "We study an endogenous nonstationary stochastic bandit problem with latent linear dynamics, where actions affect both immediate rewards and the future evolution of an unobserved latent state. Rewards are bilinear in the current action and latent state, inducing history-dependent rewards and a nontrivial long-horizon planning problem. The existing explore-then-commit approach achieves $\\tilde{O}(T^{2/3})$ regret by uniformly exploring to estimate the latent dynamics and then committing to an optimized open-loop action sequence. We show that this rate can be improved via adaptive block-level optimism. Our key step is a cyclic approximation: under stable dynamics, the infinite-memory reward process can be truncated, and the open-loop benchmark can be approximated by optimizing a finite-memory block-level proxy. Building on this reduction, we propose a UCB-based block algorithm that maintains confidence sets for the truncated dynamics parameters and selects blocks optimistically. We prove a regret bound of order $\\tilde{O}(\\sqrt T)$, significantly improving over the previous $\\tilde{O}(T^{2/3})$ guarantee for the same model. To the best of our knowledge, this is the first $\\tilde{O}(\\sqrt T)$ regret guarantee for latent linear-dynamics bandits with bilinear reward observations and an open-loop action-sequence benchmark.",
+    "published": "2026-10-01T01:43:18Z",
+    "updated": "2026-10-01T01:43:18Z",
+    "authors": [
+      "Taehyun Hwang",
+      "Hyunjun Choi",
+      "Heesang Ann",
+      "Min-hwan Oh"
+    ],
+    "categories": [
+      "stat.ML",
+      "cs.LG"
+    ],
+    "comment": "Accepted at NeurIPS 2026",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2610.00911v1",
+    "pdf": "https://arxiv.org/pdf/2610.00911v1",
+    "sources": [
+      "optimization_updates",
+      "neurips_2026"
+    ]
+  },
+  {
+    "id": "2609.40075",
+    "version_id": "2609.40075v1",
+    "title": "Accelerated Algorithm for Sparse Regularized Partial Optimal Transport",
+    "abstract": "Partial Optimal Transport (POT) extends the classical optimal transport problem by relaxing the strict mass conservation constraint, enabling its use in a wide range of real-world applications. In many of these settings, sparse transport plans are preferred for their interpretability and computational benefits. While smooth and strongly convex regularizers - such as quadratic or elastic net - have been vastly used in various machine learning applications to induce sparsity and accelerate computation, they have received less algorithmic attention compared to entropic approaches for computational POT. In this paper, we propose a new optimization framework that leverages these regularizers through a penalty-based reformulation, enabling efficient gradient-based updates while preserving the structure of the original problem. Our method accommodates a broad class of regularizers that promote structured and sparse transport plans. Building on this formulation, we design an accelerated first-order algorithm that alternates between smooth updates and simple projection steps. Through empirical benchmarks on color transfer, domain adaptation, and point cloud registration, our approach consistently outperforms established baselines - achieving lower transport cost, higher sparsity, and faster convergence - making it a practical and scalable solution for modern transport problems.",
+    "published": "2026-09-30T16:25:53Z",
+    "updated": "2026-09-30T16:25:53Z",
+    "authors": [
+      "Khoa Nguyen",
+      "Dung T. Nguyen",
+      "Thong Huynh",
+      "Hoang-Hiep Nguyen-Mau",
+      "Anh Nguyen",
+      "Minh Ngoc Dinh",
+      "Juho Kannala"
+    ],
+    "categories": [
+      "cs.LG"
+    ],
+    "comment": "36 pages, 13 figures. Submitted to the Journal of Optimization Theory and Applications",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.40075v1",
+    "pdf": "https://arxiv.org/pdf/2609.40075v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.38659",
+    "version_id": "2609.38659v2",
+    "title": "Bandits with Multiple Optimal Arms: Minimax Regret and Non-Adaptivity",
+    "abstract": "We study multi-armed bandits (MAB) with multiple optimal arms, motivated by the fact that many practical decision making problems admit multiple correct answers. For $K$-armed bandits with $A$ optimal arms, we first provide a sharper analysis of previous sub-sampling algorithms (De Heide et al., 2021; Zhu and Nowak, 2020), establishing a $\\tilde{O}\\Big(\\frac{K-A}{\\sqrt{KA}}\\sqrt{T} \\Big)$ minimax regret, where $T$ is the total number of interactions and $\\tilde O(\\cdot)$ drops all constant and logarithmic factors, improving the previous $\\tilde{O}(\\sqrt{KT/A})$ regret. We then provide a matching lower bound up to logarithmic factors, indicating that our established rate is nearly minimax-optimal. We further show that the knowledge of $A$ up to $\\tilde{O}(1)$ factors is necessary to achieve near-optimal regret, as near-optimal algorithms for one number of optimal arms must incur substantially larger regret than optimal regret for a smaller number. Overall, our results provide a comprehensive minimax characterization of $K$-armed bandits with $A$ over the entire range of $1 \\leq A \\leq K-1$.",
+    "published": "2026-09-29T23:33:10Z",
+    "updated": "2026-10-01T03:05:49Z",
+    "authors": [
+      "Kaixuan Ji",
+      "Qiwei Di",
+      "Qingyue Zhao",
+      "Heyang Zhao",
+      "Quanquan Gu"
+    ],
+    "categories": [
+      "stat.ML",
+      "cs.AI",
+      "cs.LG",
+      "math.ST",
+      "stat.ME"
+    ],
+    "comment": "",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.38659v2",
+    "pdf": "https://arxiv.org/pdf/2609.38659v2",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.36393",
+    "version_id": "2609.36393v1",
+    "title": "Reward-rate Policy Gradient for Efficient Machine Learning Engineering Agents",
+    "abstract": "Traditional reinforcement learning (RL) techniques focus on maximizing expected cumulative reward, where each action assumes to take a constant unit of time. However, this assumption does not hold for agentic RL tasks such as machine learning engineering (MLE) agents, where actions involve data loading, feature engineering, and model training that take variable durations. Efficiency matters in modern agentic RL where actions are costly. To address this limitation, we adapt from continuous-time RL and Semi-Markov Decision Process (SMDP) formulation and propose Reward-rate Policy Gradient (RPG), where we focus on optimizing the reward rate -- the long-term reward per unit of time. RPG estimates the reward rate from off-policy samples, then charges each action for the time it consumes at that rate. We first conduct theoretical analysis in the bandit setting to establish that RPG approximates the optimal reward rate and empirically demonstrate it outperforms baselines while avoiding enumeration over the policy space, a known issue for an existing method. We then further apply RPG on a small language model (Qwen3.5-4B) with self-improvement loops and empirically show it obtains higher rewards within a fixed time budget than vanilla RL on MLE-Bench and NanoGPT, with a 19.2% and 85.7% margin, respectively. Our method provides a practical solution for optimizing performance under wait time considerations in modern agentic RL tasks, where actions interact with external environments and cost time.",
+    "published": "2026-09-28T23:46:08Z",
+    "updated": "2026-09-28T23:46:08Z",
+    "authors": [
+      "Muhang Tian",
+      "Sherry Yang"
+    ],
+    "categories": [
+      "cs.LG",
+      "cs.AI"
+    ],
+    "comment": "",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.36393v1",
+    "pdf": "https://arxiv.org/pdf/2609.36393v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.36074",
+    "version_id": "2609.36074v1",
+    "title": "GEM-KMeans: Memory-Efficient and Accurate Clustering on Massive Scale with GPU Optimization",
+    "abstract": "Memory-efficient scaling on clustering problems without sacrificing statistical accuracy is of central interest for large-scale data analysis and machine learning problems. Nonnegative low-rank (NLR) matrix factorization for $K$-means is a scalable clustering method, which connects to semidefinite relaxations with optimal average-case exact recovery guarantees. However, a direct GPU implementation of NLR requires multiple large factor-sized buffers and substantial data movements that are essentially memory-bound. In this paper, we introduce GEM-KMeans, a spectrally normalized yet mathematically equivalent NLR formulation that fuses the gradient update, nonnegative projection, and sufficient statistics for normalization and iterate movement into a matrix-multiplication epilogue. Instead of retaining three massive factor-sized arrays, our IO-aware GPU implementation materializes only one single factor with small tile-reduction arrays as additional storage in the High Bandwidth Memory (HBM). We derive explicit memory costs and spectrally normalized smoothness bounds for optimizing the clustering objective function. Accurate clustering is demonstrated at massive scales on synthetic and real datasets, where performance gains of GEM-KMeans over existing GPU-accelerated Lloyd's algorithms involve data-dependent runtime tradeoffs.",
+    "published": "2026-09-28T18:23:05Z",
+    "updated": "2026-09-28T18:23:05Z",
+    "authors": [
+      "Peng Xu",
+      "Nihar Koganti",
+      "Volodymyr Kindratenko",
+      "Xiaohui Chen"
+    ],
+    "categories": [
+      "cs.LG",
+      "cs.AR",
+      "cs.PF"
+    ],
+    "comment": "",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.36074v1",
+    "pdf": "https://arxiv.org/pdf/2609.36074v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.35668",
+    "version_id": "2609.35668v2",
+    "title": "Optimal Query Complexity for Ground-State Preparation",
+    "abstract": "We determine the optimal query complexity of ground-state preparation to trace-distance error $\\varepsilon$ when an energy threshold in the spectral gap is known. Let $U_H$ be an $α$-block-encoding of a Hamiltonian with unique ground state $|ψ_0\\rangle$, and suppose $|\\langleψ_0|U_I|0\\rangle|\\geγ$ for a state-preparation oracle $U_I$. The threshold lies at least $Δ/2$ above the ground-state energy and at least $Δ/2$ below every excited-state energy. We give two algorithms that prepare a state within trace distance $\\varepsilon$ of the ground state. One uses $O((α/Δ)(γ^{-1}+\\log(1/\\varepsilon)))$ calls to $U_H$ in expectation; the other uses $O((α/(γΔ))\\log(1/\\varepsilon))$ calls to $U_H$ in the worst case. We prove a lower bound matching the expected query count; the corresponding worst-case lower bound follows from Somma and de Wolf [SdW26]. The respective bounds on calls to $U_I$ are $O(1/γ)$ in expectation and $O(γ^{-1}\\log(1/\\varepsilon))$ in the worst case. On $(N+1)$-dimensional systems, these $U_I$ bounds are also optimal when the expected or worst-case count of $U_H$ calls, respectively, is $o((α/Δ)\\sqrt N)$. Both algorithms use a constant-accuracy spectral filter to construct a purifier, which we then sequentially compose during amplitude amplification to prepare a state with constant overlap with the ground state. The expected-query algorithm repeats the preparation followed by one high-accuracy spectral filter until success. The worst-case algorithm uses filters of increasing accuracy and limits the total number of queries.",
+    "published": "2026-09-28T17:26:19Z",
+    "updated": "2026-10-01T16:51:44Z",
+    "authors": [
+      "Boyang Chen",
+      "Minbo Gao",
+      "Xinzhao Wang",
+      "Shuo Zhou"
+    ],
+    "categories": [
+      "quant-ph",
+      "cs.CC",
+      "cs.DS"
+    ],
+    "comment": "48 pages",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.35668v2",
+    "pdf": "https://arxiv.org/pdf/2609.35668v2",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.35628",
+    "version_id": "2609.35628v1",
+    "title": "Arbitrary-Accuracy Neural Approximation with Optimal Neuron Count and Near-Optimal Bit Complexity",
+    "abstract": "We study the minimum number of hidden neurons required for arbitrary-accuracy approximation of multivariate Hölder-continuous functions on $[0,1]^d$ and the associated encoding complexity. For $d\\geq 2$, we construct a fixed, explicitly defined activation function for which a closed-form network with two hidden layers of widths $d$ and $1$ achieves arbitrary accuracy in the uniform norm. We prove that $d+1$ is the exact minimum total number of hidden neurons among standard feedforward networks with locally integrable activations and affine outputs. We further give a simpler construction using a single elementary activation that combines the floor and exponential functions. This construction requires three hidden layers of widths $d$, $1$, and $2$, only two neurons above the minimum. If a skip connection is allowed, widths $d$, $1$, and $1$ suffice. These constructions use explicit grid addressing and integer encoding of quantized function values. For a bounded $α$-Hölder class, they require $O(\\varepsilon^{-d/α}\\log(1/\\varepsilon))$ bits, matching the metric-entropy lower bound up to a logarithmic factor.",
+    "published": "2026-09-28T17:00:04Z",
+    "updated": "2026-09-28T17:00:04Z",
+    "authors": [
+      "Zilan Cheng",
+      "Li-Lian Wang",
+      "Zhongjian Wang"
+    ],
+    "categories": [
+      "cs.LG",
+      "cs.NE",
+      "stat.ML"
+    ],
+    "comment": "",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.35628v1",
+    "pdf": "https://arxiv.org/pdf/2609.35628v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.35130",
+    "version_id": "2609.35130v1",
+    "title": "CTP-FL: Common-Trajectory Gradient Prediction for Federated Learning",
+    "abstract": "Communication-efficient federated optimization commonly spends several gradient evaluations between server updates. Existing local-update methods use this computation to advance an independent model on each client. Under heterogeneous data, however, these models evaluate gradients at different locations, making the aggregated update difficult to interpret as a gradient of the global objective. We study an alternative use of the same computation budget: \\emph{evaluate the global objective along a shared, predicted path}. We propose Common-Trajectory Predictive Federated Learning (\\texttt{CTP-FL}). At each round, all clients construct the same sequence of query points from the current global model and the previous aggregated direction, evaluate $K$ stochastic gradients along this sequence, and upload their average. The server then performs a single global update. Thus, \\texttt{CTP-FL} uses $K$ mini-batch gradients per client and one model-sized vector in each communication direction, matching the per-round computation and communication of full-participation FedAvg-M. Shared query points make the aggregated direction an unbiased estimator of the average \\emph{global} gradient along the predicted path. The remaining discrepancy from the gradient at the current model is controlled by the path length, without assuming bounded client-gradient dissimilarity or bounded gradients. For smooth non-convex objectives, we establish an $\\mathcal{O}\\!\\left( \\sqrt{LΔσ^2/(NKR)}+LΔ/R \\right)$ average-stationarity bound under full participation. The analysis isolates a testable trade-off: extending the prediction path provides more forward-looking gradient information but increases its displacement bias.",
+    "published": "2026-09-28T13:22:45Z",
+    "updated": "2026-09-28T13:22:45Z",
+    "authors": [
+      "Junkang Liu"
+    ],
+    "categories": [
+      "cs.LG",
+      "cs.AI"
+    ],
+    "comment": "",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.35130v1",
+    "pdf": "https://arxiv.org/pdf/2609.35130v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.35038",
+    "version_id": "2609.35038v1",
+    "title": "GUIDE-FBO: Guidance via Uncertainty Intervention and Distributional Exchange for Federated Bayesian Optimization",
+    "abstract": "Federated Bayesian Optimization (FBO) enables distributed agents to collaboratively optimize expensive black-box objectives without sharing raw local observations. However, effective knowledge transfer remains challenging under communication constraints and task heterogeneity. We propose GUIDE-FBO, in which agents exchange compact distributions over the locations of their respective optima inferred from local Gaussian process (GP) posteriors, rather than raw observations, query points, or surrogate parameters. The server merges and reweights these distributional components before returning a subset to each agent. Each agent then constructs a Federated Interventional GP (FI-GP), which preserves the local posterior mean and spatially rescales its covariance for local decision making. For the upper confidence bound (UCB) instantiation, GUIDE-UCB, we prove that any bounded FI-GP uncertainty intervention preserves the leading-order cumulative regret rate of standard GP-UCB. When the transferred distributions place greater support near an optimum than in a suboptimal region, selecting the latter requires greater local posterior uncertainty. Experiments on 12 synthetic benchmarks and three real-world optimization tasks show that GUIDE-FBO remains effective across settings ranging from homogeneous to severely heterogeneous. Ablation results highlight the importance of spatially localized uncertainty intervention, while the communication analysis shows that GUIDE-FBO exchanges only compact distributional messages.",
+    "published": "2026-09-28T12:37:48Z",
+    "updated": "2026-09-28T12:37:48Z",
+    "authors": [
+      "Jintao Wei",
+      "Chenxi Li",
+      "Songhao Wang"
+    ],
+    "categories": [
+      "stat.ML",
+      "cs.LG"
+    ],
+    "comment": "",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.35038v1",
+    "pdf": "https://arxiv.org/pdf/2609.35038v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.34812",
+    "version_id": "2609.34812v1",
+    "title": "Polylogarithmic Nash Regret in Matrix Games with Bandit Feedback",
+    "abstract": "We study Nash regret minimization in unknown finite matrix games with bandit payoff feedback and observed opponent actions. We develop Optimistic Payoff Balancing (OPB), which achieves instance-dependent $\\mathcal{O}(\\log^2 T)$ Nash regret against arbitrary adaptive opponents, including games with nonunique equilibria. This resolves the open problem posed by Maiti et al. (2025), extending their polylogarithmic guarantee under bandit feedback from $2\\times2$ games to arbitrary finite dimensions. To handle nonunique equilibria, we construct a reference strategy that leaves room for local adjustments. We order independent payoff differences by estimation accuracy and scale these adjustments by uncertainty, allowing the learner to exploit the opponent's imbalance to offset estimation costs. Our result thus shows that observing opponent actions suffices for polylogarithmic Nash regret in general finite matrix games.",
+    "published": "2026-09-28T10:13:59Z",
+    "updated": "2026-09-28T10:13:59Z",
+    "authors": [
+      "Yuheng Zhang"
+    ],
+    "categories": [
+      "cs.LG",
+      "cs.GT"
+    ],
+    "comment": "",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.34812v1",
+    "pdf": "https://arxiv.org/pdf/2609.34812v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.34656",
+    "version_id": "2609.34656v1",
+    "title": "Minimax Last-Iterate Convergence in Matrix Games with Observed Actions",
+    "abstract": "We study last-iterate convergence in unknown two-player zero-sum matrix games with bandit payoff feedback and observed opponent actions. For games with $d$ actions per player, we develop an algorithm achieving a duality gap of $\\widetilde{\\mathcal{O}}(\\sqrt{d/t})$ with high probability, simultaneously at every round $t$. This improves the dimension dependence of the best previously known guarantee by a factor of $d^{3/2}$. The rate matches a standard bandit lower bound, establishing minimax optimality in both the number of actions and the number of rounds, up to logarithmic factors. The algorithm is computationally efficient, requiring only $\\mathcal{O}(d)$ time and memory per round. Our technical contribution is a joint design of adaptive averaging and corrected exponential weights that absorbs estimation variance, together with a potential argument that bounds phase durations.",
+    "published": "2026-09-28T08:59:34Z",
+    "updated": "2026-09-28T08:59:34Z",
+    "authors": [
+      "Yuheng Zhang"
+    ],
+    "categories": [
+      "cs.LG",
+      "cs.GT"
+    ],
+    "comment": "",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.34656v1",
+    "pdf": "https://arxiv.org/pdf/2609.34656v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.33993",
+    "version_id": "2609.33993v1",
+    "title": "ASTRA: ADMM-Accelerated Topology Reconfiguration for Dynamic Satellite Constellations",
+    "abstract": "Dynamic topology reconfiguration is central to the reliability and efficiency of large satellite constellations, yet many existing approaches rely on idealized assumptions such as full constellation deployment or uniform orbital spacing. We present Adaptive Satellite Topology via Regret-Aware learning (ASTRA), a theoretically-grounded framework for dynamic satellite topology reconfiguration that builds on an online learning formulation and makes it computationally practical. ASTRA combines an ADMM-based offline solver with efficient online updates for both online gradient descent and online conditional gradient, yielding markedly cheaper constrained updates than generic optimization pipelines. On the theory side, we show that for a relevant class of entry-wise nonzero utility matrices, the objective is strongly convex, which yields logarithmic static regret for online gradient descent, and we further instantiate known dynamic-regret guarantees under inexact ADMM inner loops. Empirically, ASTRA matches or improves topology quality, presenting a good trade-off with computational time on synthetic constellations, and it remains effective on real Starlink data under partial deployment and non-uniform spacing, where idealized structural assumptions break down. These results position ASTRA as an efficient and theoretically grounded approach to topology reconfiguration in realistic Low Earth Orbit networks.",
+    "published": "2026-09-27T22:46:39Z",
+    "updated": "2026-09-27T22:46:39Z",
+    "authors": [
+      "João Norberto",
+      "Ricardo Ferreira",
+      "Cláudia Soares"
+    ],
+    "categories": [
+      "cs.LG"
+    ],
+    "comment": "Published at NeurIPS 2026",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.33993v1",
+    "pdf": "https://arxiv.org/pdf/2609.33993v1",
+    "sources": [
+      "optimization_updates",
+      "neurips_2026"
+    ]
+  },
+  {
+    "id": "2609.32805",
+    "version_id": "2609.32805v2",
+    "title": "Decision-Sufficient State Representations: Measuring and Reducing Write-Time Regret",
+    "abstract": "Long tasks produce more history than an LLM agent can hold in its context, and more than it uses reliably even when the history fits. A growing line of work therefore has agents carry a short written state instead: at every step a writer rewrites the state, and a reader acts from the state alone. Steps stay cheap, but anything the writer drops is lost before later decisions reveal that they need it. We quantify this loss and ask whether training can reduce it. Comparing the written state with the best state of the same size written in hindsight, we split the reader's loss into a budget loss, which any state of that size must incur, and a write-time regret, which comes from the writer's choices. In TextWorld cooking games where we control how long a fact must be carried before it is needed, a 128-token state holding the facts wins nearly every game, while prompted language-model writers win at most 17%. Almost all of the loss is write-time regret, and it grows with the delay. We then train the writer from the reader's own loss. DSSR (decision-sufficient state representations) scores candidate states by how well the reader acts after the writer carries them forward, and teaches the writer to prefer the better ones. This forward-rolled score predicts game outcomes ($ρ= 0.48$), whereas scoring a candidate as a fixed context, as hindsight methods usually do, does not ($ρ\\leq 0.07$). On a pre-registered test split opened once, training adds +7.0 [+1.9, +12.2] points of success when facts are needed soon, bringing a plain summary writer to the level of belief- and slot-based memory prompts. The gain shrinks as the delay grows and is significant only at the shortest delay. We trace this limit to credit assignment: keeping a fact now pays off only if every later rewrite keeps it too, which a per-step score cannot see.",
+    "published": "2026-09-26T17:27:32Z",
+    "updated": "2026-09-29T02:16:41Z",
+    "authors": [
+      "Bingyu Shen",
+      "Boyang Li"
+    ],
+    "categories": [
+      "cs.AI",
+      "cs.CL",
+      "cs.LG"
+    ],
+    "comment": "29 pages (10 main, 17 appendix), 12 figures (4 main, 8 appendix), 18 tables (2 main, 16 appendix)",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.32805v2",
+    "pdf": "https://arxiv.org/pdf/2609.32805v2",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.32790",
+    "version_id": "2609.32790v1",
+    "title": "FedHV: Low-Overhead Hypervolume Weighting for Federated Multi-Objective Optimization",
+    "abstract": "Task-wise federated multi-objective optimization (FedMOO) trains a shared model for competing prediction objectives under heterogeneous data, partial participation, and communication constraints. Existing methods commonly derive task weights from gradient or update geometry. This requires task-specific information or iterative server-side optimization. We introduce FedHV, which maps reference-relative objective slacks to closed-form inverse-slack weights. Each client optimizes one weighted loss and returns objective estimates with its model update. The protocol adds exactly 2m auxiliary scalars per participating client, yielding Theta(d + m) total per-client communication, compared with the Theta(md) task-specific communication of FSMGDA, and requires no additional synchronization stage. We analyze the resulting one-round-delayed weights under client heterogeneity, multi-step local updates, partial participation, and finite-sample objective reports. Under a fixed-horizon positive-slack reference condition, with the prescribed horizon-dependent step size and vanishing report error, FedHV achieves an O(T^(-1/2)) rate for the average squared log-hypervolume gradient norm; persistent report error determines the resulting stationarity neighborhood. The same bound controls the squared Pareto-stationarity residual. Across six Dirichlet-partitioned non-IID settings from four vision benchmark families and three training seeds, FedHV exceeds FSMGDA and FedCMOO in mean accuracy in five settings. Among these methods and uniform scalarization, it achieves the highest worst-task accuracy in four settings and improves the difficult CIFAR-10 objective in both CIFAR10-MNIST settings.",
+    "published": "2026-09-26T17:07:02Z",
+    "updated": "2026-09-26T17:07:02Z",
+    "authors": [
+      "Amirardalan Dehghanpour",
+      "Seyed Mohammad Azimi-Abarghouyi",
+      "Christopher G. Brinton"
+    ],
+    "categories": [
+      "cs.LG"
+    ],
+    "comment": "Preprint; submitted to ICLR 2027",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.32790v1",
+    "pdf": "https://arxiv.org/pdf/2609.32790v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.32464",
+    "version_id": "2609.32464v1",
+    "title": "Adapting Nonstationary Multi-output Gaussian Processes to Bayesian Optimization",
+    "abstract": "Multi-objective Bayesian optimization (MOBO) commonly relies on independent Gaussian processes (GPs) with stationary kernels, limiting its ability to represent nonstationary structure and share information between objectives. However, expressive nonstationary GPs do not necessarily make reliable BO decisions. We study this mismatch for the multi-output low-rank nonstationary (MO-LRN) GP: strong training fit can coexist with large off-design errors and optimistic acquisition predictions. We introduce MOLRN-BO, which combines a regularized shared-spectral surrogate with objective-specific residuals, prequential mean correction and tempered covariance scaling, and Pareto-local qLogEHVI optimization with periodic global search. Experiments on 12 deterministic bi-objective benchmarks show that MOLRN-BO substantially improves upon the original MO-LRN and achieves the best average problem ranks for final normalized hypervolume and normalized inverted generational distance among nine evaluated algorithms. It also achieves the strongest adverse-tail performance while remaining competitive with the leading baselines in anytime optimization. Ablation studies further show that the shared spectral construction improves off-design prediction, the local--global decision policy improves optimization performance, and hierarchical calibration reduces systematic candidate bias. These results demonstrate that nonstationary multi-output surrogates can deliver strong and robust MOBO performance when their structure and use are explicitly adapted to the demands of sequential optimization.",
+    "published": "2026-09-26T10:54:56Z",
+    "updated": "2026-09-26T10:54:56Z",
+    "authors": [
+      "Zikai Xie"
+    ],
+    "categories": [
+      "cs.LG",
+      "cs.AI"
+    ],
+    "comment": "",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.32464v1",
+    "pdf": "https://arxiv.org/pdf/2609.32464v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.32066",
+    "version_id": "2609.32066v1",
+    "title": "Optimal convergence analysis of arbitrary Lagrangian-Eulerian finite element methods for two-phase Stokes flow problems with moving interface",
+    "abstract": "In this paper, an arbitrary Lagrangian-Eulerian (ALE)-based finite element method (FEM) is developed and studied in a monolithic framework for a class of two-phase Stokes flow problems with moving interfaces and jump coefficients, where the mixed finite element approximation to Stokes moving interface problems is established and analyzed in both semi- and fully discrete schemes based on the ALE formulation. The key analytical technique involves a specific H^1-projection associated with the ALE-induced mesh motion due to the evolving interface. Optimal convergence properties of the proposed H^1-projection and its ALE temporal derivative are proved in both H^1 and L^2 norms, with which optimal error estimates are obtained for both semi- and fully discrete mixed finite element approximations to the studied Stokes moving interface problem in both H1 and L2 norms as well. Numerical experiments are carried out to validate all derived theoretical results. The developed analytical approach can be extended to Taylor-Hood and MINI mixed elements, as well as to more general two-phase flow problems.",
+    "published": "2026-09-25T23:05:34Z",
+    "updated": "2026-09-25T23:05:34Z",
+    "authors": [
+      "Yi Liang",
+      "Cheng Wang",
+      "Pengtao Sun",
+      "Yan Chen",
+      "Jiarui Han"
+    ],
+    "categories": [
+      "math.NA"
+    ],
+    "comment": "41 pages, 9 figures",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.32066v1",
+    "pdf": "https://arxiv.org/pdf/2609.32066v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.31458",
+    "version_id": "2609.31458v1",
+    "title": "Nonparametric In-Context Learning under Growing Geometric Complexity: Minimax Optimality and Local Geometry-Adaptivity of Transformers",
+    "abstract": "Transformers have become a central architecture for in-context learning (ICL), particularly through their state-of-the-art performance in large language models. This success motivates understanding how transformers exploit task-relevant structure in geometrically heterogeneous data. However, existing nonparametric ICL theory has largely focused on Euclidean domains or single-manifold models. To address this gap, we study the prediction problem under unknown local geometry, modeled by sample size-dependent mixtures of manifolds with heterogeneous dimensions, smoothness, and sampling masses. Under local separation and small-perturbation conditions, we establish a minimax lower bound capturing the aggregate difficulty of the components and construct an oracle tangent local-polynomial estimator with a matching upper bound. This estimator is connected to a structure-informed, two-stage softmax transformer with a geometric preconditioner and chartwise reduced local-polynomial solvers. The transformer achieves negligible approximation error relative to the minimax rate with logarithmic depth and polynomial size. Finally, we derive an in-context generalization bound for near empirical risk minimizers over this class. Together, these results identify conditions under which the resulting predictor exploits local geometry and attains the aggregate minimax rate.",
+    "published": "2026-09-25T16:10:53Z",
+    "updated": "2026-09-25T16:10:53Z",
+    "authors": [
+      "Jaehee Seo",
+      "Jisu Kim"
+    ],
+    "categories": [
+      "stat.ML",
+      "cs.LG",
+      "math.ST"
+    ],
+    "comment": "63 pages, 2 figures. Accepted at NeurIPS 2026",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.31458v1",
+    "pdf": "https://arxiv.org/pdf/2609.31458v1",
+    "sources": [
+      "optimization_updates",
+      "neurips_2026"
+    ]
+  },
+  {
+    "id": "2609.30829",
+    "version_id": "2609.30829v1",
+    "title": "Geometric Optimization Parameterized by Piercing Complexity",
+    "abstract": "Packing and covering problems for geometric regions have been studied under many notions of complexity, including VC-dimension, union complexity, shallow-cell complexity, and fatness. Although these restrictions often yield constant-factor approximation algorithms, they do not by themselves generally lead to PTASs. A recurring feature of known hardness constructions is that one region may be \\emph{pierced} by many others: a region $B$ pierces $A$ when $A\\setminus B$ is disconnected. We study geometric instances through the \\emph{piercing degree}. Since piercing is symmetric for Jordan regions, this is the maximum degree of the corresponding piercing graph. Our main result is that, for every fixed piercing degree, the standard local-search algorithms give PTASs for the unweighted \\emph{Discrete Independent Set} and \\emph{Set Cover} problems. The proof constructs a sublinear balanced separator for an appropriate locality graph and applies it adaptively throughout the recursive local-search analysis. This guarantee depends only on the piercing degree; in particular, it places no bound on the number of components created by an individual piercing pair. We also prove a polynomial shallow-trace bound depending only on the piercing degree. As consequences, for every fixed piercing degree, weighted Set Cover admits a deterministic $C_r$-approximation and weighted Discrete Independent Set admits a deterministic $O(r+1)$-approximation. These results extend the known guarantees for non-piercing families and apply, for example, to axis-parallel rectangles when every rectangle is pierced by only a bounded number of other rectangles.",
+    "published": "2026-09-25T05:15:56Z",
+    "updated": "2026-09-25T05:15:56Z",
+    "authors": [
+      "Aritra Banik",
+      "Rajiv Raman",
+      "Saurabh Ray"
+    ],
+    "categories": [
+      "cs.CG",
+      "cs.DS"
+    ],
+    "comment": "This is a corrected version of our ICALP 2026 paper. Unforunately, the conference version has an unfixable bug rendering the proofs incorrect. The current version proves the stronger (albeit with slightly worse running time)-the conference version required also a bound on the fragmentation number. This version removes the dependence on the fragmentation number",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.30829v1",
+    "pdf": "https://arxiv.org/pdf/2609.30829v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.30556",
+    "version_id": "2609.30556v1",
+    "title": "Dynamic Regret in Online Convex Optimization with Indicator Switching Costs",
+    "abstract": "We study dynamic regret in online convex optimization with an \\emph{indicator switching cost}: a fixed penalty incurred whenever two consecutive decisions differ. This captures startup overheads such as server activation, model deployment, and cache updates, and on a bounded domain it recovers norm-based movement costs as a special case. Existing guarantees for indicator costs handle only static comparators. We show that a direct extension of these techniques to dynamic regret provably fails, motivating a different approach. We propose a meta-learning framework: a set of randomized lazy FTRL base learners restarted at dyadic time scales, aggregated by a movement-aware master that mixes their proposal densities and samples actions via maximal coupling of consecutive mixtures. The resulting algorithm satisfies, in expectation, $\\mathcal{R}^{\\mathbf{1}}_T \\le \\tilde{\\mathcal{O}}(\\min\\{\\sqrt{T(S_T{+}1)},T^{2/3}(P_T+1)^{1/3}\\})$, where $\\mathcal{R}^{\\mathbf{1}}_T$ is the dynamic regret plus the cumulative indicator switching cost, $S_T$ counts comparator switches, and $P_T$ is the comparator path length. The bound holds simultaneously for all sequences and requires no prior knowledge of $S_T$ or $P_T$: it is minimax-optimal (up to logarithmic factors) for tracking piecewise-constant comparators, and also captures frequently moving comparators with small total path length.",
+    "published": "2026-09-24T21:08:40Z",
+    "updated": "2026-09-24T21:08:40Z",
+    "authors": [
+      "Naram Mhaisen",
+      "George Iosifidis"
+    ],
+    "categories": [
+      "cs.LG"
+    ],
+    "comment": "To appear in the proceedings of NeurIPS 2026",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.30556v1",
+    "pdf": "https://arxiv.org/pdf/2609.30556v1",
+    "sources": [
+      "optimization_updates",
+      "neurips_2026"
+    ]
+  },
+  {
+    "id": "2609.30501",
+    "version_id": "2609.30501v1",
+    "title": "To Solve Bilevel Optimization with Nonconvex Lower Levels, We Need Second-Order Stationarity",
+    "abstract": "Although bilevel optimization (BLO) has emerged as a powerful framework for addressing many complex and nested machine learning problems in recent years, most existing studies are confined to the lower-level strongly convex (LLSC) or lower-level generally convex (LLGC) settings (i.e., the lower-level objective function is assumed to be, at least, convex). While the LLSC/LLGC assumptions render more tractable algorithmic design and theoretical analysis, they are too rigid to encompass many machine learning problems in practice. The limitations of LLSC/LLGC assumptions in BLO motivate us to investigate solving the BLO problem in the general lower-level nonconvex (LLNC) settings, which remains in its infancy. In the literature on LLNC-BLO, most of the existing works either require additional structures in the lower-level objective function for tractable theoretical analysis, or adopt the first-order stationarity reformulation as a lower-level surrogate problem, which is inherited from the LLSC/LLGC settings but could lose their effectiveness in the LLNC setting. To bridge this gap, we propose to reformulate the nonconvex lower-level problem using a second-order stationarity-based surrogate, the solution of which guarantees a local optimal solution at the lower level. Based on this reformulation, we propose the PROBE (Perturbed gradient algorithm for bilevel problem) and show that it overcomes the limitations of prior works by probing and escaping lower-level saddle points. We prove that PROBE achieves a finite-time convergence rate of $O(T^{-2/5})$, where T denotes iterations. To our knowledge, this work is the first to establish the finite-time convergence for achieving lower-level second-order stationary solutions in general LLNC-BLO. Our experiments on both a large language model-based data curation task and a meta-learning task also show that PROBE outperforms SOTA methods.",
+    "published": "2026-09-24T19:40:18Z",
+    "updated": "2026-09-24T19:40:18Z",
+    "authors": [
+      "Zhiyao Zhang",
+      "Menglu Yu",
+      "Alvaro Velasquez",
+      "Nathaniel D. Bastian",
+      "Jia Liu"
+    ],
+    "categories": [
+      "cs.LG"
+    ],
+    "comment": "",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.30501v1",
+    "pdf": "https://arxiv.org/pdf/2609.30501v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.30499",
+    "version_id": "2609.30499v1",
+    "title": "Ordinary Nonconvex SGD under Distance-Dependent Moments: Finite-Horizon Stationarity and Nagaev Bounds",
+    "abstract": "Uniform noise-moment bounds exclude stochastic gradients whose variability increases with the iterate. We study ordinary, single-sample stochastic gradient descent for smooth, lower-bounded, possibly nonconvex objectives under distance-dependent conditional moments. Under second moments alone, a direct descent--displacement argument yields $T^{-1/3}$ expected average squared-gradient stationarity with a horizon-dependent stepsize. An explicit oracle-complexity corollary matches the known smooth Blum--Gladyshev (BG-0) lower bound, including the $Lb_2Δ^3\\varepsilon^{-6}$ and $LΔσ^2\\varepsilon^{-4}$ stochastic terms, where $Δ$ is the initial objective gap and $σ^2+b_2\\|x-x_1\\|^2$ bounds the variance. Thus unchanged SGD attains the minimax stochastic complexity in this second-moment class. For $p>2$, predictable localization and a Hilbert-space Fuk--Nagaev inequality yield a high-probability bound separating logarithmic variance and polynomial rare-shock contributions. The localization radius is derived from the recursion: no bounded-iterate assumption, clipping, normalization, momentum, or increasing batch size is needed. We also give increasing-confidence rates, an objective-gap-growth refinement recovering root-$T$ stationarity, and stochastic $L^p$-Lipschitz examples. The broad BG-0 optimality statement is distinguished from the smaller mean-square-smooth class, in which additional oracle structure permits faster algorithms.",
+    "published": "2026-09-24T19:37:07Z",
+    "updated": "2026-09-24T19:37:07Z",
+    "authors": [
+      "Wei Biao Wu"
+    ],
+    "categories": [
+      "stat.ML",
+      "cs.LG"
+    ],
+    "comment": "",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.30499v1",
+    "pdf": "https://arxiv.org/pdf/2609.30499v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.29446",
+    "version_id": "2609.29446v1",
+    "title": "SPADE-DFL: Communication-Efficient Decentralized Federated Learning via Derivative-Free Linearized ADMM",
+    "abstract": "Reducing communication in derivative-free decentralized learning requires controlling the disagreement accumulated over multiple local updates. This paper develops SPADE-DFL, a primal--dual method that allows the number of local function-value updates between neighbor exchanges to grow with the computation budget while preserving the nonprivate convergence order. For smooth nonconvex objectives under uniform query-moment bounds, the prescribed nonprivate schedule achieves a time-averaged stationarity and consensus bound of $\\mathcal{O}(T^{-1/3})$ using only $Θ(T^{2/3})$ communication rounds, where $T$ is the number of local updates per client. For private training, the accumulated data-dependent increment is isolated from the graph correction, allowing one protected state per client and round to generate all outgoing messages. We prove client-level differential privacy for the full interactive transcript and quantify the resulting optimization error over a finite horizon. Experiments on four classification tasks show that SPADE-DFL achieves higher mean test accuracy than existing decentralized learning methods.",
+    "published": "2026-09-24T12:03:22Z",
+    "updated": "2026-09-24T12:03:22Z",
+    "authors": [
+      "Mengli Wei",
+      "Mengkai Zhu",
+      "Jiawen Chen",
+      "Wenwu Yu",
+      "Duxin Che"
+    ],
+    "categories": [
+      "cs.LG",
+      "cs.NI"
+    ],
+    "comment": "",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.29446v1",
+    "pdf": "https://arxiv.org/pdf/2609.29446v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2610.00254",
+    "version_id": "2610.00254v1",
+    "title": "Sharp Oracle-Regret Tradeoffs for Projection-Free Online Convex Optimization",
+    "abstract": "We characterize the regret attainable in online convex optimization when access to the feasible set is limited to an exact linear optimization oracle. The learner is given an inscribed ball and a diameter bound and must remain feasible on every consistent instance. For convex $G$-Lipschitz losses, diameter at most $D$, a total allowance of $Q$ oracle calls, and a strict limit of $B$ calls per round, the dimension-free minimax expected regret is $Θ(GD\\max\\{\\sqrt T,T/(1+\\min\\{Q,BT\\})^{1/4}\\})$. The lower bound applies to arbitrary randomized learners. Universal feasibility first forces each action into the hull of the supplied ball and the preceding oracle replies. A fixed-body construction then couples fresh phase directions to a shared simplex, making useful replies costly repeatedly even though all losses have a common minimizer. A counted approximate-gradient method with interleaved blocks attains the matching rate. Total-budget and strict per-round guarantees follow as special cases, including the $T^{3/4}$ rate with one call per round and the quadratic total budget needed for $\\sqrt T$ regret. For prescribed smoothness $β$, an analytic construction yields a curvature-dependent lower bound and identifies the threshold above which the general characterization remains sharp.",
+    "published": "2026-09-23T22:25:52Z",
+    "updated": "2026-09-23T22:25:52Z",
+    "authors": [
+      "Vaneet Aggarwal"
+    ],
+    "categories": [
+      "cs.LG"
+    ],
+    "comment": "",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2610.00254v1",
+    "pdf": "https://arxiv.org/pdf/2610.00254v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.28718",
+    "version_id": "2609.28718v1",
+    "title": "Exact Bayes Regret and Asymptotic Optimality in High-Dimensional Gaussian Bandits",
+    "abstract": "We study Bayesian linear bandits with an isotropic Gaussian parameter, independent Gaussian candidate arms, and Gaussian reward noise when the horizon is proportional to the dimension. The normalized posterior uncertainty has an explicit limit that is uniform over all causal policies. Gaussian posterior identities then determine the limiting parameter overlaps without an assumed closure of the adaptive recursion. These results yield exact regret curves for Thompson sampling, posterior-mean greedy selection, and a family of policies that scale the posterior sampling covariance. The normalized realized cumulative regret converges in L1, uniformly on compact proportional-time intervals. A policy-uniform lower bound identifies the limiting optimal Bayes regret and proves that posterior-mean greedy selection attains it. Thompson sampling incurs a strictly larger leading regret; its instantaneous regret ratio relative to greedy selection lies between one and two and approaches two at long proportional horizons. Closed-form cumulative curves also identify a different comparison in the vanishing-noise limit. Finally, the instantaneous regret converges to a nondegenerate Gaussian decision-loss distribution, rather than to its mean. The analysis separates the amount of information acquired by a bandit policy from the quality of the decisions made using that information.",
+    "published": "2026-09-23T18:58:51Z",
+    "updated": "2026-09-23T18:58:51Z",
+    "authors": [
+      "Prakhar Singhvi",
+      "Yi Zou",
+      "Abhishek Bhattacharjee"
+    ],
+    "categories": [
+      "stat.ML",
+      "cs.LG",
+      "math.ST"
+    ],
+    "comment": "17 Pages",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.28718v1",
+    "pdf": "https://arxiv.org/pdf/2609.28718v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.27216",
+    "version_id": "2609.27216v1",
+    "title": "KATOsuper: Surrogate-accelerated neural topology optimization with sensitivity-consistent Fourier neural operators",
+    "abstract": "Topology optimization (TO) remains computationally intensive due to repeated finite element analysis (FEA) evaluations required at each iteration. While neural network-based surrogates offer potential acceleration, existing approaches often suffer from gradient inconsistency between predicted objectives and sensitivities, leading to optimization instability. This work presents KATOsuper, an objective-agnostic framework that couples neural-reparameterized topology optimization with a Sensitivity-Consistent Fourier Neural Operator (SC-FNO). The framework employs the forward_split architecture, which derives deployed sensitivities via automatic differentiation through the predicted objective field and thereby preserves consistency between the predicted objective and the gradient used for optimization. The case studies include three 2D benchmark problems and three 3D structures considering compliance or stress minimization. A physics-informed multi-channel input encoding with Fourier position embedding enables resolution-invariant learning, supporting zero-shot extrapolation beyond the training resolution, with useful performance at moderate scaling factors and topology-preserving exploration at up to 64x without retraining. The framework extends to 3D through KATO3D, featuring novel KANConv3D blocks with learnable B-spline activations. KATOsuper demonstrates 15--110x deployment-time speedup over MATLAB baselines while maintaining competitive optimality, with the clearest gains observed in complex 3D and stress-optimization cases. The insight that sensitivity direction matters more than magnitude enables robust optimization even with approximate physics evaluation, extensible to other differentiable physics-driven design objectives.",
+    "published": "2026-09-23T01:29:19Z",
+    "updated": "2026-09-23T01:29:19Z",
+    "authors": [
+      "Shengyu Yan",
+      "Jasmin Jelovica"
+    ],
+    "categories": [
+      "cs.CE",
+      "cs.AI",
+      "cs.LG",
+      "math.NA"
+    ],
+    "comment": "32 pages, 24 figures, 7 tables",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.27216v1",
+    "pdf": "https://arxiv.org/pdf/2609.27216v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.27206",
+    "version_id": "2609.27206v1",
+    "title": "Prediction with Expert Advice: Anytime Regret with Many Experts Matches the Fixed-Time Constant",
+    "abstract": "Prediction with expert advice is a fundamental problem in online learning. When the time horizon $T$ is known in advance, the minimax cumulative regret over $n$ experts is asymptotically $\\sqrt{\\frac{T \\ln n}{2}}$. This is achieved by the Multiplicative Weights Update algorithm with a learning rate tuned to $T$, and is known to be tight. If instead the regret bound is required to hold simultaneously at every time $t$, the best known guarantee has been $\\sqrt{t \\ln n}$---a factor of $\\sqrt{2}$ worse---and it has remained unknown whether this factor of $\\sqrt{2}$ is necessary. We show that it is not. We give an algorithm, requiring no knowledge of the horizon, whose cumulative regret satisfies $R_t \\le \\bigl(1 + O(\\sqrt{\\ln \\ln n / \\ln n})\\bigr)\\sqrt{t \\ln n / 2}$ simultaneously for every $t \\ge 1$.",
+    "published": "2026-09-23T01:13:21Z",
+    "updated": "2026-09-23T01:13:21Z",
+    "authors": [
+      "Yang Cai",
+      "Vineet Gupta",
+      "Yanchen Jiang",
+      "Christopher Liaw",
+      "Aranyak Mehta",
+      "Grigoris Velegkas",
+      "Di Wang"
+    ],
+    "categories": [
+      "stat.ML",
+      "cs.LG"
+    ],
+    "comment": "",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.27206v1",
+    "pdf": "https://arxiv.org/pdf/2609.27206v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.26978",
+    "version_id": "2609.26978v1",
+    "title": "Tight Regret Bound for Online Inverse Linear Optimization via Multiscale Matrix Weights",
+    "abstract": "We study online inverse linear optimization with a fixed unknown linear utility: in each round, an environment presents a compact action set, the learner recommends an action from it, and the environment returns an action that maximizes the utility over the same set. When the utility vector and the actions lie in the $d$-dimensional Euclidean unit ball, we give a randomized algorithm whose regret---the cumulative utility shortfall relative to optimal actions---is $O(\\sqrt d)$ in expectation for every time horizon, without knowledge of the horizon. The dependence on $d$ is optimal up to a constant factor by the known $Ω(\\sqrt d)$ lower bound for horizons $T\\ge d$. Our algorithm maintains matrix multiplicative weights on polynomial feature spaces at geometrically spaced scales. It selects a recommendation distribution by solving a linear program and updates its score matrices by comparing the available actions with the feedback action. With rational oracle outputs and feedback actions, an implementation computable relative to a linear-optimization oracle preserves the $O(\\sqrt d)$ regret bound. Whether the same rate is attainable with running time polynomial in the dimension, horizon, and input length remains open.",
+    "published": "2026-09-22T19:13:53Z",
+    "updated": "2026-09-22T19:13:53Z",
+    "authors": [
+      "Shinsaku Sakaue"
+    ],
+    "categories": [
+      "stat.ML",
+      "cs.DS",
+      "cs.LG"
+    ],
+    "comment": "",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.26978v1",
+    "pdf": "https://arxiv.org/pdf/2609.26978v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.35827",
+    "version_id": "2609.35827v2",
+    "title": "Meta-learning accelerates detector design optimization",
+    "abstract": "The quality of a detector design is ultimately determined by the quality of the inference it enables, that is, by the accuracy with which the quantities of interest are reconstructed from the raw detector response. For complex detectors, the inference is performed by machine learning models, and the relation between the design and the attainable inference performance is, in general, non-trivial. In this work, we consider the optimization of the inference performance with respect to the detector design. The conventional approach prescribes retraining the inference model at every candidate design, thus, treating the evaluations as independent tasks and discarding the shared structure of the optimal inference algorithms at different designs. We propose the meta-learned objective estimate (MLOE): instead of solving the inference problem anew at every candidate design, a single meta-inference model, conditioned on the design and trained continually along the optimization path, is shared across all of them. We test MLOE on three families of optimization problems, the last of which comprises two design spaces of the Spectrometer Straw Tracker of the Search for Hidden Particles (SHiP) experiment; under matched budgets of simulation calls, the meta-inference model evaluates a candidate design using fewer simulation calls than the baseline strategies and holds the better rank over the convergence curve in all examined cases.",
+    "published": "2026-09-22T17:03:47Z",
+    "updated": "2026-09-30T17:41:19Z",
+    "authors": [
+      "Maxim Borisyak",
+      "Nikita Gladin",
+      "Andrey Ustyuzhanin"
+    ],
+    "categories": [
+      "physics.ins-det",
+      "cs.LG"
+    ],
+    "comment": "",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.35827v2",
+    "pdf": "https://arxiv.org/pdf/2609.35827v2",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.26647",
+    "version_id": "2609.26647v1",
+    "title": "Statistical Rates for Entropic Optimal Transport in the Discrete to SubGaussian Regime",
+    "abstract": "We study statistical rates in entropic optimal transport in the semi-discrete regime where one measure has finite support and the other is subGaussian. Our main result establishes parametric convergence rates for the empirical dual potentials to their population counterparts, with no dimension dependence in the leading term. Our result relies on tailored strong concavity analysis of the semi-dual objective, coupled with specialized bounds for the semi-discrete potentials. As a consequence, we obtain fast rates for downstream quantities derived from the optimal coupling. Chiefly, the empirical barycentric projection achieves a squared-error rate $n^{-1}$, matching the fully compact case and improving over the less favorable $n^{-1/2}$ rate known for fully subGaussian settings. Altogether, these results may indicate a lower complexity adaptation phenomenon whereby the statistical complexity of the barycentric projection is governed by the discrete measure. As an application, we analyze Sinkhorn-EM, an EM-type algorithm in which the E-step is replaced by an entropic optimal transport problem. In a well-specified and balanced two-component Gaussian mixture model, we prove $\\sqrt{n}$-consistency of the empirical iterates to their population counterparts for any fixed number of iterations, matching classical EM rates up to a $\\sqrt{\\log n}$ factor. Simulations support the theory.",
+    "published": "2026-09-22T16:17:58Z",
+    "updated": "2026-09-22T16:17:58Z",
+    "authors": [
+      "Tomas Gonzalez",
+      "Gonzalo Mena"
+    ],
+    "categories": [
+      "math.ST",
+      "cs.LG"
+    ],
+    "comment": "",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.26647v1",
+    "pdf": "https://arxiv.org/pdf/2609.26647v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.25705",
+    "version_id": "2609.25705v1",
+    "title": "On the Gradient Heterogeneity Dynamics of Adversarially Robust Federated Regression",
+    "abstract": "Federated learning (FL) is intrinsically heterogeneous: honest clients may have different data-generating models. On top of that, adversarial clients can make heterogeneity even more pronounced by sharing arbitrary updates. Existing analyses typically control the interaction between statistical heterogeneity and adversarial behavior through gradient-dissimilarity conditions. However, the underlying bound is imposed a priori and may yield conservative guarantees even for least-squares regression. We instead derive the gradient heterogeneity from the statistical model of linear and nonlinear regression with fresh data samples at every round. Our bounds separate heterogeneity among the honest clients' ground-truth model parameters, finite-sample label noise, and initialization. We then demonstrate that, for any $(f,κ)$-robust aggregator with coefficient $κ= O(f/n)$, where $f$ is the number of adversarial clients and $n$ the total number of clients (with $f/n < 1/2$), convergence holds after an explicit sample burn-in.",
+    "published": "2026-09-22T05:17:52Z",
+    "updated": "2026-09-22T05:17:52Z",
+    "authors": [
+      "Leonardo F. Toso",
+      "James Anderson",
+      "Nirupam Gupta",
+      "Rafael Pinot"
+    ],
+    "categories": [
+      "stat.ML",
+      "cs.LG"
+    ],
+    "comment": "",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.25705v1",
+    "pdf": "https://arxiv.org/pdf/2609.25705v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.24260",
+    "version_id": "2609.24260v1",
+    "title": "Adversarially Robust PAC Learning with Optimal VC Rates",
+    "abstract": "We study the problem of \\emph{adversarially robust} PAC learning. In this framework, the learner observes independent samples from an unknown distribution over $\\mathcal{X} \\times \\{0,1\\}$, as in classical PAC learning. However, given a perturbation map $\\mathcal{U} : \\mathcal{X} \\to 2^{\\mathcal{X}}$ known to the learner, the goal is to output, with high probability, a predictor that correctly classifies \\emph{every} perturbation $z \\in \\mathcal{U}(x)$ of most future examples $(x,y)$ drawn from the same underlying distribution. We determine the \\emph{optimal} $\\mathcal{U}$-independent sample complexity of this problem in both the realizable and agnostic settings. More specifically, for every concept class $\\mathcal{H}$ of $\\operatorname{VC}$ dimension $d$, we prove upper bounds of $\\mathcal{O} \\big( d/ε+ \\log(1/δ)/ε\\big)$ in the realizable setting and $\\mathcal{O} \\big( d/ε^2 + \\log(1/δ)/ε^2 \\big)$ in the agnostic setting, together with an optimal first-order refinement of the latter. These bounds match the corresponding lower bounds for classical PAC learning. Consequently, and perhaps surprisingly, adversarial robustness incurs \\emph{no additional} distribution-free statistical cost, uniformly over all perturbation maps. Our bounds improve exponentially on those of [Montasser, Hanneke, and Srebro; COLT '19]. On the technical side, we present short and elementary proofs based on a new algorithmic principle that we call \\emph{binomial-bagging}. We believe that binomial-bagging and its analysis may be of independent interest.",
+    "published": "2026-09-21T08:23:12Z",
+    "updated": "2026-09-21T08:23:12Z",
+    "authors": [
+      "Steve Hanneke",
+      "Amirreza Shaeiri"
+    ],
+    "categories": [
+      "stat.ML",
+      "cs.LG",
+      "math.ST"
+    ],
+    "comment": "35 pages, 2 figures",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.24260v1",
+    "pdf": "https://arxiv.org/pdf/2609.24260v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.24233",
+    "version_id": "2609.24233v1",
+    "title": "Adaptive Forgetting for Nonstationary Optimization: Towards Robust EEG Decoding",
+    "abstract": "Electroencephalography (EEG) provides non-invasive monitoring of brain activity and is widely used in emotion recognition, motor imagery and sleep staging. Although within-subject decoding has achieved considerable progress, cross-subject generalization remains a central challenge in practical applications. EEG decoders are typically trained with Adam/AdamW under a fixed second-moment decay coefficient, even though cross-subject learning involves low signal-to-noise ratios, subject variability, and gradient nonstationarity. A fixed coefficient implicitly assumes that gradient statistics are homogeneous across layers and time, which can limit model's adaptability to cross-subject EEG signals and degrade generalization. To address these issues, we propose AFOR, a tensor-wise adaptive optimizer that converts the fixed second-moment decay coefficient into a dynamic coefficient estimated online from local gradient state. AFOR combines a Residual-Alignment Signal Scorer (RASS) and an Adaptive Forgetting Controller (AFC). RASS summarizes local gradient residuals and directional agreement into a signal-quality score, and AFC maps this score through self-referential normalization to a bounded per-step decay coefficient, with cumulative-product initialization correction maintaining consistency under time-varying decay. Under a strict cross-subject protocol on three EEG benchmarks that cover three representative fields, AFOR achieves the best average performance among the compared optimizers, improving the mean test accuracy over Adam by 3.00%, 2.07%, and 4.38%, respectively.",
+    "published": "2026-09-21T07:56:33Z",
+    "updated": "2026-09-21T07:56:33Z",
+    "authors": [
+      "Hongyu Zhu",
+      "Lin Chen",
+      "Jing Chen",
+      "Yuting Zhou",
+      "Mingsheng Shang"
+    ],
+    "categories": [
+      "cs.LG",
+      "cs.HC"
+    ],
+    "comment": "Submitted",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.24233v1",
+    "pdf": "https://arxiv.org/pdf/2609.24233v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.23361",
+    "version_id": "2609.23361v1",
+    "title": "Dynamic Ritz projection of mean curvature flow and optimal ${\\bf L^2}$ convergence of parametric FEM",
+    "abstract": "A new approach is developed to study the convergence of parametric finite element approximations to the mean curvature flow of closed surfaces in three-dimensional space. In this approach, the error analysis is conducted by comparing the numerical solution to a dynamic Ritz projection of the mean curvature flow introduced in this paper, rather than an interpolation of the mean curvature flow, as commonly used in the literature. The errors associated with the dynamic Ritz projection in approximating the mean curvature flow are established in the $L^2$ and $W^{1,p}$ norms. Leveraging these results, optimal-order convergence of parametric finite element methods for mean curvature flow of closed surfaces in the $L^\\infty(0,T;L^2)$ norm is proved, including the convergence of parametric finite element methods with piecewise linear finite elements.",
+    "published": "2026-09-20T04:56:11Z",
+    "updated": "2026-09-20T04:56:11Z",
+    "authors": [
+      "Buyang Li",
+      "Rong Tang"
+    ],
+    "categories": [
+      "math.NA"
+    ],
+    "comment": "",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.23361v1",
+    "pdf": "https://arxiv.org/pdf/2609.23361v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.23326",
+    "version_id": "2609.23326v1",
+    "title": "Super-approximation and optimal $L^2$ convergence of the stabilized BGN method with piecewise linear parametric finite elements for curve-shortening flow",
+    "abstract": "We develop a bihomotopy argument to estimate the discrete material time derivatives of consistency functionals. Combined with summation-by-parts, this argument yields a directional super-convergence estimate for the consistency contribution when tested with the normal error velocity. Together with the super-approximation of the reversely weighted discrete normal, these techniques establish $L_t^\\infty H_x^1$ super-convergence of the projection error and optimal $L_t^\\infty L_x^2$ convergence of the trajectory error of a stabilized BGN method for curve-shortening flow with piecewise linear parametric finite elements.",
+    "published": "2026-09-20T03:25:05Z",
+    "updated": "2026-09-20T03:25:05Z",
+    "authors": [
+      "Genming Bai"
+    ],
+    "categories": [
+      "math.NA"
+    ],
+    "comment": "",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.23326v1",
+    "pdf": "https://arxiv.org/pdf/2609.23326v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.23265",
+    "version_id": "2609.23265v1",
+    "title": "Optimal No-Regret Learning for Repeated Prophet Inequality",
+    "abstract": "We study repeated prophet inequalities under prefix feedback. In each of $T$ rounds, a learner encounters fresh values drawn independently from $n$ boxes with unknown $[0,1]$-supported distributions in a fixed order and must irrevocably accept one, observing only the prefix up to its stopping box. Regret is measured against the optimal stopping policy that knows the distributions. We give an efficient algorithm achieving $\\widetilde O(\\sqrt{T})$ expected regret, matching the lower bound up to logarithmic factors. Our algorithm explores directly through near-optimal policies, combining empirical backward induction with box-specific reach bonuses. A relative-drop aggregation rule then exploits the nesting structure of observed prefixes to preserve exploration, thereby removing the polynomial dependence on the box number $n$. This resolves an open question posed by Liu et al. (2025).",
+    "published": "2026-09-20T00:50:02Z",
+    "updated": "2026-09-20T00:50:02Z",
+    "authors": [
+      "Kun Wang"
+    ],
+    "categories": [
+      "cs.LG"
+    ],
+    "comment": "",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.23265v1",
+    "pdf": "https://arxiv.org/pdf/2609.23265v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.23092",
+    "version_id": "2609.23092v1",
+    "title": "The Role of Coordinates in Pareto Regret for Adversarial Multi-Objective Bandits",
+    "abstract": "Adversarial multi-objective bandits hold the potential to help us optimize choices (arms) whose reward is a multidimensional vector chosen by an adversary and whose performance is measured by Pareto regret. We define loss as one minus reward and measure the easiness of a coordinate by the smallest cumulative loss of the arms on it, and call the coordinate easier when this quantity is smaller. Existing work suggests that in theory an easier coordinate may reduce Pareto regret. However, in practice, one may not know which coordinate is easier. On the negative side, we show that this lack of information eliminates the possibility: a smaller cumulative loss does not improve the worst-case order of Pareto regret. Precisely, let \\(L_d\\) be the smallest cumulative loss along coordinate $d$ over $T$ rounds. For \\(K\\ge4\\) arms, \\(T\\ge6\\) rounds, and at least 2 coordinates, we prove that the minimax expected Pareto regret is \\(Ω(\\min\\{T-L_0,\\sqrt{K(T-L_0)}\\})\\). It is monotonically decreasing in \\(L_0\\), even when \\(L_0=\\min_d L_d\\) itself is known. On the positive side, this result motivates the possibility that other coordinates, not just the easy one, may suffice to attain the optimal rate of Pareto regret. When $L_0$ is known, we apply Poly-INF to a fixed coordinate and obtain an upper bound on Pareto regret that exhibits the same order and thus matches the lower bound. Without such knowledge, we develop a reward-doubling version of Poly-INF that adapts to this unknown quantity while still attaining the matching minimax rate. Another implication is that it has no extra \\(\\log T\\) factor and is independent of the number of coordinates.",
+    "published": "2026-09-19T15:59:08Z",
+    "updated": "2026-09-19T15:59:08Z",
+    "authors": [
+      "Changkun Guan",
+      "Mengfan Xu"
+    ],
+    "categories": [
+      "cs.LG"
+    ],
+    "comment": "",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.23092v1",
+    "pdf": "https://arxiv.org/pdf/2609.23092v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.22839",
+    "version_id": "2609.22839v1",
+    "title": "A Horizon-Independent Regret Bound for Optimistic Hedge in General-Sum Games",
+    "abstract": "Can simple learning rules keep their regret bounded in self-play? Recent work achieves constant regret bounds through modified regularization and higher-order prediction. Yet for Optimistic Hedge, arguably the most canonical method in games, the best known individual regret bound remains logarithmic. In this work, we prove that plain Optimistic Hedge with a constant step size can attain $O_{n,d}(1)$ individual regret in general-sum games with $n$ players and $d=(d_1,\\ldots,d_n)$ actions, under expected loss-vector feedback. As a corollary, its time-averaged play enjoys an $O_{n,d}(1/T)$ coarse correlated equilibrium (CCE) gap. Our analysis represents Optimistic Hedge as a real-analytic recurrence on a compact space, which yields an exact finite-order difference relation that eliminates horizon dependence. Our proof hinges on nonconstructive Noetherianity argument of Frisch (1967), so the $(n,d)$-dependence remains implicit.",
+    "published": "2026-09-19T07:15:57Z",
+    "updated": "2026-09-19T07:15:57Z",
+    "authors": [
+      "Junsoo Ha"
+    ],
+    "categories": [
+      "cs.GT",
+      "cs.LG"
+    ],
+    "comment": "",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.22839v1",
+    "pdf": "https://arxiv.org/pdf/2609.22839v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.22833",
+    "version_id": "2609.22833v1",
+    "title": "Personalized Federated Reinforcement Learning via Model-Agnostic Meta-Learning: Convergence of Exact and Hessian-Free Meta-Policy Gradients",
+    "abstract": "We study personalized federated reinforcement learning, in which $n$ agents, each acting in its own Markov decision process, collaborate through a server to learn a shared MAML-style policy initialization that becomes effective for an individual agent once that agent adapts it with a single local policy-gradient step. We propose Per-FedAvg-PG, in which agents take $τ$ local stochastic meta-policy-gradient steps between communication rounds, and prove that it reaches an $\\varepsilon$-approximate first-order stationary point of the personalized objective in $K=\\mathcal O(\\varepsilon^{-3/2})$ rounds with $τ=Θ(\\varepsilon^{-1/2})$ local steps. The analysis rests on a structural feature of the reinforcement learning setting: under standard policy-class regularity, the per-agent objectives have uniformly bounded gradients and Hessians with explicit constants, so the bounded-gradient and bounded-heterogeneity conditions imposed by the supervised theory hold automatically and no separate heterogeneity assumption is needed. The exact meta-gradient requires the inner-loop policy Hessian, which our experiments identify as the practical bottleneck. We therefore analyze the Hessian-free variant, bound its bias, and exhibit fixed points at which the meta-gradient is nonzero and of order $α$, showing that the resulting stationarity floor is a property of the method rather than of the bound. Experiments on tabular and neural navigation confirm the predicted behavior and show transfer to unseen agents at an order of magnitude lower sample cost than independent training. Together these results identify the adaptation step size as a tunable personalization knob and the curvature estimate as the quantity that governs whether exact meta-gradients are affordable.",
+    "published": "2026-09-19T07:11:23Z",
+    "updated": "2026-09-19T07:11:23Z",
+    "authors": [
+      "Ali Beikmohammadi",
+      "Sarit Khirirat",
+      "Sindri Magnússon"
+    ],
+    "categories": [
+      "cs.LG",
+      "cs.MA"
+    ],
+    "comment": "44 pages, 8 figures, Code: https://github.com/AliBeikmohammadi/Per-FedAvg-PG",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.22833v1",
+    "pdf": "https://arxiv.org/pdf/2609.22833v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.20968",
+    "version_id": "2609.20968v2",
+    "title": "From Switching to Dynamic Regret: A Simple Reduction via Unbiased Random Sequences",
+    "abstract": "In non-stationary online learning, dynamic regret has attracted increasing attention as a measure of how well an online learner performs against a time-varying comparator sequence. Despite considerable advances, attaining optimal bounds for strongly convex and exp-concave losses often involves intricate analysis. In this paper, we present a \\textit{simple} framework that reduces dynamic regret minimization to switching regret minimization. As a result, we can derive dynamic regret bounds by using off-the-shelf algorithms with switching regret guarantees. The key idea of our reduction is to construct, for \\textit{any} comparator sequence, an auxiliary random sequence that is unbiased at each round, with the controlled variance and a manageable number of switches. Combining this construction with suitable surrogate losses, we can decompose dynamic regret into the expected switching regret against the random sequence and its controlled variance. Theoretically, for strongly convex and exp-concave losses, we establish the $\\widetilde{O}(T^{1/3}P_T^{2/3})$ dynamic regret bounds, where $T$ denotes the time horizon and $P_T$ denotes the path-length of the comparator sequence. Moreover, for general convex losses, the same reduction also recovers the $O(\\sqrt{T(1+P_T)})$ dynamic regret bound. Notably, all our findings match the minimax optimal results for these three types of losses, highlighting the versatility of our proposed framework.",
+    "published": "2026-09-17T18:25:43Z",
+    "updated": "2026-10-01T15:38:18Z",
+    "authors": [
+      "Yibo Wang",
+      "Wenhao Yang",
+      "Sifan Yang",
+      "Wei Jiang",
+      "Yuanyu Wan",
+      "Lijun Zhang"
+    ],
+    "categories": [
+      "cs.LG"
+    ],
+    "comment": "",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.20968v2",
+    "pdf": "https://arxiv.org/pdf/2609.20968v2",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.19963",
+    "version_id": "2609.19963v2",
+    "title": "Exact Regret Frontiers and Externality Scheduling in Centralized Serial-Dictatorship Bandits",
+    "abstract": "Exploration in centralized serial-dictatorship matching bandits must use complete matchings, so learning one player-arm pair can impose regret on others. We study this externality under a known common priority order and Gaussian rewards with unit variance. We show that the matching-level Graves-Lai constraints reduce to finitely many pairwise exploration quotas and, at top-choice-separated instances, yield a polynomial-size marginal linear program. At these instances, the exact attainable set of expected logarithmic regret coefficients is $G(θ)\\mathcal{X}(θ)$, where $\\mathcal{X}$ is the feasible matching-allocation set and $G$ maps allocations to player regret. The usual upper-closed Graves-Lai region can be strictly larger despite having the same Pareto-minimal boundary. We further show that identical exploration quotas can induce very different regret through their scheduling. Finally, we construct estimate-solve-track policies, uniformly good on the full row-strict class, that attain every fixed positively weighted optimum without assuming optimizer uniqueness. Every Pareto-minimal point is pointwise attainable, possibly through an instance-calibrated target.",
+    "published": "2026-09-17T09:35:34Z",
+    "updated": "2026-09-28T07:42:06Z",
+    "authors": [
+      "Lishang Xu",
+      "Guodong Ma",
+      "Pengcheng Weng",
+      "Zixuan Xia"
+    ],
+    "categories": [
+      "cs.GT",
+      "cs.LG",
+      "stat.ML"
+    ],
+    "comment": "v2: expanded and corrected proofs in the appendices (new Remark D.8), added and corrected references, updated AI use statement, typos and wording fixed; main results unchanged",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.19963v2",
+    "pdf": "https://arxiv.org/pdf/2609.19963v2",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.19559",
+    "version_id": "2609.19559v1",
+    "title": "FedFIbOS: Fisher Importance based Optimal Submodelling for Heterogeneous Federated Learning",
+    "abstract": "Heterogeneous federated learning requires clients with diverse computational capacities to collaboratively train a global model, where each client trains a capacity-constrained submodel. Existing methods select submodel parameters using heuristic importance measures---most prominently parameter magnitude---without theoretical justification for why these measures support convergence. We identify a fundamental gap: existing parameter selection criteria lack theoretical grounding in the convergence framework, partial client participation introduces additional estimation effects in the Fisher scores. We propose \\textbf{FedFIbOS}: Fisher Importance-based Optimal Submodelling for heterogeneous federated learning, using Fisher Information in a principled criterion derived from minimizing submodel masking error. %We formally establish when magnitude selection is equivalent to Fisher selection fail under non-IID heterogeneous federated learning. We theoretically formulate submodel selection through a Fisher-weighted quadratic masking surrogate and show that the raw Fisher top-$k$ rule implemented by FedFIbOS solves this surrogate under a Fisher-dominant ranking condition. The resulting method retains the convergence structure of the underlying masked federated optimization bound. Fisher scores are efficiently estimated from empirical diagonal Fisher information using squared gradients, enabling stable and adaptive parameter selection without additional optimization overhead. Experiments on CIFAR-10, CIFAR-100, and AGNews under pathological and Dirichlet non-IID settings show FedFIbOS achieves ${\\approx}10\\%$ higher accuracy than the state of the art, with improvements becoming more pronounced under stronger heterogeneity.",
+    "published": "2026-09-17T01:41:17Z",
+    "updated": "2026-09-17T01:41:17Z",
+    "authors": [
+      "Yasmeen Afzal",
+      "Jeremiah D. Deng",
+      "Haibo Zhang"
+    ],
+    "categories": [
+      "cs.LG"
+    ],
+    "comment": "9 pages, 4 figures",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.19559v1",
+    "pdf": "https://arxiv.org/pdf/2609.19559v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.19089",
+    "version_id": "2609.19089v1",
+    "title": "A Near-Optimal Space Lower Bound for Euclidean Diameter Estimation in Dynamic Streams",
+    "abstract": "We study the space complexity of diameter estimation for a set of points in Euclidean space in the dynamic (turnstile) streaming model. The seminal work of Indyk (SODA 2003) gives a $c$-approximation to the Euclidean diameter of $n$ vectors using $n^{O(1/c^2)}$ space. Our main contribution is giving an essentially matching lower bound. Any dynamic streaming algorithm which can $c$-approximate the diameter of $n$ Euclidean vectors must use $n^{\\tildeΩ(1/c^2)}$ space.",
+    "published": "2026-09-16T17:26:50Z",
+    "updated": "2026-09-16T17:26:50Z",
+    "authors": [
+      "Ashwin Padaki",
+      "Krish Singal",
+      "Erik Waingarten"
+    ],
+    "categories": [
+      "cs.DS",
+      "cs.CG"
+    ],
+    "comment": "",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.19089v1",
+    "pdf": "https://arxiv.org/pdf/2609.19089v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.18118",
+    "version_id": "2609.18118v1",
+    "title": "Preservation of Log-Concavity and Convergence of Wasserstein-Fisher-Rao Gradient Flows",
+    "abstract": "We study the convergence of Wasserstein-Fisher-Rao (WFR) gradient flows for sampling from probability distributions known up to a normalisation constant. By combining Wasserstein transport with Fisher-Rao birth-death dynamics, WFR flows balance exploration and selection. These flows have been recognised as a promising mechanism to accelerate convergence beyond Langevin dynamics. We show that for a class of strongly log-concave target distributions satisfying additional curvature conditions, WFR flows preserve strong log-concavity, in contrast to Wasserstein flows which enjoy this property only in the Gaussian setting. Exploiting this result, we derive explicit non-asymptotic convergence rates for the symmetrised Kullback-Leibler divergence, without requiring a warm-start as required in current estimates. In particular, we show that the convergence rate decomposes additively into Wasserstein and Fisher-Rao contributions, thereby confirming a recent conjecture within this setting. These results provide refined convergence guarantees and further develop the theoretical foundations of WFR gradient flows for sampling and Bayesian inference.",
+    "published": "2026-09-16T04:55:06Z",
+    "updated": "2026-09-16T04:55:06Z",
+    "authors": [
+      "Francesca Romana Crucinio",
+      "Sahani Pathiraja"
+    ],
+    "categories": [
+      "stat.ML",
+      "cs.LG",
+      "math.PR"
+    ],
+    "comment": "",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.18118v1",
+    "pdf": "https://arxiv.org/pdf/2609.18118v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.18089",
+    "version_id": "2609.18089v1",
+    "title": "FedPGT: Progressive Gradient Transmission for Vehicular Federated Learning over Time-Varying Channels",
+    "abstract": "Vehicular federated learning (VFL) enables privacy-preserving collaborative model training for intelligent transportation systems, where communication resource allocation and gradient sparsification techniques have been explored to reduce communication overhead. However, vehicle mobility leads to rapidly varying channel conditions and transmission capacity, rendering predetermined resource allocation and sparsification decisions ineffective. In this paper, we propose FedPGT, a progressive gradient transmission scheme for VFL over time-varying channels, where vehicles progressively transmit high-magnitude gradient entries in response to instantaneous channel conditions. We establish a convergence bound that characterizes the impact of transmitted gradient entries and reveals diminishing-return behavior governed by a power-law decay. Motivated by this result, we formulate a stochastic optimization problem for online decision-making, where the main challenge lies in a cumulatively coupled, non-separable objective. To handle this challenge, we introduce per-slot surrogate transmission variables to decouple the long-term dependence across time slots and convert the original objective into an additive per-slot optimization problem, enabling a Lyapunov drift-plus-penalty approach for online scheduling. We further develop a low-complexity resource allocation algorithm for efficient online implementation. Experimental results demonstrate that the proposed scheme achieves a 3.65% accuracy improvement on the CIFAR-10 image classification task and a 12.66% reduction in average displacement error on the Argoverse trajectory prediction task compared with state-of-the-art baselines, demonstrating its applicability to diverse learning tasks under highly dynamic vehicular environments.",
+    "published": "2026-09-16T03:48:44Z",
+    "updated": "2026-09-16T03:48:44Z",
+    "authors": [
+      "Jintao Yan",
+      "Tan Chen",
+      "Yuxuan Sun",
+      "Sheng Zhou",
+      "Zhisheng Niu"
+    ],
+    "categories": [
+      "cs.LG",
+      "cs.IT"
+    ],
+    "comment": "",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.18089v1",
+    "pdf": "https://arxiv.org/pdf/2609.18089v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.16751",
+    "version_id": "2609.16751v2",
+    "title": "Constant Swap Regret in General-Sum Games via Two-Scale Higher-Order Optimism",
+    "abstract": "We give deterministic and uncoupled learning dynamics for finite multiplayer general-sum games under full-information feedback that achieve constant individual swap regret in self-play, independent of the horizon $T$. With $n$ players and at most $m$ actions each, every player's individual swap regret is $O(\\sqrt n\\,m\\log m\\log^{5/2}(nm))$ at every finite horizon. The dynamics use the classical Blum-Mansour framework with optimism. Each player predicts the deviation gains, uses these predictions to update a row-stochastic transition matrix, and plays its stationary distribution. Our new ingredients include a tailored row normalization map and a two-scale higher-order predictor. An adversarially robust variant, obtained through a generic common-prefix switching wrapper, preserves the self-play bound up to a universal constant and guarantees individual swap regret at most $7\\sqrt{mT\\log m}$ in the adversarial setting.",
+    "published": "2026-09-15T07:27:34Z",
+    "updated": "2026-09-19T22:18:51Z",
+    "authors": [
+      "Tung Mai"
+    ],
+    "categories": [
+      "cs.GT",
+      "cs.LG"
+    ],
+    "comment": "",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.16751v2",
+    "pdf": "https://arxiv.org/pdf/2609.16751v2",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.16622",
+    "version_id": "2609.16622v1",
+    "title": "Characterizing Heterogeneous Rates in Finite Mixture Estimation via Partial Optimal Transport",
+    "abstract": "Parameter estimation in finite mixture models can exhibit highly heterogeneous convergence behavior: locally isolated components may be estimated substantially faster than groups of competing components. Existing analyses based on Wasserstein distances typically characterize only the worst-case rate and therefore do not fully capture this local heterogeneity. In this paper, we introduce a Voronoi-based partial optimal transport (VPOT) framework for obtaining refined local and global convergence guarantees for the maximum likelihood estimator of the mixing measure. The key geometric idea is to localize the comparison of two mixing measures to extended Voronoi neighborhoods and use partial optimal transport to accommodate the unequal masses of their local restrictions. Within each neighborhood, the first-order POT discrepancy is raised to a power determined by the number of locally competing atoms, allowing the resulting loss to adapt to the local degree of singularity. Under suitable regularity and strong identifiability conditions, we establish uniform local and global upper bounds for a maximum likelihood estimator under the VPOT loss. These bounds reveal a configuration-dependent form of parameter estimation: less singular local configurations admit faster convergence, whereas the most singular configuration recovers the classical worst-case behavior characterized by Wasserstein-based analyses. We further establish a minimax lower bound showing that the convergence rate for estimating the mixing measure under the VPOT loss is optimal. Our results hold in arbitrary fixed dimension without requiring mixing proportions to be uniformly bounded away from zero or prior knowledge of the true number of mixture components. Overall, VPOT provides a configuration-adaptive framework for capturing heterogeneous parameter-estimation behavior in finite mixture models.",
+    "published": "2026-09-15T04:32:53Z",
+    "updated": "2026-09-15T04:32:53Z",
+    "authors": [
+      "Dung Le",
+      "Huy Nguyen",
+      "Trang Pham",
+      "Alessandro Rinaldo",
+      "Nhat Ho"
+    ],
+    "categories": [
+      "math.ST",
+      "stat.ML"
+    ],
+    "comment": "Dung Le and Huy Nguyen contributed equally to this work",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.16622v1",
+    "pdf": "https://arxiv.org/pdf/2609.16622v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.16350",
+    "version_id": "2609.16350v1",
+    "title": "Federated stochastic bilevel optimization with fully first-order gradients",
+    "abstract": "Federated stochastic bilevel optimization has been actively studied in recent years due to its widespread applications in machine learning. However, most existing federated stochastic bilevel optimization algorithms require the computation of second-order Hessian and Jacobian matrices, which leads to longer running times in practice. To address these challenges, we propose a novel federated stochastic variance-reduced bilevel gradient descent algorithm that relies solely on first-order oracles. Specifically, our approach does not require the computation of second-order Hessian and Jacobian matrices, significantly reducing running time. Furthermore, we introduce a novel learning rate mechanism, i.e., a constant single-timescale learning rate, to coordinate the update of different variables. We also present a new strategy to establish the convergence rate of our algorithm. Finally, the extensive experimental results confirm the efficacy of our proposed algorithm.",
+    "published": "2026-09-14T21:12:59Z",
+    "updated": "2026-09-14T21:12:59Z",
+    "authors": [
+      "Yihan Zhang",
+      "Rohit Dhaipule",
+      "Chiu C Tan",
+      "Haibin Ling",
+      "Hongchang Gao"
+    ],
+    "categories": [
+      "cs.LG"
+    ],
+    "comment": "Accepted for publication in the Proceedings of the Thirty-Fourth International Joint Conference on Artificial Intelligence (IJCAI 2025). The official version is available at https://doi.org/10.24963/ijcai.2025/784",
+    "journal_ref": "In Proceedings of the Thirty-Fourth International Joint Conference on Artificial Intelligence (IJCAI 2025) (pp. 7047-7055)",
+    "doi": "10.24963/ijcai.2025/784",
+    "url": "https://arxiv.org/abs/2609.16350v1",
+    "pdf": "https://arxiv.org/pdf/2609.16350v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.15825",
+    "version_id": "2609.15825v2",
+    "title": "Sharp Regret Bounds and a Task-Covariance Correction for Spectral Representation Learning",
+    "abstract": "Spectral features can remain optimal under strongly uneven task preferences when they retain the directions most useful to the tasks. In a local-task model, expected probing gain depends on the task prior only through its covariance $Λ$: with $B$ recording dependence between views, $k$ spectral features span the leading eigenspace of $BB^\\top$, while task-optimal features span that of $BΛB^\\top$. We derive alignment-dependent regret bounds, matching worst-case lower bounds for a flat leading spectrum, and bounds using the leading $2k$ directions with a spectral-tail term; a spectral gap makes the bound quadratic in small anisotropy. We also bound the imbalance from random preference patterns and from averaging independent tasks with an isotropic population covariance. With known $Λ$, changing one term of the spectral contrastive loss selects task-optimal features; with a labelled task bank, we propose a diagnostic and test correction without retraining. Correction reduces synthetic held-out regret from $0.858$ to $0.003$ with $2000$ tasks when less task-relevant directions dominate, and on CIFAR-100 lowers empirical regret by $0.031$--$0.053$ on held-out fine-label tasks using the same images. With a small task bank, however, correction can hurt.",
+    "published": "2026-09-14T16:26:55Z",
+    "updated": "2026-09-26T13:09:22Z",
+    "authors": [
+      "Dier Tang",
+      "Jing Yee Tan",
+      "Guangyue Han"
+    ],
+    "categories": [
+      "cs.LG",
+      "cs.IT",
+      "stat.ML"
+    ],
+    "comment": "53 pages, 6 figures. Comments welcome",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.15825v2",
+    "pdf": "https://arxiv.org/pdf/2609.15825v2",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.15248",
+    "version_id": "2609.15248v1",
+    "title": "Bandits with Probing: Optimal Regret and the Limits of Winner Feedback",
+    "abstract": "A learner probes at most $k$ of $n$ arms each round, receives the maximum of their rewards in $[0,1]$, and competes with the best fixed arm. When does the probing advantage pay for learning? We determine two minimax laws. Under independent stochastic rewards with winner feedback (the maximum and a winning label), or on arbitrary fixed sequences given a single signed contrast between block maxima, the minimax regret has order $Φ_{n,k}(T)=\\min\\{\\frac{n-k}{n}T,\\frac{n-k}{k}\\}$, $2\\le k<n$. Under winner feedback, both arbitrary joint i.i.d. rewards and fixed sequences have minimax regret of order $R_{n,k}(T)=\\frac{n-k}{n}\\min\\{T,\\frac{n+T}{k},\\sqrt{\\frac{nT}{k}}\\}$. Both laws have universal constants and anytime upper bounds. The first reduces regret to a pure coverage cost: same-round contrasts absorb the stability cost, and independence permits exact resampling whose gains fund sample advancement. The second adds a learning cost that becomes comparable to coverage at horizon $n$; beyond $nk$, numerical maxima improve over labels alone. The lower bound allows every adaptive action size.",
+    "published": "2026-09-14T09:07:54Z",
+    "updated": "2026-09-14T09:07:54Z",
+    "authors": [
+      "Yongjie Guan"
+    ],
+    "categories": [
+      "cs.LG",
+      "cs.DS",
+      "stat.ML"
+    ],
+    "comment": "37 pages, 2 tables",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.15248v1",
+    "pdf": "https://arxiv.org/pdf/2609.15248v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.15170",
+    "version_id": "2609.15170v1",
+    "title": "Nearly Minimax-Optimal Regret for Linear Contextual Bandits with Arbitrary Adaptive Action Sets",
+    "abstract": "We study stochastic linear contextual bandits with arbitrary action menus that may depend on the fixed parameter and the interaction history. We establish matching upper and lower bounds, up to logarithmic factors. Let $d$ be the dimension, $K$ be the menu size, and $T$ the time horizon. For $2\\le K\\le d$, we prove an upper bound $\\widetilde O(K^{1/4}\\sqrt{dT})$. When $T\\ge d^2$, we further prove a lower bound $Ω(K^{1/4}\\sqrt{dT})$. Thus, for $T\\ge d^2$ and $2\\le K\\le d$, the upper and lower bounds match up to logarithmic factors, and the polynomial dependence on $K$ is optimal. Compared with the previous $\\widetilde O(\\sqrt{dKT})$ bound, our upper bound improves the dependence on $K$ by a factor of $K^{1/4}$. For $K\\ge d$, we prove an upper bound $\\widetilde O_{d,T}\\left(\\sqrt{dT}\\min\\{\\sqrt d,(d\\log K)^{1/4}\\}\\right)$ and a lower bound $Ω\\left(\\sqrt{dT}\\min\\left\\{\\sqrt d,\\left(\\frac{d\\log K}{\\log(2d)}\\right)^{1/4}\\right\\}\\right)$. Here, $\\widetilde O_{d,T}$ omits logarithmic factors only in $d$ and $T$. In particular, for polynomially large $K\\ge d$, the upper and lower bounds both scale as $d^{3/4}\\sqrt T$ up to logarithmic factors, improving the standard $\\widetilde O(d\\sqrt T)$ rate by a factor of $d^{1/4}$. As $K$ grows further, the regret smoothly recovers the $d\\sqrt T$ scale once $\\log K$ reaches order $d$.",
+    "published": "2026-09-14T07:57:45Z",
+    "updated": "2026-09-14T07:57:45Z",
+    "authors": [
+      "Tianyuan Jin"
+    ],
+    "categories": [
+      "cs.LG",
+      "cs.GT"
+    ],
+    "comment": "",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.15170v1",
+    "pdf": "https://arxiv.org/pdf/2609.15170v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.14246",
+    "version_id": "2609.14246v1",
+    "title": "Joint Optimization for Federated Learning and Transmission over Unreliable Wireless Networks with Heterogeneous Data",
+    "abstract": "In wireless federated learning (FL), data heterogeneity and multiple local updates induce client drift, degrading model convergence. It is further affected by unreliable wireless links, as transmission errors may invalidate model updates. To address these challenges, we propose a federated random walk averaging (FedRW) framework, which is a variant of federated averaging (FedAvg) that mitigates data heterogeneity by updating models along random walk (RW) paths and aggregating them at the server. Model parameters are transmitted in packets with retransmission support to improve training quality by mitigating wireless errors along RW paths. Meanwhile, wireless transmission delays hinder the exploration of FedRW. To this end, we formulate a joint optimization problem that integrates learning, RW path selection, and transmission parameter tuning, aiming to minimize the training loss under delay constraints. By deriving an upper bound on the expected convergence of FedRW over unreliable wireless networks, we reduce the problem to a general form agnostic to task type and model architecture. A distributed solution is then proposed, in which the server or clients optimize packet size and maximum number of retransmissions locally, and efficiently select reliable and expandable next-hop nodes via a resilience-aware beam search with dynamic pruning. Simulation results show that FedRW achieves 2.26%-9% higher accuracy than state-of-the-art baselines under high data heterogeneity. Furthermore, the jointly optimized FedRW yields at least 2.78% higher accuracy and faster convergence compared to baselines.",
+    "published": "2026-09-13T02:49:28Z",
+    "updated": "2026-09-13T02:49:28Z",
+    "authors": [
+      "Changheng Wang",
+      "Xianchao Zhang",
+      "Zhiqing Wei",
+      "Lingzhu Zhao",
+      "Zhongming Yang",
+      "Zhiyong Feng"
+    ],
+    "categories": [
+      "cs.DC",
+      "cs.LG"
+    ],
+    "comment": "",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.14246v1",
+    "pdf": "https://arxiv.org/pdf/2609.14246v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.13547",
+    "version_id": "2609.13547v1",
+    "title": "Toward Optimal Switching Regret for Multi-Armed Bandits with Oblivious Adversary",
+    "abstract": "We study switching regret in adversarial multi-armed bandits, where the learner competes with an arm sequence that changes at most $S$ times. When $S$ is known, an optimal expected regret of $\\widetilde{\\mathcal{O}}(\\sqrt{(S+1)KT})$ is obtainable [Auer et al., 2002]. However, when $S$ is unknown, Marinov and Zimmert [2021] show that this guarantee is impossible under an adaptive adversary. In this paper, we show that a single algorithm achieves $\\widetilde{\\mathcal{O}}(\\sqrt{(S+1)KT})$ expected regret for every $S$ against an oblivious adversary, resolving an open problem of Auer et al. [2019b]. Our algorithm combines a fixed-share learner initialized with a small learning rate and dyadic-interval subroutines that search for local improvements using randomized learning rates and implicit exploration. Importantly, a non-uniform prior favors following the main learner, keeping the cost of maintaining many subroutines small. When the subroutines accumulate sufficient improvement over the main learner, its learning rate doubles, allowing adaptation to the unknown number of comparator switches $S$.",
+    "published": "2026-09-11T21:23:20Z",
+    "updated": "2026-09-11T21:23:20Z",
+    "authors": [
+      "Mengxiao Zhang"
+    ],
+    "categories": [
+      "cs.LG",
+      "stat.ML"
+    ],
+    "comment": "",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.13547v1",
+    "pdf": "https://arxiv.org/pdf/2609.13547v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.13440",
+    "version_id": "2609.13440v1",
+    "title": "Efficient Online Inverse Optimization with $O(d)$ Regret",
+    "abstract": "We give a deterministic algorithm for online inverse linear optimization with regret $O(d)$, uniform in the horizon and $O(d^{2})$ time per round. A bound of this order was obtained recently by Dewasurendra, settling a question of Gollapudi et al.\\ and of Oki and Sakaue, but by an improper rule that enumerates covers at every scale and costs $T^{Θ(d)}$ a round; ours is the first efficient such bound and the first proper one. We build on the variable-metric framework of Sakaue et al., adding a self-normalized rank-one update, and we replace the $\\log\\det$ potential by the trace power $\\tr(H^{-1/2})$, which is bounded outright and removes the $\\ln T$. The bound also holds against an expert that does not optimize, and we give corruption-robust and rank-adaptive variants, and an application to convex minimization.",
+    "published": "2026-09-11T18:55:31Z",
+    "updated": "2026-09-11T18:55:31Z",
+    "authors": [
+      "Yang Cai",
+      "Anupam Gupta",
+      "Vineet Gupta",
+      "Guru Guruganesh",
+      "Yanchen Jiang",
+      "Christopher Liaw",
+      "Aranyak Mehta",
+      "Renato Paes Leme",
+      "Grigoris Velegkas",
+      "Di Wang"
+    ],
+    "categories": [
+      "cs.LG",
+      "cs.DS"
+    ],
+    "comment": "",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.13440v1",
+    "pdf": "https://arxiv.org/pdf/2609.13440v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.13396",
+    "version_id": "2609.13396v1",
+    "title": "Converge Then Diversify: Decoupling Convergence and Diversity in Multi-Objective Bayesian Optimisation",
+    "abstract": "Multi-objective Bayesian optimisation (MOBO) is a sample-efficient approach for optimising expensive black-box functions with multiple objectives. In MOBO, the goal is to adequately approximate the Pareto front; that is, to obtain a high-quality solution set with 1) good convergence (closeness to the Pareto front) and 2) good diversity (spread across the Pareto front). Existing MOBO methods typically aim to accomplish these two tasks simultaneously, i.e., driving the search towards the Pareto front while maintaining a diverse set of nondominated solutions, such that the solutions, ideally, can gradually approach the entire front. When sufficient search budgets are available, this approach is effective. However, considering both convergence and diversity throughout the search is not easy and requires careful design. Under very tight budgets, there may not be enough solutions generated to be able to simultaneously approach the entire Pareto front. To address this issue, this paper proposes a \\textit{converge-then-diversify} (CTD) approach that decouples convergence and diversity into two stages. In the first stage, CTD focuses on convergence, aiming to quickly drive the search toward a single point on the Pareto front. In the second stage, CTD focuses on diversity, aiming to spread solutions across the front. We present two simple instantiations of CTD by using widely adopted acquisition functions in the area. Experimental results show that, across all 446 pairwise comparisons, CTD statistically outperforms state-of-the-art methods in 72.9\\% of the cases, performs equivalently in 21.1\\%, and is statistically worse in only 6.1\\%, with the advantage being particularly evident in settings with very tight evaluation budgets or in high-dimensional problems.",
+    "published": "2026-09-11T18:04:56Z",
+    "updated": "2026-09-11T18:04:56Z",
+    "authors": [
+      "Chao Jiang",
+      "Yueling Huang",
+      "Miqing Li"
+    ],
+    "categories": [
+      "cs.AI",
+      "stat.ML"
+    ],
+    "comment": "26 pages,4 figures",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.13396v1",
+    "pdf": "https://arxiv.org/pdf/2609.13396v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.12590",
+    "version_id": "2609.12590v2",
+    "title": "Tight Sampling Complexity with Stochastic Gradient Oracles in Fixed Dimensions",
+    "abstract": "We establish the stochastic-gradient query complexity of sampling smooth strongly log-concave distributions in every fixed dimension $d\\geq1$. For $μ$-strongly convex, $L$-smooth potentials with unknown minimizers $x_f^\\star$ in the ball $\\mathbb{B}(0,μ^{-1/2})$, and unbiased gradient oracles with variance at most $σ^2$, the minimax worst-case expected query complexity is $Θ\\left(\\log(1+κ)+\\frac{σ^2}{μ\\varepsilon}\\right)$, jointly optimal for the condition number $κ:=L/μ$, variance $σ^2\\ge 0$, and TV accuracy $0<\\varepsilon\\leq 1/10$. In the noiseless setting $σ=0$, this tight complexity $Θ\\left(\\log(1+κ)\\right)$ is independent of $\\varepsilon$. Moreover, a gradient-only sampler generates an exact sample with ${O}(\\log(1+κ))$ worst-case expected queries. Without previous ball $\\mathbb{B}(0,μ^{-1/2})$, exact sampling from any initial point $x_0$ can be implemented with expected cost ${O}\\left(\\log(1+κ)+\\log(1+\\sqrtμ\\|x_0-x_f^\\star\\|)\\right)$, without knowing the initial distance. We also show that dependence on initial distance is generally unavoidable.",
+    "published": "2026-09-11T08:44:06Z",
+    "updated": "2026-09-26T15:20:41Z",
+    "authors": [
+      "Weiming Ou",
+      "Xiao Wang"
+    ],
+    "categories": [
+      "math.ST",
+      "cs.LG",
+      "math.PR"
+    ],
+    "comment": "Under Review",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.12590v2",
+    "pdf": "https://arxiv.org/pdf/2609.12590v2",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.10981",
+    "version_id": "2609.10981v1",
+    "title": "Thompson Sampling for Non-Monotone Convex Ridge Bandits: Monotonicity Is Not Needed for Polynomial Regret",
+    "abstract": "Bakhtiari, Lattimore and Szepesvári (COLT 2025) proved that Thompson sampling (TS) has Bayesian regret $\\tilde O(d^{5/2}\\sqrt n)$ for bandit convex optimisation with convex \\emph{monotone} ridge losses $f(x)=\\ell(\\ip{x}θ)$, and asked whether monotonicity of the link is necessary. We give a qualitative negative answer. For every prior on $[0,1]$-valued, $1$-Lipschitz convex ridge losses with an arbitrary convex, possibly non-monotone, link, and for any fixed measurable selection of minimisers, exact-posterior TS has Bayesian regret $O\\big((d+1)^4\\sqrt{dn}\\,\\log(e+nd\\max\\{1,\\diam K\\})\\big)=\\tilde O(d^{9/2}\\sqrt n)$. The monotone proof relies on a single-removal John-ellipsoid dichotomy; we show by an explicit twelve-point configuration that this dichotomy fails for non-monotone links, and replace it by an $O(d^2)$ cardinality bound for ``uninformative'' configurations. The bound uses a Boolean rounding argument: a $0$-$1$ matrix within $1/(4r)$ in max-norm of a rank-$r$ matrix has rank at most $2r-1$. We construct $d(d+1)$ uninformative losses, showing that the cardinality bound is tight up to constants in the large-diameter-to-gap regime, and give a self-contained information-ratio-to-regret transfer that is uniform over fixed measurable selections. Whether the $d^{5/2}$ dependence of the monotone case can be retained remains open.",
+    "published": "2026-09-10T01:58:03Z",
+    "updated": "2026-09-10T01:58:03Z",
+    "authors": [
+      "Xuan Li"
+    ],
+    "categories": [
+      "cs.LG"
+    ],
+    "comment": "",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.10981v1",
+    "pdf": "https://arxiv.org/pdf/2609.10981v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.10196",
+    "version_id": "2609.10196v1",
+    "title": "An Exponential Deterministic--Randomized Gap in ERM-Oracle Complexity for Thresholds on an Unknown Order",
+    "abstract": "Attias, Hanneke and Ramaswami (NeurIPS 2025) asked whether randomization provably reduces the oracle calls needed for online learning when the class is accessible only through an oracle. We study the instance they singled out: transductive online learning of thresholds on an unknown total order of T instances, with a consistency-type ERM oracle that returns a full concept consistent with a queried labeled set (or reports non-realizability). Our main result is a separation for a fixed natural oracle. When the oracle is the minimal-prefix rule (or the maximal-prefix rule), every deterministic learner makes M mistakes and Q calls with $M+Q\\ge T-\\varepsilon$ on some instance ($\\varepsilon\\in\\{0,1\\}$, according to whether the empty prefix is a concept), and the constant is exact; hence $O(\\log T)$ mistakes cost $T-\\varepsilon-O(\\log T)$ calls, whereas that paper's randomized learner achieves $O(\\log T)$ expected calls and mistakes under the same rule. The randomized order is optimal: on an explicit hard distribution under the minimal-prefix rule, every learner has expected mistakes at least $((T+1-\\varepsilon)\\,128^{-\\mathbb{E}[Q]}-1)/2$, so $Ω(\\log T)$ expected calls are necessary for polylogarithmic mistakes. The separation is governed by the oracle's selection rule, not by the class alone: for a legal feasible-median ERM rule a deterministic learner achieves $O(\\log T)$ calls and mistakes, while a global-median rule again forces linear total cost. The same linear bound holds when the oracle's answers are chosen adversarially and then frozen into a memoryless oracle. We add partial tradeoff results for fixed query budgets (the middle regime is open) and an interface contrast: with only a weak consistency oracle, returning a realizability bit, both deterministic and randomized learners need $Θ(T)$ calls.",
+    "published": "2026-09-09T14:02:47Z",
+    "updated": "2026-09-09T14:02:47Z",
+    "authors": [
+      "Xuan Li"
+    ],
+    "categories": [
+      "cs.LG",
+      "stat.ML"
+    ],
+    "comment": "",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.10196v1",
+    "pdf": "https://arxiv.org/pdf/2609.10196v1",
+    "sources": [
+      "optimization_updates",
+      "neurips_2026"
+    ]
+  },
+  {
+    "id": "2609.09659",
+    "version_id": "2609.09659v1",
+    "title": "Cascading Gradient Inversion via LT-Code Inspired Peeling in Federated Learning",
+    "abstract": "Federated learning shares model updates rather than raw data, yet these updates can be inverted to reconstruct the clients' training data. Analytic reconstruction attacks, which invert a gradient in closed form, degrade as the batch grows: prior single-round attacks recover only about half of a batch of size $100$ even when the attacker fully controls the network parameters, and known upper bounds limit what any such method can recover. We establish a connection between gradient inversion and the theory of erasure-correcting codes, and use it to construct attacks that exceed these bounds. Our attacks recover batches exactly, together with every sample's label, from a single FedSGD round, and certify each recovery without ground-truth data. On eight image and tabular benchmarks they outperform prior single-round attacks by a wide margin. Even a passive attacker who only observes an honestly trained network recovers $94$--$100\\%$ of ImageNet batches at sizes up to $128$, more than prior single-round attacks achieve even with active manipulation of the model, and in the active setting more than $90\\%$ is recovered at batch sizes of several hundred. These results show that the privacy leakage of federated learning has been underestimated.",
+    "published": "2026-09-09T03:17:01Z",
+    "updated": "2026-09-09T03:17:01Z",
+    "authors": [
+      "Saeed Shariati",
+      "Mohsen Alambardar Meybodi"
+    ],
+    "categories": [
+      "cs.LG",
+      "cs.AI",
+      "cs.CR"
+    ],
+    "comment": "",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.09659v1",
+    "pdf": "https://arxiv.org/pdf/2609.09659v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.07566",
+    "version_id": "2609.07566v2",
+    "title": "No-Regret Mixing of LRU and LFU with Optimal Switching Cost",
+    "abstract": "Caching systems often rely on simple eviction policies such as Least Recently Used (LRU) and Least Frequently Used (LFU), which perform well in complementary request regimes. Recent policies such as LeCar and Cacheus combine LRU and LFU using ideas from the experts problem in online learning. Specifically, upon a miss, they randomize between the two eviction rules using probabilities derived from scores updated by tracking the history of past evictions. While these policies exhibit strong empirical performance, it remains unclear whether they are guaranteed, on every request sequence, to perform asymptotically as well as the better of LRU and LFU, i.e., whether they achieve sublinear regret with respect to this benchmark. We first show that LeCar suffers linear regret against an oblivious adversary, even with unbounded history. We then propose H-MC, a Hedge-based mixture of virtual LRU and LFU caches that preserves Hedge's selection probabilities, and hence its regret guarantees, while minimizing the switching cost among all joint selection rules with these marginals.",
+    "published": "2026-09-07T14:44:51Z",
+    "updated": "2026-09-28T06:09:06Z",
+    "authors": [
+      "Younes Ben Mazziane",
+      "Xinying Zou"
+    ],
+    "categories": [
+      "cs.LG",
+      "cs.NI"
+    ],
+    "comment": "",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.07566v2",
+    "pdf": "https://arxiv.org/pdf/2609.07566v2",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.05986",
+    "version_id": "2609.05986v1",
+    "title": "Quasi-uniform designs from random candidates: optimal candidate complexity and farthest-point sampling",
+    "abstract": "We study randomized constructions of quasi-uniform designs on a compact metric-measure space satisfying two-sided polynomial ball-growth conditions. Given integers $N\\le M$, we first draw $M$ independent candidate points and then retain the first $N$ points of a farthest-point traversal of the candidate set. We prove probabilistic non-asymptotic bounds on the mesh ratio and show that $M=Θ(N\\log N)$ is the sharp order of the candidate-pool size required for bounded mesh ratio: a sufficiently large multiple of $N\\log(N/δ)$ suffices with probability at least $1-δ$, whereas, if $M=o(N\\log N)$, the mesh ratio diverges in probability for every procedure that selects $N$ points from the same independent candidate pool. If $M/(N\\log M)\\to\\infty$, the upper bound on the mesh ratio for the exact farthest-point sampling (FPS) tends to $2$. We also quantify the effect of approximate FPS and analyze direct and fast implementations in spaces of bounded doubling dimension. Finally, using a single infinite stream of candidate points and increasing candidate budgets, we construct an almost surely quasi-uniform nested sequence; under supercritical oversampling and exact FPS, or more generally when the approximation factors tend to $1$, its mesh-ratio limit superior equals $2$ for compact positive-volume subsets of Euclidean space.",
+    "published": "2026-09-05T09:00:28Z",
+    "updated": "2026-09-05T09:00:28Z",
+    "authors": [
+      "Takashi Goda",
+      "Hengjun Xu"
+    ],
+    "categories": [
+      "math.NA"
+    ],
+    "comment": "39 pages, 5 figures",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.05986v1",
+    "pdf": "https://arxiv.org/pdf/2609.05986v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.05895",
+    "version_id": "2609.05895v1",
+    "title": "A First-Order Learning Algorithm for Online Resource Allocation with Constant Regret",
+    "abstract": "We study a finite-horizon online resource allocation problem with initial resource capacities proportional to the horizon. In each period, a request type is observed and one action is chosen from a finite menu. Each action earns a reward and consumes a vector of resources. The arrival types are independent and identically distributed, but their probabilities are unknown. We present a primal first-order learning policy that, in each period, performs one gradient ascent update of the action coordinates associated with the current request type. The policy achieves $O(1)$ expected additive regret relative to the hindsight optimum, with a bound independent of the horizon $T$. It does not solve any linear program, and the regret bound does not require a nondegeneracy assumption on the fluid linear program.",
+    "published": "2026-09-05T05:30:29Z",
+    "updated": "2026-09-05T05:30:29Z",
+    "authors": [
+      "Menglong Li",
+      "Jiawei Zhang"
+    ],
+    "categories": [
+      "cs.LG"
+    ],
+    "comment": "",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.05895v1",
+    "pdf": "https://arxiv.org/pdf/2609.05895v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.04825",
+    "version_id": "2609.04825v1",
+    "title": "Beyond Distance Ordering: Resource Complexity and Universal Optimality of Exact Labeled Directed Shortest Paths",
+    "abstract": "We study exact single-source shortest paths when the output is only the materialized labeled distance vector ($\\mathrm{DIST}$), rather than a distance order. In the full deterministic comparison-addition model, the minimum worst-case number of additions on every fixed directed topology is exactly the maximum number $ρ_{\\mathrm{fwd}}$ of forward nonsource endpoint classes over rooted vertex orders; the lower bound permits adaptive control, literals, and arbitrary mixed sums. This arithmetic law aligns with the comparison optimum on DAGs, where the full resource region is an exact rectangle. Cycles destroy that alignment: a two-spoke shared-hub graph has coordinatewise optima $(4,2)$ but requires five comparisons at the two-addition budget. Its $k$-spoke extension forces $k\\log_2 k+O(k)$ comparisons at the addition optimum and has an entropy-tight deterministic tradeoff $C_{k+r}^*(H_k)=Θ(k+Λ_{k,r})$, where $Λ_{k,r}=\\log_2(k!/[r!(r+1)^{k-r}])$, with leading constant one when $Λ_{k,r}/k\\to\\infty$. Because the two coordinatewise minima need not belong to one program, these conflicts lead to the same-program benchmark $\\operatorname{OPT}_{\\mathrm{DIST}}=\\inf_A\\sup_w(C_A(w)+P_A(w))$. An exact transcript-cone game yields one uniform interpreter whose charged addition-comparison cost equals $\\operatorname{OPT}_{\\mathrm{DIST}}$ on every topology; its optimal actions are synthesizable in polynomial space but may require exponential time. Finally, an active-core reduction and the current deterministic directed-SSSP bound give an efficient uniform $O\\!\\bigl(\\operatorname{OPT}_{\\mathrm{DIST}}\\sqrt{\\log(2+\\operatorname{OPT}_{\\mathrm{DIST}})\\log\\log(4+\\operatorname{OPT}_{\\mathrm{DIST}})}\\bigr)$ charged-operation bound. Thus optimal numerical policies exist uniformly, while efficient constant-competitive navigation remains open.",
+    "published": "2026-09-04T07:27:06Z",
+    "updated": "2026-09-04T07:27:06Z",
+    "authors": [
+      "Bin Cai"
+    ],
+    "categories": [
+      "cs.DS",
+      "cs.CC"
+    ],
+    "comment": "45 pages, including appendices and references. One endpoint theorem is verified by an exact computer-assisted finite certificate",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.04825v1",
+    "pdf": "https://arxiv.org/pdf/2609.04825v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.04815",
+    "version_id": "2609.04815v1",
+    "title": "Federated Attack Campaign Detection via Contrastive Encoding of Threat Indicators in Gradient Updates",
+    "abstract": "Detecting orchestrated cyberattack campaigns that span multiple organizations traditionally requires sharing sensitive telemetry and threat intelligence across institutional boundaries and country borders, a barrier that Federated Learning removes by training shared threat detectors directly on local data. We propose FedIoC, a modular framework in which clients fold locally available structured threat indicators into their gradient updates; we instantiate the client-side encoder with a supervised contrastive loss over IoC-matched flows. Within each training batch, flows that match any known indicator pattern form the positive set; the contrastive objective pulls their learned embeddings together and pushes non-IoC embeddings away, so that campaign-relevant structure is, by design, expressed in the gradient direction. Clients sharing indicators for the same attack campaign then produce aligned gradient components, which the server clusters by the cosine similarity of their updates to recover global campaign patterns without any direct IoC transmission. We evaluate FedIoC on two public threat-detection benchmarks distributed across FL clients that each observe only a fragment of every active campaign and hold disjoint indicator sets derived from their local telemetry. In this regime the FL server recovers cross-organizational campaign cohorts directly from gradient geometry. We contribute FedIoC as a modular framework for this setting, and use it to pinpoint the non-IID gradient structure as the main driver of recovery and to define the open problem of designing encoders that improve on it.",
+    "published": "2026-09-04T07:13:59Z",
+    "updated": "2026-09-04T07:13:59Z",
+    "authors": [
+      "Manuel Röder",
+      "Bibin Babu",
+      "Frank-Michael Schleif"
+    ],
+    "categories": [
+      "cs.LG",
+      "cs.CR"
+    ],
+    "comment": "Accepted to ECML-PKDD 2026, 4th Workshop on Advancements in Federated Learning - Towards Trustworthy Federated Learning",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.04815v1",
+    "pdf": "https://arxiv.org/pdf/2609.04815v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.04113",
+    "version_id": "2609.04113v1",
+    "title": "Constant regret in general games via higher-order optimism",
+    "abstract": "We introduce an uncoupled learning algorithm which, when employed by all players of an arbitrary $N$-player normal form game with up to $K$ actions per player, guarantees $O(N^3\\log^2 K)$ individual regret, uniformly over the horizon of play. The proposed algorithm - which we call higher-order optimism with discounting (HOOD) is a variant of optimistic follow-the-regularized-leader (OptFTRL) that combines a discounted $(N+1)$-th order predictor with entropic regularization over a suitable \"lifting\" of the game's strategy space. This combination of ingredients is purposefully designed to dampen large oscillations of the induced sequence of play in a controlled manner, removing in this way a key stumbling block of previous attempts to achieve constant regret in general games. Our approach bears several striking similarities to the concurrent - and completely independent - work of Liu, Farina, and Ozdaglar (arXiv:2608.31166), who very recently derived an $O(N^{21}\\log^{4} K)$ regret bound through the use of higher-order optimism and an exponential moving average estimator.",
+    "published": "2026-09-03T17:16:13Z",
+    "updated": "2026-09-03T17:16:13Z",
+    "authors": [
+      "Omar Abbadi",
+      "Rida Laraki",
+      "Panayotis Mertikopoulos"
+    ],
+    "categories": [
+      "cs.LG",
+      "cs.GT"
+    ],
+    "comment": "42 pages, 1 figure",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.04113v1",
+    "pdf": "https://arxiv.org/pdf/2609.04113v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.02638",
+    "version_id": "2609.02638v1",
+    "title": "Oracle, will I ever learn? A study of prediction convergence and complementarity across link prediction models",
+    "abstract": "Knowledge graphs have become an important source of structured knowledge for Web applications, including search, question answering, and recommender systems. In these applications, link prediction can serve either as a prediction task itself or as a means to enrich incomplete knowledge graphs for downstream tasks. Interestingly, different link prediction models, or even different training runs of the same model, can produce substantially different predictions for the same query. This suggests a variability in the capture of the underlying knowledge by models, thus raising a fundamental question: to what extent do different models capture complementary knowledge, and how much of this knowledge could be recovered by combining them? We propose to measure model complementarity through the performance of an oracle that, for each query, selects the best prediction among a considered set of models, hence providing an upper bound on the performance achievable through model combination. Across several architectures and benchmarks, we find a substantial gap between individual models and their oracle, revealing that different models capture complementary knowledge. Yet, this complementarity rapidly saturates as more models are added, leaving a persistent subset of queries unsolved even by a large number of models. These findings reveal both the potential of model complementarity and a fundamental limit to what current link prediction models can collectively recover; thereby highlighting the need for further research to build robust Web applications.",
+    "published": "2026-09-02T14:14:36Z",
+    "updated": "2026-09-02T14:14:36Z",
+    "authors": [
+      "Guillaume Méroué",
+      "Fabien Gandon",
+      "Pierre Monnin"
+    ],
+    "categories": [
+      "cs.LG"
+    ],
+    "comment": "",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.02638v1",
+    "pdf": "https://arxiv.org/pdf/2609.02638v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.02971",
+    "version_id": "2609.02971v2",
+    "title": "Privacy Leakage in Federated Learning: Gradient-Based Client Identity Inference and Defenses for Inertial Sensing in Vehicular Edge Networks",
+    "abstract": "As vehicular networks move toward 5G/6G edge intelligence, federated learning (FL) is widely promoted as a privacy-preserving way for vehicles and infrastructure to train shared models without exposing raw sensor data. Yet the updates clients transmit still leak enough information to identify who sent them, which threatens the anonymity that safety-critical V2X applications assume and adds to existing concerns over adversarial ML, model poisoning, and backdoor attacks. We study server-side client identity inference from transmitted weight deltas using inertial (IMU) measurements, evaluated on the UCI Human Activity Recognition (HAR) benchmark as an accessible proxy for the IMU streams produced onboard connected vehicles. Across five attack classifiers and five non-IID partitions, an honest-but-curious server recovers client identity with near-perfect accuracy (approximately 1.000) from undefended updates, confirming a concrete identifiability risk. We then quantify the privacy-utility trade-off of a lightweight clip-then-noise defense by sweeping Gaussian noise (sigma in {0.00, 0.05, 0.10, 0.20, 0.50, 1.00}) at fixed clipping (C=1.0), and report formal (epsilon, delta)-DP budgets through Renyi accounting. A practical region (sigma in [0.1, 0.2]) drives attack accuracy to near-random while costing under 5% relative FL accuracy. Ensemble FL supplies complementary structural privacy with a 1/K anonymity-set bound and no noise penalty. Results are supported by cryptographic (SHA-256) train/evaluation gradient disjointness, three seeds, and a count-normalized attacker-advantage metric. We position HAR explicitly as a proxy and discuss what validation on true vehicular telemetry would require.",
+    "published": "2026-09-02T09:49:39Z",
+    "updated": "2026-09-05T10:06:01Z",
+    "authors": [
+      "Ali Akarma",
+      "Toqeer Ali Syed",
+      "Muhammad Khan",
+      "Qurat-ul-ain Mastoi",
+      "Adeel Ahmad"
+    ],
+    "categories": [
+      "cs.CR",
+      "cs.LG",
+      "cs.NI"
+    ],
+    "comment": "Accepted for presentation at IEEE VTC2026-Fall, Boston, MA, USA, September 6-9, 2026",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.02971v2",
+    "pdf": "https://arxiv.org/pdf/2609.02971v2",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2609.01802",
+    "version_id": "2609.01802v1",
+    "title": "D-FROST: Decentralized Federated pRompt-tuning via Optimal tranSporT for Non-IID and Imbalanced Data",
+    "abstract": "Prompt tuning provides a parameter-efficient way to adapt foundation models (FMs) by freezing the pretrained backbone and updating only a small set of learnable prompts. This property makes prompt tuning especially suitable for decentralized federated learning (DFL), where exchanging full-model updates can be prohibitively expensive. However, prompt tuning in DFL introduces new challenges. Prompt sets learned from heterogeneous local data may not be index-wise aligned, making standard decentralized averaging unsuitable. In addition, the algorithm should be theoretically guaranteed to achieve consensus and make progress toward the shared objective. In this work, we provide the first study of prompt tuning in DFL. We formulate decentralized prompt tuning as a Wasserstein-based optimization problem over prompt measures, which captures the set-valued structure of prompts. We then propose D-FROST, an optimal-transport-based (OT-based) decentralized prompt-tuning algorithm that merges neighborhood prompts into compact representative prompt sets through transportation-based matching. We further analyze D-FROST by bounding the Wasserstein consensus error across clients, and establishing convergence of the network-level prompt barycenter to a neighborhood of stationarity. Experiments under heterogeneous client data demonstrate the effectiveness of D-FROST for decentralized prompt tuning.",
+    "published": "2026-09-01T19:16:14Z",
+    "updated": "2026-09-01T19:16:14Z",
+    "authors": [
+      "Quan Minh Nguyen",
+      "Hoang M. Ngo",
+      "Trong Nghia Hoang",
+      "My T. Thai"
+    ],
+    "categories": [
+      "cs.LG"
+    ],
+    "comment": "",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2609.01802v1",
+    "pdf": "https://arxiv.org/pdf/2609.01802v1",
+    "sources": [
+      "optimization_updates"
+    ]
+  },
+  {
+    "id": "2608.25212",
+    "version_id": "2608.25212v1",
+    "title": "Time-Optimal APSP and Matrix Multiplication in Classes of Linear Neighborhood Complexity",
+    "abstract": "The notion of linear neighborhood complexity is a very general structural assumption on a graph class, covering most classes of sparse graphs such as planar graphs, graphs excluding a fixed (topological) minor, or bounded expansion graphs, as well as many structured classes of dense graphs, such as graphs of bounded clique-width, twin-width, merge-width, or flip-width. In this work, we present $O(n^2)$-time optimal algorithms for $n$-vertex graphs coming from a class of linear neighborhood complexity for the following problems: $\\bullet$ All-Pairs Shortest Paths, $\\bullet$ the multiplication of the adjacency matrix $M$ of the input graph with any $n \\times n$ matrix. More specifically, after a quadratic preprocessing, we can multiply $M$ with any $n$-vector in $O(n)$ time. This solves several questions raised in [Bonnet, Kim, Geniet, Moon; ICALP '26], and improves and generalizes results in several other recent papers [Bonnet, Giocanti, Ossona de Mendez, Thomassé; STACS '23], [Bannach, Marwitz, Tantau; STACS '24], [Anand, van den Brand, McCarty; NeurIPS '26], [Kozma, Opler '26], and [Cardinal, McCarty, Yuditsky '26]. We also extend our results to classes of bounded VC density. In classes of linear neighborhood complexity, we also give a triangle-detection algorithm in randomized linear time $O(n+m)$ in $n$-vertex $m$-edge graphs, a $K_4$-detection algorithm in randomized $O(n \\log^5 n + m \\log n)$ or deterministic $O(n^2)$ time, and a $K_5$-detection algorithm in randomized $O(n \\log^9 n + m \\log^5 n)$ time.",
+    "published": "2026-08-25T23:05:32Z",
+    "updated": "2026-08-25T23:05:32Z",
+    "authors": [
+      "Édouard Bonnet",
+      "Julien Duron",
+      "Marcin Pilipczuk",
+      "Marek Sokołowski",
+      "Szymon Toruńczyk"
+    ],
+    "categories": [
+      "cs.DS",
+      "cs.CC",
+      "cs.DM",
+      "math.CO"
+    ],
+    "comment": "31 pages, 5 figures",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2608.25212v1",
+    "pdf": "https://arxiv.org/pdf/2608.25212v1",
+    "sources": [
+      "neurips_2026"
+    ]
+  },
+  {
+    "id": "2608.24731",
+    "version_id": "2608.24731v1",
+    "title": "Optimal Alternating Regret for Online Learning and Games",
+    "abstract": "We settle the minimax-optimal alternating regret, a regret notion motivated by alternating learning dynamics in games, for both online linear optimization (OLO) and online convex optimization (OCO). For OLO over the probability simplex $Δ_d$, we give an algorithm with $O(\\log d)$ alternating regret that remains a constant for any time horizon $T$, and a matching lower bound. Our constant regret bound significantly improves previous results with $O(\\log ^{2/3}d \\cdot T^{1/3})$ regret [Cevher, Cutkosky, Kavis, Piliouras, Skoulakis, Viano, NeurIPS 2023, Hait, Li, Luo, Zhang, COLT 2025]. As a result, we obtain alternating learning dynamics with $O(\\log d /T)$ convergence to Nash equilibria in two-player zero-sum games and $O(\\log d /T)$ convergence to coarse correlated equilibria in two-player general-sum games. This is the first uncoupled learning dynamics with $O(1/T)$ convergence to CCE in two-player general-sum games, while all prior works suffer additional $\\log T$ factors. For general OCO over a $d$-dimensional compact convex set, we give an algorithm with $O(d\\log (1+T/d))$ alternating regret, improving the previous best of $\\widetilde{O}(d^{2/3}T^{1/3})$. We also prove a matching lower bound of $Ω(d\\log (1+T/d))$, showing that the $Ω(\\log T)$ factor is unavoidable.",
+    "published": "2026-08-25T15:41:17Z",
+    "updated": "2026-08-25T15:41:17Z",
+    "authors": [
+      "Yixin Tao",
+      "Weiqiang Zheng"
+    ],
+    "categories": [
+      "cs.LG",
+      "cs.GT",
+      "stat.ML"
+    ],
+    "comment": "21 pages",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2608.24731v1",
+    "pdf": "https://arxiv.org/pdf/2608.24731v1",
+    "sources": [
+      "neurips_2026"
+    ]
+  },
+  {
+    "id": "2606.02663",
+    "version_id": "2606.02663v1",
+    "title": "AdaWeather: Adaptively Mixing Probabilistic Weather Forecasts with Logarithmic Regret",
+    "abstract": "Recent advances in machine learning have produced probabilistic weather forecasting models comparable to state-of-the-art numerical weather predictors. But no model consistently dominates spatio-temporally, and relative performance is highly context-dependent. This motivates adaptive methods for combining multiple forecasts to obtain improvements and robustness. While combined forecasts have been proposed in the literature, these are achieved either through supervised learning or through prediction with expert advice methods. We introduce AdaWeather, an adaptive framework that combines many probabilistic forecasts using both machine learning as well as mixture of experts to arrive at a unified improved probabilistic forecast. While traditional expert methods develop the regret bounds with respect to the best single expert in hindsight, we extend the algorithm and analysis to show our method has logarithmic regret compared to the best static mixture of experts in hindsight. Empirically, we focus on forecasting temperature, and observe improvements over existing methods.",
+    "published": "2026-06-01T09:46:26Z",
+    "updated": "2026-06-01T09:46:26Z",
+    "authors": [
+      "Saptarishi Dhanuka",
+      "Sarvesh Iyer",
+      "Manmeet Singh",
+      "Mihir More",
+      "Rushil Gupta",
+      "Dhruman Gupta",
+      "Parthasarathi Mukhopadhyay",
+      "Sandeep Juneja"
+    ],
+    "categories": [
+      "cs.LG",
+      "cs.AI"
+    ],
+    "comment": "36 pages, 16 figures. Submitted to arXiv. Forecast aggregation for probabilistic weather prediction using offline supervised learning and online prediction with expert advice. Includes theoretical regret guarantees and empirical evaluation on temperature forecasting. Submitted to NeurIPS 2026",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2606.02663v1",
+    "pdf": "https://arxiv.org/pdf/2606.02663v1",
+    "sources": [
+      "neurips_2026"
+    ]
+  },
+  {
+    "id": "2604.18026",
+    "version_id": "2604.18026v1",
+    "title": "RASP-Tuner: Retrieval-Augmented Soft Prompts for Context-Aware Black-Box Optimization in Non-Stationary Environments",
+    "abstract": "Many deployed systems expose black-box objectives whose minimizing configuration shifts with an externally observed context. When contexts revisit a small set of latent regimes, an optimizer that discards history pays repeated adaptation cost; when each step must remain inexpensive, full Gaussian-process (GP) refits at high observation counts are difficult to sustain. We cast online tuning as context-conditioned regret minimization and present RASP-Tuner, which instantiates a decomposition motivated by first principles: (i) identify a regime proxy by retrieving similar past contexts; (ii) predict short-horizon loss with a mixture-of-experts surrogate whose input concatenates parameters, context, and a retrieved soft prompt; (iii) adapt chiefly in a low-dimensional prompt subspace, invoking full surrogate updates only when scalarized error or disagreement spikes. A RealErrorComposer maps heterogeneous streaming metrics to [0,1] via EMA-stabilized logistic scores, supplying a single differentiable training target. On nine synthetic non-stationary benchmarks, an adversarial-context sanity check, and three tabular real-world streams (Section on real-world experiments), RASP-Tuner improves or matches cumulative regret relative to our GP-UCB and CMA-ES implementations on seven of nine synthetic tasks under paired tests at horizon T=100, while recording 8-12 times lower wall-clock per step than sliding-window GP-UCB on identical hardware. Idealized analysis in a cluster-separated, strongly convex regime model (RA-GD) supplies sufficient conditions for bounded dynamic regret; the deployed pipeline violates several of these premises, and we articulate which gaps remain open.",
+    "published": "2026-04-20T09:52:36Z",
+    "updated": "2026-04-20T09:52:36Z",
+    "authors": [
+      "Enze Pan"
+    ],
+    "categories": [
+      "cs.LG",
+      "cs.AI"
+    ],
+    "comment": "Withdraw by ICML and prepare for NeurIPS or ICLR",
+    "journal_ref": "",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2604.18026v1",
+    "pdf": "https://arxiv.org/pdf/2604.18026v1",
+    "sources": [
+      "neurips_2026"
+    ]
+  },
+  {
+    "id": "2602.15076",
+    "version_id": "2602.15076v1",
+    "title": "Near-Optimal Sample Complexity for Online Constrained MDPs",
+    "abstract": "Safety is a fundamental challenge in reinforcement learning (RL), particularly in real-world applications such as autonomous driving, robotics, and healthcare. To address this, Constrained Markov Decision Processes (CMDPs) are commonly used to enforce safety constraints while optimizing performance. However, existing methods often suffer from significant safety violations or require a high sample complexity to generate near-optimal policies. We address two settings: relaxed feasibility, where small violations are allowed, and strict feasibility, where no violation is allowed. We propose a model-based primal-dual algorithm that balances regret and bounded constraint violations, drawing on techniques from online RL and constrained optimization. For relaxed feasibility, we prove that our algorithm returns an $\\varepsilon$-optimal policy with $\\varepsilon$-bounded violation with arbitrarily high probability, requiring $\\tilde{O}\\left(\\frac{SAH^3}{\\varepsilon^2}\\right)$ learning episodes, matching the lower bound for unconstrained MDPs. For strict feasibility, we prove that our algorithm returns an $\\varepsilon$-optimal policy with zero violation with arbitrarily high probability, requiring $\\tilde{O}\\left(\\frac{SAH^5}{\\varepsilon^2ζ^2}\\right)$ learning episodes, where $ζ$ is the problem-dependent Slater constant characterizing the size of the feasible region. This result matches the lower bound for learning CMDPs with access to a generative model. Our results demonstrate that learning CMDPs in an online setting is as easy as learning with a generative model and is no more challenging than learning unconstrained MDPs when small violations are allowed.",
+    "published": "2026-02-16T05:16:13Z",
+    "updated": "2026-02-16T05:16:13Z",
+    "authors": [
+      "Chang Liu",
+      "Yunfan Li",
+      "Lin F. Yang"
+    ],
+    "categories": [
+      "cs.LG",
+      "stat.ML"
+    ],
+    "comment": "",
+    "journal_ref": "NeurIPS 2025",
+    "doi": "",
+    "url": "https://arxiv.org/abs/2602.15076v1",
+    "pdf": "https://arxiv.org/pdf/2602.15076v1",
+    "sources": [
+      "neurips_2026"
+    ]
+  }
+]

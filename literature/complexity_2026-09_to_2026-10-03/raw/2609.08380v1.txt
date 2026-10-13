@@ -1,0 +1,917 @@
+Content selection saved. Describe the issue below:
+
+How to Make the Gradient Mapping Small for Constrained Stochastic Min-Max Problems and Beyond
+
+We study the stochastic first-order oracle complexity for constrained or regularized convex-concave min-max optimization and stochastic monotone variational inequalities. We focus on the case when suboptimality is measured in terms of the gradient mapping, also known as, forward-backward or natural residual, an optimality notion that generalizes the gradient norm for unconstrained problems. In this setting, under standard unbiased oracle access with now-standard variance assumptions, the best-known complexity for making the norm of the gradient mapping less than $\varepsilon$ is $\widetilde{O}(\varepsilon^{-4})$ , compared to the near-optimal $\widetilde{O}(\varepsilon^{-2})$ that is established in the unconstrained case. We bridge this gap to improve the gradient mapping complexity for constrained convex-concave min-max problems to $\widetilde{O}(\varepsilon^{-2})$ . We then extend to prove the same complexity for problems without the bounded variance, by using the Blum-Gladyshev assumption.
+
+1 Introduction
+
+We study algorithms to solve the standard template of constrained convex-concave min-max optimization,
+
+$\min_{\mathbf{u}\in U}\max_{\mathbf{v}\in V}f(\mathbf{u},\mathbf{v}),$ (1.1)
+
+where $f(\cdot,\mathbf{v})$ is convex, $f(\mathbf{u},\cdot)$ is concave, the gradients $\nabla_{\mathbf{u}}f(\mathbf{u},\mathbf{v}),\nabla_{\mathbf{v}}f(\mathbf{u},\mathbf{v})$ are Lipschitz continuous, and $U\subseteq\mathbb{R}^{n},V\subseteq\mathbb{R}^{m}$ are closed convex sets admitting efficient projection operators.
+
+Two canonical examples of this template come from cases where the coupling between $\mathbf{u}$ and $\mathbf{v}$ is bilinear, such as matrix games
+
+$\min_{\mathbf{u}\in\Delta_{n}}\max_{\mathbf{v}\in\Delta_{m}}\langle A\mathbf{u},\mathbf{v}\rangle,$ (1.2)
+
+where $\Delta_{n}$ denotes the probability simplex, that is, $\Delta_{n}=\{\mathbf{u}\in\mathbb{R}^{n}_{+}\colon\sum_{i=1}^{n}u_{i}=1\}$ .
+
+The second common example is linearly constrained optimization
+
+$\min_{\mathbf{u}\in\mathbb{R}^{n}}f(\mathbf{u}):A\mathbf{u}\leq\mathbf{b},$
+
+for a proper, convex and closed function $f\colon\mathbb{R}^{n}\to(-\infty,\infty]$ . Solving this problem efficiently is generally done by utilizing convex duality to convert to a min-max problem given as
+
+$\min_{\mathbf{u}\in\mathbb{R}^{n}}\max_{\mathbf{v}\geq 0}f(\mathbf{u})+\langle A\mathbf{u}-\mathbf{b},\mathbf{v}\rangle.$ (1.3)
+
+Strictly speaking, this problem does not fit the template ( 1.1 ) due to potential nonsmoothness in $f$ . However, our focus on ( 1.1 ) in this section is purely for a simple presentation. In the sequel, we develop our results for the more general problem of variational inequalities to cover this example, see ( VI ) for a precise problem statement.
+
+We will focus on a setting where we do not have access to gradients $\nabla_{\mathbf{u}}f(\mathbf{u},\mathbf{v})$ and $\nabla_{\mathbf{v}}f(\mathbf{u},\mathbf{v})$ , but to their unbiased estimators such that
+
+$\mathbb{E}[\nabla_{\mathbf{u}}f_{\xi}(\mathbf{u},\mathbf{v})]=\nabla_{\mathbf{u}}f(\mathbf{u},\mathbf{v}),$
+
+where $\xi$ is sampled from an unknown distribution $P$ , where we can have $f(\mathbf{u},\mathbf{v})=\mathbb{E}_{\xi\sim P}[f_{\xi}(\mathbf{u},\mathbf{v})]$ . At every iteration of our algorithm, we will assume that we receive i.i.d. samples $\xi\sim P$ .
+
+More concretely, for ( 1.2 ) or ( 1.3 ), these stochastic oracles may correspond to randomly sampling rows or columns from the matrix $A$ , whereas the full-gradients require accessing the matrix $A$ at every iteration. A concrete example is given at the end of Section 1.1 .
+
+Two optimality notions.
+
+Arguably, the most widely used optimality notion for min-max problems is the primal-dual gap
+
+$\mathrm{Gap}(\bar{\mathbf{u}},\bar{\mathbf{v}})=\max_{\mathbf{u}\in U,\mathbf{v}\in V}f(\bar{\mathbf{u}},\mathbf{v})-f(\mathbf{u},\bar{\mathbf{v}}).$
+
+This is well-suited to problems such as matrix games in ( 1.2 ), however, when the sets $U,V$ are unbounded, such as the case of linearly constrained optimization in ( 1.3 ), this notion runs into problems. In particular, this quantity may be infinite at test points $\bar{\mathbf{u}},\bar{\mathbf{v}}$ that are not optimal.
+
+This well-known drawback gave rise to the restricted primal-dual gap function ( Nes, 09 ) that takes the maximum over a compact set that needs to satisfy certain requirements. That is, this set needs to contain a solution and the iterates of the algorithm, see ( Nes, 09 , Lemma 4) . This approach can be compatible in the deterministic case when the boundedness of the iterates can be shown for standard methods.
+
+For stochastic algorithms, boundedness of the iterates does not generally hold, causing difficulty in identifying a compact set to define the restricted gap function á la Nes (09) . Moreover, the restricted gap is generally taken over sets that generally depend on the solution, making it difficult to compute in general.
+
+Despite its incompatibility with unbounded domains and stochastic problems, this notion is widely used because the standard convergence analyses for algorithms, such as extragradient ( Kor, 76 ) or forward-backward-forward (FBF) methods ( Tse, 00 ) , give a rate result on the gap as a byproduct. As a result, optimal methods for reducing the gap is well-established for both deterministic and stochastic problems ( Nem, 04 ; NJLS, 09 ) .
+
+Perhaps even a more natural way of measuring suboptimality for unbounded problems is the gradient mapping norm ( Nes, 13 , Section 2) , which generalizes the gradient norm for unconstrained problems
+
+$\|\mathcal{G}_{\eta,f}(\mathbf{x},\mathbf{y})\|^{2}=\frac{1}{\eta^{2}}\left(\|\mathbf{x}-\operatorname{proj}_{U}(\mathbf{x}-\eta\nabla_{\mathbf{x}}f(\mathbf{x},\mathbf{y}))\|^{2}+\|\mathbf{y}-\operatorname{proj}_{V}(\mathbf{y}+\eta\nabla_{\mathbf{y}}f(\mathbf{x},\mathbf{y}))\|^{2}\right),$ (1.4)
+
+where $\operatorname{proj}_{C}$ denotes the Euclidean projection on $C$ . While this notion is widely used for nonconvex problems, optimal complexity results for making this quantity small, even for convex minimization problems is relatively recent, see Nes (12) for deterministic and AZ (18) for stochastic optimization.
+
+Clearly, this reduces to the gradient norm when $(U,V)=(\mathbb{R}^{n},\mathbb{R}^{m})$ since
+
+$\mathcal{G}_{\eta,f}(\mathbf{x},\mathbf{y})=\binom{\nabla_{\mathbf{x}}f(\mathbf{x},\mathbf{y})}{-\nabla_{\mathbf{y}}f(\mathbf{x},\mathbf{y})}.$
+
+Optimal methods for reducing the gradient – or gradient mapping – norm for deterministic convex-concave min-max problems is established relatively recently as well, see Dia (20) ; Kim (21) ; YR (21) ; KG (22) . An optimal method for unconstrained and stochastic min-max problems is proposed in CL (24) who showed the complexity $\widetilde{O}(\varepsilon^{-2})$ for making the gradient norm less than $\varepsilon$ with matching lower bounds.
+
+Yet, the best-known complexity for constrained min-max problems, which are of interest in terms of many applications – such as matrix games ( 1.2 ), linearly constrained optimization ( 1.3 ), and distributionally robust optimization ( ND, 16 , Eq. (1)) – remained at $\widetilde{O}(\varepsilon^{-4})$ – with the exception of TDNT (26) that improved this to $\widetilde{O}(\varepsilon^{-10/3})$ under stronger assumptions on the stochastic oracle, see Table 1 . The goal of this work is to improve this complexity to one that is optimal in terms of $\varepsilon$ dependence. This discussion is summarized in Table 2 where we highlighted the main setting we focus on.
+
+Generalized problems.
+
+For a simpler notation and a slight generalization, we will consider the problem of variational inequalities where the goal is to
+
+$\text{find~}\mathbf{x}^{\star}\text{~such that~}\langle F(\mathbf{x}^{\star}),\mathbf{x}-\mathbf{x}^{\star}\rangle\geq r(\mathbf{x}^{\star})-r(\mathbf{x})\text{~for any~}\mathbf{x}\in\mathbb{R}^{d},$ (VI)
+
+with a proper, convex and closed $r\colon\mathbb{R}^{d}\to(-\infty,\infty]$ and a monotone operator 1 1 1 Introduced in Section 1.1 . $F\colon\mathbb{R}^{d}\to\mathbb{R}^{d}$ . Mapping ( 1.1 ) to this problem is done by setting
+
+$\mathbf{x}=\binom{\mathbf{u}}{\mathbf{v}},~~~F(\mathbf{x})=\binom{\nabla_{\mathbf{u}}f(\mathbf{u},\mathbf{v})}{-\nabla_{\mathbf{v}}f(\mathbf{u},\mathbf{v})},~~~r(\mathbf{x})=\delta_{U}(\mathbf{u})+\delta_{V}(\mathbf{v}),$ (1.5)
+
+where $\delta_{C}(\mathbf{x})$ denotes the indicator function, that is $0$ when $\mathbf{x}\in C$ and $\infty$ otherwise.
+
+We will often use the equivalent form written as a monotone inclusion problem where the goal is to
+
+$\text{find~}\mathbf{x}^{\star}\text{~such that~}0\in H(\mathbf{x}^{\star}):=(F+\partial r)(\mathbf{x}^{\star}).$ (MI)
+
+We focus on this specific monotone inclusion for presentation purposes, but by changing Algorithm 1 to a method based on FBF ( Tse, 00 ) or forward-reflected-backward method ( MT, 20 ) , our analysis can be extended to solve general monotone inclusion where $\partial r$ is replaced by a maximally monotone operator. We skip this extension for keeping our notation simpler.
+
+By overloading the terminology for simplicity, we shall now write the gradient mapping as
+
+$\mathcal{G}_{\eta,H}(\mathbf{x})=\frac{1}{\eta}\left(\mathbf{x}-\prox_{\eta r}(\mathbf{x}-\eta F(\mathbf{x}))\right),$
+
+which is equivalent to ( 1.4 ) with the setting ( 1.5 ). We emphasize that $F$ does not need to be the gradient of a function, and we merely use this notation to keep the link with min-max optimization ( 1.1 ) transparent. This notion is also referred to as forward-backward residual or natural residual (in the specific case when $r$ is an indicator function), see ( FP, 03 , Section 10.3) .
+
+Our goal in the sequel is to find an approximate solution to ( MI ) by making the residual small. This result directly covers making the gradient mapping small for convex-concave and constrained min-max problems by the mapping ( 1.5 ).
+
+Complexity.
+
+Given the problem ( VI ) introduced above, we measure complexity in terms of the number of calls to the unbiased stochastic oracles $F_{\xi}$ such that
+
+$\mathbb{E}[F_{\xi}(\mathbf{x})]=F(\mathbf{x})$
+
+and to the proximal operator of $r$ —which reduces to the number of calls to stochastic gradients and projections on $U,V$ in the case of min-max problems ( 1.1 )— to get a certain optimality notion less than $\varepsilon$ .
+
+There exists now a large body of works that analyze methods such as stochastic extragradient with optimal complexity for reducing the gap. That is, it is well-known how to get
+
+$\mathbb{E}[\mathrm{Gap}(\bar{\mathbf{x}},\bar{\mathbf{y}})]\leq\varepsilon,\text{~with complexity~}O(\varepsilon^{-2}).$
+
+We refer to NJLS (09) ; JNT (11) ; KLL (22) ; Zha (22) ; LL (26) for representative examples.
+
+Moreover, when $r\equiv 0$ , that is, we have a root finding problem, CL (24) established the oracle complexity
+
+$\widetilde{O}(\varepsilon^{-2})\text{~for making~}\mathbb{E}\|F(\mathbf{x})\|\leq\varepsilon,$
+
+which is optimal. The authors assumed that the unbiased oracle has bounded variance upper bounded by $\sigma^{2}$ and designed an algorithm that sets its parameters by using $\sigma^{2}$ and $\|\mathbf{x}_{0}-\mathbf{x}^{\star}\|^{2}$ , the initial distance of their initial point to a solution. For unconstrained problems, with stronger assumptions such as sharpness, CSGD (22) also obtained a similar complexity, yet for unconstrained and merely monotone problems, the complexity in this work deteriorated to $\widetilde{O}(\varepsilon^{-3})$ .
+
+For constrained problems, the best-known complexity for the gradient mapping under our assumptions is
+
+$O(\varepsilon^{-4})\text{~for making~}\mathbb{E}\|\mathcal{G}_{\eta,H}(\mathbf{x})\|\leq\varepsilon,$
+
+which is suboptimal. This complexity remained as the best-known on a large body of literature for constrained or regularized min-max problems ( IJOT, 17 ; BMSV, 21 ; AMW, 25 ; LK, 21 ; PFL+, 23 ; Böh, 23 ; DDJ, 21 ; TDNT, 25 ) . Even though some of these works relied on some relaxations of convex-concavity, none of the analyses in those works gave rise to a better complexity for convex-concave problems. The aim of this work is to improve this complexity for problems satisfying the Blum-Gladyshev variance and without requiring parameters depending on initial distance to solution or variance upper bounds.
+
+A recent work by TDNT (26) obtained a complexity of $\widetilde{O}(\varepsilon^{-10/3})$ for constrained problems by using variance reduction. Different from our work, they required a multi-point oracle that requires querying the stochastic oracle at the same seed for different points, the mean-square Lipschitzness assumption (which is stronger than mere Lipschitzness of $F$ ) and bounded variance.
+
+Table 1 : Complexity results for stochastic convex-concave optimization under Assumption 1 and variance assumption specified in the last column. For the first row, the complexity is for $\mathbb{E}\|F(\mathbf{x})\|\leq\varepsilon$ . For the last three rows, the complexity is for $\mathbb{E}\|\mathcal{G}_{\eta,H}(\mathbf{x})\|\leq\varepsilon$ . See the notation in ( 1.5 ) and ( MI ).
+
+Table 2 : Best-known complexity results for stochastic convex-concave optimization under Assumption 1 and bounded variance. For the first row, the complexity is for making the (restricted) gap less than $\varepsilon$ . For the second row, it is for making the gradient mapping (which reduces to gradient norm for unconstrained problem) less than $\varepsilon$ .
+
+1.1 Notation and Preliminaries
+
+Given the history of random vectors $\xi_{0},\xi_{0.5},\dots,\xi_{k}$ , we denote the expectation conditioned on the generated $\sigma$ -algebra as $\mathbb{E}_{k}[\cdot]=\mathbb{E}[\cdot~|~\sigma(\xi_{0},\xi_{0.5},\dots,\xi_{k})]$ . For a vector $\mathbf{x}$ , the notation $x_{i}$ refers to its $i$ -th coordinate.
+
+In this paper, we always consider a regularizer $r\colon\mathbb{R}^{d}\to(-\infty,\infty]$ that is convex, proper and closed. Its subdifferential set is denoted as $\partial r$ . We define the proximal operator of $r$ as
+
+$\prox_{r}(\mathbf{x})=\arg\min_{\mathbf{y}}r(\mathbf{y})+\frac{1}{2}\|\mathbf{x}-\mathbf{y}\|^{2},$ (1.6)
+
+from which we can derive the prox-inequality , by using the optimality condition of ( 1.6 ),
+
+$\mathbf{y}=\prox_{r}(\mathbf{x})\iff\langle\mathbf{y}-\mathbf{x},\mathbf{u}-\mathbf{y}\rangle\geq r(\mathbf{y})-r(\mathbf{u})~~~\forall\mathbf{u}\in\mathbb{R}^{d}.$ (1.7)
+
+When $r(\mathbf{x})=\delta_{C}(\mathbf{x})=\begin{cases}0,\text{~if~}\mathbf{x}\in C,\\ \infty,\text{~if~}\mathbf{x}\not\in C,\end{cases}$ this reduces to the projection operator
+
+$\operatorname{proj}_{C}(\mathbf{x})=\arg\min_{\mathbf{y}\in C}\frac{1}{2}\|\mathbf{x}-\mathbf{y}\|^{2}.$
+
+We say that an operator $F\colon\mathbb{R}^{d}\to\mathbb{R}^{d}$ is $\mu$ -strongly monotone, when
+
+$\langle F(\mathbf{x})-F(\mathbf{y}),\mathbf{x}-\mathbf{y}\rangle\geq\mu\|\mathbf{x}-\mathbf{y}\|^{2},$
+
+and monotone when this inequality holds with $\mu=0$ .
+
+The operator $F$ is $L_{F}$ -Lipschitz when
+
+$\|F(\mathbf{x})-F(\mathbf{y})\|\leq L_{F}\|\mathbf{x}-\mathbf{y}\|.$
+
+Recalling our mapping $F=\binom{\nabla_{\mathbf{u}}f(\mathbf{u},\mathbf{v})}{-\nabla_{\mathbf{v}}f(\mathbf{u},\mathbf{v})}$ for a convex-concave $f$ , this corresponds to Lipschitzness of the gradients of $\nabla_{\mathbf{u}}f(\mathbf{u},\mathbf{v}),\nabla_{\mathbf{v}}f(\mathbf{u},\mathbf{v})$ .
+
+For problem ( MI ), let $F$ be monotone and $L_{F}$ -Lipschitz. Assume that $r$ is proper, convex, closed. There exists $\mathbf{x}^{\star}$ such that $0\in(F+\partial r)(\mathbf{x}^{\star})$ . We have access to an unbiased estimator of $F$ such that $\mathbb{E}[F_{\xi}(\mathbf{x})]=F(\mathbf{x})$ .
+
+In view of the mapping ( 1.5 ), Assumption 1 is satisfied when $f(\mathbf{u},\mathbf{v})$ is convex-concave (implies that $F$ is monotone), the gradients $\nabla_{\mathbf{u}}f(\mathbf{u},\mathbf{v})$ and $\nabla_{\mathbf{v}}f(\mathbf{u},\mathbf{v})$ are Lipschitz continuous (implies that $F$ is Lipschitz) and $U,V$ are convex closed sets (implies the requirements on $r$ ).
+
+We now present the Blum-Gladyshev (BG) assumption from Gla (65) ; Blu (54) that is studied for minimization and min-max problems recently.
+
+Let the unbiased estimator of $F$ satisfy
+
+$\mathbb{E}\|F_{\xi}(\mathbf{x})-F(\mathbf{x})\|^{2}\leq B^{2}\|\mathbf{x}-\mathring{\mathbf{z}}\|^{2}+G^{2},$
+
+where $\mathring{\mathbf{z}}$ is a fixed initial point. In view of Assumption 1 , denote $\widehat{L}_{F}=L_{F}+B$ .
+
+The reason for selecting $\mathring{\mathbf{z}}$ as the center in the assumption is for convenience. One can change it to any other fixed center point, by absorbing the difference in the constant $G$ and slightly changing $B$ .
+
+We also define the initial distance to a solution as (see ( MI ))
+
+$D_{\star}=\|\mathring{\mathbf{z}}-\mathbf{x}^{\star}\|.$ (1.8)
+
+Let us first remark that this is a generalization of the commonly used bounded variance assumption that is used in AZ (18) ; CL (24) . If $B=0$ in Assumption 2 , this would correspond to assuming a bounded variance.
+
+In the sequel, we require the knowledge of $B$ , but not $G$ for setting algorithmic parameters. As we explain now, $B$ is often connected to the Lipschitz constant and hence its knowledge should not be too restrictive in many cases.
+
+Let us observe that a sufficient condition for the BG assumption is when we have $F(\mathbf{x})=\mathbb{E}[F_{\xi\sim P}(\mathbf{x})]$ and $F_{\xi}(\mathbf{x})$ is mean-square Lipschitz, that is,
+
+$\mathbb{E}\|F_{\xi}(\mathbf{x})-F_{\xi}(\mathbf{y})\|^{2}\leq L_{\exp}^{2}\|\mathbf{x}-\mathbf{y}\|^{2},$
+
+and $\mathbb{E}\|F_{\xi}(\mathbf{x}^{\star})-F(\mathbf{x}^{\star})\|^{2}\leq\sigma_{\star}^{2}$ . This is sufficient because of the chain of inequalities
+
+$\displaystyle\mathbb{E}\|F_{\xi}(\mathbf{x})-F(\mathbf{x})\|^{2}$ $\displaystyle\leq 2\mathbb{E}\|F_{\xi}(\mathbf{x})-F(\mathbf{x})-F_{\xi}(\mathbf{x}^{\star})+F(\mathbf{x}^{\star})\|^{2}+2\mathbb{E}\|F_{\xi}(\mathbf{x}^{\star})-F(\mathbf{x}^{\star})\|^{2}$ $\displaystyle\leq 2\mathbb{E}\|F_{\xi}(\mathbf{x})-F_{\xi}(\mathbf{x}^{\star})\|^{2}+2\mathbb{E}\|F_{\xi}(\mathbf{x}^{\star})-F(\mathbf{x}^{\star})\|^{2}$ $\displaystyle\leq 2L_{\exp}^{2}\|\mathbf{x}-\mathbf{x}^{\star}\|^{2}+2\sigma_{\star}^{2}$ $\displaystyle\leq\underbrace{4L_{\exp}^{2}}_{B^{2}}\|\mathbf{x}-\mathring{\mathbf{z}}\|^{2}+\underbrace{4L_{\exp}^{2}\|\mathring{\mathbf{z}}-\mathbf{x}^{\star}\|^{2}+2\sigma_{\star}^{2}}_{G^{2}},$
+
+where the first and last steps are by Young’s inequality, the second step is using $\mathbb{E}[F_{\xi}(\mathbf{x})-F_{\xi}(\mathbf{x}^{\star})]=F(\mathbf{x})-F(\mathbf{x}^{\star})$ – along with the inequality $\mathbb{E}\|X-\mathbb{E}X\|^{2}\leq\mathbb{E}\|X\|^{2}$ for random vectors $X$ . This proves that, for example, ( MKS+, 20 , Assumptions 2, 4) implies Assumption 2 .
+
+A more concrete example is the bilinearly coupled min-max problem where a common oracle is by sampling row-column pairs from matrix $A\in\mathbb{R}^{m\times n}$ :
+
+$F_{\xi}(\mathbf{x})=\binom{mA_{j:}v_{j}}{-nA_{:i}u_{i}},$
+
+where $\xi=(i,j)$ are selected uniformly at random, $A_{:i}$ is $i$ -th column of $A$ and $A_{j:}$ is $j$ -th row of $A$ .
+
+Then, the variance $\mathbb{E}_{i,j}\left\|\binom{mA_{j:}v_{j}}{-nA_{:i}u_{i}}-\binom{A^{\top}v}{-A\mathbf{u}}\right\|^{2}$ will not be bounded in general, unless $\mathbf{u},\mathbf{v}$ live on compact sets – an unrealistic assumption in general, preventing applying the results of the form CL (24) even for unconstrained problems. Yet, the variance will scale quadratically in the norm of $\mathbf{x}=\binom{\mathbf{u}}{\mathbf{v}}$ , satisfying the BG assumption. This example can be generalized to solve problems with other affine operators and stochastic oracles.
+
+Byproducts of our analysis also include optimal complexity guarantees for the gradient mapping norm for strongly convex-strongly concave problems. We also design algorithms not requiring difficult-to-compute constants such as the initial distance to solution, that is, $\|\mathring{\mathbf{z}}-\mathbf{x}^{\star}\|^{2}$ , required in ( CL, 24 ) , or a global variance upper bound, required in the work ( CL, 24 ) .
+
+2 Algorithm & Statement of Main Results
+
+Algorithm 1 Anchored stochastic extragradient – $\mathtt{ASEG}(A+\partial r,\mathbf{x}_{0},\beta,\alpha,K)$
+
+Algorithm 2 $\mathtt{SEG^{SC}}(A+\partial r,\mathbf{y}_{0},\mu_{A},\widehat{L}_{A},B_{A},T)$
+
+Algorithm 3 Recursive regularization $(F^{\mu}+\partial r,\mathring{\mathbf{z}},\mu,L_{F},B,T)$
+
+The main algorithmic construction will be based on a key idea from AZ (18) who had focused on the same goal for composite convex optimization: recursive regularization . Indeed, CL (24) had also considered extension of AZ (18) to the min-max case. However, their extension came with three main drawbacks that we will address: (1) their analysis was limited to the unconstrained problem, (2) their analysis introduced a requirement for knowing the global variance upper bound and initial distance to optimum $\|\mathring{\mathbf{z}}-\mathbf{x}^{\star}\|^{2}$ , (3) they inherited the drawback from AZ (18) and required a globally bounded variance. We will go around these limitations by using the BG variance assumption and anchoring, proposed for a similar purpose in NO (24) for proving a complexity result for the primal-dual gap.
+
+Recursive regularization – Algorithm 3 .
+
+In our setting, this corresponds to solving strongly monotone inclusion problems with an increasing amount of added strong monotonicity. In particular, this algorithm will give us an approximate solution for the problem
+
+$\text{find~}\mathbf{z}^{\star}_{0}\text{~such that~}0\in H^{\mu}(\mathbf{z}^{\star}_{0}):=F^{\mu}(\mathbf{z}_{0}^{\star})+\partial r(\mathbf{z}^{\star}_{0}),$ (2.1)
+
+where
+
+$F^{0}(\mathbf{z}):=F^{\mu}(\mathbf{z})=\begin{cases}F(\mathbf{z})\text{~if~}F\text{~is~}\mu\text{-strongly monotone,}\\ F(\mathbf{z})+\mu(\mathbf{z}-\mathring{\mathbf{z}})\text{~for some~}\mu>0\text{~if~}F\text{~is monotone.}\end{cases}$ (2.2)
+
+This setting ensures that $F^{\mu}$ is $\mu$ -strongly monotone for some $\mu>0$ , even if $F$ is only monotone.
+
+Then, each step $s\geq 1$ of Algorithm 3 solves approximately the subproblem:
+
+$\displaystyle\text{~find~}\mathbf{z}_{s-1}^{\star}\text{~such that~}0\in(F^{s-1}+\partial r)(\mathbf{z}_{s-1}^{\star}),$ (2.3) $\displaystyle\text{~where~}F^{s-1}(\mathbf{z})=F^{s-2}(\mathbf{z})+\mu_{s-1}(\mathbf{z}-\mathbf{z}_{s-1})=F^{\mu}(\mathbf{z})+\sum_{i=1}^{s-1}\mu_{i}(\mathbf{z}-\mathbf{z}_{i}),\text{~if~}s\geq 2,$
+
+and for $s=1$ , we have that $F^{0}$ is as defined in ( 2.2 ) and $\mathbf{z}_{0}^{\star}$ is defined in ( 2.1 ).
+
+That is, at iteration $s$ , we form an auxiliary problem which is centered at current iterate $\mathbf{z}_{s-1}$ and then use a strongly monotone subsolver in Algorithm 2 to solve this problem. The amount of strong monotonicity added is increasing exponentially fast, that is $\mu_{s}=2^{s}\mu$ where $\mu$ is the initial strong monotonicity of $F^{0}=F^{\mu}$ defined in ( 2.2 ).
+
+Our main aim is to solve a monotone problem, but similar to AZ (18) , the approach for the best complexity requires designing the strongly monotone solver with the gradient mapping guarantee (see Algorithm 3 and Corollary 2.1 ). After this, we will invoke this result on a perturbed problem where the initial strong monotonicity level will depend on the desired accuracy, see ( 2.2 ), case 2.
+
+Strongly convex subsolver – Algorithm 2 .
+
+The first layer was described in the previous section where we solve a sequence of strongly monotone subproblems. To solve these problems, we use a restarting-based second layer ( Algorithm 2 ) similar to AZ (18) . This method restarts Algorithm 1 with two different step size and inner iteration limit pairs.
+
+Main workhorse: Anchored stochastic extragradient – Algorithm 1 .
+
+Anchoring is mainly used to handle the BG variance assumption (Assumption 2 ). Indeed, if the variance is bounded, then $B=0$ and the algorithm reduces to regular stochastic extragradient method. However, the anchoring allows us to handle nonzero $B$ , to cover problems without bounded variance.
+
+We now continue with the summary of two main results that will be developed in the sequel.
+
+2.1 Complexity for Strongly Monotone Problems
+
+We now state the main complexity results for solving strongly monotone problems, which correspond to strongly convex-strongly concave instances of ( 1.1 ). We state this result under bounded variance, since we don’t prove it under Blum-Gladyshev variance due to space constraints. The following result is proven in Section 4.1 . A similar result under BG variance assumption can be proven by using the tools in Section 5 . We omit this extension for brevity.
+
+For problem ( MI ), let Assumption 1 hold and suppose that Assumption 2 holds with $B=0$ . Additionally assume that $F$ is $\mu_{F}$ -strongly monotone. Let $S=\lfloor\log_{2}(L_{F}/\mu_{F})\rfloor\geq 1$ , $T\geq 48SL_{F}/\mu_{F}$ and $\eta=\frac{1}{3L_{F}}$ . Then, we have that
+
+$\mathbb{E}\|\mathcal{G}_{\eta,H}(\mathbf{z}_{S})\|\leq\varepsilon,$ (2.4)
+
+where the number of stochastic first-order oracles $T$ is upper bounded by
+
+$O\left(\frac{L_{F}}{\mu_{F}}\log\left(\frac{L_{F}}{\mu_{F}}\right)\log\left(\frac{\mu_{F}D_{\star}}{\varepsilon}+e\right)+\frac{G^{2}\log^{3}(L_{F}/\mu_{F})}{\varepsilon^{2}}\right).$
+
+where $O$ only suppresses the absolute constants.
+
+Even for unconstrained problems, our result extends ( CL, 24 , Theorem 4.1) since our algorithmic parameters do not depend on $\|\mathbf{z}_{0}-\mathbf{x}^{\star}\|$ or a global variance upper bound $\sigma^{2}$ , which were required for running the algorithm in ( CL, 24 , Theorem 4.1) . The parameters in our algorithm only depend on the oracle budget $T$ , $L_{F}$ and $\mu_{F}$ .
+
+2.2 Complexity for Monotone Problems
+
+By using the result for the strongly monotone case with a perturbed version of the monotone problem, we can obtain the claimed complexity guarantee for solving the original monotone problem. For this we need to connect the solutions in terms of the gradient mapping norm and use the previous result. In particular, we will solve
+
+$\text{find~}\mathbf{z}^{\star}_{0}\text{~such that~}0\in H^{\mu}(\mathbf{z}^{\star}_{0}):=F(\mathbf{z}^{\star}_{0})+\partial r(\mathbf{z}^{\star}_{0})+\mu(\mathbf{z}^{\star}_{0}-\mathring{\mathbf{z}}),$ (2.5)
+
+where $\mu=\widetilde{O}\left(\frac{1}{\sqrt{T}}\right)$ . Since $\mu$ is small depending on the oracle budget $T$ , the perturbed problem is sufficiently close to the original problem to yield the claimed complexity result on the gradient mapping. The proof of the following result is the focus of Section 5 .
+
+For problem ( MI ), let Assumptions 1 and 2 hold. We apply Algorithm 3 to solve ( 2.1 ) with $\mu=\frac{32\widehat{L}_{F}}{\sqrt{T}}\log_{2}^{3/2}\left(\frac{\sqrt{T}}{48}\right)$ , $T\geq 14175$ , $\eta=\frac{1}{3\widehat{L}_{F}}$ . Then, we have that
+
+$\mathbb{E}\|\mathcal{G}_{\eta,H}(\mathbf{z}_{S})\|=O\left(\frac{\widehat{L}_{F}D_{\star}(\ln\sqrt{T})^{3/2}}{\sqrt{T}}+\frac{(\ln\sqrt{T})^{5/2}(BD_{\star}+G)}{\sqrt{T}}\right).$ (2.6)
+
+Consequently, to obtain
+
+$\mathbb{E}\|\mathcal{G}_{\eta,H}(\mathbf{z}_{S})\|\leq\varepsilon,$ (2.7)
+
+the number of required stochastic first-order oracles $T$ is upper bounded by
+
+$O\left(1+\frac{(L_{F}^{2}+B^{2})D_{\star}^{2}+G^{2}}{\varepsilon^{2}}\ln^{5}\left(\frac{D_{\star}(L_{F}+B)+G}{\varepsilon}+1\right)\right),$
+
+where we only suppress the absolute constants.
+
+A similar discussion as the previous subsection apply here to compare our result with the corresponding result of CL (24) . In particular, we not only improve over this result to handle constrained or regularized problems, but also require a weaker variance assumption, and use algorithmic parameters only depending on $L_{F},T,B$ . An additional point of discussion is the parameter $\mu$ , which is independent of $\|\mathring{\mathbf{z}}-\mathbf{x}^{\star}\|^{2}$ , whereas this quantity was used to set $\mu$ in the work of CL (24) . To transfer our guarantees to a guarantee on the stronger tangent residual (see its definition, e.g., in COZ (22) ), one can apply a postprocessing step similar to ( CAD, 24 , Appendix C.3) .
+
+3 Analysis for Subsolvers
+
+3.1 Layer 1: Anchored Stochastic Extragradient
+
+We now analyze Alg. 1 which is the main workhorse of the construction. It is an extragradient-based method for solving a strongly monotone inclusion problem. The addition on top of the standard extragradient is the Halpern-type anchoring step Hal (67) .
+
+Even though we are not aware of this algorithm being proposed or analyzed before; in spirit, it can be considered as a stochastic version of regular anchored extragradient (see YR (21) and ( KG, 22 , Algorithm 3) ) or a single-sample version of LK (21) , or non-variance reduced version of ( AMW, 25 , Section 4.3) . Our choice for building on extragradient is purely for presentation purposes, as similar bounds can be proven for anchored versions of other algorithms.
+
+All these works above focused on the non-strongly monotone case. However, our subproblems are strongly monotone, so we analyze for this case. We will call this method and its complexity result for a series of subproblems, so we introduce the problem:
+
+$\displaystyle\text{find~}\mathbf{x}^{\star}_{A}\text{~such that~}0\in(A+\partial r)(\mathbf{x}^{\star}_{A}),$ (3.1)
+
+when $A$ is strongly monotone. At each step $s$ of Algorithm 3 , we will change $A$ depending on $F^{s-1}$ , see ( 2.3 ).
+
+For convenience, let us introduce the assumptions to be used in this and next subsection.
+
+For problem ( 3.1 ), let $A$ be monotone, $L_{A}$ -Lipschitz and $\mu_{A}$ -strongly monotone. Assume that $r$ is proper, convex, closed. There exists $\mathbf{x}^{\star}_{A}$ such that $0\in(A+\partial r)(\mathbf{x}^{\star}_{A})$ .
+
+We have access to an unbiased estimator of $A$ such that $\mathbb{E}[A_{\xi}(\mathbf{x})]=A(\mathbf{x})$ and
+
+$\mathbb{E}\|A_{\xi}(\mathbf{x})-A(\mathbf{x})\|^{2}\leq B_{A}^{2}\|\mathbf{x}-\mathring{\mathbf{z}}\|^{2}+G_{A}^{2},$
+
+where $\mathring{\mathbf{z}}$ is a globally fixed iterate.
+
+To see the connection between the parameters $B_{A},G_{A}$ of the variance assumption in this section and the variance assumption made for the global problem (Assumption 2 ), see Fact 6.5 .
+
+The following lemma, when $\beta=0$ is completely classical, see JNT (11) for an early reference. We provide a generalization here with the anchoring step. We build on NO (24) ; AMW (25) who analyzed similar algorithms in different contexts, without strong monotonicity. The main idea is to use the anchoring with weight $\beta$ to absorb the contribution coming from the iterate-dependent $B_{A}$ term in the BG assumption (Assumption 3 ), which allows relaxing the bounded variance assumption.
+
+For problem ( 3.1 ), let Assumption 3 hold. When we run Algorithm 1 for $K$ iterations, with parameters $\alpha\leq\frac{1}{2(L_{A}+B_{A})}$ , $\beta=3\alpha^{2}B_{A}^{2}$ , we obtain
+
+$\mathbb{E}\|\hat{\mathbf{x}}_{K}^{s,n}-\mathbf{x}^{\star}_{A}\|^{2}\leq\frac{1}{2\alpha\mu_{A}K}\|\mathbf{x}_{0}^{s,n}-\mathbf{x}^{\star}_{A}\|^{2}+\frac{3\alpha}{\mu_{A}}\left(B_{A}^{2}\|\mathring{\mathbf{z}}-\mathbf{x}^{\star}_{A}\|^{2}+\frac{7G_{A}^{2}}{18}\right).$
+
+In this bound, the additional term $B^{2}_{A}\|\mathring{\mathbf{z}}-\mathbf{x}^{\star}_{A}\|^{2}$ coming from the relaxed variance requirement seems not problematic since $\mathbf{x}^{\star}_{A}$ is fixed. However, we will later invoke this result with a dynamic set of problems where the solution $\mathbf{x}^{\star}_{A}$ will be changing at each step. As a result, we cannot treat this term as a constant. We will have to craft a specialized analysis to handle this additional term since we do not have a global upper bound for the solutions of inner problems. This will be handled in Section 5 .
+
+For a lighter notation, we suppress the superscript $s,n$ from the iterates, as in the algorithm.
+
+By the update rules of the iterates $\mathbf{x}_{k+1/2},\mathbf{x}_{k+1}$ in Algorithm 1 , and ( 1.7 ), we have
+
+$\displaystyle\langle\mathbf{x}_{k+1/2}-\bar{\mathbf{x}}_{k}+\alpha A_{\xi_{k}}(\mathbf{x}_{k}),\mathbf{x}_{k+1}-\mathbf{x}_{k+1/2}\rangle\geq\alpha(r(\mathbf{x}_{k+1/2})-r(\mathbf{x}_{k+1})),$ $\displaystyle\langle\mathbf{x}_{k+1}-\bar{\mathbf{x}}_{k}+\alpha A_{\xi_{k+1/2}}(\mathbf{x}_{k+1/2}),\mathbf{x}^{\star}_{A}-\mathbf{x}_{k+1}\rangle\geq\alpha(r(\mathbf{x}_{k+1})-r(\mathbf{x}^{\star}_{A})).$
+
+We sum up these inequalities and rearrange to obtain
+
+$\displaystyle\alpha(r(\mathbf{x}_{k+1/2})-r(\mathbf{x}^{\star}_{A})+\langle A_{\xi_{k+1/2}}(\mathbf{x}_{k+1/2}),\mathbf{x}_{k+1/2}-\mathbf{x}^{\star}_{A}\rangle)$ (3.2) $\displaystyle\leq\langle\mathbf{x}_{k+1/2}-\bar{\mathbf{x}}_{k},\mathbf{x}_{k+1}-\mathbf{x}_{k+1/2}\rangle+\langle\mathbf{x}_{k+1}-\bar{\mathbf{x}}_{k},\mathbf{x}^{\star}_{A}-\mathbf{x}_{k+1}\rangle$ $\displaystyle+\alpha\langle A_{\xi_{k}}(\mathbf{x}_{k})-A_{\xi_{k+1/2}}(\mathbf{x}_{k+1/2}),\mathbf{x}_{k+1}-\mathbf{x}_{k+1/2}\rangle.$
+
+We estimate the first two terms on the right-hand side. Applying $\|\mathbf{a}+\mathbf{b}\|^{2}=\|\mathbf{a}\|^{2}+\|\mathbf{b}\|^{2}+2\langle\mathbf{a},\mathbf{b}\rangle$ gives
+
+$\displaystyle 2\langle\mathbf{x}_{k+1/2}-\bar{\mathbf{x}}_{k},\mathbf{x}_{k+1}-\mathbf{x}_{k+1/2}\rangle$ $\displaystyle=\|\mathbf{x}_{k+1}-\bar{\mathbf{x}}_{k}\|^{2}-\|\mathbf{x}_{k+1/2}-\bar{\mathbf{x}}_{k}\|^{2}-\|\mathbf{x}_{k+1}-\mathbf{x}_{k+1/2}\|^{2},$ $\displaystyle 2\langle\mathbf{x}_{k+1}-\bar{\mathbf{x}}_{k},\mathbf{x}^{\star}_{A}-\mathbf{x}_{k+1}\rangle$ $\displaystyle=\|\mathbf{x}^{\star}_{A}-\bar{\mathbf{x}}_{k}\|^{2}-\|\mathbf{x}_{k+1}-\bar{\mathbf{x}}_{k}\|^{2}-\|\mathbf{x}^{\star}_{A}-\mathbf{x}_{k+1}\|^{2}.$
+
+Plugging in these identities to ( 3.2 ), after multiplying both sides by $2$ , and taking expectation give
+
+$\displaystyle 2\alpha\mathbb{E}[r(\mathbf{x}_{k+1/2})-r(\mathbf{x}^{\star}_{A})+\langle A_{\xi_{k+1/2}}(\mathbf{x}_{k+1/2}),\mathbf{x}_{k+1/2}-\mathbf{x}^{\star}_{A}\rangle]$ (3.3) $\displaystyle\leq\mathbb{E}\left[\|\mathbf{x}^{\star}_{A}-\bar{\mathbf{x}}_{k}\|^{2}-\|\mathbf{x}^{\star}_{A}-\mathbf{x}_{k+1}\|^{2}-\|\mathbf{x}_{k+1}-\mathbf{x}_{k+1/2}\|^{2}-\|\mathbf{x}_{k+1/2}-\bar{\mathbf{x}}_{k}\|^{2}\right]$ $\displaystyle+2\alpha\mathbb{E}\langle A_{\xi_{k}}(\mathbf{x}_{k})-A_{\xi_{k+1/2}}(\mathbf{x}_{k+1/2}),\mathbf{x}_{k+1}-\mathbf{x}_{k+1/2}\rangle.$
+
+We now estimate the inner product on the right-hand side by
+
+$\displaystyle 2\alpha\mathbb{E}\langle A_{\xi_{k}}(\mathbf{x}_{k})-A_{\xi_{k+1/2}}(\mathbf{x}_{k+1/2}),\mathbf{x}_{k+1}-\mathbf{x}_{k+1/2}\rangle$ $\displaystyle\leq\mathbb{E}\left[\alpha^{2}\|A_{\xi_{k}}(\mathbf{x}_{k})-A_{\xi_{k+1/2}}(\mathbf{x}_{k+1/2})\|^{2}+\|\mathbf{x}_{k+1}-\mathbf{x}_{k+1/2}\|^{2}\right]$ $\displaystyle\leq\alpha^{2}\mathbb{E}\left[\frac{4}{3}\|A_{\xi_{k}}(\mathbf{x}_{k})-A(\mathbf{x}_{k})\|^{2}+\|A(\mathbf{x}_{k+1/2})-A_{\xi_{k+1/2}}(\mathbf{x}_{k+1/2})\|^{2}+4L_{A}^{2}\|\mathbf{x}_{k+1/2}-\mathbf{x}_{k}\|^{2}\right]$ $\displaystyle\quad+\mathbb{E}\|\mathbf{x}_{k+1}-\mathbf{x}_{k+1/2}\|^{2}.$ (3.4)
+
+Here, the first step is by Young’s inequality and the second step used $L_{A}$ -Lipschitzness of $A$ after applying the estimation
+
+$\displaystyle\mathbb{E}\left[\|A_{\xi_{k}}(\mathbf{x}_{k})-A_{\xi_{k+1/2}}(\mathbf{x}_{k+1/2})\|^{2}\right]$ $\displaystyle=\mathbb{E}\left[\|A_{\xi_{k}}(\mathbf{x}_{k})-A(\mathbf{x}_{k+1/2})\|^{2}+\|A(\mathbf{x}_{k+1/2})-A_{\xi_{k+1/2}}(\mathbf{x}_{k+1/2})\|^{2}\right]$ $\displaystyle\leq\mathbb{E}\left[\frac{4}{3}\|A_{\xi_{k}}(\mathbf{x}_{k})-A(\mathbf{x}_{k})\|^{2}+4\|A(\mathbf{x}_{k})-A(\mathbf{x}_{k+1/2})\|^{2}+\|A(\mathbf{x}_{k+1/2})-A_{\xi_{k+1/2}}(\mathbf{x}_{k+1/2})\|^{2}\right],$
+
+where the first line is by tower property, since $\mathbb{E}_{k}[A(\mathbf{x}_{k+1/2})-A_{\xi_{k+1/2}}(\mathbf{x}_{k+1/2})]=0$ and $A_{\xi_{k}}(\mathbf{x}_{k})-A(\mathbf{x}_{k+1/2})$ is measurable under the conditioning of $\mathbb{E}_{k}$ .
+
+For the inner product on the left-hand side of ( 3.3 ), we use strong monotonicity of $A$ to derive
+
+$\displaystyle\mathbb{E}\langle A_{\xi_{k+1/2}}(\mathbf{x}_{k+1/2}),\mathbf{x}_{k+1/2}-\mathbf{x}^{\star}_{A}\rangle$ $\displaystyle=\mathbb{E}\langle{A}(\mathbf{x}_{k+1/2}),\mathbf{x}_{k+1/2}-\mathbf{x}^{\star}_{A}\rangle$ $\displaystyle\geq\mathbb{E}[\langle{A}(\mathbf{x}^{\star}_{A}),\mathbf{x}_{k+1/2}-\mathbf{x}^{\star}_{A}\rangle+\mu_{A}\|\mathbf{x}^{\star}_{A}-\mathbf{x}_{k+1/2}\|^{2}]$ $\displaystyle\geq\mathbb{E}[r(\mathbf{x}^{\star}_{A})-r(\mathbf{x}_{k+1/2})+\mu_{A}\|\mathbf{x}^{\star}_{A}-\mathbf{x}_{k+1/2}\|^{2}],$ (3.5)
+
+where the first identity used the tower property, $\mathbb{E}_{k}[A_{\xi_{k+1/2}}(\mathbf{x}_{k+1/2})]=A(\mathbf{x}_{k+1/2})$ , and that $\mathbf{x}_{k+1/2}-\mathbf{x}^{\star}_{A}$ is measurable under the conditioning of $\mathbb{E}_{k}$ . The third step used convexity of $r$ as well as $-A(\mathbf{x}^{\star}_{A})\in\partial r(\mathbf{x}^{\star}_{A})$ by the definition of the solution $\mathbf{x}^{\star}_{A}$ in ( 3.1 ). Using ( 3.4 ) and ( 3.5 ) in ( 3.3 ) gives
+
+$\displaystyle 2\alpha\mu_{A}\mathbb{E}\|\mathbf{x}^{\star}_{A}-\mathbf{x}_{k+1/2}\|^{2}$ $\displaystyle\leq\mathbb{E}\left[\|\mathbf{x}^{\star}_{A}-\bar{\mathbf{x}}_{k}\|^{2}-\|\mathbf{x}^{\star}_{A}-\mathbf{x}_{k+1}\|^{2}-\|\bar{\mathbf{x}}_{k}-\mathbf{x}_{k+1/2}\|^{2}\right]$ $\displaystyle\quad+\alpha^{2}\mathbb{E}\left[\frac{4}{3}\|A(\mathbf{x}_{k})-A_{\xi_{k}}(\mathbf{x}_{k})\|^{2}+\|A(\mathbf{x}_{k+1/2})-A_{\xi_{k+1/2}}(\mathbf{x}_{k+1/2})\|^{2}\right]$ $\displaystyle\quad+4\alpha^{2}L_{A}^{2}\mathbb{E}\|\mathbf{x}_{k}-\mathbf{x}_{k+1/2}\|^{2}.$ (3.6)
+
+On the one hand, by the definition of $\bar{\mathbf{x}}_{k}$ in Algorithm 1 , we have
+
+$\displaystyle\|\mathbf{x}^{\star}_{A}-\bar{\mathbf{x}}_{k}\|^{2}-\|\bar{\mathbf{x}}_{k}-\mathbf{x}_{k+1/2}\|^{2}$ $\displaystyle=\beta(\|\mathbf{x}^{\star}_{A}-\mathring{\mathbf{z}}\|^{2}-\|\mathring{\mathbf{z}}-\mathbf{x}_{k+1/2}\|^{2})+(1-\beta)(\|\mathbf{x}^{\star}_{A}-\mathbf{x}_{k}\|^{2}-\|\mathbf{x}_{k}-\mathbf{x}_{k+1/2}\|^{2})$
+
+and, by Young’s inequality,
+
+$-\beta\|\mathbf{x}^{\star}_{A}-\mathbf{x}_{k}\|^{2}\leq-\frac{\beta}{2}\|\mathring{\mathbf{z}}-\mathbf{x}_{k}\|^{2}+\beta\|\mathring{\mathbf{z}}-\mathbf{x}^{\star}_{A}\|^{2}.$
+
+On the other hand, to handle the terms in the second line of ( 3.6 ), we have by Assumption 3 that
+
+$\displaystyle\alpha^{2}\mathbb{E}\left[\frac{4}{3}\|A(\mathbf{x}_{k})-A_{\xi_{k}}(\mathbf{x}_{k})\|^{2}+\|A(\mathbf{x}_{k+1/2})-A_{\xi_{k+1/2}}(\mathbf{x}_{k+1/2})\|^{2}\right]$ $\displaystyle\quad\leq\alpha^{2}B_{A}^{2}\mathbb{E}\left[\frac{4}{3}\|\mathbf{x}_{k}-\mathring{\mathbf{z}}\|^{2}+\|\mathbf{x}_{k+1/2}-\mathring{\mathbf{z}}\|^{2}\right]+\frac{7}{3}\alpha^{2}G_{A}^{2}.$
+
+Combining the last three estimates in ( 3.6 ) gives
+
+$\displaystyle 2\alpha\mu_{A}\mathbb{E}\|\mathbf{x}^{\star}_{A}-\mathbf{x}_{k+1/2}\|^{2}$ $\displaystyle\leq\mathbb{E}\left[\|\mathbf{x}^{\star}_{A}-\mathbf{x}_{k}\|^{2}-\|\mathbf{x}^{\star}_{A}-\mathbf{x}_{k+1}\|^{2}+2\beta\|\mathring{\mathbf{z}}-\mathbf{x}^{\star}_{A}\|^{2}\right]+\frac{7}{3}\alpha^{2}G_{A}^{2}$ $\displaystyle\quad+\left(\frac{4\alpha^{2}B_{A}^{2}}{3}-\frac{\beta}{2}\right)\mathbb{E}\|\mathring{\mathbf{z}}-\mathbf{x}_{k}\|^{2}+(\alpha^{2}B_{A}^{2}-\beta)\mathbb{E}\|\mathring{\mathbf{z}}-\mathbf{x}_{k+1/2}\|^{2}$ $\displaystyle\quad+\left(4\alpha^{2}L_{A}^{2}-(1-\beta)\right)\mathbb{E}\|\mathbf{x}_{k}-\mathbf{x}_{k+1/2}\|^{2}.$ (3.7)
+
+By the requirements on $\alpha$ and $\beta$ , we have that the last three terms on the right-hand side are nonpositive.
+
+Dividing both sides by $2\alpha\mu_{A}$ , summing for $k=0,\dots,K-1$ , dividing by $K$ and using the definition of $\hat{\mathbf{x}}_{K}^{s,n}$ from Algorithm 1 gives the result. ∎
+
+3.2 Layer 2: Restarting for Better Complexity
+
+The following result analyzes the restart-based instantiations of the inner solver and the argument is the same as AZ (18) (see also HK (14) ), invoked with slightly different parameters and constants.
+
+For problem ( 3.1 ), let Assumption 3 hold. When we run Algorithm 2 with budget $T\geq 32\widehat{L}_{A}/\mu_{A}$ for the number of oracles and initial point $\mathbf{y}_{0}$ , we have
+
+$\mathbb{E}\|\mathbf{y}_{N+M}^{s}-\mathbf{x}^{\star}_{A}\|^{2}\leq\left(\frac{1}{2}\right)^{\frac{T}{8\widehat{L}_{A}/\mu_{A}}}\|\mathbf{y}_{0}^{s}-\mathbf{x}^{\star}_{A}\|^{2}+\frac{192B_{A}^{2}\|\mathring{\mathbf{z}}-\mathbf{x}^{\star}_{A}\|^{2}+75G_{A}^{2}}{T\mu_{A}^{2}},$
+
+where $\widehat{L}_{A}=L_{A}+B_{A}$ . The total number of oracle calls is upper bounded by $T$ .
+
+For a lighter notation, we omit the superscript $s$ as in the algorithm and also suppress the subscript for $\mu_{A},\widehat{L}_{A},B_{A},G_{A}$ throughout the proof. Let us use the notations
+
+$\displaystyle\widehat{G}^{2}=B^{2}\|\mathring{\mathbf{z}}-\mathbf{x}^{\star}_{A}\|^{2}+\frac{7G^{2}}{18},\text{~~~and~~~}\widehat{L}=L+B.$
+
+We invoke Lemma 3.1 with $\alpha=\frac{1}{2\widehat{L}}$ and $K=\frac{2\widehat{L}}{\mu}$ . Since $\alpha\mu K=1$ and $\frac{3\alpha}{\mu}=\frac{3}{2\widehat{L}\mu}$ , we have for each $n=1,\dots,N$ (where the initial point to Algorithm 1 is $\mathbf{y}_{n-1}$ ):
+
+$\displaystyle\mathbb{E}\|\mathbf{y}_{n}-\mathbf{x}^{\star}_{A}\|^{2}$ $\displaystyle\leq\frac{1}{2}\mathbb{E}\|\mathbf{y}_{n-1}-\mathbf{x}^{\star}_{A}\|^{2}+\frac{3}{2\widehat{L}\mu}\widehat{G}^{2}$ $\displaystyle\leq\frac{1}{2^{n}}\|\mathbf{y}_{0}-\mathbf{x}^{\star}_{A}\|^{2}+\frac{3\widehat{G}^{2}}{2\widehat{L}\mu}\sum_{i=0}^{n-1}\frac{1}{2^{i}}.$
+
+At $n=N$ , this gives us
+
+$\mathbb{E}\|\mathbf{y}_{N}-\mathbf{x}^{\star}_{A}\|^{2}\leq\frac{1}{2^{N}}\|\mathbf{y}_{0}-\mathbf{x}^{\star}_{A}\|^{2}+\frac{3\widehat{G}^{2}}{\widehat{L}\mu}(1-2^{-N}),$ (3.8)
+
+where the last term is by summing the geometric series.
+
+We continue to analyze the iterations of Algorithm 2 when $n=N+1$ to $N+M$ . By the setting of $\alpha$ and $K$ in this case, we have $\alpha\mu K=2$ and $\frac{3\alpha}{\mu}=\frac{3}{2^{n-N}\widehat{L}\mu}$ . We invoke Lemma 3.1 at $n=N+M$ and then unroll until $n=N+1$ to obtain
+
+$\displaystyle\mathbb{E}\|\mathbf{y}_{N+M}-\mathbf{x}^{\star}_{A}\|^{2}$ $\displaystyle\leq\frac{1}{4}\mathbb{E}\|\mathbf{y}_{N+M-1}-\mathbf{x}^{\star}_{A}\|^{2}+\frac{3\widehat{G}^{2}}{2^{M}\widehat{L}\mu}$ $\displaystyle\leq\frac{1}{4^{M}}\mathbb{E}\|\mathbf{y}_{N}-\mathbf{x}^{\star}_{A}\|^{2}+\frac{3\widehat{G}^{2}}{2^{M}\widehat{L}\mu}\sum_{i=0}^{M-1}\frac{1}{2^{i}}$ $\displaystyle\leq\frac{1}{4^{M}}\mathbb{E}\|\mathbf{y}_{N}-\mathbf{x}^{\star}_{A}\|^{2}+\frac{3\widehat{G}^{2}}{2^{M-1}\widehat{L}\mu}(1-2^{-M}),$
+
+where the last line is by summing the geometric series. On the last inequality, we plug in the bound of $\mathbb{E}\|\mathbf{y}_{N}-\mathbf{x}^{\star}_{A}\|^{2}$ from ( 3.8 ) to deduce
+
+$\displaystyle\mathbb{E}\|\mathbf{y}_{N+M}-\mathbf{x}^{\star}_{A}\|^{2}\leq\frac{1}{2^{N+2M}}\|\mathbf{y}_{0}-\mathbf{x}^{\star}_{A}\|^{2}+\frac{6\widehat{G}^{2}}{2^{M}\widehat{L}\mu}.$
+
+Since $N\geq\frac{T}{8\widehat{L}/\mu}-1$ , $2^{M}\geq\frac{T}{32\widehat{L}/\mu}$ , and $M\geq 1$ , we have
+
+$\displaystyle\mathbb{E}\|\mathbf{y}_{N+M}-\mathbf{x}^{\star}_{A}\|^{2}\leq\left(\frac{1}{2}\right)^{\frac{T}{8\widehat{L}/\mu}}\|\mathbf{y}_{0}-\mathbf{x}^{\star}_{A}\|^{2}+\frac{192\widehat{G}^{2}}{T\mu^{2}}.$
+
+Moreover, the total number of calls to $A_{\xi}$ is less than
+
+$2\times\frac{2\widehat{L}}{\mu}\times N+\sum_{m=1}^{M}2\times 2^{m+1}\times\frac{\widehat{L}}{\mu}\leq\frac{T}{2}+2^{M}\times\frac{8\widehat{L}}{\mu}\leq T,$
+
+since $N\leq\frac{T}{8\widehat{L}/\mu}$ and $2^{M}\leq\frac{T}{16\widehat{L}/\mu}$ . ∎
+
+4 Complexity Analysis with Bounded Variance
+
+We now analyze Algorithm 3 . This method calls Algorithm 2 repeatedly for $S$ times where each step approximates the problem in ( 2.3 ).
+
+For analyzing this scheme, we will invoke Lemma 3.3 , with $\mathbf{x}_{A}^{\star}\leftarrow\mathbf{z}^{\star}_{s-1}$ and $\mathbf{y}_{0}\leftarrow\mathbf{z}_{s-1}$ . Since the last term on the right-hand side of the result of Lemma 3.3 has a term depending on $B^{2}\|\mathring{\mathbf{z}}-\mathbf{z}_{s-1}^{\star}\|^{2}$ , we need a dedicated analysis to control this term since such a term did not exist in prior analyses that required a uniformly bounded variance ( CL, 24 ; AZ, 18 ) . For simplicity, we will first analyze the case $B=0$ which corresponds to bounded variance and then we will show how to handle the $B\neq 0$ case in the next section.
+
+The two results below will be used for both monotone and strongly monotone cases. As a result, they only use that $F^{\mu}$ is $\mu$ -strongly monotone which is true in both cases, due to the definition ( 2.2 ).
+
+For problem ( MI ), let Assumption 1 hold and suppose that Assumption 2 holds with $B=0$ . We apply Algorithm 3 to solve ( 2.1 ) with budget $T\geq 48\kappa S$ for number of oracles where $\kappa=\frac{L_{F}}{\mu}$ , $S=\left\lfloor\log_{2}\kappa\right\rfloor\geq 1$ and initial point $\mathring{\mathbf{z}}$ . We have for all $s=1,\dots,S$ that
+
+$\displaystyle\mu_{s}^{2}\mathbb{E}\|\mathbf{z}_{s}-\mathbf{z}_{s-1}^{\star}\|^{2}\leq\left(\frac{1}{2}\right)^{\frac{Ts}{24\kappa S}}\mu^{2}\|\mathring{\mathbf{z}}-\mathbf{z}^{\star}_{0}\|^{2}+\frac{400SG^{2}}{T},$
+
+and the points $\mathbf{z}_{s}^{\star}$ are as defined in ( 2.3 ).
+
+At iteration $s\geq 1$ , we will invoke Lemma 3.3 with
+
+$\mathbf{y}_{0}^{s}\leftarrow\mathbf{z}_{s-1},~~~\mathbf{x}^{\star}_{A}\leftarrow\mathbf{z}_{s-1}^{\star},~~~A\leftarrow F^{s-1},~~~T\leftarrow T/S,$ (4.1)
+
+where $F^{0}=F^{\mu}$ as defined in ( 2.2 ).
+
+With these settings, we can verify that the requirements of Assumption 3 hold. Then, the structural constants in the setting of Lemma 3.3 become
+
+$\mu_{A}\leftarrow(2^{s}-1)\mu,~~~\widehat{L}_{A}\equiv L_{A}\leftarrow L_{F}+(2^{s}-1)\mu,~~~\frac{\widehat{L}_{A}}{\mu_{A}}=\frac{L_{F}+(2^{s}-1)\mu}{(2^{s}-1)\mu}\leq\frac{3\kappa}{2},~~~B_{A}\leftarrow 0,~~~G_{A}\leftarrow G,$ (4.2)
+
+where $\kappa=\frac{L_{F}}{\mu}\geq 2$ , see Fact 6.5 and $\mu$ is the strong monotonicity constant of $F^{\mu}$ . The last two conclusions also follow from Fact 6.5 .
+
+As a result, from Lemma 3.3 , we have for $s\geq 1$ :
+
+$\displaystyle\mathbb{E}\|\mathbf{z}_{s}-\mathbf{z}_{s-1}^{\star}\|^{2}$ $\displaystyle\leq\left(\frac{1}{2}\right)^{\frac{T}{12S\kappa}}\mathbb{E}\|\mathbf{z}_{s-1}-\mathbf{z}_{s-1}^{\star}\|^{2}+\frac{75SG^{2}}{T\mu_{s-1}^{2}},$ (4.3)
+
+since $\mu_{s-1}\leq\mu_{A}$ .
+
+Particularly, for $s=1$ , we have (recalling $\mu_{0}=\mu$ )
+
+$\mu_{1}^{2}\mathbb{E}\|\mathbf{z}_{1}-\mathbf{z}_{0}^{\star}\|^{2}\leq\left(\frac{1}{2}\right)^{\frac{T}{24S\kappa}}\mu^{2}\|\mathring{\mathbf{z}}-\mathbf{z}_{0}^{\star}\|^{2}+\frac{300SG^{2}}{T},$ (4.4)
+
+where we used $4\left(\frac{1}{2}\right)^{\frac{T}{12\kappa S}}\leq\left(\frac{1}{2}\right)^{\frac{T}{24\kappa S}}$ due to $T\geq 48\kappa S$ .
+
+Using Lemma 6.1 and $\mu_{s}^{2}=4\mu_{s-1}^{2}$ , this implies that for $s\geq 2$ :
+
+$\displaystyle\mu_{s}^{2}\mathbb{E}\|\mathbf{z}_{s}-\mathbf{z}_{s-1}^{\star}\|^{2}$ $\displaystyle\leq\left(\frac{1}{2}\right)^{\frac{T}{12S\kappa}}4\mu_{s-1}^{2}\mathbb{E}\|\mathbf{z}_{s-1}-\mathbf{z}_{s-2}^{\star}\|^{2}+\frac{300SG^{2}}{T}$ $\displaystyle\leq\left(\frac{1}{2}\right)^{\frac{T}{24S\kappa}}\mu_{s-1}^{2}\mathbb{E}\|\mathbf{z}_{s-1}-\mathbf{z}_{s-2}^{\star}\|^{2}+\frac{300SG^{2}}{T},$
+
+where the last step used $T\geq 48S\kappa$ to get $\frac{T}{12S\kappa}-2\geq\frac{T}{24S\kappa}$ . By unrolling this inequality and summing the geometric series for the last term, we get for $s\geq 2$ :
+
+$\displaystyle\mu_{s}^{2}\mathbb{E}\|\mathbf{z}_{s}-\mathbf{z}_{s-1}^{\star}\|^{2}$ $\displaystyle\leq\left(\frac{1}{2}\right)^{\frac{(s-1)T}{24S\kappa}}\mu_{1}^{2}\mathbb{E}\|\mathbf{z}_{1}-\mathbf{z}_{0}^{\star}\|^{2}+\frac{300SG^{2}}{T}\sum_{i=0}^{s-2}\left(\frac{1}{2}\right)^{\frac{iT}{24\kappa S}}$ $\displaystyle\leq\left(\frac{1}{2}\right)^{\frac{sT}{24S\kappa}}\mu^{2}\|\mathring{\mathbf{z}}-\mathbf{z}_{0}^{\star}\|^{2}+\frac{300SG^{2}}{T}\sum_{i=0}^{s-1}\left(\frac{1}{2}\right)^{\frac{iT}{24\kappa S}},$
+
+where the second inequality used ( 4.4 ). Calculating the sum of geometric series and using $T\geq 48\kappa S$ gives the result. ∎
+
+By using Lemma 6.4 , we can now convert this result to a guarantee on the gradient mapping norm for the operator $H^{\mu}$ given in ( 2.1 ). In view of its definition, this will directly give us the required guarantee for the strongly monotone setting. In the monotone setting, we will select $\mu$ accordingly to get a guarantee for the original problem in ( MI ).
+
+For problem ( MI ), let Assumption 1 hold and suppose that Assumption 2 holds with $B=0$ . We apply Algorithm 3 to solve ( 2.1 ) with $\eta=\frac{1}{3L_{F}}$ , oracle budget $T\geq 48SL_{F}/\mu$ where $S=\left\lfloor\log_{2}\frac{L_{F}}{\mu}\right\rfloor\geq 1$ for the number of oracles and initial point $\mathring{\mathbf{z}}$ . Then, we have that
+
+$\displaystyle\mathbb{E}\|\mathcal{G}_{\eta,H^{\mu}}(\mathbf{z}_{S})\|=O\left(\left(\frac{1}{2}\right)^{\frac{T}{48SL_{F}/\mu}}\mu\|\mathring{\mathbf{z}}-\mathbf{z}_{0}^{\star}\|+\frac{S^{3/2}G}{\sqrt{T}}\right),$
+
+where $O$ only suppresses the absolute constants.
+
+In view of the result of Lemma 4.1 , we invoke Lemma 6.4 with $C\leftarrow 400$ and $\widehat{G}\leftarrow G$ to obtain the claim. ∎
+
+4.1 Strongly Monotone Case
+
+In the strongly monotone case, we will use the first case in the definition of $F^{\mu}$ in ( 2.2 ). This reduces $H^{\mu}$ to the original problem and we have the following theorem as the direct corollary of Lemma 4.2 .
+
+For problem ( MI ), let Assumption 1 hold and suppose that Assumption 2 holds with $B=0$ . Additionally assume that $F$ is $\mu_{F}$ strongly monotone for $\mu_{F}>0$ . We apply Algorithm 3 to solve ( 2.1 ) with $\eta=\frac{1}{3L_{F}}$ , $S=\lfloor\log_{2}(L_{F}/\mu_{F})\rfloor\geq 1$ and $T\geq 48SL_{F}/\mu_{F}$ , and initial point $\mathring{\mathbf{z}}$ . Then, we have that
+
+$\displaystyle\mathbb{E}\|\mathcal{G}_{\eta,H}(\mathbf{z}_{S})\|=O\left(\left(\frac{1}{2}\right)^{\frac{T}{48SL_{F}/\mu_{F}}}\mu_{F}D_{\star}+\frac{S^{3/2}G}{\sqrt{T}}\right),$
+
+where $O$ only suppresses the absolute constants.
+
+Since $F$ is strongly monotone, in view of ( 2.2 ), we have $F^{\mu}=F$ , $\mu=\mu_{F}$ , and $\mathbf{z}_{0}^{\star}=\mathbf{x}^{\star}$ . Then, we invoke Lemma 4.2 with these settings and use the definition of $D_{\star}$ from ( 1.8 ) to derive the bound. ∎
+
+The next corollary then immediately follows by finding the value of $T$ to make the right-hand side of Theorem 4.3 less than $\varepsilon$ .
+
+Under the same setup as Theorem 4.3 , we have
+
+$\mathbb{E}\|\mathcal{G}_{\eta,H}(\mathbf{z}_{S})\|\leq\varepsilon,$ (4.5)
+
+where the number of stochastic first-order oracles $T$ is upper bounded by
+
+$O\left(\frac{L_{F}}{\mu_{F}}\log\left(\frac{L_{F}}{\mu_{F}}\right)\log\left(\frac{\mu_{F}D_{\star}}{\varepsilon}+e\right)+\frac{G^{2}\log^{3}(L_{F}/\mu_{F})}{\varepsilon^{2}}\right).$
+
+Our algorithmic parameters do not depend on $\|\mathbf{z}_{0}-\mathbf{x}^{\star}\|$ or a global variance upper bound $\sigma^{2}$ , which were required for running the algorithm in ( CL, 24 , Theorem 4.1) . The parameters in our algorithm only depend on the oracle budget $T$ , $L_{F}$ and $\mu_{F}$ , similar to the case of AZ (18) in the minimization case and the bound for the gradient mapping in Theorem 4.3 follows. Converting this to a complexity bound gives Corollary 4.4 .
+
+4.2 Monotone Case
+
+In view of the definitions in ( 2.1 ) and ( 2.2 ), we are in the second case of ( 2.2 ). Let us recall that Lemma 4.2 gives a bound for solving the perturbed problem, controlled by $\mu$ . By controlling $\mu$ and the distance between gradient mapping at perturbed problem and the original problem, we will derive a guarantee for the gradient mapping for solving the original problem in ( MI ).
+
+For problem ( MI ), let Assumption 1 hold and suppose that Assumption 2 holds with $B=0$ . We apply Algorithm 3 to solve ( 2.1 ) with any $L_{F}/2\geq\mu>0$ , $\eta=\frac{1}{3L_{F}}$ , $S=\lfloor\log_{2}(L_{F}/\mu)\rfloor\geq 1$ and $T\geq 48SL_{F}/\mu$ , and initial point $\mathring{\mathbf{z}}$ . Then, we have that
+
+$\mathbb{E}\|\mathcal{G}_{\eta,H}(\mathbf{z}_{S})\|=O\left(\mu\|\mathbf{x}^{\star}-\mathring{\mathbf{z}}\|+\left(\frac{1}{2}\right)^{\frac{T}{48SL_{F}/\mu}}\mu\|\mathring{\mathbf{z}}-\mathbf{x}^{\star}\|+\frac{S^{3/2}G}{\sqrt{T}}\right).$
+
+Applying Lemma 6.3 yields the inequality
+
+$\displaystyle\|\mathcal{G}_{\eta,H}(\mathbf{z}_{S})\|\leq 2.5\sum_{j=1}^{S}\mu_{j}\|\mathbf{z}_{j}-\mathbf{z}_{j-1}^{\star}\|+9L_{F}\|\mathbf{z}_{S}-\mathbf{z}_{S-1}^{\star}\|+\mu\|\mathring{\mathbf{z}}-\mathbf{x}^{\star}\|.$ (4.6)
+
+Since Lemma 4.1 holds in this case, on ( 4.6 ), we use ( 6.11 ) to bound the first term and ( 6.12 ) the second term on the right-hand side and use ( 6.8 ) to obtain the claimed bound. ∎
+
+Under the same setup of Theorem 4.5 , let $T\geq 2200$ and $\mu=\frac{96L_{F}\log_{2}T}{T}$ . We apply Algorithm 3 to solve ( 2.1 ) with $\eta=\frac{1}{3L_{F}}$ , $S=\lfloor\log_{2}(L_{F}/\mu)\rfloor$ , and initial point $\mathring{\mathbf{z}}$ . Then, we have that
+
+$\mathbb{E}\|\mathcal{G}_{\eta,H}(\mathbf{z}_{S})\|=O\left(\frac{L_{F}D_{\star}\log_{2}T}{T}+\frac{G(\log_{2}T)^{3/2}}{\sqrt{T}}\right).$ (4.7)
+
+Consequently, to obtain
+
+$\mathbb{E}\|\mathcal{G}_{\eta,H}(\mathbf{z}_{S})\|\leq\varepsilon,$ (4.8)
+
+the required number of stochastic first-order oracles $T$ is upper bounded by
+
+$O\left(1+\frac{L_{F}D_{\star}}{\varepsilon}\ln\left(\frac{L_{F}D_{\star}}{\varepsilon}+1\right)+\frac{G^{2}}{\varepsilon^{2}}\ln^{3}\left(\frac{G}{\varepsilon}+1\right)\right),$
+
+where we only suppress the absolute constants.
+
+In this case, we start from the result of Lemma 6.3 , after plugging in from ( 6.11 ) and ( 6.12 ) to derive
+
+$\displaystyle\mathbb{E}\|\mathcal{G}_{\eta,H}(\mathbf{z}_{S})\|\leq\mu D_{\star}+5\left(\frac{1}{2}\right)^{\frac{T}{48\kappa S}}\mu D_{\star}+\frac{50S^{3/2}G}{\sqrt{T}}+18\bigg(\left(\frac{1}{2}\right)^{\frac{T}{48\kappa}}\mu D_{\star}+\frac{20\sqrt{S}G}{\sqrt{T}}\bigg),$ (4.9)
+
+where we also used Lemma 6.1 which gives $\|\mathring{\mathbf{z}}-\mathbf{z}^{\star}_{0}\|\leq\|\mathring{\mathbf{z}}-\mathbf{x}^{\star}\|=D_{\star}$ . Plugging in the definition of $\mu$ gives ( 4.7 ). From this bound, it should be clear that this choice of $\mu$ will give a complexity result scaling as $\varepsilon^{-2}$ up to logarithmic terms. We now flesh out the explicit dependencies.
+
+First, we verify that the requirement on $T$ in Theorem 4.5 is satisfied. That is, we show that $T\geq 48\kappa S$ . By the definitions of $\kappa=\frac{L_{F}}{\mu}=\frac{T}{96\log_{2}T}\leq T$ and $S=\left\lfloor\log_{2}\frac{L_{F}}{\mu}\right\rfloor\leq\log_{2}\frac{L_{F}}{\mu}\leq\log_{2}T$ , we have
+
+$\displaystyle 48\kappa S=\frac{T}{2\log_{2}T}S\leq T.$
+
+Moreover, by the definition of $\kappa$ , we also have that $\kappa\geq 2$ since $T\geq 2200$ .
+
+Because of this requirement, for making the first, second and fourth terms in ( 4.9 ) less than $\varepsilon$ , we need $\mu D_{\star}\leq\varepsilon/9$ . This is true when
+
+$\displaystyle\frac{96L_{F}D_{\star}\log_{2}T}{T}\leq\frac{\varepsilon}{9},$
+
+which is true for $T=\Theta\left(\frac{L_{F}D_{\star}}{\varepsilon}\ln\left(\frac{L_{F}D_{\star}}{\varepsilon}+1\right)\right)$ because of Lemma 6.7 (ii) with $a=96L_{F}D_{\star}$ , $b=1$ , $c=1$ . $\varepsilon^{\prime}=\varepsilon/9$ .
+
+We finally calculate the order of $T$ to make the third and fifth terms on the right-hand side of ( 4.9 ) less than $\varepsilon$ . Since the third term dominates the fifth up to absolute constants, we calculate $T$ to make
+
+$\displaystyle\frac{50S^{3/2}G}{\sqrt{T}}\leq\varepsilon,$
+
+where $S=\left\lfloor\log_{2}\frac{L_{F}}{\mu}\right\rfloor\leq\log_{2}\frac{L_{F}}{\mu}\leq\log_{2}T$ . As a result, a sufficient condition is
+
+$\displaystyle\frac{2500G^{2}(\log_{2}T)^{3}}{T}\leq\varepsilon^{2},$
+
+which is true for $T=\Theta\left(\frac{G^{2}}{\varepsilon^{2}}\ln^{3}\left(\frac{G}{\varepsilon}+1\right)\right)$ because of Lemma 6.7 (ii) with $a=2500G^{2}$ , $b=1$ , $c=3$ . $\varepsilon^{\prime}=\varepsilon^{2}$ .
+
+Combining the two bounds for $T$ gives the assertion. ∎
+
+5 Complexity Analysis without Bounded Variance
+
+For brevity, we will only analyze the monotone case, the strongly monotone case can be analyzed similarly by replacing the $\mu$ value by the strong monotonicity of the operator.
+
+We now derive the result corresponding to Lemma 4.1 when the bounded variance assumption is lifted. Even for unconstrained problems, our result extends ( CL, 24 , Theorem 4.1) in that we do not require a globally upper bounded variance, but only Assumption 2 .
+
+For problem ( MI ), let Assumption 1 and Assumption 2 hold. We apply Algorithm 3 to solve ( 2.1 ) with budget $T\geq 14175$ for number of oracles, $\mu=\frac{32\widehat{L}_{F}}{\sqrt{T}}\log_{2}^{3/2}\frac{\sqrt{T}}{48}$ and initial point $\mathring{\mathbf{z}}$ . We have for all $s=1,\dots,S$ that
+
+$\displaystyle\mu_{s}^{2}\mathbb{E}\|\mathbf{z}_{s}-\mathbf{z}_{s-1}^{\star}\|^{2}\leq\left(\frac{1}{2}\right)^{\frac{Ts}{24\kappa S}}\mu^{2}\|\mathring{\mathbf{z}}-\mathbf{z}^{\star}_{0}\|^{2}+\frac{2048S^{3}\widehat{G}^{2}}{T},$
+
+where $\widehat{G}^{2}=B^{2}\|\mathring{\mathbf{z}}-\mathbf{z}_{0}^{\star}\|^{2}+G^{2}$ , $\kappa=\frac{\widehat{L}_{F}}{\mu}=\frac{L_{F}+B}{\mu}$ and $S=\left\lfloor\log_{2}\kappa\right\rfloor$ .
+
+At iteration $s\geq 1$ , we will invoke Lemma 3.3 with
+
+$\mathbf{y}_{0}\leftarrow\mathbf{z}_{s-1},~~~\mathbf{x}^{\star}_{A}\leftarrow\mathbf{z}_{s-1}^{\star},~~~A\leftarrow F^{s-1},~~~T\leftarrow T/S,$ (5.1)
+
+With these settings, we can verify that the requirements of Assumption 3 hold. Then, we will get the structural constants in the setting of Lemma 3.3 becoming
+
+$\mu_{A}\leftarrow(2^{s}-1)\mu_{,}~~~L_{A}\leftarrow L_{s-1}=L_{F}+(2^{s}-1)\mu,~~~B_{A}\leftarrow B,~~~G_{A}\leftarrow G,$ (5.2)
+
+where we use Fact 6.5 . This also tells us that $\frac{\widehat{L}_{A}}{\mu_{A}}=\frac{L_{A}+B_{A}}{\mu_{A}}\leq\frac{L_{F}+(2^{s}-1)\mu+B}{(2^{s}-1)\mu}\leq 1+\frac{L_{F}+B}{\mu}\leq\frac{3\kappa}{2}$ where $\kappa=\frac{L_{F}+B}{\mu}\geq 2$ by Lemma 6.7 (iii).
+
+As a result, from Lemma 3.3 , we have for $s\geq 1$ :
+
+$\displaystyle\mathbb{E}\|\mathbf{z}_{s}-\mathbf{z}_{s-1}^{\star}\|^{2}$ $\displaystyle\leq\left(\frac{1}{2}\right)^{\frac{T}{12S\kappa}}\mathbb{E}\|\mathbf{z}_{s-1}-\mathbf{z}_{s-1}^{\star}\|^{2}+\frac{192S\mathbb{E}(B^{2}\|\mathring{\mathbf{z}}-\mathbf{z}^{\star}_{s-1}\|^{2}+G^{2})}{T\mu_{s-1}^{2}},$ (5.3)
+
+since $\mu_{s-1}\leq\mu_{A}$ . Here, we also majorized the constant in the last term for simplicity.
+
+We next need to show that the term involving $\mathbb{E}\|\mathring{\mathbf{z}}-\mathbf{z}_{s-1}^{\star}\|^{2}$ is not too large to deteriorate the bound. In particular, we use triangle inequality and Lemma 6.1 to get
+
+$\displaystyle\|\mathring{\mathbf{z}}-\mathbf{z}_{s-1}^{\star}\|$ $\displaystyle\leq\|\mathring{\mathbf{z}}-\mathbf{z}_{0}^{\star}\|+\sum_{j=1}^{s-1}\|\mathbf{z}_{j}^{\star}-\mathbf{z}_{j-1}^{\star}\|\leq\|\mathring{\mathbf{z}}-\mathbf{z}_{0}^{\star}\|+\sum_{j=1}^{s-1}\|\mathbf{z}_{j}-\mathbf{z}_{j-1}^{\star}\|.$
+
+After taking the square of this estimate, we consequently have
+
+$\displaystyle\|\mathring{\mathbf{z}}-\mathbf{z}_{s-1}^{\star}\|^{2}\leq S\|\mathring{\mathbf{z}}-\mathbf{z}_{0}^{\star}\|^{2}+S\sum_{j=1}^{s-1}\|\mathbf{z}_{j}-\mathbf{z}_{j-1}^{\star}\|^{2},$ (5.4)
+
+since $s\leq S$ .
+
+Using this bound and Lemma 6.1 on ( 5.3 ) yields for $s\geq 2$ ,
+
+$\displaystyle\mathbb{E}\|\mathbf{z}_{s}-\mathbf{z}_{s-1}^{\star}\|^{2}$ $\displaystyle\leq\left(\frac{1}{2}\right)^{\frac{T}{12S\kappa}}\mathbb{E}\|\mathbf{z}_{s-1}-\mathbf{z}_{s-2}^{\star}\|^{2}+\frac{192S^{2}B^{2}(\|\mathring{\mathbf{z}}-\mathbf{z}_{0}^{\star}\|^{2}+\sum_{j=1}^{s-1}\mathbb{E}\|\mathbf{z}_{j}-\mathbf{z}_{j-1}^{\star}\|^{2})}{T\mu_{s-1}^{2}}+\frac{192SG^{2}}{T\mu_{s-1}^{2}}.$ (5.5)
+
+Due to Lemma 6.7 (iii) , the choice of $T$ and $\mu$ implies that
+
+$T\geq 48\kappa S,\qquad\mu^{2}\geq\frac{1024S^{3}\widehat{L}_{F}^{2}}{T}.$
+
+As a result, we notice for the coefficients in ( 5.5 ) that
+
+$\left(\frac{1}{2}\right)^{\frac{T}{12S\kappa}}\leq\frac{1}{4}\text{,~~~}\frac{192S^{2}B^{2}}{T\mu_{s-1}^{2}}\leq\frac{256S^{2}B^{2}}{T\mu^{2}}\leq\frac{1}{4S},\text{~~~}\frac{192SG^{2}}{T\mu_{s-1}^{2}}\leq\frac{G^{2}}{4(L_{F}+B)^{2}S^{2}}\leq\frac{G^{2}}{4(L_{F}+B)^{2}},$ (5.6)
+
+where we also used $\mu_{s-1}\geq\mu$ and $S\geq 1$ .
+
+We will next use induction. With these estimates, the inequality ( 5.5 ) becomes for $s\geq 2$
+
+$\displaystyle\mathbb{E}\|\mathbf{z}_{s}-\mathbf{z}_{s-1}^{\star}\|^{2}$ $\displaystyle\leq\frac{1}{4}\mathbb{E}\|\mathbf{z}_{s-1}-\mathbf{z}_{s-2}^{\star}\|^{2}+\frac{\|\mathring{\mathbf{z}}-\mathbf{z}_{0}^{\star}\|^{2}+\sum_{j=1}^{s-1}\mathbb{E}\|\mathbf{z}_{j}-\mathbf{z}_{j-1}^{\star}\|^{2}}{4S}+\frac{G^{2}}{4(L_{F}+B)^{2}}.$ (5.7)
+
+For $s=1$ , from ( 5.3 ), with $\mathbf{z}_{0}=\mathring{\mathbf{z}}$ and $\mathbf{z}_{s-1}^{\star}=\mathbf{z}_{0}^{\star}$ , we have
+
+$\displaystyle\mathbb{E}\|\mathbf{z}_{1}-\mathbf{z}_{0}^{\star}\|^{2}\leq\left(\frac{1}{2}\right)^{\frac{T}{12S\kappa}}\|\mathring{\mathbf{z}}-\mathbf{z}_{0}^{\star}\|^{2}+\frac{192S(B^{2}\|\mathring{\mathbf{z}}-\mathbf{z}_{0}^{\star}\|^{2}+G^{2})}{T\mu_{0}^{2}}.$
+
+Applying ( 5.4 ) and ( 5.6 ) gives
+
+$\displaystyle\mathbb{E}\|\mathbf{z}_{1}-\mathbf{z}_{0}^{\star}\|^{2}\leq\frac{1}{4}\|\mathring{\mathbf{z}}-\mathbf{z}_{0}^{\star}\|^{2}+\frac{\|\mathring{\mathbf{z}}-\mathbf{z}_{0}^{\star}\|^{2}}{4S}+\frac{G^{2}}{4(L_{F}+B)^{2}}.$
+
+We will prove $\mathbb{E}\|\mathbf{z}_{j}-\mathbf{z}_{j-1}^{\star}\|^{2}\leq\|\mathring{\mathbf{z}}-\mathbf{z}_{0}^{\star}\|^{2}+\frac{G^{2}}{(L_{F}+B)^{2}}$ for $j\geq 1$ . By the last display equation, the claim holds at $j=1$ . Assume that it holds for $j\leq s-1$ with $s\geq 2$ . Then, ( 5.7 ) gives
+
+$\displaystyle\mathbb{E}\|\mathbf{z}_{s}-\mathbf{z}_{s-1}^{\star}\|^{2}$ $\displaystyle\leq\frac{1}{2}\left(\|\mathring{\mathbf{z}}-\mathbf{z}_{0}^{\star}\|^{2}+\frac{G^{2}}{(L_{F}+B)^{2}}\right)+\frac{G^{2}}{4(L_{F}+B)^{2}}$ $\displaystyle\leq\|\mathring{\mathbf{z}}-\mathbf{z}_{0}^{\star}\|^{2}+\frac{G^{2}}{(L_{F}+B)^{2}}.$ (5.8)
+
+This completes the induction to derive the global upper bound on $\mathbb{E}\|\mathbf{z}_{s}-\mathbf{z}_{s-1}^{\star}\|^{2}$ .
+
+Then, using ( 5.4 ) and taking expectation, we have
+
+$\displaystyle\mathbb{E}\|\mathring{\mathbf{z}}-\mathbf{z}_{s-1}^{\star}\|^{2}$ $\displaystyle\leq S\|\mathring{\mathbf{z}}-\mathbf{z}_{0}^{\star}\|^{2}+S\sum_{j=1}^{s-1}\left(\|\mathring{\mathbf{z}}-\mathbf{z}_{0}^{\star}\|^{2}+\frac{G^{2}}{(L_{F}+B)^{2}}\right)$ $\displaystyle\leq 2S^{2}\|\mathring{\mathbf{z}}-\mathbf{z}_{0}^{\star}\|^{2}+\frac{S^{2}G^{2}}{(L_{F}+B)^{2}}.$
+
+We now plug this bound to ( 5.3 ) which gives us the bound
+
+$\displaystyle\mathbb{E}\|\mathbf{z}_{s}-\mathbf{z}_{s-1}^{\star}\|^{2}$ $\displaystyle\leq\left(\frac{1}{2}\right)^{\frac{T}{12S\kappa}}\mathbb{E}\|\mathbf{z}_{s-1}-\mathbf{z}_{s-1}^{\star}\|^{2}+\frac{192S(B^{2}(2S^{2}\|\mathring{\mathbf{z}}-\mathbf{z}_{0}^{\star}\|^{2}+\frac{S^{2}G^{2}}{(L_{F}+B)^{2}})+G^{2})}{T\mu_{s-1}^{2}}$ (5.9) $\displaystyle\leq\left(\frac{1}{2}\right)^{\frac{T}{12S\kappa}}\mathbb{E}\|\mathbf{z}_{s-1}-\mathbf{z}_{s-1}^{\star}\|^{2}+\frac{384S^{3}(B^{2}\|\mathring{\mathbf{z}}-\mathbf{z}_{0}^{\star}\|^{2}+G^{2})}{T\mu_{s-1}^{2}}$ (5.10)
+
+We follow the exact same steps that followed ( 4.3 ) (where the difference is having $384S^{3}$ instead of $75S$ and $B^{2}\|\mathring{\mathbf{z}}-\mathbf{z}_{0}^{\star}\|^{2}+G^{2}$ instead of $G^{2}$ on the last term) to get the assertion. ∎
+
+Let us remark that the induction argument in this proof to bound $\mathbb{E}\|\mathring{\mathbf{z}}-\mathbf{z}_{s-1}^{\star}\|^{2}$ can be strengthened with a more involved analysis to improve the order of the $S$ term in the final bound. However we chose the current argument for simplicity, since this order only affects the order of the logarithmic terms in the final bound in the sequel.
+
+The next result corresponds to Lemma 4.2 and Theorem 4.5 without the bounded variance assumption.
+
+For problem ( MI ), let Assumptions 1 and 2 hold. We apply Algorithm 3 to solve ( 2.1 ) with
+
+$\mu=\frac{32\widehat{L}_{F}}{\sqrt{T}}\log_{2}^{3/2}\left(\frac{\sqrt{T}}{48}\right),~~~\eta=\frac{1}{3\widehat{L}_{F}},~~~S=\lfloor\log_{2}(\widehat{L}_{F}/\mu)\rfloor,~~~T\geq 14175,$
+
+and initial point $\mathring{\mathbf{z}}$ . Then, we have that
+
+$\mathbb{E}\|\mathcal{G}_{\eta,H}(\mathbf{z}_{S})\|=O\left(\mu D_{\star}+\left(\frac{1}{2}\right)^{\frac{T}{48S\widehat{L}_{F}/\mu}}\mu D_{\star}+\frac{S^{5/2}\left(BD_{\star}+G\right)}{\sqrt{T}}\right).$
+
+By the value of $\mu=\widetilde{O}\left(\frac{1}{\sqrt{T}}\right)$ and $T\geq 48S\widehat{L}_{F}/\mu$ as shown in Lemma 6.7 , one can estimate that the complexity will be of the order $\varepsilon^{-2}$ up to logarithmic terms. We follow by a corollary for the order of the terms and then we give the precise constants.
+
+The result of Lemma 5.1 shows that the hypothesis of Lemma 6.4 is satisfied with
+
+$C=2048S^{2}\text{~~~and~~~}\widehat{G}^{2}=B^{2}\|\mathring{\mathbf{z}}-\mathbf{z}_{0}^{\star}\|^{2}+G^{2}.$ (5.11)
+
+We also know that applying Lemma 6.3 yields the inequality
+
+$\displaystyle\|\mathcal{G}_{\eta,H}(\mathbf{z}_{S})\|\leq 2.5\sum_{j=1}^{S}\mu_{j}\|\mathbf{z}_{j}-\mathbf{z}_{j-1}^{\star}\|+9\widehat{L}_{F}\|\mathbf{z}_{S}-\mathbf{z}_{S-1}^{\star}\|+\mu\|\mathring{\mathbf{z}}-\mathbf{x}^{\star}\|.$ (5.12)
+
+Using ( 6.11 ) and ( 6.12 ) and Lemma 6.1 for $\|\mathring{\mathbf{z}}-\mathbf{z}^{\star}_{0}\|\leq\|\mathring{\mathbf{z}}-\mathbf{x}^{\star}\|=D_{\star}$ to estimate the right-hand side of ( 5.12 ) gives the claimed bound. ∎
+
+Under the same setup of Theorem 5.2 , with $\mu=\frac{32\widehat{L}_{F}}{\sqrt{T}}\log_{2}^{3/2}\left(\frac{\sqrt{T}}{48}\right)$ , $T\geq 14175$ , we have that
+
+$\mathbb{E}\|\mathcal{G}_{\eta,H}(\mathbf{z}_{S})\|=O\left(\frac{\widehat{L}_{F}D_{\star}(\ln\sqrt{T})^{3/2}}{\sqrt{T}}+\frac{(\ln\sqrt{T})^{5/2}(BD_{\star}+G)}{\sqrt{T}}\right).$ (5.13)
+
+Consequently, to obtain
+
+$\mathbb{E}\|\mathcal{G}_{\eta,H}(\mathbf{z}_{S})\|\leq\varepsilon,$ (5.14)
+
+the number of required stochastic first-order oracles $T$ is upper bounded by
+
+$O\left(1+\frac{(L_{F}^{2}+B^{2})D_{\star}^{2}+G^{2}}{\varepsilon^{2}}\ln^{5}\left(\frac{D_{\star}(L_{F}+B)+G}{\varepsilon}+1\right)\right),$
+
+where we only suppress the absolute constants.
+
+We next write down the precise bound for the gradient mapping norm, unpacking the bound in Theorem 5.2 .
+
+$\displaystyle\mathbb{E}\|\mathcal{G}_{\eta,H}(\mathbf{z}_{S})\|\leq\mu D_{\star}+5\left(\frac{1}{2}\right)^{\frac{T}{48\kappa S}}\mu D_{\star}+\frac{114S^{5/2}\widehat{G}}{\sqrt{T}}+18\left(\left(\frac{1}{2}\right)^{\frac{T}{48\kappa}}\mu D_{\star}+\frac{46S^{3/2}\widehat{G}}{\sqrt{T}}\right),$ (5.15)
+
+where $\widehat{G}$ is as defined in ( 5.11 ), that is, $\widehat{G}^{2}=B^{2}\|\mathring{\mathbf{z}}-\mathbf{z}_{0}^{\star}\|^{2}+G^{2}$ . Plugging in the definition of $\mu$ gives ( 5.13 ).
+
+We first estimate the first term on the right-hand side. In particular, we have
+
+$\displaystyle\mu D_{\star}=\frac{32\widehat{L}_{F}D_{\star}}{\sqrt{T}}\left(\log_{2}\frac{\sqrt{T}}{48}\right)^{3/2}.$
+
+Then, by using Lemma 6.7 (i) with $a=32\widehat{L}_{F}D_{\star}$ , $b=\frac{1}{48}$ , and $c=\frac{3}{2}$ , we have that $\mu D_{\star}\leq\varepsilon$ whenever
+
+$T=\Theta\left(\frac{\widehat{L}_{F}^{2}D_{\star}^{2}}{\varepsilon^{2}}\ln^{3}\left(\frac{\widehat{L}_{F}D_{\star}}{\varepsilon}+1\right)\right).$ (5.16)
+
+As long as we have $\mu D_{\star}\leq\varepsilon$ , we also have for the second-term on the right-hand side of ( 5.15 )
+
+$\displaystyle 5\left(\frac{1}{2}\right)^{\frac{T}{48\kappa S}}\mu\|\mathring{\mathbf{z}}-\mathbf{z}_{0}^{\star}\|\leq 2.5\varepsilon,$
+
+because $T\geq 48\kappa S$ , see Lemma 6.7 (iii).
+
+Similarly, the fourth term on the right-hand side of ( 5.15 ) is upper bounded by these terms up to absolute constants, as a result, it will be also of the order $\varepsilon$ scaled by an absolute constant.
+
+As shown in Lemma 6.7 (iii), we have
+
+$\displaystyle S^{5/2}\leq\left(\log_{2}\frac{\sqrt{T}}{48}\right)^{5/2}.$
+
+Then, we estimate the third term on the right-hand side of ( 5.15 ) as
+
+$\displaystyle\frac{114S^{5/2}\widehat{G}}{\sqrt{T}}\leq\varepsilon,\text{~when~}T=\Theta\left(\frac{B^{2}D_{\star}^{2}+G^{2}}{\varepsilon^{2}}\ln^{5}\left(\frac{BD_{\star}+G}{\varepsilon}+1\right)\right),$ (5.17)
+
+where the calculation of $T$ uses Lemma 6.7 (i) with $a=114\widehat{G}$ , $b=\frac{1}{48}$ , and $c=5/2$ . We also used $\widehat{G}^{2}\leq B^{2}D_{\star}^{2}+G^{2}$ and $\widehat{G}\leq BD_{\star}+G$ , due to Lemma 6.1 . The last term on the right-hand side of ( 5.15 ) is dominated up to constants by the third term so the given $T$ is sufficient (up to constants) to make the last term on the right-hand side of ( 5.15 ) less than $\varepsilon$ .
+
+Let us recall that $T\geq 48\kappa S$ was proved in Lemma 6.7 (iii). Combining the estimates for $T$ in ( 5.16 ) and ( 5.17 ) gives the assertion. ∎
+
+6 Auxiliary Lemmas
+
+In this section, we will prove auxiliary results that were used in the main proofs. The first result connects the solutions of subproblems for different regularization levels.
+
+Given $F^{0}=F^{\mu}$ , let us recall that at iteration $s\geq 1$ , we estimate $\mathbf{z}^{\star}_{s-1}$ such that $0\in(F^{s-1}+\partial r)(\mathbf{z}^{\star}_{s-1})$ where
+
+$\displaystyle F^{s-1}(\mathbf{z})=F^{\mu}(\mathbf{z})+\sum_{i=1}^{s-1}\mu_{i}(\mathbf{z}-\mathbf{z}_{i}),\text{~for~}s=1,2,\dots,S$ (6.1)
+
+with $\mathbf{z}^{\star}_{0}$ is as defined in ( 2.1 ).
+
+For $s=1,\dots,S$ , if we are given that $F^{0}=F^{\mu}$ (see ( 2.2 )), $\mathbf{z}_{s}^{\star}=(F^{s}+\partial r)^{-1}(0)$ and $\mathbf{z}_{s-1}^{\star}=(F^{s-1}+\partial r)^{-1}(0)$ , where
+
+$F^{s}(\mathbf{z})=F^{s-1}(\mathbf{z})+\mu_{s}(\mathbf{z}-\mathbf{z}_{s}),$ (6.2)
+
+it follows that
+
+$\|\mathbf{z}_{s}-\mathbf{z}_{s}^{\star}\|\leq\|\mathbf{z}_{s}-\mathbf{z}_{s-1}^{\star}\|\text{~and~}\|\mathbf{z}_{s}^{\star}-\mathbf{z}_{s-1}^{\star}\|\leq\|\mathbf{z}_{s}-\mathbf{z}_{s-1}^{\star}\|.$
+
+Moreover, we have that $\|\mathring{\mathbf{z}}-\mathbf{z}^{\star}_{0}\|\leq\|\mathring{\mathbf{z}}-\mathbf{x}^{\star}\|$ .
+
+By definition of the solutions, we have that
+
+$0\in(F^{s}+\partial r)(\mathbf{z}^{\star}_{s})\text{~and~}0\in(F^{s-1}+\partial r)(\mathbf{z}_{s-1}^{\star})\text{~where~}F^{s}(\mathbf{z}_{s-1}^{\star})=F^{s-1}(\mathbf{z}_{s-1}^{\star})+\mu_{s}(\mathbf{z}_{s-1}^{\star}-\mathbf{z}_{s}),$
+
+because of ( 6.2 ). Consequently, we have that $\mu_{s}(\mathbf{z}_{s-1}^{\star}-\mathbf{z}_{s})\in(F^{s}+\partial r)(\mathbf{z}_{s-1}^{\star})$ .
+
+Let us now use that $(F^{s}+\partial r)$ is $\mu_{s}$ -strongly monotone to write
+
+$\displaystyle\mu_{s}\langle\mathbf{z}_{s}-\mathbf{z}_{s-1}^{\star},\mathbf{z}_{s}^{\star}-\mathbf{z}_{s-1}^{\star}\rangle\geq\mu_{s}\|\mathbf{z}_{s}^{\star}-\mathbf{z}_{s-1}^{\star}\|^{2}$ $\displaystyle\iff$ $\displaystyle\frac{1}{2}\left(\|\mathbf{z}_{s}-\mathbf{z}_{s-1}^{\star}\|^{2}+\|\mathbf{z}_{s}^{\star}-\mathbf{z}_{s-1}^{\star}\|^{2}-\|\mathbf{z}_{s}-\mathbf{z}_{s}^{\star}\|^{2}\right)\geq\|\mathbf{z}_{s}^{\star}-\mathbf{z}_{s-1}^{\star}\|^{2}.$
+
+Rearranging the final inequality gives both results.
+
+In view of ( 2.2 ), if $F$ is $\mu$ -strongly monotone, the last claim holds with equality. Otherwise, we use $\mu$ -strong monotonicity of $F^{\mu}+\partial r$ as in the first part of the proof, along with
+
+$\displaystyle 0\in(F^{\mu}+\partial r)(\mathbf{z}_{0}^{\star}),~~~0\in(F+\partial r)(\mathbf{x}^{\star}),~~~F^{\mu}(\mathbf{x}^{\star})=F(\mathbf{x}^{\star})+\mu(\mathbf{x}^{\star}-\mathring{\mathbf{z}}).$
+
+This establishes the last inequality in the statement. ∎
+
+This lemma generalizes ( CL, 24 , Lemma A.1) which was specialized to unconstrained min-max problems. The extension is to handle the multi-valued mapping $\partial r$ in the definition of subproblems. For this, we keep all the terms on the right-hand side to depend on the quality of approximate subproblem solutions.
+
+Under Assumptions 1 , 2 and the setup of ( 2.1 )–( 2.3 ), set $\eta=\frac{1}{3\widehat{L}_{F}}$ where $\widehat{L}_{F}=L_{F}+B$ . Then, we have
+
+$\|\mathcal{G}_{\eta,H^{\mu}}(\mathbf{z}_{S})\|\leq 2\sum_{j=1}^{S}\mu_{j}\|\mathbf{z}_{j}-\mathbf{z}_{j-1}^{\star}\|+9\widehat{L}_{F}\|\mathbf{z}_{S}-\mathbf{z}_{S-1}^{\star}\|,$ (6.3)
+
+where $\mu_{s}=2^{s}\mu$ and $\mathbf{z}_{s},\mathbf{z}_{s}^{\star}$ are as given in ( 6.1 ) (see also ( 2.3 ) and ( 2.1 )).
+
+We first recall the definition of the residual for operators $H^{\mu}=F^{\mu}+\partial r$ and $H^{s}=F^{s}+\partial r$ , respectively:
+
+$\displaystyle\mathcal{G}_{\eta,H^{\mu}}(\mathbf{z})=\eta^{-1}\left(\mathbf{z}-\prox_{\eta r}(\mathbf{z}-\eta F^{\mu}(\mathbf{z}))\right)\text{~~~and~~~}\mathcal{G}_{\eta,H^{S-1}}(\mathbf{z})=\eta^{-1}\left(\mathbf{z}-\prox_{\eta r}(\mathbf{z}-\eta F^{S-1}(\mathbf{z}))\right).$
+
+By these definitions, we have
+
+$\displaystyle\|\mathcal{G}_{\eta,H^{\mu}}(\mathbf{z}_{S})-\mathcal{G}_{\eta,H^{S-1}}(\mathbf{z}_{S})\|$ $\displaystyle=\eta^{-1}\|\prox_{\eta r}(\mathbf{z}_{S}-\eta F^{\mu}(\mathbf{z}_{S}))-\prox_{\eta r}(\mathbf{z}_{S}-\eta F^{S-1}(\mathbf{z}_{S}))\|$ $\displaystyle\leq\|F^{\mu}(\mathbf{z}_{S})-F^{S-1}(\mathbf{z}_{S})\|$ $\displaystyle\leq\sum_{i=1}^{S-1}\mu_{i}\|\mathbf{z}_{S}-\mathbf{z}_{i}\|,$ (6.4)
+
+where the first inequality used nonexpansiveness of the proximal operator, see for example ( Bec, 17 , Theorem 6.42) . The last inequality is by ( 6.1 ) and triangle inequality.
+
+Now we estimate the term on the right-hand side by using triangle inequality and Lemma 6.1
+
+$\displaystyle\|\mathbf{z}_{S}-\mathbf{z}_{i}\|$ $\displaystyle\leq\|\mathbf{z}_{S}-\mathbf{z}_{S-1}^{\star}\|+\sum_{j=i}^{S-2}\|\mathbf{z}_{j+1}^{\star}-\mathbf{z}_{j}^{\star}\|+\|\mathbf{z}_{i}^{\star}-\mathbf{z}_{i}\|\leq\sum_{j=i}^{S}\|\mathbf{z}_{j}-\mathbf{z}_{j-1}^{\star}\|.$
+
+Substituting this and changing the order of summations give
+
+$\displaystyle\sum_{i=1}^{S-1}\mu_{i}\|\mathbf{z}_{S}-\mathbf{z}_{i}\|$ $\displaystyle\leq\sum_{i=1}^{S-1}\mu_{i}\sum_{j=i}^{S}\|\mathbf{z}_{j}-\mathbf{z}_{j-1}^{\star}\|$ $\displaystyle=\sum_{j=1}^{S-1}\sum_{i=1}^{j}\mu_{i}\|\mathbf{z}_{j}-\mathbf{z}_{j-1}^{\star}\|+\sum_{i=1}^{S-1}\mu_{i}\|\mathbf{z}_{S}-\mathbf{z}_{S-1}^{\star}\|.$
+
+By using the setting $\mu_{i}=2^{i}\mu$ , we have $\sum_{i=1}^{j}\mu_{i}=\sum_{i=1}^{j}2^{i}\mu\leq 2^{j+1}\mu=\mu_{j+1}=2\mu_{j}$ and $\sum_{i=1}^{S-1}\mu_{i}\leq\mu_{S}$ , we get
+
+$\displaystyle\sum_{i=1}^{S-1}\mu_{i}\|\mathbf{z}_{S}-\mathbf{z}_{i}\|$ $\displaystyle\leq 2\sum_{j=1}^{S}\mu_{j}\|\mathbf{z}_{j}-\mathbf{z}_{j-1}^{\star}\|.$
+
+Using this in ( 6.4 ) gives
+
+$\displaystyle\|\mathcal{G}_{\eta,H^{\mu}}(\mathbf{z}_{S})\|\leq\|\mathcal{G}_{\eta,H^{S-1}}(\mathbf{z}_{S})\|+2\sum_{j=0}^{S-1}\mu_{j+1}\|\mathbf{z}_{j+1}-\mathbf{z}_{j}^{\star}\|,$ (6.5)
+
+where we used the triangle inequality on the left-hand side of ( 6.4 ).
+
+Next, we estimate $\|\mathcal{G}_{\eta,H^{S-1}}(\mathbf{z}_{S})\|$ . First, by the definition of $\mathbf{z}_{S-1}^{\star}$ (see ( 6.1 )), we have
+
+$\displaystyle\mathcal{G}_{\eta,H^{S-1}}(\mathbf{z}_{S-1}^{\star})=0$ $\displaystyle\iff\mathbf{z}_{S-1}^{\star}=\prox_{\eta r}(\mathbf{z}_{S-1}^{\star}-\eta F^{S-1}(\mathbf{z}_{S-1}^{\star}))$ $\displaystyle\iff\mathbf{z}_{S-1}^{\star}+\eta\partial r(\mathbf{z}_{S-1}^{\star})\ni\mathbf{z}_{S-1}^{\star}-\eta F^{S-1}(\mathbf{z}_{S-1}^{\star})$ $\displaystyle\iff 0\in(\partial r+F^{S-1})(\mathbf{z}_{S-1}^{\star}).$
+
+Using this, we estimate as
+
+$\displaystyle\|\mathcal{G}_{\eta,H^{S-1}}(\mathbf{z}_{S})\|$ $\displaystyle=\|\mathcal{G}_{\eta,H^{S-1}}(\mathbf{z}_{S})-\mathcal{G}_{\eta,H^{S-1}}(\mathbf{z}_{S-1}^{\star})\|$ $\displaystyle\leq\eta^{-1}\left(\|\mathbf{z}_{S}-\mathbf{z}_{S-1}^{\star}\|+\|\prox_{\eta r}(\mathbf{z}_{S}-\eta F^{S-1}(\mathbf{z}_{S}))-\prox_{\eta r}(\mathbf{z}_{S-1}^{\star}-\eta F^{S-1}(\mathbf{z}_{S-1}^{\star}))\|\right)$ $\displaystyle\leq\eta^{-1}\left(2\|\mathbf{z}_{S}-\mathbf{z}_{S-1}^{\star}\|+\eta\|F^{S-1}(\mathbf{z}_{S})-F^{S-1}(\mathbf{z}_{S-1}^{\star})\|\right)$ $\displaystyle\leq\eta^{-1}\left(2\|\mathbf{z}_{S}-\mathbf{z}_{S-1}^{\star}\|+\eta L_{S-1}\|\mathbf{z}_{S}-\mathbf{z}_{S-1}^{\star}\|\right),$
+
+where the first step is by triangle inequality, the second by triangle inequality and nonexpansiveness of the proximal operator, the third by the $L_{S-1}$ -Lipschitzness of $F^{S-1}$ . Since $L_{S-1}\leq 2\widehat{L}_{F}$ , we insert this into ( 6.5 ) to obtain the bound. ∎
+
+This lemma is extending ( CL, 24 , Lemma 3.1) to using gradient mapping instead of the gradient and the existence of the regularizer $r$ in the subproblems. In contrast to ( AZ, 18 , Lemma 5.1) , we cannot rely on inequalities specific to minimization such as the descent lemma.
+
+Let $F$ be monotone and $F^{\mu},(\mathbf{z}_{s}^{\star}),(\mathbf{z}_{s})$ defined as ( 2.2 ), ( 2.3 ), and Algorithm 3 , respectively. Set $\eta=\frac{1}{3\widehat{L}_{F}}$ where $\widehat{L}_{F}=L_{F}+B$ . Then, we have
+
+$\displaystyle\|\mathcal{G}_{\eta,H}(\mathbf{z}_{S})\|\leq 2.5\sum_{j=1}^{S}\mu_{j}\|\mathbf{z}_{j}-\mathbf{z}_{j-1}^{\star}\|+9\widehat{L}_{F}\|\mathbf{z}_{S}-\mathbf{z}_{S-1}^{\star}\|+\mu\|\mathring{\mathbf{z}}-\mathbf{x}^{\star}\|.$ (6.6)
+
+Since $F$ is only monotone, we are in the second case of ( 2.2 ). First, we characterize the difference between the residual for solving the original problem ( MI ) and the perturbed problem ( 2.1 ).
+
+By the definition of the residual, we have
+
+$\displaystyle\mathcal{G}_{\eta,H}(\mathbf{z})=\eta^{-1}\left(\mathbf{z}-\prox_{\eta r}(\mathbf{z}-\eta F(\mathbf{z}))\right)\text{~~~and~~~}\mathcal{G}_{\eta,H^{\mu}}(\mathbf{z})=\eta^{-1}\left(\mathbf{z}-\prox_{\eta r}(\mathbf{z}-\eta F^{\mu}(\mathbf{z}))\right).$
+
+With this, nonexpansiveness of the proximal operator and the triangle inequality, we obtain
+
+$\displaystyle\|\mathcal{G}_{\eta,H}(\mathbf{z}_{S})-\mathcal{G}_{\eta,H^{\mu}}(\mathbf{z}_{S})\|\leq\|F(\mathbf{z}_{S})-F^{\mu}(\mathbf{z}_{S})\|\leq\mu\|\mathbf{z}_{S}-\mathring{\mathbf{z}}\|\leq\mu(\|\mathbf{z}_{S}-\mathbf{z}_{0}^{\star}\|+\|\mathbf{z}_{0}^{\star}-\mathring{\mathbf{z}}\|),$ (6.7)
+
+where $\mathbf{z}_{0}^{\star}$ is the solution of the perturbed problem as in ( 2.1 ) and the second inequality uses the definition in the second case of ( 2.2 ). For the second term on the right-hand side of ( 6.7 ), we can use Lemma 6.1 to get
+
+$\|\mathring{\mathbf{z}}-\mathbf{z}^{\star}_{0}\|\leq\|\mathring{\mathbf{z}}-\mathbf{x}^{\star}\|.$ (6.8)
+
+For the first term on the right-hand side of ( 6.7 ), we estimate similar to the proof of the Lemma 6.2 :
+
+$\displaystyle\|\mathbf{z}_{S}-\mathbf{z}_{0}^{\star}\|$ $\displaystyle\leq\|\mathbf{z}_{S}-\mathbf{z}_{S-1}^{\star}\|+\sum_{j=1}^{S-1}\|\mathbf{z}_{j}^{\star}-\mathbf{z}_{j-1}^{\star}\|\leq\|\mathbf{z}_{S}-\mathbf{z}_{S-1}^{\star}\|+\sum_{j=1}^{S-1}\|\mathbf{z}_{j}-\mathbf{z}_{j-1}^{\star}\|=\sum_{j=1}^{S}\|\mathbf{z}_{j}-\mathbf{z}_{j-1}^{\star}\|,$
+
+where the second step used Lemma 6.1 .
+
+On ( 6.7 ), we substitute the last two estimates to the right-hand side and use triangle inequality on the left-hand side to deduce
+
+$\displaystyle\|\mathcal{G}_{\eta,H}(\mathbf{z}_{S})\|$ $\displaystyle\leq\|\mathcal{G}_{\eta,H^{\mu}}(\mathbf{z}_{S})\|+\mu\sum_{j=1}^{S}\|\mathbf{z}_{j}-\mathbf{z}_{j-1}^{\star}\|+\mu\|\mathring{\mathbf{z}}-\mathbf{x}^{\star}\|$ $\displaystyle\leq 2.5\sum_{j=1}^{S}\mu_{j}\|\mathbf{z}_{j}-\mathbf{z}_{j-1}^{\star}\|+9\widehat{L}_{F}\|\mathbf{z}_{S}-\mathbf{z}_{S-1}^{\star}\|+\mu\|\mathring{\mathbf{z}}-\mathbf{x}^{\star}\|,$ (6.9)
+
+where the last step is because of $\mu_{j}=2^{j}\mu\Rightarrow\mu\leq\mu_{j}/2$ and Lemma 6.2 . ∎
+
+For problem ( MI ), let Assumptions 1 and 2 hold. We apply Algorithm 3 to solve ( 2.1 ) with budget $T\geq 48S\kappa=48S\widehat{L}_{F}/\mu$ for the number of oracles where $S=\left\lfloor\log_{2}\frac{\widehat{L}_{F}}{\mu}\right\rfloor\geq 1$ and initial point $\mathring{\mathbf{z}}$ . Set $\eta=\frac{1}{3\widehat{L}_{F}}$ where $\widehat{L}_{F}=L_{F}+B$ . If we have an estimate of the form
+
+$\displaystyle\mu_{s}^{2}\mathbb{E}\|\mathbf{z}_{s}-\mathbf{z}_{s-1}^{\star}\|^{2}\leq\left(\frac{1}{2}\right)^{\frac{Ts}{24\kappa S}}\mu^{2}\|\mathring{\mathbf{z}}-\mathbf{z}^{\star}_{0}\|^{2}+\frac{CS\widehat{G}^{2}}{T},$
+
+for some $C,\widehat{G}$ , then it follows that
+
+$\displaystyle\mathbb{E}\|\mathcal{G}_{\eta,H^{\mu}}(\mathbf{z}_{S})\|\leq\left(4\left(\frac{1}{2}\right)^{\frac{T}{48\kappa S}}+18\left(\frac{1}{2}\right)^{\frac{T}{48\kappa}}\right)\mu\|\mathring{\mathbf{z}}-\mathbf{z}_{0}^{\star}\|+\frac{\sqrt{C}\widehat{G}}{\sqrt{T}}\left(2S^{3/2}+18\sqrt{S}\right).$
+
+Let us recall that the hypothesis of the lemma implies for all $s=1,\dots,S$ that
+
+$\mu_{s}\mathbb{E}\|\mathbf{z}_{s}-\mathbf{z}_{s-1}^{\star}\|\leq\left(\frac{1}{2}\right)^{\frac{Ts}{48\kappa S}}\mu\|\mathring{\mathbf{z}}-\mathbf{z}^{\star}_{0}\|+\frac{\sqrt{CS}\widehat{G}}{\sqrt{T}},$ (6.10)
+
+by Jensen’s inequality and concavity of the square root. Summing up both sides of the inequality gives
+
+$\displaystyle\sum_{s=1}^{S}\mu_{s}\mathbb{E}\|\mathbf{z}_{s}-\mathbf{z}_{s-1}^{\star}\|\leq\mu\|\mathring{\mathbf{z}}-\mathbf{z}^{\star}_{0}\|\sum_{s=1}^{S}\left(\frac{1}{2}\right)^{\frac{Ts}{48\kappa S}}+\frac{\sqrt{C}S^{3/2}\widehat{G}}{\sqrt{T}}\leq 2\left(\frac{1}{2}\right)^{\frac{T}{48\kappa S}}\mu\|\mathring{\mathbf{z}}-\mathbf{z}_{0}^{\star}\|+\frac{\sqrt{C}S^{3/2}\widehat{G}}{\sqrt{T}},$ (6.11)
+
+where the last estimate is summing the geometric series: since $T\geq 48\kappa S$ , we have $\sum_{j=1}^{s}\left(\frac{1}{2}\right)^{Tj/(48\kappa S)}\leq 2\left(\frac{1}{2}\right)^{\frac{T}{48\kappa S}}$ . This is because $\sum_{j=1}^{s}\alpha^{j}=\frac{\alpha(1-\alpha^{S})}{1-\alpha}\leq\frac{\alpha}{1-\alpha}$ where $\alpha=\left(\frac{1}{2}\right)^{T/(48\kappa S)}\leq 1/2$ .
+
+In view of the second term on the right-hand side of the result of Lemma 6.2 , we have
+
+$9\widehat{L}_{F}\mathbb{E}\|\mathbf{z}_{S}-\mathbf{z}_{S-1}^{\star}\|\leq 18\mu_{S}\mathbb{E}\|\mathbf{z}_{S}-\mathbf{z}_{S-1}^{\star}\|\leq 18\left(\left(\frac{1}{2}\right)^{\frac{T}{48\kappa}}\mu\|\mathring{\mathbf{z}}-\mathbf{z}_{0}^{\star}\|+\frac{\sqrt{SC}\widehat{G}}{\sqrt{T}}\right),$ (6.12)
+
+where the first inequality is because of $2^{S+1}\geq\frac{\widehat{L}_{F}}{\mu}$ , which is by the definition of $S$ and $\mu_{S}=2^{S}\mu$ . The second inequality is substituting ( 6.10 ) with $s=S$ .
+
+Using ( 6.11 ) and ( 6.12 ) to estimate the right-hand side of Lemma 6.2 gives the claimed bound. ∎
+
+Let $F$ satisfy Assumption 2 with constants $B,G$ . Then, $F^{s}$ defined in ( 2.3 ), satisfies the BG assumption with the same constants. Moreover, $F^{s-1}$ is $(L_{F}+(2^{s}-1)\mu)$ -Lipschitz, $((2^{s}-1)\mu)$ -strongly monotone.
+
+Since $F^{s}(\mathbf{z})=F^{\mu}(\mathbf{z})+\sum_{i=1}^{s}\mu_{i}(\mathbf{z}-\mathbf{z}_{i})$ and $F^{s}_{\xi}(\mathbf{z})=F^{\mu}_{\xi}(\mathbf{z})+\sum_{i=1}^{s}\mu_{i}(\mathbf{z}-\mathbf{z}_{i})$ , we have that
+
+$\displaystyle\mathbb{E}\|F^{s}_{\xi}(\mathbf{z})-F^{s}(\mathbf{z})\|^{2}=\mathbb{E}\|F_{\xi}(\mathbf{z})-F(\mathbf{z})\|^{2}\leq B^{2}\|\mathbf{z}-\mathring{\mathbf{z}}\|^{2}+G^{2}.$
+
+This gives the first assertion.
+
+For the second, by definition, we have $F^{s-1}(\mathbf{z})=F^{\mu}(\mathbf{z})+\sum_{i=1}^{s-1}\mu_{i}(\mathbf{z}-\mathbf{z}_{i})$ which is $L_{F}+(2^{s}-1)\mu$ -Lipschitz since $\sum_{i=1}^{s-1}\mu_{i}=\sum_{i=1}^{s-1}2^{i}\mu=(2^{s}-2)\mu$ . The strong monotonicity constant is calculated in the same way. ∎
+
+For getting precise constants for the complexity results and the parameters (see for example Section 4.2 ), we often solve inequalities of the form $e^{x}\geq Cx$ . For simplicity, we use the following simple sufficient condition to satisfy these inequalities without resorting to the Lambert W function to find exact roots.
+
+( SSBD, 14 , Lemma A.2) For some $C>1$ , if $x\geq 4\ln 2+2\ln C$ , then we have $x\geq\ln x+\ln C\iff e^{x}\geq Cx$ .
+
+We now continue to derive numerical sufficient conditions for our complexity results.
+
+Let $a,b,c,\varepsilon$ be positive real numbers and $T\geq\frac{1}{b^{2}}$ . Then, the inequality $\frac{a}{\sqrt{T}}\left(\log_{2}b\sqrt{T}\right)^{c}\leq\varepsilon$ holds if $T\geq\frac{a^{2}c^{2c}}{\varepsilon^{2}(\ln 2)^{2c}}\left(4\ln 2+2\ln\left(\frac{c(ab)^{1/c}}{\varepsilon^{1/c}\ln 2}+1\right)\right)^{2c}$ .
+
+Let $a,b,c,\varepsilon^{\prime}$ be positive real numbers and $T\geq\frac{1}{b}$ . Then, the inequality $\frac{a}{T}\left(\log_{2}bT\right)^{c}\leq\varepsilon^{\prime}$ holds if $T\geq\frac{ac^{c}}{\varepsilon^{\prime}(\ln 2)^{c}}\left(4\ln 2+2\ln\left(\frac{c(ab)^{1/c}}{(\varepsilon^{\prime})^{1/c}\ln 2}+1\right)\right)^{c}$ .
+
+If $T\geq 14175$ and $\mu=\frac{32\widehat{L}_{F}}{\sqrt{T}}\log_{2}^{3/2}\frac{\sqrt{T}}{48}$ , then the following inequalities hold: $T\geq 48\kappa S$ , $\mu^{2}\geq\frac{1024S^{3}\widehat{L}_{F}^{2}}{T}$ , where $\kappa=\frac{\widehat{L}_{F}}{\mu}$ and $S=\lfloor\log_{2}\frac{\widehat{L}_{F}}{\mu}\rfloor$ . Moreover, we have $S\leq\log_{2}\frac{\sqrt{T}}{48}$ , $\kappa\geq 2$ , and $S\geq 1$ .
+
+By the required conditions on $a,b,c,T$ , we have that the required inequality is equivalent to
+
+$\log_{2}b\sqrt{T}\leq\left(\frac{\varepsilon\sqrt{T}}{a}\right)^{1/c}.$ (6.13)
+
+Let us define $x$ such that
+
+$\left(\frac{\varepsilon\sqrt{T}}{a}\right)^{1/c}=\frac{cx}{\ln 2}\iff T^{\frac{1}{2c}}=\frac{cxa^{1/c}}{\varepsilon^{1/c}\ln 2}.$ (6.14)
+
+We also note that
+
+$\log_{2}b\sqrt{T}=\frac{c}{\ln 2}\ln(b^{\frac{1}{c}}T^{\frac{1}{2c}}).$
+
+Plugging in the last two estimates into ( 6.13 ) gives
+
+$\ln(b^{1/c}T^{1/(2c)})\leq x\iff b^{1/c}T^{1/(2c)}\leq e^{x}\iff\frac{c(ab)^{1/c}}{\varepsilon^{1/c}\ln 2}x\leq e^{x}\Leftarrow\left(\frac{c(ab)^{1/c}}{\varepsilon^{1/c}\ln 2}+1\right)x\leq e^{x},$
+
+since $x\geq 0$ .
+
+From Lemma 6.6 , we know that this is satisfied as long as
+
+$x\geq 4\ln 2+2\ln\left(\frac{c(ab)^{1/c}}{\varepsilon^{1/c}\ln 2}+1\right),$
+
+which is translated to a lower bound on $T$ given in the assertion by using the last identity in ( 6.14 )
+
+We use the proof of the first assertion by replacing $T\leftarrow T^{2}$ and $\varepsilon\leftarrow\varepsilon^{\prime}$ .
+
+We first show that $S\geq 1$ for which it is enough to show $\kappa\geq 2$ . Let $x=\log_{2}\frac{\sqrt{T}}{48}\iff\sqrt{T}=48\times 2^{x}$ and hence $\kappa=\frac{\sqrt{T}}{32\log_{2}^{3/2}\frac{\sqrt{T}}{48}}=\frac{\sqrt{T}}{32x^{3/2}}$ . The inequality $\kappa\geq 2$ is equivalent to
+
+$\displaystyle 2^{x}\geq\frac{4}{3}x^{3/2}\iff\frac{(2^{2/3})^{x}}{x}\geq\left(\frac{4}{3}\right)^{2/3}.$
+
+Denoting $\beta=2^{2/3}>1$ , we have by a standard calculation that $\min_{x>0}\beta^{x}/x=e\ln\beta>1.25>1.22>\left(\frac{4}{3}\right)^{2/3}$ .
+
+We then prove the assertion $\mu^{2}T\geq 1024S^{3}\widehat{L}_{F}^{2}$ . By a straightforward calculation, we have
+
+$\displaystyle\mu^{2}T=1024\widehat{L}_{F}^{2}\log_{2}^{3}\frac{\sqrt{T}}{48}\geq 1024S^{3}\widehat{L}_{F}^{2}=1024\widehat{L}_{F}^{2}\left\lfloor\log_{2}\frac{\widehat{L}_{F}}{\mu}\right\rfloor^{3}\Leftarrow\log_{2}\frac{\sqrt{T}}{48}\geq\log_{2}\frac{\sqrt{T}}{32\log_{2}^{3/2}\frac{\sqrt{T}}{48}}$ $\displaystyle\iff\log_{2}^{3/2}\frac{\sqrt{T}}{48}\geq\frac{3}{2}\Leftarrow T\geq 14175.$
+
+Recalling $x=\log_{2}\frac{\sqrt{T}}{48}$ , we have just established that $x\geq S$ . Then, since $\kappa=\frac{\sqrt{T}}{32\log_{2}^{3/2}\frac{\sqrt{T}}{48}}=\frac{\sqrt{T}}{32x^{3/2}}$ , we have
+
+$\displaystyle 48\kappa S\leq 48\kappa x\leq\frac{3\sqrt{T}}{2\sqrt{x}}\leq\frac{3\sqrt{T}}{2}\leq T,$
+
+since $x\geq 1$ and $\sqrt{T}\geq 3/2$ .
+
+∎
+
+7 Conclusions
+
+Our goal in this work was to obtain a complexity result for the gradient mapping that is optimal up to logarithmic terms for solving constrained convex-concave min-max problems or stochastic VIs.
+
+Our construction relied on the idea of recursive regularization of AZ (18) to get the best complexity, resulting in a three-loop construction. A clear direction for future research is to obtain the same complexity with a simpler approach, ideally with a single-loop algorithm. We believe that one may be able to go for a two-loop construction by combining KLL (22) and AZ (18) , although it is not clear to us if this construction would still be able to handle the BG assumption. Obtaining the same complexity with a single-loop algorithm is open to our knowledge, even for minimization problems.
+
+The second direction is analyzing the monotone case directly, rather than using perturbation by a small parameter $\mu$ . This is necessary even for minimization problems to obtain the best gradient-norm guarantee to our knowledge, so we believe it is a question with a wider scope than min-max problems. Third, we believe that extension of our results to general monotone inclusions is possible by changing the inner solver. Finally, by using similar ideas to CL (24) , we suspect it would be possible to allow some form of nonmonotonicity, to solve problems with cohypomonotone operators and constraints.
+
+References

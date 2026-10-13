@@ -1,0 +1,1391 @@
+Content selection saved. Describe the issue below:
+
+Two-Fidelity Best-Action Identification for Stochastic Minimax Tree
+
+We study fixed-confidence best-action identification (BAI) in stochastic minimax trees. This problem is increasingly relevant in modern AI planning, where deep minimax search and Monte Carlo Tree Search (MCTS) with language model long rollouts face a fundamental tradeoff: heuristic evaluations are cheap but biased, while accurate rollouts are reliable but prohibitively expensive. We propose 2FFS, a 2-fidelity minimax tree search paradigm that brings multi-fidelity flat bandit ideas into trees. 2FFS combines minimax-style fast expansion with MCTS-style stochastic sampling, adaptively deciding when to exploit cheap biased evaluations and when to invoke expensive accurate evaluations for local certification. We prove fixed-confidence correctness, establish finite stopping for exact identification, and give a polynomial-depth cost upper bound for general-depth trees. Guarantees are further extended to real-world multi-agent reinforcement learning (MARL). Across numerical stochastic-tree experiments, 2FFS uses substantially fewer samples and computational operations comparing to existing BAI-MCTS baseline 1 1 1 Numerical implementation: https://github.com/PeterLauLukChen/2FFS .
+
+Figure 1 : Algorithmic pipeline for 2-fidelity fast-slow (2FFS) minimax tree search.
+
+1 Introduction
+
+Modern decision-making systems often face a fundamental budget-allocation tradeoff: when reasoning over a large search space, should computation be used to expand the search tree more deeply, or to improve the reliability of the evaluations assigned to actions already under consideration? In two-player zero-sum planning and multi-agent reinforcement learning, this tradeoff is exemplified by the contrast between minimax-style tree search, which pushes depth using fast heuristic leaf evaluations, and Monte Carlo Tree Search (MCTS), which allocates computation to repeated stochastic sampling and consequently grows a narrower, more selective tree.
+
+A closely related tradeoff also arises in long-horizon reasoning and planning with large language models, where exhaustive tree expansion quickly becomes infeasible and each rollout, especially one involving a long chain-of-thought, can be costly. At a high level, this setting points to a common abstraction: a learner must allocate a limited sampling budget between cheap but biased information and expensive but accurate information. This viewpoint is closely connected to multi-fidelity bandits, in which an agent may query each arm at different fidelities, trading cost against accuracy in estimating its value. While the multi-fidelity multi-armed bandit ( MF-MAB ) literature [ 1 , 2 , 3 , 4 ] formalizes this tradeoff in flat action spaces, and best-action identification in MCTS [ 5 ] studies fixed-confidence identification in minimax trees under a single stochastic oracle, the corresponding problem of multi-fidelity best-action identification in minimax trees remains largely unexplored.
+
+In this work, we formalize this tradeoff in a minimax tree with two complementary sources of information: a fast oracle, which is cheap but biased, and a slow oracle, which is more costly but statistically accurate. The agent must adaptively allocate computation across the tree, deciding whether to expand the search using fast evaluations or to spend additional budget refining the values of nodes already on the frontier. Our objective is to identify the optimal root action under a fixed-confidence requirement while minimizing total evaluation cost. This exposes a principled crossover between $\alpha$ - $\beta$ -style expansion and MCTS-style sampling: at a frontier node, should the algorithm go one level deeper using the cheap biased fast oracle, or stay and reduce uncertainty using the expensive unbiased slow oracle?
+
+Contributions.
+
+Our work fills this gap by proposing 2FFS, a two-fidelity search algorithm for fixed-confidence best-action identification in stochastic minimax trees. 2FFS adaptively compares two routes at each decision-critical node: recursively expanding the tree using cheap biased fast evaluations, or locally certifying the node value using expensive but statistically accurate slow evaluations. On the theoretical side, we prove $(\varepsilon,\delta)$ -PAC correctness and, for exact identification under a local regularity assumption, establish finite stopping together with a general-depth cost upper bound whose overhead is polynomial in the tree depth. The same exact-identification upper bound also gives a conservative bound for $\varepsilon>0$ runs, since the approximate stopping rule can only terminate earlier. To our knowledge, this is the first analytic framework for multi-fidelity bandits in a minimax-tree setting. Empirically, on synthetic stochastic minimax trees, we show that 2FFS substantially improves both sampling and computational efficiency compared with existing baseline.
+
+Related works.
+
+Viewed through the compute-allocation lens above, classical perfect-information two-player zero-sum search is dominated by minimax with $\alpha$ - $\beta$ pruning, where efficiency is driven by deeper expansion and pruning under deterministic leaf evaluation [ 6 , 7 ] . MCTS takes the opposite perspective, treating action selection as an exploration–exploitation problem guided by bandit principles (UCB) and stochastic samples [ 8 ] . Empirical hybrids such as implicit minimax backups suggest these paradigms are complementary, but also echo classic game-tree pathology results: applying minimax to noisy point estimates can mis-rank moves as depth grows [ 9 , 10 ] . On the theory side, BAI-MCTS formalizes root-action selection as fixed-confidence BAI in minimax trees with an unbiased sampling oracle [ 5 ] ; in parallel, multi-fidelity bandits and Bayesian optimization study cost–accuracy tradeoffs between cheap biased approximations and expensive accurate evaluations [ 1 , 11 , 12 , 2 , 3 , 4 ] . We defer further related works to Appendix A .
+
+2 Problem Setup and Preliminaries
+
+In this section, we formalize fixed-confidence BAI in two-fidelity stochastic minimax trees and introduces the notation used by the algorithm and analysis. We first define the tree model, the fast and slow oracles, and the frontier maintained by the learner. Then, we define local and propagated confidence intervals, the effective gaps that determine decision-relevant precision, and the recursive oracle complexity and dyadic scale surrogates used in the upper-bound proof.
+
+2.1 Minimax tree with two-fidelity oracles
+
+Stochastic minimax tree.
+
+Let $\mathcal{T}$ be a finite rooted tree with root $r$ and internal nodes alternating between Max and Min , with root $r$ as Max node. For each node $v\in\mathcal{T}$ , we denote $\mathrm{Ch}(v)$ as its set of children and $d(v)$ as its depth, and we define remaining depth of node $v$ as $h(v)\coloneqq D-d(v)$ , where $D$ is the depth of $\mathcal{T}$ . For notational simplicity, we assume the tree has balanced depth: a node $v$ is a leaf if and only if $h(v)=0$ .
+
+Let $\mathcal{L}$ be the set of leaves, and let each $\ell\in\mathcal{L}$ have mean payoff $\mu_{\ell}$ , then its minimax value $V^{*}(v)$ is defined by $V^{*}(\ell)=\mu_{\ell}$ . For every internal node $v$ ,
+
+$V^{*}(v)=\begin{cases}\max_{u\in\mathrm{Ch}(v)}V^{*}(u),&\text{if }v\text{ is a {Max} node},\\[4.0pt] \min_{u\in\mathrm{Ch}(v)}V^{*}(u),&\text{if }v\text{ is a {Min} node}.\end{cases}$
+
+For each root action $a\in\mathrm{Ch}(r)$ , we write $V^{*}(r,a)\coloneqq V^{*}(a)$ . Thus, $V^{*}(\cdot)$ denotes node values, while $V^{*}(r,\cdot)$ denotes root-action values. We assume throughout that $|\mathrm{Ch}(r)|\geq 2$ , so the BAI problem is nontrivial, and that the optimal root action is unique, which is given by $a^{*}\in\arg\max_{a\in\mathrm{Ch}(r)}V^{*}(r,a)$ , along with the root gap $\Delta_{*}\coloneqq V^{*}(r,a^{*})-\max_{a\neq a^{*}}V^{*}(r,a)$ .
+
+A frontier $\mathcal{F}\subseteq\mathcal{T}\setminus\{r\}$ is a complete cut of the tree, meaning that every root-to-leaf path intersects $\mathcal{F}$ in exactly one node.
+
+At each round $t$ , the algorithm has an explored subtree $\mathcal{T}_{t}\subseteq\mathcal{T}$ containing the root. A node becomes exposed when it first enters $\mathcal{T}_{t}$ . The current frontier $\mathcal{F}_{t}$ consists of the exposed nodes at which recursive expansion has not yet proceeded; it forms a complete cut of the full tree. Expanding an exposed internal node reveals all of its children, queries the fast oracle at those children, and replaces the node by its children in the frontier. Any local slow samples already collected at the expanded node remain available for all future interval computations.
+
+Two-fidelity node-wise evaluations.
+
+Each exposed non-root node $v$ can be evaluated through two resources. In the multi-fidelity bandit viewpoint [ 1 , 2 , 4 ] , querying an arm at fidelity $m$ produces a sample from a distribution $\nu_{v,m}$ with mean $\mu_{v,m}$ and known query cost $\lambda_{m}$ . In our tree setting, the node $v$ plays the role of the arm, and we use two fidelities. The fast oracle $(m=1)$ is cheap and deterministic, but may be biased. The slow oracle $(m=2)$ is more expensive and stochastic, but unbiased for the true minimax value $V^{*}(v)$ . Thus, the fast oracle provides a low-fidelity estimate and the slow oracle provides a high-fidelity estimate of the same node value.
+
+Note that the fast-oracle bias is controlled by the remaining depth $h(v)$ through a known calibration envelope $B:\{0,\ldots,D\}\to\mathbb{R}_{\geq 0}$ , which satisfies
+
+$B(0)=0,\qquad B(h+1)\geq B(h)\quad\text{for every }h\in\{0,\ldots,D-1\},$ (1)
+
+We normalize query costs as $\lambda_{1}=1$ and $\lambda_{2}=c\geq 1$ . The two oracles are defined formally below.
+
+The fast oracle returns a deterministic value $V_{F}(v)$ . Equivalently, $\nu_{v,1}$ is a degenerate distribution at $V_{F}(v)$ , so $\mu_{v,1}=V_{F}(v)$ and $|V_{F}(v)-V^{*}(v)|\leq B(h(v)).$
+
+For each node $v$ , repeated slow-oracle queries return independent $\sigma$ -sub-Gaussian samples $Y_{v,s}$ with distribution $\nu_{v,2}$ and mean $\mu_{v,2}=V^{*}(v).$
+
+The unbiased slow oracle setup is analogous to that of Kaufmann and Koolen [5] , which defines the sampling oracle as mean-correct $\mathbb{E}[Y_{l,s}]=V^{*}(l)$ ; in § 4 , we instantiate it by adding actual noise to true minimax values. Also, unlike classical BAI-MCTS [ 5 ] , where stochastic samples are attached to leaf rollouts, our slow oracle may be queried at any exposed non-root node. In § 3.2 , we add further worst-case guarantee to real-world applications, where slow-oracles are biased.
+
+We note that the envelope structure in Eq. ( 1 ) can be motivated by finite horizon MARL. Specifically, for a critic $\widehat{V}_{t}$ with the correct terminal value, discount $0\leq\gamma\leq 1$ , and minimax Bellman residual $\eta_{t}=\lVert\widehat{V}_{t}-\mathcal{T}_{t}\widehat{V}_{t+1}\rVert_{\infty}$ , Bellman nonexpansiveness gives $\lVert\widehat{V}_{t}-V_{t}^{*}\rVert_{\infty}\leq\sum_{j=t}^{H-1}\gamma^{j-t}\eta_{j}$ . A known bound $\eta_{j}\leq\bar{\eta}$ provides the nondecreasing envelope $B(h)=\bar{\eta}\sum_{i=0}^{h-1}\gamma^{i}$ .
+
+2.2 Intervals, effective gaps, and recursive oracle complexity
+
+In the fixed-confidence setting, a strategy adaptively chooses exposed nodes and query types, stops at a stopping time $\tau$ , and outputs a recommended action $\hat{a}_{\tau}\in\mathrm{Ch}(r)$ . Let $N^{F}(\tau)$ denote the total number of fast-oracle queries issued by time $\tau$ , and let $N_{v}^{S}(\tau)$ denote the number of slow-oracle queries issued at node $v$ . The total searching cost is
+
+$C_{\tau}\coloneqq N^{F}(\tau)+c\sum_{v\in\mathcal{T}}N_{v}^{S}(\tau),$
+
+where $c$ is the slow-oracle cost $\lambda_{2}$ . Given $(\varepsilon,\delta)\!\in\![0,\infty)\!\times\!(0,1)$ , we seek strategies that satisfy the $(\varepsilon,\delta)$ -PAC guarantee: $\mathbb{P}\!\left(\tau<\infty,\ V^{*}(r,a^{*})\!-\!V^{*}(r,\hat{a}_{\tau})\!>\!\varepsilon\right)\!\leq\!\delta$ , while seeking low evaluation cost; our cost bounds hold with high probability.
+
+We now introduce the interval objects used by 2FFS and the instance-dependent oracle complexity used in the upper bound. The construction has three layers: (i) local intervals combine the cheap fast evaluation with slow statistical evidence at the same node; (ii) propagated intervals carry child information upward through the minimax recursion; (iii) finally, we establish the ideal amount of oracle complexity needed to certify only the precision that can affect the root decision.
+
+Confidence allocation & intervals.
+
+We first fix a feasible node-wise confidence allocation $\boldsymbol{\delta}=(\delta_{v})_{v\in\mathcal{T}\setminus\{r\}}$ , which indicates that $\delta_{v}\in(0,1)$ and $\sum_{v\in\mathcal{T}\setminus\{r\}}\delta_{v}\leq\delta$ . For every exposed non-root node $v$ , the fast oracle gives the deterministic interval
+
+$I_{v}^{F}=[V_{F}(v)-B(h(v)),\,V_{F}(v)+B(h(v))].$ (2)
+
+For slow samples, let $\widehat{V}_{v,n}$ be the empirical mean of the first $n$ slow-oracle samples at $v$ . Following from fixed-confidence bandit literature [ 13 , 5 , 14 , 15 , 2 ] , we use the time-uniform radius $\beta_{v}(\cdot,\delta_{v})$ satisfying
+
+$\mathbb{P}\left(\exists\,n\geq 1:\,\left|\widehat{V}_{v,n}-V^{*}(v)\right|>\beta_{v}(n,\delta_{v})\right)\leq\delta_{v},$ (3)
+
+where $n\mapsto\beta_{v}(n,\delta_{v})$ is non-increasing and $\beta_{v}(n,\delta_{v})\to 0$ as $n\to\infty$ . Let $N_{v}^{S}(t)$ be the number of slow queries issued at $v$ by round $t$ , the slow interval is then the running intersection
+
+$I_{v}^{S}(t)=\begin{cases}\displaystyle\bigcap_{j=1}^{N_{v}^{S}(t)}\left[\widehat{V}_{v,j}-\beta_{v}(j,\delta_{v}),\,\widehat{V}_{v,j}+\beta_{v}(j,\delta_{v})\right],&N_{v}^{S}(t)\geq 1,\\[10.0pt] (-\infty,+\infty),&N_{v}^{S}(t)=0,\end{cases}$ (4)
+
+which further gives the direct local interval $I_{v}^{\mathrm{loc}}(t)\coloneqq I_{v}^{F}\cap I_{v}^{S}(t)$ . Finally, we define the simultaneous-validity event by Eq. ( 5 ). Also, by Eq. ( 3 ) and the union bound, we always have $\mathbb{P}(\mathcal{E}_{\delta})\geq 1-\delta$ .
+
+$\mathcal{E}_{\delta}\coloneqq\bigcap_{v\in\mathcal{T}\setminus\{r\}}\bigcap_{n\geq 1}\left\{\left|\widehat{V}_{v,n}-V^{*}(v)\right|\leq\beta_{v}(n,\delta_{v})\right\}.$ (5)
+
+Propagated intervals.
+
+If an internal node $v$ has been expanded, its children are exposed and carry effective intervals $I_{u}(t)=[L_{u}(t),U_{u}(t)]$ . The child-backup interval is
+
+$I_{v}^{\mathrm{ch}}(t)=\begin{cases}\left[\max_{u\in\mathrm{Ch}(v)}L_{u}(t),\,\max_{u\in\mathrm{Ch}(v)}U_{u}(t)\right],&\text{if }v\text{ is a {Max} node},\\[8.0pt] \left[\min_{u\in\mathrm{Ch}(v)}L_{u}(t),\,\min_{u\in\mathrm{Ch}(v)}U_{u}(t)\right],&\text{if }v\text{ is a {Min} node}.\end{cases}$ (6)
+
+If $v$ is a leaf or not expanded yet, we set $I_{v}^{\mathrm{ch}}(t)=(-\infty,+\infty)$ . For every explored non-root node, the effective interval combines direct local evidence and descendant evidence: $I_{v}(t)=I_{v}^{\mathrm{loc}}(t)\cap I_{v}^{\mathrm{ch}}(t)$ . We note that the minimax backup in Eq. ( 6 ) preserves validity and does not increase interval width. The following two lemmas formalize these properties; their proofs are given in Appendix B.2 .
+
+Fix a frontier $\mathcal{F}$ and suppose that each frontier interval $[L_{v},U_{v}]$ , $v\in\mathcal{F}$ , contains $V^{*}(v)$ . Under the recursive backup in Eq. ( 6 ), (i) every ancestor $u$ of a frontier node satisfies $V^{*}(u)\in[L_{u},U_{u}]$ ; and (ii) if every frontier interval has half-width at most $w$ , then every propagated ancestor interval also has half-width at most $w$ .
+
+On $\mathcal{E}_{\delta}$ , every effective interval constructed from Eqs. ( 2 )–( 6 ) is valid at every round $t$ . In particular, $V^{*}(v)\in I_{v}(t)$ for every explored non-root node $v$ , and the intervals of root children and the root backup are valid as well.
+
+Effective gap.
+
+A node does not necessarily need to be estimated down to its own local sibling gap. The value of a node $v$ can affect the final recommendation only if its uncertainty propagates through every ancestor and changes the comparison between root actions. Along this path, any large value separation creates a bottleneck: once the uncertainty below $v$ is smaller than that separation, further refinement cannot change the root decision. We therefore define the effective gap of a node as the precision scale needed to certify that node for the purpose of root-action identification.
+
+Set the root effective gap to $\Delta_{r}^{\mathrm{eff}}\coloneqq\Delta_{*}$ . For every non-root node $v$ , let $p(v)$ denotes the parent of $v$ , we define recursively
+
+$\Delta_{v}^{\mathrm{eff}}\coloneqq\max\!\left\{\Delta_{p(v)}^{\mathrm{eff}},\,|V^{*}(v)-V^{*}(p(v))|\right\}.$
+
+Thus, $\Delta_{v}^{\mathrm{eff}}$ records the largest bottleneck encountered on the path from the root to $v$ . If this quantity is large, then $v$ only needs to be estimated coarsely: Proposition B.10 shows that a call at scale $k$ requires $\Delta_{v}^{\mathrm{eff}}\leq 2\rho_{k}$ .
+
+Reference recursive oracle complexity.
+
+To derive cost guarantees, we first define an idealized reference oracle complexity $H^{*}$ under perfect gap information within our recursive certification model. Our main theorem shows that 2FFS, despite not knowing the effective gaps or the cheaper route in advance, has cost within a polynomial-depth factor of this ideal reference complexity.
+
+For a target precision $\rho>0$ , we first define the local cost of certifying a single exposed node $v$ . Let
+
+$m_{v}(\rho,\delta_{v})\coloneqq\inf\!\left\{n\in\mathbb{N}:\,n\geq 1,\,\beta_{v}(n,\delta_{v})\leq\tfrac{1}{4}\rho\right\}.$
+
+After $m_{v}(\rho,\delta_{v})$ slow samples, the slow confidence interval has width at most $\rho/2$ . The factor $1/4$ is chosen so that either the fast interval alone, $2B(h(v))\leq\rho/2$ , or the slow confidence interval alone, $2\beta_{v}(n,\delta_{v})\leq\rho/2$ , is sufficient to make the direct local interval $I_{v}^{\mathrm{loc}}$ have width at most $\rho/2$ .
+
+The corresponding local certification cost is
+
+$\Gamma_{v}(\rho,\delta_{v})=\begin{cases}0,&\text{if }B(h(v))\leq\tfrac{1}{4}\rho,\\[3.0pt] c\cdot m_{v}(\rho,\delta_{v}),&\text{if }B(h(v))>\tfrac{1}{4}\rho.\end{cases}$ (7)
+
+Thus, $\Gamma_{v}(\rho,\delta_{v})$ is the slow-oracle cost needed to certify the value of $v$ locally at precision $\rho$ , after $v$ has already been exposed. The first case means that the fast interval is already narrow enough, so no slow sample is needed at $v$ .
+
+We now define the recursive subtree oracle complexity. For a fixed confidence allocation $\boldsymbol{\delta}$ , $J_{v}^{*}(\boldsymbol{\delta})$ is a reference cost for the subtree rooted at $v$ , using effective-gap information. At each internal node, it compares two routes: certify $v$ locally, or expand $v$ and add all child reference costs:
+
+$J_{v}^{*}(\boldsymbol{\delta})=\begin{cases}\Gamma_{v}(\Delta_{v}^{\mathrm{eff}},\delta_{v}),&\text{if }h(v)=0,\\[5.0pt] \min\!\left\{\Gamma_{v}(\Delta_{v}^{\mathrm{eff}},\delta_{v}),\,|\mathrm{Ch}(v)|+\sum_{u\in\mathrm{Ch}(v)}J_{u}^{*}(\boldsymbol{\delta})\right\},&\text{if }h(v)\geq 1.\end{cases}$ (8)
+
+This induces the root oracle complexity $H(\boldsymbol{\delta})\coloneqq|\mathrm{Ch}(r)|+\sum_{a\in\mathrm{Ch}(r)}J_{a}^{*}(\boldsymbol{\delta})$ , where $|\mathrm{Ch}(r)|$ is the cost of initially exposing all root actions, and gives us the optimized recursive oracle complexity $H^{*}$ :
+
+$H^{*}\coloneqq\inf_{\boldsymbol{\delta}\,\mathrm{feasible}}H(\boldsymbol{\delta}).$ (9)
+
+We note that instance-dependent complexity measures are standard in fixed-confidence BAI. Classical bounds are often stated in terms of gap-dependent hardness quantities such as $H_{1}=\sum_{i\neq i^{*}}\Delta_{i}^{-2}$ , while refined analyses use information-theoretic characteristic times to quantify the intrinsic difficulty of an instance [ 16 , 17 , 18 ] . BAI-MCTS and multi-fidelity BAI follow the same convention, using tree- or fidelity-dependent oracle complexities to state adaptive cost guarantees [ 5 , 2 , 4 ] . Our $H^{*}$ serves as an analysis-only recursive oracle complexity under perfect gap information, rather than an information-theoretic lower bound; see Appendix B.8 .
+
+Dyadic scale surrogates.
+
+Following from Remark 2.5 , the algorithm does not know the effective gaps and therefore cannot target $J_{v}^{*}(\boldsymbol{\delta})$ directly. Instead, 2FFS works on a dyadic precision grid, which initializes by exposing the root children with fast queries, then sets
+
+$\rho_{0}\coloneqq\max_{a\in\mathrm{Ch}(r)}\bigl(U_{a}(0)-L_{a}(0)\bigr),\qquad\rho_{k+1}\coloneqq\tfrac{1}{2}\rho_{k},\qquad k\geq 0.$
+
+If $\rho_{0}=0$ , the root-child values are already known exactly and the algorithm stops immediately; otherwise the following scales are used. A node $v$ is scale- $k$ safe at round $t$ if $U_{v}(t)-L_{v}(t)\leq\tfrac{1}{2}\rho_{k}$ . The scale- $k$ local certification cost is $\Gamma_{v}^{(k)}(\delta_{v})\coloneqq\Gamma_{v}(\rho_{k},\delta_{v})$ , and the operational rules that decide which scale and which node to refine are given in Algorithm 1 .
+
+3 2FFS Tree Search: Two-Fidelity Fast-Slow Tree Search
+
+2FFS maintains a confidence interval $[L_{v}(t),U_{v}(t)]$ for each exposed node and repeatedly certifies the root decision. At each round, the algorithm first checks whether some root action is already $\varepsilon$ -optimal according to the current intervals. If not, it selects one decision-relevant side of one root child and calls a recursive resolver $\textsc{Resolve}(v,s,k)$ , where $s\in\{L,U\}$ is the endpoint to certify and $k$ is the active dyadic scale. Figure 1 visualizes these three pieces: the root test, the recursive resolver, and the scale- $k$ child-selection rules.
+
+At the root, let $a_{t}\in\mathop{\rm argmax}_{a\in\mathrm{Ch}(r)}L_{a}(t)$ and $b_{t}\in\mathop{\rm argmax}_{a\in\mathrm{Ch}(r)\setminus\{a_{t}\}}U_{a}(t)$ be the current leader and challenger. 2FFS stops once a root action is certified to be $\varepsilon$ -optimal: $L_{\hat{a}_{t}}(t)\!\geq\!\max_{a\neq\hat{a}_{t}}U_{a}(t)-\varepsilon$ . If this test fails, the leader’s lower endpoint and the challenger’s unresolved endpoint information are the two quantities that can still change the root decision. 2FFS refines whichever of these two root-side certificates is currently coarser. For the leader this means the lower side $L_{a_{t}}$ ; for the challenger it means the coarsest unresolved side among $L_{b_{t}}$ and $U_{b_{t}}$ .
+
+The call $\textsc{Resolve}(v,s,k)$ tries to certify endpoint $s$ of node $v$ at scale $\rho_{k}$ . It has two competing routes. The local route takes slow samples directly at $v$ . The recursive route expands below $v$ , uses fast evaluations on the children, and continues recursively only along the currently relevant child. These routes remain available throughout the run: even after $v$ has been expanded, 2FFS may still take slow samples at $v$ . This local reversibility is important because the cheaper route is not known in advance. Recursive spending at node $v$ and scale $k$ is capped by $\mathsf{B}_{v,k}^{\mathrm{rec}}=\alpha_{h(v)}\Gamma_{v}^{(k)}(\delta_{v})$ , and every child call uses a scale no finer than the parent scale $k$ . If the recursive route cannot make admissible progress within this budget, the resolver falls back to one slow local query at $v$ .
+
+Algorithm 1 2FFS algorithm skeleton
+
+Inside an expanded node, the recursive route follows the live child rule in Figure 1 (right). In selector cases, the live child is the endpoint that currently determines the minimax backup. In comparison cases, 2FFS does not force all children to become fully certified. Instead, it lazily removes a child once the child is already outside the scale- $k$ comparison margin, or once the child has the required same-side certificate. Among the remaining live children, only the current endpoint-most blocker is refined recursively. The comparison rows use the following discharge margins. For a Max node on side $L$ , write $\lambda_{L}(v,t)=\max_{u}L_{u}(t)$ ; a child is no longer live if
+
+$U_{u}(t)\leq\lambda_{L}(v,t)+\rho_{k}/2\quad\text{or}\quad\mathsf{Comp}_{L}(u,k,t).$
+
+For a Min node on side $U$ , write $\lambda_{U}(v,t)=\min_{u}U_{u}(t)$ ; a child is no longer live if
+
+$L_{u}(t)\geq\lambda_{U}(v,t)-\rho_{k}/2\quad\text{or}\quad\mathsf{Comp}_{U}(u,k,t).$
+
+The formal implementation maintains scale-local counters, monotone side flags $\mathsf{Done}_{s}(v,k)$ , observable certificates $\mathsf{Comp}_{s}(v,k,t)$ , and capped unresolved scales $K_{s}^{\leq k}(v,t)$ . These details are given in Appendix B.3 , which are not needed to understand the main flow above but important for the proofs.
+
+3.1 Theoretical results
+
+We present three results: algorithmic correctness and a general-depth cost upper bound guarantee along with finite stopping time guarantee. First, we provide algorithm’s $(\varepsilon,\delta)$ -PAC correctness:
+
+Fix any feasible confidence allocation $\boldsymbol{\delta}=(\delta_{v})_{v\in\mathcal{T}\setminus\{r\}}$ and any $\varepsilon\geq 0$ . Consider Algorithm 1 run with accuracy $\varepsilon$ , let $\tau$ be its stopping time, and, on the event $\{\tau<\infty\}$ , let $\hat{a}_{\tau}$ be the returned root child. Then, $\mathbb{P}\!\left(\tau<\infty\text{ \emph{and} }V^{*}(r,a^{*})-V^{*}(r,\hat{a}_{\tau})>\varepsilon\right)\leq\delta$ . In fact, on the simultaneous-validity event $\mathcal{E}_{\delta}$ , every finite-time recommendation made by the stopping rule is $\varepsilon$ -optimal.
+
+We note that Theorem 3.1 uses only simultaneous interval validity and the root stopping rule and does not use any assumptions in the later upper-bound proof. Its proof is very straightforward, and we defer it to Appendix B.4 . The finite stopping guarantee is elaborated in Theorem 3.6 .
+
+Now, we move to establish the upper bound for cost using the reference oracle complexity $H^{*}$ . Before that, we first explicitly state several required regular assumptions along with their discussions.
+
+Fix the confidence allocation $\boldsymbol{\delta}$ , we assume there exist constants $\Lambda_{\mathrm{pre}}\geq 1$ and $\Lambda_{\mathrm{gap}}\geq 1$ such that, for every non-root node $v$ and every $K\geq 0$ ,
+
+$\sum_{j=0}^{K}\Gamma_{v}^{(j)}(\delta_{v})\leq\Lambda_{\mathrm{pre}}\Gamma_{v}^{(K)}(\delta_{v}),$ (10)
+
+and, for every non-root node $v$ ,
+
+$\Gamma_{v}\!\left(\frac{\Delta_{v}^{\mathrm{eff}}}{2},\delta_{v}\right)\leq\Lambda_{\mathrm{gap}}\,\Gamma_{v}(\Delta_{v}^{\mathrm{eff}},\delta_{v}).$ (11)
+
+We write $\Lambda_{\mathrm{loc}}\coloneqq\Lambda_{\mathrm{pre}}\Lambda_{\mathrm{gap}}$ .
+
+Assumption 3.3 is purely local: it does not compare the raw recursive dyadic DP with $J^{*}$ . The prefix condition is the standard dyadic regularity of a statistical sample-complexity curve; it holds with a constant for polynomial laws, e.g., $m_{v}(\rho,\delta_{v})\asymp\rho^{-2}\log(1/\delta_{v})$ with uniform comparison constants over the positive-cost scales. The second condition only asks that moving from the effective gap to the neighboring dyadic half-scale changes the local stop cost by at most a constant factor. This is the only place where the deterministic fast-bias cutoff in Eq. ( 7 ) can create a knife-edge, which is ruled out by the assumption at the exact effective gap.
+
+For a fixed nondecreasing depth-budget sequence $(\alpha_{h})_{h=0}^{D}$ with $\alpha_{h}\geq 1$ , define $P_{0}=\Lambda_{\mathrm{loc}}$ and, for $h\geq 1$ ,
+
+$P_{h}\coloneqq\max\!\left\{(1+\alpha_{h})\Lambda_{\mathrm{loc}},\,\left(1+\frac{\Lambda_{\mathrm{pre}}}{\alpha_{h}}\right)P_{h-1}\right\}.$ (12)
+
+With the concrete choice $\alpha_{h}=(h+1)^{2}$ , this recursion gives $P_{D}=\mathcal{O}_{\Lambda_{\mathrm{pre}},\Lambda_{\mathrm{gap}}}(D^{2})$ .
+
+Proof. We denote $A=\Lambda_{\mathrm{loc}}$ and $B=\Lambda_{\mathrm{pre}}$ , and unrolling the recursion shows that $P_{D}$ is at most the largest local term $(1+\alpha_{i})A$ , multiplied by the product of later recursive multipliers:
+
+$P_{D}\leq A\max_{0\leq i\leq D}\left[\bigl(1+\alpha_{i}\bigr)\prod_{j=i+1}^{D}\left(1+\frac{B}{\alpha_{j}}\right)\right].$
+
+For $\alpha_{j}=(j+1)^{2}$ , the product is bounded by
+
+$\prod_{j=1}^{D}\left(1+\frac{B}{(j+1)^{2}}\right)\leq\exp\!\left(B\sum_{j=1}^{\infty}\frac{1}{(j+1)^{2}}\right),$
+
+which is a constant depending only on $B$ . Since $\max_{i\leq D}(1+\alpha_{i})=O(D^{2})$ , we obtain $P_{D}=O_{\Lambda_{\mathrm{pre}},\Lambda_{\mathrm{gap}}}(D^{2})$ , which is the key ingredient for the following general-depth cost bound. $\Box$
+
+Fix any feasible confidence allocation $\boldsymbol{\delta}=(\delta_{v})_{v\in\mathcal{T}\setminus\{r\}}$ satisfying Assumption 3.3 , and run Algorithm 1 with $\varepsilon=0$ . On $\mathcal{E}_{\delta}$ , the algorithm is guaranteed to stop at a finite time $\tau$ , returns $\hat{a}_{\tau}=a^{*}$ , and satisfies $C_{\tau}\leq P_{D}\,H(\boldsymbol{\delta})$ .
+
+With the depth budgets $\alpha_{h}=(h+1)^{2}$ , the cost $C_{\tau}\leq\mathcal{O}_{\Lambda_{\mathrm{pre}},\Lambda_{\mathrm{gap}}}\!\left(D^{2}H(\boldsymbol{\delta})\right)$ . Consequently, suppose the regularity constants $\Lambda_{\mathrm{pre}}$ and $\Lambda_{\mathrm{gap}}$ are uniform along a near-optimal feasible sequence: for every $\eta>0$ , there exists a feasible allocation $\boldsymbol{\delta}^{\eta}$ satisfying Assumption 3.3 with these same constants and
+
+$H(\boldsymbol{\delta}^{\eta})\leq H^{*}+\eta.$
+
+Then, the corresponding run satisfies, with probability at least $1-\delta$ ,
+
+$\hat{a}_{\tau}=a^{*},\qquad C_{\tau}\leq P_{D}\bigl(H^{*}+\eta\bigr).$
+
+In particular, when $\alpha_{h}=(h+1)^{2}$ and the local regularity constants are uniform constants,
+
+$C_{\tau}\leq\mathcal{O}_{\Lambda_{\mathrm{pre}},\Lambda_{\mathrm{gap}}}\!\left(D^{2}(H^{*}+\eta)\right),$
+
+and, since $H^{*}\geq|\mathrm{Ch}(r)|\geq 2$ , one obtains $\mathcal{O}_{\Lambda_{\mathrm{pre}},\Lambda_{\mathrm{gap}}}(D^{2}H^{*})$ by taking $\eta\leq H^{*}$ , or $\eta=0$ whenever the infimum in Eq. ( 9 ) is attained with the same regularity constants.
+
+Proof sketch. To our knowledge, this is the first theoretical result to establish a bound for multi-fidelity bandit in the tree setting. We therefore hope the proof structure sets up a paradigm for future work, and Theorem 3.6 is proved formally in Appendix B.6 . Overall, we have one main goal: charge the actual oracle calls made by 2FFS to the ideal recursive oracle complexity $H(\boldsymbol{\delta})$ . First, every certificate used by 2FFS is shown to be sound: once a side of a node is certified at scale $k$ , the corresponding endpoint error is at most $\rho_{k}/2$ . Second, a recursive call is shown to spend effort only on children that can still affect the parent certificate at the current scale; since child calls are capped by the parent scale, the algorithm avoids irrelevant fine-scale work below already separated parts of the tree. Third, for each node and scale, the budgeted resolver spends at most a local certification budget plus its recursive budget, and the same node-side-scale is never charged again after certification. Summing these charges over active scales, while reserving the cap needed for the next step, gives a subtree bound with overhead $P_{h(v)}$ . Lemma 3.5 then shows that this overhead is only quadratic in depth for $\alpha_{h}=(h+1)^{2}$ . Applying the subtree bound to the root children gives a finite global cost bound; since every non-stopping round makes positive progress, the algorithm must stop, and interval validity gives correctness.
+
+3.2 Guarantees for real-world multi-agent RL application
+
+In many real-world applications, e.g., multi-agent RL (MARL) with minimax trees, slow oracles may not provide perfectly unbiased estimates of the minimax value $V^{*}$ , and a tight, accurate fast-oracle envelope $B$ may be unavailable and must instead be approximated by a proxy. In this section, we establish additional theoretical guarantees for such imperfect real-world settings.
+
+Biased slow oracles.
+
+We show that pointwise slow-oracle bias can be handled without accumulation across tree depths. Specifically, Theorem 3.7 gives a correctness guarantee using a known bias bound.
+
+Suppose the slow oracle has fixed mean $V^{*}(v)+b_{v}$ , with known $\xi\geq\max_{v}|b_{v}|$ , and its samples satisfy Eq. ( 3 ) around this mean. Replacing each slow radius $\beta_{v}$ by $\beta_{v}+\xi$ preserves the $(\varepsilon,\delta)$ finite-output correctness of 2FFS. The bias inflation does not accumulate with tree depth.
+
+Loose fast-oracle envelope.
+
+In practical MARL applications, the true minimax value is unavailable, and thus a tight fast-oracle envelope cannot be constructed. Instead, one can use a calibrated proxy envelope that shrinks with the remaining horizon, for example,
+
+$\hat{B}(h)=1+\frac{h-1}{D-1},\qquad\hat{B}(0)=0,$
+
+where $D\geq 2$ is the full tree depth and $h\geq 1$ is the remaining depth, provided $\hat{B}(h)\geq B(h)$ . We show that such a loose envelope preserves the PAC guarantee.
+
+Let $B(h)$ denote the true fast-oracle envelope, and let $\hat{B}(h)$ be a nondecreasing proxy envelope with $\hat{B}(0)=0$ and $\hat{B}(h)\geq B(h)$ for all $h$ . Replacing $B(h)$ with $\hat{B}(h)$ preserves the finite-output PAC guarantee and, on $\mathcal{E}_{\delta}$ for the same query history, can only widen the resulting confidence intervals.
+
+The proofs and qualifications for both results are given in Appendix B.7 .
+
+4 Numerical Experiments
+
+Table 1 : Results over stochastic minimax trees, with mean $\pm$ standard deviation reported.
+
+We evaluate 2FFS on stochastic minimax trees, focusing on whether it can reduce search effort by adaptively combining cheap biased evaluations with expensive accurate samples. We compare against three fixed-confidence baselines: (i) BAI-MCTS sampling ( BAI-MCTS ) [ 5 ] , which uses stochastic leaf samples; (ii) minimax fast-oracle ( Minimax-fast ), which uses only the deterministic fast oracle; and (iii) fixed-depth expansion followed by slow-oracle sampling on the exposed frontier ( Slow-only ). The second and third baselines are controlled ablations: they test, respectively, the limits of relying only on fast expansion and of committing to a non-adaptive expansion depth before slow sampling. We use the abbreviated names in parentheses in all tables. We note that BAI-MCTS [ 5 , §4] has shown that it already substantially improves (15 $\times$ ) over earlier tree-based BAI methods, including UGapE-MCTS [ 19 ] , LUCB-MCTS [ 20 ] , and FindTopWinner [ 21 ] .
+
+Setup and evaluation.
+
+Our main experiments use balanced $b$ -ary minimax trees with $(D,b)\in\{(5,8),(7,6),(10,3)\}$ , with $100$ independently generated trees per setting. These configurations cover both wide shallow trees and deeper narrower trees, and are much larger than the depth- $3$ , $10$ -ary setting (only $1111$ nodes) in BAI-MCTS [ 5 ] , with more explicit evidence of efficiency improvement.
+
+For evaluation, we report two complementary metrics. The first is sampling count , the total number of nodes sampled and visited. The second is operation count , the total number of bookkeeping operation units, where one operation count is one $\mathcal{O}(1)$ scalar state access, update, or comparison. This distinction is important because sampling one node does not necessarily induce the same amount of computation across methods. For example, after a stochastic leaf sample, BAI-MCTS mainly updates the sampled leaf interval and propagates confidence bounds along the leaf-to-root path. In contrast, after a slow oracle sample, 2FFS updates local slow intervals, intersects them with fast intervals, propagates minimax bounds, and maintains scale-dependent comparison certificates. Thus, sampling count measures efficiency of repetitive nodes visit, while operation count measures the overall computation efficiency.
+
+Results.
+
+Table 1 shows that 2FFS substantially reduces search effort relative to the BAI-MCTS baseline: across the reported settings, it uses $160$ – $1450\times$ fewer sampled or visited nodes and $1.9$ – $4.6\times$ fewer bookkeeping operations. The ablations illustrate the two sides of the fast–slow tradeoff. Minimax-fast is computationally cheap because it relies only on fast expansion, but this efficiency comes at the cost of accuracy since the fast oracle is biased. Conversely, Slow-only uses accurate slow-oracle samples and can be accurate when enough samples are collected, but it requires many more samples and often fails to stop within the finite budget. Overall, these results suggest that 2FFS gains its efficiency by adaptively choosing when to trust fast expansion and when to spend slow samples on decision-critical nodes.
+
+Figure 2 : Oracle-bias ablation results for 2FFS : (a) fast-oracle bias and (b) slow-oracle noise.
+
+Ablations.
+
+We further test the sensitivity of 2FFS to the fast-oracle bias and slow-oracle noise. Using $D=5$ , 8-ary trees, we sweep the fast-oracle bias with mean $0.45$ and the slow-oracle noise with mean $0.01$ . Figure 2 shows that 2FFS is relatively stable across both ranges, suggesting that its performance is not overly sensitive to moderate changes in either oracle parameter.
+
+5 Conclusion
+
+In this work, we introduced 2FFS , a two-fidelity algorithm for fixed-confidence best-action identification in stochastic minimax trees. Our work bridges multi-fidelity bandits and minimax tree search by providing a principled mechanism for adaptively trading off cheap biased expansion against expensive accurate sampling. Theoretically, we prove PAC correctness, finite stopping, and a general-depth cost bound relative to an ideal recursive oracle complexity. Empirically, 2FFS achieves substantial gains in sampling efficiency over BAI-MCTS-style baselines while maintaining reliable root-action identification. These results suggest that two-fidelity tree search may be a useful abstraction beyond the current theoretical framework, with potential applications in multi-agent reinforcement learning, game-tree planning, and LLM policy-rollout systems, where accurate rollouts are expensive but cheap heuristic evaluations are widely available, a further discussion to these is provided in Appendix A .
+
+Follow-up work.
+
+We note that 2FFS opens up a broad range of potential directions for future work. On the empirical side, we suggest investigating how 2FFS can be integrated with policy-gradient-based MARL, particularly how to design approximate envelopes that ensure the effectiveness of fast oracles. Such extensions could also be explored for training LLMs in multi-agent environments, such as chess playing and adversarial training. On the theoretical side, we first look forward to seeing how 2FFS can be adapted to non-minimax trees, which could facilitate extensions to tree-of-thought rollout structures for expansive LLM reasoning trajectories. Beyond this direction, within minimax trees, we also look forward to further developments in fast-oracle envelope design, as well as weaker assumptions for the cost upper bound, or even tighter upper bounds.
+
+References
+
+Appendix A Further Related Works and Limitations
+
+Multi-fidelity bandits and optimization.
+
+Multi-fidelity methods study how to allocate queries across information sources with different costs and accuracies. In flat bandit models, the goal is typically to identify or compete with the best arm while using cheap biased fidelities when they are informative and reserving expensive accurate fidelities for difficult comparisons [ 1 , 2 , 3 , 4 ] . Related ideas also appear in multi-fidelity Bayesian and black-box optimization, where low-cost simulators, subsampled training runs, or surrogate evaluations are used to accelerate optimization under a total cost budget [ 11 , 12 , 22 , 23 , 24 , 25 ] . These works provide the broad cost–accuracy motivation for our two-oracle model, but they do not address minimax value propagation through an adversarial tree or fixed-confidence certification of a root action.
+
+Relation to multi-fidelity tree search for noisy black-box optimization.
+
+Sen et al. [26] study noisy black-box optimization with multi-fidelity queries using a tree-search approach. Their tree is a hierarchical partition of the input domain of an unknown function; a node represents a region of the search space, and querying at a fidelity gives a biased and noisy estimate useful for optimistic optimization. Their algorithms, MFHOO and MFPOO, adapt HOO/POO-style optimistic tree search to continuous fidelities and are analyzed through simple regret under a finite cost budget.
+
+This is related in spirit because both settings combine tree search with multi-fidelity information, but it is not the same problem. In our setting, the tree is not an auxiliary partition of a black-box domain: it is the stochastic minimax tree itself, with alternating Max / Min backups and a root-action decision. Our objective is fixed-confidence $(\varepsilon,\delta)$ -PAC best-action identification, not simple-regret minimization after a budget is exhausted. Methodologically, 2FFS maintains valid confidence intervals at minimax nodes, propagates them through adversarial backups, and adaptively chooses between local slow certification and recursive fast expansion. This differs from the optimistic partition-refinement mechanism of MFHOO/MFPOO, where the tree is used to explore a continuous domain and there is no minimax alternation, no root-child certification problem, and no two-route local-versus-recursive certificate of the kind used here.
+
+Best-action identification and tree-based planning.
+
+Pure-exploration bandits distinguish fixed-budget regret-style objectives from fixed-confidence identification objectives. The flat best-arm identification literature characterizes instance-dependent sample complexity for identifying the best arm [ 18 , 27 ] , with extensions to structured settings such as unimodal bandits [ 28 , 29 ] and cost-aware sampling [ 30 ] . In tree-based planning, classical minimax search and $\alpha$ - $\beta$ pruning exploit deterministic backups in adversarial trees [ 6 , 7 ] , while MCTS uses stochastic sampling and bandit-style selection rules [ 8 ] . BAI-MCTS [ 5 ] brings fixed-confidence identification to minimax trees, but assumes a single unbiased sampling oracle. Our contribution combines this fixed-confidence root-action perspective with a calibrated cheap evaluator and an expensive accurate evaluator.
+
+Applications and oracle-based learning.
+
+Multi-fidelity ideas are widely used in hyperparameter optimization [ 31 , 32 , 33 , 34 ] , medical trial design [ 35 ] , and engineering design problems such as hydrofoil, wind-farm, and aerodynamic optimization [ 36 , 37 , 38 ] . More broadly, oracle-based learning studies how decision-making systems can exploit structured feedback such as ranking or comparison oracles [ 39 , 40 ] . Our work fits this broader line by studying how cheap heuristic information and expensive reliable feedback should be allocated in a structured decision tree and GDA-style minimax tree [ 41 ] .
+
+Future work.
+
+We acknowledge several limitations, which also open a broad space for follow-up work from both empirical and theoretical perspectives. Empirically, our experiments focus on simulated finite minimax trees, while many modern planning problems involve richer interactive environments (we note that adapting 2FFS to these areas would require the effort of a fully new follow-up work). Extending 2FFS to multi-agent reinforcement learning, policy-gradient-based training, or neural-guided MCTS would be an important step toward broader applications, but is beyond the scope of the present paper. In addition, our current formulation assumes finite trees with fixed depth (which aligns with the setup from previous tree-based BAI works); adapting the method to dynamically generated trees, progressive widening, or very large action spaces is a natural next direction. We also note such minimax planning can be smoothly integrated with the recent group-based language model policy optimization for language model reasoning [ 42 , 43 , 44 , 45 ] and language model alignment and decision making problems [ 46 , 47 ] .
+
+Theoretically, our general-depth upper bound relies on mild local regularity assumptions on the sampling complexity. Understanding whether these conditions can be weakened, verified adaptively, or replaced by fully data-dependent stopping criteria would further sharpen the theory. Another important direction is to close the remaining gap between the current polynomial-depth factor and the ideal recursive oracle complexity, potentially leading to tighter depth dependence or sharper instance-dependent bounds.
+
+Appendix B Missing Proofs and Further Technical Details
+
+This section gives the proofs and algorithmic details omitted from the main text. We begin with a notation table in Appendix B.1 .
+
+B.1 Notation Glossary
+
+Table 2: Glossary of notation used in the main text and appendix.
+
+Table 2: Glossary of notation used in the main text and appendix (continued).
+
+B.2 Proofs for Preliminaries
+
+B.2.1 Proof of Lemma 2.3
+
+Proof. We propagate validity and the width bound upward from the frontier. For any node $u$ that belongs to $\mathcal{F}$ or is an ancestor of a node in $\mathcal{F}$ , define
+
+$m(u)\coloneqq\max\{d(z)-d(u):z\in\mathcal{F},\ u\text{ is an ancestor of }z\text{ or }u=z\}.$
+
+The frontier nodes are exactly those with $m(u)=0$ , where validity holds by assumption. We proceed by induction on $m(u)$ .
+
+Let $m(u)\geq 1$ , and assume validity for all smaller values of $m$ . Since $u$ lies on a path to a frontier node, no strict ancestor of $u$ belongs to $\mathcal{F}$ ; otherwise, that path would meet $\mathcal{F}$ twice. For every child $x\in\mathrm{Ch}(u)$ , each root-to-leaf path through $x$ must therefore meet $\mathcal{F}$ at or below $x$ . Thus $x$ either belongs to $\mathcal{F}$ or has a descendant in $\mathcal{F}$ . Its propagated interval is valid by the induction hypothesis.
+
+If $u$ is a Max node, taking maxima of the child bounds gives
+
+$\max_{x}L_{x}\leq\max_{x}V^{*}(x)=V^{*}(u)\leq\max_{x}U_{x},$
+
+which is exactly $V^{*}(u)\in[L_{u},U_{u}]$ .
+
+If $u$ is a Min node, taking minima gives
+
+$\min_{x}L_{x}\leq\min_{x}V^{*}(x)=V^{*}(u)\leq\min_{x}U_{x}.$
+
+This proves the validity statement.
+
+For the half-width bound, use the same induction. Suppose every child interval of $u$ has width at most $2w$ . If $u$ is a Max node, choose $x^{*}\in\mathop{\rm argmax}_{x}U_{x}$ . Then
+
+$U_{u}-L_{u}=U_{x^{*}}-\max_{x}L_{x}\leq U_{x^{*}}-L_{x^{*}}\leq 2w.$
+
+If $u$ is a Min node, choose $x^{*}\in\mathop{\rm argmin}_{x}L_{x}$ to obtain
+
+$U_{u}-L_{u}=\min_{x}U_{x}-L_{x^{*}}\leq U_{x^{*}}-L_{x^{*}}\leq 2w.$
+
+Every propagated ancestor interval therefore has half-width at most $w$ . $\Box$
+
+B.2.2 Proof of Lemma 2.4
+
+Proof. Fix a round $t$ . On $\mathcal{E}_{\delta}$ , the slow interval is valid by Eq. ( 4 ), while the fast interval $I_{v}^{F}$ is valid deterministically by Definition 2.2 . Their intersection therefore satisfies
+
+$V^{*}(v)\in I_{v}^{\mathrm{loc}}(t)=I_{v}^{F}\cap I_{v}^{S}(t),$
+
+which holds for every exposed non-root node $v$ .
+
+It remains to check the recursive backups. We use induction upward through the explored tree. If a non-root node $v$ is unexpanded, then $I_{v}^{\mathrm{ch}}(t)=(-\infty,+\infty)$ , so validity of $I_{v}(t)=I_{v}^{\mathrm{loc}}(t)\cap I_{v}^{\mathrm{ch}}(t)$ reduces to local validity.
+
+If $v$ is an expanded non-root node, all children of $v$ are explored and have valid effective intervals by the induction hypothesis. For a Max node $v$ , this gives
+
+$\max_{u\in\mathrm{Ch}(v)}L_{u}(t)\leq\max_{u\in\mathrm{Ch}(v)}V^{*}(u)=V^{*}(v)\leq\max_{u\in\mathrm{Ch}(v)}U_{u}(t),$
+
+so $V^{*}(v)\in I_{v}^{\mathrm{ch}}(t)$ .
+
+The Min case is identical with maxima replaced by minima. Since $I_{v}^{\mathrm{loc}}(t)$ is also valid, the intersection $I_{v}(t)=I_{v}^{\mathrm{loc}}(t)\cap I_{v}^{\mathrm{ch}}(t)$ remains valid.
+
+At the root, the interval consists only of the child backup. Applying the same Max argument to its valid child intervals gives $V^{*}(r)\in I_{r}(t)$ , completing the induction. $\Box$
+
+B.3 Full 2FFS Details
+
+We now give the full version of Algorithm 1 . The resolver $\textsc{Resolve}(v,s,k,B)$ includes an invocation-level cost cap $B$ , omitted from the main-text pseudocode. This cap prevents a child call from exceeding the remaining budget inherited from its parent. All ties use fixed deterministic node and side orders, independent of the invocation cap and of $\varepsilon$ .
+
+To define the algorithm on every sample path, fix a default root action in advance. If an interval intersection becomes empty, terminate the entire run immediately and return this default action, before evaluating any widths or certificates. This exceptional rule never applies on $\mathcal{E}_{\delta}$ by Lemma 2.4 ; any error caused by it is therefore included in the confidence-failure event. All subsequent interval and scale operations are performed only while the intervals are nonempty.
+
+The algorithm allows local reversibility : once a node $v$ has been exposed, it may receive direct slow samples at $v$ even after expansion. Thus the two certification routes at $v$ ,
+
+the local route , which shrinks $I_{v}^{\mathrm{loc}}(t)$ through slow samples at $v$ , and
+
+the recursive route , which shrinks $I_{v}^{\mathrm{ch}}(t)$ by expanding below $v$ and recursively refining its children,
+
+remain available throughout the run. Work performed below $v$ and samples taken at $v$ both contribute to its effective interval.
+
+The algorithm uses the dyadic target diameters $(\rho_{k})_{k\geq 0}$ from § 2 : scale $k$ means target width $\rho_{k}/2$ , and $\Gamma_{v}^{(k)}(\delta_{v})=\Gamma_{v}(\rho_{k},\delta_{v})$ is the corresponding local stopping cost.
+
+Each outer-loop iteration computes an active local scale for the current leader and challenger, then selects a root-side obligation as specified below. A node $v$ is resolved at scale $k$ once the targeted side has an observable certificate at tolerance $\rho_{k}/2$ .
+
+The choice between local sampling and recursion is governed by a budget. Fix a nondecreasing polynomial depth-budget sequence
+
+$\alpha_{h}\geq 1,\qquad h=0,1,\ldots,D,$
+
+for example $\alpha_{h}=(h+1)^{2}$ . For an internal node $v$ , the recursive route at scale $k$ is allowed to spend at most
+
+$\mathsf{B}_{v,k}^{\mathrm{rec}}\coloneqq\alpha_{h(v)}\,\Gamma_{v}^{(k)}(\delta_{v})$
+
+below $v$ , before the obligation falls back to direct slow sampling at $v$ . The resolver first attempts recursive work and falls back to local sampling when its recursive budget is insufficient. To track spending at each explored non-root node $v$ and scale $k$ , define
+
+$M_{v,k}^{\mathrm{loc}}(t)\coloneqq c\times\bigl(\text{number of slow queries issued at $v$ while resolving scale $k$}\bigr),$
+
+and $M_{v,k}^{\mathrm{exp}}(t)$ as the total cost already spent strictly below $v$ while resolving the scale- $k$ recursive obligation at $v$ .
+
+These counters record costs already incurred. The recursive counter enforces the budget, while the current certificates determine which child to refine. Together, these rules limit spending below a node and direct it toward children that still affect the required comparison.
+
+At the root, let
+
+$a_{t}\in\mathop{\rm argmax}_{a\in\mathrm{Ch}(r)}L_{a}(t),\qquad b_{t}\in\mathop{\rm argmax}_{a\in\mathrm{Ch}(r)\setminus\{a_{t}\}}U_{a}(t)$
+
+be the current leader and challenger. 2FFS stops once some root action beats every competitor up to $\varepsilon$ , i.e.,
+
+$\text{stop if there exists }\hat{a}_{t}\in\mathrm{Ch}(r)\text{ such that }L_{\hat{a}_{t}}(t)\geq\max_{a\neq\hat{a}_{t}}U_{a}(t)-\varepsilon.$
+
+Otherwise, 2FFS refines one uncertified decision-critical root side.
+
+The challenger may either be excluded or become the leader. The algorithm therefore computes the current lower-side scale for the leader $a_{t}$ and the current full-contender scale for the challenger $b_{t}$ , then selects the obligation with the coarser unresolved diameter.
+
+Inside the selected subtree, the algorithm first attempts recursive work. If the node’s own recursive budget prevents progress, the resolver falls back to a direct slow sample, provided its inherited cap permits that sample. If the inherited cap prevents the chosen action, the call returns without spending. In the two selector cases $(\textsc{Min},L)$ and $(\textsc{Max},U)$ , the recursive route selects an unresolved endpoint witness. In the two comparison cases $(\textsc{Max},L)$ and $(\textsc{Min},U)$ , it selects the child whose endpoint most strongly obstructs the parent-side comparison certificate.
+
+An internal blocker is refined through obligations capped at the parent scale. A call may improve either the parent’s comparison side or the opposite endpoint used to exclude the blocker. It cannot use a finer scale than the parent obligation. This restriction is what allows the localization bound below to remain independent of depth.
+
+For an expanded internal node $v$ , define the scale-aware active child set $A_{s}(v,k,t)\subseteq\mathrm{Ch}(v)$ as follows. In the two selector cases, we use the endpoint witness sets:
+
+if $s=L$ and $v$ is a Min node, then
+
+$A_{L}(v,k,t)=\mathop{\rm argmin}_{u\in\mathrm{Ch}(v)}L_{u}(t);$
+
+if $s=U$ and $v$ is a Max node, then
+
+$A_{U}(v,k,t)=\mathop{\rm argmax}_{u\in\mathrm{Ch}(v)}U_{u}(t);$
+
+In the two comparison cases we instead compare against the current best comparison endpoint and define a lazy set of critical children:
+
+if $s=L$ and $v$ is a Max node, let
+
+$\lambda_{L}(v,t)\coloneqq\max_{u\in\mathrm{Ch}(v)}L_{u}(t),$
+
+and set
+
+$A_{L}(v,k,t)=\bigl\{u\in\mathrm{Ch}(v):\,U_{u}(t)>\lambda_{L}(v,t)+\rho_{k}/2\ \text{and}\ \neg\mathsf{Comp}_{L}(u,k,t)\bigr\};$
+
+if $s=U$ and $v$ is a Min node, let
+
+$\lambda_{U}(v,t)\coloneqq\min_{u\in\mathrm{Ch}(v)}U_{u}(t),$
+
+and set
+
+$A_{U}(v,k,t)=\bigl\{u\in\mathrm{Ch}(v):\,L_{u}(t)<\lambda_{U}(v,t)-\rho_{k}/2\ \text{and}\ \neg\mathsf{Comp}_{U}(u,k,t)\bigr\}.$
+
+Therefore, $A_{s}(v,k,t)$ contains only the children that are still unresolved at the current scale for the comparison required by the parent. In a comparison case, a child is discharged either by endpoint exclusion, namely falling outside the displayed margin, or by same-side completion at scale $k$ . A discharged child is no longer recursively refined for that parent-scale obligation. Equivalently, the two comparison certificates use the following dual discharge rules:
+
+$\begin{array}[]{ll}\text{{Max}, $L$:}&u\text{ is discharged if }U_{u}(t)\leq\lambda_{L}(v,t)+\rho_{k}/2\text{ or }\mathsf{Comp}_{L}(u,k,t),\\[4.0pt] \text{{Min}, $U$:}&u\text{ is discharged if }L_{u}(t)\geq\lambda_{U}(v,t)-\rho_{k}/2\text{ or }\mathsf{Comp}_{U}(u,k,t).\end{array}$
+
+So the first line excludes a Max -node child through its upper endpoint or certifies it on the lower side, while the second line is the exact dual for Min nodes.
+
+When $(v,s)$ is a comparison case and $A_{s}(v,k,t)\neq\varnothing$ , define the current blocking contender by
+
+$\begin{cases}b_{L}(v,k,t)\in\mathop{\rm argmax}_{u\in A_{L}(v,k,t)}U_{u}(t),&\text{if }v\text{ is a {Max} node and }s=L,\\[4.0pt] b_{U}(v,k,t)\in\mathop{\rm argmin}_{u\in A_{U}(v,k,t)}L_{u}(t),&\text{if }v\text{ is a {Min} node and }s=U.\end{cases}$
+
+Recursive descent works on this blocker and recomputes it after every unit of work. Other active children are considered when they become the blocker.
+
+2FFS maintains scale-local side-completion flags $\mathsf{Done}_{s}(v,k)\in\{0,1\}$ . These flags are initialized to $0$ when the pair $(v,k)$ is first used, and are only changed from $0$ to $1$ . When used as a predicate, $\mathsf{Done}_{s}(v,k,t)$ denotes that the flag is equal to $1$ at round $t$ . An unstored flag is interpreted as zero; storage is initialized before any assignment to it.
+
+We call $(v,s)$ a comparison case if either $v$ is a Max node with $s=L$ , or $v$ is a Min node with $s=U$ . The selector cases are $(\textsc{Min},L)$ and $(\textsc{Max},U)$ . In a comparison case, the children in $A_{s}(v,k,t)$ are exactly those that are neither endpoint-excluded nor same-side complete at scale $k$ .
+
+Among them, only the current blocker $b_{s}(v,k,t)$ is eligible for recursive comparison work. The blocker may be refined either on the parent-targeted side $s$ , which supports promotion or same-side safety, or on the opposite side $\bar{s}$ , which supports endpoint exclusion, but both calls are capped by the current parent scale $k$ . Note that no child is required to become fully complete merely because it is currently active.
+
+For each fixed scale $k$ and round $t$ , we define the predicates $\mathsf{Cert}_{s}(v,k,t)$ and $\mathsf{Comp}_{s}(v,k,t)$ upward from the leaves of the currently explored tree. The observable side certificate $\mathsf{Cert}_{s}(v,k,t)$ holds if either
+
+$U_{v}(t)-L_{v}(t)\leq\rho_{k}/2,$
+
+or
+
+$\mathrm{width}\bigl(I_{v}^{\mathrm{loc}}(t)\bigr)\leq\rho_{k}/2,$
+
+or $v$ is an expanded internal node and one of the following recursive alternatives holds:
+
+$\begin{cases}\text{for every }u\in\mathrm{Ch}(v),\ \bigl[U_{u}(t)\leq\lambda_{L}(v,t)+\rho_{k}/2\ \text{or}\ \mathsf{Comp}_{L}(u,k,t)\bigr],&\text{if }v\text{ is {Max} and }s=L,\\[4.0pt] \text{for every }u\in\mathrm{Ch}(v),\ \bigl[L_{u}(t)\geq\lambda_{U}(v,t)-\rho_{k}/2\ \text{or}\ \mathsf{Comp}_{U}(u,k,t)\bigr],&\text{if }v\text{ is {Min} and }s=U,\\[4.0pt] \mathsf{Comp}_{s}(u,k,t)\quad\text{for every }u\in A_{s}(v,k,t),&\text{if }(v,s)\text{ is a selector case}.\end{cases}$
+
+For leaves, only the first two alternatives can apply. Finally, the following are equivalent
+
+$\mathsf{Comp}_{s}(v,k,t)\quad\Longleftrightarrow\quad\mathsf{Done}_{s}(v,k,t)\ \text{ or }\ \mathsf{Cert}_{s}(v,k,t).$
+
+This joint definition of $\mathsf{Cert}$ , $\mathsf{Comp}$ , the comparison endpoints $\lambda_{s}(v,t)$ , and the lazy active sets $A_{s}(v,k,t)$ is well-founded, as the only recursive certificate reference is from a node to its children. Every evaluation at a finite scale $k$ , including evaluations inside the scale searches below, first initializes the scale storage at all exposed non-root nodes and then evaluates the predicates in bottom-up order. Whenever a true $\mathsf{Cert}_{s}(v,k,t)$ is observed, it is immediately latched by setting $\mathsf{Done}_{s}(v,k)\leftarrow 1$ . Thus a certificate observed during a scale search is retained just as one observed after an oracle update. The routine EvaluateScale (k) below implements this convention.
+
+For any explored non-root node $x$ with width $w_{x}(t)=U_{x}(t)-L_{x}(t)>0$ , let $\underline{k}(x,t)$ be the unique integer $k\geq 0$ such that
+
+$\rho_{k}/2<w_{x}(t)\leq\rho_{k}.$
+
+This integer exists: balanced depth gives $\rho_{0}=2B(D-1)$ , and every exposed node has $w_{x}(t)\leq 2B(h(x))\leq\rho_{0}$ , because its effective interval is contained in its fast interval. When $\rho_{0}=0$ , initialization already determines all root-action values and the stopping test succeeds. The node-local active scale of side $s\in\{L,U\}$ at $x$ is
+
+$K_{s}(x,t)\coloneqq\min\{k\geq\underline{k}(x,t):\ \neg\mathsf{Comp}_{s}(x,k,t)\},$
+
+with the convention $K_{s}(x,t)=+\infty$ if $w_{x}(t)=0$ or if the set is empty. Thus 2FFS never refines a side at a scale where that side is already certified; if the width-derived scale is already complete, it moves directly to the next unresolved finer scale for the same side of the same node.
+
+Finite implementation of the uncapped scale search.
+
+The convention $K_{s}=+\infty$ does not require an infinite search. Define $Z_{s}(v,t)$ by the same bottom-up formula as $\mathsf{Cert}_{s}$ , replacing the tolerance $\rho_{k}/2$ by zero and every child predicate $\mathsf{Comp}_{s^{\prime}}(u,k,t)$ by $Z_{s^{\prime}}(u,t)$ . This auxiliary evaluation ignores all $\mathsf{Done}$ flags and neither initializes nor changes storage. If $Z_{s}(x,t)$ holds, monotonicity of these formulas in their tolerance shows that $\mathsf{Comp}_{s}(x,k,t)$ holds for every finite $k$ , so the search returns $+\infty$ .
+
+Otherwise, the search has a finite upper limit. To see this, collect the strictly positive values among all current effective and local interval widths and all comparison differences $U_{u}-\lambda_{L}(v,t)$ and $\lambda_{U}(v,t)-L_{u}$ appearing in the certificate formulas. This is a finite set, and it is nonempty when $w_{x}(t)>0$ ; let $b(t)>0$ be its minimum. Let $k_{\mathrm{stored}}$ be the largest scale currently stored, or $-1$ if none is stored. Choose a finite $k_{\mathrm{test}}\geq\underline{k}(x,t)$ with $k_{\mathrm{test}}>k_{\mathrm{stored}}$ and $\rho_{k_{\mathrm{test}}}/2<b(t)$ . At this scale all initial flags are zero, and every primitive comparison has the same truth value as at zero tolerance. A bottom-up evaluation therefore gives $\mathsf{Comp}_{s}(x,k_{\mathrm{test}},t)=Z_{s}(x,t)=0$ . Evaluating the finitely many scales from $\underline{k}(x,t)$ through $k_{\mathrm{test}}$ returns the first unresolved one. Latching during this finite scan does not alter this argument, since flags at different scales are distinct. Consequently every uncapped scale search terminates after finitely many arithmetic and predicate operations.
+
+The root selection is also well-defined outside $\mathcal{E}_{\delta}$ while all intervals remain nonempty. Indeed, bottom-up induction gives
+
+$Z_{L}(v,t)\ \text{and}\ Z_{U}(v,t)\quad\Longrightarrow\quad U_{v}(t)=L_{v}(t).$
+
+If either zero-tolerance predicate uses a width alternative, this is immediate. Otherwise, suppose both predicates hold recursively but $v$ has positive width. At a Max node, choose $u\in\mathop{\rm argmax}_{x}U_{x}$ . Since $I_{v}\subseteq I_{v}^{\mathrm{ch}}$ , positive width implies $U_{u}>\max_{x}L_{x}$ . The upper selector certificate gives $Z_{U}(u,t)$ , and the lower comparison certificate then requires $Z_{L}(u,t)$ . By induction $U_{u}=L_{u}\leq\max_{x}L_{x}$ , a contradiction. The Min case is dual, using a child in $\mathop{\rm argmin}_{x}L_{x}$ . An unexpanded node has no recursive certificate, which supplies the induction base. The finite search above therefore shows that a positive-width node cannot have both $K_{L}=K_{U}=+\infty$ . Whenever the root stopping test fails, $U_{b_{t}}>L_{a_{t}}+\varepsilon\geq L_{b_{t}}$ , so the challenger has positive width and a finite contender scale. Thus the selected root obligation is finite on every path on which the algorithm has not already terminated.
+
+For a finite parent scale $k$ , define the capped unresolved scale
+
+$K_{s}^{\leq k}(x,t)\coloneqq\min\{0\leq j\leq k:\ \neg\mathsf{Comp}_{s}(x,j,t)\},$
+
+with the convention $K_{s}^{\leq k}(x,t)=+\infty$ if the set is empty.
+
+A recursive call made while resolving a parent obligation at scale $k$ may only call a child at a capped scale $K_{s^{\prime}}^{\leq k}(u,t)$ .
+
+Thus, recursive descent can refine a child at a coarser unresolved scale, but never at a scale finer than the current parent obligation.
+
+The root challenger has no parent scale to cap its obligations. Its contender side is defined as follows. If at least one of $K_{L}(u,t)$ and $K_{U}(u,t)$ is finite, set
+
+$\sigma(u,t)\in\mathop{\rm argmax}_{s\in\{L,U\}:\,K_{s}(u,t)<+\infty}\rho_{K_{s}(u,t)},$
+
+breaking ties arbitrarily, and define its contender scale by
+
+$K_{\pm}(u,t)\coloneqq K_{\sigma(u,t)}(u,t).$
+
+If both $K_{L}(u,t)$ and $K_{U}(u,t)$ are $+\infty$ , we set $\sigma(u,t)=U$ arbitrarily and $K_{\pm}(u,t)=+\infty$ . In this case, the contender has no unresolved root-side obligation.
+
+A full-contender call then uses $\textsc{Resolve}(u,\sigma(u,t),K_{\pm}(u,t)).$ For internal comparison blockers, we instead use capped side obligations. Write $\bar{L}=U$ and $\bar{U}=L$ . During $\textsc{Resolve}(v,s,k)$ , an internal blocker $b_{s}(v,k,t)$ is first called on the opposite side $\bar{s}$ at scale $K_{\bar{s}}^{\leq k}(b_{s}(v,k,t),t)$ , whenever that capped obligation is finite. This is the endpoint that appears in the exclusion inequality. Only after the blocker has no unresolved opposite-side obligation at scales $\leq k$ , while remaining active, is it called on the same side $s$ at scale $K_{s}^{\leq k}(b_{s}(v,k,t),t)$ .
+
+The same-side blocker obligation can then discharge the blocker through $\mathsf{Comp}_{s}(b_{s},k,t)$ or allow it to promote through the comparison-side endpoint. When evaluating a finite scale in $K_{s}$ or $K_{s}^{\leq k}$ , the EvaluateScale convention above initializes and latches the required scale-local flags. The fourth argument of $\textsc{Resolve}(v,s,k,B)$ is an invocation-level cost cap: the call may not perform a positive oracle action whose returned cost would exceed $B$ . We write $\textsc{Resolve}(v,s,k)$ in the analysis when the cap is irrelevant. Each actual recursive call receives the minimum of the parent obligation’s remaining recursive budget and its inherited invocation cap.
+
+Recursive descent is required to remain synchronized with the current parent obligation and its remaining recursive budget. Concretely, inside a call $\textsc{Resolve}(v,s,k,B)$ , a child call $\textsc{Resolve}(u,s^{\prime},K_{s^{\prime}}^{\leq k}(u,t),B_{\mathrm{rec}})$ is admissible only if the scale- $k$ certificate at $v$ is still unresolved at the current round, the child is selected by the current scale- $k$ rule at $v$ , and $B_{\mathrm{rec}}$ is no larger than the remaining budget $\mathsf{B}_{v,k}^{\mathrm{rec}}-M_{v,k}^{\mathrm{exp}}$ . In particular,
+
+in a comparison case, the algorithm may refine only the current blocking contender $b_{s}(v,k,t)\in A_{s}(v,k,t)$ ; the blocker is refined first on $(b_{s}(v,k,t),\bar{s},K_{\bar{s}}^{\leq k}(b_{s}(v,k,t),t))$ whenever this obligation is finite, and otherwise on $(b_{s}(v,k,t),s,K_{s}^{\leq k}(b_{s}(v,k,t),t))$ ;
+
+in a selector case, the algorithm may refine only a child $u\in A_{s}(v,k,t)$ with $\neg\mathsf{Comp}_{s}(u,k,t)$ , and it calls that child at $K_{s}^{\leq k}(u,t)$ .
+
+Every invocation of $\textsc{Resolve}(v,s,k,B)$ performs at most one positive oracle action, either a slow query or an expansion, at the current node or below it. A local query may follow a zero-cost blocked child return. After each positive action, the algorithm updates the intervals, comparison endpoints, blockers, and active child sets before descending again. Thus the coarser-scale tests that could already certify or exclude a child from the current scale- $k$ obligation are checked before that child is refined further.
+
+The implementation below is split into reusable routines. Algorithm 2 contains scale and selection utilities, Algorithm 3 contains the atomic oracle actions, Algorithm 4 is the budgeted recursive resolver, and Algorithm 5 is the short top-level driver.
+
+Algorithm 2 2FFS scale and selection utilities
+
+Algorithm 3 2FFS atomic oracle actions
+
+Algorithm 4 2FFS budgeted recursive resolver
+
+Algorithm 5 2FFS top-level driver
+
+Lazy critical children.
+
+In the selector cases, the live sets reduce to the current endpoint witness set. In the comparison cases, a child is discharged once it is endpoint-excluded by the scale- $k$ comparison margin or same-side complete at scale $k$ . Among the still-live children, only the endpoint-most blocker is eligible for recursive comparison work. This blocker is refined through capped side obligations only, so it may either become safe on the comparison side or be excluded through the opposite endpoint without being pushed to a finer scale than the parent.
+
+B.4 Proof of Theorem 3.1
+
+Proof. By Eq. ( 5 ) and the union bound in § 2 ,
+
+$\mathbb{P}(\mathcal{E}_{\delta})\geq 1-\delta.$
+
+We prove that no $\varepsilon$ -incorrect finite recommendation can occur on $\mathcal{E}_{\delta}$ . Fix an outcome in $\mathcal{E}_{\delta}$ and suppose the algorithm stops at a finite time $\tau$ . Let $\hat{a}_{\tau}$ be any returned root child. Interval validity rules out the exceptional empty-intersection exit on this outcome. Hence the ordinary stopping rule gives
+
+$L_{\hat{a}_{\tau}}(\tau)\geq\max_{a\neq\hat{a}_{\tau}}U_{a}(\tau)-\varepsilon.$
+
+Interval validity holds simultaneously at every round, so Lemma 2.4 also applies at the finite stopping time $\tau$ . For every $a\in\mathrm{Ch}(r)$ ,
+
+$L_{a}(\tau)\leq V^{*}(r,a)\leq U_{a}(\tau).$
+
+Combining validity with the stopping inequality gives
+
+$V^{*}(r,\hat{a}_{\tau})\geq L_{\hat{a}_{\tau}}(\tau)\geq\max_{a\neq\hat{a}_{\tau}}U_{a}(\tau)-\varepsilon\geq\max_{a\neq\hat{a}_{\tau}}V^{*}(r,a)-\varepsilon.$
+
+If $\hat{a}_{\tau}=a^{*}$ , then the returned action is optimal. Otherwise $a^{*}\neq\hat{a}_{\tau}$ , and the last display with $a=a^{*}$ gives
+
+$V^{*}(r,a^{*})-V^{*}(r,\hat{a}_{\tau})\leq\varepsilon.$
+
+Thus, every finite recommendation on $\mathcal{E}_{\delta}$ is $\varepsilon$ -optimal, and the error event in the theorem is contained in $\mathcal{E}_{\delta}^{c}$ , whose probability is at most $\delta$ . $\Box$
+
+B.5 Derived Lemmas for the General-Depth Bound
+
+We first establish soundness of the side certificates and then show that recursive calls remain at scales compatible with the effective gaps. These facts will support the cost bound in Theorem 3.6 . Throughout, we work on the simultaneous-validity event $\mathcal{E}_{\delta}$ , set $\varepsilon=0$ , and use Assumption 3.3 only in the aggregate summation and charging steps. All dyadic statements below concern $\rho_{0}>0$ . If $\rho_{0}=0$ , then $B(D-1)=0$ and monotonicity of $B$ gives $B(h(v))=0$ for every non-root node. Initialization already identifies the optimal root action, and every $\Gamma_{v}(\Delta_{v}^{\mathrm{eff}},\delta_{v})$ and $J_{v}^{*}$ is zero. Hence $C_{\tau}=H(\boldsymbol{\delta})=|\mathrm{Ch}(r)|$ , without evaluating any dyadic cost at zero precision or requiring dyadic regularity.
+
+The certificates control one endpoint at a time. We use the following notion of safety to express that control.
+
+Fix a scale index $k\geq 0$ , a round $t$ , an explored non-root node $v$ , and a side $s\in\{L,U\}$ . We say that $v$ is $(s,k)$ -safe at round $t$ if
+
+$\begin{cases}V^{*}(v)-L_{v}(t)\leq\rho_{k}/2,&\text{if }s=L,\\[4.0pt] U_{v}(t)-V^{*}(v)\leq\rho_{k}/2,&\text{if }s=U.\end{cases}$
+
+On $\mathcal{E}_{\delta}$ , both one-sided errors in Definition B.1 are nonnegative by Lemma 2.4 . Moreover, if
+
+$U_{v}(t)-L_{v}(t)\leq\rho_{k}/2,$
+
+then $v$ is both $(L,k)$ -safe and $(U,k)$ -safe.
+
+For every node $v$ whose effective interval is defined at round $t$ including the root, the effective intervals are nested over time: if $t^{\prime}\geq t$ , then
+
+$I_{v}(t^{\prime})\subseteq I_{v}(t).$
+
+Equivalently, $L_{v}(t^{\prime})\geq L_{v}(t)$ and $U_{v}(t^{\prime})\leq U_{v}(t)$ . The same nesting holds for $I_{v}^{\mathrm{loc}}(t)$ whenever $v\neq r$ is exposed by round $t$ .
+
+Proof. We check the local intervals first, then propagate nesting up the explored tree. At an exposed non-root node, the fast interval is fixed, while the running intersection in Eq. ( 4 ) can only shrink as slow samples arrive. Therefore $I_{v}^{\mathrm{loc}}(t)=I_{v}^{F}\cap I_{v}^{S}(t)$ is nested.
+
+For the child backups, both minimax operators preserve the required endpoint monotonicity. At a Max node, the lower endpoint $\max_{u}L_{u}(t)$ is nondecreasing and the upper endpoint $\max_{u}U_{u}(t)$ is nonincreasing whenever every child interval is nested.
+
+At a Min node, the corresponding endpoints are $\min_{u}L_{u}(t)$ and $\min_{u}U_{u}(t)$ , with the same monotonicity. Induction from the leaves of the explored tree therefore shows that $I_{v}^{\mathrm{ch}}(t)$ is nested after expansion. Before expansion it is $(-\infty,+\infty)$ , so the first expansion preserves nesting as well. Intersecting the local and child-backup intervals proves the claim for $I_{v}(t)$ at every non-root node. At the root, the effective interval is the child backup itself. $\Box$
+
+Interval nesting preserves an endpoint-accuracy guarantee once established. We now verify that the side certificates provide such a guarantee.
+
+Fix a round $t$ , a scale index $k\geq 0$ , an explored non-root node $v$ , and a side $s\in\{L,U\}$ . On $\mathcal{E}_{\delta}$ , if $\mathsf{Comp}_{s}(v,k,t)$ holds, then $v$ is $(s,k)$ -safe at round $t$ .
+
+Proof. We induct on the remaining depth $h(v)$ , with the induction claim uniform over all rounds, scales, and sides: whenever $\mathsf{Comp}_{s}(v,k,t)$ holds, $v$ is $(s,k)$ -safe at round $t$ . Fix $v$ and assume the claim for every child of $v$ . We first verify the current certificate $\mathsf{Cert}_{s}(v,k,t)$ , then use interval nesting to handle certificates latched at an earlier round.
+
+If
+
+$U_{v}(t)-L_{v}(t)\leq\rho_{k}/2,$
+
+then Lemma 2.4 gives $V^{*}(v)\in[L_{v}(t),U_{v}(t)]$ , so both one-sided errors are at most $\rho_{k}/2$ .
+
+If
+
+$\mathrm{width}\bigl(I_{v}^{\mathrm{loc}}(t)\bigr)\leq\rho_{k}/2,$
+
+then $I_{v}(t)\subseteq I_{v}^{\mathrm{loc}}(t)$ , while interval validity places $V^{*}(v)$ in $I_{v}(t)$ . Thus this alternative also bounds both one-sided errors by $\rho_{k}/2$ .
+
+It remains to consider $\mathsf{Cert}_{s}(v,k,t)$ obtained through the recursive alternative. The selector cases use an endpoint witness; the comparison cases require a bound for every child.
+
+Min node, $s=L$ . The selector set is
+
+$A_{L}(v,k,t)=\arg\min_{u\in\mathrm{Ch}(v)}L_{u}(t),$
+
+which is nonempty. The recursive certificate requires every $u\in A_{L}(v,k,t)$ to satisfy $\mathsf{Comp}_{L}(u,k,t)$ ; the induction hypothesis therefore makes each such child $(L,k)$ -safe. Choose any $x\in A_{L}(v,k,t)$ . Its endpoint is the selector minimum, and the parent value is no larger than its value:
+
+$L_{x}(t)=\min_{u\in\mathrm{Ch}(v)}L_{u}(t)\qquad\text{and}\qquad V^{*}(v)=\min_{u\in\mathrm{Ch}(v)}V^{*}(u)\leq V^{*}(x),$
+
+and containment $I_{v}(t)\subseteq I_{v}^{\mathrm{ch}}(t)$ gives
+
+$L_{v}(t)\geq\min_{u\in\mathrm{Ch}(v)}L_{u}(t)=L_{x}(t),$
+
+so the selected child’s safety yields
+
+$V^{*}(v)-L_{v}(t)\leq V^{*}(x)-L_{x}(t)\leq\rho_{k}/2.$
+
+Max node, $s=U$ . The selector set is
+
+$A_{U}(v,k,t)=\arg\max_{u\in\mathrm{Ch}(v)}U_{u}(t),$
+
+which is again nonempty. Every $u\in A_{U}(v,k,t)$ satisfies $\mathsf{Comp}_{U}(u,k,t)$ and is therefore $(U,k)$ -safe by the induction hypothesis. Choose any $x\in A_{U}(v,k,t)$ . The selector maximum and the minimax definition give
+
+$U_{x}(t)=\max_{u\in\mathrm{Ch}(v)}U_{u}(t)\qquad\text{and}\qquad V^{*}(v)=\max_{u\in\mathrm{Ch}(v)}V^{*}(u)\geq V^{*}(x),$
+
+and containment $I_{v}(t)\subseteq I_{v}^{\mathrm{ch}}(t)$ gives
+
+$U_{v}(t)\leq\max_{u\in\mathrm{Ch}(v)}U_{u}(t)=U_{x}(t),$
+
+so the selected child’s safety yields
+
+$U_{v}(t)-V^{*}(v)\leq U_{x}(t)-V^{*}(x)\leq\rho_{k}/2.$
+
+Max node, $s=L$ . Let $\lambda\coloneqq\lambda_{L}(v,t)=\max_{w\in\mathrm{Ch}(v)}L_{w}(t)$ . Fix any child $u\in\mathrm{Ch}(v)$ . If it is endpoint-excluded, then
+
+$V^{*}(u)\leq U_{u}(t)\leq\lambda+\rho_{k}/2.$
+
+If the child is not endpoint-excluded, the certificate requires $\mathsf{Comp}_{L}(u,k,t)$ . The induction hypothesis then gives
+
+$V^{*}(u)\leq L_{u}(t)+\rho_{k}/2\leq\lambda+\rho_{k}/2.$
+
+Taking the minimax backup over these child bounds gives
+
+$V^{*}(v)=\max_{u\in\mathrm{Ch}(v)}V^{*}(u)\leq\lambda+\rho_{k}/2.$
+
+Since $I_{v}(t)\subseteq I_{v}^{\mathrm{ch}}(t)$ and $\lambda=\max_{u}L_{u}(t)$ ,
+
+$L_{v}(t)\geq\max_{u\in\mathrm{Ch}(v)}L_{u}(t)=\lambda.$
+
+Combining the last two bounds yields
+
+$V^{*}(v)-L_{v}(t)\leq\rho_{k}/2.$
+
+Min node, $s=U$ . We now bound every child from below. Let $\lambda\coloneqq\lambda_{U}(v,t)=\min_{w\in\mathrm{Ch}(v)}U_{w}(t)$ . Fix any child $u\in\mathrm{Ch}(v)$ . If it is endpoint-excluded, then
+
+$V^{*}(u)\geq L_{u}(t)\geq\lambda-\rho_{k}/2.$
+
+If the child is not endpoint-excluded, the certificate requires $\mathsf{Comp}_{U}(u,k,t)$ , so the induction hypothesis gives
+
+$V^{*}(u)\geq U_{u}(t)-\rho_{k}/2\geq\lambda-\rho_{k}/2.$
+
+Taking the minimax backup over these child bounds gives
+
+$V^{*}(v)=\min_{u\in\mathrm{Ch}(v)}V^{*}(u)\geq\lambda-\rho_{k}/2.$
+
+Since $I_{v}(t)\subseteq I_{v}^{\mathrm{ch}}(t)$ and $\lambda=\min_{u}U_{u}(t)$ ,
+
+$U_{v}(t)\leq\min_{u\in\mathrm{Ch}(v)}U_{u}(t)=\lambda.$
+
+Combining the last two bounds yields
+
+$U_{v}(t)-V^{*}(v)\leq\rho_{k}/2.$
+
+This establishes soundness of $\mathsf{Cert}_{s}(v,k,t)$ , including the leaf case, where only the width alternatives apply.
+
+We next check that latching preserves this guarantee. Suppose $\mathsf{Done}_{s}(v,k,t)=1$ , and let $t_{0}\leq t$ be the first round at which the flag changed from $0$ to $1$ . If it was set by a bottom-up certificate evaluation, during either a scale search or a post-update sweep, then $\mathsf{Cert}_{s}(v,k,t_{0})$ held by the update rule. Otherwise it was set by the first branch of $\textsc{Resolve}(v,s,k)$ . In this case, the flag was still zero before the assignment, so the branch condition $\mathsf{Comp}_{s}(v,k,t_{0})$ could only hold through $\mathsf{Cert}_{s}(v,k,t_{0})$ . Hence either way, $\mathsf{Cert}_{s}(v,k,t_{0})$ holds.
+
+The certificate argument above applies at the earlier round $t_{0}$ , so $v$ was $(s,k)$ -safe at round $t_{0}$ . If $s=L$ , Lemma B.2 gives $L_{v}(t)\geq L_{v}(t_{0})$ , and therefore
+
+$V^{*}(v)-L_{v}(t)\leq V^{*}(v)-L_{v}(t_{0})\leq\rho_{k}/2.$
+
+If $s=U$ , then $U_{v}(t)\leq U_{v}(t_{0})$ , and thus
+
+$U_{v}(t)-V^{*}(v)\leq U_{v}(t_{0})-V^{*}(v)\leq\rho_{k}/2.$
+
+Thus a latched side remains safe. Since $\mathsf{Comp}_{s}(v,k,t)$ is the disjunction of $\mathsf{Cert}_{s}(v,k,t)$ and $\mathsf{Done}_{s}(v,k,t)$ , the lemma follows. $\Box$
+
+We next verify that an unresolved parent always leaves a child obligation at a scale no finer than its own. This ensures that the recursive selection rule is defined.
+
+Fix a round $t$ , a finite scale $k\geq 0$ , an expanded internal node $v$ , and a side $s\in\{L,U\}$ . If $\neg\mathsf{Comp}_{s}(v,k,t)$ , then the current scale- $k$ recursive rule has at least one finite capped child obligation whenever recursive work is attempted, i.e.,
+
+if $(v,s)$ is a selector case, then there exists $u\in A_{s}(v,k,t)$ such that
+
+$\neg\mathsf{Comp}_{s}(u,k,t)\qquad\text{and}\qquad K_{s}^{\leq k}(u,t)<+\infty;$
+
+if $(v,s)$ is a comparison case, then $A_{s}(v,k,t)\neq\varnothing$ ; for $b=b_{s}(v,k,t)$ ,
+
+$K_{\bar{s}}^{\leq k}(b,t)<+\infty\qquad\text{or}\qquad K_{s}^{\leq k}(b,t)<+\infty.$
+
+Thus, when the budget permits, both the comparison and selector recursive branches have an admissible capped child whenever the parent side predicate $\mathsf{Comp}_{s}(v,k,t)$ is false.
+
+Proof. We show that failure of the parent certificate leaves an unresolved child within the permitted range of scales. Since $\mathsf{Comp}_{s}$ includes $\mathsf{Cert}_{s}$ , $\neg\mathsf{Comp}_{s}(v,k,t)$ implies $\neg\mathsf{Cert}_{s}(v,k,t)$ .
+
+Suppose first that $(v,s)$ is a selector case. If every child $u\in A_{s}(v,k,t)$ satisfied $\mathsf{Comp}_{s}(u,k,t)$ , then the recursive selector alternative in the definition of $\mathsf{Cert}_{s}(v,k,t)$ would hold, contradicting $\neg\mathsf{Cert}_{s}(v,k,t)$ . Thus there is a child $u\in A_{s}(v,k,t)$ with $\neg\mathsf{Comp}_{s}(u,k,t)$ . Since the capped set defining $K_{s}^{\leq k}(u,t)$ contains the index $k$ , this implies
+
+$K_{s}^{\leq k}(u,t)<+\infty.$
+
+Now suppose $(v,s)$ is a comparison case. We first check that the active set is nonempty. If $A_{s}(v,k,t)=\varnothing$ , then every child is discharged at scale $k$ : in the Max , $L$ , case every child $u$ satisfies
+
+$U_{u}(t)\leq\lambda_{L}(v,t)+\rho_{k}/2\qquad\text{or}\qquad\mathsf{Comp}_{L}(u,k,t),$
+
+and in the Min , $U$ , case every child $u$ satisfies
+
+$L_{u}(t)\geq\lambda_{U}(v,t)-\rho_{k}/2\qquad\text{or}\qquad\mathsf{Comp}_{U}(u,k,t).$
+
+These are the recursive discharge conditions for $\mathsf{Cert}_{s}(v,k,t)$ , contradicting $\neg\mathsf{Cert}_{s}(v,k,t)$ . Hence $A_{s}(v,k,t)\neq\varnothing$ .
+
+Let $b=b_{s}(v,k,t)$ be the selected blocker. Its membership $b\in A_{s}(v,k,t)$ gives
+
+$\neg\mathsf{Comp}_{s}(b,k,t).$
+
+Thus the set defining $K_{s}^{\leq k}(b,t)$ contains $k$ , and consequently
+
+$K_{s}^{\leq k}(b,t)<+\infty.$
+
+If $K_{\bar{s}}^{\leq k}(b,t)<+\infty$ , the algorithm refines that exclusion side. If $K_{\bar{s}}^{\leq k}(b,t)=+\infty$ , the finite same-side obligation is available instead. In either case, the comparison rule has an admissible child while $\mathsf{Comp}_{s}(v,k,t)$ is false. $\Box$
+
+The latching rule also prevents an obligation from incurring work after it has been certified.
+
+Fix a finite scale $k$ , an explored non-root node $v$ , and a side $s\in\{L,U\}$ . If $\textsc{Resolve}(v,s,k)$ begins at round $t$ with $\mathsf{Comp}_{s}(v,k,t)$ , then it sets $\mathsf{Done}_{s}(v,k)\leftarrow 1$ and returns $(0,\mathsf{cert})$ before issuing any oracle query, expanding any node, making any child call, or increasing any work counter. Consequently, once $\mathsf{Done}_{s}(v,k)=1$ , the node remains $(s,k)$ -safe on $\mathcal{E}_{\delta}$ , and every later invocation of $\textsc{Resolve}(v,s,k)$ returns zero before doing positive work.
+
+Proof. After initializing any unused scale-local storage, $\textsc{Resolve}(v,s,k)$ first tests $\mathsf{Comp}_{s}(v,k,t)$ . If this predicate holds, the procedure latches $\mathsf{Done}_{s}(v,k)$ and immediately returns $(0,\mathsf{cert})$ . The procedure reaches every oracle query, expansion, child call, and counter increment only after this guard fails.
+
+Each flag $\mathsf{Done}_{s}(v,k)$ is initialized to $0$ and can change only from $0$ to $1$ . Once latched, $\mathsf{Comp}_{s}(v,k,t^{\prime})$ holds at every later round $t^{\prime}$ by definition. Lemma B.3 then gives $(s,k)$ -safety on $\mathcal{E}_{\delta}$ at every such $t^{\prime}$ . The initial guard at round $t^{\prime}$ therefore returns before any positive work, regardless of subsequent changes to the comparison endpoint, blocker, or active set. $\Box$
+
+We next convert the first unresolved scale into an endpoint-error bound. The capped form applies to recursive child selection.
+
+Assume $\mathcal{E}_{\delta}$ . Fix a finite parent cap $\kappa$ , a round $t$ , an explored non-root node $x$ , and a side $s\in\{L,U\}$ . If
+
+$j=K_{s}^{\leq\kappa}(x,t)<+\infty,$
+
+then
+
+$\begin{cases}V^{*}(x)-L_{x}(t)\leq\rho_{j},&s=L,\\[3.0pt] U_{x}(t)-V^{*}(x)\leq\rho_{j},&s=U.\end{cases}$
+
+If $K_{s}^{\leq\kappa}(x,t)=+\infty$ , then $\mathsf{Comp}_{s}(x,\kappa,t)$ holds, and therefore
+
+$\begin{cases}V^{*}(x)-L_{x}(t)\leq\rho_{\kappa}/2,&s=L,\\[3.0pt] U_{x}(t)-V^{*}(x)\leq\rho_{\kappa}/2,&s=U.\end{cases}$
+
+Proof. If $K_{s}^{\leq\kappa}(x,t)=+\infty$ , the capped set contains no unresolved scale: every index $0\leq i\leq\kappa$ is complete on side $s$ , in particular $i=\kappa$ . Lemma B.3 , applied at the cap, proves the bound.
+
+Now let $j=K_{s}^{\leq\kappa}(x,t)<+\infty$ . If $U_{x}(t)=L_{x}(t)$ , interval validity gives zero error. Otherwise, let $\ell=\underline{k}(x,t)$ . We first show $j\geq\ell$ , which places the selected scale within the range controlled by the current width. If $j<\ell$ , then the dyadic definition of $\ell$ gives
+
+$U_{x}(t)-L_{x}(t)\leq\rho_{\ell}\leq\rho_{j}/2,$
+
+using $\rho_{i+1}=\rho_{i}/2$ . The width alternative in $\mathsf{Cert}_{s}(x,j,t)$ would hold, contradicting the defining property $\neg\mathsf{Comp}_{s}(x,j,t)$ of $j$ .
+
+If $j=\ell$ , the width itself controls either endpoint error, since
+
+$U_{x}(t)-L_{x}(t)\leq\rho_{\ell}=\rho_{j}.$
+
+If $j>\ell$ , then $j-1\geq 0$ . Also $j\leq\kappa$ , because $j$ belongs to the capped set, so $j-1\leq\kappa$ . The minimality of $j$ therefore gives $\mathsf{Comp}_{s}(x,j-1,t)$ . Lemma B.3 bounds the endpoint error by
+
+$\rho_{j-1}/2=\rho_{j}.$
+
+These two cases prove the finite- $j$ claim for either side. $\Box$
+
+We can now bound the value gap across a selected edge. The argument uses only the current selection rule, so it also covers a child call blocked by its inherited budget.
+
+Assume $\mathcal{E}_{\delta}$ . Fix a round $t$ , an expanded internal node $v$ , a side $s$ , and a finite scale $k$ such that $\neg\mathsf{Comp}_{s}(v,k,t)$ . Let $(u,s_{u},k_{u})$ be the output of $\textsc{ChildObligation}(v,s,k)$ evaluated at this state. Then $k_{u}<+\infty$ , $k_{u}\leq k$ , and
+
+$|V^{*}(u)-V^{*}(v)|\leq\rho_{k_{u}}.$
+
+Proof. We relate the child’s value gap to the endpoint that caused its selection. Lemma B.4 first ensures that the selected obligation is finite. The rule uses the capped scale $k_{u}=K_{s_{u}}^{\leq k}(u,t)$ , whether or not the available budget permits an actual call. Thus $k_{u}\leq k$ ; the dyadic relation $\rho_{i+1}=\rho_{i}/2$ then gives $\rho_{k}\leq\rho_{k_{u}}$ . Write $\bar{\rho}=\rho_{k}$ and $\rho=\rho_{k_{u}}$ .
+
+Selector cases. If $v$ is a Min node and $s=L$ , then $u\in\arg\min_{x}L_{x}(t)$ . Let $w$ be a child attaining $V^{*}(v)=\min_{x}V^{*}(x)$ . The selected lower endpoint is accurate by Lemma B.6 :
+
+$V^{*}(u)-L_{u}(t)\leq\rho.$
+
+The selector ordering gives $L_{u}(t)\leq L_{w}(t)\leq V^{*}(w)=V^{*}(v)$ . Together with $V^{*}(u)\geq V^{*}(v)$ , this places the value gap inside the endpoint error:
+
+$|V^{*}(u)-V^{*}(v)|=V^{*}(u)-V^{*}(v)\leq V^{*}(u)-L_{u}(t)\leq\rho.$
+
+For the Max , $s=U$ , selector case, the same argument uses the upper endpoints. Now $u\in\arg\max_{x}U_{x}(t)$ , so a child $w$ attaining $V^{*}(v)=\max_{x}V^{*}(x)$ satisfies
+
+$U_{u}(t)\geq U_{w}(t)\geq V^{*}(w)=V^{*}(v).$
+
+Lemma B.6 gives $U_{u}(t)-V^{*}(u)\leq\rho$ , and since $V^{*}(u)\leq V^{*}(v)$ ,
+
+$|V^{*}(u)-V^{*}(v)|=V^{*}(v)-V^{*}(u)\leq U_{u}(t)-V^{*}(u)\leq\rho.$
+
+Comparison at a Max node. Suppose $v$ is Max and $s=L$ . Since $\mathsf{Comp}_{L}(v,k,t)$ is false, Lemma B.4 gives $A_{L}(v,k,t)\neq\varnothing$ . Let $\lambda=\lambda_{L}(v,t)$ and $b=b_{L}(v,k,t)$ , so the selected child is $u=b$ . We first establish $V^{*}(v)\leq U_{b}(t)$ by bounding every child value. For a child $x$ with $x\in A_{L}(v,k,t)$ , the definition of $b$ gives
+
+$V^{*}(x)\leq U_{x}(t)\leq U_{b}(t).$
+
+If $x\notin A_{L}(v,k,t)$ , then either
+
+$U_{x}(t)\leq\lambda+\bar{\rho}/2,$
+
+or $\mathsf{Comp}_{L}(x,k,t)$ . In the latter case, Lemma B.3 gives
+
+$V^{*}(x)\leq L_{x}(t)+\bar{\rho}/2\leq\lambda+\bar{\rho}/2.$
+
+Membership $b\in A_{L}(v,k,t)$ gives $U_{b}(t)>\lambda+\bar{\rho}/2$ . The bounds for active and inactive children are therefore both at most $U_{b}(t)$ , proving $V^{*}(v)\leq U_{b}(t)$ . Since $v$ is Max , we also have $V^{*}(b)\leq V^{*}(v)$ . It remains to control the blocker’s upper-endpoint error.
+
+When the selected side is $U$ at $b$ , Lemma B.6 gives
+
+$U_{b}(t)-V^{*}(b)\leq\rho,$
+
+and the value ordering just proved yields
+
+$|V^{*}(b)-V^{*}(v)|=V^{*}(v)-V^{*}(b)\leq U_{b}(t)-V^{*}(b)\leq\rho.$
+
+If the rule instead selects side $L$ at $b$ , the opposite side has no unresolved capped scale:
+
+$K_{U}^{\leq k}(b,t)=+\infty.$
+
+Lemma B.6 therefore gives
+
+$U_{b}(t)-V^{*}(b)\leq\bar{\rho}/2\leq\rho,$
+
+which, substituted into the preceding gap inequality, again gives $|V^{*}(b)-V^{*}(v)|\leq\rho$ .
+
+Comparison at a Min node. For $v$ Min and $s=U$ , we bound every child value from below by the blocker’s lower endpoint. Lemma B.4 gives $A_{U}(v,k,t)\neq\varnothing$ . Let $\lambda=\lambda_{U}(v,t)$ and $b=b_{U}(v,k,t)$ . An active child $x\in A_{U}(v,k,t)$ satisfies, by the definition of $b$ ,
+
+$V^{*}(x)\geq L_{x}(t)\geq L_{b}(t).$
+
+For $x\notin A_{U}(v,k,t)$ , either
+
+$L_{x}(t)\geq\lambda-\bar{\rho}/2,$
+
+or $\mathsf{Comp}_{U}(x,k,t)$ , in which case
+
+$V^{*}(x)\geq U_{x}(t)-\bar{\rho}/2\geq\lambda-\bar{\rho}/2$
+
+by Lemma B.3 . Since $b\in A_{U}(v,k,t)$ , we have
+
+$L_{b}(t)<\lambda-\bar{\rho}/2.$
+
+The active and inactive child bounds are therefore both at least $L_{b}(t)$ , which proves $V^{*}(v)\geq L_{b}(t)$ . Since $v$ is Min , we also have $V^{*}(b)\geq V^{*}(v)$ . We now control the blocker’s lower-endpoint error.
+
+When the selected side is $L$ at $b$ , Lemma B.6 gives
+
+$V^{*}(b)-L_{b}(t)\leq\rho,$
+
+and the value ordering above yields
+
+$|V^{*}(b)-V^{*}(v)|=V^{*}(b)-V^{*}(v)\leq V^{*}(b)-L_{b}(t)\leq\rho.$
+
+If the rule instead selects side $U$ at $b$ , the opposite side is complete throughout the capped range:
+
+$K_{L}^{\leq k}(b,t)=+\infty,$
+
+and Lemma B.6 gives
+
+$V^{*}(b)-L_{b}(t)\leq\bar{\rho}/2\leq\rho.$
+
+Substitution into the gap inequality gives $|V^{*}(b)-V^{*}(v)|\leq\rho$ , completing the comparison case. $\Box$
+
+At the root, scale selection has no parent cap. The same endpoint argument applies to the uncapped active scale.
+
+Assume $\mathcal{E}_{\delta}$ . Fix a round $t$ , an explored non-root node $x$ , and a side $s\in\{L,U\}$ . If
+
+$k=K_{s}(x,t)<+\infty,$
+
+then
+
+$\begin{cases}V^{*}(x)-L_{x}(t)\leq\rho_{k},&s=L,\\[3.0pt] U_{x}(t)-V^{*}(x)\leq\rho_{k},&s=U.\end{cases}$
+
+If $K_{s}(x,t)=+\infty$ , then the corresponding one-sided error is zero.
+
+Proof. If $K_{s}(x,t)=+\infty$ because $U_{x}(t)=L_{x}(t)$ , both errors are zero by interval validity. We may therefore assume positive width and write $\ell=\underline{k}(x,t)$ .
+
+For $k=K_{s}(x,t)<+\infty$ , the definition gives $k\geq\ell$ . If $k=\ell$ , the width bound defining $\ell$ is
+
+$U_{x}(t)-L_{x}(t)\leq\rho_{\ell}=\rho_{k},$
+
+which controls either endpoint error by interval validity. If $k>\ell$ , the minimality of $k$ in the definition of $K_{s}(x,t)$ gives $\mathsf{Comp}_{s}(x,k-1,t)$ . Certificate soundness at this preceding scale bounds the required error by
+
+$\rho_{k-1}/2=\rho_{k}.$
+
+Finally, suppose $K_{s}(x,t)=+\infty$ while the width is positive. Then $\mathsf{Comp}_{s}(x,i,t)$ holds at every $i\geq\ell$ . Lemma B.3 bounds the same endpoint error by $\rho_{i}/2$ for all $i\geq\ell$ . Letting $i\to\infty$ and using $\rho_{i}\downarrow 0$ proves that this error is zero. $\Box$
+
+The root rule compares the leader with a full contender. Its choice of the coarser unresolved scale controls the endpoint errors needed to bound the selected action’s effective gap.
+
+Assume $\mathcal{E}_{\delta}$ and $\varepsilon=0$ . Consider an outer-loop round $t$ , and let $x\in\mathrm{Ch}(r)$ be the root child selected by Algorithm 1 , with selected side $s$ and finite active scale $k<+\infty$ . Then
+
+$\Delta_{x}^{\mathrm{eff}}\leq 2\rho_{k}.$
+
+Proof. We combine the endpoint bounds at the selected scale with the overlap that prevents root stopping. Let
+
+$a\in\mathop{\rm argmax}_{y\in\mathrm{Ch}(r)}L_{y}(t),\qquad b\in\mathop{\rm argmax}_{y\in\mathrm{Ch}(r)\setminus\{a\}}U_{y}(t)$
+
+be the current leader and challenger. The failed stopping test and $\varepsilon=0$ give
+
+$L_{a}(t)<U_{b}(t).$
+
+For any root child $y$ , Definition 2.4 gives
+
+$\Delta_{y}^{\mathrm{eff}}=\max\{\Delta_{*},\,V^{*}(r,a^{*})-V^{*}(r,y)\}.$
+
+Thus $\Delta_{a^{*}}^{\mathrm{eff}}=\Delta_{*}$ , while for every nonoptimal root child $y\neq a^{*}$ ,
+
+$\Delta_{y}^{\mathrm{eff}}=V^{*}(r,a^{*})-V^{*}(r,y),$
+
+because $V^{*}(r,a^{*})-V^{*}(r,y)\geq\Delta_{*}$ .
+
+The leader is selected. If the selected child is $a$ , then $k=K_{L}(a,t)$ , and Lemma B.8 gives
+
+$V^{*}(r,a)-L_{a}(t)\leq\rho_{k}.$
+
+The root selection rule also controls both endpoints of the challenger. Its full-contender scale $k_{b}$ is either $+\infty$ , in which case both $K_{L}(b,t)$ and $K_{U}(b,t)$ are $+\infty$ , or it is finite with $\rho_{k_{b}}\leq\rho_{k}$ . In the latter case, the contender-side definition gives, for each $s^{\prime}\in\{L,U\}$ , either $K_{s^{\prime}}(b,t)=+\infty$ or $\rho_{K_{s^{\prime}}(b,t)}\leq\rho_{k_{b}}\leq\rho_{k}$ . Lemma B.8 therefore yields
+
+$V^{*}(r,b)-L_{b}(t)\leq\rho_{k},\qquad U_{b}(t)-V^{*}(r,b)\leq\rho_{k}.$
+
+If $a=a^{*}$ , then $\Delta_{a}^{\mathrm{eff}}=\Delta_{*}$ . Since $b$ is a competitor, the failed stopping test and the endpoint bounds give
+
+$\Delta_{*}\leq V^{*}(r,a)-V^{*}(r,b)<\bigl(V^{*}(r,a)-L_{a}(t)\bigr)+\bigl(U_{b}(t)-V^{*}(r,b)\bigr)\leq 2\rho_{k}.$
+
+If $a\neq a^{*}$ , then $a^{*}\neq a$ , so $U_{b}(t)\geq U_{a^{*}}(t)\geq V^{*}(r,a^{*})$ . The leader ordering gives $L_{a}(t)\geq L_{b}(t)$ , while the challenger bounds give $L_{b}(t)\geq V^{*}(r,b)-\rho_{k}$ and $U_{b}(t)\leq V^{*}(r,b)+\rho_{k}$ . Combining these inequalities yields
+
+$\Delta_{a}^{\mathrm{eff}}=V^{*}(r,a^{*})-V^{*}(r,a)\leq U_{b}(t)-L_{a}(t)\leq U_{b}(t)-L_{b}(t)\leq 2\rho_{k}.$
+
+The challenger is selected. Now suppose the selected child is $b$ , with finite full-contender scale $k$ . For each $s^{\prime}\in\{L,U\}$ , either $K_{s^{\prime}}(b,t)=+\infty$ or $\rho_{K_{s^{\prime}}(b,t)}\leq\rho_{k}$ , by the contender-side definition. Lemma B.8 therefore bounds both endpoint errors of $b$ by $\rho_{k}$ :
+
+$V^{*}(r,b)-L_{b}(t)\leq\rho_{k},\qquad U_{b}(t)-V^{*}(r,b)\leq\rho_{k}.$
+
+For the leader $a$ , either $K_{L}(a,t)=+\infty$ , in which case the lower error is zero, or the algorithm’s choice of the challenger implies $\rho_{K_{L}(a,t)}\leq\rho_{k}$ . Hence
+
+$V^{*}(r,a)-L_{a}(t)\leq\rho_{k}.$
+
+If $b=a^{*}$ , then $a$ is a competitor. The leader ordering bounds their value gap by the challenger’s lower-endpoint error:
+
+$\Delta_{b}^{\mathrm{eff}}=\Delta_{*}\leq V^{*}(r,b)-V^{*}(r,a)\leq V^{*}(r,b)-L_{b}(t)\leq\rho_{k},$
+
+where we used $L_{a}(t)\geq L_{b}(t)$ and $L_{a}(t)\leq V^{*}(r,a)$ . If $b\neq a^{*}$ and $a=a^{*}$ , then the failed stop test gives
+
+$\Delta_{b}^{\mathrm{eff}}=V^{*}(r,a)-V^{*}(r,b)<\bigl(V^{*}(r,a)-L_{a}(t)\bigr)+\bigl(U_{b}(t)-V^{*}(r,b)\bigr)\leq 2\rho_{k}.$
+
+In the remaining case, $b\neq a^{*}$ and $a\neq a^{*}$ . Since $a^{*}\neq a$ , the challenger choice $b$ gives
+
+$V^{*}(r,a^{*})\leq U_{a^{*}}(t)\leq U_{b}(t)\leq V^{*}(r,b)+\rho_{k}.$
+
+The gap is therefore bounded by the challenger’s upper-endpoint error:
+
+$\Delta_{b}^{\mathrm{eff}}=V^{*}(r,a^{*})-V^{*}(r,b)\leq\rho_{k}.$
+
+This covers every choice of the selected root child. $\Box$
+
+The root bound and the one-step bound combine without a loss at each depth, because capped descent never decreases the target tolerance.
+
+Assume $\mathcal{E}_{\delta}$ and $\varepsilon=0$ . Consider any invocation $\textsc{Resolve}(v,s,k)$ with finite scale $k$ made by Algorithm 1 during an outer-loop iteration. Let $m$ be the number of recursive edges from the initially selected root child in that outer-loop iteration to $v$ . Then $m\leq D$ and
+
+$\Delta_{v}^{\mathrm{eff}}\leq C_{\mathrm{act}}(D)\rho_{k},\qquad C_{\mathrm{act}}(D)=2.$
+
+Equivalently, every active finite-scale call satisfies
+
+$\Delta_{v}^{\mathrm{eff}}\leq 2\rho_{k}.$
+
+Proof. We propagate the root bound along the call chain. Fix one outer-loop iteration and let
+
+$x_{0},x_{1},\ldots,x_{m}=v$
+
+be the chain from the selected root child to the current invocation, with sides and finite scales
+
+$(s_{0},k_{0}),(s_{1},k_{1}),\ldots,(s_{m},k_{m})=(s,k).$
+
+Each $x_{i}$ , for $i\geq 1$ , is a child of $x_{i-1}$ , so the tree depth bounds the chain length: $m\leq D$ .
+
+Let $t_{0}$ be the outer-loop round at which $x_{0}$ was selected. For $i\geq 1$ , let $t_{i}$ be the round, within the same nested execution, at which the call $\textsc{Resolve}(x_{i-1},s_{i-1},k_{i-1})$ calls $\textsc{Resolve}(x_{i},s_{i},k_{i})$ . Each localization lemma is applied to the intervals and active set at its own call time. The true values and effective gaps remain fixed along the chain.
+
+At round $t_{0}$ , Lemma B.9 gives
+
+$\Delta_{x_{0}}^{\mathrm{eff}}\leq 2\rho_{k_{0}}.$
+
+For each $i\geq 1$ , apply Lemma B.7 at round $t_{i}$ to the call from $x_{i-1}$ to $x_{i}$ . This gives
+
+$k_{i}\leq k_{i-1}\qquad\text{and}\qquad|V^{*}(x_{i})-V^{*}(x_{i-1})|\leq\rho_{k_{i}}.$
+
+The cap is essential here: by $\rho_{j+1}=\rho_{j}/2$ , the child tolerance is at least the parent tolerance,
+
+$\rho_{k_{i-1}}\leq\rho_{k_{i}}.$
+
+These two bounds let us carry the same constant through the maximum in the effective-gap recursion. Specifically, we induct on $i$ to show
+
+$\Delta_{x_{i}}^{\mathrm{eff}}\leq 2\rho_{k_{i}}.$
+
+The case $i=0$ is the root bound above. For the induction step, Definition 2.4 gives
+
+$\Delta_{x_{i}}^{\mathrm{eff}}=\max\!\left\{\Delta_{x_{i-1}}^{\mathrm{eff}},|V^{*}(x_{i})-V^{*}(x_{i-1})|\right\}.$
+
+The induction hypothesis controls the inherited gap, and the one-step bound controls the new edge. Hence
+
+$\Delta_{x_{i}}^{\mathrm{eff}}\leq\max\!\left\{2\rho_{k_{i-1}},\rho_{k_{i}}\right\}\leq 2\rho_{k_{i}}.$
+
+Taking $i=m$ proves the claim for $\textsc{Resolve}(v,s,k)$ . Thus $C_{\mathrm{act}}(D)=2$ : the constant is independent of $D$ , and hence polynomial in $D$ . $\Box$
+
+Fix a round $t$ , an explored non-root node $v$ , and a scale $k\geq 0$ . Assume that the local counter $M_{v,k}^{\mathrm{loc}}(t)$ is defined. On $\mathcal{E}_{\delta}$ , if
+
+$M_{v,k}^{\mathrm{loc}}(t)\geq\Gamma_{v}^{(k)}(\delta_{v}),$
+
+then
+
+$\mathrm{width}\bigl(I_{v}^{\mathrm{loc}}(t)\bigr)\leq\rho_{k}/2.$
+
+Consequently, $\mathsf{Cert}_{L}(v,k,t)$ and $\mathsf{Cert}_{U}(v,k,t)$ both hold.
+
+Proof. We bound the local interval using the oracle that determines the local cost. If $B(h(v))\leq\rho_{k}/4$ , then Eq. ( 7 ) gives $\Gamma_{v}^{(k)}(\delta_{v})=0$ . In this case, the fast interval is already sufficient: since
+
+$I_{v}^{\mathrm{loc}}(t)=I_{v}^{F}\cap I_{v}^{S}(t)\subseteq I_{v}^{F},$
+
+Eq. ( 2 ) gives
+
+$\mathrm{width}\bigl(I_{v}^{\mathrm{loc}}(t)\bigr)\leq 2B(h(v))\leq\rho_{k}/2.$
+
+Suppose now that $B(h(v))>\rho_{k}/4$ . Let $n_{v,k}(t)$ count the slow samples issued at $v$ while resolving scale $k$ , through round $t$ . The definition of the local counter gives
+
+$M_{v,k}^{\mathrm{loc}}(t)=c\,n_{v,k}(t).$
+
+The assumed spending bound and Eq. ( 7 ) therefore imply
+
+$n_{v,k}(t)\geq m_{v}(\rho_{k},\delta_{v}).$
+
+The total sample count at $v$ includes these samples, so
+
+$N_{v}^{S}(t)\geq n_{v,k}(t)\geq m_{v}(\rho_{k},\delta_{v}).$
+
+Since $n\mapsto\beta_{v}(n,\delta_{v})$ is nonincreasing,
+
+$\beta_{v}\!\bigl(N_{v}^{S}(t),\delta_{v}\bigr)\leq\beta_{v}\!\bigl(m_{v}(\rho_{k},\delta_{v}),\delta_{v}\bigr)\leq\rho_{k}/4.$
+
+The running intersection in Eq. ( 4 ) includes this current confidence interval. Hence $I_{v}^{S}(t)$ satisfies
+
+$\mathrm{width}\bigl(I_{v}^{S}(t)\bigr)\leq\rho_{k}/2.$
+
+The inclusion $I_{v}^{\mathrm{loc}}(t)\subseteq I_{v}^{S}(t)$ proves the required local-width bound. In either case, this is the local-width alternative in $\mathsf{Cert}_{s}(v,k,t)$ , for both $s=L$ and $s=U$ . $\Box$
+
+Fix any execution of Algorithm 1 . For every invocation $\textsc{Resolve}(v,s,k,B)$ , if the invocation returns $(q,z)$ , then
+
+$0\leq q\leq B$
+
+with the convention that the inequality is void when $B=+\infty$ . Moreover, if $z=\mathsf{blocked}$ , then $q=0$ . Finally, for every explored non-root node $v$ , scale $k$ , and round $t$ ,
+
+$M_{v,k}^{\mathrm{exp}}(t)\leq\mathsf{B}_{v,k}^{\mathrm{rec}}=\alpha_{h(v)}\Gamma_{v}^{(k)}(\delta_{v}).$
+
+Here an undefined scale-local counter is interpreted as zero.
+
+Proof. We first show that every return respects the input cap and that a blocked call incurs no cost, by induction on the remaining depth $h(v)$ . The certificate branch returns $(0,\mathsf{cert})$ . In the local branch, $\textsc{LocalStep}(v,k,B)$ returns $(0,\mathsf{blocked})$ if $B<c$ ; otherwise it takes one slow sample and returns $(c,\mathsf{progress})$ , with $B\geq c$ . Thus both properties hold for the local branch: its cost is at most $B$ , and it spends nothing when blocked. This also proves the leaf case.
+
+For an internal node, let
+
+$R=\mathsf{B}_{v,k}^{\mathrm{rec}}-M_{v,k}^{\mathrm{exp}}.$
+
+If $R\leq 0$ , the call uses the local branch just considered. Otherwise, its child-work cap is $B_{\mathrm{rec}}=\min\{B,R\}$ . For an unexpanded $v$ , the comparison with the expansion cost determines what happens. If $|\mathrm{Ch}(v)|>R$ , expansion exceeds the node’s own budget, so the call uses the local branch. If $|\mathrm{Ch}(v)|\leq R$ but $|\mathrm{Ch}(v)|>B$ , expansion fits that budget but exceeds the inherited cap, and the call returns $(0,\mathsf{blocked})$ . In the remaining case,
+
+$|\mathrm{Ch}(v)|\leq B_{\mathrm{rec}}\leq B,$
+
+so expansion respects the cap.
+
+If $v$ is already expanded, there is at most one child call, with cap $B_{\mathrm{rec}}$ . The induction hypothesis bounds its returned cost $q$ by $B_{\mathrm{rec}}\leq B$ , and makes that cost zero if the child reports $\mathsf{blocked}$ . When this happens and the inherited cap is binding $(B<R)$ , the parent also returns $(0,\mathsf{blocked})$ . Otherwise it uses the local branch, which respects the cap and costs zero exactly when blocked. If the child is not blocked, the parent simply returns the child’s result. This completes the induction on the return properties.
+
+It remains to bound $M_{v,k}^{\mathrm{exp}}$ . This counter starts at zero, with undefined counters also read as zero, and has only two possible updates. When $v$ is expanded at scale $k$ , the algorithm first checks
+
+$|\mathrm{Ch}(v)|\leq B_{\mathrm{rec}}\leq R=\mathsf{B}_{v,k}^{\mathrm{rec}}-M_{v,k}^{\mathrm{exp}},$
+
+so adding the expansion cost leaves $M_{v,k}^{\mathrm{exp}}$ at most $\mathsf{B}_{v,k}^{\mathrm{rec}}$ . When a child call returns $(q,z)$ with $z\neq\mathsf{blocked}$ , the parent adds to $M_{v,k}^{\mathrm{exp}}$ the cost $q$ . The return property just proved gives
+
+$q\leq B_{\mathrm{rec}}\leq R=\mathsf{B}_{v,k}^{\mathrm{rec}}-M_{v,k}^{\mathrm{exp}},$
+
+so this update also leaves the counter at most $\mathsf{B}_{v,k}^{\mathrm{rec}}$ . Since no other operation increases $M_{v,k}^{\mathrm{exp}}$ , the bound holds throughout the execution. $\Box$
+
+Assume $\mathcal{E}_{\delta}$ . Fix an explored non-root node $v$ and scale $k$ . Undefined scale-local counters are interpreted as zero. For every round $t$ ,
+
+$M_{v,k}^{\mathrm{loc}}(t)\leq\Gamma_{v}^{(k)}(\delta_{v}),\qquad M_{v,k}^{\mathrm{exp}}(t)\leq\alpha_{h(v)}\Gamma_{v}^{(k)}(\delta_{v}).$
+
+Consequently the total work ever charged to the scale- $k$ obligation at $v$ , aggregated over both sides, is bounded by
+
+$M_{v,k}^{\mathrm{loc}}(t)+M_{v,k}^{\mathrm{exp}}(t)\leq\bigl(1+\alpha_{h(v)}\bigr)\Gamma_{v}^{(k)}(\delta_{v}).$
+
+Moreover, once $M_{v,k}^{\mathrm{loc}}(t)$ reaches $\Gamma_{v}^{(k)}(\delta_{v})$ , both side predicates $\mathsf{Comp}_{L}(v,k,\cdot)$ and $\mathsf{Comp}_{U}(v,k,\cdot)$ remain true thereafter, and every later invocation of $\textsc{Resolve}(v,s,k,\cdot)$ for either side returns before doing positive work.
+
+Proof. Lemma B.12 gives the recursive bound. For the local bound, we show that completion prevents the counter from passing its prescribed limit. The counter starts at zero, and only $\textsc{LocalStep}(v,k,B)$ increases it, by exactly $c$ each time. If $\Gamma_{v}^{(k)}(\delta_{v})=0$ , Lemma B.11 gives both side certificates before any slow query at $v$ at scale $k$ . Thus $\textsc{Resolve}(v,s,k,\cdot)$ returns at its first branch and $M_{v,k}^{\mathrm{loc}}$ stays zero.
+
+If $\Gamma_{v}^{(k)}(\delta_{v})>0$ , the identity $\Gamma_{v}^{(k)}(\delta_{v})=\Gamma_{v}(\rho_{k},\delta_{v})$ shows that the limit is $c\,m_{v}(\rho_{k},\delta_{v})$ . Thus $M_{v,k}^{\mathrm{loc}}$ cannot skip the limit: its values lie in $\{0,c,2c,\ldots,\Gamma_{v}^{(k)}(\delta_{v})\}$ until completion. Upon first reaching $\Gamma_{v}^{(k)}(\delta_{v})$ , Lemma B.11 gives
+
+$\mathsf{Cert}_{L}(v,k,\cdot)\qquad\text{and}\qquad\mathsf{Cert}_{U}(v,k,\cdot).$
+
+The ensuing $\textsc{RefreshAndLatch}(k)$ in Algorithm 3 sets both $\mathsf{Done}$ flags. Therefore $\mathsf{Comp}_{L}(v,k,\cdot)$ and $\mathsf{Comp}_{U}(v,k,\cdot)$ remain true. By Lemma B.5 , every subsequent call at this node and scale returns without positive work, on either side. The local counter therefore stays at most $\Gamma_{v}^{(k)}(\delta_{v})$ .
+
+Adding the two counter bounds proves the aggregate estimate. Persistence follows from the same latching argument and Lemma B.5 . $\Box$
+
+Given Assumption 3.3 , for a non-root node $v$ , let
+
+$\mathcal{K}_{v}^{\mathrm{act}}\coloneqq\{k\geq 0:\ \Delta_{v}^{\mathrm{eff}}\leq 2\rho_{k}\}.$
+
+Then, we have
+
+$\sum_{k\in\mathcal{K}_{v}^{\mathrm{act}}}\Gamma_{v}^{(k)}(\delta_{v})\leq\Lambda_{\mathrm{loc}}\,\Gamma_{v}(\Delta_{v}^{\mathrm{eff}},\delta_{v}).$
+
+Moreover, for every $x\geq 0$ and every finite prefix of scales considered in an execution,
+
+$\sum_{\begin{subarray}{c}k\geq 0:\\ \Gamma_{v}^{(k)}(\delta_{v})\leq x\end{subarray}}\Gamma_{v}^{(k)}(\delta_{v})\leq\Lambda_{\mathrm{pre}}\,x,$
+
+where the sum is restricted to that finite prefix.
+
+Proof. For each bound, we identify a prefix of scales and apply prefix regularity. The sequence $k\mapsto\Gamma_{v}^{(k)}(\delta_{v})$ is nondecreasing: as $\rho_{k}$ decreases, the sample requirement cannot decrease, since $m_{v}(\rho,\delta_{v})$ is nonincreasing in the target radius $\rho$ .
+
+The first claim is immediate if $\mathcal{K}_{v}^{\mathrm{act}}=\varnothing$ . Otherwise, $\mathcal{K}_{v}^{\mathrm{act}}$ is the prefix $\{0,\ldots,K_{v}\}$ . Its last index $K_{v}$ satisfies
+
+$\rho_{K_{v}}\geq\frac{\Delta_{v}^{\mathrm{eff}}}{2}.$
+
+This lets us compare the last cost with the cost at the effective gap. Monotonicity of $\Gamma_{v}(\rho,\delta_{v})$ in $\rho$ and Eq. ( 11 ) give
+
+$\Gamma_{v}^{(K_{v})}(\delta_{v})=\Gamma_{v}(\rho_{K_{v}},\delta_{v})\leq\Gamma_{v}\!\left(\frac{\Delta_{v}^{\mathrm{eff}}}{2},\delta_{v}\right)\leq\Lambda_{\mathrm{gap}}\Gamma_{v}(\Delta_{v}^{\mathrm{eff}},\delta_{v}).$
+
+The prefix condition ( 10 ) at $K_{v}$ now bounds the sum by this last cost:
+
+$\sum_{k\in\mathcal{K}_{v}^{\mathrm{act}}}\Gamma_{v}^{(k)}(\delta_{v})\leq\Lambda_{\mathrm{pre}}\Gamma_{v}^{(K_{v})}(\delta_{v})\leq\Lambda_{\mathrm{loc}}\Gamma_{v}(\Delta_{v}^{\mathrm{eff}},\delta_{v}).$
+
+For the second claim, fix the finite prefix $\{0,\ldots,K_{\max}\}$ of scales in question. If no scale satisfies the cost threshold, the sum is zero. Otherwise, monotonicity makes the admissible set a prefix $\{0,\ldots,K_{x}\}$ , whose last cost satisfies $\Gamma_{v}^{(K_{x})}(\delta_{v})\leq x$ . Applying prefix regularity once more,
+
+$\sum_{k=0}^{K_{x}}\Gamma_{v}^{(k)}(\delta_{v})\leq\Lambda_{\mathrm{pre}}\Gamma_{v}^{(K_{x})}(\delta_{v})\leq\Lambda_{\mathrm{pre}}x.$
+
+$\Box$
+
+We now compare the algorithm’s total spending with the recursive reference cost. This comparison must also account for the cap needed to make further progress: a child may be blocked even though that cap has not yet been spent. The next definition and lemma make this distinction precise.
+
+For a non-root node $v$ , let $\mathfrak{C}_{v}(t)$ be the sum of the costs returned by all invocations at $v$ in the first $t$ completed outer-loop rounds. Equivalently, this is the slow cost at $v$ , together with all fast and slow costs strictly below $v$ ; it excludes the fast query that first exposed $v$ . Set this quantity to zero for an unexposed node. Write $L_{v}^{\mathrm{cost}}(t)$ for the direct slow cost at $v$ , and $E_{v}^{\mathrm{cost}}(t)$ for the remaining, recursive cost. Then
+
+$\mathfrak{C}_{v}(t)=L_{v}^{\mathrm{cost}}(t)+E_{v}^{\mathrm{cost}}(t),\qquad E_{v}^{\mathrm{cost}}(t)=\mathbf{1}\{v\text{ expanded by }t\}|\mathrm{Ch}(v)|+\sum_{u\in\mathrm{Ch}(v)}\mathfrak{C}_{u}(t).$
+
+The second term is zero at a leaf. Costs in a child subtree also appear in its ancestors’ costs, but no sum over all nodes is used: the root-child subtrees are disjoint, and their sum counts every post-initialization oracle cost exactly once.
+
+Assume $\mathcal{E}_{\delta}$ . At a fixed state of the algorithm, let $(v,s,k)$ be a finite unresolved obligation at an explored node, so that $\neg\mathsf{Comp}_{s}(v,k,t)$ . There is a finite positive number $d_{v}(s,k;t)$ , called its minimum progress cap , such that $\textsc{Resolve}(v,s,k,B)$ returns $(0,\mathsf{blocked})$ exactly when $B<d_{v}(s,k;t)$ , and returns positive cost when $B\geq d_{v}(s,k;t)$ . Fix the algorithm’s tie-breaking rules when defining this quantity. For an internal node set
+
+$R=\alpha_{h(v)}\Gamma_{v}^{(k)}(\delta_{v})-M_{v,k}^{\mathrm{exp}}(t),\qquad b_{v}=|\mathrm{Ch}(v)|.$
+
+The cap has the following recursive description:
+
+If $v$ is a leaf, $R\leq 0$ , or $v$ is unexpanded with $b_{v}>R$ , then $d_{v}(s,k;t)=c$ .
+
+If $v$ is unexpanded and $b_{v}\leq R$ , then $d_{v}(s,k;t)=b_{v}$ .
+
+Otherwise $v$ is expanded and $R>0$ . Let $(u,s_{u},k_{u})=\textsc{ChildObligation}(v,s,k)$ , and write $d_{u}=d_{u}(s_{u},k_{u};t)$ . Then
+
+$d_{v}(s,k;t)=\begin{cases}d_{u},&d_{u}\leq R,\\ \max\{R,c\},&d_{u}>R.\end{cases}$
+
+In particular, at every internal node,
+
+$d_{v}(s,k;t)\leq\max\{R,c\}.$
+
+Moreover, if $v$ is expanded and $\Delta_{v}^{\mathrm{eff}}\leq 2\rho_{k}$ , the child obligation selected by $\textsc{ChildObligation}(v,s,k)$ satisfies $\Delta_{u}^{\mathrm{eff}}\leq 2\rho_{k_{u}}$ , regardless of the value of $R$ and whether the resolver actually reaches its child-call branch.
+
+Proof. We prove the cap formula by induction on remaining depth. The local and expansion branches of Algorithm 4 give the first two cases directly. In the third case, Lemma B.4 supplies a finite unresolved child obligation. Certificate evaluations do not affect this argument: at fixed intervals, a bottom-up induction shows that latching a true certificate leaves all current completion predicates unchanged. Hence these zero-cost evaluations preserve both the selected obligation and its cap threshold.
+
+If $d_{u}\leq R$ , the child receives enough cap exactly when $B\geq d_{u}$ . If $B<d_{u}$ , then $B<R$ , so the parent passes the blocked return upward. If $d_{u}>R$ , the child is blocked for every cap $\min\{B,R\}$ . The parent can then take a local step exactly when $B\geq R$ and $B\geq c$ . These are the two alternatives in the claimed formula. They also show that the threshold is finite and bounded by $\max\{R,c\}$ .
+
+The child-selection rule and Lemma B.7 give $k_{u}\leq k$ and $|V^{*}(u)-V^{*}(v)|\leq\rho_{k_{u}}$ . These bounds depend only on the current state and the child-selection rule; they do not require the child call to receive enough cap to perform work. Thus
+
+$\Delta_{u}^{\mathrm{eff}}=\max\{\Delta_{v}^{\mathrm{eff}},|V^{*}(u)-V^{*}(v)|\}\leq\max\{2\rho_{k},\rho_{k_{u}}\}\leq 2\rho_{k_{u}}.$
+
+$\Box$
+
+Assume $\mathcal{E}_{\delta}$ , $\varepsilon=0$ , and Assumption 3.3 , and let $P_{h}$ be defined in Eq. ( 12 ). For every finite round $T$ and every non-root node $v$ ,
+
+$\mathfrak{C}_{v}(T)\leq P_{h(v)}J_{v}^{*}(\boldsymbol{\delta}).$
+
+In fact, for every currently unresolved finite obligation $(v,s,k)$ with $\Delta_{v}^{\mathrm{eff}}\leq 2\rho_{k}$ , the stronger bound holds:
+
+$\mathfrak{C}_{v}(T)+d_{v}(s,k;T)\leq P_{h(v)}J_{v}^{*}(\boldsymbol{\delta}).$ (13)
+
+Consequently,
+
+$C_{T}\leq|\mathrm{Ch}(r)|+P_{D-1}\sum_{a\in\mathrm{Ch}(r)}J_{a}^{*}(\boldsymbol{\delta})\leq P_{D}H(\boldsymbol{\delta}).$
+
+For $\alpha_{h}=(h+1)^{2}$ ,
+
+$P_{D}\leq\Lambda_{\mathrm{loc}}(1+\alpha_{D})\prod_{i=1}^{D}\left(1+\frac{\Lambda_{\mathrm{pre}}}{\alpha_{i}}\right),$
+
+so $P_{D}=O_{\Lambda_{\mathrm{pre}},\Lambda_{\mathrm{gap}}}(D^{2})$ .
+
+Proof. We use induction on remaining depth to prove the cost bound together with ( 13 ). The stronger claim is needed when a child call is blocked: past spending alone does not control the cap required for its next action. We prove both claims for every finite execution prefix and every current unresolved obligation satisfying the localization condition. Throughout, we consider states before new positive work and interpret undefined counters as zero. A blocked call changes neither intervals nor spending counters.
+
+The local bound. We first bound spending by the cost of local certification. Each positive cost returned at scale $j$ increases exactly one of $M_{v,j}^{\mathrm{loc}}$ and $M_{v,j}^{\mathrm{exp}}$ by that cost. Proposition B.10 restricts every such scale to $\mathcal{K}_{v}^{\mathrm{act}}$ . Therefore Lemma B.13 gives
+
+$\mathfrak{C}_{v}(T)\leq(1+\alpha_{h(v)})\sum_{j\in\mathcal{K}_{v}^{\mathrm{act}}}\Gamma_{v}^{(j)}(\delta_{v}).$ (14)
+
+To include the cap for a current unresolved obligation $(v,s,k)$ , observe that $k\in\mathcal{K}_{v}^{\mathrm{act}}$ . Local scale completion then gives
+
+$\Gamma_{v}^{(k)}(\delta_{v})>0,\qquad M_{v,k}^{\mathrm{loc}}(T)\leq\Gamma_{v}^{(k)}(\delta_{v})-c.$
+
+The subtraction is justified because both quantities are multiples of $c$ . For an internal node, write $R=\alpha_{h(v)}\Gamma_{v}^{(k)}-M_{v,k}^{\mathrm{exp}}\geq 0$ . Lemma B.15 then gives
+
+$\begin{split}M_{v,k}^{\mathrm{loc}}+M_{v,k}^{\mathrm{exp}}+d_{v}(s,k;T)&\leq M_{v,k}^{\mathrm{loc}}+M_{v,k}^{\mathrm{exp}}+\max\{R,c\}\\ &\leq(1+\alpha_{h(v)})\Gamma_{v}^{(k)}.\end{split}$
+
+The unused allowance at this scale therefore covers the additional cap: the right-hand side of ( 14 ) also bounds $\mathfrak{C}_{v}(T)+d_{v}(s,k;T)$ . By Lemma B.14 , both are at most $(1+\alpha_{h(v)})\Lambda_{\mathrm{loc}}\Gamma_{v}(\Delta_{v}^{\mathrm{eff}},\delta_{v})$ . At a leaf, there is no recursive spending, so the bound reduces to $\Lambda_{\mathrm{loc}}\Gamma_{v}(\Delta_{v}^{\mathrm{eff}},\delta_{v})$ . If an unresolved obligation exists, the unused local sample covers its cap $c$ . This proves the base case. It also proves both claims at an internal node whenever the local term attains the minimum defining $J_{v}^{*}$ .
+
+The recursive bound. It remains to consider a node $v$ of remaining depth $h\geq 1$ for which the recursive term attains the minimum. Set
+
+$Q_{v}\coloneqq P_{h-1}\left(|\mathrm{Ch}(v)|+\sum_{u\in\mathrm{Ch}(v)}J_{u}^{*}(\boldsymbol{\delta})\right)=P_{h-1}J_{v}^{*}(\boldsymbol{\delta}).$
+
+The cost induction hypothesis and $P_{h-1}\geq 1$ imply, at every earlier state $t\leq T$ ,
+
+$E_{v}^{\mathrm{cost}}(t)\leq Q_{v}.$ (15)
+
+Suppose $v$ is expanded and $(v,s,k)$ is a current unresolved obligation satisfying the localization condition. Let $(u,s_{u},k_{u})$ be the child obligation given by Lemma B.4 . It exists even if the resolver has no recursive budget left, and it satisfies the localization condition by Lemma B.15 . Apply the stronger induction hypothesis to this child and the ordinary cost bounds to all other children. This gives
+
+$E_{v}^{\mathrm{cost}}(t)+d_{u}(s_{u},k_{u};t)\leq Q_{v}.$ (16)
+
+This is the estimate that controls a blocked child call: it includes the cap needed for progress, even though that cap has not been spent.
+
+We next bound the direct slow cost. We show that every scale $k$ at which a slow sample is issued at $v$ satisfies
+
+$\alpha_{h}\Gamma_{v}^{(k)}(\delta_{v})<Q_{v}.$ (17)
+
+Consider the state just before such a sample. By Proposition B.10 , its obligation satisfies the localization condition. If $v$ is unexpanded, local sampling requires $\alpha_{h}\Gamma_{v}^{(k)}<|\mathrm{Ch}(v)|\leq Q_{v}$ , since its recursive counter is still zero. If $v$ is expanded and its remaining budget $R$ is zero, then
+
+$\alpha_{h}\Gamma_{v}^{(k)}=M_{v,k}^{\mathrm{exp}}\leq E_{v}^{\mathrm{cost}}<E_{v}^{\mathrm{cost}}+d_{u}\leq Q_{v}.$
+
+If the node is expanded and $R>0$ , the resolver can fall back to local sampling only after a blocked child call, and only when its inherited cap is at least $R$ . The child therefore received cap $R$ , so Lemma B.15 gives $d_{u}>R$ . Consequently,
+
+$\alpha_{h}\Gamma_{v}^{(k)}=M_{v,k}^{\mathrm{exp}}+R<M_{v,k}^{\mathrm{exp}}+d_{u}\leq E_{v}^{\mathrm{cost}}+d_{u}\leq Q_{v}.$
+
+Thus ( 17 ) holds whenever local sampling occurs. The local cost at each such scale is bounded by its local stopping cost. Summing these bounds with Lemma B.14 yields
+
+$L_{v}^{\mathrm{cost}}(T)\leq\sum_{\{j:\,\Gamma_{v}^{(j)}<Q_{v}/\alpha_{h}\}}\Gamma_{v}^{(j)}\leq\frac{\Lambda_{\mathrm{pre}}}{\alpha_{h}}Q_{v}.$ (18)
+
+Here the sum is taken over a finite prefix containing all scales used through $T$ . Together with ( 15 ), this proves the ordinary cost bound with factor $(1+\Lambda_{\mathrm{pre}}/\alpha_{h})P_{h-1}$ .
+
+Including the cap for further progress. We must still include the current cap $d=d_{v}(s,k;T)$ . We show that it fits either the recursive bound or the unused local allowance. If $v$ is unexpanded and the expansion fits its recursive budget, then $d=|\mathrm{Ch}(v)|$ , $E_{v}^{\mathrm{cost}}=0$ , and $E_{v}^{\mathrm{cost}}+d\leq Q_{v}$ . If $v$ is expanded and its child’s cap fits the remaining budget, then $d=d_{u}$ and ( 16 ) gives the same conclusion. Finally, if $d_{u}>R\geq c$ , then $d=R<d_{u}$ , so again $E_{v}^{\mathrm{cost}}+d\leq Q_{v}$ . In each case, the recursive bound covers the cap, and ( 18 ) covers the local spending.
+
+In the remaining cases, $d=c$ and the next positive step is local sampling: either expansion exceeds the unexpanded node’s budget, $R=0$ , or $d_{u}>R$ and $R<c$ . The argument for ( 17 ) applies to this scale as well, even if no sample has yet been issued there. Moreover, $M_{v,k}^{\mathrm{loc}}\leq\Gamma_{v}^{(k)}-c$ , since the current obligation is unresolved. One additional local sample therefore leaves the direct local cost at this scale at most $\Gamma_{v}^{(k)}$ . Applying the threshold sum to the previously sampled scales and the current scale gives
+
+$L_{v}^{\mathrm{cost}}(T)+d\leq\frac{\Lambda_{\mathrm{pre}}}{\alpha_{h}}Q_{v}.$
+
+Together with $E_{v}^{\mathrm{cost}}(T)\leq Q_{v}$ , this proves in every case
+
+$\mathfrak{C}_{v}(T)+d_{v}(s,k;T)\leq\left(1+\frac{\Lambda_{\mathrm{pre}}}{\alpha_{h}}\right)Q_{v}\leq P_{h}J_{v}^{*}(\boldsymbol{\delta}).$
+
+This completes the simultaneous induction.
+
+Summing at the root. The root’s only direct cost is the initialization cost $|\mathrm{Ch}(r)|$ , and every subsequent cost belongs to exactly one root-child subtree. Since $P_{h}\geq P_{h-1}\geq 1$ follows directly from Eq. ( 12 ), the claimed root bounds follow. Finally, unrolling that recursion and using the nondecreasing sequence $\alpha_{h}$ gives the stated product bound. For $\alpha_{h}=(h+1)^{2}$ , its product is at most
+
+$\exp\!\left(\Lambda_{\mathrm{pre}}\sum_{i=1}^{\infty}\frac{1}{(i+1)^{2}}\right),$
+
+while its remaining factor is $O(D^{2})$ . $\Box$
+
+Let
+
+$q_{\min}\coloneqq\min\{c,1\}>0.$
+
+Consider any invocation $\textsc{Resolve}(v,s,k,B)$ with finite scale $k$ that begins at a round $t$ with
+
+$\neg\mathsf{Comp}_{s}(v,k,t).$
+
+Then the invocation either returns $(0,\mathsf{blocked})$ , or returns a pair $(q,z)$ with $q\geq q_{\min}$ . In particular, if $B=+\infty$ , then the invocation returns cost at least $q_{\min}$ .
+
+Proof. We argue by induction on the remaining depth $h(v)$ . At a leaf, $h(v)=0$ , the first guard in $\textsc{Resolve}(v,s,k,B)$ is false because the obligation is unresolved. The procedure therefore calls $\textsc{LocalStep}(v,k,B)$ , which returns $(0,\mathsf{blocked})$ if $B<c$ , and otherwise takes one slow sample at cost $c\geq q_{\min}$ .
+
+Suppose $h(v)\geq 1$ and the claim holds for the children of $v$ . The first guard is again false. A nonpositive remaining recursive budget leads directly to $\textsc{LocalStep}(v,k,B)$ , whose behavior was just established. If $v$ is unexpanded and $|\mathrm{Ch}(v)|>R$ , the same fallback $\textsc{LocalStep}(v,k,B)$ applies. For an unexpanded node in the remaining case, $|\mathrm{Ch}(v)|\leq R$ : the expansion is affordable from the node’s own budget. If $|\mathrm{Ch}(v)|>B$ , the inherited cap blocks it and the invocation returns $(0,\mathsf{blocked})$ . If this cap also permits the expansion, the procedure expands $v$ at cost $|\mathrm{Ch}(v)|\geq 1\geq q_{\min}$ .
+
+Only the expanded-node case with positive recursive budget requires the induction hypothesis. Lemma B.4 ensures that $\mathsf{Comp}_{s}(v,k,t)$ being false provides a finite capped child obligation. In a selector case, the chosen child $(u,s,k_{u})$ satisfies
+
+$k_{u}=K_{s}^{\leq k}(u,t)<+\infty\qquad\text{and}\qquad\neg\mathsf{Comp}_{s}(u,k_{u},t).$
+
+In a comparison case, the blocker is called on the opposite side $\bar{s}$ when a finite capped obligation remains there, and otherwise on side $s$ . The definition of $K_{\cdot}^{\leq k}$ ensures that either call targets an unresolved obligation, so the induction hypothesis applies. A positive child cost is returned unchanged. After a child return of $(0,\mathsf{blocked})$ , the parent either also returns $(0,\mathsf{blocked})$ because the inherited cap is binding, or calls $\textsc{LocalStep}(v,k,B)$ . That local step is itself blocked or costs at least $q_{\min}$ , completing the induction.
+
+When $B=+\infty$ , the inherited cap cannot block progress and $\textsc{LocalStep}(v,k,B)$ is always affordable. The invocation therefore returns cost at least $q_{\min}$ . $\Box$
+
+Assume $\mathcal{E}_{\delta}$ and $\varepsilon=0$ . In every outer-loop round before stopping, Algorithm 1 selects a root child $x$ , side $s$ , and scale $k<+\infty$ such that
+
+$\neg\mathsf{Comp}_{s}(x,k,t).$
+
+Proof. Let $a$ and $b$ be the current leader and challenger, with respective scales $k_{a}=K_{L}(a,t)$ and $k_{b}=K_{\pm}(b,t)$ . The selection rule prefers a finite scale: if $k_{a}<+\infty$ and $k_{b}=+\infty$ , it selects the leader at scale $k_{a}$ ; if $k_{a}=+\infty$ and $k_{b}<+\infty$ , it selects the challenger at scale $k_{b}$ ; and if both scales are finite, it selects the coarser one. Thus an infinite selected scale would require
+
+$K_{L}(a,t)=+\infty\qquad\text{and}\qquad K_{\pm}(b,t)=+\infty.$
+
+By the definition of $K_{\pm}$ , the second equality means
+
+$K_{L}(b,t)=K_{U}(b,t)=+\infty.$
+
+These equalities are incompatible with a failed stopping test. Indeed, if $K_{L}(a,t)=+\infty$ , Lemma B.8 gives
+
+$V^{*}(r,a)-L_{a}(t)=0.$
+
+Likewise, $K_{L}(b,t)=K_{U}(b,t)=+\infty$ gives
+
+$V^{*}(r,b)-L_{b}(t)=0,\qquad U_{b}(t)-V^{*}(r,b)=0.$
+
+Failure of the stopping test means
+
+$L_{a}(t)<U_{b}(t).$
+
+Together, these relations imply $V^{*}(r,a)<V^{*}(r,b)$ , and hence
+
+$L_{b}(t)=V^{*}(r,b)>V^{*}(r,a)=L_{a}(t),$
+
+contradicting the choice of $a$ as a leader with maximal lower endpoint. The selected scale must therefore be finite. By the definitions of $K_{L}$ , $K_{U}$ , and $K_{\pm}$ , every finite selected scale is unresolved, giving the required $\neg\mathsf{Comp}$ condition. $\Box$
+
+Assume $\mathcal{E}_{\delta}$ , $\varepsilon=0$ , and Assumption 3.3 . Then Algorithm 1 halts after finitely many oracle calls. At its stopping time $\tau$ , every returned action $\hat{a}_{\tau}$ is the unique optimal root action $a^{*}$ .
+
+Proof. We combine the uniform bound on finite execution prefixes with a positive cost in every non-stopping round. Consistency of the confidence radii gives $\Gamma_{v}(\Delta_{v}^{\mathrm{eff}},\delta_{v})<\infty$ at every non-root node $v$ , since $\Delta_{v}^{\mathrm{eff}}\geq\Delta_{*}>0$ . It follows that $J_{v}^{*}(\boldsymbol{\delta})<\infty$ for every non-root $v$ , by induction on $h(v)$ , and the tree’s finiteness then gives $H(\boldsymbol{\delta})<\infty$ . Proposition B.16 bounds every finite prefix:
+
+$C_{T}\leq P_{D}H(\boldsymbol{\delta})\qquad\text{for every finite round }T.$
+
+Suppose the algorithm never stops. In each outer-loop round, Lemma B.18 supplies a finite unresolved call $\textsc{Resolve}(x,s,k,+\infty)$ . The finite scale searches and finite recursion depth ensure that each round completes. By Lemma B.17 , its cost is at least $q_{\min}>0$ . After $N$ non-stopping rounds, the total cost is therefore at least the initialization cost plus $Nq_{\min}$ . This diverges as $N\to\infty$ , contradicting the uniform bound $P_{D}H(\boldsymbol{\delta})$ . The algorithm must halt after finitely many oracle calls.
+
+At the stopping time $\tau$ , the returned action $\hat{a}_{\tau}$ satisfies
+
+$L_{\hat{a}_{\tau}}(\tau)\geq\max_{a\neq\hat{a}_{\tau}}U_{a}(\tau).$
+
+Lemma 2.4 makes every root-child interval valid on $\mathcal{E}_{\delta}$ , so
+
+$V^{*}(r,\hat{a}_{\tau})\geq L_{\hat{a}_{\tau}}(\tau)\geq\max_{a\neq\hat{a}_{\tau}}U_{a}(\tau)\geq\max_{a\neq\hat{a}_{\tau}}V^{*}(r,a).$
+
+Thus $\hat{a}_{\tau}$ is optimal, and uniqueness gives $\hat{a}_{\tau}=a^{*}$ . $\Box$
+
+B.6 Proof of Theorem 3.6
+
+We now assemble the bounds established in Appendix B.5 .
+
+Proof. When $\rho_{0}=0$ , initialization already determines the answer, as shown at the start of Appendix B.5 . The cost bound follows from $C_{\tau}=H(\boldsymbol{\delta})$ and $P_{D}\geq 1$ . Assume $\rho_{0}>0$ below. On $\mathcal{E}_{\delta}$ , finite stopping and correctness follow from Proposition B.19 . Now that $\tau$ is known to be finite, Proposition B.16 applies with $T=\tau$ and gives
+
+$C_{\tau}\leq P_{D}H(\boldsymbol{\delta}).$
+
+The $\mathcal{O}(D^{2})$ form follows from the final statement of Proposition B.16 for $\alpha_{h}=(h+1)^{2}$ .
+
+By Eq. ( 5 ), each feasible allocation satisfies $\mathbb{P}(\mathcal{E}_{\delta})\geq 1-\delta$ . For the optimized statement, choose a near-optimal feasible allocation $\boldsymbol{\delta}^{\eta}$ satisfying the uniform regularity condition in Theorem 3.6 , with
+
+$H(\boldsymbol{\delta}^{\eta})\leq H^{*}+\eta.$
+
+Apply the fixed-allocation bound to the run using this allocation, on its corresponding simultaneous-validity event. This gives the claimed high-probability optimized bound. If an allocation attaining the infimum satisfies the same regularity constants, take $\eta=0$ . Otherwise, $H^{*}\geq|\mathrm{Ch}(r)|\geq 2$ ensures that any $\eta\leq H^{*}$ gives the stated $H^{*}$ -order bound. $\Box$
+
+B.7 Proofs and Qualifications for Oracle Robustness
+
+The robustness results control the probability of an incorrect finite output. Extending the unbiased finite-stopping or cost theorem would require additional assumptions.
+
+B.7.1 Proof of Theorem 3.7
+
+Write $\theta_{v}=V^{*}(v)+b_{v}$ . To account for the bias, replace Eq. ( 4 ) by
+
+$I_{v}^{S,\xi}(t)=\bigcap_{j=1}^{N_{v}^{S}(t)}[\widehat{V}_{v,j}-\beta_{v}(j,\delta_{v})-\xi,\widehat{V}_{v,j}+\beta_{v}(j,\delta_{v})+\xi],$
+
+where the intersection is $(-\infty,+\infty)$ before any samples are taken. The fast intervals, minimax backups, and root stopping test are unchanged. The assumed concentration around the biased mean is
+
+$\mathbb{P}\!\left(\exists n\geq 1:|\widehat{V}_{v,n}-\theta_{v}|>\beta_{v}(n,\delta_{v})\right)\leq\delta_{v}.$
+
+Proof. A union bound gives an event of probability at least $1-\delta$ on which, simultaneously for all nodes and sample counts, $|\widehat{V}_{v,n}-\theta_{v}|\leq\beta_{v}(n,\delta_{v})$ . On this event,
+
+$|\widehat{V}_{v,n}-V^{*}(v)|\leq\beta_{v}(n,\delta_{v})+\xi.$
+
+Every inflated slow interval therefore contains the true node value, as does every fast interval. Their intersections remain nonempty and valid, and induction through the max and min backups preserves validity without further inflation. The inconsistency exit consequently cannot occur on this event. The root stopping argument from Theorem 3.1 now proves the claim. $\Box$
+
+Why interval inflation is required.
+
+Without inflation, the endpoint inequalities $L_{v}\leq V^{*}(v)+\xi$ and $U_{v}\geq V^{*}(v)-\xi$ would bound the error by $\varepsilon+2\xi$ whenever the root stopping test returns a separated recommendation. But they do not ensure $L_{v}\leq U_{v}$ : a fast interval containing $V^{*}(v)$ may be disjoint from a narrow slow interval around $V^{*}(v)+b_{v}$ . They therefore cannot, by themselves, guarantee correctness of the unmodified algorithm for arbitrary biased oracles. Inflation by the known bias bound preserves valid, nonempty intervals. The inflated radius need not tend to zero, however, so the unbiased finite-stopping and cost proofs do not carry over.
+
+B.7.2 Proof of Theorem 3.8
+
+Proof. The enlarged fast interval contains $V^{*}(v)$ . On $\mathcal{E}_{\delta}$ , every slow interval also contains $V^{*}(v)$ , so local intersections and minimax backups remain valid. The stopping-rule proof applies, and the inconsistency exit cannot occur on $\mathcal{E}_{\delta}$ .
+
+For the fixed-history comparison, intersecting a larger fast interval with the same slow interval gives a larger local interval. Enlarging the child intervals weakly decreases their lower endpoints and weakly increases their upper endpoints; both max and min backups preserve these inequalities. Induction up the common exposed tree, with the enlarged local intervals intersected at each node, proves the claimed containment. Actual adaptive runs may choose different queries and expansions, so this comparison does not order their realized costs. $\Box$
+
+B.8 Qualifications for the Reference Complexity and Local Regularity
+
+The correctness theorem bounds the unconditional probability that the algorithm stops and returns a recommendation that violates the requested accuracy.
+
+We also note that the half-gap condition in Assumption 3.3 restricts how the hybrid cost curve may cross the deterministic fast-bias cutoff. If
+
+$\Delta_{v}^{\mathrm{eff}}/8<B(h(v))\leq\Delta_{v}^{\mathrm{eff}}/4,$
+
+then $\Gamma_{v}(\Delta_{v}^{\mathrm{eff}},\delta_{v})=0$ but $\Gamma_{v}(\Delta_{v}^{\mathrm{eff}}/2,\delta_{v})>0$ , so the condition fails. Polynomial scaling of the slow-sample cost alone therefore does not establish regularity of the hybrid curve.

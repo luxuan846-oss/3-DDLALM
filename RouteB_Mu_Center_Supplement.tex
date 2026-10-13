@@ -1,0 +1,312 @@
+\documentclass[11pt,a4paper,UTF8]{ctexart}
+\usepackage[a4paper,margin=23mm,headheight=15pt]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools,bm}
+\usepackage{booktabs,tabularx}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{newtxmath}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{pifont}
+
+\hypersetup{colorlinks=true,linkcolor=blue!55!black,citecolor=blue!55!black,urlcolor=blue!55!black,pdftitle={DDLALM 路线 B 的非零对偶中心补充}}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{路线 B 非零 $\mu$ 中心补充}
+\fancyhead[R]{\leftmark}
+\fancyfoot[C]{\thepage}
+
+\setlength{\parindent}{2em}
+\setlength{\parskip}{0.25em}
+\allowdisplaybreaks
+\onehalfspacing
+
+\newtheorem{theorem}{定理}[section]
+\newtheorem{lemma}[theorem]{引理}
+\newtheorem{proposition}[theorem]{命题}
+\newtheorem{remark}[theorem]{说明}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\D}{\mathcal D}
+\newcommand{\F}{\mathcal F}
+\newcommand{\V}{\mathcal V}
+\newcommand{\G}{\mathcal G}
+\newcommand{\Y}{\mathcal Y}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\prox}{\operatorname{prox}}
+\newcommand{\dist}{\operatorname{dist}}
+\newcommand{\grad}{\nabla}
+\newcommand{\ip}[2]{\left\langle #1,#2\right\rangle}
+\newcommand{\norm}[1]{\left\|#1\right\|}
+\newcommand{\statusok}{\textcolor{green!45!black}{\ding{51}}}
+
+\title{\bfseries 路线 B 的非零对偶中心：\\固定 $\bar\mu\neq0$ 的闭合定理与 moving-$\mu$ 的阻断分析}
+\date{2026-08-16}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+本补充回答如下问题：路线 B 能否使用非零对偶中心 $\mu$。结论分两层。
+第一层，固定非零中心 $\bar\mu\in\R^m$ 的版本（路线 B-$\bar\mu$）在原假设下完全闭合：通过平移归约 $\tilde\lambda=\lambda-\bar\mu$，Li 等的 Perturbed Smoothed GDA 定理逐字适用，single-loop $O(\eps^{-3})$ split-KKT 复杂度不变；其代价是渐近 feasibility 偏差 $r_y\|\lambda^\star-\bar\mu\|$，与 $\bar\mu=0$ 同构。无先验信息时 $\bar\mu=0$ 是最坏情形下最优的固定中心。
+第二层，移动中心 $\mu^{k+1}=\mu^k+\omega(\lambda^{k+1}-\mu^k)$ 的版本（它才是渐近精确的版本：其不动点满足精确 split-KKT）不能通过把 $r_y$ 取成精度相关的大值来绕过路线 A 的缺口。本文给出两个阻断结果：其一，dual-flatness 反例中 QEB 比值对任意固定 $r_y>0$ 发散，故精度相关 $s$ 不恢复 QEB；其二，$\mu$-运动使三值 Lyapunov $\Psi_2$ 每步产生 $5r_y\omega\norm{T-\mu}^2$ 的正漂移，其中 $\|\lambda^{k+1}-T\|$ 部分可由 fast 下降在 $\omega=O(r_y/\ell_\rho)$ 下吸收，$\norm{T-\mu}^2$ 部分在三值组织内无支付来源。因此 moving-$\mu$ 的闭合与路线 A0 是同一个 correlated moving-center transport 问题。
+\end{abstract}
+
+\tableofcontents
+
+\section{总览}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.35}
+\begin{tabularx}{\textwidth}{>{\bfseries}p{0.22\textwidth}p{0.30\textwidth}XX}
+\toprule
+版本 & 中心 & 状态 & 渐近偏差 \\
+\midrule
+B & $\bar\mu=0$ 固定 & 已闭合 & $r_y\norm{\lambda^\star}$ \\
+B-$\bar\mu$ & $\bar\mu\neq0$ 固定 & 已闭合（本文定理~\ref{thm:Bmu}） & $r_y\norm{\lambda^\star-\bar\mu}$ \\
+B-MC & $\mu^k$ 移动，$\omega_k$ 更新 & 未闭合，与 A0 同缺口 & 不动点处为零 \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+三个版本使用同一 prox 不变量：所有实际 prox 均为固定参数 $\rho$ 的 $\prox_{h/\rho}$，每轮至多两次。
+
+\section{路线 B-$\bar\mu$：固定非零中心的闭合定理}
+
+\subsection{算法}
+
+固定任意 $\bar\mu\in\R^m$、$r_x>\ell_\rho+r_y$、$r_y>0$，定义
+
+$$
+\widehat\F_{\bar\mu}(x,\lambda,z)
+:=\D_\rho(x,\lambda)+\frac{r_x}{2}\norm{x-z}^2-\frac{r_y}{2}\norm{\lambda-\bar\mu}^2.
+$$
+
+\begin{algorithm}[htbp]
+\caption{路线 B-$\bar\mu$：固定非零中心的 Perturbed Smoothed DDLALM}
+\begin{algorithmic}[1]
+\State $x^{k+1}=x^k-c\bigl[\grad_x\D_\rho(x^k,\lambda^k)+r_x(x^k-z^k)\bigr]$
+\State $\lambda^{k+1}=\lambda^k+\alpha\bigl[\grad_\lambda\D_\rho(x^{k+1},\lambda^k)-r_y(\lambda^k-\bar\mu)\bigr]$
+\State $z^{k+1}=z^k+\beta(x^{k+1}-z^k)$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{无投影乘子有界性}
+
+\begin{lemma}[凸组合界]\label{lem:bound}
+若
+$$
+0<\alpha\le\frac1{1/\rho+r_y},
+$$
+则对所有 $k$，
+$$
+\norm{\lambda^k}\le M_{\bar\mu}
+:=\max\{\norm{\lambda^0},L_h,\norm{\bar\mu}\}.
+$$
+\end{lemma}
+
+\begin{proof}
+记 $q_+^k=q(\lambda^k;x^{k+1})$。由 $r(\lambda;x)=\rho^{-1}(q(\lambda;x)-\lambda)$，
+$$
+\lambda^{k+1}
+=\Bigl(1-\frac\alpha\rho-\alpha r_y\Bigr)\lambda^k
++\frac\alpha\rho\,q_+^k+\alpha r_y\,\bar\mu .
+$$
+三项系数非负且和为一，$\norm{q_+^k}\le L_h$，归纳即得。
+\end{proof}
+
+\subsection{平移归约}
+
+\begin{lemma}[平移归约]\label{lem:shift}
+令 $\tilde\lambda:=\lambda-\bar\mu$，
+$$
+\tilde\D_\rho(x,\tilde\lambda):=\D_\rho(x,\tilde\lambda+\bar\mu).
+$$
+则 $\tilde\D_\rho$ 与 $\D_\rho$ 具有相同的 block 光滑常数与相同的 joint 常数 $\ell_\rho$，$\tilde\D_\rho(x,\cdot)$ 仍为凹函数，且路线 B-$\bar\mu$ 的迭代在坐标 $\tilde\lambda$ 下恰为以 $-\frac{r_y}{2}\norm{\tilde\lambda}^2$ 为对偶正则、以平移球 $\tilde\Y=B_R(0)$ 为对偶域的路线 B 迭代。
+\end{lemma}
+
+\begin{proof}
+梯度 $\grad_x\tilde\D_\rho=\grad_x\D_\rho$、$\grad_{\tilde\lambda}\tilde\D_\rho=\grad_\lambda\D_\rho$ 在平移后的两点差中 $\bar\mu$ 相消，故一切 Lipschitz 常数不变。更新方向
+$$
+\grad_\lambda\D_\rho(x^{k+1},\lambda^k)-r_y(\lambda^k-\bar\mu)
+=\grad_{\tilde\lambda}\tilde\D_\rho(x^{k+1},\tilde\lambda^k)-r_y\tilde\lambda^k .
+$$
+取 proof-only 球 $B_R(0)$、$R>2M_{\bar\mu}$，则 $\norm{\lambda^k}\le M_{\bar\mu}<R$，投影恒不激活，$D_Y=2R$。
+\end{proof}
+
+\subsection{主定理}
+
+\begin{theorem}[Route B-$\bar\mu$]\label{thm:Bmu}
+设基础假设成立。取 $R>2\max\{\norm{\lambda^0},L_h,\norm{\bar\mu}\}$，$D_Y=2R$，$r_x=4\ell_\rho$，并按 (B-steps) 的同一参数区间选取 $c,\alpha,\beta$，特别是
+$$
+r_y=\frac1s=\Theta\Bigl(\frac\eps{D_Y}\Bigr),
+\qquad
+\beta=\Theta\Bigl(\frac{r_y}{\ell_\rho}\Bigr)
+=\Theta\Bigl(\frac\eps{\ell_\rho D_Y}\Bigr).
+$$
+则存在与 $\eps$ 无关的 $\overline\Delta_{\Psi_2}<\infty$，使算法在
+$$
+K=O\Bigl(\frac{\ell_\rho^2D_Y\overline\Delta_{\Psi_2}}{\eps^3}\Bigr)
+$$
+次迭代内产生 tail iterate $(\bar x,\bar\lambda)$，满足
+$$
+\bar q\in\partial h(\bar y),
+\qquad
+\norm{\grad f(\bar x)+J_A(\bar x)^\top\bar q}\le\eps,
+\qquad
+\norm{A(\bar x)-\bar y}\le\eps ,
+$$
+其中 $\bar y=y(\bar\lambda;\bar x)$、$\bar q=q(\bar\lambda;\bar x)$。
+\end{theorem}
+
+\begin{proof}
+由引理~\ref{lem:shift}，算法是平移坐标下 Li 等 Perturbed Smoothed GDA 的精确实例，其全部假设（光滑性、对偶强凹、紧对偶域）逐字成立，故 (B-descent)、(B-GS)、(B-rate) 全部移植。初始 gap 的参考值
+$$
+\max_{\lambda\in B_R}\Bigl\{\D_\rho(x,\lambda)-\frac{r_y}2\norm{\lambda-\bar\mu}^2\Bigr\}
+$$
+与 $F(x)$ 之差的绝对值至多为 $\frac{r_y}2\norm{\lambda^\star(x)-\bar\mu}^2\le\frac{r_y}2(L_h+\norm{\bar\mu})^2\le2r_yR^2$，故 $\overline\Delta_{\Psi_2}$ 一致有界。feasibility 重构中
+$$
+\grad_\lambda\D_\rho(\bar x,\bar\lambda)
+=\grad_\lambda\widehat\F_{\bar\mu}(\bar x,\bar\lambda,\bar z)
++r_y(\bar\lambda-\bar\mu),
+$$
+第一项由 game-stationarity 控制，第二项
+$\norm{\bar\lambda-\bar\mu}\le M_{\bar\mu}+\norm{\bar\mu}\le2M_{\bar\mu}<D_Y$，故偏差至多 $r_yD_Y$，与 $\bar\mu=0$ 情形同阶。选择 $r_y=\Theta(\eps/D_Y)$ 后全部残差至多 $\eps$。
+\end{proof}
+
+\begin{remark}[固定中心的常数效应]\label{rem:constant}
+固定 $\bar\mu$ 不改变最坏情形复杂度与偏差结构：驻点处 $\grad_\lambda\D_\rho=r_y(\lambda^\star-\bar\mu)$，渐近 feasibility 偏差为 $r_y\norm{\lambda^\star-\bar\mu}$。由于只知 $\norm{\lambda^\star}\lesssim L_h$，
+$$
+\sup_{\norm{\lambda^\star}\le L_h}\norm{\lambda^\star-\bar\mu}
+=L_h+\norm{\bar\mu},
+$$
+在 $\bar\mu=0$ 处取最小。因此无先验时 $\bar\mu=0$ 已是最优固定中心；$\bar\mu\neq0$ 的价值在于有 warm-start 先验 $\norm{\hat\mu-q^\star}\le\delta$ 时把实际偏差降到 $r_y\delta$。此为先验依赖的常数改进，非定理级改进。
+\end{remark}
+
+\begin{remark}[两阶段启发]
+可先以粗精度 $\eps_1$ 运行 B 得到 $\hat\lambda$，再以 $\bar\mu=\hat\lambda$ 运行 B-$\bar\mu$。注意 game-stationarity 小不蕴含 $\norm{\hat\lambda-q^\star}$ 小（对偶解可不唯一、$d_0$ 可平坦），故该方案是常数层面的启发式调参，不构成新定理。
+\end{remark}
+
+\section{B-MC：移动中心为何仍被阻断}
+
+移动中心版本将第 2 行后加入
+
+$$
+\mu^{k+1}=\mu^k+\omega_k(\lambda^{k+1}-\mu^k),
+\qquad 0<\omega_k\le1 .
+$$
+
+其动机是渐近精确性：不动点满足 $z=x$、$\mu=\lambda$，从而 $\grad_\lambda\D_\rho=r_y(\lambda-\mu)=0$、$\grad_x\D_\rho=0$，即精确 split-KKT。这正是把偏差项 $r_yD_Y$ 消除的版本。以下两个命题说明该版本与路线 A0 共享同一缺口，且把 $r_y$ 取成精度相关的大值不能绕过。
+
+\subsection{QEB 对任意固定 \texorpdfstring{$r_y$}{ry} 失败}
+
+\begin{proposition}[QEB 鲁棒失败]\label{prop:qeb}
+取标量模型 $A\equiv0$、$f\equiv0$、$h^*(q)=|q|^p/p+\delta_{[-1,1]}$，$p>2$。对任意固定 $r_y>0$（等价地任意固定 $s=1/r_y$，包括 $r_y=\Theta(\eps/D_Y)$ 的运行内取值），记 $T(\mu)$ 为 $d_0(\lambda)-\frac{r_y}2|\lambda-\mu|^2$ 的最大化点，$\G(\mu)=v-p$ 为 center value gap。则当 $\mu\to0^+$ 时
+$$
+\frac{\G(\mu)}{\frac{r_y}2|T(\mu)-\mu|^2}
+=\Theta\bigl(r_y\,|T(\mu)|^{2-p}\bigr)\longrightarrow+\infty .
+$$
+\end{proposition}
+
+\begin{proof}
+小 $\lambda$ 处 $e_{1/\rho}h^*(\lambda)=|\lambda|^p/p+o(|\lambda|^p)$，$d_0=-e_{1/\rho}h^*$，$T_0=0$。最优性条件给 $r_y(\mu-T)=|T|^{p-1}(1+o(1))$，故 $\mu\to0^+$ 时 $T\to0^+$ 且 $\mu=T+T^{p-1}/r_y$。于是
+$$
+\G=e_{1/\rho}h^*(T)+\frac{r_y}2(\mu-T)^2
+=\frac{|T|^p}p+\frac{T^{2p-2}}{2r_y}+o(|T|^p)
+=\Theta(|T|^p),
+$$
+$$
+\frac{\G}{\frac{r_y}2(\mu-T)^2}
+=\Theta\Bigl(\frac{|T|^p}{T^{2p-2}/r_y}\Bigr)
+=\Theta\bigl(r_y|T|^{2-p}\bigr)\to+\infty ,
+$$
+其中用到 $p>2$。比值对每个固定 $r_y$ 发散；增大 $r_y$ 只放大比值。
+\end{proof}
+
+结论：QEB 缺口与运行内 $s$ 的选取无关。路线 A1 所需的统一 center-gap error bound 不能由任何 fixed-$s$ 配置自动获得。
+
+\subsection{三值 Lyapunov 在 \texorpdfstring{$\mu$}{mu}-运动下的不可支付漂移}
+
+定义时变三值 Lyapunov
+$$
+\Psi_2(x,\lambda,z,\mu)
+=\widehat\F_{\mu}(x,\lambda,z)-2d_{\mu}(\lambda,z)+2p_{\mu}(z),
+$$
+其中 $d_{\mu}(\lambda,z)=\min_x\widehat\F_{\mu}(x,\lambda,z)$、$p_{\mu}(z)=\max_\lambda d_{\mu}(\lambda,z)$、$T(z,\mu)=\arg\max_\lambda d_\mu(\lambda,z)$。
+
+\begin{proposition}[漂移阻断]\label{prop:drift}
+固定 $(X,\Lambda,z)$，令 $\mu^+=\mu+\omega(\Lambda-\mu)$，$0<\omega\le1$。则
+$$
+\boxed{
+\Psi_2(X,\Lambda,z,\mu^+)-\Psi_2(X,\Lambda,z,\mu)
+\le
+5r_y\omega\norm{T(z,\mu)-\mu}^2
++3r_y\omega\norm{\Lambda-T(z,\mu)}^2 .
+}
+$$
+\end{proposition}
+
+\begin{proof}
+记 $u=\Lambda-\mu$、$w=T-\mu$。三部分变化为：
+$\widehat\F$ 与 $d_\mu(\Lambda,z)$ 的对偶二次项在 $\Lambda$ 处的位移同为
+$-\frac{r_y\omega(2-\omega)}2\norm u^2$（对 $x$ 取 min 与 $\mu$ 无关，故 $d$ 的位移精确相等）；
+$p$ 的位移由 frozen-Danskin 上界
+$$
+\Delta p\le r_y\omega\ip{w}{u}-\frac{r_y\omega^2}2\norm u^2 .
+$$
+合并并用极化恒等式 $2\ip wu=\norm w^2+\norm u^2-\norm{\Lambda-T}^2$：
+$$
+\Delta\Psi_2
+\le r_y\omega\Bigl[\frac{4-3\omega}2\norm u^2+\norm w^2-\norm{\Lambda-T}^2\Bigr]
+\le r_y\omega\bigl[5\norm w^2+3\norm{\Lambda-T}^2\bigr],
+$$
+最后一步用 $\norm u^2\le2\norm w^2+2\norm{\Lambda-T}^2$ 并舍弃负项。
+\end{proof}
+
+\subsection{支付分析}
+
+\textbf{$\norm{\Lambda-T}$ 项可支付。}由 $d_\mu(\cdot,z)$ 的 $r_y$-强凹性与算法对偶梯度的误差，
+$$
+\norm{\lambda^{k+1}-T(z^k,\mu^k)}
+\le
+\Bigl(\frac1{r_y\alpha}+1\Bigr)\norm{\Delta\lambda^{k+1}}
++\frac{G_A\sigma_x}{r_y}\norm{\Delta x^{k+1}} .
+$$
+由 $\alpha\le\frac1{11(\ell_\rho+r_y)}$ 有 $r_y\alpha\le\frac1{11}$，故吸收条件
+$3r_y\omega C_{\rm tr}^2\le\frac1{32\alpha}$ 在
+$$
+\omega=O\!\Bigl(\frac{r_y\alpha}{1}\Bigr)
+=O\!\Bigl(\frac{r_y}{\ell_\rho}\Bigr)
+$$
+下成立。注意这与 $\beta=\Theta(r_y/\ell_\rho)$ 是同一慢尺度：两个中心必须同速移动。
+
+\textbf{$\norm{T-\mu}$ 项在三值组织内无支付来源。}(B-descent) 的三个正项为
+$\frac1{8c}\norm{\Delta x}^2$、$\frac1{16\alpha}\norm{\lambda-\lambda_+(z)}^2$、$\frac{r_x\beta}8\norm{z-x}^2$，均不含 $\norm{T-\mu}$。若向 Lyapunov 追加 $c_G\G$ 项以恢复支付（$\mu$-步使 $\G$ 按 $\frac{r_y\omega(2-\omega)}2\norm{T-\mu}^2$ 下降），则 $z$-transport 重新制造乘法型增长 $C\beta\G$，其吸收恰需 (QEB)，而命题~\ref{prop:qeb} 已否定其自动成立。两种组织在同一处断裂。
+
+\begin{remark}[与路线 A0 的同一性]
+命题~\ref{prop:drift} 的漂移与命题~\ref{prop:qeb} 的失败点重合：当 $\mu$ 漂移到平坦极大点 $T_0$ 附近时，$\mu$-步的支付能力 $\frac{r_y\omega}2\norm{T-\mu}^2$ 塌缩，而 transport 债务 $\Theta(\beta\G)$ 保持有限。因此 B-MC 的闭合等价于路线 A0 的 correlated moving-center transport lemma；缺口不是 $r_y$ 或 $s$ 的选择问题，而是 value function $d_0,p,v$ 之间缺少一个使 $z$-运动与 $\mu$-运动直接抵消的恒等式。
+\end{remark}
+
+\begin{remark}[非不可能性]
+两个命题只否定两类标准闭合路径：fixed-$s$ 下的 QEB 自动成立，与三值 Lyapunov 加任意中心运动的直接 telescoping。存在 correlated 恒等式的可能性保持开放，此即 A0 的开放问题，应继续按原文档建议列为 theorem-closure 问题。
+\end{remark}
+
+\section{论文组织建议}
+
+\begin{enumerate}
+  \item 主定理采用路线 B，并同时陈述推广定理 B-$\bar\mu$（定理~\ref{thm:Bmu}）：二者共用参数区间与复杂度界，$\bar\mu=0$ 为最坏情形最优特例，$\bar\mu\neq0$ 承接 warm-start 常数改进（说明~\ref{rem:constant}）。
+  \item 算法族统一表述：路线 A 骨架冻结 $\mu$ 块并取 $s=\Theta(\eps^{-1})$ 即得 B-$\bar\mu$；解冻 $\mu$ 块即回到 A0/A1。一张算法族表格覆盖全部实例。
+  \item Moving-$\mu$ 列为开放问题，引用命题~\ref{prop:qeb} 与 \ref{prop:drift} 作为“缺口不可通过调 $s$ 或直接 telescoping 绕过”的证据，避免审稿人质疑作者未尝试精度相关 $s$。
+  \item 不将两阶段 $\bar\mu$ 选取写成定理；如需提及，标注为常数层面的启发式。
+\end{enumerate}
+
+\section*{Essence}
+
+固定非零中心 $\bar\mu\neq0$ 立即闭合且复杂度不变；渐近精确的 moving-$\mu$ 版本与路线 A0 共享同一缺口，且该缺口对任意运行内固定的 $s$（含精度相关取值）鲁棒存在。
+
+\end{document}

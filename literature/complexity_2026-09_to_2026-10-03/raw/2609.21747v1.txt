@@ -1,0 +1,1373 @@
+Content selection saved. Describe the issue below:
+
+Single-Loop Stochastic Projected Damped Extragradient Methods for Stochastic Nonconvex–(Strongly) Concave Minimax Optimization
+
+We develop single-loop stochastic projected damped extragradient methods for stochastic nonconvex–(strongly) concave minimax optimization, with complexity guarantees for both game stationarity (GS) and optimization stationarity (OS). Our approach combines a stochastic projected damped extragradient (SPDE) method with a recursive variance-reduced variant, VR-SPDE, both of which retain a single-loop structure. Under an unbiased stochastic gradient oracle with uniformly bounded variance, SPDE finds an $\varepsilon$ -game-stationary point with stochastic first-order oracle (SFO) complexities of $O(\kappa\varepsilon^{-4})$ and $O(\varepsilon^{-5})$ in the nonconvex–strongly concave and nonconvex–concave settings, respectively, where $\kappa=L/\mu$ . Under an additional mean-square Lipschitz condition on the stochastic gradients, VR-SPDE improves these GS complexities to $O(\kappa^{3/2}\varepsilon^{-3})$ and $O(\varepsilon^{-9/2})$ , respectively. For an $\varepsilon$ -optimization-stationary point, SPDE achieves SFO complexities of $O(\kappa\varepsilon^{-4})$ and $O(\varepsilon^{-6})$ , while VR-SPDE achieves $O(\kappa^{3/2}\varepsilon^{-3})$ and $O(\varepsilon^{-6})$ , in the two settings, respectively. These OS guarantees match the best-known bounds achieved by multi-loop methods while preserving a single-loop implementation. To the best of our knowledge, our results provide the best-known SFO complexity guarantees among single-loop stochastic first-order methods for the respective stationarity criteria and problem classes.
+
+Keywords: stochastic nonconvex–(strongly) concave minimax optimization; stochastic projected damped extragradient method; variance reduction; single-loop algorithms.
+
+1 Introduction
+
+We consider the stochastic minimax problem
+
+$\min_{x\in X}\max_{y\in Y}F(x,y):=\mathbb{E}_{\omega\sim\mathcal{D}}[f(x,y;\omega)],$ (1)
+
+where $X\subseteq\mathbb{R}^{n}$ is closed and convex, $Y\subseteq\mathbb{R}^{p}$ is compact and convex, and $F$ is smooth. The objective may be nonconvex in $x$ and is concave or strongly concave in $y$ . The random variable $\omega$ follows an unknown distribution $\mathcal{D}$ , and $\mathbb{E}$ denotes expectation. Problems of this form arise in distributed nonconvex optimization [ 4 ] , wireless systems [ 1 ] , and statistical learning [ 12 ] . Their growing scope of applications motivates stochastic first-order methods that combine a simple iteration structure with strong oracle complexity guarantees.
+
+Two stationarity criteria are central to nonconvex minimax optimization: game stationarity (GS) and optimization stationarity (OS). Game stationarity concerns first-order conditions for the two players at a primal–dual pair, whereas optimization stationarity concerns the minimization of the primal value function
+
+$\phi(x):=\max_{y\in Y}F(x,y).$
+
+These criteria capture different aspects of approximate solutions, and their complexity guarantees must be distinguished. This distinction is particularly relevant in the nonconvex–concave setting, where $\phi$ may be nonsmooth. We state the precise GS and OS criteria in Section 2 and analyze both criteria for the methods developed in this paper.
+
+For stochastic nonconvex–strongly concave problems, representative multi-loop methods obtain strong stochastic first-order oracle (SFO) complexity guarantees by approximately solving an inner maximization problem or a regularized saddle-point subproblem. Luo et al. [ 8 ] proposed SREDA, which combines nested ascent with SPIDER recursion and requires $O(\kappa^{3}\varepsilon^{-3})$ stochastic gradient evaluations, where $\kappa=L/\mu$ , $L$ is the gradient Lipschitz constant, and $\mu$ is the strong concavity parameter. Zhang et al. [ 15 ] developed SAPD+, which combines an inexact proximal-point outer scheme with an accelerated primal–dual inner solver. Their method requires $O(L\kappa\varepsilon^{-4})$ oracle calls, while its variance-reduced variant requires $O(L\kappa^{2}\varepsilon^{-3})$ calls. Among single-loop methods, Lin et al. [ 7 ] analyzed two-timescale stochastic gradient descent–ascent (SGDA) and established an $O(\kappa^{3}\varepsilon^{-4})$ stochastic gradient complexity for value-function stationarity. Huang et al. [ 5 ] introduced Acc-MDA with a STORM-type estimator and obtained complexities of $\widetilde{O}(\kappa^{9/2}\varepsilon^{-3})$ without a large batch and $\widetilde{O}(\kappa^{5/2}\varepsilon^{-3})$ with a batch size of order $\kappa^{4}$ .
+
+For stochastic nonconvex–concave problems, the possible nonsmoothness of the value function presents an additional challenge. Multi-loop methods often address this difficulty through proximal regularization or regularized saddle-point subproblems. Zhang et al. [ 15 ] applied SAPD+ to this setting and established an $O(\varepsilon^{-6})$ oracle complexity. Among single-loop methods, Lin et al. [ 7 ] established an $O(\varepsilon^{-8})$ stochastic gradient complexity for SGDA under value-function stationarity. For game stationarity, Zhang and Xu [ 14 ] proposed FORMDA, which combines vanishing dual regularization with recursive momentum and achieves an iteration complexity of $\widetilde{O}(\varepsilon^{-13/2})$ .
+
+These results highlight the challenge of obtaining strong complexity guarantees within a single-loop implementation. Multi-loop methods achieve sharper dependence on the target accuracy in several settings, but their outer iterations may require inner maximization, proximal, or regularized saddle-point subproblems to be solved to prescribed accuracies. The resulting inner-loop lengths and parameter schedules can depend on the target accuracy. This motivates the following question:
+
+Can single-loop stochastic first-order methods achieve improved game-stationarity guarantees and match the best-known multi-loop optimization-stationarity guarantees for both nonconvex–strongly concave and nonconvex–concave problems?
+
+We address this question through a stochastic projected damped extragradient method and its recursive variance-reduced variant. Both methods retain a single-loop structure, and their analysis provides complexity guarantees for both GS and OS.
+
+Contributions.
+
+Our contributions concern the algorithmic design and the complexity guarantees under the two stationarity criteria.
+
+Single-loop stochastic damped extragradient methods. We propose a stochastic projected damped extragradient (SPDE) method under an unbiased stochastic gradient oracle with uniformly bounded variance. We further incorporate a recursive variance-reduction mechanism to obtain VR-SPDE under an additional mean-square Lipschitz condition on the stochastic gradients. Both algorithms use a single-loop structure without nested iterative solvers for maximization, proximal, or saddle-point subproblems.
+
+Complexity guarantees for game stationarity. SPDE finds an $\varepsilon$ -game-stationary point with total SFO complexities of $O(\kappa\varepsilon^{-4})$ and $O(\varepsilon^{-5})$ in the nonconvex–strongly concave and nonconvex–concave settings, respectively. The corresponding iteration complexities are $O(\sqrt{\kappa}\varepsilon^{-2})$ and $O(\varepsilon^{-5/2})$ . Under the additional mean-square Lipschitz condition, VR-SPDE improves the GS oracle complexities to $O(\kappa^{3/2}\varepsilon^{-3})$ and $O(\varepsilon^{-9/2})$ , respectively, while preserving the single-loop structure.
+
+Complexity guarantees for optimization stationarity. For an $\varepsilon$ -optimization-stationary point, SPDE requires $O(\kappa\varepsilon^{-4})$ and $O(\varepsilon^{-6})$ SFO calls in the nonconvex–strongly concave and nonconvex–concave settings, respectively. VR-SPDE achieves the corresponding complexities of $O(\kappa^{3/2}\varepsilon^{-3})$ and $O(\varepsilon^{-6})$ . These OS guarantees match the best-known multi-loop dependence on the target accuracy in both settings while retaining a single-loop implementation.
+
+To the best of our knowledge, these results provide the best-known total SFO complexity guarantees among single-loop stochastic first-order methods for the respective stationarity criteria and problem classes. In particular, the same single-loop algorithms support both GS and OS guarantees. In the strongly concave setting, the two criteria have the same stated SFO bounds for each method. In the merely concave setting, the GS bounds are $O(\varepsilon^{-5})$ for SPDE and $O(\varepsilon^{-9/2})$ for VR-SPDE, whereas both methods attain an OS bound of $O(\varepsilon^{-6})$ . Table 1 summarizes representative results and identifies the stationarity criterion associated with each bound.
+
+Table 1: Representative complexity guarantees for stochastic nonconvex minimax optimization. Bounds are total SFO complexities unless marked by $\dagger$ , which denotes an iteration complexity. The dependence on $L$ is suppressed in this comparison.
+
+In Table 1 , NC–SC and NC–C denote the nonconvex–strongly concave and nonconvex–concave settings, respectively. “VR” indicates whether a method uses recursive variance reduction, and “GS” and “OS” denote game stationarity and optimization stationarity. The Acc-MDA entry reports the bound without a large batch. Each result is stated under the assumptions of the corresponding reference; comparisons must account for both the stationarity criterion and the stochastic oracle assumptions.
+
+Organization and notation.
+
+Section 2 presents the preliminaries and defines the GS and OS criteria. Section 3 introduces SPDE and its stochastic oracle model, develops a unified convergence analysis, and establishes the GS complexity bounds for the nonconvex–strongly concave and nonconvex–concave settings. Section 4 introduces the paired oracle, recursive estimator, and VR-SPDE algorithm, and derives the corresponding variance-reduced GS complexity bounds with all oracle calls counted. Section 5 establishes the OS guarantees for the original primal value function. Section 6 concludes the paper.
+
+Throughout, $\lVert\cdot\rVert$ denotes the Euclidean norm, $\langle\cdot,\cdot\rangle$ denotes the corresponding inner product, and $\Pi_{C}$ and $N_{C}$ denote the Euclidean projection onto and the normal cone of a closed convex set $C$ , respectively. The notation $O(\cdot)$ suppresses constants independent of the target accuracy $\varepsilon$ and of any parameters whose dependence is displayed explicitly. The notation $\widetilde{O}(\cdot)$ additionally suppresses logarithmic factors.
+
+2 Preliminaries and stationarity criteria
+
+We first state the standing assumptions and then introduce the stationarity criteria used in our complexity analysis. Throughout, product spaces are equipped with the Euclidean norm.
+
+The set $X\subseteq\mathbb{R}^{n}$ is nonempty, closed, and convex. The set $Y\subseteq\mathbb{R}^{p}$ is nonempty, compact, and convex, with
+
+$D_{Y}:=\max_{y\in Y}\lVert y\rVert>0.$
+
+For almost every $\omega$ , the sample loss $f(\cdot,\cdot;\omega)$ is differentiable on a neighborhood of $X\times Y$ .
+
+The function $F$ is continuously differentiable on a neighborhood of $X\times Y$ , and there exists $L>0$ such that, for all $(x,y),(x^{\prime},y^{\prime})\in X\times Y$ ,
+
+$\lVert\nabla F(x^{\prime},y^{\prime})-\nabla F(x,y)\rVert\leq L\lVert(x^{\prime}-x,y^{\prime}-y)\rVert.$ (2)
+
+For every $x\in X$ , the function $F(x,\cdot)$ is concave on $Y$ . The primal value function satisfies
+
+$\phi(x):=\max_{y\in Y}F(x,y),\qquad x\in X,\qquad\phi_{\inf}:=\inf_{x\in X}\phi(x)>-\infty.$ (3)
+
+Compactness of $Y$ and continuity of $F$ ensure that the maximum in ( 3 ) is attained for every $x\in X$ . The quantity $D_{Y}$ bounds the norm of points in $Y$ ; it is not the diameter of $Y$ .
+
+In the nonconvex–strongly concave setting, we additionally assume that $F(x,\cdot)$ is $\mu$ -strongly concave on $Y$ , uniformly in $x\in X$ , for some $\mu>0$ . Equivalently, for every $x\in X$ and $y,y^{\prime}\in Y$ ,
+
+$F(x,y^{\prime})\leq F(x,y)+\langle\nabla_{y}F(x,y),y^{\prime}-y\rangle-\frac{\mu}{2}\lVert y^{\prime}-y\rVert^{2}.$
+
+We write $\kappa:=L/\mu$ in this setting. The stochastic oracle assumptions are stated separately with the corresponding algorithms.
+
+Projection and normal cone.
+
+For a nonempty closed convex set $C\subseteq\mathbb{R}^{d}$ , define
+
+$\Pi_{C}(w):=\argmin_{u\in C}\frac{1}{2}\lVert u-w\rVert^{2},\qquad N_{C}(u):=\begin{cases}\{\eta\in\mathbb{R}^{d}:\langle\eta,a-u\rangle\leq 0\ \text{for all }a\in C\},&u\in C,\\ \varnothing,&u\notin C.\end{cases}$ (4)
+
+The projection is uniquely defined and satisfies
+
+$u=\Pi_{C}(w)\quad\Longleftrightarrow\quad w-u\in N_{C}(u),\qquad\lVert\Pi_{C}(w)-\Pi_{C}(w^{\prime})\rVert\leq\lVert w-w^{\prime}\rVert.$ (5)
+
+For a nonempty set $A$ , we use $\dist(v,A):=\inf_{a\in A}\lVert v-a\rVert$ .
+
+Game stationarity.
+
+For a feasible pair $(x,y)\in X\times Y$ , define the game-stationarity residual of the original minimax problem by
+
+$\mathcal{R}(x,y)^{2}:=\dist^{2}\bigl(0,\nabla_{x}F(x,y)+N_{X}(x)\bigr)+\dist^{2}\bigl(0,-\nabla_{y}F(x,y)+N_{Y}(y)\bigr).$ (6)
+
+Thus $\mathcal{R}(x,y)=0$ if and only if
+
+$0\in\nabla_{x}F(x,y)+N_{X}(x),\qquad 0\in-\nabla_{y}F(x,y)+N_{Y}(y).$
+
+These inclusions express the first-order conditions for the minimization and maximization variables, respectively. By concavity of $F(x,\cdot)$ , the second inclusion is equivalent to $y\in\arg\max_{v\in Y}F(x,v)$ .
+
+We call a random feasible pair $(x_{\rm out},y_{\rm out})$ $\varepsilon$ -game-stationary in expectation if
+
+$\mathbb{E}\bigl[\mathcal{R}(x_{\rm out},y_{\rm out})^{2}\bigr]\leq\varepsilon^{2}.$ (7)
+
+By the Cauchy–Schwarz inequality, this condition also implies
+
+$\mathbb{E}\bigl[\mathcal{R}(x_{\rm out},y_{\rm out})\bigr]\leq\varepsilon.$
+
+Optimization stationarity.
+
+Optimization stationarity concerns the constrained minimization of the primal value function $\phi$ . To incorporate the constraint explicitly, define
+
+$\bar{\phi}(x):=\begin{cases}\phi(x),&x\in X,\\ +\infty,&x\notin X.\end{cases}$
+
+For each $y\in Y$ , Assumption 1 implies that $F(\cdot,y)$ is $L$ -weakly convex on $X$ ; that is,
+
+$x\longmapsto F(x,y)+\frac{L}{2}\lVert x\rVert^{2}$
+
+is convex on $X$ . Taking the pointwise maximum over $y\in Y$ shows that $\phi$ is also $L$ -weakly convex on $X$ . Moreover, continuity of $F$ and compactness of $Y$ imply that $\phi$ is continuous relative to $X$ . Consequently, $\bar{\phi}$ is a proper, lower semicontinuous, $L$ -weakly convex function on $\mathbb{R}^{n}$ .
+
+For $z\in\mathbb{R}^{n}$ , define the Moreau envelope of $\bar{\phi}$ with parameter $1/(2L)$ and its associated proximal point by
+
+$p_{0}(z):=\min_{x\in X}\left\{\phi(x)+L\lVert x-z\rVert^{2}\right\},\qquad x_{0}^{\star}(z):=\argmin_{x\in X}\left\{\phi(x)+L\lVert x-z\rVert^{2}\right\}.$ (8)
+
+Since $1/(2L)<1/L$ , the standard Moreau-envelope theorem for weakly convex functions guarantees that $x_{0}^{\star}(z)$ exists and is unique for every $z\in\mathbb{R}^{n}$ . Furthermore, $p_{0}$ is continuously differentiable on $\mathbb{R}^{n}$ , with
+
+$\nabla p_{0}(z)=2L\bigl(z-x_{0}^{\star}(z)\bigr).$ (9)
+
+We therefore use the optimization-stationarity measure
+
+$\mathcal{S}_{\rm OS}(z):=\lVert\nabla p_{0}(z)\rVert.$ (10)
+
+A random output $z_{\rm out}\in\mathbb{R}^{n}$ is called $\varepsilon$ -optimization-stationary in expectation if
+
+$\mathbb{E}\bigl[\mathcal{S}_{\rm OS}(z_{\rm out})^{2}\bigr]\leq\varepsilon^{2}.$
+
+This condition also implies $\mathbb{E}[\mathcal{S}_{\rm OS}(z_{\rm out})]\leq\varepsilon$ .
+
+The GS criterion measures first-order residuals at a feasible primal–dual pair, whereas the OS criterion measures the gradient of a Moreau envelope of the constrained primal value function. The envelope is defined for every $z\in\mathbb{R}^{n}$ , and its proximal point $x_{0}^{\star}(z)$ always belongs to $X$ . Although the two criteria are related, their approximate guarantees are not interchangeable without further analysis. We establish the corresponding complexity bounds separately.
+
+3 A stochastic projected damped extragradient method
+
+We develop a stochastic projected damped extragradient (SPDE) method for nonconvex–(strongly) concave minimax optimization. The method combines a projected predictor–corrector step, a damped dual momentum recursion, and a relaxed update of a primal proximal center. These updates are performed within a single loop: each iteration uses a fixed sequence of projections and stochastic gradient queries, without an inner iterative solver for a regularized saddle-point subproblem. In this section, we establish the game-stationarity guarantees; the corresponding optimization-stationarity guarantees are developed in Section 5 .
+
+Regularized objective.
+
+For a center $z\in X$ and a regularization parameter $0<\tau\leq L$ , define
+
+$\displaystyle g(x,y;z,\omega)$ $\displaystyle:=f(x,y;\omega)+L\lVert x-z\rVert^{2}-\frac{\tau}{2}\lVert y\rVert^{2},$ (11) $\displaystyle G(x,y;z)$ $\displaystyle:=\mathbb{E}_{\omega\sim\mathcal{D}}[g(x,y;z,\omega)]=F(x,y)+L\lVert x-z\rVert^{2}-\frac{\tau}{2}\lVert y\rVert^{2}.$
+
+Under Assumption 1 , $F(\cdot,y)$ is $L$ -weakly convex on $X$ . Consequently, for each fixed $z$ , $G(\cdot,\cdot;z)$ is $L$ -strongly convex in $x$ and $\tau$ -strongly concave in $y$ . If $F(x,\cdot)$ is $\mu$ -strongly concave, the dual strong concavity modulus of $G$ is $\mu+\tau$ . These properties concern the population objective $G$ ; they need not hold for individual sample objectives $g$ . The regularized objective guides the algorithmic updates. The stationarity criteria remain those of the original problem: the residual $\mathcal{R}$ in ( 6 ) and the Moreau-envelope measure $\mathcal{S}_{\rm OS}$ in ( 10 ). The effect of dual regularization on these criteria is accounted for in the subsequent complexity analysis.
+
+Stochastic gradient estimates.
+
+For a feasible query point $u=(x,y)$ and a batch $\Omega=(\omega_{1},\ldots,\omega_{m})$ of independent samples from $\mathcal{D}$ , define
+
+$\widehat{\nabla}F(u;\Omega):=\frac{1}{m}\sum_{i=1}^{m}\nabla f(x,y;\omega_{i}).$ (12)
+
+The regularization gradients are evaluated exactly, so stochastic estimation is needed only for $\nabla F$ .
+
+At iteration $t$ , SPDE queries three fresh batches sequentially: at the current iterate, at a projected predictor, and at the corrected iterate. We use the notation
+
+$\displaystyle\widehat{g}_{t}^{(0)}$ $\displaystyle:=\widehat{\nabla}F((x_{t},y_{t});\Omega_{t}^{(0)}),$ (13) $\displaystyle\widehat{g}_{t}^{(1)}$ $\displaystyle:=\widehat{\nabla}F((\widetilde{x}_{t},\widetilde{y}_{t});\Omega_{t}^{(1)}),$ $\displaystyle\widehat{g}_{t}^{(2)}$ $\displaystyle:=\widehat{\nabla}F((x_{t+1},y_{t+1});\Omega_{t}^{(2)}),$
+
+and write $\widehat{g}_{t}^{(r)}=(\widehat{g}_{x,t}^{(r)},\widehat{g}_{y,t}^{(r)})$ . Each batch is drawn independently of all information available before that batch is queried.
+
+Single-loop update.
+
+SPDE maintains the primal–dual iterate $(x_{t},y_{t})$ , the proximal center $z_{t}$ , normal-cone vectors $\xi_{t}$ and $n_{t}$ , and a dual momentum vector $v_{t}$ . The first stochastic gradient estimate generates the projected predictor $(\widetilde{x}_{t},\widetilde{y}_{t})$ . The second estimate produces the corrected iterate and the associated normal-cone vectors. It also forms the intermediate momentum $\bar{v}_{t}$ used in the dual correction. After the corrected point has been computed, a third fresh batch updates the dual momentum at that point. This sampling order makes the endpoint gradient error conditionally mean zero given the corrected iterate and its normal-cone vectors. Finally, the relaxed update $z_{t+1}=(1-\beta)z_{t}+\beta x_{t+1}$ moves the proximal center toward the corrected primal iterate. Thus the center evolves together with the predictor–corrector and momentum updates, without a separate outer loop.
+
+The coupling of the normal-cone corrections with the damped dual momentum is a central feature of SPDE. In particular, the scaling of $n_{t+1}$ by $1+k$ is part of this coupling, and the same vector enters the next momentum update. Algorithm 1 gives the complete procedure. The convergence results below specify admissible parameter choices within the ranges stated in the algorithm.
+
+Algorithm 1 Stochastic projected damped extragradient (SPDE)
+
+The output rule is used for the GS guarantees in this section. It requires no evaluation of the stationarity residual. The output used for the OS guarantees is specified in Section 5 .
+
+3.1 Stochastic oracle and batch errors
+
+We next state the stochastic oracle assumptions and describe the information available at each query. These assumptions connect sample gradients to the population gradient; differentiability of the sample losses alone does not assert unbiasedness.
+
+Let $\mathcal{A}$ be the sigma-algebra representing the information available before an oracle query, and let $u=(x,y)\in X\times Y$ be an $\mathcal{A}$ -measurable query point. The oracle draws a fresh sample $\omega\sim\mathcal{D}$ , independently of $\mathcal{A}$ , and returns a measurable sample gradient $\nabla f(u;\omega)\in\mathbb{R}^{n+p}$ satisfying
+
+$\mathbb{E}[\nabla f(u;\omega)\mid\mathcal{A}]=\nabla F(u),\qquad\mathbb{E}\!\left[\lVert\nabla f(u;\omega)-\nabla F(u)\rVert^{2}\,\middle|\,\mathcal{A}\right]\leq\sigma^{2}.$ (14)
+
+Here $\sigma\geq 0$ is independent of the query point, iteration index, and regularization parameter. Within each batch, the samples are independent draws from $\mathcal{D}$ and are independent of the pre-query information. Each evaluation of $\nabla f(u;\omega)$ counts as one stochastic first-order oracle (SFO) call.
+
+Conditional independence and unbiasedness imply that the mini-batch estimator satisfies
+
+$\displaystyle\mathbb{E}[\widehat{\nabla}F(u;\Omega)\mid\mathcal{A}]$ $\displaystyle=\nabla F(u),$ (15) $\displaystyle\mathbb{E}\!\left[\lVert\widehat{\nabla}F(u;\Omega)-\nabla F(u)\rVert^{2}\,\middle|\,\mathcal{A}\right]$ $\displaystyle\leq\frac{\sigma^{2}}{m}.$
+
+Indeed, the cross terms between distinct sample-gradient errors have zero conditional expectation. No smoothness or concavity assumption is imposed on individual sample losses beyond the differentiability in Assumption 1 . All smoothness and concavity properties used in this section concern the population objective $F$ . In particular, SPDE does not require the mean-square Lipschitz condition used later for VR-SPDE.
+
+Oracle accounting.
+
+Every occurrence of $\widehat{g}_{t}^{(1)}$ within iteration $t$ uses the same computed vector. The third batch is used for the endpoint momentum update, and the first batch of iteration $t+1$ is drawn afresh. With three batches of size $m$ per iteration, Algorithm 1 , as written, uses $3mT$ SFO calls. Only the $y$ component of the third estimate enters the updates; if an implementation evaluates only that component, we still charge one full-gradient SFO call per sample. Thus $3mT$ is also a valid upper bound under this convention.
+
+Filtration and conditional errors.
+
+Let $\mathcal{F}_{t}$ be the sigma-algebra generated by all oracle samples drawn before iteration $t$ , together with the deterministic initialization. Define
+
+$\mathcal{F}_{t}^{(1)}:=\sigma(\mathcal{F}_{t},\Omega_{t}^{(0)}),\qquad\mathcal{F}_{t}^{(2)}:=\sigma(\mathcal{F}_{t}^{(1)},\Omega_{t}^{(1)}),\qquad\mathcal{F}_{t+1}:=\sigma(\mathcal{F}_{t}^{(2)},\Omega_{t}^{(2)}).$
+
+The state $(x_{t},y_{t},z_{t},\xi_{t},n_{t},v_{t})$ is $\mathcal{F}_{t}$ -measurable. The predictor $(\widetilde{x}_{t},\widetilde{y}_{t})$ is $\mathcal{F}_{t}^{(1)}$ -measurable, and the corrected quantities $x_{t+1},y_{t+1},\xi_{t+1},n_{t+1}$ and $\bar{v}_{t}$ are $\mathcal{F}_{t}^{(2)}$ -measurable. The center $z_{t+1}$ is also $\mathcal{F}_{t}^{(2)}$ -measurable, because its update does not depend on the third batch.
+
+Define the batch errors by
+
+$\displaystyle a_{t}$ $\displaystyle:=\widehat{g}_{t}^{(0)}-\nabla F(x_{t},y_{t}),$ (16) $\displaystyle b_{t}$ $\displaystyle:=\widehat{g}_{t}^{(1)}-\nabla F(\widetilde{x}_{t},\widetilde{y}_{t}),$ $\displaystyle c_{t}$ $\displaystyle:=\widehat{g}_{t}^{(2)}-\nabla F(x_{t+1},y_{t+1}).$
+
+Equivalently, the stochastic estimates admit the decompositions
+
+$\displaystyle\widehat{g}_{t}^{(0)}$ $\displaystyle=\nabla F(x_{t},y_{t})+a_{t},$ (17) $\displaystyle\widehat{g}_{t}^{(1)}$ $\displaystyle=\nabla F(\widetilde{x}_{t},\widetilde{y}_{t})+b_{t},$ $\displaystyle\widehat{g}_{t}^{(2)}$ $\displaystyle=\nabla F(x_{t+1},y_{t+1})+c_{t}.$
+
+Applying ( 15 ) at the three successive query points gives
+
+$\begin{gathered}\mathbb{E}[a_{t}\mid\mathcal{F}_{t}]=0,\qquad\mathbb{E}[b_{t}\mid\mathcal{F}_{t}^{(1)}]=0,\qquad\mathbb{E}[c_{t}\mid\mathcal{F}_{t}^{(2)}]=0,\\ \mathbb{E}[\lVert a_{t}\rVert^{2}\mid\mathcal{F}_{t}]\leq\frac{\sigma^{2}}{m},\qquad\mathbb{E}[\lVert b_{t}\rVert^{2}\mid\mathcal{F}_{t}^{(1)}]\leq\frac{\sigma^{2}}{m},\qquad\mathbb{E}[\lVert c_{t}\rVert^{2}\mid\mathcal{F}_{t}^{(2)}]\leq\frac{\sigma^{2}}{m}.\end{gathered}$ (18)
+
+Writing $c_{t}=(c_{x,t},c_{y,t})$ , the endpoint momentum update therefore takes the form
+
+$v_{t+1}=\alpha v_{t}+k\bigl(\nabla_{y}F(x_{t+1},y_{t+1})-\tau y_{t+1}-n_{t+1}\bigr)+kc_{y,t},\qquad\mathbb{E}[c_{y,t}\mid\mathcal{F}_{t}^{(2)}]=0.$
+
+This identity states precisely the conditional centering supplied by the third batch. The errors $a_{t}$ , $b_{t}$ , and $c_{t}$ need not be mutually independent, since their query points depend on preceding batches; the analysis uses their conditional moment properties in ( 18 ).
+
+The deterministic saddle-point, envelope, sensitivity, and normal-cone arguments below concern the population objective. For the stochastic updates, we first substitute ( 17 ) into the algorithm and derive inequalities for the realized iterates and errors. We then take conditional expectations with respect to the appropriate sigma-algebras. In particular, conditional mean-zero identities are used only when the other factors are measurable with respect to the corresponding pre-query information.
+
+Suppose that Assumptions 1 and 2 hold, and let the iterates be generated by Algorithm 1 . Then, almost surely, for every $t=0,\ldots,T$ ,
+
+$x_{t},z_{t}\in X,\qquad y_{t}\in Y,\qquad\xi_{t}\in N_{X}(x_{t}),\qquad n_{t}\in N_{Y}(y_{t}).$ (19)
+
+The predictors satisfy $(\widetilde{x}_{t},\widetilde{y}_{t})\in X\times Y$ for $t=0,\ldots,T-1$ . At every finite iteration, all state components, predictors, intermediate momentum vectors, and batch gradient estimates have finite second moments.
+
+The initialization is feasible, and the zero vector belongs to the normal cone at every point of a nonempty closed convex set. The projection steps ensure that the predictors and corrected iterates are feasible. Since $0<\beta\leq 1$ ,
+
+$z_{t+1}=(1-\beta)z_{t}+\beta x_{t+1}\in X$
+
+whenever $z_{t},x_{t+1}\in X$ .
+
+By the projection optimality condition in ( 5 ), the primal correction satisfies
+
+$x_{t}-h\bigl(\widehat{g}_{x,t}^{(1)}+2L(\widetilde{x}_{t}-z_{t})\bigr)-x_{t+1}=h\xi_{t+1}\in N_{X}(x_{t+1}).$
+
+Similarly, the dual correction gives
+
+$y_{t}+h\bigl(\widehat{g}_{y,t}^{(1)}-\tau\widetilde{y}_{t}+\bar{v}_{t}\bigr)-y_{t+1}=h(1+k)n_{t+1}\in N_{Y}(y_{t+1}).$
+
+Normal cones are cones, and $h>0$ and $1+k>0$ . Dividing by these positive scalars proves ( 19 ) by induction.
+
+To establish the second-moment claim, fix $u_{\rm ref}\in X\times Y$ . The Lipschitz bound ( 2 ) implies
+
+$\lVert\nabla F(u)\rVert^{2}\leq 2\lVert\nabla F(u_{\rm ref})\rVert^{2}+2L^{2}\lVert u-u_{\rm ref}\rVert^{2},\qquad u\in X\times Y.$
+
+For any square-integrable feasible query point $u$ , conditional unbiasedness and ( 15 ) yield
+
+$\mathbb{E}\!\left[\lVert\widehat{\nabla}F(u;\Omega)\rVert^{2}\,\middle|\,\mathcal{A}\right]\leq\lVert\nabla F(u)\rVert^{2}+\frac{\sigma^{2}}{m}.$
+
+Hence the corresponding batch estimate has a finite second moment.
+
+Moreover, for any nonempty closed convex set $C$ and any fixed $u_{C}\in C$ , nonexpansiveness gives
+
+$\lVert\Pi_{C}(w)-u_{C}\rVert=\lVert\Pi_{C}(w)-\Pi_{C}(u_{C})\rVert\leq\lVert w-u_{C}\rVert.$
+
+Thus projection preserves finite second moments. Starting from the deterministic initialization, apply these observations successively to the first batch and predictor, the second batch and correction, and the third batch and momentum update. All remaining updates are affine combinations with fixed finite coefficients. Induction establishes the claimed finite second moments at every finite iteration. ∎
+
+3.2 Convergence analysis
+
+We now introduce the regularized saddle point attached to a fixed center and the potential that will telescope across iterations. The first three results establish sensitivity, nonnegativity, and an accuracy-independent initial budget; none of them uses stochastic independence.
+
+For a fixed center $z\in\mathbb{R}^{n}$ , define
+
+$\begin{gathered}p(z):=\min_{x\in X}\max_{y\in Y}G(x,y;z),\\ (x^{\star}(z),y^{\star}(z)):=\text{the unique saddle point of $G(\cdot,\cdot;z)$}.\end{gathered}$ (20)
+
+Existence follows from strong convexity and coercivity in $x$ , compactness of $Y$ , and the convex–concave minimax theorem. Strong convexity and strong concavity give uniqueness. More explicitly, for fixed $y\in Y$ , the function $G(x,y;z)$ has a quadratic lower bound. Thus $\max_{y}G(x,y;z)$ has bounded sublevel sets and attains its minimum. The convex–concave minimax theorem can be applied on a compact convex subset containing all relevant minimizers; coercivity then recovers the problem over $X$ .
+
+Suppose that Assumption 1 holds and $0<\tau\leq L$ . Then, for all $z,z^{\prime}\in\mathbb{R}^{n}$ ,
+
+$\lVert x^{\star}(z^{\prime})-x^{\star}(z)\rVert\leq 2\lVert z^{\prime}-z\rVert,\qquad\lVert y^{\star}(z^{\prime})-y^{\star}(z)\rVert\leq\sqrt{\frac{2L}{\tau}}\lVert z^{\prime}-z\rVert,$ (21)
+
+and
+
+$\nabla p(z)=2L(z-x^{\star}(z)),\qquad\lVert\nabla p(z^{\prime})-\nabla p(z)\rVert\leq 6L\lVert z^{\prime}-z\rVert.$ (22)
+
+Define $\mathcal{T}(x,y)=(\nabla_{x}F(x,y)+2Lx,-\nabla_{y}F(x,y)+\tau y)$ . Adding the two pairs of first-order strong convexity and strong concavity inequalities for $G$ gives
+
+$\langle\mathcal{T}(x^{\prime},y^{\prime})-\mathcal{T}(x,y),(x^{\prime}-x,y^{\prime}-y)\rangle\geq L\lVert x^{\prime}-x\rVert^{2}+\tau\lVert y^{\prime}-y\rVert^{2}.$
+
+Add the variational inequalities at the two saddle points and write $\delta_{x}=x^{\star}(z^{\prime})-x^{\star}(z)$ and $\delta_{y}=y^{\star}(z^{\prime})-y^{\star}(z)$ . Then
+
+$L\lVert\delta_{x}\rVert^{2}+\tau\lVert\delta_{y}\rVert^{2}\leq 2L\langle z^{\prime}-z,\delta_{x}\rangle\leq\frac{L}{2}\lVert\delta_{x}\rVert^{2}+2L\lVert z^{\prime}-z\rVert^{2}.$
+
+Rearranging proves ( 21 ). Let $\phi_{\tau}(x)=\max_{y\in Y}\{F(x,y)-\tau\lVert y\rVert^{2}/2\}$ . Then $p(z)=\min_{x\in X}\{\phi_{\tau}(x)+L\lVert x-z\rVert^{2}\}$ . Uniqueness of the minimizer and envelope differentiation give $\nabla p(z)=2L(z-x^{\star}(z))$ . Together with ( 21 ), this yields the Lipschitz bound $2L(1+2)=6L$ . ∎
+
+The potential used in the remaining concave analysis employs the shorthand
+
+$s:=\sqrt{2L\tau}.$ (23)
+
+Write $w_{t}=(x_{t},y_{t},\xi_{t},n_{t},v_{t})$ . For $w=(x,y,\xi,n,v)$ with $\xi\in N_{X}(x),n\in N_{Y}(y)$ , define
+
+$\displaystyle E_{z}(w):={}$ $\displaystyle-\left(1-\frac{s}{16L}\right)[G(x,y;z)-p(z)]+\frac{1}{L}\lVert\nabla_{x}G(x,y;z)+\xi\rVert^{2}$ (24) $\displaystyle+\frac{1}{L}\lVert-\nabla_{y}G(x,y;z)+n-v\rVert^{2}+\frac{s}{16L}\langle v,y-y^{\star}(z)\rangle+\frac{\tau}{256}\lVert y-y^{\star}(z)\rVert^{2},$ $\displaystyle H_{z}(w):={}$ $\displaystyle E_{z}(w)+\frac{s}{256L^{2}}\lVert v\rVert^{2},$ $\displaystyle\mathcal{V}(z,w):={}$ $\displaystyle p(z)-\inf_{z^{\prime}\in\mathbb{R}^{n}}p(z^{\prime})+H_{z}(w),\qquad\mathcal{V}_{t}:=\mathcal{V}(z_{t},w_{t}).$
+
+Suppose that Assumption 1 holds and $0<\tau\leq L$ . For any state as above, let $P=\nabla_{x}G(x,y;z)+\xi$ and $Q=-\nabla_{y}G(x,y;z)+n-v$ . Then
+
+$\langle-\nabla_{y}G(x,y;z)+n,y-y^{\star}(z)\rangle+G(x,y;z)-p(z)\geq\frac{L}{2}\lVert x-x^{\star}(z)\rVert^{2}+\frac{\tau}{2}\lVert y-y^{\star}(z)\rVert^{2},$ (25)
+
+and
+
+$\displaystyle E_{z}(w)\geq{}$ $\displaystyle\frac{1}{2L}\lVert P\rVert^{2}+\frac{s}{32}\lVert x-x^{\star}(z)\rVert^{2}+\frac{\tau}{2}\lVert y-y^{\star}(z)\rVert^{2}+\frac{1}{L}\left\|Q-\frac{s}{32}(y-y^{\star}(z))\right\|^{2}\geq 0.$ (26)
+
+Consequently, $\mathcal{V}(z,w)\geq 0$ .
+
+Saddle-point optimality, strong convexity, and strong concavity give
+
+$\displaystyle G(x,y^{\star}(z);z)-p(z)$ $\displaystyle\geq\frac{L}{2}\lVert x-x^{\star}(z)\rVert^{2},$ (27) $\displaystyle G(x,y^{\star}(z);z)$ $\displaystyle\leq G(x,y;z)-\langle\nabla_{y}G(x,y;z),y-y^{\star}(z)\rangle-\frac{\tau}{2}\lVert y-y^{\star}(z)\rVert^{2}.$ (28)
+
+Adding these inequalities and using $\langle n,y-y^{\star}(z)\rangle\geq 0$ proves ( 25 ). Write $Y_{0}=y-y^{\star}(z)$ . Completing the square in ( 24 ) yields
+
+$\displaystyle E_{z}(w)={}$ $\displaystyle-\left(1-\frac{s}{16L}\right)(G-p)+\frac{1}{L}\lVert P\rVert^{2}+\frac{s}{16L}\langle-\nabla_{y}G+n,Y_{0}\rangle$ $\displaystyle+\frac{1}{L}\lVert Q-sY_{0}/32\rVert^{2}+\frac{\tau}{512}\lVert Y_{0}\rVert^{2}$ $\displaystyle\geq{}$ $\displaystyle-(G-p)+\frac{s}{16L}[G(x,y^{\star}(z);z)-p(z)]+\frac{1}{L}\lVert P\rVert^{2}+\frac{1}{L}\lVert Q-sY_{0}/32\rVert^{2}.$
+
+The last line follows from ( 28 ) after discarding nonnegative terms. For every $a\in X$ , strong convexity and the normal-cone condition also give
+
+$G(a,y;z)\geq G(x,y;z)+\langle P,a-x\rangle+\frac{L}{2}\lVert a-x\rVert^{2}\geq G(x,y;z)-\frac{\lVert P\rVert^{2}}{2L}.$
+
+Since $\min_{a}G(a,y;z)\leq G(x^{\star}(z),y;z)\leq p(z)-\tau\lVert Y_{0}\rVert^{2}/2$ , we obtain
+
+$\frac{\lVert P\rVert^{2}}{2L}-(G(x,y;z)-p(z))\geq\frac{\tau}{2}\lVert Y_{0}\rVert^{2}.$
+
+Substituting this inequality and ( 27 ) into the completed-square lower bound proves ( 26 ). Moreover, $\lVert y\rVert\leq D_{Y}$ implies $\inf_{z}p(z)=\inf_{x}\phi_{\tau}(x)\geq\phi_{\inf}-\tau D_{Y}^{2}/2>-\infty$ . Thus $E_{z}$ , $H_{z}$ , and $\mathcal{V}$ in ( 24 ) are all nonnegative. ∎
+
+Define the initial quantity, independent of $\tau,m,T,\varepsilon$ , by
+
+$\displaystyle B:={}$ $\displaystyle\phi(x_{0})-\phi_{\inf}+2D_{Y}\lVert\nabla_{y}F(x_{0},y_{0})\rVert+\frac{\lVert\nabla_{x}F(x_{0},y_{0})\rVert^{2}+2\lVert\nabla_{y}F(x_{0},y_{0})\rVert^{2}}{L}+\left(3+\frac{1}{64}\right)LD_{Y}^{2}.$ (29)
+
+Suppose that Assumption 1 holds and $0<\tau\leq L$ . Then the initialization in Algorithm 1 satisfies $0\leq\mathcal{V}_{0}\leq B$ .
+
+Using $0\leq\phi(x)-\phi_{\tau}(x)\leq\tau D_{Y}^{2}/2$ and $z_{0}=x_{0}$ , we have
+
+$p(x_{0})-\inf_{z}p(z)\leq\phi(x_{0})-\phi_{\inf}+\frac{\tau}{2}D_{Y}^{2}.$
+
+Substituting $\xi_{0}=n_{0}=v_{0}=0$ into ( 24 ) gives
+
+$\displaystyle E_{x_{0}}(w_{0})={}$ $\displaystyle\left(1-\frac{s}{16L}\right)\left[p(x_{0})-F(x_{0},y_{0})+\frac{\tau}{2}\lVert y_{0}\rVert^{2}\right]$ $\displaystyle+\frac{\lVert\nabla_{x}F(x_{0},y_{0})\rVert^{2}+\lVert-\nabla_{y}F(x_{0},y_{0})+\tau y_{0}\rVert^{2}}{L}+\frac{\tau}{256}\lVert y_{0}-y^{\star}(x_{0})\rVert^{2}.$
+
+By concavity and the radius bound on $Y$ , the bracketed expression is at most
+
+$2D_{Y}\lVert\nabla_{y}F(x_{0},y_{0})\rVert+\tau D_{Y}^{2}/2.$
+
+Replace the bracket by this nonnegative upper bound and use $0<1-s/(16L)<1$ together with
+
+$\lVert-\nabla_{y}F(x_{0},y_{0})+\tau y_{0}\rVert^{2}\leq 2\lVert\nabla_{y}F(x_{0},y_{0})\rVert^{2}+2\tau^{2}D_{Y}^{2}.$
+
+This gives
+
+$\displaystyle\mathcal{V}_{0}\leq{}$ $\displaystyle\phi(x_{0})-\phi_{\inf}+2D_{Y}\lVert\nabla_{y}F(x_{0},y_{0})\rVert+\frac{\lVert\nabla_{x}F(x_{0},y_{0})\rVert^{2}+2\lVert\nabla_{y}F(x_{0},y_{0})\rVert^{2}}{L}$ $\displaystyle+\left(\tau+\frac{2\tau^{2}}{L}+\frac{\tau}{64}\right)D_{Y}^{2}\leq B.$
+
+The last step uses $\tau\leq L$ ; nonnegativity follows from Lemma 3 . ∎
+
+The next lemma is the deterministic algebraic core of the analysis. It isolates one predictor–corrector step at a fixed center and keeps the two gradient errors explicit. In the SPDE proof these errors are the realized sample-gradient errors generated by $\Omega_{t}^{(0)}$ and $\Omega_{t}^{(1)}$ ; in the VR-SPDE proof they are the errors of the recursive sample estimator.
+
+Throughout this subsection, the center $z$ is fixed. All gradients refer to the same function $G(\cdot,\cdot;z)$ , so neither conditional expectations nor center updates arise here. The next lemma makes the concrete step-size and damping choices at their first use. Consider two feasible states $w=(x,y,\xi,n,v)$ and $w^{+}=(x^{+},y^{+},\xi^{+},n^{+},v^{+})$ , and assume normal cone membership at both endpoints. Specifically, $\xi\in N_{X}(x)$ , $\xi^{+}\in N_{X}(x^{+})$ , $n\in N_{Y}(y)$ , and $n^{+}\in N_{Y}(y^{+})$ . For compact notation, define
+
+$\displaystyle P$ $\displaystyle=\nabla_{x}G(x,y;z)+\xi,$ $\displaystyle P^{+}$ $\displaystyle=\nabla_{x}G(x^{+},y^{+};z)+\xi^{+},$ $\displaystyle R$ $\displaystyle=-\nabla_{y}G(x,y;z)+n,$ $\displaystyle R^{+}$ $\displaystyle=-\nabla_{y}G(x^{+},y^{+};z)+n^{+},$ $\displaystyle Q$ $\displaystyle=R-v,$ $\displaystyle Q^{+}$ $\displaystyle=R^{+}-v^{+},$ $\displaystyle X^{+}$ $\displaystyle=x^{+}-x^{\star}(z),$ $\displaystyle Y^{+}$ $\displaystyle=y^{+}-y^{\star}(z).$ (30)
+
+For any quantity defined at both endpoints, $\Delta$ denotes its endpoint value minus its initial value; for example, $\Delta P=P^{+}-P$ and $\Delta x=x^{+}-x$ . Also set
+
+$\mathcal{I}=\lVert\Delta P\rVert^{2}+\lVert\Delta Q\rVert^{2},\qquad e=(e_{x},e_{y}),\qquad\lVert e\rVert^{2}=\lVert e_{x}\rVert^{2}+\lVert e_{y}\rVert^{2}.$ (31)
+
+We use the following full dissipation associated with the potential function ( 24 ):
+
+$\displaystyle\mathcal{D}_{z}(w^{+},w)={}$ $\displaystyle\frac{h}{4}\lVert P^{+}\rVert^{2}+\frac{3hs}{512L}\lVert Q^{+}\rVert^{2}+\frac{7hs}{4096L}\lVert v^{+}\rVert^{2}$ (32) $\displaystyle+\frac{h\tau s}{128}\lVert Y^{+}\rVert^{2}+\frac{hs(16L-s)}{1024}\lVert X^{+}\rVert^{2}+\frac{1}{4L}\mathcal{I}.$
+
+Here $v^{+}$ may be the virtual endpoint momentum constructed below. The argument requires the exact recursion stated next, but does not require $e_{x},e_{y}$ to vanish.
+
+Suppose that Assumption 1 holds. Let $0<\tau\leq L$ , let $s$ be given by ( 23 ), and set
+
+$\begin{gathered}L_{G}:=3L+\tau,\qquad h:=\frac{1}{64L_{G}},\qquad d:=hL_{G}=\frac{1}{64},\\ \alpha:=\left(1+\frac{hs}{16}\right)^{-1},\qquad k:=\frac{h(8L-s)}{16+hs}.\end{gathered}$ (33)
+
+These choices satisfy
+
+$s\leq 2L,\qquad hL\leq\frac{1}{192},\qquad\alpha^{-1}=1+\frac{hs}{16},\qquad\frac{k}{\alpha}=\frac{h(8L-s)}{16},\qquad 0\leq k\leq\frac{hL}{2}.$ (34)
+
+Under the preceding notation, suppose that
+
+$\displaystyle\Delta x$ $\displaystyle=-h(P^{+}+e_{x}),$ $\displaystyle\Delta y$ $\displaystyle=-h(Q^{+}+e_{y}),$ (35) $\displaystyle v^{+}$ $\displaystyle=\alpha v+k\bigl(\nabla_{y}G(x^{+},y^{+};z)-n^{+}\bigr),$ (36)
+
+and that, for some $u\geq 0$ ,
+
+$\lVert e\rVert\leq 2d\sqrt{\mathcal{I}}+u.$ (37)
+
+Then
+
+$H_{z}(w^{+})-H_{z}(w)+\frac{hs}{32}H_{z}(w^{+})\leq-\mathcal{D}_{z}(w^{+},w)+\frac{17}{L}u^{2}.$ (38)
+
+We suppress the fixed-center subscript $z$ below. Set $\rho=(16L-s)/32$ and $H=G(x,y;z)-p(z)$ and $H^{+}=G(x^{+},y^{+};z)-p(z)$ . Using ( 34 ) and dividing the momentum recursion by $\alpha$ gives
+
+$\displaystyle\frac{\Delta v}{h}$ $\displaystyle=-\frac{s}{16}v^{+}-\frac{8L-s}{16}R^{+}=-\frac{L}{2}R^{+}+\frac{s}{16}Q^{+}.$ (39)
+
+Step 1: Endpoint inequalities and a three-component expansion. For any state, write $Y=y-y^{\star}(z)$ and define three local components
+
+$A=-\rho H+\frac{1}{2}\lVert P\rVert^{2},\qquad B=\frac{1}{2}\lVert Q\rVert^{2},\qquad C_{0}=\frac{s}{32}\langle v,Y\rangle+\frac{L\tau}{512}\lVert Y\rVert^{2}.$ (40)
+
+The definition of the potential function gives $A+B+C_{0}=(L/2)E_{z}(w)$ . The kinetic energy is excluded from $C_{0}$ for now and will be added in the final step.
+
+Since $\xi\in N_{X}(x)$ and $n^{+}\in N_{Y}(y^{+})$ , $\langle\xi,\Delta x\rangle\leq 0$ and $\langle n^{+},\Delta y\rangle\geq 0$ . At the mixed point $(x^{+},y)$ , applying $L$ -strong convexity and $\tau$ -strong concavity gives
+
+$\displaystyle G(x^{+},y;z)$ $\displaystyle\geq G(x,y;z)+\langle P,\Delta x\rangle+\frac{L}{2}\lVert\Delta x\rVert^{2},$ $\displaystyle G(x^{+},y;z)$ $\displaystyle\leq G(x^{+},y^{+};z)+\langle R^{+},\Delta y\rangle-\frac{\tau}{2}\lVert\Delta y\rVert^{2}.$
+
+Consequently,
+
+$H^{+}-H\geq\langle P,\Delta x\rangle-\langle R^{+},\Delta y\rangle+\frac{L}{2}\lVert\Delta x\rVert^{2}+\frac{\tau}{2}\lVert\Delta y\rVert^{2}.$ (41)
+
+To establish the strong monotonicity used below, write the following inequalities at the four endpoints:
+
+$\displaystyle G(x^{+},y;z)-G(x,y;z)$ $\displaystyle\geq\langle\nabla_{x}G(x,y;z),\Delta x\rangle+\frac{L}{2}\lVert\Delta x\rVert^{2},$ $\displaystyle G(x,y^{+};z)-G(x^{+},y^{+};z)$ $\displaystyle\geq-\langle\nabla_{x}G(x^{+},y^{+};z),\Delta x\rangle+\frac{L}{2}\lVert\Delta x\rVert^{2},$ $\displaystyle G(x,y^{+};z)-G(x,y;z)$ $\displaystyle\leq\langle\nabla_{y}G(x,y;z),\Delta y\rangle-\frac{\tau}{2}\lVert\Delta y\rVert^{2},$ $\displaystyle G(x^{+},y;z)-G(x^{+},y^{+};z)$ $\displaystyle\leq-\langle\nabla_{y}G(x^{+},y^{+};z),\Delta y\rangle-\frac{\tau}{2}\lVert\Delta y\rVert^{2}.$
+
+The sum of the first two left-hand sides equals the sum of the last two. Comparing the corresponding right-hand sides and rearranging yields
+
+$\langle\Delta(\nabla_{x}G),\Delta x\rangle+\langle\Delta(-\nabla_{y}G),\Delta y\rangle\geq L\lVert\Delta x\rVert^{2}+\tau\lVert\Delta y\rVert^{2}.$
+
+The normal cone definition also gives $\langle\Delta\xi,\Delta x\rangle\geq 0$ and $\langle\Delta n,\Delta y\rangle\geq 0$ . Adding these inequalities gives
+
+$\langle\Delta P,\Delta x\rangle+\langle\Delta R,\Delta y\rangle\geq L\lVert\Delta x\rVert^{2}+\tau\lVert\Delta y\rVert^{2}.$ (42)
+
+For the primal part of $A$ , the difference-of-squares identity gives exactly
+
+$\displaystyle\frac{1}{2}(\lVert P^{+}\rVert^{2}-\lVert P\rVert^{2})-\rho\langle P,\Delta x\rangle-\frac{L\rho}{2}\lVert\Delta x\rVert^{2}$ $\displaystyle\quad=\langle P^{+},\Delta P\rangle-\rho\langle P^{+},\Delta x\rangle-\frac{1}{2}\lVert\Delta P-\rho\Delta x\rVert^{2}-\frac{L(128L-\tau)}{1024}\lVert\Delta x\rVert^{2}.$ (43)
+
+The last term is nonpositive. Multiplying ( 41 ) by $-\rho$ and applying ( 43 ), we obtain
+
+$\displaystyle\Delta A\leq{}$ $\displaystyle-\rho\langle P^{+},\Delta x\rangle+\rho\langle R^{+},\Delta y\rangle+\langle P^{+},\Delta P\rangle$ $\displaystyle-\frac{1}{2}\lVert\Delta P-\rho\Delta x\rVert^{2}-\frac{\rho\tau}{2}\lVert\Delta y\rVert^{2}.$ (44)
+
+Moreover,
+
+$\Delta B=\langle Q^{+},\Delta Q\rangle-\frac{1}{2}\lVert\Delta Q\rVert^{2}.$ (45)
+
+Substituting ( 35 ) into ( 42 ) and using $\Delta R=\Delta Q+\Delta v$ yields
+
+$\displaystyle\frac{1}{h}\bigl(\langle P^{+},\Delta P\rangle+\langle Q^{+},\Delta Q\rangle\bigr)\leq{}$ $\displaystyle-L\lVert P^{+}+e_{x}\rVert^{2}-\tau\lVert Q^{+}+e_{y}\rVert^{2}$ $\displaystyle-\frac{1}{h}\bigl(\langle e_{x},\Delta P\rangle+\langle e_{y},\Delta Q\rangle\bigr)-\frac{1}{h}\langle Q^{+}+e_{y},\Delta v\rangle.$ (46)
+
+By ( 39 ), the last inner product equals
+
+$-\frac{1}{h}\langle Q^{+}+e_{y},\Delta v\rangle=\frac{L}{2}\langle Q^{+}+e_{y},R^{+}\rangle-\frac{s}{16}\langle Q^{+}+e_{y},Q^{+}\rangle.$
+
+Combining ( 44 )–( 46 ) and using $L/2-\rho=s/32$ , we obtain the full two-component increment bound
+
+$\displaystyle\frac{\Delta A+\Delta B}{h}\leq{}$ $\displaystyle\rho\lVert P^{+}\rVert^{2}-L\lVert P^{+}+e_{x}\rVert^{2}-\tau\lVert Q^{+}+e_{y}\rVert^{2}+\rho\langle P^{+},e_{x}\rangle$ $\displaystyle+\frac{s}{32}\langle R^{+},Q^{+}+e_{y}\rangle-\frac{s}{16}\langle Q^{+},Q^{+}+e_{y}\rangle$ $\displaystyle-\frac{1}{h}\bigl(\langle e_{x},\Delta P\rangle+\langle e_{y},\Delta Q\rangle\bigr)-\frac{1}{2h}\lVert\Delta P-\rho\Delta x\rVert^{2}$ $\displaystyle-\frac{1}{2h}\lVert\Delta Q\rVert^{2}-\frac{\rho\tau}{2h}\lVert\Delta y\rVert^{2}.$ (47)
+
+For the third component, start with the two exact identities
+
+$\displaystyle\langle v^{+},Y^{+}\rangle-\langle v,Y\rangle$ $\displaystyle=\langle\Delta v,Y^{+}\rangle+\langle v^{+},\Delta y\rangle-\langle\Delta v,\Delta y\rangle,$ $\displaystyle\lVert Y^{+}\rVert^{2}-\lVert Y\rVert^{2}$ $\displaystyle=2\langle Y^{+},\Delta y\rangle-\lVert\Delta y\rVert^{2}.$
+
+Substituting ( 35 ) and ( 39 ), and then using $v^{+}=R^{+}-Q^{+}$ and $s^{2}/512=L\tau/256$ , gives the termwise expansion
+
+$\displaystyle\frac{\Delta C_{0}}{h}={}$ $\displaystyle-\frac{s}{32}\langle R^{+},Q^{+}+e_{y}\rangle+\frac{s}{32}\lVert Q^{+}\rVert^{2}+\frac{s}{32}\langle Q^{+},e_{y}\rangle$ $\displaystyle-\frac{Ls}{64}\langle R^{+},Y^{+}\rangle-\frac{L\tau}{256}\langle Y^{+},e_{y}\rangle-\frac{s}{32h}\langle\Delta v,\Delta y\rangle-\frac{L\tau}{512h}\lVert\Delta y\rVert^{2}.$ (48)
+
+The two $\langle Q^{+},Y^{+}\rangle$ terms cancel because $s^{2}/512=L\tau/256$ . In ( 47 ) and ( 48 ), the $\langle R^{+},Q^{+}+e_{y}\rangle$ terms also cancel exactly.
+
+Step 2: Add the endpoint weight and bound the current-point terms. The endpoint weight expands as
+
+$\displaystyle\frac{Ls}{64}E_{z}(w^{+})={}$ $\displaystyle-\frac{s(16L-s)}{1024}H^{+}+\frac{s}{64}(\lVert P^{+}\rVert^{2}+\lVert Q^{+}\rVert^{2})$ $\displaystyle+\frac{L\tau}{512}\langle v^{+},Y^{+}\rangle+\frac{L\tau s}{16384}\lVert Y^{+}\rVert^{2}.$ (49)
+
+After writing $v^{+}=R^{+}-Q^{+}$ , the coefficient of $\langle R^{+},Y^{+}\rangle$ is
+
+$-\frac{Ls}{64}+\frac{L\tau}{512}=-\frac{s(16L-s)}{1024}.$
+
+The saddle-point growth inequality ( 25 ) therefore gives
+
+$\displaystyle-\frac{s(16L-s)}{1024}\bigl(H^{+}+\langle R^{+},Y^{+}\rangle\bigr)$ $\displaystyle\qquad\leq-\frac{Ls(16L-s)}{2048}\lVert X^{+}\rVert^{2}-\frac{\tau s(16L-s)}{2048}\lVert Y^{+}\rVert^{2}.$ (50)
+
+Adding ( 47 ), ( 48 ), and ( 49 ), and applying ( 50 ), yields
+
+$\frac{L}{2h}\left[E_{z}(w^{+})-E_{z}(w)+\frac{hs}{32}E_{z}(w^{+})\right]\leq\mathcal{C}+\mathcal{J},$ (51)
+
+where the current-point and increment terms are, respectively,
+
+$\displaystyle\mathcal{C}={}$ $\displaystyle\frac{32L-s}{64}\lVert P^{+}\rVert^{2}-L\lVert P^{+}+e_{x}\rVert^{2}-\tau\lVert Q^{+}+e_{y}\rVert^{2}-\frac{s}{64}\lVert Q^{+}\rVert^{2}$ $\displaystyle+\rho\langle P^{+},e_{x}\rangle-\frac{s}{32}\langle Q^{+},e_{y}\rangle-\frac{L\tau}{256}\langle Y^{+},e_{y}\rangle-\frac{L\tau}{512}\langle Q^{+},Y^{+}\rangle$ $\displaystyle+\left(\frac{L\tau s}{16384}-\frac{\tau s(16L-s)}{2048}\right)\lVert Y^{+}\rVert^{2}-\frac{Ls(16L-s)}{2048}\lVert X^{+}\rVert^{2},$ (52) $\displaystyle\mathcal{J}={}$ $\displaystyle-\frac{1}{2h}\lVert\Delta P-\rho\Delta x\rVert^{2}-\frac{1}{2h}\lVert\Delta Q\rVert^{2}-\left(\frac{\rho\tau}{2h}+\frac{L\tau}{512h}\right)\lVert\Delta y\rVert^{2}$ $\displaystyle-\frac{s}{32h}\langle\Delta v,\Delta y\rangle-\frac{1}{h}\bigl(\langle e_{x},\Delta P\rangle+\langle e_{y},\Delta Q\rangle\bigr).$ (53)
+
+These expressions include every term in the sum; no term involving $u$ has been discarded.
+
+For the primal terms, expand exactly and then use $s\leq 2L$ :
+
+$\displaystyle\frac{32L-s}{64}\lVert P^{+}\rVert^{2}-L\lVert P^{+}+e_{x}\rVert^{2}+\rho\langle P^{+},e_{x}\rangle$ $\displaystyle\quad=-\frac{32L+s}{64}\lVert P^{+}\rVert^{2}-\frac{48L+s}{32}\langle P^{+},e_{x}\rangle-L\lVert e_{x}\rVert^{2}$ $\displaystyle\quad\leq-\frac{L}{4}\lVert P^{+}\rVert^{2}+4L\lVert e_{x}\rVert^{2}.$ (54)
+
+The last step uses $2L\lVert P^{+}\rVert\lVert e_{x}\rVert\leq(L/4)\lVert P^{+}\rVert^{2}+4L\lVert e_{x}\rVert^{2}$ and drops the remaining nonpositive terms. Young’s inequality bounds the other three cross terms as follows:
+
+$\displaystyle\frac{s}{32}|\langle Q^{+},e_{y}\rangle|$ $\displaystyle\leq\frac{s}{256}\lVert Q^{+}\rVert^{2}+\frac{s}{16}\lVert e_{y}\rVert^{2},$ (55) $\displaystyle\frac{L\tau}{512}|\langle Q^{+},Y^{+}\rangle|$ $\displaystyle\leq\frac{s}{256}\lVert Q^{+}\rVert^{2}+\frac{L\tau s}{8192}\lVert Y^{+}\rVert^{2},$ (56) $\displaystyle\frac{L\tau}{256}|\langle Y^{+},e_{y}\rangle|$ $\displaystyle\leq\frac{L\tau s}{16384}\lVert Y^{+}\rVert^{2}+\frac{s}{32}\lVert e_{y}\rVert^{2}.$ (57)
+
+The constants follow directly from $s^{2}=2L\tau$ . The resulting coefficient of $\lVert Q^{+}\rVert^{2}$ is $-s/128$ , while the coefficient of the distance term satisfies
+
+$\frac{L\tau s}{4096}-\frac{\tau s(16L-s)}{2048}\leq-\frac{27L\tau s}{4096}\leq-\frac{L\tau s}{256}.$
+
+Dropping $-\tau\lVert Q^{+}+e_{y}\rVert^{2}$ and using $3s/32\leq 4L$ , we obtain
+
+$\displaystyle\mathcal{C}\leq{}$ $\displaystyle-\frac{L}{4}\lVert P^{+}\rVert^{2}-\frac{s}{128}\lVert Q^{+}\rVert^{2}-\frac{L\tau s}{256}\lVert Y^{+}\rVert^{2}$ $\displaystyle-\frac{Ls(16L-s)}{2048}\lVert X^{+}\rVert^{2}+4L\lVert e\rVert^{2}.$ (58)
+
+Step 3: Bound the increment terms and absorb the explicit errors. The inequality $\lVert a-b\rVert^{2}\geq\lVert a\rVert^{2}/2-\lVert b\rVert^{2}$ and ( 35 ) give
+
+$\displaystyle-\frac{1}{2h}\lVert\Delta P-\rho\Delta x\rVert^{2}-\frac{1}{2h}\lVert\Delta Q\rVert^{2}$ $\displaystyle\quad\leq-\frac{\mathcal{I}}{4h}+h\rho^{2}(\lVert P^{+}\rVert^{2}+\lVert e_{x}\rVert^{2}).$ (59)
+
+Since $\Delta v=-\Delta(\nabla_{y}G)+\Delta n-\Delta Q$ and $\langle\Delta n,\Delta y\rangle\geq 0$ , applying $L_{G}$ -Lipschitz continuity only to the true gradient gives
+
+$\displaystyle-\frac{s}{32h}\langle\Delta v,\Delta y\rangle$ $\displaystyle\leq\frac{L_{G}s}{32h}\sqrt{\lVert\Delta x\rVert^{2}+\lVert\Delta y\rVert^{2}}\lVert\Delta y\rVert+\frac{s}{32h}\lVert\Delta Q\rVert\lVert\Delta y\rVert$ $\displaystyle\leq\frac{L_{G}s}{64h}\lVert\Delta x\rVert^{2}+\left(\frac{3L_{G}s}{64h}+\frac{L\tau}{64h}\right)\lVert\Delta y\rVert^{2}+\frac{1}{32h}\lVert\Delta Q\rVert^{2}$ $\displaystyle\leq\frac{hL_{G}s}{32}(\lVert P^{+}\rVert^{2}+\lVert e_{x}\rVert^{2})+\left(\frac{3hL_{G}s}{32}+\frac{hL\tau}{32}\right)(\lVert Q^{+}\rVert^{2}+\lVert e_{y}\rVert^{2})+\frac{\mathcal{I}}{32h}.$ (60)
+
+The intermediate step uses $\sqrt{a^{2}+b^{2}}\,b\leq a^{2}/2+3b^{2}/2$ and
+
+$s\lVert\Delta Q\rVert\lVert\Delta y\rVert\leq\lVert\Delta Q\rVert^{2}+\frac{s^{2}}{4}\lVert\Delta y\rVert^{2}.$
+
+The bounds $s\leq 2L\leq 2L_{G}$ and $\tau\leq L$ imply
+
+$\displaystyle h\rho^{2}+\frac{hL_{G}s}{32}$ $\displaystyle\leq\frac{5Ld}{16},$ $\displaystyle\frac{3hL_{G}s}{32}+\frac{hL\tau}{32}$ $\displaystyle\leq\frac{ds}{8}.$ (61)
+
+The first inequality uses $\rho\leq L/2$ , and the second uses $L\tau\leq L_{G}s$ . Both right-hand sides are at most $L/2$ .
+
+We retain the explicit cost of $u$ in the error inner products. By ( 37 ),
+
+$\displaystyle-\frac{1}{h}\bigl(\langle e_{x},\Delta P\rangle+\langle e_{y},\Delta Q\rangle\bigr)$ $\displaystyle\leq\frac{\lVert e\rVert\sqrt{\mathcal{I}}}{h}\leq\frac{2d+1/32}{h}\mathcal{I}+\frac{8}{h}u^{2},$ (62) $\displaystyle\lVert e\rVert^{2}$ $\displaystyle\leq 8d^{2}\mathcal{I}+2u^{2}.$ (63)
+
+The first inequality uses $u\sqrt{\mathcal{I}}\leq\mathcal{I}/32+8u^{2}$ . Substituting ( 59 )–( 62 ) into ( 53 ) and dropping the explicit nonpositive $\lVert\Delta y\rVert^{2}$ term gives
+
+$\displaystyle\mathcal{J}\leq{}$ $\displaystyle\frac{5Ld}{16}\lVert P^{+}\rVert^{2}+\frac{ds}{8}\lVert Q^{+}\rVert^{2}+\frac{L}{2}\lVert e\rVert^{2}$ $\displaystyle-\frac{7/32-2d-1/32}{h}\mathcal{I}+\frac{8}{h}u^{2}.$ (64)
+
+Adding ( 58 ) bounds the right-hand side of ( 51 ) by
+
+$\displaystyle-\frac{(4-5d)L}{16}\lVert P^{+}\rVert^{2}-\frac{(1-16d)s}{128}\lVert Q^{+}\rVert^{2}-\frac{L\tau s}{256}\lVert Y^{+}\rVert^{2}$ $\displaystyle-\frac{Ls(16L-s)}{2048}\lVert X^{+}\rVert^{2}+\frac{9L}{2}\lVert e\rVert^{2}-\frac{7/32-2d-1/32}{h}\mathcal{I}+\frac{8}{h}u^{2}.$ (65)
+
+Substituting ( 63 ) and using $Lh\leq d$ , the magnitude of the negative increment coefficient is at least
+
+$\frac{1}{h}\left(\frac{7}{32}-2d-\frac{1}{32}-36d^{3}\right).$
+
+At $d=1/64$ , the three required numerical margins are
+
+$\frac{4-5d}{16}=\frac{251}{1024}\geq\frac{1}{8},\qquad\frac{1-16d}{128}=\frac{3}{512}\geq\frac{1}{256},\qquad\frac{7}{32}-2d-\frac{1}{32}-36d^{3}=\frac{10231}{65536}\geq\frac{1}{8}.$ (66)
+
+Multiplying both sides of ( 51 ) by $2h/L$ therefore gives
+
+$\displaystyle E_{z}(w^{+})-E_{z}(w)+\frac{hs}{32}E_{z}(w^{+})$ $\displaystyle\quad\leq-\frac{h}{4}\lVert P^{+}\rVert^{2}-\frac{hs}{128L}\lVert Q^{+}\rVert^{2}-\frac{h\tau s}{128}\lVert Y^{+}\rVert^{2}-\frac{hs(16L-s)}{1024}\lVert X^{+}\rVert^{2}$ $\displaystyle\qquad-\frac{1}{4L}\mathcal{I}+\left(18h+\frac{16}{L}\right)u^{2}.$ (67)
+
+Since $hL\leq 1/64$ , the last positive coefficient is at most $17/L$ .
+
+Step 4: Add the kinetic-energy dissipation and endpoint weight. Equation ( 39 ) and $R^{+}=Q^{+}+v^{+}$ give the exact filter identity
+
+$\left(1+\frac{hL}{2}\right)v^{+}=v-\frac{h(8L-s)}{16}Q^{+}.$ (68)
+
+Set $a=h(8L-s)/16$ . Then $0\leq a\leq hL/2$ and $v-v^{+}=(hL/2)v^{+}+aQ^{+}$ . The difference-of-squares identity and Young’s inequality yield
+
+$\displaystyle\lVert v\rVert^{2}-\lVert v^{+}\rVert^{2}$ $\displaystyle=2\langle v^{+},v-v^{+}\rangle+\lVert v-v^{+}\rVert^{2}$ $\displaystyle\geq hL\lVert v^{+}\rVert^{2}+2a\langle v^{+},Q^{+}\rangle$ $\displaystyle\geq\frac{hL}{2}\lVert v^{+}\rVert^{2}-\frac{hL}{2}\lVert Q^{+}\rVert^{2}.$ (69)
+
+Multiplying by $s/(256L^{2})$ , rearranging, and adding the endpoint weight of the kinetic energy gives
+
+$\displaystyle\frac{s}{256L^{2}}(\lVert v^{+}\rVert^{2}-\lVert v\rVert^{2})+\frac{hs}{32}\frac{s}{256L^{2}}\lVert v^{+}\rVert^{2}$ $\displaystyle\quad\leq\frac{hs}{512L}\lVert Q^{+}\rVert^{2}-\frac{hs}{512L}\left(1-\frac{s}{16L}\right)\lVert v^{+}\rVert^{2}$ $\displaystyle\quad\leq\frac{hs}{512L}\lVert Q^{+}\rVert^{2}-\frac{7hs}{4096L}\lVert v^{+}\rVert^{2}.$ (70)
+
+The last step uses $s\leq 2L$ . Adding ( 70 ) to ( 67 ) and using $H_{z}(w)=E_{z}(w)+s\lVert v\rVert^{2}/(256L^{2})$ , the coefficient of the dual direction becomes $-hs/(128L)+hs/(512L)=-3hs/(512L)$ . All remaining coefficients agree with ( 32 ), proving ( 38 ). The entire argument is pathwise and therefore requires neither independence nor unbiasedness of $e_{x},e_{y}$ . ∎
+
+The step-size and damping choices in ( 33 ) remain in force throughout the rest of the concave analysis.
+
+The actual endpoint momentum contains the third stochastic estimate. To take conditional expectations without losing its linear error terms, we compare it with a virtual endpoint state in which only that final estimate is replaced by its conditional mean.
+
+For the analysis, define the virtual endpoint momentum before drawing the third batch by
+
+$v_{t+1}^{0}:=\alpha v_{t}+k\bigl(\nabla_{y}F(x_{t+1},y_{t+1})-\tau y_{t+1}-n_{t+1}\bigr),\qquad w_{t+1}^{0}:=(x_{t+1},y_{t+1},\xi_{t+1},n_{t+1},v_{t+1}^{0}).$ (71)
+
+The algorithm need not compute $v_{t+1}^{0}$ . This quantity is $\mathcal{F}_{t}^{(2)}$ -measurable, whereas the actual momentum satisfies
+
+$v_{t+1}=v_{t+1}^{0}+kc_{y,t}.$ (72)
+
+Suppose that Assumption 1 holds, and let the iterates be generated by Algorithm 1 with the parameter choices in ( 33 ). Apply the notation of the preceding subsection with fixed center $z_{t}$ , initial state $w_{t}$ , and endpoint $w_{t+1}^{0}$ . Let $\mathcal{I}_{t}^{0}$ and $\mathcal{D}_{t}^{0}$ denote the corresponding sum of squared increments and dissipation, respectively. For every realization of $\Omega_{t}^{(0)}$ and $\Omega_{t}^{(1)}$ , define
+
+$U_{t}(\Omega_{t}^{(0)},\Omega_{t}^{(1)}):=2d\lVert a_{t}\rVert+2\lVert b_{t}\rVert,$ (73)
+
+where $a_{t}$ and $b_{t}$ are the explicit sample averages in ( 16 ). Then
+
+$H_{z_{t}}(w_{t+1}^{0})-H_{z_{t}}(w_{t})\leq-\mathcal{D}_{t}^{0}+\frac{17}{L}U_{t}^{2},\qquad U_{t}:=U_{t}(\Omega_{t}^{(0)},\Omega_{t}^{(1)}).$ (74)
+
+Fix the two realized batches. By ( 16 ), their errors are
+
+$\displaystyle a_{t}$ $\displaystyle=\frac{1}{m}\sum_{i=1}^{m}[\nabla f(x_{t},y_{t};\omega_{t,i}^{(0)})-\nabla F(x_{t},y_{t})],$ $\displaystyle b_{t}$ $\displaystyle=\frac{1}{m}\sum_{i=1}^{m}[\nabla f(\widetilde{x}_{t},\widetilde{y}_{t};\omega_{t,i}^{(1)})-\nabla F(\widetilde{x}_{t},\widetilde{y}_{t})].$
+
+No expectation is taken in this proof. The correction step and ( 71 ) yield the dynamics
+
+$\displaystyle x_{t+1}-x_{t}$ $\displaystyle=-h(P^{+}+e_{x,t}),$ $\displaystyle y_{t+1}-y_{t}$ $\displaystyle=-h(Q^{+}+e_{y,t}),$ (75) $\displaystyle e_{x,t}$ $\displaystyle=\nabla_{x}G(\widetilde{x}_{t},\widetilde{y}_{t};z_{t})-\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+b_{x,t},$ $\displaystyle e_{y,t}$ $\displaystyle=(1+k)\bigl[\nabla_{y}G(x_{t+1},y_{t+1};z_{t})-\nabla_{y}G(\widetilde{x}_{t},\widetilde{y}_{t};z_{t})-b_{y,t}\bigr].$ (76)
+
+Here $P^{+}=\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}$ and $Q^{+}=-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}^{0}$ . The second dynamical identity uses
+
+$\bar{v}_{t}-v_{t+1}^{0}=k\bigl[\nabla_{y}G(\widetilde{x}_{t},\widetilde{y}_{t};z_{t})+b_{y,t}-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}\bigr]$
+
+and the definition of $n_{t+1}$ , with the normal-cone coefficient equal to $k-(1+k)=-1$ .
+
+Write $e_{t}=(e_{x,t},e_{y,t})$ . Subtracting ( 75 ) from the unprojected predictor and applying the nonexpansiveness of the projection gives
+
+$\lVert(\widetilde{x}_{t}-x_{t+1},\widetilde{y}_{t}-y_{t+1})\rVert\leq h\left(\sqrt{\mathcal{I}_{t}^{0}}+\lVert e_{t}\rVert+\lVert a_{t}\rVert\right).$
+
+Thus, setting $r=d(1+k)$ , we obtain from ( 76 ) that
+
+$\displaystyle\lVert e_{t}\rVert$ $\displaystyle\leq(1+k)L_{G}\lVert(\widetilde{x}_{t}-x_{t+1},\widetilde{y}_{t}-y_{t+1})\rVert+(1+k)\lVert b_{t}\rVert$ $\displaystyle\leq r\left(\sqrt{\mathcal{I}_{t}^{0}}+\lVert e_{t}\rVert+\lVert a_{t}\rVert\right)+(1+k)\lVert b_{t}\rVert.$
+
+Since $k\leq 1/384$ and $d=1/64$ , we have $r<1$ , $r/(1-r)\leq 2d$ , and $(1+k)/(1-r)\leq 2$ . Rearranging yields
+
+$\lVert e_{t}\rVert\leq 2d\sqrt{\mathcal{I}_{t}^{0}}+U_{t}.$ (77)
+
+The virtual momentum satisfies the exact recursion required in the preceding subsection. Substituting ( 77 ) into the fixed-center descent inequality and dropping the nonnegative weighted endpoint term $(hs/32)H_{z_{t}}(w_{t+1}^{0})$ gives ( 74 ). ∎
+
+We next restore the center update. The center sensitivity bound converts its motion into a controlled perturbation of the fixed-center potential, after which the three fresh batches yield a one-step conditional descent inequality.
+
+Suppose that Assumption 1 holds and $0<\tau\leq L$ . For any state $w=(x,y,\xi,n,v)$ satisfying ( 19 ) and any $z^{\prime}=z+\delta$ , we have
+
+$\displaystyle H_{z^{\prime}}(w)-H_{z}(w)\leq{}$ $\displaystyle\left[2L\lVert x-x^{\star}(z)\rVert+4\lVert\nabla_{x}G(x,y;z)+\xi\rVert+\frac{1}{8}\lVert v\rVert+\frac{s}{128}\lVert y-y^{\star}(z)\rVert\right]\lVert\delta\rVert$ (78) $\displaystyle+\frac{1025L}{128}\lVert\delta\rVert^{2}.$
+
+First, ( 11 ) and ( 22 ) give
+
+$\displaystyle G(x,y;z^{\prime})-G(x,y;z)$ $\displaystyle=-2L\langle x-z,\delta\rangle+L\lVert\delta\rVert^{2},$ $\displaystyle|p(z^{\prime})-p(z)-\langle\nabla p(z),\delta\rangle|$ $\displaystyle\leq 3L\lVert\delta\rVert^{2}.$
+
+Using $2L(x-z)=2L(x-x^{\star}(z))-\nabla p(z)$ , the increment of the function-value term in the potential function is at most $2L\lVert x-x^{\star}(z)\rVert\lVert\delta\rVert+4L\lVert\delta\rVert^{2}$ . Next, $\nabla_{x}G(x,y;z^{\prime})=\nabla_{x}G(x,y;z)-2L\delta$ , so
+
+$\frac{1}{L}\left(\lVert\nabla_{x}G(x,y;z^{\prime})+\xi\rVert^{2}-\lVert\nabla_{x}G(x,y;z)+\xi\rVert^{2}\right)\leq 4\lVert\nabla_{x}G(x,y;z)+\xi\rVert\lVert\delta\rVert+4L\lVert\delta\rVert^{2}.$
+
+Finally, ( 21 ) and $s\sqrt{2L/\tau}=2L$ imply
+
+$\displaystyle\frac{s}{16L}|\langle v,y^{\star}(z)-y^{\star}(z^{\prime})\rangle|$ $\displaystyle\leq\frac{1}{8}\lVert v\rVert\lVert\delta\rVert,$ $\displaystyle\frac{\tau}{256}\left(\lVert y-y^{\star}(z^{\prime})\rVert^{2}-\lVert y-y^{\star}(z)\rVert^{2}\right)$ $\displaystyle\leq\frac{s}{128}\lVert y-y^{\star}(z)\rVert\lVert\delta\rVert+\frac{L}{128}\lVert\delta\rVert^{2}.$
+
+The remaining terms are independent of $z$ . Adding the four increments proves ( 78 ). ∎
+
+Suppose that Assumption 1 holds, and let the iterates be generated by Algorithm 1 with the parameter choices in ( 33 ). Choose the center relaxation
+
+$\beta:=\frac{hs}{4096},\qquad 0<\beta<\frac{1}{12}.$ (79)
+
+For every realization of $\Omega_{t}^{(0)}$ and $\Omega_{t}^{(1)}$ , the following inequality holds before any expectation is taken:
+
+$\mathcal{V}(z_{t+1},w_{t+1}^{0})-\mathcal{V}_{t}\leq-\frac{1}{2}\mathcal{D}_{t}^{0}-\frac{\beta}{8L}\lVert\nabla p(z_{t})\rVert^{2}+\frac{17}{L}U_{t}^{2}.$ (80)
+
+Let $X_{t}^{+}=x_{t+1}-x^{\star}(z_{t})$ , $Y_{t}^{+}=y_{t+1}-y^{\star}(z_{t})$ , and $P_{t}^{+}=\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1}$ . Define the dissipation budget
+
+$\mathcal{B}_{t}:=\frac{hs}{8L}\lVert P_{t}^{+}\rVert^{2}+\frac{7hs}{4096L}\lVert v_{t+1}^{0}\rVert^{2}+\frac{h\tau s}{128}\lVert Y_{t}^{+}\rVert^{2}+\frac{7hLs}{512}\lVert X_{t}^{+}\rVert^{2}.$ (81)
+
+Since $s\leq 2L$ and $16L-s\geq 14L$ , comparison with each term of the fixed-center dissipation gives $0\leq\mathcal{B}_{t}\leq\mathcal{D}_{t}^{0}$ . The weighted Cauchy–Schwarz inequality yields
+
+$\left[2L\lVert X_{t}^{+}\rVert+4\lVert P_{t}^{+}\rVert+\frac{1}{8}\lVert v_{t+1}^{0}\rVert+\frac{s}{128}\lVert Y_{t}^{+}\rVert\right]^{2}\leq\frac{432L}{hs}\mathcal{B}_{t}.$ (82)
+
+The constant follows by summing the four coefficients:
+
+$\frac{16L}{hs}\left(\frac{128}{7}+8+\frac{4}{7}+\frac{1}{1024}\right)<\frac{432L}{hs}.$
+
+The center increment $\delta_{t}=z_{t+1}-z_{t}$ satisfies
+
+$\delta_{t}=\beta\left(X_{t}^{+}-\frac{\nabla p(z_{t})}{2L}\right),\qquad\lVert\delta_{t}\rVert^{2}\leq 2\beta^{2}\lVert X_{t}^{+}\rVert^{2}+\frac{\beta^{2}}{2L^{2}}\lVert\nabla p(z_{t})\rVert^{2}.$ (83)
+
+Substituting ( 82 ) into ( 78 ) and using $ab\leq a^{2}/4+b^{2}$ and $hs\leq 32$ gives
+
+$\displaystyle H_{z_{t+1}}(w_{t+1}^{0})-H_{z_{t}}(w_{t+1}^{0})$ $\displaystyle\leq\frac{1}{4}\mathcal{B}_{t}+\frac{704L}{hs}\lVert\delta_{t}\rVert^{2}$ $\displaystyle\leq\frac{1}{4}\mathcal{B}_{t}+\frac{1408L\beta^{2}}{hs}\lVert X_{t}^{+}\rVert^{2}+\frac{352\beta^{2}}{Lhs}\lVert\nabla p(z_{t})\rVert^{2}.$ (84)
+
+Moreover, $p$ is $6L$ -smooth, so ( 83 ) and $\langle\nabla p(z_{t}),X_{t}^{+}\rangle\leq\lVert\nabla p(z_{t})\rVert^{2}/(8L)+2L\lVert X_{t}^{+}\rVert^{2}$ imply
+
+$\displaystyle p(z_{t+1})-p(z_{t})$ $\displaystyle\leq-\frac{\beta}{L}\left(\frac{3}{8}-\frac{3}{2}\beta\right)\lVert\nabla p(z_{t})\rVert^{2}+\beta L(2+6\beta)\lVert X_{t}^{+}\rVert^{2}$ $\displaystyle\leq-\frac{\beta}{4L}\lVert\nabla p(z_{t})\rVert^{2}+\frac{5}{2}\beta L\lVert X_{t}^{+}\rVert^{2}.$ (85)
+
+Add ( 74 ), ( 84 ), and ( 85 ). Since $\beta=hs/4096$ , we have
+
+$\displaystyle\frac{5}{2}\beta L+\frac{1408L\beta^{2}}{hs}$ $\displaystyle\leq\frac{7hLs}{2048},$ $\displaystyle\frac{\beta}{4L}-\frac{352\beta^{2}}{Lhs}$ $\displaystyle=\frac{\beta}{L}\left(\frac{1}{4}-\frac{352}{4096}\right)\geq\frac{\beta}{8L}.$
+
+The right-hand side of the first line is the coefficient in $\mathcal{B}_{t}/4$ multiplying $\lVert X_{t}^{+}\rVert^{2}$ . Hence, the sum of the right-hand sides is at most
+
+$-\mathcal{D}_{t}^{0}+\frac{1}{2}\mathcal{B}_{t}-\frac{\beta}{8L}\lVert\nabla p(z_{t})\rVert^{2}+\frac{17}{L}U_{t}^{2}.$
+
+Using $\mathcal{B}_{t}\leq\mathcal{D}_{t}^{0}$ now gives ( 80 ). ∎
+
+The center choice in ( 79 ) remains in force throughout the rest of the concave analysis.
+
+Suppose that Assumption 1 holds, and let the iterates be generated by Algorithm 1 with the parameter choices in ( 33 ) and ( 79 ). For the three realized batches $\Omega_{t}^{(0)},\Omega_{t}^{(1)},\Omega_{t}^{(2)}$ , define
+
+$\displaystyle\Lambda_{t}(\Omega_{t}^{(2)}):={}$ $\displaystyle-\frac{2k}{L}\langle-\nabla_{y}G(x_{t+1},y_{t+1};z_{t+1})+n_{t+1}-v_{t+1}^{0},c_{y,t}\rangle$ $\displaystyle+\frac{sk}{16L}\langle c_{y,t},y_{t+1}-y^{\star}(z_{t+1})\rangle+\frac{sk}{128L^{2}}\langle v_{t+1}^{0},c_{y,t}\rangle$ $\displaystyle+\left(\frac{1}{L}+\frac{s}{256L^{2}}\right)k^{2}\lVert c_{y,t}\rVert^{2},$ (86)
+
+where
+
+$c_{y,t}=\frac{1}{m}\sum_{i=1}^{m}[\nabla_{y}f(x_{t+1},y_{t+1};\omega_{t,i}^{(2)})-\nabla_{y}F(x_{t+1},y_{t+1})].$
+
+Then, before taking any expectation,
+
+$\mathcal{V}_{t+1}-\mathcal{V}_{t}\leq-\frac{1}{2}\mathcal{D}_{t}^{0}-\frac{\beta}{8L}\lVert\nabla p(z_{t})\rVert^{2}+\frac{17}{L}U_{t}(\Omega_{t}^{(0)},\Omega_{t}^{(1)})^{2}+\Lambda_{t}(\Omega_{t}^{(2)}).$ (87)
+
+For fixed $z,x,y,\xi,n$ , the function $H_{z}(w)$ is quadratic in $v$ , with quadratic coefficient $1/L+s/(256L^{2})$ . Substitute the realized third-batch identity $v_{t+1}=v_{t+1}^{0}+kc_{y,t}$ from ( 72 ) and expand the square. This gives the exact identity
+
+$\mathcal{V}_{t+1}-\mathcal{V}(z_{t+1},w_{t+1}^{0})=\Lambda_{t}(\Omega_{t}^{(2)}).$ (88)
+
+Adding this identity to the sample-path virtual descent ( 80 ) proves ( 87 ). ∎
+
+Suppose that Assumptions 1 and 2 hold. Then Algorithm 1 , with the parameter choices in ( 33 ) and ( 79 ), satisfies
+
+$\mathbb{E}[\mathcal{V}_{t+1}\mid\mathcal{F}_{t}]\leq\mathcal{V}_{t}-\frac{1}{2}\mathbb{E}[\mathcal{D}_{t}^{0}\mid\mathcal{F}_{t}]-\frac{\beta}{8L}\lVert\nabla p(z_{t})\rVert^{2}+\frac{300\sigma^{2}}{Lm}.$ (89)
+
+We now take conditional expectations in the sample-path inequality ( 87 ). This is the first point in the descent argument at which an expectation is taken. In the first three inner products, all factors other than $c_{y,t}$ are $\mathcal{F}_{t}^{(2)}$ -measurable. Thus, ( 18 ) gives the exact conditional expectation identity
+
+$\displaystyle\mathbb{E}[\Lambda_{t}(\Omega_{t}^{(2)})\mid\mathcal{F}_{t}^{(2)}]$ (90) $\displaystyle=\left(\frac{1}{L}+\frac{s}{256L^{2}}\right)k^{2}\mathbb{E}[\lVert c_{y,t}\rVert^{2}\mid\mathcal{F}_{t}^{(2)}]\leq\frac{2\sigma^{2}}{Lm}.$
+
+The last step uses $s\leq 2L$ and $k\leq 1$ ; this loose constant suffices.
+
+For the first and second batches, we do not invoke unbiased cancellation involving subsequent iterates. Since $U_{t}=2d\lVert a_{t}\rVert+2\lVert b_{t}\rVert$ , for every sample realization we have
+
+$U_{t}^{2}\leq 8d^{2}\lVert a_{t}\rVert^{2}+8\lVert b_{t}\rVert^{2}.$
+
+Taking conditional expectations and using the tower property gives
+
+$\frac{17}{L}\mathbb{E}[U_{t}^{2}\mid\mathcal{F}_{t}]\leq\frac{136(1+d^{2})\sigma^{2}}{Lm}.$ (91)
+
+Substitute ( 90 ) and ( 91 ) into the conditional expectation of ( 87 ). Since $136(1+1/4096)+2<300$ , this proves ( 89 ). Lemma 1 , the compactness of $Y$ , and the at most quadratic growth of $p,G$ ensure the integrability of these random quantities, so the conditional expectations and the tower property are well defined. ∎
+
+3.3 Stationarity and complexity results
+
+The descent inequality controls regularized residuals along the trajectory. The following budget lemma averages those residuals, removes the artificial dual regularization, and converts the result into the original criterion defined in ( 6 ).
+
+Suppose that Assumptions 1 and 2 hold, and let the iterates be generated by Algorithm 1 with the parameter choices in ( 33 ) and ( 79 ). Let
+
+$M_{T}:=B+\frac{300T\sigma^{2}}{Lm}.$ (92)
+
+Then
+
+$\sum_{t=0}^{T-1}\left[\frac{1}{2}\mathbb{E}\mathcal{D}_{t}^{0}+\frac{\beta}{8L}\mathbb{E}\lVert\nabla p(z_{t})\rVert^{2}\right]\leq M_{T}.$ (93)
+
+The random output satisfies
+
+$\mathbb{E}\mathcal{R}(x_{J+1},y_{J+1})^{2}\leq\frac{64LB}{\beta T}+\frac{19200\sigma^{2}}{\beta m}+2\tau^{2}D_{Y}^{2}.$ (94)
+
+Taking total expectations in ( 89 ) and summing from $t=0$ to $T-1$ , we obtain ( 93 ) from $\mathcal{V}_{T}\geq 0$ and $\mathcal{V}_{0}\leq B$ . Write
+
+$\displaystyle P_{t}^{+}$ $\displaystyle=\nabla_{x}G(x_{t+1},y_{t+1};z_{t})+\xi_{t+1},$ $\displaystyle Q_{t}^{+}$ $\displaystyle=-\nabla_{y}G(x_{t+1},y_{t+1};z_{t})+n_{t+1}-v_{t+1}^{0},$ $\displaystyle X_{t}^{+}$ $\displaystyle=x_{t+1}-x^{\star}(z_{t}).$
+
+Retaining the squared terms in $\mathcal{D}_{t}^{0}$ individually and using $hs=4096\beta$ and $16L-s\geq 14L$ , we obtain
+
+$\begin{gathered}\sum_{t<T}\mathbb{E}\lVert P_{t}^{+}\rVert^{2}\leq\frac{8M_{T}}{h},\qquad\sum_{t<T}\mathbb{E}\lVert Q_{t}^{+}\rVert^{2}\leq\frac{LM_{T}}{12\beta},\qquad\sum_{t<T}\mathbb{E}\lVert v_{t+1}^{0}\rVert^{2}\leq\frac{2LM_{T}}{7\beta},\\ \sum_{t<T}\mathbb{E}\lVert X_{t}^{+}\rVert^{2}\leq\frac{M_{T}}{28\beta L},\qquad\sum_{t<T}\mathbb{E}\lVert\nabla p(z_{t})\rVert^{2}\leq\frac{8LM_{T}}{\beta}.\end{gathered}$ (95)
+
+Define the following true-gradient certificate solely for the analysis:
+
+$S_{t}:=\lVert\nabla_{x}F(x_{t+1},y_{t+1})+\xi_{t+1}\rVert^{2}+\lVert-\nabla_{y}F(x_{t+1},y_{t+1})+\tau y_{t+1}+n_{t+1}\rVert^{2}.$ (96)
+
+The certificate $S_{t}$ contains neither the actual nor the virtual momentum. By ( 22 ),
+
+$\displaystyle\nabla_{x}F(x_{t+1},y_{t+1})+\xi_{t+1}$ $\displaystyle=P_{t}^{+}-2LX_{t}^{+}+\nabla p(z_{t}),$ $\displaystyle-\nabla_{y}F(x_{t+1},y_{t+1})+\tau y_{t+1}+n_{t+1}$ $\displaystyle=Q_{t}^{+}+v_{t+1}^{0}.$
+
+Hence
+
+$S_{t}\leq 3\lVert P_{t}^{+}\rVert^{2}+12L^{2}\lVert X_{t}^{+}\rVert^{2}+3\lVert\nabla p(z_{t})\rVert^{2}+2\lVert Q_{t}^{+}\rVert^{2}+2\lVert v_{t+1}^{0}\rVert^{2}.$
+
+Summing and substituting ( 95 ) gives
+
+$\displaystyle\sum_{t<T}\mathbb{E}S_{t}$ $\displaystyle\leq\left(\frac{24\beta}{hL}+\frac{3}{7}+24+\frac{1}{6}+\frac{4}{7}\right)\frac{LM_{T}}{\beta}\leq\frac{32LM_{T}}{\beta}.$ (97)
+
+The last inequality uses $\beta/(hL)=s/(4096L)\leq 1/2048$ .
+
+Normal-cone membership and the triangle inequality give, pathwise, $\mathcal{R}(x_{t+1},y_{t+1})\leq\sqrt{S_{t}}+\tau\lVert y_{t+1}\rVert$ , and thus
+
+$\mathcal{R}(x_{t+1},y_{t+1})^{2}\leq 2S_{t}+2\tau^{2}D_{Y}^{2}.$
+
+The independent uniform index $J$ converts the finite average into the output expectation. Substituting ( 97 ) and ( 92 ) yields ( 94 ). ∎
+
+3.3.1 Nonconvex–strongly concave setting
+
+We first specialize the mini-batch analysis to the case in which the original inner objective is strongly concave. This setting does not require artificial dual regularization and therefore has no regularization-bias term.
+
+There exists $\mu>0$ such that, for every $x\in X$ and $y,y^{\prime}\in Y$ ,
+
+$F(x,y^{\prime})\leq F(x,y)+\langle\nabla_{y}F(x,y),y^{\prime}-y\rangle-\frac{\mu}{2}\lVert y^{\prime}-y\rVert^{2}.$ (98)
+
+Define the condition number $\kappa:=L/\mu$ . The joint $L$ -smoothness in Assumption 1 implies $0<\mu\leq L$ and hence $\kappa\geq 1$ .
+
+Define the unregularized proximal saddle function and its value by
+
+$G_{\rm sc}(x,y;z):=F(x,y)+L\lVert x-z\rVert^{2},\qquad p_{\rm sc}(z):=\min_{x\in X}\max_{y\in Y}G_{\rm sc}(x,y;z).$ (99)
+
+The function $G_{\rm sc}$ is $L$ -strongly convex in $x$ , $\mu$ -strongly concave in $y$ , and has a $3L$ -Lipschitz full gradient. The concrete strongly-concave specialization is stated in the first result that uses it.
+
+Suppose that Assumptions 1 , 2 , and 3 hold. Set
+
+$\begin{gathered}L_{G,{\rm sc}}:=3L,\qquad s_{\rm sc}:=\sqrt{2L\mu},\qquad h_{\rm sc}:=\frac{1}{64L_{G,{\rm sc}}}=\frac{1}{192L},\\ \alpha_{\rm sc}:=\left(1+\frac{h_{\rm sc}s_{\rm sc}}{16}\right)^{-1},\qquad k_{\rm sc}:=\frac{h_{\rm sc}(8L-s_{\rm sc})}{16+h_{\rm sc}s_{\rm sc}},\\ \beta_{\rm sc}:=\frac{h_{\rm sc}s_{\rm sc}}{4096}=\frac{\sqrt{2}}{786432}\kappa^{-1/2}.\end{gathered}$ (100)
+
+Run Algorithm 1 with every explicit dual-regularization term $-\tau y_{t}$ , $-\tau\widetilde{y}_{t}$ , or $-\tau y_{t+1}$ deleted and with the parameters in ( 100 ). This prescription specifies all updates and introduces neither an inner solve nor a restart. Then SPDE satisfies
+
+$\mathbb{E}\mathcal{R}(x_{J+1},y_{J+1})^{2}\leq\frac{64LB}{\beta_{\rm sc}T}+\frac{19200\sigma^{2}}{\beta_{\rm sc}m}.$ (101)
+
+We give the exact substitution map from the preceding mini-batch analysis. Let $\mathcal{V}^{\rm sc}$ denote the potential in ( 24 ) after replacing $G$ and $p$ by $G_{\rm sc}$ and $p_{\rm sc}$ , deleting every explicit dual-regularization gradient, and replacing the strong-concavity parameter in the analytical coefficients by $\mu$ . In particular, the sensitivity factor becomes $\sqrt{2L/\mu}$ , the potential uses $s_{\rm sc}\langle v,y-y^{\star}(z)\rangle/(16L)$ and $\mu\lVert y-y^{\star}(z)\rVert^{2}/256$ , and the dissipation uses the same formulas with $(s,\tau,h,\beta)$ replaced by $(s_{\rm sc},\mu,h_{\rm sc},\beta_{\rm sc})$ .
+
+Assumption 3 and ( 100 ) give
+
+$0<\mu\leq L,\qquad s_{\rm sc}\leq 2L,\qquad h_{\rm sc}L_{G,{\rm sc}}=\frac{1}{64},\qquad\beta_{\rm sc}=\frac{h_{\rm sc}s_{\rm sc}}{4096}.$
+
+These are precisely the scalar relations used in the fixed-center, center-movement, and mini-batch error estimates. Strong concavity ( 98 ) supplies every dual quadratic-growth term, while the algorithmic dual gradients are those of $G_{\rm sc}$ and contain no regularization term. Thus the proof of Theorem 1 gives the corresponding strongly-concave drift inequality with the same constants.
+
+The initial potential is bounded by the same $B$ in ( 29 ). Indeed, $z_{0}=x_{0}$ and the unregularized saddle function give
+
+$\displaystyle\mathcal{V}_{0}^{\rm sc}$ $\displaystyle\leq\phi(x_{0})-\phi_{\inf}+2D_{Y}\lVert\nabla_{y}F(x_{0},y_{0})\rVert+\frac{\lVert\nabla_{x}F(x_{0},y_{0})\rVert^{2}+\lVert\nabla_{y}F(x_{0},y_{0})\rVert^{2}}{L}+\frac{\mu D_{Y}^{2}}{64}$ $\displaystyle\leq B,$
+
+where the first inequality follows from concavity and the radius bound on $Y$ , and the second uses $\mu\leq L$ and ( 29 ). Finally, the analytical certificate contains $-\nabla_{y}F(x_{t+1},y_{t+1})+n_{t+1}$ itself. Its conversion to $\mathcal{R}$ is exact, so the term $2\tau^{2}D_{Y}^{2}$ in ( 94 ) is absent. The remaining two terms give ( 101 ). ∎
+
+Suppose that Assumptions 1 , 2 , and 3 hold. Fix a known bound $\overline{B}\geq B$ and set
+
+$T=\max\left\{1,\left\lceil\frac{128L\overline{B}}{\beta_{\rm sc}\varepsilon^{2}}\right\rceil\right\},\qquad m=\max\left\{1,\left\lceil\frac{38400\sigma^{2}}{\beta_{\rm sc}\varepsilon^{2}}\right\rceil\right\}.$ (102)
+
+Then SPDE returns a point satisfying ( 7 ), and
+
+$\displaystyle N_{\rm sc}$ $\displaystyle\leq 3\left(1+\frac{128L\overline{B}}{\beta_{\rm sc}\varepsilon^{2}}\right)\left(1+\frac{38400\sigma^{2}}{\beta_{\rm sc}\varepsilon^{2}}\right)$ $\displaystyle=O\!\left(1+\frac{(L\overline{B}+\sigma^{2})\sqrt{\kappa}}{\varepsilon^{2}}+\frac{L\overline{B}\sigma^{2}\kappa}{\varepsilon^{4}}\right).$ (103)
+
+For fixed $L,\overline{B}$ and $\sigma>0$ , this gives
+
+$T=O(\sqrt{\kappa}\varepsilon^{-2}),\qquad m=O(\sqrt{\kappa}\varepsilon^{-2}),\qquad N_{\rm sc}=O(\kappa\varepsilon^{-4}).$ (104)
+
+If $\sigma=0$ , then $m=1$ and $N_{\rm sc}=O(\sqrt{\kappa}\varepsilon^{-2})$ .
+
+Substituting ( 102 ) into ( 101 ) gives
+
+$\frac{64LB}{\beta_{\rm sc}T}\leq\frac{\varepsilon^{2}}{2},\qquad\frac{19200\sigma^{2}}{\beta_{\rm sc}m}\leq\frac{\varepsilon^{2}}{2}.$
+
+Hence ( 7 ) holds. The three batches per iteration give the first line of ( 103 ). The identity $\beta_{\rm sc}^{-1}=(786432/\sqrt{2})\sqrt{\kappa}$ from ( 100 ) yields its second line and ( 104 ). ∎
+
+Theorem 2 shows that strong concavity removes the regularization bias and fixes the center timescale at $\beta_{\rm sc}=\Theta(\kappa^{-1/2})$ . The resulting product of the iteration and batch orders gives the $O(\kappa\varepsilon^{-4})$ stochastic-oracle bound.
+
+3.3.2 Nonconvex–concave setting
+
+Without strong concavity, we set the auxiliary dual regularization at the accuracy-dependent scale $\tau=O(\varepsilon)$ . This makes its contribution to the original game-stationarity residual at most order $\varepsilon$ , while slowing the center by the factor $\beta=\Theta(\varepsilon^{1/2})$ .
+
+Suppose that Assumptions 1 and 2 hold. Choose a known upper bound independent of $\varepsilon,\tau$ satisfying $\overline{B}\geq B$ , where $B$ is defined in ( 29 ). Given $\varepsilon>0$ , set
+
+$\tau=\min\left\{L,\frac{\varepsilon}{2D_{Y}}\right\},$ (105)
+
+choose $h,\alpha,k$ by ( 33 ) and $\beta$ by ( 79 ), and set
+
+$T=\max\left\{1,\left\lceil\frac{256L\overline{B}}{\beta\varepsilon^{2}}\right\rceil\right\},\qquad m=\max\left\{1,\left\lceil\frac{76800\sigma^{2}}{\beta\varepsilon^{2}}\right\rceil\right\}.$ (106)
+
+Then the output of Algorithm 1 satisfies ( 7 ). The number $N$ of stochastic full-gradient oracle calls satisfies the explicit bound
+
+$N\leq 3mT\leq 3\left(1+\frac{256L\overline{B}}{\beta\varepsilon^{2}}\right)\left(1+\frac{76800\sigma^{2}}{\beta\varepsilon^{2}}\right).$ (107)
+
+Let
+
+$K_{\varepsilon}:=\max\left\{1,\sqrt{\frac{2LD_{Y}}{\varepsilon}}\right\}.$ (108)
+
+Then
+
+$N=O\!\left(1+\frac{(L\overline{B}+\sigma^{2})K_{\varepsilon}}{\varepsilon^{2}}+\frac{L\overline{B}\sigma^{2}K_{\varepsilon}^{2}}{\varepsilon^{4}}\right).$ (109)
+
+For a fixed problem, initialization, $\overline{B}$ , and $\sigma>0$ , as $\varepsilon\downarrow 0$ , the iteration count is $T=O(\varepsilon^{-5/2})$ and the batch size is $m=O(\varepsilon^{-5/2})$ , so $N=O(\varepsilon^{-5})$ .
+
+By ( 105 ), $\tau D_{Y}\leq\varepsilon/2$ and $0<\tau\leq L$ . Substituting ( 106 ) into ( 94 ), the three error terms satisfy
+
+$\frac{64LB}{\beta T}\leq\frac{64L\overline{B}}{\beta T}\leq\frac{\varepsilon^{2}}{4},\qquad\frac{19200\sigma^{2}}{\beta m}\leq\frac{\varepsilon^{2}}{4},\qquad 2\tau^{2}D_{Y}^{2}\leq\frac{\varepsilon^{2}}{2}.$ (110)
+
+When $\sigma=0$ , the second error term is zero and $m=1$ ; no division by $\sigma$ is needed. Adding the three bounds gives $\mathbb{E}\mathcal{R}^{2}\leq\varepsilon^{2}$ . For any $a\geq 0$ , $\max\{1,\lceil a\rceil\}\leq 1+a$ . Thus the three batch queries per iteration give ( 107 ).
+
+By ( 33 ) and ( 79 ),
+
+$\displaystyle\beta$ $\displaystyle=\frac{\sqrt{2L\tau}}{262144(3L+\tau)},\frac{786432}{\sqrt{2}}\sqrt{\frac{L}{\tau}}\leq\frac{1}{\beta}\leq\frac{1048576}{\sqrt{2}}\sqrt{\frac{L}{\tau}},\qquad\sqrt{\frac{L}{\tau}}=K_{\varepsilon}.$ (111)
+
+Expanding ( 107 ) and substituting ( 111 ) yields ( 109 ). In particular, for $0<\varepsilon\leq 2LD_{Y}$ ,
+
+$N=O\!\left(1+(L\overline{B}+\sigma^{2})\sqrt{LD_{Y}}\,\varepsilon^{-5/2}+L^{2}\overline{B}D_{Y}\sigma^{2}\varepsilon^{-5}\right).$ (112)
+
+This proves the stated sample complexity. The quantity $B$ is used only in the analysis; the budgets use the supplied $\overline{B}$ and require no additional true-gradient oracle calls to estimate $B$ . ∎
+
+The theorem provides an upper bound for a general unbiased oracle with bounded variance, using a fixed batch size while retaining the single-loop structure. The $O(\varepsilon^{-5})$ bound counts individual sample-gradient calls; the iteration count is $O(\varepsilon^{-5/2})$ . The guarantee concerns the expected squared game-stationarity residual of the original problem.
+
+4 A variance-reduced SPDE method
+
+We develop a variance-reduced variant of SPDE, termed VR-SPDE, that preserves its single-loop structure. The method maintains one recursive gradient estimator along the entire sequence of current, predictor, and corrected query points. This estimator replaces the three independent mini-batch estimates in Algorithm 1 , while the projected steps, normal-cone corrections, dual momentum recursion, and proximal-center update retain the same formulas. Periodic refreshes update only the gradient estimator and require no inner optimization procedure.
+
+The recursive estimator introduces a distinct analytical difficulty. In the mini-batch analysis, the fresh endpoint estimate has conditionally mean-zero error, which eliminates the corresponding linear noise terms in ( 88 ). A recursive estimate generally retains the error from the preceding query, so this cancellation is no longer available. We instead control the endpoint error pathwise and bound the accumulated estimator variance through the motion of the query points. The resulting variance terms are then absorbed into the descent inequality. This approach yields the variance-reduced GS complexity guarantees in this section; the corresponding OS guarantees are established in Section 5 .
+
+4.1 Paired oracle and recursive estimator
+
+Variance reduction requires access to stochastic gradient differences evaluated with a common sample. We impose the following additional oracle assumption.
+
+In addition to Assumption 2 , the oracle permits evaluating $\nabla f(u;\omega)$ and $\nabla f(u^{\prime};\omega)$ using the same sample $\omega$ . There exists $\ell\geq L$ such that, for every pre-query sigma-algebra $\mathcal{A}$ and every pair of $\mathcal{A}$ -measurable feasible points $u,u^{\prime}\in X\times Y$ , a fresh sample $\omega\sim\mathcal{D}$ , independent of $\mathcal{A}$ , satisfies
+
+$\mathbb{E}\!\left[\lVert\nabla f(u;\omega)-\nabla f(u^{\prime};\omega)\rVert^{2}\,\middle|\,\mathcal{A}\right]\leq\ell^{2}\lVert u-u^{\prime}\rVert^{2}.$ (113)
+
+Samples within each newly drawn batch are independent, and each batch is independent of the information available before it is drawn. Each sample-gradient evaluation at one point counts as one SFO call; evaluating a paired difference therefore costs two SFO calls.
+
+Write $\chi:=\ell/L\geq 1$ . Assumption 4 controls stochastic gradient differences in mean square. It is stronger than Lipschitz continuity of the population gradient and is used only for VR-SPDE. It does not require every sample loss to have a uniformly Lipschitz gradient or to be concave in the dual variable.
+
+The estimator follows the SPIDER principle [ 3 ] . Its use here requires accounting for an adaptive query sequence: each new point may depend on the estimates produced at earlier requests.
+
+A recursive estimator along the query sequence.
+
+Index the estimator requests by $j=0,\ldots,3T-1$ and define
+
+$u_{3t}=(x_{t},y_{t}),\qquad u_{3t+1}=(\widetilde{x}_{t},\widetilde{y}_{t}),\qquad u_{3t+2}=(x_{t+1},y_{t+1}),\qquad 0\leq t<T.$ (114)
+
+These points are generated sequentially by the algorithm. For integers $q,B_{\rm r},b\geq 1$ , set
+
+$\mathsf{g}_{j}=\begin{cases}\displaystyle\frac{1}{B_{\rm r}}\sum_{i=1}^{B_{\rm r}}\nabla f(u_{j};\omega_{j,i}),&j\equiv 0\pmod{q},\\[7.0pt] \displaystyle\mathsf{g}_{j-1}+\frac{1}{b}\sum_{i=1}^{b}\bigl[\nabla f(u_{j};\omega_{j,i})-\nabla f(u_{j-1};\omega_{j,i})\bigr],&j\not\equiv 0\pmod{q}.\end{cases}$ (115)
+
+At each request, the samples appearing in ( 115 ) are drawn afresh after the query points have been determined. Within each paired difference, the two gradients use the same sample.
+
+Here $B_{\rm r}$ is the refresh batch size, $b$ is the difference batch size, and $q$ is the refresh period measured in estimator requests, rather than algorithmic iterations. In particular, the initial estimate $\mathsf{g}_{0}$ is always a refresh estimate. The same recursion serves all three query locations; no separate estimator is maintained for the predictor or endpoint.
+
+For $t\geq 1$ , the consecutive requests at the boundary between iterations satisfy
+
+$u_{3t}=u_{3t-1}=(x_{t},y_{t}).$
+
+If request $3t$ is not a refresh, every paired difference in ( 115 ) is then identically zero. The update can therefore be implemented exactly by setting $\mathsf{g}_{3t}=\mathsf{g}_{3t-1}$ without additional oracle calls. If request $3t$ is a refresh, the prescribed refresh batch is still drawn.
+
+The VR-SPDE algorithm.
+
+Algorithm 2 inserts the recursive estimator into the SPDE updates. The parameters $q,B_{\rm r},b$ govern estimator refresh and accuracy; the parameters $\tau,h,\alpha,k,\beta$ retain their roles in Algorithm 1 . Their choices for the two problem settings are specified in the complexity results below.
+
+Algorithm 2 Variance-reduced stochastic projected damped extragradient (VR-SPDE)
+
+Every occurrence of the second estimate within an iteration uses the same vector $\mathsf{g}_{3t+1}$ . A refresh replaces only the gradient estimate: it does not restart the primal, dual, normal-cone, momentum, or center states. Thus periodic refreshing preserves the single-loop structure. As in the SPDE analysis, the displayed output rule is used for GS; the OS output is specified in Section 5 .
+
+There are
+
+$N_{\rm r}:=1+\left\lfloor\frac{3T-1}{q}\right\rfloor=\left\lceil\frac{3T}{q}\right\rceil$
+
+refresh requests. Charging two SFO calls for every sample in every nonrefresh difference gives the total bound
+
+$N_{\rm SFO}\leq B_{\rm r}N_{\rm r}+2b(3T-N_{\rm r}).$
+
+This bound counts all refresh and difference evaluations. Copying the estimate at repeated query points can only reduce the oracle cost.
+
+Conditional estimator errors.
+
+Let $\mathcal{H}_{j}$ denote the sigma-algebra containing all information available immediately before request $j$ is processed. The query point $u_{j}$ is $\mathcal{H}_{j}$ -measurable. For $j\geq 1$ , the preceding point $u_{j-1}$ and estimate $\mathsf{g}_{j-1}$ are also $\mathcal{H}_{j}$ -measurable. Define
+
+$\eta_{j}:=\mathsf{g}_{j}-\nabla F(u_{j}),\qquad a_{t}:=\eta_{3t},\qquad b_{t}:=\eta_{3t+1},\qquad c_{t}:=\eta_{3t+2}.$ (116)
+
+These errors satisfy the algebraic decompositions in ( 17 ). Their conditional moments, however, differ from those of independent mini-batch estimates.
+
+At a refresh request, Assumption 2 gives
+
+$\mathbb{E}[\eta_{j}\mid\mathcal{H}_{j}]=0,\qquad\mathbb{E}[\lVert\eta_{j}\rVert^{2}\mid\mathcal{H}_{j}]\leq\frac{\sigma^{2}}{B_{\rm r}}.$
+
+At a nonrefresh request, write
+
+$\eta_{j}=\eta_{j-1}+\delta_{j},$
+
+where
+
+$\delta_{j}:=\frac{1}{b}\sum_{i=1}^{b}\bigl[\nabla f(u_{j};\omega_{j,i})-\nabla f(u_{j-1};\omega_{j,i})\bigr]-\bigl[\nabla F(u_{j})-\nabla F(u_{j-1})\bigr].$
+
+Conditional unbiasedness of the paired differences and Assumption 4 imply
+
+$\mathbb{E}[\delta_{j}\mid\mathcal{H}_{j}]=0,\qquad\mathbb{E}[\lVert\delta_{j}\rVert^{2}\mid\mathcal{H}_{j}]\leq\frac{\ell^{2}}{b}\lVert u_{j}-u_{j-1}\rVert^{2}.$
+
+Since $\eta_{j-1}$ is $\mathcal{H}_{j}$ -measurable, it follows that
+
+$\mathbb{E}[\eta_{j}\mid\mathcal{H}_{j}]=\eta_{j-1},\qquad\mathbb{E}[\lVert\eta_{j}\rVert^{2}\mid\mathcal{H}_{j}]\leq\lVert\eta_{j-1}\rVert^{2}+\frac{\ell^{2}}{b}\lVert u_{j}-u_{j-1}\rVert^{2}.$
+
+Thus the recursive increment is conditionally centered, whereas the full estimator error generally is not. Accordingly, the conditional zero-mean identities in ( 18 ) are not assumed for $a_{t},b_{t},c_{t}$ in this section. When a nonrefresh request repeats the preceding point, $\delta_{j}=0$ and $\eta_{j}=\eta_{j-1}$ exactly.
+
+Feasibility and moment bounds.
+
+The projection identities in Lemma 1 apply without change, since VR-SPDE modifies only the gradient estimates. In particular, almost surely,
+
+$x_{t},z_{t}\in X,\qquad y_{t}\in Y,\qquad\xi_{t}\in N_{X}(x_{t}),\qquad n_{t}\in N_{Y}(y_{t}),$
+
+and all predictor points belong to $X\times Y$ .
+
+All states and estimates also have finite second moments at every finite iteration. Indeed, at a refresh request, population smoothness and the bounded-variance oracle assumption give a finite second moment whenever the query point is square-integrable. At a nonrefresh request, the paired-oracle bound gives a finite second moment for the recursive increment whenever the current and preceding query points are square-integrable. The affine updates and nonexpansive projections preserve this property. Induction along the query sequence, starting from the deterministic initialization, therefore establishes the claim.
+
+The analysis below combines a pathwise descent estimate with bounds on query motion and accumulated estimator error. Appropriate choices of the refresh period and batch sizes allow the variance terms to be absorbed into the descent bound, yielding the complexity guarantees for the strongly concave and merely concave settings.
+
+4.2 Convergence analysis
+
+Retain the virtual momentum and state in ( 71 ), the quantities $\mathcal{I}_{t}^{0},\mathcal{D}_{t}^{0}$ from Lemma 6 , and $P_{t}^{+},Q_{t}^{+},X_{t}^{+}$ defined in the proof of Lemma 9 . Also write $Y_{t}^{+}=y_{t+1}-y^{\star}(z_{t})$ . The deterministic error bound ( 77 ) and virtual joint descent ( 80 ) hold for these correlated errors: their proofs use only the update identities and inequalities that hold pathwise. After inserting ( 115 ), the errors $a_{t},b_{t},c_{t}$ are explicit functions of the realized samples $\{\omega_{j,i}\}$ . The next lemma is therefore proved for a fixed realization of the complete recursive estimator path; expectations enter only in Lemma 13 and the subsequent accumulated bounds.
+
+Suppose that Assumption 1 holds, and let the iterates be generated by Algorithm 2 with the parameter choices in ( 33 ) and ( 79 ). Set $C_{\star}:=140$ . For every realization of the samples $\{\omega_{j,i}\}_{0\leq j<3T}$ used in ( 115 ),
+
+$\mathcal{V}_{t+1}-\mathcal{V}_{t}\leq-\frac{1}{4}\mathcal{D}_{t}^{0}-\frac{\beta}{16L}\lVert\nabla p(z_{t})\rVert^{2}+\frac{C_{\star}}{L\beta}(\lVert a_{t}\rVert^{2}+\lVert b_{t}\rVert^{2}+\lVert c_{t}\rVert^{2}).$ (117)
+
+Start from ( 80 ) and add the exact endpoint expansion ( 88 ). Since the $y$ gradient of $G$ is independent of the center, its first inner product contains $Q_{t}^{+}$ . By ( 21 ), with $\delta_{t}=z_{t+1}-z_{t}$ ,
+
+$\displaystyle\lVert y_{t+1}-y^{\star}(z_{t+1})\rVert$ $\displaystyle\leq\lVert Y_{t}^{+}\rVert+\sqrt{\frac{2L}{\tau}}\lVert\delta_{t}\rVert,$ $\displaystyle\frac{sk}{16L}\sqrt{\frac{2L}{\tau}}\lVert\delta_{t}\rVert\lVert c_{t}\rVert$ $\displaystyle\leq\frac{k\beta}{8}\lVert X_{t}^{+}\rVert\lVert c_{t}\rVert+\frac{k\beta}{16L}\lVert\nabla p(z_{t})\rVert\lVert c_{t}\rVert.$ (118)
+
+Here the second line uses ( 83 ) and $s^{2}=2L\tau$ . The dissipation ( 32 ) has the lower bound
+
+$\mathcal{D}_{t}^{0}\geq\frac{24\beta}{L}\lVert Q_{t}^{+}\rVert^{2}+\frac{7\beta}{L}\lVert v_{t+1}^{0}\rVert^{2}+32\tau\beta\lVert Y_{t}^{+}\rVert^{2}+56L\beta\lVert X_{t}^{+}\rVert^{2}.$ (119)
+
+For clarity, Young’s inequality bounds each linear endpoint term separately:
+
+$\displaystyle\frac{2k}{L}\lVert Q_{t}^{+}\rVert\lVert c_{t}\rVert$ $\displaystyle\leq\frac{24\beta}{16L}\lVert Q_{t}^{+}\rVert^{2}+\frac{k^{2}}{L\beta}\lVert c_{t}\rVert^{2},$ $\displaystyle\frac{sk}{128L^{2}}\lVert v_{t+1}^{0}\rVert\lVert c_{t}\rVert$ $\displaystyle\leq\frac{7\beta}{16L}\lVert v_{t+1}^{0}\rVert^{2}+\frac{k^{2}}{L\beta}\lVert c_{t}\rVert^{2},$ $\displaystyle\frac{sk}{16L}\lVert Y_{t}^{+}\rVert\lVert c_{t}\rVert$ $\displaystyle\leq 2\tau\beta\lVert Y_{t}^{+}\rVert^{2}+\frac{k^{2}}{L\beta}\lVert c_{t}\rVert^{2},$ $\displaystyle\frac{k\beta}{8}\lVert X_{t}^{+}\rVert\lVert c_{t}\rVert$ $\displaystyle\leq\frac{7}{2}L\beta\lVert X_{t}^{+}\rVert^{2}+\frac{k^{2}}{L\beta}\lVert c_{t}\rVert^{2},$ $\displaystyle\frac{k\beta}{16L}\lVert\nabla p(z_{t})\rVert\lVert c_{t}\rVert$ $\displaystyle\leq\frac{\beta}{16L}\lVert\nabla p(z_{t})\rVert^{2}+\frac{k^{2}}{L\beta}\lVert c_{t}\rVert^{2}.$ (120)
+
+These bounds follow from $ab\leq ra^{2}+b^{2}/(4r)$ , $s^{2}=2L\tau$ , $s\leq 2L$ , and $\beta\leq 1$ . The four state-square terms in the first four lines sum to at most $\mathcal{D}_{t}^{0}/16$ by ( 119 ). The quadratic endpoint term satisfies
+
+$\left(\frac{1}{L}+\frac{s}{256L^{2}}\right)k^{2}\lVert c_{y,t}\rVert^{2}\leq\frac{2k^{2}}{L\beta}\lVert c_{t}\rVert^{2}.$
+
+Consequently, ( 88 )–( 120 ) imply
+
+$\mathcal{V}_{t+1}-\mathcal{V}(z_{t+1},w_{t+1}^{0})\leq\frac{1}{16}\mathcal{D}_{t}^{0}+\frac{\beta}{16L}\lVert\nabla p(z_{t})\rVert^{2}+\frac{7k^{2}}{L\beta}\lVert c_{t}\rVert^{2}.$ (121)
+
+Add ( 80 ) and ( 121 ). Using $U_{t}^{2}\leq 8d^{2}\lVert a_{t}\rVert^{2}+8\lVert b_{t}\rVert^{2}$ , $d,k,\beta\leq 1$ , and $17\cdot 8=136<C_{\star}$ , we have
+
+$\displaystyle-\frac{1}{2}\mathcal{D}_{t}^{0}+\frac{1}{16}\mathcal{D}_{t}^{0}$ $\displaystyle\leq-\frac{1}{4}\mathcal{D}_{t}^{0},$ $\displaystyle\frac{17}{L}U_{t}^{2}+\frac{7k^{2}}{L\beta}\lVert c_{t}\rVert^{2}$ $\displaystyle\leq\frac{C_{\star}}{L\beta}(\lVert a_{t}\rVert^{2}+\lVert b_{t}\rVert^{2}+\lVert c_{t}\rVert^{2}).$
+
+The gradient coefficients leave $-\beta/(16L)$ , proving ( 117 ). ∎
+
+Suppose that Assumption 1 holds, and let the iterates be generated by Algorithm 2 with the parameter choices in ( 33 ) and ( 79 ). For each iteration, the query points in ( 114 ) satisfy
+
+$\lVert u_{3t+1}-u_{3t}\rVert^{2}+\lVert u_{3t+2}-u_{3t+1}\rVert^{2}\leq\frac{\mathcal{D}_{t}^{0}}{L\beta}+\frac{\lVert a_{t}\rVert^{2}+\lVert b_{t}\rVert^{2}}{L^{2}}.$ (122)
+
+Use the fixed-center directions $P,Q,P^{+},Q^{+}$ in ( 30 ) for the actual initial state and the virtual endpoint state. Projection nonexpansiveness, the predictor update, and $\lVert(P,Q)-(P^{+},Q^{+})\rVert=\sqrt{\mathcal{I}_{t}^{0}}$ give
+
+$\displaystyle\lVert u_{3t+1}-u_{3t}\rVert$ $\displaystyle\leq h\left(\sqrt{\lVert P_{t}^{+}\rVert^{2}+\lVert Q_{t}^{+}\rVert^{2}}+\sqrt{\mathcal{I}_{t}^{0}}+\lVert a_{t}\rVert\right),$ $\displaystyle\lVert u_{3t+2}-u_{3t+1}\rVert$ $\displaystyle\leq h\left(\sqrt{\mathcal{I}_{t}^{0}}+\lVert e_{t}\rVert+\lVert a_{t}\rVert\right).$
+
+The second inequality is the projection estimate used in the proof of Lemma 6 . By ( 77 ),
+
+$\lVert e_{t}\rVert^{2}\leq 8d^{2}\mathcal{I}_{t}^{0}+2U_{t}^{2},\qquad U_{t}^{2}\leq 8d^{2}\lVert a_{t}\rVert^{2}+8\lVert b_{t}\rVert^{2}.$
+
+Squaring the two motion bounds and using $(a+b+c)^{2}\leq 3(a^{2}+b^{2}+c^{2})$ yields
+
+$\displaystyle\lVert u_{3t+1}-u_{3t}\rVert^{2}+\lVert u_{3t+2}-u_{3t+1}\rVert^{2}$ $\displaystyle\leq 3h^{2}(\lVert P_{t}^{+}\rVert^{2}+\lVert Q_{t}^{+}\rVert^{2})+(6+24d^{2})h^{2}\mathcal{I}_{t}^{0}+(6+48d^{2})h^{2}\lVert a_{t}\rVert^{2}+48h^{2}\lVert b_{t}\rVert^{2}$ $\displaystyle\leq 8h^{2}(\lVert P_{t}^{+}\rVert^{2}+\lVert Q_{t}^{+}\rVert^{2}+\mathcal{I}_{t}^{0})+64h^{2}(\lVert a_{t}\rVert^{2}+\lVert b_{t}\rVert^{2}).$ (123)
+
+The last line uses $d=1/64$ . From ( 32 ),
+
+$\lVert P_{t}^{+}\rVert^{2}\leq\frac{4}{h}\mathcal{D}_{t}^{0},\qquad\lVert Q_{t}^{+}\rVert^{2}\leq\frac{L}{24\beta}\mathcal{D}_{t}^{0},\qquad\mathcal{I}_{t}^{0}\leq 4L\mathcal{D}_{t}^{0}.$
+
+Their coefficient in ( 123 ) is $32h+h^{2}L/(3\beta)+32h^{2}L$ . Since $hL\leq 1/64$ and $\beta\leq 1$ ,
+
+$\displaystyle L\beta\left(32h+\frac{h^{2}L}{3\beta}+32h^{2}L\right)$ $\displaystyle\leq\frac{32}{64}+\frac{1}{3\cdot 64^{2}}+\frac{32}{64^{2}}<1,$ $\displaystyle 64h^{2}$ $\displaystyle\leq\frac{1}{L^{2}}.$
+
+Substitution proves ( 122 ). ∎
+
+Define the cumulative expected error and dissipation by
+
+$\mathcal{E}_{T}:=\sum_{j=0}^{3T-1}\mathbb{E}\lVert\eta_{j}\rVert^{2}=\sum_{t=0}^{T-1}\mathbb{E}(\lVert a_{t}\rVert^{2}+\lVert b_{t}\rVert^{2}+\lVert c_{t}\rVert^{2}),\qquad\mathcal{A}_{T}:=\sum_{t=0}^{T-1}\mathbb{E}\mathcal{D}_{t}^{0}.$ (124)
+
+Suppose that Assumptions 1 , 2 , and 4 hold, and let the iterates and estimators be generated by Algorithm 2 with the parameter choices in ( 33 ) and ( 79 ). Then
+
+$\mathcal{E}_{T}\leq\frac{3T\sigma^{2}}{B_{\rm r}}+\frac{q\chi^{2}L}{b\beta}\mathcal{A}_{T}+\frac{q\chi^{2}}{b}\mathcal{E}_{T}.$ (125)
+
+At a refresh index $j$ , ( 14 ) gives $\mathbb{E}[\lVert\eta_{j}\rVert^{2}\mid\mathcal{H}_{j}]\leq\sigma^{2}/B_{\rm r}$ . At a nonrefresh index, define the centered fresh increment
+
+$\zeta_{j}:=\frac{1}{b}\sum_{i=1}^{b}[\nabla f(u_{j};\omega_{j,i})-\nabla f(u_{j-1};\omega_{j,i})]-[\nabla F(u_{j})-\nabla F(u_{j-1})].$
+
+Both points and $\eta_{j-1}$ are $\mathcal{H}_{j}$ -measurable. Conditional independence and ( 113 ) give
+
+$\displaystyle\eta_{j}$ $\displaystyle=\eta_{j-1}+\zeta_{j},\qquad\mathbb{E}[\zeta_{j}\mid\mathcal{H}_{j}]=0,$ $\displaystyle\mathbb{E}[\lVert\eta_{j}\rVert^{2}\mid\mathcal{H}_{j}]$ $\displaystyle=\lVert\eta_{j-1}\rVert^{2}+\mathbb{E}[\lVert\zeta_{j}\rVert^{2}\mid\mathcal{H}_{j}]\leq\lVert\eta_{j-1}\rVert^{2}+\frac{\ell^{2}}{b}\lVert u_{j}-u_{j-1}\rVert^{2}.$ (126)
+
+Let $r(j):=q\lfloor j/q\rfloor$ be the last refresh index. Iterating ( 126 ) after that refresh yields
+
+$\mathbb{E}\lVert\eta_{j}\rVert^{2}\leq\frac{\sigma^{2}}{B_{\rm r}}+\frac{\ell^{2}}{b}\sum_{i=r(j)+1}^{j}\mathbb{E}\lVert u_{i}-u_{i-1}\rVert^{2}.$ (127)
+
+When ( 127 ) is summed over $j<3T$ , each motion term is counted at most $q$ times. Moreover, $u_{3t}=u_{3t-1}$ for $t\geq 1$ . Thus
+
+$\displaystyle\mathcal{E}_{T}$ $\displaystyle\leq\frac{3T\sigma^{2}}{B_{\rm r}}+\frac{q\ell^{2}}{b}\sum_{j=1}^{3T-1}\mathbb{E}\lVert u_{j}-u_{j-1}\rVert^{2}$ $\displaystyle\leq\frac{3T\sigma^{2}}{B_{\rm r}}+\frac{q\ell^{2}}{b}\left[\frac{\mathcal{A}_{T}}{L\beta}+\frac{\mathcal{E}_{T}}{L^{2}}\right],$
+
+where the last line uses ( 122 ) and nonnegativity of the endpoint-error squares. Since $\chi=\ell/L$ , this is ( 125 ). ∎
+
+Suppose that Assumptions 1 , 2 , and 4 hold, and let the iterates be generated by Algorithm 2 with the parameter choices in ( 33 ) and ( 79 ). Suppose further that
+
+$b\geq\frac{16C_{\star}q\chi^{2}}{\beta^{2}},\qquad M_{T}^{\rm vr}:=B+\frac{6C_{\star}T\sigma^{2}}{L\beta B_{\rm r}}.$ (128)
+
+Then Algorithm 2 satisfies
+
+$\frac{1}{8}\mathcal{A}_{T}+\frac{\beta}{16L}\sum_{t=0}^{T-1}\mathbb{E}\lVert\nabla p(z_{t})\rVert^{2}\leq M_{T}^{\rm vr},$ (129)
+
+and its output obeys
+
+$\mathbb{E}\mathcal{R}(x_{J+1},y_{J+1})^{2}\leq\frac{128LB}{\beta T}+\frac{768C_{\star}\sigma^{2}}{\beta^{2}B_{\rm r}}+2\tau^{2}D_{Y}^{2}.$ (130)
+
+Since $q\chi^{2}/b\leq\beta^{2}/(16C_{\star})\leq 1/2$ , rearranging ( 125 ) gives
+
+$\mathcal{E}_{T}\leq\frac{6T\sigma^{2}}{B_{\rm r}}+\frac{2q\chi^{2}L}{b\beta}\mathcal{A}_{T}.$ (131)
+
+Sum ( 117 ) in expectation and use $\mathcal{V}_{T}\geq 0$ and $\mathcal{V}_{0}\leq B$ to obtain
+
+$\displaystyle\frac{1}{4}\mathcal{A}_{T}+\frac{\beta}{16L}\sum_{t<T}\mathbb{E}\lVert\nabla p(z_{t})\rVert^{2}$ $\displaystyle\leq B+\frac{C_{\star}}{L\beta}\mathcal{E}_{T}$ $\displaystyle\leq B+\frac{6C_{\star}T\sigma^{2}}{L\beta B_{\rm r}}+\frac{2C_{\star}q\chi^{2}}{b\beta^{2}}\mathcal{A}_{T}$ $\displaystyle\leq M_{T}^{\rm vr}+\frac{1}{8}\mathcal{A}_{T}.$
+
+Moving the last term to the left proves ( 129 ). Retaining individual components of ( 32 ) gives
+
+$\begin{gathered}\sum_{t<T}\mathbb{E}\lVert P_{t}^{+}\rVert^{2}\leq\frac{32M_{T}^{\rm vr}}{h},\qquad\sum_{t<T}\mathbb{E}\lVert Q_{t}^{+}\rVert^{2}\leq\frac{LM_{T}^{\rm vr}}{3\beta},\qquad\sum_{t<T}\mathbb{E}\lVert v_{t+1}^{0}\rVert^{2}\leq\frac{8LM_{T}^{\rm vr}}{7\beta},\\ \sum_{t<T}\mathbb{E}\lVert X_{t}^{+}\rVert^{2}\leq\frac{M_{T}^{\rm vr}}{7L\beta},\qquad\sum_{t<T}\mathbb{E}\lVert\nabla p(z_{t})\rVert^{2}\leq\frac{16LM_{T}^{\rm vr}}{\beta}.\end{gathered}$ (132)
+
+The algebraic certificate $S_{t}$ in ( 96 ) satisfies the same pointwise bound used to prove ( 97 ). Hence
+
+$\displaystyle\sum_{t<T}\mathbb{E}S_{t}$ $\displaystyle\leq\left(\frac{96\beta}{hL}+\frac{12}{7}+48+\frac{2}{3}+\frac{16}{7}\right)\frac{LM_{T}^{\rm vr}}{\beta}\leq\frac{64LM_{T}^{\rm vr}}{\beta}.$ (133)
+
+The last inequality uses $\beta/(hL)\leq 1/2048$ . Finally, $\mathcal{R}^{2}\leq 2S_{t}+2\tau^{2}D_{Y}^{2}$ and independent uniform selection of $J$ give
+
+$\mathbb{E}\mathcal{R}(x_{J+1},y_{J+1})^{2}\leq\frac{128LM_{T}^{\rm vr}}{\beta T}+2\tau^{2}D_{Y}^{2}.$
+
+Substitute ( 128 ) to obtain ( 130 ). ∎
+
+4.3 Complexity results
+
+The preceding lemmas reduce the remaining work to selecting the refresh batch, difference batch, and refresh period. We first exploit strong concavity, where no bias term is present, and then impose the same accuracy-dependent dual regularization used in the ordinary concave result.
+
+4.3.1 Nonconvex–strongly concave setting
+
+VR-SPDE applies Algorithm 2 to the query stream generated by SPDE: every explicit dual-regularization term is deleted and the parameters in ( 100 ) are used.
+
+Suppose that Assumptions 1 , 2 , 4 , and 3 hold and that
+
+$b\geq\frac{16C_{\star}q\chi^{2}}{\beta_{\rm sc}^{2}}.$ (134)
+
+Then VR-SPDE satisfies
+
+$\mathbb{E}\mathcal{R}(x_{J+1},y_{J+1})^{2}\leq\frac{128LB}{\beta_{\rm sc}T}+\frac{768C_{\star}\sigma^{2}}{\beta_{\rm sc}^{2}B_{\rm r}}.$ (135)
+
+Apply the strongly-concave substitution established in the proof of Lemma 10 to Lemmas 11 – 14 . The paired-oracle recursion and query-motion estimate use only mean-square smoothness, projection nonexpansiveness, and the scalar relations displayed after ( 100 ); hence their constants are unchanged. The initial potential remains bounded by $B$ , and the exact original dual certificate again removes the regularization-bias term. Substituting $\beta_{\rm sc}$ into ( 130 ) therefore gives ( 135 ). ∎
+
+Suppose that Assumptions 1 , 2 , 4 , and 3 hold. Fix a known bound $\overline{B}\geq B$ and set
+
+$\begin{gathered}T=\max\left\{1,\left\lceil\frac{256L\overline{B}}{\beta_{\rm sc}\varepsilon^{2}}\right\rceil\right\},\qquad B_{\rm r}=\max\left\{1,\left\lceil\frac{1536C_{\star}\sigma^{2}}{\beta_{\rm sc}^{2}\varepsilon^{2}}\right\rceil\right\},\\ A_{{\rm vr},{\rm sc}}:=\frac{16C_{\star}\chi^{2}}{\beta_{\rm sc}^{2}},\qquad q=\max\left\{1,\left\lfloor\sqrt{\frac{B_{\rm r}}{A_{{\rm vr},{\rm sc}}}}\right\rfloor\right\},\qquad b=\lceil A_{{\rm vr},{\rm sc}}q\rceil.\end{gathered}$ (136)
+
+Then VR-SPDE returns a point satisfying ( 7 ), and
+
+$N_{{\rm vr},{\rm sc}}\leq B_{\rm r}+18T\min\left\{B_{\rm r},\sqrt{A_{{\rm vr},{\rm sc}}B_{\rm r}}\right\}.$ (137)
+
+For fixed positive $\sigma$ and $\chi$ , the parameter and oracle orders are
+
+$\displaystyle T=O(\sqrt{\kappa}\varepsilon^{-2}),\qquad B_{\rm r}=O(\kappa\varepsilon^{-2}),\qquad q=\Theta((\chi\varepsilon)^{-1}),\qquad b=O(\chi\kappa\varepsilon^{-1}),$ (138) $\displaystyle N_{{\rm vr},{\rm sc}}=O\!\left(\kappa\varepsilon^{-2}+\chi\kappa^{3/2}\varepsilon^{-3}\right).$
+
+If $\sigma=0$ , then $B_{\rm r}=q=1$ and $N_{{\rm vr},{\rm sc}}\leq 3T=O(\sqrt{\kappa}\varepsilon^{-2})$ .
+
+The batch choice gives $b\geq 16C_{\star}q\chi^{2}/\beta_{\rm sc}^{2}$ , so Lemma 15 applies. Moreover,
+
+$\frac{128LB}{\beta_{\rm sc}T}\leq\frac{\varepsilon^{2}}{2},\qquad\frac{768C_{\star}\sigma^{2}}{\beta_{\rm sc}^{2}B_{\rm r}}\leq\frac{\varepsilon^{2}}{2},$
+
+which proves ( 7 ).
+
+There are $3T$ estimator requests and exactly $\lceil 3T/q\rceil$ refreshes. If $q\geq 2$ , then $B_{\rm r}\geq 4A_{{\rm vr},{\rm sc}}$ and
+
+$\frac{1}{2}\sqrt{\frac{B_{\rm r}}{A_{{\rm vr},{\rm sc}}}}\leq q,\qquad b\leq 2\sqrt{A_{{\rm vr},{\rm sc}}B_{\rm r}}.$
+
+Charging $B_{\rm r}$ calls per refresh and $2b$ calls per paired difference gives
+
+$N_{{\rm vr},{\rm sc}}\leq B_{\rm r}+\frac{3TB_{\rm r}}{q}+6Tb\leq B_{\rm r}+18T\sqrt{A_{{\rm vr},{\rm sc}}B_{\rm r}}.$
+
+If $q=1$ , every request is a refresh and $N_{{\rm vr},{\rm sc}}=3TB_{\rm r}$ . In this case $B_{\rm r}<4A_{{\rm vr},{\rm sc}}$ , so $B_{\rm r}\leq 2\min\{B_{\rm r},\sqrt{A_{{\rm vr},{\rm sc}}B_{\rm r}}\}$ and the same bound follows. This proves ( 137 ) in both cases.
+
+By ( 100 ), $\beta_{\rm sc}=\Theta(\kappa^{-1/2})$ . For fixed positive $\sigma$ and $\chi$ , ( 136 ) therefore gives
+
+$B_{\rm r}=\Theta(\kappa\varepsilon^{-2}),\qquad A_{{\rm vr},{\rm sc}}=\Theta(\chi^{2}\kappa),\qquad\sqrt{B_{\rm r}/A_{{\rm vr},{\rm sc}}}=\Theta((\chi\varepsilon)^{-1}).$
+
+Consequently, $q=\Theta((\chi\varepsilon)^{-1})$ , $b=O(\chi\kappa\varepsilon^{-1})$ , and
+
+$\displaystyle N_{{\rm vr},{\rm sc}}$ $\displaystyle\leq B_{\rm r}+18T\sqrt{A_{{\rm vr},{\rm sc}}B_{\rm r}}$ $\displaystyle=O\!\left(\kappa\varepsilon^{-2}+\chi\kappa^{3/2}\varepsilon^{-3}\right).$
+
+If $\sigma=0$ , then $B_{\rm r}=1<A_{{\rm vr},{\rm sc}}$ , hence $q=1$ ; all $3T$ requests are refreshes of size one and $N_{{\rm vr},{\rm sc}}\leq 3T$ . ∎
+
+Compared with SPDE, the iteration count is unchanged. Variance reduction replaces a fresh batch at every request by periodic refreshes and paired differences, yielding $O(\kappa\varepsilon^{-2}+\chi\kappa^{3/2}\varepsilon^{-3})$ oracle calls under the stronger paired mean-square smoothness assumption.
+
+4.3.2 Nonconvex–concave setting
+
+Suppose that Assumptions 1 , 2 , and 4 hold. Fix a known bound $\overline{B}\geq B$ independent of $\varepsilon,\tau$ . For $\varepsilon>0$ , choose $\tau$ as in ( 105 ), choose $h,\alpha,k$ by ( 33 ), and choose $\beta$ by ( 79 ). Set
+
+$\begin{gathered}T=\max\left\{1,\left\lceil\frac{512L\overline{B}}{\beta\varepsilon^{2}}\right\rceil\right\},\qquad B_{\rm r}=\max\left\{1,\left\lceil\frac{3072C_{\star}\sigma^{2}}{\beta^{2}\varepsilon^{2}}\right\rceil\right\},\\ A_{\rm vr}:=\frac{16C_{\star}\chi^{2}}{\beta^{2}},\qquad q=\max\left\{1,\left\lfloor\sqrt{\frac{B_{\rm r}}{A_{\rm vr}}}\right\rfloor\right\},\qquad b=\lceil A_{\rm vr}q\rceil.\end{gathered}$ (139)
+
+Then Algorithm 2 satisfies ( 7 ). Its number of stochastic full-gradient oracle calls obeys
+
+$\displaystyle N_{\rm vr}$ $\displaystyle\leq B_{\rm r}\left\lceil\frac{3T}{q}\right\rceil+2b\left(3T-\left\lceil\frac{3T}{q}\right\rceil\right)$ $\displaystyle\leq B_{\rm r}+18T\min\{B_{\rm r},\sqrt{A_{\rm vr}B_{\rm r}}\}.$ (140)
+
+For fixed problem data, $\overline{B}$ , and $\sigma>0$ , as $\varepsilon\downarrow 0$ ,
+
+$T=O(\varepsilon^{-5/2}),\qquad B_{\rm r}=O(\varepsilon^{-3}),\qquad q=\Theta(\varepsilon^{-1}),\qquad b=O(\varepsilon^{-2}),\qquad N_{\rm vr}=O(\varepsilon^{-9/2}).$ (141)
+
+If $\sigma=0$ , the choices in ( 139 ) give $B_{\rm r}=q=1$ and $N_{\rm vr}\leq 3T=O(\varepsilon^{-5/2})$ .
+
+By ( 139 ), $b\geq 16C_{\star}q\chi^{2}/\beta^{2}$ , so Lemma 14 applies. Its three residual terms satisfy
+
+$\frac{128LB}{\beta T}\leq\frac{\varepsilon^{2}}{4},\qquad\frac{768C_{\star}\sigma^{2}}{\beta^{2}B_{\rm r}}\leq\frac{\varepsilon^{2}}{4},\qquad 2\tau^{2}D_{Y}^{2}\leq\frac{\varepsilon^{2}}{2}.$ (142)
+
+When $\sigma=0$ , the second term is zero. Adding ( 142 ) proves $\mathbb{E}\mathcal{R}^{2}\leq\varepsilon^{2}$ .
+
+There are $3T$ estimator requests, including exactly $\lceil 3T/q\rceil$ refresh requests. Each refresh costs $B_{\rm r}$ calls and each other request costs at most $2b$ calls, proving the first line of ( 140 ). Since $A_{\rm vr}\geq 1$ , if $q\geq 2$ then $B_{\rm r}\geq 4A_{\rm vr}$ and
+
+$\frac{1}{2}\sqrt{\frac{B_{\rm r}}{A_{\rm vr}}}\leq q\leq\sqrt{\frac{B_{\rm r}}{A_{\rm vr}}},\qquad b\leq\sqrt{A_{\rm vr}B_{\rm r}}+1\leq 2\sqrt{A_{\rm vr}B_{\rm r}}.$
+
+Consequently,
+
+$\displaystyle N_{\rm vr}$ $\displaystyle\leq B_{\rm r}+\frac{3TB_{\rm r}}{q}+6Tb$ $\displaystyle\leq B_{\rm r}+18T\sqrt{A_{\rm vr}B_{\rm r}}=B_{\rm r}+18T\min\{B_{\rm r},\sqrt{A_{\rm vr}B_{\rm r}}\}.$
+
+If $q=1$ , every request is a refresh and $N_{\rm vr}=3TB_{\rm r}$ . Here $B_{\rm r}<4A_{\rm vr}$ , which implies $B_{\rm r}\leq 2\min\{B_{\rm r},\sqrt{A_{\rm vr}B_{\rm r}}\}$ ; the same upper bound follows.
+
+For fixed $\sigma>0$ and sufficiently small $\varepsilon$ , $\tau=\varepsilon/(2D_{Y})$ and ( 111 ) gives $\beta=\Theta(\varepsilon^{1/2})$ . Thus ( 139 ) implies
+
+$B_{\rm r}=\Theta(\varepsilon^{-3}),\qquad A_{\rm vr}=\Theta(\varepsilon^{-1}),\qquad\sqrt{B_{\rm r}/A_{\rm vr}}=\Theta(\varepsilon^{-1}).$
+
+It follows that $q=\Theta(\varepsilon^{-1})$ , $b=O(\varepsilon^{-2})$ , and
+
+$N_{\rm vr}=O\!\left(B_{\rm r}+T\sqrt{A_{\rm vr}B_{\rm r}}\right)=O\!\left(\varepsilon^{-3}+\varepsilon^{-5/2}\varepsilon^{-2}\right)=O(\varepsilon^{-9/2}).$
+
+When $\sigma=0$ , $B_{\rm r}=1$ and $A_{\rm vr}>1$ force $q=1$ , so the difference batches are never used and $N_{\rm vr}\leq 3T$ . ∎
+
+The iteration order remains $O(\varepsilon^{-5/2})$ in both stochastic methods. In SPDE, every iteration pays for three batches of order $\varepsilon^{-5/2}$ . In VR-SPDE, a refresh of order $\varepsilon^{-3}$ is spread over $\Theta(\varepsilon^{-1})$ requests, and the difference batches have order $\varepsilon^{-2}$ . The average oracle work per iteration is therefore $O(\varepsilon^{-2})$ for fixed positive variance. The stronger oracle in Assumption 4 enables this improvement. The bounds in Theorems 3 and 5 are upper bounds for the same expected squared game-stationarity criterion.
+
+5 Optimization-stationarity guarantees
+
+The preceding sections use game stationarity, which evaluates a feasible primal–dual pair. We now analyze the optimization-stationarity criterion introduced in ( 10 ). The same center-based algorithmic constructions, with the OS-specific parameter choices given below, provide this guarantee through the center sequences of SPDE and VR-SPDE without any additional stochastic-gradient evaluation.
+
+For $0\leq\tau\leq L$ , define the regularized value function and its $1/(2L)$ -Moreau envelope over $X$ by
+
+$\phi_{\tau}(x):=\max_{y\in Y}\left\{F(x,y)-\frac{\tau}{2}\lVert y\rVert^{2}\right\},\qquad p_{\tau}(z):=\min_{x\in X}\left\{\phi_{\tau}(x)+L\lVert x-z\rVert^{2}\right\}.$ (143)
+
+Thus $\phi_{0}=\phi$ , $p_{0}$ agrees with the original envelope in ( 8 ), $p_{\tau}=p$ in the regularized analysis of Section 3 , and $p_{0}=p_{\rm sc}$ in the strongly-concave specialization. Assumption 1 implies that every $\phi_{\tau}$ is $L$ -weakly convex. Consequently, the minimizer
+
+$x_{\tau}^{\star}(z):=\argmin_{x\in X}\left\{\phi_{\tau}(x)+L\lVert x-z\rVert^{2}\right\}$ (144)
+
+is unique and
+
+$\nabla p_{\tau}(z)=2L(z-x_{\tau}^{\star}(z)).$ (145)
+
+For the OS results below, the algorithms use the same independent index $J\sim\operatorname{Unif}\{0,\ldots,T-1\}$ as before and additionally report $z_{\rm out}:=z_{J}$ . Storing and reporting this center changes neither the updates nor the SFO count.
+
+Suppose that Assumption 1 holds. For every $0\leq\tau\leq L$ and $z\in\mathbb{R}^{n}$ ,
+
+$\displaystyle 0$ $\displaystyle\leq\phi(x)-\phi_{\tau}(x)\leq\frac{\tau}{2}D_{Y}^{2},$ $\displaystyle x\in X,$ (146) $\displaystyle\lVert x_{\tau}^{\star}(z)-x_{0}^{\star}(z)\rVert^{2}$ $\displaystyle\leq\frac{\tau D_{Y}^{2}}{L},$ (147) $\displaystyle\lVert\nabla p_{0}(z)-\nabla p_{\tau}(z)\rVert$ $\displaystyle\leq 2D_{Y}\sqrt{L\tau}.$ (148)
+
+In particular,
+
+$\mathcal{S}_{\rm OS}(z)^{2}\leq 2\lVert\nabla p_{\tau}(z)\rVert^{2}+8L\tau D_{Y}^{2}.$ (149)
+
+For every $x\in X$ , subtracting the nonnegative quadratic from the inner maximization gives $\phi_{\tau}(x)\leq\phi(x)$ . If $y_{0}(x)\in\operatorname*{argmax}_{y\in Y}F(x,y)$ , compactness of $Y$ and the definition of $D_{Y}$ give
+
+$\displaystyle\phi_{\tau}(x)$ $\displaystyle\geq F(x,y_{0}(x))-\frac{\tau}{2}\lVert y_{0}(x)\rVert^{2}\geq\phi(x)-\frac{\tau}{2}D_{Y}^{2}.$
+
+This proves ( 146 ).
+
+The lower smoothness inequality for $F(\cdot,y)$ shows that $x\mapsto F(x,y)+(L/2)\lVert x\rVert^{2}$ is convex for every $y\in Y$ . Taking the pointwise maximum over $y$ preserves convexity, and hence every $\phi_{\tau}$ is $L$ -weakly convex. Moreover, $\phi_{\tau}\geq\phi_{\inf}-\tau D_{Y}^{2}/2$ , so the proximal objectives below are coercive on the closed set $X$ and attain their minima.
+
+For fixed $z$ , set
+
+$P_{\tau,z}(x):=\phi_{\tau}(x)+L\lVert x-z\rVert^{2},\qquad\delta_{\tau}:=\frac{\tau}{2}D_{Y}^{2}.$
+
+Since $\phi_{\tau}$ is $L$ -weakly convex, $P_{\tau,z}$ is $L$ -strongly convex on $X$ . Applying strong convexity of $P_{0,z}$ at its minimizer and then ( 146 ) gives
+
+$\displaystyle\frac{L}{2}\lVert x_{\tau}^{\star}(z)-x_{0}^{\star}(z)\rVert^{2}$ $\displaystyle\leq P_{0,z}(x_{\tau}^{\star}(z))-P_{0,z}(x_{0}^{\star}(z))$ $\displaystyle\leq P_{\tau,z}(x_{\tau}^{\star}(z))+\delta_{\tau}-P_{0,z}(x_{0}^{\star}(z))$ $\displaystyle\leq P_{\tau,z}(x_{0}^{\star}(z))+\delta_{\tau}-P_{0,z}(x_{0}^{\star}(z))$ $\displaystyle\leq\delta_{\tau}.$ (150)
+
+Rearranging ( 150 ) proves ( 147 ). Using ( 145 ),
+
+$\displaystyle\lVert\nabla p_{0}(z)-\nabla p_{\tau}(z)\rVert$ $\displaystyle=2L\lVert x_{\tau}^{\star}(z)-x_{0}^{\star}(z)\rVert\leq 2D_{Y}\sqrt{L\tau},$
+
+which is ( 148 ). Finally, $\lVert a+b\rVert^{2}\leq 2\lVert a\rVert^{2}+2\lVert b\rVert^{2}$ gives ( 149 ). ∎
+
+The next lemma extracts the envelope-gradient estimates already contained in the two descent analyses.
+
+Suppose that Assumptions 1 and 2 hold, and let $J$ be independent and uniform on $\{0,\ldots,T-1\}$ . For SPDE with $0<\tau\leq L$ and the parameters in ( 33 ) and ( 79 ),
+
+$\mathbb{E}\lVert\nabla p_{\tau}(z_{J})\rVert^{2}\leq\frac{8LB}{\beta T}+\frac{2400\sigma^{2}}{\beta m}.$ (151)
+
+If Assumption 4 also holds and $b\geq 16C_{\star}q\chi^{2}/\beta^{2}$ , then VR-SPDE satisfies
+
+$\mathbb{E}\lVert\nabla p_{\tau}(z_{J})\rVert^{2}\leq\frac{16LB}{\beta T}+\frac{96C_{\star}\sigma^{2}}{\beta^{2}B_{\rm r}}.$ (152)
+
+Under Assumption 3 , the corresponding unregularized SPDE and VR-SPDE estimates are obtained from ( 151 ) and ( 152 ), respectively, by replacing $(p_{\tau},\beta)$ with $(p_{0},\beta_{\rm sc})$ .
+
+Independence and uniformity of $J$ give
+
+$\mathbb{E}\lVert\nabla p_{\tau}(z_{J})\rVert^{2}=\frac{1}{T}\sum_{t=0}^{T-1}\mathbb{E}\lVert\nabla p_{\tau}(z_{t})\rVert^{2}.$
+
+For SPDE, the last estimate in ( 95 ) and the definition ( 92 ) yield
+
+$\displaystyle\mathbb{E}\lVert\nabla p_{\tau}(z_{J})\rVert^{2}$ $\displaystyle\leq\frac{8L}{\beta T}\left(B+\frac{300T\sigma^{2}}{Lm}\right)=\frac{8LB}{\beta T}+\frac{2400\sigma^{2}}{\beta m}.$
+
+For VR-SPDE, the last estimate in ( 132 ) and ( 128 ) give
+
+$\displaystyle\mathbb{E}\lVert\nabla p_{\tau}(z_{J})\rVert^{2}$ $\displaystyle\leq\frac{16L}{\beta T}\left(B+\frac{6C_{\star}T\sigma^{2}}{L\beta B_{\rm r}}\right)$ $\displaystyle=\frac{16LB}{\beta T}+\frac{96C_{\star}\sigma^{2}}{\beta^{2}B_{\rm r}}.$
+
+The strongly-concave drift used in Lemma 10 retains the same envelope term with $(p_{0},\beta_{\rm sc})$ . Likewise, the strongly-concave substitution in Lemma 15 retains the corresponding VR envelope term. This proves the last assertion. ∎
+
+5.1 Nonconvex–strongly concave setting
+
+Strong concavity removes the artificial dual regularization, so the envelope controlled by the descent inequality is already the envelope of the original value function.
+
+Suppose that Assumptions 1 , 2 , and 3 hold, with the strong-concavity modulus chosen so that $0<\mu\leq L$ ; any larger valid modulus may be replaced by $\min\{\mu,L\}$ . Let $\varepsilon>0$ and fix a known bound $\overline{B}\geq B$ .
+
+For SPDE, use the unregularized specialization and the parameters in ( 100 ), and set
+
+$T=\max\left\{1,\left\lceil\frac{16L\overline{B}}{\beta_{\rm sc}\varepsilon^{2}}\right\rceil\right\},\qquad m=\max\left\{1,\left\lceil\frac{4800\sigma^{2}}{\beta_{\rm sc}\varepsilon^{2}}\right\rceil\right\}.$ (153)
+
+Then $\mathbb{E}\mathcal{S}_{\rm OS}(z_{\rm out})^{2}\leq\varepsilon^{2}$ , and the number of SFO calls satisfies
+
+$N_{{\rm os},{\rm sc}}\leq 3\left(1+\frac{16L\overline{B}}{\beta_{\rm sc}\varepsilon^{2}}\right)\left(1+\frac{4800\sigma^{2}}{\beta_{\rm sc}\varepsilon^{2}}\right)=O(\kappa\varepsilon^{-4})$ (154)
+
+for fixed positive $L,\overline{B}$ , and $\sigma$ .
+
+If Assumption 4 also holds, run the unregularized VR-SPDE specialization with
+
+$\begin{gathered}T=\max\left\{1,\left\lceil\frac{32L\overline{B}}{\beta_{\rm sc}\varepsilon^{2}}\right\rceil\right\},\qquad B_{\rm r}=\max\left\{1,\left\lceil\frac{192C_{\star}\sigma^{2}}{\beta_{\rm sc}^{2}\varepsilon^{2}}\right\rceil\right\},\\ A_{{\rm os},{\rm sc}}:=\frac{16C_{\star}\chi^{2}}{\beta_{\rm sc}^{2}},\qquad q=\max\left\{1,\left\lfloor\sqrt{\frac{B_{\rm r}}{A_{{\rm os},{\rm sc}}}}\right\rfloor\right\},\qquad b=\left\lceil A_{{\rm os},{\rm sc}}q\right\rceil.\end{gathered}$ (155)
+
+Then $\mathbb{E}\mathcal{S}_{\rm OS}(z_{\rm out})^{2}\leq\varepsilon^{2}$ and
+
+$\displaystyle N_{{\rm os},{\rm vr},{\rm sc}}$ $\displaystyle\leq B_{\rm r}+18T\min\left\{B_{\rm r},\sqrt{A_{{\rm os},{\rm sc}}B_{\rm r}}\right\}$ $\displaystyle=O\!\left(\kappa\varepsilon^{-2}+\chi\kappa^{3/2}\varepsilon^{-3}\right)$ (156)
+
+for fixed positive $\sigma$ and $\chi$ . If $\sigma=0$ , both methods use $O(\sqrt{\kappa}\varepsilon^{-2})$ SFO calls.
+
+For SPDE, the strongly-concave form of ( 151 ) and ( 153 ) give
+
+$\displaystyle\mathbb{E}\mathcal{S}_{\rm OS}(z_{\rm out})^{2}$ $\displaystyle\leq\frac{8LB}{\beta_{\rm sc}T}+\frac{2400\sigma^{2}}{\beta_{\rm sc}m}\leq\frac{\varepsilon^{2}}{2}+\frac{\varepsilon^{2}}{2}=\varepsilon^{2}.$
+
+The three fresh batches per iteration give the first inequality in ( 154 ). Since $\beta_{\rm sc}=\Theta(\kappa^{-1/2})$ , both $T$ and $m$ are $O(\sqrt{\kappa}\varepsilon^{-2})$ , proving its stated order.
+
+For VR-SPDE, ( 155 ) implies $b\geq 16C_{\star}q\chi^{2}/\beta_{\rm sc}^{2}$ . The strongly-concave form of ( 152 ) therefore gives
+
+$\displaystyle\mathbb{E}\mathcal{S}_{\rm OS}(z_{\rm out})^{2}$ $\displaystyle\leq\frac{16LB}{\beta_{\rm sc}T}+\frac{96C_{\star}\sigma^{2}}{\beta_{\rm sc}^{2}B_{\rm r}}\leq\frac{\varepsilon^{2}}{2}+\frac{\varepsilon^{2}}{2}=\varepsilon^{2}.$
+
+The refresh and paired-difference accounting used in ( 137 ) applies without change and proves the first line of ( 156 ). Moreover,
+
+$\displaystyle T$ $\displaystyle=O(\sqrt{\kappa}\varepsilon^{-2}),$ $\displaystyle B_{\rm r}$ $\displaystyle=O(\kappa\varepsilon^{-2}),$ $\displaystyle A_{{\rm os},{\rm sc}}$ $\displaystyle=O(\chi^{2}\kappa),$ $\displaystyle q$ $\displaystyle=\Theta((\chi\varepsilon)^{-1}),$ $\displaystyle b$ $\displaystyle=O(\chi\kappa\varepsilon^{-1}),$ $\displaystyle\sqrt{A_{{\rm os},{\rm sc}}B_{\rm r}}$ $\displaystyle=O(\chi\kappa\varepsilon^{-1}).$
+
+Substitution into the query bound proves the second line of ( 156 ). When $\sigma=0$ , the mini-batch method uses $m=1$ , while the VR method has $B_{\rm r}=q=1$ ; both costs are $O(T)=O(\sqrt{\kappa}\varepsilon^{-2})$ . ∎
+
+5.2 Nonconvex–concave setting
+
+In the merely concave setting, the regularized envelope $p_{\tau}$ differs from the envelope $p_{0}$ of the original value function. The square-root transfer error in ( 148 ) requires a smaller regularization parameter than the one used for game stationarity.
+
+Suppose that Assumptions 1 and 2 hold. Let $\varepsilon>0$ , fix a known bound $\overline{B}\geq B$ independent of $\varepsilon$ and $\tau$ , and set
+
+$\tau_{\rm os}:=\min\left\{L,\frac{\varepsilon^{2}}{16LD_{Y}^{2}}\right\},\qquad K_{\varepsilon}^{\rm os}:=\max\left\{1,\frac{4LD_{Y}}{\varepsilon}\right\}.$ (157)
+
+Choose $h,\alpha,k$ by ( 33 ) and $\beta$ by ( 79 ), with $\tau=\tau_{\rm os}$ .
+
+For SPDE, set
+
+$T=\max\left\{1,\left\lceil\frac{64L\overline{B}}{\beta\varepsilon^{2}}\right\rceil\right\},\qquad m=\max\left\{1,\left\lceil\frac{19200\sigma^{2}}{\beta\varepsilon^{2}}\right\rceil\right\}.$ (158)
+
+Then $\mathbb{E}\mathcal{S}_{\rm OS}(z_{\rm out})^{2}\leq\varepsilon^{2}$ and
+
+$\displaystyle N_{{\rm os},{\rm ncc}}$ $\displaystyle\leq 3\left(1+\frac{64L\overline{B}}{\beta\varepsilon^{2}}\right)\left(1+\frac{19200\sigma^{2}}{\beta\varepsilon^{2}}\right)$ $\displaystyle=O\!\left(1+\frac{(L\overline{B}+\sigma^{2})K_{\varepsilon}^{\rm os}}{\varepsilon^{2}}+\frac{L\overline{B}\sigma^{2}(K_{\varepsilon}^{\rm os})^{2}}{\varepsilon^{4}}\right).$ (159)
+
+For fixed problem data, $\overline{B}$ , and $\sigma>0$ , this gives $T=m=O(\varepsilon^{-3})$ and $N_{{\rm os},{\rm ncc}}=O(\varepsilon^{-6})$ .
+
+If Assumption 4 also holds, run VR-SPDE with
+
+$\begin{gathered}T=\max\left\{1,\left\lceil\frac{128L\overline{B}}{\beta\varepsilon^{2}}\right\rceil\right\},\qquad B_{\rm r}=\max\left\{1,\left\lceil\frac{768C_{\star}\sigma^{2}}{\beta^{2}\varepsilon^{2}}\right\rceil\right\},\\ A_{{\rm os},{\rm ncc}}:=\frac{16C_{\star}\chi^{2}}{\beta^{2}},\qquad q=\max\left\{1,\left\lfloor\sqrt{\frac{B_{\rm r}}{A_{{\rm os},{\rm ncc}}}}\right\rfloor\right\},\qquad b=\left\lceil A_{{\rm os},{\rm ncc}}q\right\rceil.\end{gathered}$ (160)
+
+Then $\mathbb{E}\mathcal{S}_{\rm OS}(z_{\rm out})^{2}\leq\varepsilon^{2}$ and
+
+$\displaystyle N_{{\rm os},{\rm vr},{\rm ncc}}$ $\displaystyle\leq B_{\rm r}+18T\min\left\{B_{\rm r},\sqrt{A_{{\rm os},{\rm ncc}}B_{\rm r}}\right\}$ $\displaystyle=O(\varepsilon^{-4}+\chi\varepsilon^{-6})=O(\varepsilon^{-6})$ (161)
+
+for fixed positive problem data, $\sigma$ , and $\chi$ . If $\sigma=0$ , both methods use $O(\varepsilon^{-3})$ SFO calls.
+
+The choice ( 157 ) gives
+
+$8L\tau_{\rm os}D_{Y}^{2}\leq\frac{\varepsilon^{2}}{2}.$ (162)
+
+For SPDE, ( 151 ) and ( 158 ) imply
+
+$\displaystyle\mathbb{E}\lVert\nabla p_{\tau_{\rm os}}(z_{J})\rVert^{2}$ $\displaystyle\leq\frac{8LB}{\beta T}+\frac{2400\sigma^{2}}{\beta m}\leq\frac{\varepsilon^{2}}{8}+\frac{\varepsilon^{2}}{8}=\frac{\varepsilon^{2}}{4}.$ (163)
+
+Taking expectations in ( 149 ) and using ( 162 )–( 163 ) gives
+
+$\displaystyle\mathbb{E}\mathcal{S}_{\rm OS}(z_{\rm out})^{2}$ $\displaystyle\leq 2\mathbb{E}\lVert\nabla p_{\tau_{\rm os}}(z_{J})\rVert^{2}+8L\tau_{\rm os}D_{Y}^{2}\leq\varepsilon^{2}.$
+
+The three batches per iteration give the first line of ( 159 ). By ( 111 ) and ( 157 ),
+
+$\frac{1}{\beta}=\Theta\!\left(\sqrt{\frac{L}{\tau_{\rm os}}}\right),\qquad\sqrt{\frac{L}{\tau_{\rm os}}}=K_{\varepsilon}^{\rm os}.$ (164)
+
+Expanding the first line and using ( 164 ) proves the second line of ( 159 ). For sufficiently small $\varepsilon$ , $K_{\varepsilon}^{\rm os}=\Theta(\varepsilon^{-1})$ , proving the stated orders.
+
+For VR-SPDE, ( 160 ) ensures $b\geq 16C_{\star}q\chi^{2}/\beta^{2}$ . Hence ( 152 ) gives
+
+$\displaystyle\mathbb{E}\lVert\nabla p_{\tau_{\rm os}}(z_{J})\rVert^{2}$ $\displaystyle\leq\frac{16LB}{\beta T}+\frac{96C_{\star}\sigma^{2}}{\beta^{2}B_{\rm r}}\leq\frac{\varepsilon^{2}}{8}+\frac{\varepsilon^{2}}{8}=\frac{\varepsilon^{2}}{4}.$ (165)
+
+Equations ( 149 ), ( 162 ), and ( 165 ) prove $\mathbb{E}\mathcal{S}_{\rm OS}(z_{\rm out})^{2}\leq\varepsilon^{2}$ .
+
+The query accounting in ( 140 ) is independent of the choice of $\tau$ and proves the first line of ( 161 ). For fixed positive $\sigma$ and $\chi$ , ( 164 ) and ( 160 ) give
+
+$\displaystyle T$ $\displaystyle=O(\varepsilon^{-3}),$ $\displaystyle B_{\rm r}$ $\displaystyle=O(\varepsilon^{-4}),$ $\displaystyle A_{{\rm os},{\rm ncc}}$ $\displaystyle=O(\chi^{2}\varepsilon^{-2}),$ $\displaystyle q$ $\displaystyle=\Theta((\chi\varepsilon)^{-1}),$ $\displaystyle b$ $\displaystyle=O(\chi\varepsilon^{-3}),$ $\displaystyle\sqrt{A_{{\rm os},{\rm ncc}}B_{\rm r}}$ $\displaystyle=O(\chi\varepsilon^{-3}).$
+
+Substitution gives
+
+$N_{{\rm os},{\rm vr},{\rm ncc}}=O(\varepsilon^{-4})+O(\varepsilon^{-3})O(\chi\varepsilon^{-3})=O(\varepsilon^{-4}+\chi\varepsilon^{-6}).$
+
+When $\sigma=0$ , SPDE uses $m=1$ , while VR-SPDE has $B_{\rm r}=q=1$ . In both cases the SFO count is $O(T)=O(\varepsilon^{-3})$ . ∎
+
+The NC–C OS and GS parameter choices differ for a structural reason. Game stationarity incurs the direct dual bias $O(\tau)$ and therefore permits $\tau=\Theta(\varepsilon)$ . Optimization stationarity transfers a Moreau gradient, whose norm bias is $O(\sqrt{\tau})$ , and consequently requires $\tau=\Theta(\varepsilon^{2})$ . This reduces the center rate from $\Theta(\varepsilon^{1/2})$ to $\Theta(\varepsilon)$ and yields the $O(\varepsilon^{-6})$ SFO order for both stochastic estimators under the present analysis.
+
+6 Conclusions
+
+We developed single-loop stochastic projected damped extragradient methods for smooth nonconvex–(strongly) concave minimax optimization, with complexity guarantees for both game stationarity and optimization stationarity. The proposed SPDE method combines predictor–corrector projections, damped dual momentum, normal-cone corrections, and a relaxed proximal-center update. Its variance-reduced variant, VR-SPDE, maintains a recursive gradient estimator along the same sequence of query points. Both methods update the primal, dual, momentum, normal-cone, and center states within a single loop, without inner iterative solvers for regularized subproblems.
+
+For game stationarity, SPDE returns a feasible pair satisfying $\mathbb{E}[\mathcal{R}(x_{\rm out},y_{\rm out})^{2}]\leq\varepsilon^{2}$ with total stochastic first-order oracle (SFO) complexities of $O(\kappa\varepsilon^{-4})$ and $O(\varepsilon^{-5})$ in the nonconvex–strongly concave and nonconvex–concave settings, respectively, where $\kappa=L/\mu$ . These guarantees require an unbiased stochastic gradient oracle with uniformly bounded variance. With paired sample evaluations and an additional mean-square Lipschitz condition on the stochastic gradients, VR-SPDE improves the corresponding GS complexities to $O(\kappa^{3/2}\varepsilon^{-3})$ and $O(\varepsilon^{-9/2})$ .
+
+For optimization stationarity, the same algorithms, with criterion-specific parameter choices, return a proximal center $z_{\rm out}=z_{J}$ satisfying $\mathbb{E}[\mathcal{S}_{\rm OS}(z_{\rm out})^{2}]\leq\varepsilon^{2}$ , where $\mathcal{S}_{\rm OS}$ is defined through the Moreau envelope of the constrained primal value function of the original problem. SPDE achieves SFO complexities of $O(\kappa\varepsilon^{-4})$ and $O(\varepsilon^{-6})$ in the nonconvex–strongly concave and nonconvex–concave settings, respectively, while VR-SPDE achieves $O(\kappa^{3/2}\varepsilon^{-3})$ and $O(\varepsilon^{-6})$ . Thus variance reduction improves the stated OS bound in the strongly concave setting, while both methods attain the same $O(\varepsilon^{-6})$ bound in the merely concave setting.
+
+To the best of our knowledge, these results provide the best-known SFO complexity guarantees among single-loop stochastic first-order methods for the respective stationarity criteria and problem classes. The OS guarantees also match the best-known multi-loop dependence on the target accuracy in both settings. Together, these results establish that a single-loop damped extragradient framework can support improved GS guarantees and competitive OS guarantees under their respective oracle assumptions.
+
+References

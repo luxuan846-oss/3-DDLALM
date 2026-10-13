@@ -1,0 +1,627 @@
+Content selection saved. Describe the issue below:
+
+Tight Lower Bounds for Stochastic Nonconvex-Strongly-Concave Minimax Optimization
+
+We study the stochastic first-order oracle complexity of finding $\epsilon$ -stationary points of the primal function in smooth nonconvex-strongly-concave minimax optimization. For sufficiently small $\epsilon$ , we establish lower bounds of $\Omega(\kappa L\Delta\sigma^{2}\epsilon^{-4})$ under the bounded-variance assumption and $\Omega(\kappa^{3/2}\bar{L}\Delta\sigma\epsilon^{-3})$ under the additional assumption of averaged smoothness. Here, $L$ and $\bar{L}$ denote the smoothness and averaged-smoothness constants, respectively, $\Delta$ is the initial primal gap, $\sigma^{2}$ bounds the oracle variance, and $\kappa=L/\mu$ or $\bar{L}/\mu$ in the respective settings, where $\mu$ is the strong-concavity parameter. Our bounded-variance lower bound improves the dependence on the condition number from $\kappa^{1/3}$ in previous lower bounds to $\kappa$ , while our averaged-smoothness lower bound is the first of its kind. In both settings, the resulting lower bounds match existing upper bounds in their dependence on $\kappa$ and $\epsilon$ . Our proofs are based on a unified quadratic lifting construction that transfers a hardness instance for stochastic nonconvex minimization to unconstrained minimax optimization while preserving the required variance and smoothness properties.
+
+1 Introduction
+
+We consider the nonconvex-strongly-concave (NC-SC) minimax problem
+
+$\min_{x\in\mathbb{R}^{d_{x}}}\Phi(x),\qquad\Phi(x):=\max_{y\in\mathbb{R}^{d_{y}}}f(x,y),$ (1)
+
+where $f$ has an $L$ -Lipschitz gradient and $f(x,\cdot)$ is $\mu$ -strongly concave. Problems of this form arise in a variety of machine learning applications ( Sinha et al., 2017 ; Liu et al., 2019 ; Zhu et al., 2023 ) . Strong concavity ensures that the inner maximizer is unique, and the resulting primal function $\Phi$ is differentiable, although generally nonconvex. A central goal is to find a point $\hat{x}$ such that $\left\lVert\nabla\Phi(\hat{x})\right\rVert\leq{\epsilon}$ , using stochastic gradients of $f$ . In the deterministic and finite-sum settings, accelerated proximal-point methods achieve the optimal complexity $\mathcal{O}(\sqrt{\kappa}\epsilon^{-2})$ , where $\kappa\triangleq L/\mu$ is the condition number, already matching the corresponding lower bounds ( Lin et al., 2020a ; Zhang et al., 2021 ; Li et al., 2021 ; Han et al., 2024 ) .
+
+In the stochastic setting, where $f(x,y)\triangleq\mathbb{E}_{\xi}[F(x,y;\xi)]$ , two common oracle assumptions lead to different complexity guarantees. Under an unbiased stochastic gradient oracle with uniformly bounded variance, existing algorithms achieve complexity $\mathcal{O}(\kappa{\epsilon}^{-4})$ ( Zhang et al., 2024 ) . With the additional assumption of averaged smoothness of the stochastic gradients, the best known upper bounds improve to $\mathcal{O}({\epsilon}^{-3})$ ( Luo et al., 2020 ; Zhang et al., 2024 ; Zhang et al., 2026 ) . However, the corresponding lower bounds remain incomplete. Under bounded variance, Li et al. (2021) established an $\Omega(\kappa^{1/3}{\epsilon}^{-4})$ lower bound for constrained NC-SC problems, leaving a gap in the dependence on $\kappa$ relative to the $\mathcal{O}(\kappa{\epsilon}^{-4})$ upper bound. Under averaged smoothness, to the best of our knowledge, no lower bound has been established specifically for NC-SC minimax optimization. We therefore ask:
+
+Can we establish tight lower bounds for stochastic NC-SC minimax optimization under bounded variance and averaged smoothness?
+
+Contributions
+
+In this work, we answer both questions affirmatively. Our contributions are three-fold. First, let $\epsilon>0$ denote the target accuracy and assume $\Phi(0)-\inf_{x}\Phi(x)\leq\Delta$ . For an unbiased bounded-variance (BV) oracle 1 1 1 Concurrent work by Zhou (2026) independently establishes an $\Omega(\kappa\epsilon^{-4})$ lower bound for the BV setting. Our work differs in considering fully unconstrained settings, and additionally establishes lower bounds under averaged smoothness. with variance bounded by $\sigma^{2}$ , we establish the lower bound, with $\kappa=L/\mu$ ,
+
+$\Omega\!\left(\frac{\kappa L\sigma^{2}\Delta}{{\epsilon}^{4}}\right).$ (2)
+
+Second, for an averaged-smooth (AS) oracle with Lipschitz constant $\bar{L}$ , we establish, with $\kappa=\bar{L}/\mu$ ,
+
+$\Omega\!\left(\frac{\overline{L}\Delta}{{\epsilon}^{2}}\min\left\{\frac{\kappa\sigma^{2}}{{\epsilon}^{2}},\frac{\kappa^{3/2}\sigma}{{\epsilon}}\right\}\right).$ (3)
+
+We refer to Theorems 4.1 and 5.1 for the formal statements, and summarize the comparison with existing results in Table 1 and Figure 1 . In the BV setting, our lower bound ( 2 ) improves the dependence on $\kappa$ over the previous lower bound of Li et al. (2021) and matches the upper complexity bounds of Zhang et al. (2024) and Zhang et al. (2026) in their dependence on both $\kappa$ and $\epsilon$ . To the best of our knowledge, ( 3 ) is the first lower bound specifically for the AS setting. Moreover, this lower bound matches the upper complexity bound of Zhang et al. (2026) in its dependence on $\kappa$ and $\epsilon$ when $\epsilon^{-1}\gtrsim\sqrt{\kappa}$ , and that of Zhang et al. (2022b) when $\epsilon^{-1}\lesssim\sqrt{\kappa}$ .
+
+Finally, we note that the corresponding upper bounds are stated under slightly different problem classes and measures of initial optimality. Specifically, Zhang et al. (2024) and Zhang et al. (2026) use a Moreau-envelope-based stationarity measurement. To facilitate a more direct comparison, we also establish lower bounds using a Moreau envelope stationarity, see Corollary 5.2 .
+
+Figure 1: Schematic comparison of previous upper (UB) and lower bounds (LB) with our results under (a) bounded variance and (b) averaged smoothness. Both panels use log-log axes with $r=1/\varepsilon$ , $\kappa=100$ , and $\sigma=1$ , and other constants, parameters and lower-order terms are suppressed. The SAPD+ curve ( Zhang et al., 2024 ) in (b) is the pointwise minimum of its non-VR and VR rate expressions. Overlapping curves indicate matching leading-order dependence, not identical oracle costs.
+
+Table 1: Summary and Comparison of Lower and Upper Bound Results
+
+Note: BV denotes the bounded-variance setting, and AS denotes the averaged-smoothness setting. We use $\kappa=L/\mu$ in the BV setting and $\kappa=\overline{L}/\mu$ in the AS setting. See Theorems 4.1 and 5.1 for the precise assumptions and problem settings. AS is a special case of BV, and hence upper bounds established for BV also apply to AS.
+
+The hard instance is obtained through a quadratic lifting of hard instances for stochastic nonconvex minimization ( Carmon et al., 2020 ; Arjevani et al., 2023 ) . Starting from the hard instance $F_{T}$ by Carmon et al. (2020) , we construct a minimax objective of the form
+
+$f_{T}(x,y)=\alpha F_{T}(\beta y)-\frac{\nu}{2}\|y-\gamma x\|^{2},$
+
+where the parameters $\alpha,\beta,\nu$ and $\gamma$ are chosen so that $f_{T}(x,\cdot)$ is strongly-concave. The quadratic coupling is designed so that stationarity of the primal function $\Phi_{T}(x)=\max_{y}f_{T}(x,y)$ implies approximate stationarity of $F_{T}$ at the explicitly rescaled point $\beta\gamma x$ . In particular, an ${\epsilon}$ -stationary point $\hat{x}$ of $\Phi_{T}$ yields an appropriately scaled approximate stationary point $\beta\gamma\hat{x}$ of $F_{T}$ . Since this point is obtained directly from $\hat{x}$ , the reduction does not require computing the inner maximizer and therefore introduces no additional oracle cost. The construction is compatible with stochastic oracle: we keep the quadratic coupling deterministic and introduce randomness only through the stochastic oracle associated with $F_{T}$ , preventing the oracle variance from growing with $\|x\|$ or $\|y\|$ over the unconstrained domain. The main technical challenge is therefore to establish this stationarity-preserving reduction and tune the scaling parameters so that the lifted instance simultaneously satisfies the required smoothness, strong-concavity and variance conditions.
+
+2 Related Literature
+
+Lower Bounds for Minimax Optimization.
+
+First-order oracle lower bounds for convex-concave and strongly-convex-strongly-concave minimax problems were established by Ouyang and Xu (2021) and Zhang et al. (2022a) , while Xie et al. (2020) studied the finite-sum setting. For nonconvex-strongly-concave (NC-SC) problems, Zhang et al. (2021) derived lower bounds for both the deterministic and averaged-smooth finite-sum settings. Han et al. (2024) further studied finite-sum NC-SC problems under an oracle model that allows access to both component gradients and proximal operators. Closest to our setting, Li et al. (2021) established deterministic and stochastic lower bounds for NC-SC problems; under bounded variance, their stochastic lower bound contains the term $\Omega(L\Delta\kappa^{1/3}\sigma^{2}{\epsilon}^{-4})$ . For a broader overview of oracle-complexity results in minimization and minimax optimization, we refer to Zhang and Hu (2025) .
+
+Nonconvex Minimax Optimization Algorithms.
+
+In the deterministic NC-SC setting, accelerated proximal-point methods achieve near-optimal dependence on the condition number ( Lin et al., 2020a ; Zhang et al., 2021 ) . In the stochastic setting, two-timescale SGDA attains $\mathcal{O}(\kappa^{3}{\epsilon}^{-4})$ stochastic gradient complexity under bounded variance ( Lin et al., 2020b ; Lin et al., 2025 ) , while SREDA achieves $\mathcal{O}(\kappa^{3}{\epsilon}^{-3})$ under averaged smoothness ( Luo et al., 2020 ) . Momentum-based and adaptive variants have also been developed ( Huang et al., 2022 ; Huang et al., 2023 ) . SAPD+ combines a proximal-point framework with accelerated saddle-point solvers and also admits a variance-reduced variant ( Zhang et al., 2024 ) . More recently, Zhang et al. (2026) proposed the single-loop methods SPDE and VR-SPDE, with complexities $\mathcal{O}(\kappa{\epsilon}^{-4})$ under bounded variance and $\mathcal{O}(\kappa^{3/2}{\epsilon}^{-3})$ under averaged smoothness, respectively. These rates match the $(\kappa,{\epsilon})$ dependence of the stochastic terms in our lower bounds. Table 1 summarizes the rates of these methods. Beyond the NC-SC setting, Li et al. (2026) study smoothing and dual perturbation for nonconvex-concave problems, while Zhang and Xu (2026) develop single-loop methods that attain rates previously achieved by multi-loop schemes. Recent work on NC-SC problems considers generalized smoothness ( Gao and Liu, 2026 ) and regularized Newton methods ( Ma et al., 2026 ) .
+
+Recent Lower Bounds beyond Strong Concavity.
+
+Recent work has extended lower-bound analyses to minimax problems in which strong concavity is relaxed to concavity or the Polyak-Łojasiewicz (PL) condition. For NC-C problems with a compact dual domain, Wu et al. (2026) establish deterministic and stochastic lower bounds of $\Omega({\epsilon}^{-3})$ and $\Omega({\epsilon}^{-6})$ , respectively, for zero-respecting algorithms under Moreau-envelope stationarity. Deterministic lower bounds for projected zero-respecting methods are also developed by Zhang and Xu (2026) . Pan et al. (2026) establish the $\Omega({\epsilon}^{-3})$ deterministic lower bound for arbitrary first-order algorithms and provide a matching upper bound. For NC-PL problems, Pan and Li (2026) establish an $\Omega(L\Delta\kappa{\epsilon}^{-2})$ lower bound for arbitrary deterministic first-order methods, matching the known upper bound in the corresponding parameter regime. In particular, their result demonstrates that relaxing strong concavity to the PL condition can lead to a stronger dependence on the condition number $\kappa$ in the deterministic setting. In contrast, our work focuses on stochastic NC-SC problems and characterizes how the bounded-variance and averaged-smoothness oracle models determine the dependence on $\kappa$ .
+
+3 Problem Setup and Oracle Complexity
+
+We use Euclidean norms, denote $z=(x,y)$ , and $\operatorname{supp}(z)\triangleq\{i:z_{i}\neq 0\}$ denote the support of $z\in\mathbb{R}^{d}$ . For a mapping $T$ between Euclidean spaces, we denote
+
+$\operatorname{Lip}(T)\triangleq\inf\left\{C\geq 0:\|T(u)-T(v)\|\leq C\|u-v\|,\ \forall\,u,v\right\}$
+
+as its global Lipschitz constant. Here we study the lower bound under the oracle complexity framework ( Nemirovskij and Yudin, 1983 ) , which comes with the following components: a function class, a stochastic oracle, an algorithm class, and a convergence criterion. We will discuss them in details in this section.
+
+Function class.
+
+We consider nonconvex-strongly-concave (NC-SC) objectives. For $M,\mu,\Delta>0$ , let $\mathcal{F}^{d_{x},d_{y}}(M,\mu,\Delta)$ denote the set of continuously differentiable functions $f:\mathbb{R}^{d_{x}}\times\mathbb{R}^{d_{y}}\to\mathbb{R}$ such that, with $z=(x,y)$ , $\Phi(x)\triangleq\max_{y}f(x,y)$ , $\Phi_{*}\triangleq\inf_{x}\Phi(x)>-\infty$ ,
+
+$\displaystyle\left\lVert\nabla f(z)-\nabla f(z^{\prime})\right\rVert\leq M\left\lVert z-z^{\prime}\right\rVert$ $\displaystyle\forall z,z^{\prime}\in\mathbb{R}^{d_{x}+d_{y}},$ (4) $\displaystyle f(x,y^{\prime})\leq f(x,y)+\left\langle\nabla_{y}f(x,y),y^{\prime}-y\right\rangle-\frac{\mu}{2}\left\lVert y^{\prime}-y\right\rVert^{2}$ $\displaystyle\forall x\in\mathbb{R}^{d_{x}},\;y,y^{\prime}\in\mathbb{R}^{d_{y}},$ (5) $\displaystyle\Phi(0)-\Phi_{*}\leq\Delta.$ (6)
+
+Both the primal and dual variables are unconstrained, and no convexity in $x$ is imposed. Strong concavity ensures that the inner maximizer $y^{*}(x)$ exists and is unique for every $x$ . Moreover, $\Phi$ is differentiable with $\nabla\Phi(x)=\nabla_{x}f(x,y^{*}(x))$ , is $M$ -weakly convex, and has an $M(1+M/\mu)$ -Lipschitz gradient. These properties hold without any compactness assumption; see Appendix A .
+
+Oracle class.
+
+We consider stochastic first-order oracle (SFO) ( Arjevani et al., 2023 ) . An instance is a pair $(f,G)$ , including the law of the random seed $\xi$ . The oracle is a measurable random vector field and returns a joint gradient estimate $G(z;\xi)=(G_{x}(z;\xi),G_{y}(z;\xi))$ such that, for every $z$ ,
+
+$\mathbb{E}_{\xi}G(z;\xi)=\nabla f(z),\qquad\mathbb{E}_{\xi}\left\lVert G(z;\xi)-\nabla f(z)\right\rVert^{2}\leq\sigma^{2}.$ (7)
+
+The bounded-variance (BV) class $\mathcal{I}_{\rm BV}(L,\mu,\Delta,\sigma)$ requires $f\in\mathcal{F}^{d_{x},d_{y}}(L,\mu,\Delta)$ and Equation ( 7 ). The averaged-smooth (AS) class $\mathcal{I}_{\rm AS}(\overline{L},\mu,\Delta,\sigma)$ requires $f\in\mathcal{F}^{d_{x},d_{y}}(\overline{L},\mu,\Delta)$ , Equation ( 7 ), and
+
+$\mathbb{E}_{\xi}\left\lVert G(z;\xi)-G(z^{\prime};\xi)\right\rVert^{2}\leq\overline{L}^{2}\left\lVert z-z^{\prime}\right\rVert^{2}\qquad\text{for all }z,z^{\prime}.$ (8)
+
+Here, the same random seed $\xi$ is used to evaluate $G$ at $z$ and $z^{\prime}$ . By unbiasedness and Jensen’s inequality, $\left\lVert\nabla f(z)-\nabla f(z^{\prime})\right\rVert^{2}\leq\mathbb{E}_{\xi}\left\lVert G(z;\xi)-G(z^{\prime};\xi)\right\rVert^{2}$ , so Equation ( 8 ) implies that $\nabla f$ is $\overline{L}$ -Lipschitz. Accordingly, we define the condition number as $\kappa=L/\mu$ in the BV setting and $\kappa=\overline{L}/\mu$ in the AS setting.
+
+3.1 Algorithm Class and Lower Bound
+
+Oracle access.
+
+At round $t$ , an algorithm selects $1\leq K_{t}\leq K$ points $z^{t,1},\ldots,z^{t,K_{t}}$ using its past responses and internal randomness. A fresh independent seed $\xi_{t}$ is then drawn, and the oracle returns $G(z^{t,1};\xi_{t}),\ldots,G(z^{t,K_{t}};\xi_{t})$ . The current points are chosen before any current response is observed; the seed is hidden and cannot be queried again later. We take $K=1$ in BV and any fixed finite $K$ in AS; $K=2$ permits paired same-sample differences.
+
+Algorithm class.
+
+We consider zero-respecting stochastic first-order algorithms. Let $g^{t,k}=G(z^{t,k};\xi_{t})$ and define the coordinates revealed before round $t$ by
+
+$\mathcal{S}_{t}=\bigcup_{s<t}\ \bigcup_{j=1}^{K_{s}}\operatorname{supp}(g^{s,j}).$ (9)
+
+An algorithm is zero-respecting if, for every admissible instance, its queries and its output after $R$ rounds satisfy
+
+$\operatorname{supp}(z^{t,k})\subseteq\mathcal{S}_{t},\qquad\operatorname{supp}((\hat{x},0))\subseteq\mathcal{S}_{R+1}.$ (10)
+
+Here $(\hat{x},0)\in\mathbb{R}^{d_{x}+d_{y}}$ denotes the embedding of the primal output into the joint primal-dual space. The first condition requires every query to use only coordinates revealed by previous oracle gradients, while the second requires every nonzero coordinate of the final output $\hat{x}$ to have been revealed by the end of round $R$ . In particular, let $\mathcal{S}_{1}=\emptyset$ , so first-round queries are at the origin. It covers a lot of algorithms including linear-span algorithms and coordinate-wise updates that preserve zero coordinates.
+
+Complexity measurement.
+
+Our goal is to find the stationary point $\hat{x}$ in terms of the expectation, i.e.,
+
+$\mathbb{E}\left\lVert\nabla\Phi(\hat{x})\right\rVert^{2}\leq{\epsilon}^{2};$
+
+we also give lower bounds for $\mathbb{E}\left\lVert\nabla\Phi(\hat{x})\right\rVert\leq{\epsilon}$ (refer to Proposition C.2 ). After $R$ rounds, the number of oracle calls is $N=\sum_{t=1}^{R}K_{t}$ . Each returned joint gradient vector counts once, including all minibatch and refresh samples. Let $\mathcal{A}_{{\rm zr},N}^{(K)}$ be the algorithms above using at most $N$ calls on every run. For either instance class $\mathcal{I}$ , define
+
+$\mathcal{C}_{{\epsilon},{\rm zr}}^{(K)}(\mathcal{I})=\inf\!\left\{N\in\mathbb{N}_{0}:\exists A\in\mathcal{A}_{{\rm zr},N}^{(K)},\ \sup_{I\in\mathcal{I}}\mathbb{E}_{I}\left\lVert\nabla\Phi_{I}(\hat{x}_{A})\right\rVert^{2}\leq{\epsilon}^{2}\right\}.$ (11)
+
+The classes range over all finite dimensions; algorithms may know the dimensions and class parameters. Thus a lower bound rules out a uniform guarantee for every algorithm in this class, not just a particular update rule. Our proof bounds rounds first and uses $R\leq N$ to bound calls, without an extra factor $K$ . The expected-norm version is defined by replacing the squared norm and ${\epsilon}^{2}$ in Equation ( 11 ) by the norm and ${\epsilon}$ .
+
+3.2 Hard Instance Construction
+
+Let $H:\mathbb{R}^{d}\to\mathbb{R}$ have an $\ell$ -Lipschitz gradient, and let $g_{H}$ be an unbiased estimator of $\nabla H$ . For positive $h,q,\gamma$ , set
+
+$\alpha=q^{2}/h,\qquad\beta=h/q,\qquad\nu=\mu+\ell h,$ (12)
+
+and define the minimax objective
+
+$f_{H}(x,y)=\alpha H(\beta y)-\frac{\nu}{2}\left\lVert y-\gamma x\right\rVert^{2}.$ (13)
+
+We evaluate the quadratic gradient exactly and randomize only the estimate of $\nabla H$ :
+
+$G_{x}=\nu\gamma(y-\gamma x),\qquad G_{y}=qg_{H}(\beta y;\xi)-\nu(y-\gamma x).$ (14)
+
+If $x_{i}=y_{i}=0$ , then $[G_{x}]_{i}=0$ and $[G_{y}]_{i}=q[g_{H}(\beta y;\xi)]_{i}$ . Thus, the quadratic coupling cannot reveal a new coordinate on its own; new coordinates enter the support only through the base oracle $g_{H}$ . The following proposition is the main reduction used in proofs.
+
+Suppose $H$ is twice continuously differentiable and bounded below, with $H(0)-\inf H\leq D$ and $\left\lVert\nabla H(0)\right\rVert\leq g$ . Then $f_{H}(x,\cdot)$ is $\mu$ -strongly concave and
+
+$\displaystyle\operatorname{Lip}(\nabla f_{H})$ $\displaystyle\leq\nu(1+\gamma^{2})+\ell h,$ (15) $\displaystyle\Phi_{H}(0)-\inf\Phi_{H}$ $\displaystyle\leq\alpha D+\frac{q^{2}g^{2}}{2\mu},$ (16) $\displaystyle\left\lVert\nabla H(\beta\gamma x)\right\rVert$ $\displaystyle\leq\frac{1+\ell h/\nu}{\gamma q}\left\lVert\nabla\Phi_{H}(x)\right\rVert\qquad\forall x.$ (17)
+
+If $g_{H}$ has variance at most $v^{2}$ , the lifted oracle has variance at most $q^{2}v^{2}$ . If $g_{H}$ has averaged-smoothness constant $S$ , the lifted constant is at most $\nu(1+\gamma^{2})+hS$ .
+
+The above result is important and characterizes several important properties of the lifted function $f_{H}$ . We want to highlight Equation ( 17 ) above, with this lower bound result, we transfer the lower bound study on the primal function $\nabla\Phi_{H}$ to that of $\nabla H$ , which is well-studied in nonconvex minimization lower bound literature ( Carmon et al., 2020 ; Arjevani et al., 2023 ) . Moreover, note that
+
+$G(x,y;\xi)-\nabla f_{H}(x,y)=\bigl(0,q[g_{H}(\beta y;\xi)-\nabla H(\beta y)]\bigr).$ (18)
+
+Thus the unbounded quadratic gradient contributes no noise, which allows a uniform variance bound on the whole space.
+
+Choice of $H$ and $g_{H}$ .
+
+Regarding the hard instance function $H$ and oracle $g_{H}$ for lower bound derivations, we take $H:\mathbb{R}^{T}\rightarrow\mathbb{R}$ to be the hard instance function introduced by Carmon et al. (2020) (i.e., the function $F_{T}$ therein), which satisfies the zero-chain property, and used in the stochastic nonconvex lower bounds of Arjevani et al. (2023) . For an integer $T\geq 2$ , it is defined by
+
+$\displaystyle H(u)={}-\Psi(1)\Phi_{0}(u_{1})+\sum_{i=2}^{T}\bigl[\Psi(-u_{i-1})\Phi_{0}(-u_{i})-\Psi(u_{i-1})\Phi_{0}(u_{i})\bigr],$ (19)
+
+where
+
+$\Psi(t)=\begin{cases}0,&t\leq\frac{1}{2},\\ \exp\bigl(1-(2t-1)^{-2}\bigr),&t>\frac{1}{2},\end{cases}\qquad\Phi_{0}(t)=\sqrt{e}\int_{-\infty}^{t}e^{-s^{2}/2}\,ds.$
+
+Each summand couples two consecutive coordinates. Starting from the origin, a zero-respecting method using exact gradients can reveal at most one new coordinate per query. Moreover, $u_{T}=0$ implies $\|\nabla H(u)\|>1$ , so the method must reach the last coordinate before finding a point with a small gradient. The gradient Lipschitz constant is independent of $T$ , and the initial gap is $\mathcal{O}(T)$ .
+
+For the estimator $g_{H}$ , we use the stochastic gradient constructions of Arjevani et al. (2023) . Additional properties of the resulting stochastic hard instances are collected in Appendix B . In both the BV and AS settings, the lifted constructions preserve the probabilistic zero-chain structure of the underlying hard instance; we describe this property next.
+
+3.3 Probabilistic Zero-Chain Mechanism
+
+For $u\in\mathbb{R}^{T}$ and $a\geq 0$ , define
+
+$\operatorname{prog}_{a}(u):=\max\bigl(\{i\in\{1,\ldots,T\}:|u_{i}|>a\}\cup\{0\}\bigr).$
+
+In particular, $\operatorname{prog}_{0}(u)$ is the largest index in $\operatorname{supp}(u)$ , with value zero when $u=0$ .
+
+A differentiable function $H:\mathbb{R}^{T}\to\mathbb{R}$ is a first-order zero-chain if
+
+$\operatorname{prog}_{0}(\nabla H(u))\leq\operatorname{prog}_{0}(u)+1\qquad\text{for every }u\in\mathbb{R}^{T}.$
+
+For a zero-respecting method starting from the origin, an exact-gradient query can therefore reveal at most one new coordinate. The stochastic counterpart controls how often a new coordinate can be revealed. We use the following definition from Arjevani et al. (2023) .
+
+Let $p\in(0,1]$ , and let $g_{H}(u;\xi)$ be an unbiased gradient estimator of $H$ . We call $g_{H}$ a probability- $p$ zero-chain (PZC) if
+
+$\displaystyle\mathbb{P}_{\xi}\!\left(\exists u\in\mathbb{R}^{T}:\operatorname{prog}_{0}(g_{H}(u;\xi))=\operatorname{prog}_{1/4}(u)+1\right)$ $\displaystyle\leq p,$ (20) $\displaystyle\mathbb{P}_{\xi}\!\left(\exists u\in\mathbb{R}^{T}:\operatorname{prog}_{0}(g_{H}(u;\xi))>\operatorname{prog}_{1/4}(u)+1\right)$ $\displaystyle=0.$
+
+A single seed is used for all points inside each event. Thus the definition controls an entire same-seed batch, not just each query separately.
+
+Suppose $g_{H}$ is a probability- $p$ zero-chain in the sense of Definition 3.4 , and let $G$ be the lifted oracle in Equation ( 14 ), with $d_{x}=d_{y}=T$ . For any zero-respecting algorithm following the oracle protocol of Section 3 and returning $\hat{x}$ after at most $R$ rounds,
+
+$\mathbb{P}\!\left(\operatorname{supp}(\hat{x})\subseteq\{1,\ldots,T-1\}\right)\geq 1-\frac{pR}{T}.$
+
+In particular, $R\leq T/(4p)$ implies $\mathbb{P}(\hat{x}_{T}=0)\geq 3/4$ .
+
+This adapts the PZC progress argument of Arjevani et al. (2023, Lemma 1) to the quadratic lift. Appendix C detailed the discussion and characterizes the PZC property of the two base oracles, proves Lemma 3.5 , and combines it with Equation ( 17 ) to obtain the gradient lower bound in Proposition C.2 .
+
+4 The Bounded Variance Case Lower Bound
+
+In this section, we derive the lower complexity bound of stochastic NC-SC minimax optimization problems, under the generic bounded variance setting.
+
+There are universal constants $c,c_{0}>0$ such that, for $L,\mu,\Delta>0$ , $\sigma\geq 0$ , $\kappa=L/\mu\geq 8$ , and $0<{\epsilon}^{2}\leq c_{0}L\Delta$ ,
+
+$\mathcal{C}_{{\epsilon},{\rm zr}}^{(1)}\bigl(\mathcal{I}_{\rm BV}(L,\mu,\Delta,\sigma)\bigr)\geq c\frac{L\Delta}{{\epsilon}^{2}}\max\left\{1,\frac{\kappa\sigma^{2}}{{\epsilon}^{2}}\right\}.$ (21)
+
+The same order holds for the expected-norm target. The hard instances have actual smoothness-to-strong-concavity ratio within universal constant factors of $\kappa$ .
+
+Proof Sketch.
+
+We use the hard instance function and oracle as discussed in Section 3.2 , which are motivated by Carmon et al. (2020) ; Arjevani et al. (2023) . Its gradient stays bounded away from zero until its last coordinate is reached. The oracle reveals the next coordinate with probability at most $p$ , with variance $\mathcal{O}(p^{-1})$ independent of $T$ . In Equation ( 12 ), we choose
+
+$\gamma^{2}\asymp\kappa,\qquad q^{2}\asymp{\epsilon}^{2}/\kappa,\qquad h\asymp\mu,\qquad p\asymp\min\{1,{\epsilon}^{2}/(\kappa\sigma^{2})\},$ (22)
+
+where $p=1$ when $\sigma=0$ . Proposition 3.1 guarantees that the stationarity transfer fixes $\gamma q$ at a constant multiple of ${\epsilon}$ . A zero-respecting algorithm needs order $T/p$ rounds to reveal the chain. The dependence on $\kappa$ comes from the smaller reveal probability. Appendices B to D present the detailed oracle definition, support argument, and all parameter checks.
+
+Comparison with Existing Results.
+
+The previous lower bound for the BV setting is $\Omega(\kappa^{1/3}{\epsilon}^{-4})$ ( Li et al., 2021 ) . Our Theorem 4.1 strengthens the dependence on the condition number from $\kappa^{1/3}$ to $\kappa$ , while allowing both the primal and dual variables to remain unconstrained. On the upper-bound side, SAPD+ and SPDE achieve a leading stochastic complexity of $\mathcal{O}(\kappa{\epsilon}^{-4})$ for Moreau-envelope stationarity ( Zhang et al., 2024 ; Zhang et al., 2026 ) . In Section 5.2 , we extend our lower bound to the same stationarity criterion, while Section 5.3 discusses the remaining differences in assumptions.
+
+5 The Averaged-Smooth Lower Bound
+
+Building on the BV analysis, we now impose the additional averaged-smoothness assumption on the stochastic oracle and derive a sharper lower bound.
+
+There are universal constants $c,c_{0},c_{1}>0$ such that the following holds for every fixed finite $K\geq 1$ . Let $\overline{L},\mu,\Delta>0$ , $\sigma\geq 0$ , $\kappa=\overline{L}/\mu\geq 8$ , and suppose
+
+$0<{\epsilon}^{2}\leq c_{0}\overline{L}\Delta,\qquad{\epsilon}\sigma\leq c_{1}\overline{L}\Delta\sqrt{\kappa}.$ (23)
+
+Then
+
+$\mathcal{C}_{{\epsilon},{\rm zr}}^{(K)}\bigl(\mathcal{I}_{\rm AS}(\overline{L},\mu,\Delta,\sigma)\bigr)\geq c\frac{\overline{L}\Delta}{{\epsilon}^{2}}\max\left\{1,\min\left\{\frac{\kappa\sigma^{2}}{{\epsilon}^{2}},\frac{\kappa^{3/2}\sigma}{{\epsilon}}\right\}\right\}.$ (24)
+
+The same order holds for the expected-norm target.
+
+5.1 Proof Sketch
+
+The stochastic oracle used in the BV analysis does not, in general, satisfy the averaged-smoothness requirement. We therefore adopt the smooth-gating construction of Arjevani et al. (2023) , which preserves variance of order $\mathcal{O}(p^{-1})$ while achieving an averaged-smoothness constant of order $\mathcal{O}(p^{-1/2})$ . As a consequence, Proposition 3.1 imposes the additional constraint $h\lesssim\min\{\mu,\overline{L}\sqrt{p}\}$ . With the same choices $\gamma^{2}\asymp\kappa$ and $q^{2}\asymp{\epsilon}^{2}/\kappa$ as in the BV case, the resulting complexity scales as
+
+$\frac{T}{p}\asymp\frac{\Delta h}{q^{2}p}\asymp\frac{\overline{L}\Delta}{{\epsilon}^{2}}\min\left\{p^{-1},\kappa p^{-1/2}\right\}.$ (25)
+
+Choosing $p\asymp\min\{1,{\epsilon}^{2}/(\kappa\sigma^{2})\}$ then yields Equation ( 24 ). The conditions in Equation ( 23 ) ensure that the chain length is admissible and that the initial primal gap remains within $\Delta$ . Full calibration details are given in Appendix E .
+
+Returning to Equation ( 24 ), the lower bound can be expressed across three regimes:
+
+$\overline{L}\Delta{\epsilon}^{-2}\times\begin{cases}1,&\sigma{\epsilon}^{-1}\leq\kappa^{-1/2},\\ \kappa\sigma^{2}{\epsilon}^{-2},&\kappa^{-1/2}<\sigma{\epsilon}^{-1}<\sqrt{\kappa},\\ \kappa^{3/2}\sigma{\epsilon}^{-1},&\sigma{\epsilon}^{-1}\geq\sqrt{\kappa}.\end{cases}$ (26)
+
+In particular, in the high-accuracy regime, where ${\epsilon}$ is sufficiently small, the lower bound reduces to $\Omega(\overline{L}\Delta\kappa^{3/2}\sigma{\epsilon}^{-3})$ . Moreover, when $L=\overline{L}$ , the AS lower bound is always no larger than the corresponding BV lower bound.
+
+5.2 Lower Bounds for Moreau Envelope Stationarity
+
+Theorems 4.1 and 5.1 measure stationarity using the primal gradient. But recent NC-SC literature of SAPD+ and SPDE ( Zhang et al., 2024 ; Zhang et al., 2026 ) used Moreau envelope stationarity as the measurement. Our primal stationarity lower bound results in Theorem 5.1 does not provide a lower bound for this criterion, so a separate transfer is needed. Set $M=L$ in the BV setting and $M=\overline{L}$ in the AS setting, and define
+
+$P_{f}(x):=\Phi_{1/(2M)}(x)=\min_{u\in\mathbb{R}^{d_{x}}}\{\Phi(u)+M\left\lVert u-x\right\rVert^{2}\}.$ (27)
+
+Lemma A.1 ensures that $P_{f}$ is well-defined and continuously differentiable.
+
+On the hard instances used in our proofs, the two stationarity measures are equivalent up to universal constants. Specifically, Lemma F.2 shows that
+
+$\frac{123}{128}\left\lVert\nabla P_{f_{H}}(x)\right\rVert\leq\left\lVert\nabla\Phi_{H}(x)\right\rVert\leq\frac{133}{128}\left\lVert\nabla P_{f_{H}}(x)\right\rVert\qquad\text{for every }x.$ (28)
+
+Thus here a small Moreau-envelope gradient would also imply a small primal gradient, with a constant factor independent of $\kappa$ . Combining this comparison with the primal-gradient lower bounds in Proposition C.2 , we have the following result.
+
+The lower bounds in Theorems 4.1 and 5.1 also hold, up to universal constant factors, when the required output satisfies either
+
+$\mathbb{E}\left\lVert\nabla P_{f}(\hat{x})\right\rVert^{2}\leq{\epsilon}^{2}\qquad\text{or}\qquad\mathbb{E}\left\lVert\nabla P_{f}(\hat{x})\right\rVert\leq{\epsilon}.$
+
+Here the parameters, oracle protocols, and algorithm class are unchanged.
+
+Appendix F proves the gradient comparison and the corollary. Both gradients are evaluated at the algorithm’s output, so no additional oracle call or proximal computation is needed. The resulting bounds preserve the dependence on $\kappa$ and ${\epsilon}$ and can be compared directly with upper bounds stated for Moreau-envelope stationarity.
+
+5.3 Comparison with Existing Upper Bounds
+
+For primal stationarity, SREDA established $\mathcal{O}(\kappa^{3}{\epsilon}^{-3})$ SFO complexity under averaged smoothness ( Luo et al., 2020 ) , while it further assumes a compact dual domain and sample-wise concavity. Its expected-norm criterion is also covered by our lower bounds (refer to Proposition C.2 ). For Moreau envelope stationarity, SAPD+ ( Zhang et al., 2024 , the revised version) gives
+
+$\mathcal{O}\!\left(\frac{L\mathcal{G}_{0}}{{\epsilon}^{2}}\max\{\kappa,\sqrt{\sigma/{\epsilon}}\}(1+\kappa\sigma/{\epsilon})\right)$ (29)
+
+for its variance-reduced variant ( Zhang et al., 2024 ) , where $\mathcal{G}_{0}$ is the initial primal-dual gap. Consequently, its bound is not uniformly $\mathcal{O}(\kappa^{2}{\epsilon}^{-3})$ as accuracy ${\epsilon}\rightarrow 0$ .
+
+More recently, Zhang et al. (2026) proposed VR-SPDE and obtained $\mathcal{O}(\overline{L}\kappa^{3/2}\sigma{\epsilon}^{-3})$ for the AS case. By Corollary 5.2 , we can find that the result of Zhang et al. (2026) tightly matches our lower bound in the high-accuracy regime. Also as shown in Table 1 and Figure 1 , in the low-accuracy regime, the $\mathcal{O}(\kappa{\epsilon}^{-4})$ upper bound by SAPD+ ( Zhang et al., 2024 ) also tightly matches our lower bound, so our lower bound reveals the optimal SFO complexity in terms of $\kappa$ and ${\epsilon}$ for the AS case.
+
+6 Conclusion and Future Work
+
+We establish stochastic first-order lower bounds for fully unconstrained NC-SC minimax optimization over zero-respecting algorithms. For sufficiently small ${\epsilon}$ , we prove lower bounds of $\Omega(L\Delta\kappa\sigma^{2}{\epsilon}^{-4})$ under bounded variance and $\Omega(\overline{L}\Delta\kappa^{3/2}\sigma{\epsilon}^{-3})$ under averaged smoothness. Both results follow from a unified construction that couples a nonconvex zero-chain with a deterministic quadratic lifting, and both extend to Moreau envelope stationarity without worsening the dependence on $\kappa$ . These lower bounds match recent stochastic upper bounds in terms of their dependence on $\kappa$ and ${\epsilon}$ .
+
+Several questions remain open. First, it would be useful to extend the lower bounds beyond zero-respecting algorithms to more general, possibly randomized, first-order methods. Another direction is to better align the domain and initialization assumptions in upper and lower bounds. Finally, our zero-chain hard instances require a dimension that grows with the target accuracy; whether comparable lower bounds hold in fixed or low dimensions, in the spirit of Chewi et al. (2023) , remains open.
+
+Lean Formalization
+
+A Lean formalization that provides machine-checked verification of key components of the analysis is available at: https://github.com/Wu-Qilong/Tight-Lower-Bounds-for-Stochastic-Nonconvex-Strongly-Concave-Minimax-Optimization
+
+AI Use Statement
+
+In this work, we used generative AI tools, primarily ChatGPT, to assist with exploring candidate hard instance constructions and proof strategies, refining mathematical arguments, surveying relevant literature, and drafting and polishing part of the manuscript. The authors formulated the research questions and problem settings, evaluated and selected among candidate approaches, and independently verified all mathematical claims and proofs included in the final paper. The authors have reviewed the work and take full responsibility for the final content of this paper.
+
+References
+
+Appendix A Preliminaries and proof of the quadratic lift
+
+We collect the standard value-function properties, prove Proposition 3.1 , and verify the actual condition numbers of the constructed instances.
+
+A.1 Standard value-function properties
+
+The following lemma supplies the facts used in Section 3 and in the Moreau-envelope argument of Appendix F . The sensitivity and differentiability statements are standard; see Sinha et al. (2017, Lemma 1) and Lin et al. (2020b, Lemma 4.3) . The envelope formula is given in Lin et al. (2020a, Lemma 17) .
+
+Let $M,\mu>0$ , and let $f:\mathbb{R}^{d_{x}}\times\mathbb{R}^{d_{y}}\to\mathbb{R}$ be continuously differentiable, with an $M$ -Lipschitz gradient, and suppose $f(x,\cdot)$ is $\mu$ -strongly concave for every $x$ . Then $y^{*}(x):=\arg\max_{y}f(x,y)$ exists uniquely, the value function $\Phi(x):=\max_{y}f(x,y)$ is continuously differentiable, and
+
+$\operatorname{Lip}(y^{*})\leq\frac{M}{\mu},\qquad\nabla\Phi(x)=\nabla_{x}f(x,y^{*}(x)),\qquad\operatorname{Lip}(\nabla\Phi)\leq M\left(1+\frac{M}{\mu}\right).$ (30)
+
+Moreover, $\Phi$ is $M$ -weakly convex. If $\inf\Phi>-\infty$ , then
+
+$u_{x}:=\arg\min_{u}\{\Phi(u)+M\left\lVert u-x\right\rVert^{2}\}$
+
+exists uniquely, and the Moreau envelope $P_{f}:=\Phi_{1/(2M)}$ satisfies
+
+$\nabla P_{f}(x)=2M(x-u_{x})=\nabla\Phi(u_{x}).$ (31)
+
+Strong concavity gives
+
+$f(x,y)\leq f(x,0)+\left\langle\nabla_{y}f(x,0),y\right\rangle-\frac{\mu}{2}\left\lVert y\right\rVert^{2}\longrightarrow-\infty\quad(\left\lVert y\right\rVert\to\infty),$
+
+so the inner maximum is attained uniquely on the full space. The joint smoothness assumption bounds each blockwise Lipschitz constant by $M$ . Applying Sinha et al. (2017, Lemma 1) with these constants gives Equation ( 30 ). For each fixed $y$ , the function $f(\cdot,y)+M\left\lVert\cdot\right\rVert^{2}/2$ is convex; its pointwise supremum is $\Phi+M\left\lVert\cdot\right\rVert^{2}/2$ , proving weak convexity. When $\inf\Phi>-\infty$ , the proximal objective is coercive and $M$ -strongly convex, so $u_{x}$ exists uniquely. Lin et al. (2020a, Lemma 17) gives the first equality in Equation ( 31 ); the second is the first-order optimality condition at $u_{x}$ . ∎
+
+A.2 Proof of Proposition 3.1
+
+The smoothness, gap, and oracle estimates are used in Appendices D and E ; the stationarity transfer is used in Proposition C.2 .
+
+Strong concavity, smoothness, and gap. Since $\alpha\beta=q$ and $\alpha\beta^{2}=h$ ,
+
+$\nabla_{x}f_{H}=\nu\gamma(y-\gamma x),\qquad\nabla_{y}f_{H}=q\nabla H(\beta y)-\nu(y-\gamma x).$ (32)
+
+The bound $\left\lVert\nabla^{2}H\right\rVert\leq\ell$ gives $\nabla_{yy}^{2}f_{H}=h\nabla^{2}H(\beta y)-\nu I\preceq-\mu I$ . The Hessian of the quadratic coupling is
+
+$-\nu\begin{pmatrix}\gamma^{2}I&-\gamma I\\ -\gamma I&I\end{pmatrix},$
+
+whose operator norm is $\nu(1+\gamma^{2})$ . The remaining Hessian has norm at most $\ell h$ , proving Equation ( 15 ). Lemma A.1 now gives a unique inner maximizer and the primal-gradient formula.
+
+At the origin, smoothness of $H$ yields
+
+$f_{H}(0,y)\leq\alpha H(0)+q\left\langle\nabla H(0),y\right\rangle-\frac{\mu}{2}\left\lVert y\right\rVert^{2},\qquad\Phi_{H}(0)\leq\alpha H(0)+\frac{q^{2}g^{2}}{2\mu}.$
+
+For any $x$ , the feasible choice $y=\gamma x$ gives
+
+$\Phi_{H}(x)\geq\alpha H(\beta\gamma x)\geq\alpha\inf H>-\infty.$ (33)
+
+Subtracting this lower bound from the bound at the origin proves Equation ( 16 ).
+
+Explicit stationarity transfer. Set $z^{*}=\beta y^{*}(x)$ and $w=\beta\gamma x$ . The inner first-order condition and the primal-gradient formula give
+
+$z^{*}-w=\frac{h}{\nu}\nabla H(z^{*}),\qquad\nabla\Phi_{H}(x)=\gamma q\nabla H(z^{*}).$ (34)
+
+Consequently,
+
+$\left\lVert\nabla H(w)\right\rVert\leq\left\lVert\nabla H(z^{*})\right\rVert+\ell\left\lVert w-z^{*}\right\rVert\leq\left(1+\frac{\ell h}{\nu}\right)\left\lVert\nabla H(z^{*})\right\rVert,$
+
+which proves Equation ( 17 ). For the scaled function $H_{\rm sc}(u):=\alpha H(\beta u)$ , this also gives
+
+$\left\lVert\nabla H_{\rm sc}(\gamma x)\right\rVert\leq\frac{1+\ell h/\nu}{\gamma}\left\lVert\nabla\Phi_{H}(x)\right\rVert.$
+
+Stochastic oracle. The error identity Equation ( 18 ) and unbiasedness of $g_{H}$ give unbiasedness of $G$ and the variance bound $q^{2}v^{2}$ . If $g_{H}$ has root mean-squared Lipschitz constant at most $S$ , then Minkowski’s inequality gives
+
+$\displaystyle\bigl(\mathbb{E}\left\lVert G(z;\xi)-G(z^{\prime};\xi)\right\rVert^{2}\bigr)^{1/2}$ $\displaystyle\leq\nu(1+\gamma^{2})\left\lVert z-z^{\prime}\right\rVert+qS\left\lVert\beta(y-y^{\prime})\right\rVert$ $\displaystyle\leq[\nu(1+\gamma^{2})+hS]\left\lVert z-z^{\prime}\right\rVert,$
+
+which concludes the proof. ∎
+
+A.3 Actual condition numbers
+
+The next lemma is used in the class-membership checks in Appendices D and E . It establishes the actual-condition-number statements in Theorems 4.1 and 5.1 .
+
+Consider the construction of Proposition 3.1 . Suppose $\gamma^{2}=M/(4\mu)$ , $\ell h\leq\mu/4$ , and $\operatorname{Lip}(\nabla f_{H})\leq M$ . Let $\mu_{\rm act}$ be the largest uniform inner strong-concavity modulus, and let $L_{\rm act}:=\operatorname{Lip}(\nabla f_{H})$ . Then, for $\kappa=M/\mu$ ,
+
+$\frac{\kappa}{6}\leq\frac{L_{\rm act}}{\mu_{\rm act}}\leq\kappa.$ (35)
+
+If the lifted oracle also has root mean-squared Lipschitz constant at most $M$ , its smallest such constant $\overline{L}_{\rm act}$ satisfies the same bounds: $\kappa/6\leq\overline{L}_{\rm act}/\mu_{\rm act}\leq\kappa$ .
+
+The inner Hessian bounds imply
+
+$\mu\leq\mu_{\rm act}\leq\nu+\ell h\leq\frac{3\mu}{2}.$ (36)
+
+Holding $y$ fixed and changing $x$ gives, for every seed,
+
+$\displaystyle\left\lVert\nabla f_{H}(x,y)-\nabla f_{H}(x^{\prime},y)\right\rVert$ $\displaystyle=\left\lVert G(x,y;\xi)-G(x^{\prime},y;\xi)\right\rVert$ (37) $\displaystyle=\nu\gamma\sqrt{1+\gamma^{2}}\left\lVert x-x^{\prime}\right\rVert.$
+
+Since $\nu\gamma\sqrt{1+\gamma^{2}}\geq\nu\gamma^{2}\geq M/4$ , we obtain $L_{\rm act}\geq M/4$ and, when finite, $\overline{L}_{\rm act}\geq M/4$ . Combining these estimates with Equation ( 36 ) and the assumed upper bounds proves the claims. ∎
+
+Appendix B The base chain and its stochastic oracles
+
+B.1 The nonconvex chain
+
+Recall that we define $H=F_{T}$ in Equation ( 19 ) where $F_{T}$ is adapted from Carmon et al. (2020) : for $T\geq 2$ , define
+
+$\Psi(t)=\begin{cases}0,&t\leq 1/2,\\ \exp\bigl(1-(2t-1)^{-2}\bigr),&t>1/2,\end{cases}\qquad\Phi_{0}(t)=\sqrt{e}\int_{-\infty}^{t}e^{-s^{2}/2}\,ds,$
+
+and
+
+$F_{T}(u)=-\Psi(1)\Phi_{0}(u_{1})+\sum_{i=2}^{T}\bigl[\Psi(-u_{i-1})\Phi_{0}(-u_{i})-\Psi(u_{i-1})\Phi_{0}(u_{i})\bigr].$ (38)
+
+For $a\geq 0$ , write $\operatorname{prog}_{a}(u)=\max(\{i:|u_{i}|>a\}\cup\{0\})$ . Both $\Psi$ and $\Phi_{0}$ are bounded, so $F_{T}$ is bounded below. We use the following published properties.
+
+The function $F_{T}$ is twice continuously differentiable and satisfies
+
+$\displaystyle F_{T}(0)-\inf F_{T}$ $\displaystyle\leq 12T,$ (39) $\displaystyle\operatorname{Lip}(\nabla F_{T})$ $\displaystyle\leq 152,\quad\left\lVert\nabla F_{T}(u)\right\rVert_{\infty}\leq 23,$ (40) $\displaystyle\operatorname{prog}_{0}(\nabla F_{T}(u))$ $\displaystyle\leq\operatorname{prog}_{1/2}(u)+1,$ (41) $\displaystyle\operatorname{prog}_{1}(u)<T$ $\displaystyle\ \Longrightarrow\ \left\lVert\nabla F_{T}(u)\right\rVert>1.$ (42)
+
+In particular, $\left\lVert\nabla F_{T}(0)\right\rVert\leq 23$ .
+
+Based on the chain of Carmon et al. (2020) . The bound at zero follows from Equation ( 41 ) and the coordinate bound. We take this lemma as the external analytic input; the lift, oracle estimates, progress argument, and parameter choices are proved here.
+
+B.2 A bounded-variance oracle
+
+Let $Z\sim\operatorname{Bernoulli}(p)$ with $0<p\leq 1$ and define
+
+$[g_{T}^{\rm BV}(u;Z)]_{i}=\nabla_{i}F_{T}(u)\left[1+\mathbf{1}\{i>\operatorname{prog}_{1/4}(u)\}(Z/p-1)\right].$ (43)
+
+Since $\mathbb{E}(Z/p-1)=0$ , the estimator is unbiased. Moreover, $\operatorname{prog}_{1/2}(u)\leq\operatorname{prog}_{1/4}(u)$ . By Equation ( 41 ), its error can have at most one nonzero coordinate, namely $\operatorname{prog}_{1/4}(u)+1$ when this index is at most $T$ . Hence
+
+$\mathbb{E}\left\lVert g_{T}^{\rm BV}(u;Z)-\nabla F_{T}(u)\right\rVert^{2}\leq 23^{2}\frac{1-p}{p}.$ (44)
+
+The new frontier coordinate can be nonzero only when $Z=1$ . This is the bounded-variance construction in Arjevani et al. (2023, equation (17)) ; the argument above verifies the properties needed for the lift.
+
+B.3 An averaged-smooth oracle
+
+We specify a single smooth gate before choosing any problem parameters. Let
+
+$\Lambda(t)=\begin{cases}\displaystyle\exp\!\left(-\frac{1}{100(t-1/4)(1/2-t)}\right),&1/4<t<1/2,\\[2.0pt] 0,&\text{otherwise},\end{cases}\qquad\Gamma(t)=\frac{\int_{1/4}^{t}\Lambda(s)\,ds}{\int_{1/4}^{1/2}\Lambda(s)\,ds}.$
+
+Then $0\leq\Gamma\leq 1$ , $\Gamma=0$ on $(-\infty,1/4]$ , $\Gamma=1$ on $[1/2,\infty)$ , and $m_{\Gamma}:=\sup_{t}|\Gamma^{\prime}(t)|<\infty$ is a universal constant. This is the smooth gate used by Arjevani et al. (2023) . For the tail $u_{\geq i}=(u_{i},\ldots,u_{T})$ , set
+
+$\Theta_{i}(u)=\Gamma\bigl(1-\left\lVert\Gamma(|u_{\geq i}|)\right\rVert\bigr),\qquad[g_{T}^{\rm AS}(u;Z)]_{i}=\nabla_{i}F_{T}(u)[1+\Theta_{i}(u)(Z/p-1)],$ (45)
+
+where the inner $\Gamma$ is applied coordinatewise. The flat regions of $\Gamma$ give
+
+$\mathbf{1}\{i>\operatorname{prog}_{1/4}(u)\}\leq\Theta_{i}(u)\leq\mathbf{1}\{i>\operatorname{prog}_{1/2}(u)\}.$ (46)
+
+Indeed, a tail bounded by $1/4$ gives inner norm zero and outer value one; a tail containing an entry larger than $1/2$ gives inner norm at least one and outer value zero.
+
+For $g=23$ and any $\ell\geq 152$ , the oracle Equation ( 45 ) is unbiased, and for all $u,v$ ,
+
+$\displaystyle\mathbb{E}\left\lVert g_{T}^{\rm AS}(u;Z)-\nabla F_{T}(u)\right\rVert^{2}$ $\displaystyle\leq g^{2}\frac{1-p}{p},$ (47) $\displaystyle\mathbb{E}\left\lVert g_{T}^{\rm AS}(u;Z)-g_{T}^{\rm AS}(v;Z)\right\rVert^{2}$ $\displaystyle\leq\frac{4g^{2}m_{\Gamma}^{4}+3\ell^{2}}{p}\left\lVert u-v\right\rVert^{2}.$ (48)
+
+The constants are independent of $T$ .
+
+Write $a_{i}(u)=\Theta_{i}(u)\nabla_{i}F_{T}(u)$ . By Equation ( 41 ) and Equation ( 46 ), $a(u)$ has at most one nonzero coordinate, $\operatorname{prog}_{1/2}(u)+1$ , with magnitude at most $g$ . The centered error is $(Z/p-1)a(u)$ , which proves unbiasedness and Equation ( 47 ). The map $\Theta_{i}$ is $m_{\Gamma}^{2}$ -Lipschitz: absolute value and the norm are $1$ -Lipschitz, and the inner and outer gates each contribute $m_{\Gamma}$ . The union $J=\operatorname{supp}(a(u))\cup\operatorname{supp}(a(v))$ has at most two indices. On this union,
+
+$|a_{i}(u)-a_{i}(v)|^{2}\leq 2g^{2}|\Theta_{i}(u)-\Theta_{i}(v)|^{2}+2|\nabla_{i}F_{T}(u)-\nabla_{i}F_{T}(v)|^{2}.$
+
+Summing over $J$ yields
+
+$\left\lVert a(u)-a(v)\right\rVert^{2}\leq(4g^{2}m_{\Gamma}^{4}+2\ell^{2})\left\lVert u-v\right\rVert^{2}.$
+
+The zero mean of $Z/p-1$ eliminates the cross term, so
+
+$\displaystyle\mathbb{E}\left\lVert g_{T}^{\rm AS}(u;Z)-g_{T}^{\rm AS}(v;Z)\right\rVert^{2}$ $\displaystyle=\left\lVert\nabla F_{T}(u)-\nabla F_{T}(v)\right\rVert^{2}+\frac{1-p}{p}\left\lVert a(u)-a(v)\right\rVert^{2}$ $\displaystyle\leq\frac{4g^{2}m_{\Gamma}^{4}+3\ell^{2}}{p}\left\lVert u-v\right\rVert^{2}.$
+
+The deliberately conservative constant avoids relying on a sharper numerical estimate for the gate. ∎
+
+Appendix C Support bounds and the stationarity lower bound
+
+We prove Lemma 3.5 and the stationarity bound used in Appendices D - F . Write $[m]=\{1,\ldots,m\}$ for integers $m\geq 0$ , with $[0]=\varnothing$ .
+
+For every $T\geq 2$ and $p\in(0,1]$ , the oracles $g_{T}^{\rm BV}$ in Equation ( 43 ) and $g_{T}^{\rm AS}$ in Equation ( 45 ) are probability- $p$ zero-chains in the sense of Definition 3.4 . For either oracle, with $Z\sim\operatorname{Bernoulli}(p)$ ,
+
+$\operatorname{prog}_{0}(g_{T}(u;Z))\leq\operatorname{prog}_{1/4}(u)+\mathbf{1}\{Z=1\}\qquad\text{for every }u\in\mathbb{R}^{T}\text{ and }Z\in\{0,1\}.$
+
+Let $\mathcal{E}$ be the first event in Definition 3.4 . Outside a null set of seeds, that definition gives, simultaneously for all $u$ ,
+
+$\operatorname{prog}_{0}(g_{H}(u;\xi))\leq\operatorname{prog}_{1/4}(u)+\mathbf{1}\{\xi\in\mathcal{E}\}\leq\operatorname{prog}_{0}(u)+\mathbf{1}\{\xi\in\mathcal{E}\}.$
+
+Set $J_{0}=0$ and $J_{t}=\sum_{s=1}^{t}\mathbf{1}\{\xi_{s}\in\mathcal{E}\}$ . Write $G_{b}^{t,k}=G_{b}(z^{t,k};\xi_{t})$ for $b\in\{x,y\}$ . Induction gives, almost surely, for every actual query and response,
+
+$\displaystyle\operatorname{supp}(x^{t,k})\cup\operatorname{supp}(y^{t,k})$ $\displaystyle\subseteq[J_{t-1}],$ (49) $\displaystyle\operatorname{supp}(G_{x}^{t,k})\cup\operatorname{supp}(G_{y}^{t,k})$ $\displaystyle\subseteq[J_{t}].$
+
+The first queries are at the origin; thereafter, zero-respecting gives the first inclusion from the earlier response supports. The coupling terms in Equation ( 14 ) are supported within $[J_{t-1}]$ . Since $\beta>0$ , the PZC inequality gives $\operatorname{supp}(g_{H}(\beta y^{t,k};\xi_{t}))\subseteq[J_{t}]$ . This proves the second inclusion for every $k$ with the same seed $\xi_{t}$ .
+
+If the algorithm stops after $\tau\leq R$ rounds, the output restriction gives $\operatorname{supp}(\hat{x})\subseteq[J_{\tau}]\subseteq[J_{R}]$ ; unused seeds through round $R$ may be sampled independently for this argument. Since $\mathbb{P}(\xi_{t}\in\mathcal{E})\leq p$ , we have $\mathbb{E}J_{R}\leq pR$ . Markov’s inequality now yields
+
+$\mathbb{P}\!\left(\operatorname{supp}(\hat{x})\not\subseteq[T-1]\right)\leq\mathbb{P}(J_{R}\geq T)\leq\frac{pR}{T}.\qed$
+
+Let $H=F_{T}$ with $T\geq 2$ , let ${\epsilon}>0$ , and use either base oracle from Lemma C.1 in the lift Equation ( 14 ). Suppose $\gamma q=8{\epsilon}$ and $\ell h/\nu\leq 1/5$ . For every admissible zero-respecting algorithm using at most $R\leq T/(4p)$ rounds,
+
+$\mathbb{P}\!\left(\left\lVert\nabla\Phi_{H}(\hat{x})\right\rVert>\frac{20}{3}{\epsilon}\right)\geq\frac{3}{4}.$ (50)
+
+Consequently,
+
+$\mathbb{E}\left\lVert\nabla\Phi_{H}(\hat{x})\right\rVert\geq 5{\epsilon},\qquad\mathbb{E}\left\lVert\nabla\Phi_{H}(\hat{x})\right\rVert^{2}\geq\frac{100}{3}{\epsilon}^{2}.$ (51)
+
+Lemmas C.1 and 3.5 give $\mathbb{P}(\hat{x}_{T}=0)\geq 3/4$ . On this event, $(\beta\gamma\hat{x})_{T}=0$ , so Lemma B.1 gives $\left\lVert\nabla F_{T}(\beta\gamma\hat{x})\right\rVert>1$ . The stationarity transfer Equation ( 17 ) implies
+
+$\left\lVert\nabla\Phi_{H}(\hat{x})\right\rVert\geq\frac{\gamma q}{1+\ell h/\nu}\left\lVert\nabla F_{T}(\beta\gamma\hat{x})\right\rVert>\frac{20}{3}{\epsilon}.$
+
+This proves Equation ( 50 ); taking first and second moments gives Equation ( 51 ). ∎
+
+An algorithm using at most $N$ oracle calls has at most $N$ rounds. Thus both accuracy criteria fail whenever $N\leq T/(4p)$ . Appendices D and E apply Proposition C.2 after choosing $T$ and $p$ ; Appendix F transfers the same event to the envelope gradient.
+
+Appendix D Proof of Theorem 4.1
+
+We keep a conservative constant choice so the parameter checks are shared with AS. Fix universal constants
+
+$\Delta_{0}=12,\quad\ell=155,\quad g=23,\quad s=\max\{336,\sqrt{4g^{2}m_{\Gamma}^{4}+3\ell^{2}}\},\quad C=256g^{2}.$ (52)
+
+The choices $155$ and $336$ provide slack; no random-rotation estimates are used. For $M=L$ and $\kappa=M/\mu$ , choose
+
+$\displaystyle\gamma^{2}=\kappa/4,\quad q=8{\epsilon}/\gamma,\quad q^{2}=256{\epsilon}^{2}/\kappa,\quad h=\mu/(4\ell),\quad\nu=5\mu/4,$ (53) $\displaystyle p=\begin{cases}1,&\sigma=0,\\ \min\{1,q^{2}g^{2}/\sigma^{2}\},&\sigma>0,\end{cases}\qquad B_{*}:=\frac{\Delta h}{4\Delta_{0}q^{2}},\qquad T=\lfloor B_{*}\rfloor.$ (54)
+
+Use $H=F_{T}$ , $\alpha=q^{2}/h$ , $\beta=h/q$ , and $g_{H}=g_{T}^{\rm BV}$ .
+
+Class membership.
+
+The strong concavity follows from Proposition 3.1 . Since $\ell h/\nu=1/5$ and $\kappa\geq 8$ ,
+
+$\nu(1+\gamma^{2})+\ell h=\frac{3\mu}{2}+\frac{5M}{16}\leq\frac{M}{2}\leq M.$
+
+The variance is at most $q^{2}g^{2}(1-p)/p\leq\sigma^{2}$ . For $p<1$ , this follows from $q^{2}g^{2}/p=\sigma^{2}$ ; for $p=1$ , the stochastic error vanishes. The actual condition number satisfies Equation ( 35 ).
+
+Gap and chain length.
+
+The two quantities to control are
+
+$\frac{q^{2}g^{2}}{2\mu}=\frac{128g^{2}{\epsilon}^{2}}{M},\qquad B_{*}=\frac{M\Delta}{4096\Delta_{0}\ell{\epsilon}^{2}}.$ (55)
+
+Choose
+
+$c_{0}\leq\min\left\{\frac{1}{256g^{2}},\frac{1}{65536\Delta_{0}\ell}\right\}.$ (56)
+
+Then ${\epsilon}^{2}\leq c_{0}M\Delta$ makes the first term in Equation ( 55 ) at most $\Delta/2$ and gives $B_{*}\geq 16$ . Thus $T\geq B_{*}/2\geq 8$ . Also $\alpha\Delta_{0}T\leq\Delta/4$ , so Equation ( 16 ) gives $\Phi_{H}(0)-\inf\Phi_{H}\leq 3\Delta/4$ . The lower bound Equation ( 33 ) verifies that the infimum is finite.
+
+Query lower bound.
+
+The calibrated parameters satisfy Proposition C.2 . Moreover,
+
+$\displaystyle\frac{T}{4p}$ $\displaystyle\geq\frac{M\Delta}{32768\Delta_{0}\ell{\epsilon}^{2}}\max\left\{1,\frac{\kappa\sigma^{2}}{C{\epsilon}^{2}}\right\}$ $\displaystyle\geq\frac{1}{32768\Delta_{0}\ell C}\,\frac{M\Delta}{{\epsilon}^{2}}\max\left\{1,\frac{\kappa\sigma^{2}}{{\epsilon}^{2}}\right\}.$
+
+Every integer budget not exceeding $T/(4p)$ fails with the uniform margins in Equation ( 51 ). This proves Theorem 4.1 for both moment criteria, with $c=(32768\Delta_{0}\ell C)^{-1}$ or any smaller constant. The hard dimension is $d_{x}=d_{y}=T$ .
+
+Appendix E Proof of Theorem 5.1
+
+Use the constants Equation ( 52 ), let $M=\overline{L}$ and $\kappa=M/\mu$ , and keep the definitions of $\gamma,q,p,B_{*},T,\alpha,\beta$ in Equation ( 53 )-Equation ( 54 ), except that now
+
+$h=\min\left\{\frac{\mu}{4\ell},\frac{M\sqrt{p}}{4s}\right\},\qquad\nu=\mu+\ell h.$ (57)
+
+Use $H=F_{T}$ and $g_{H}=g_{T}^{\rm AS}$ . In particular, $B_{*}$ is computed using the new $h$ .
+
+Class membership.
+
+We have $\ell h\leq\mu/4$ , $\nu\leq 5\mu/4$ , and $\ell h/\nu\leq 1/5$ . Strong concavity and the BV calculation are unchanged. Lemma B.2 and Proposition 3.1 give the joint averaged-smoothness upper bound
+
+$\nu(1+\gamma^{2})+\frac{hs}{\sqrt{p}}\leq\frac{5\mu}{4}\left(1+\frac{\kappa}{4}\right)+\frac{M}{4}\leq\frac{23M}{32}<M.$ (58)
+
+Population smoothness follows by Jensen’s inequality. Equation ( 35 ) verifies both actual condition numbers.
+
+Gap and integer chain length.
+
+As before, $q^{2}g^{2}/(2\mu)=128g^{2}{\epsilon}^{2}/M$ , while
+
+$B_{*}=\frac{M\Delta}{4096\Delta_{0}{\epsilon}^{2}}\min\left\{\frac{1}{\ell},\frac{\kappa\sqrt{p}}{s}\right\}.$ (59)
+
+A sufficient choice of universal accuracy constants is
+
+$c_{0}\leq\min\left\{\frac{1}{256g^{2}},\frac{1}{65536\Delta_{0}\max\{\ell,s\}}\right\},\qquad c_{1}\leq\frac{g}{4096\Delta_{0}s}.$ (60)
+
+The first condition in Equation ( 23 ) bounds the gap correction by $\Delta/2$ and makes the first term in Equation ( 59 ), including its prefactor, at least $16$ . If $p=1$ , it also makes the second term at least $16$ , since $\kappa\geq 8$ . If $p<1$ , then
+
+$\sqrt{p}=\frac{qg}{\sigma}=\frac{16g{\epsilon}}{\sqrt{\kappa}\sigma},\qquad\frac{M\Delta}{4096\Delta_{0}{\epsilon}^{2}}\frac{\kappa\sqrt{p}}{s}=\frac{gM\Delta\sqrt{\kappa}}{256\Delta_{0}s{\epsilon}\sigma}\geq 16$
+
+by the second condition in Equation ( 23 ) and Equation ( 60 ). Thus $B_{*}\geq 16$ in every case, $T\geq B_{*}/2\geq 8$ , and the initial primal gap is at most $3\Delta/4$ exactly as in Appendix D .
+
+Rate calculation.
+
+Set $p_{*}=1$ when $\sigma=0$ and $p_{*}=\min\{1,{\epsilon}^{2}/(\kappa\sigma^{2})\}$ otherwise. The calibrated probability obeys
+
+$p_{*}\leq p\leq Cp_{*},\qquad C=256g^{2}.$ (61)
+
+Therefore
+
+$\displaystyle\frac{T}{4p}$ $\displaystyle\geq\frac{M\Delta}{32768\Delta_{0}\max\{\ell,s\}{\epsilon}^{2}}\min\{p^{-1},\kappa p^{-1/2}\}$ $\displaystyle\geq\frac{M\Delta}{32768\Delta_{0}\max\{\ell,s\}C{\epsilon}^{2}}\min\{p_{*}^{-1},\kappa p_{*}^{-1/2}\}.$ (62)
+
+The second inequality uses $C\geq 1$ ; both terms are bounded below by $C^{-1}$ times their $p_{*}$ counterparts. For $a=\kappa\sigma^{2}/{\epsilon}^{2}$ , elementary case splitting gives
+
+$\min\{p_{*}^{-1},\kappa p_{*}^{-1/2}\}=\max\{1,\min\{a,\kappa\sqrt{a}\}\},\qquad\kappa\sqrt{a}=\kappa^{3/2}\sigma/{\epsilon}.$
+
+Substitution in Equation ( 62 ) and Proposition C.2 prove Theorem 5.1 , with $c=(32768\Delta_{0}\max\{\ell,s\}C)^{-1}$ or smaller. The cases $a\leq 1$ , $1<a<\kappa^{2}$ , and $a\geq\kappa^{2}$ give Equation ( 26 ). Neither the construction nor the progress bound depends on the batch-size bound $K$ . Thus $d_{x}=d_{y}=T$ and all constants are independent of $K$ .
+
+Appendix F Proof of the Moreau-envelope lower bounds
+
+We prove Corollary 5.2 in three steps: bound the smoothness of the primal function on the hard family, compare its gradient with the Moreau-envelope gradient, and apply Proposition C.2 . Throughout, $M=L$ for BV and $M=\overline{L}$ for AS.
+
+For the lift in Proposition 3.1 ,
+
+$\operatorname{Lip}(\nabla\Phi_{H})\leq\frac{\nu\gamma^{2}\ell h}{\mu}.$ (63)
+
+Under either parameter choice in Appendices D - E , this upper bound is at most $5M/64$ .
+
+The inner optimality condition is
+
+$q\nabla H(\beta y^{*}(x))=\nu\bigl(y^{*}(x)-\gamma x\bigr).$
+
+For two points $x,x^{\prime}$ , write $y=y^{*}(x)$ and $y^{\prime}=y^{*}(x^{\prime})$ . Subtracting their optimality conditions gives
+
+$\nu(y-y^{\prime})=\nu\gamma(x-x^{\prime})+q\bigl(\nabla H(\beta y)-\nabla H(\beta y^{\prime})\bigr).$
+
+Since $H$ has an $\ell$ -Lipschitz gradient and $q\beta=h$ ,
+
+$\nu\left\lVert y-y^{\prime}\right\rVert\leq\nu\gamma\left\lVert x-x^{\prime}\right\rVert+\ell h\left\lVert y-y^{\prime}\right\rVert.$
+
+Using $\nu-\ell h=\mu$ yields
+
+$\left\lVert y^{*}(x)-y^{*}(x^{\prime})\right\rVert\leq\frac{\nu\gamma}{\mu}\left\lVert x-x^{\prime}\right\rVert.$ (64)
+
+The primal-gradient formula in Lemma A.1 and the inner optimality condition imply
+
+$\nabla\Phi_{H}(x)=\nu\gamma\bigl(y^{*}(x)-\gamma x\bigr)=\gamma q\nabla H(\beta y^{*}(x)).$
+
+Consequently,
+
+$\displaystyle\left\lVert\nabla\Phi_{H}(x)-\nabla\Phi_{H}(x^{\prime})\right\rVert$ $\displaystyle\leq\gamma\ell h\left\lVert y^{*}(x)-y^{*}(x^{\prime})\right\rVert$ $\displaystyle\leq\frac{\nu\gamma^{2}\ell h}{\mu}\left\lVert x-x^{\prime}\right\rVert.$
+
+For both parameter choices, $\ell h\leq\mu/4$ , $\nu\leq 5\mu/4$ , and $\gamma^{2}=M/(4\mu)$ . Substituting these inequalities gives
+
+$\frac{\nu\gamma^{2}\ell h}{\mu}\leq\frac{1}{\mu}\frac{5\mu}{4}\frac{M}{4\mu}\frac{\mu}{4}=\frac{5M}{64}.$
+
+∎
+
+Under either calibration in Appendices D and E , let $P_{f_{H}}=(\Phi_{H})_{1/(2M)}$ . Then, for every $x$ ,
+
+$\frac{123}{128}\|\nabla P_{f_{H}}(x)\|\leq\|\nabla\Phi_{H}(x)\|\leq\frac{133}{128}\|\nabla P_{f_{H}}(x)\|.$
+
+Let $u_{x}$ minimize $\Phi_{H}(u)+M\|u-x\|^{2}$ . The Moreau-gradient identities give $\nabla P_{f_{H}}(x)=\nabla\Phi_{H}(u_{x})=2M(x-u_{x})$ . By Proposition F.1 ,
+
+$\|\nabla\Phi_{H}(x)-\nabla P_{f_{H}}(x)\|\leq\frac{5M}{64}\|x-u_{x}\|=\frac{5}{128}\|\nabla P_{f_{H}}(x)\|.$
+
+The two bounds follow from the triangle and reverse triangle inequalities. ∎
+
+Fix either the BV or AS setting and choose exactly the same hard instance and parameters as in its lower-bound proof in Appendix D or E . An algorithm using at most $N\leq T/(4p)$ oracle calls also uses at most $T/(4p)$ rounds. Proposition C.2 therefore gives
+
+$\mathbb{E}\left\lVert\nabla\Phi_{H}(\hat{x})\right\rVert\geq 5{\epsilon},\qquad\mathbb{E}\left\lVert\nabla\Phi_{H}(\hat{x})\right\rVert^{2}\geq\frac{100}{3}{\epsilon}^{2}.$
+
+Lemma F.2 holds pointwise at the same random output $\hat{x}$ . It follows that
+
+$\displaystyle\mathbb{E}\left\lVert\nabla P_{f_{H}}(\hat{x})\right\rVert$ $\displaystyle\geq\frac{128}{133}\mathbb{E}\left\lVert\nabla\Phi_{H}(\hat{x})\right\rVert\geq\frac{640}{133}{\epsilon}>{\epsilon},$ $\displaystyle\mathbb{E}\left\lVert\nabla P_{f_{H}}(\hat{x})\right\rVert^{2}$ $\displaystyle\geq\left(\frac{128}{133}\right)^{2}\mathbb{E}\left\lVert\nabla\Phi_{H}(\hat{x})\right\rVert^{2}$ $\displaystyle\geq\frac{100}{3}\left(\frac{128}{133}\right)^{2}{\epsilon}^{2}>{\epsilon}^{2}.$
+
+Thus neither Moreau-envelope criterion can be met within the same oracle budget. The bounds on $T/(4p)$ already proved in Appendices D and E give the two claimed complexity lower bounds, with the same parameter ranges. The point $u_{\hat{x}}$ is used only in the gradient comparison; it is neither queried nor returned by the algorithm. ∎

@@ -1,0 +1,72 @@
+[
+  {
+    "anchor": "Thmassumption1",
+    "kind": "ltx_theorem ltx_theorem_assumption",
+    "text": "Assumption 1 . For problem ( MI ), let $F$ be monotone and $L_{F}$ -Lipschitz. Assume that $r$ is proper, convex, closed. There exists $\\mathbf{x}^{\\star}$ such that $0\\in(F+\\partial r)(\\mathbf{x}^{\\star})$ . We have access to an unbiased estimator of $F$ such that $\\mathbb{E}[F_{\\xi}(\\mathbf{x})]=F(\\mathbf{x})$ ."
+  },
+  {
+    "anchor": "Thmassumption2",
+    "kind": "ltx_theorem ltx_theorem_assumption",
+    "text": "Assumption 2 (Blum-Gladyshev variance) . Let the unbiased estimator of $F$ satisfy $\\mathbb{E}\\|F_{\\xi}(\\mathbf{x})-F(\\mathbf{x})\\|^{2}\\leq B^{2}\\|\\mathbf{x}-\\mathring{\\mathbf{z}}\\|^{2}+G^{2},$ where $\\mathring{\\mathbf{z}}$ is a fixed initial point. In view of Assumption 1 , denote $\\widehat{L}_{F}=L_{F}+B$ ."
+  },
+  {
+    "anchor": "S2.Thmtheorem1",
+    "kind": "ltx_theorem ltx_theorem_corollary",
+    "text": "Corollary 2.1 . For problem ( MI ), let Assumption 1 hold and suppose that Assumption 2 holds with $B=0$ . Additionally assume that $F$ is $\\mu_{F}$ -strongly monotone. Let $S=\\lfloor\\log_{2}(L_{F}/\\mu_{F})\\rfloor\\geq 1$ , $T\\geq 48SL_{F}/\\mu_{F}$ and $\\eta=\\frac{1}{3L_{F}}$ . Then, we have that $\\mathbb{E}\\|\\mathcal{G}_{\\eta,H}(\\mathbf{z}_{S})\\|\\leq\\varepsilon,$ (2.4) where the number of stochastic first-order oracles $T$ is upper bounded by $O\\left(\\frac{L_{F}}{\\mu_{F}}\\log\\left(\\frac{L_{F}}{\\mu_{F}}\\right)\\log\\left(\\frac{\\mu_{F}D_{\\star}}{\\varepsilon}+e\\right)+\\frac{G^{2}\\log^{3}(L_{F}/\\mu_{F})}{\\varepsilon^{2}}\\right).$ where $O$ only suppresses the absolute constants."
+  },
+  {
+    "anchor": "S2.Thmtheorem2",
+    "kind": "ltx_theorem ltx_theorem_corollary",
+    "text": "Corollary 2.2 . For problem ( MI ), let Assumptions 1 and 2 hold. We apply Algorithm 3 to solve ( 2.1 ) with $\\mu=\\frac{32\\widehat{L}_{F}}{\\sqrt{T}}\\log_{2}^{3/2}\\left(\\frac{\\sqrt{T}}{48}\\right)$ , $T\\geq 14175$ , $\\eta=\\frac{1}{3\\widehat{L}_{F}}$ . Then, we have that $\\mathbb{E}\\|\\mathcal{G}_{\\eta,H}(\\mathbf{z}_{S})\\|=O\\left(\\frac{\\widehat{L}_{F}D_{\\star}(\\ln\\sqrt{T})^{3/2}}{\\sqrt{T}}+\\frac{(\\ln\\sqrt{T})^{5/2}(BD_{\\star}+G)}{\\sqrt{T}}\\right).$ (2.6) Consequently, to obtain $\\mathbb{E}\\|\\mathcal{G}_{\\eta,H}(\\mathbf{z}_{S})\\|\\leq\\varepsilon,$ (2.7) the number of required stochastic first-order oracles $T$ is upper bounded by $O\\left(1+\\frac{(L_{F}^{2}+B^{2})D_{\\star}^{2}+G^{2}}{\\varepsilon^{2}}\\ln^{5}\\left(\\frac{D_{\\star}(L_{F}+B)+G}{\\varepsilon}+1\\right)\\right),$ where we only suppress the absolute constants."
+  },
+  {
+    "anchor": "Thmassumption3",
+    "kind": "ltx_theorem ltx_theorem_assumption",
+    "text": "Assumption 3 . For problem ( 3.1 ), let $A$ be monotone, $L_{A}$ -Lipschitz and $\\mu_{A}$ -strongly monotone. Assume that $r$ is proper, convex, closed. There exists $\\mathbf{x}^{\\star}_{A}$ such that $0\\in(A+\\partial r)(\\mathbf{x}^{\\star}_{A})$ . We have access to an unbiased estimator of $A$ such that $\\mathbb{E}[A_{\\xi}(\\mathbf{x})]=A(\\mathbf{x})$ and $\\mathbb{E}\\|A_{\\xi}(\\mathbf{x})-A(\\mathbf{x})\\|^{2}\\leq B_{A}^{2}\\|\\mathbf{x}-\\mathring{\\mathbf{z}}\\|^{2}+G_{A}^{2},$ where $\\mathring{\\mathbf{z}}$ is a globally fixed iterate."
+  },
+  {
+    "anchor": "S3.Thmtheorem2",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 3.2 . In this bound, the additional term $B^{2}_{A}\\|\\mathring{\\mathbf{z}}-\\mathbf{x}^{\\star}_{A}\\|^{2}$ coming from the relaxed variance requirement seems not problematic since $\\mathbf{x}^{\\star}_{A}$ is fixed. However, we will later invoke this result with a dynamic set of problems where the solution $\\mathbf{x}^{\\star}_{A}$ will be changing at each step. As a result, we cannot treat this term as a constant. We will have to craft a specialized analysis to handle this additional term since we do not have a global upper bound for the solutions of inner problems. This will be handled in Section 5 ."
+  },
+  {
+    "anchor": "S4.Thmtheorem3",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 4.3 . For problem ( MI ), let Assumption 1 hold and suppose that Assumption 2 holds with $B=0$ . Additionally assume that $F$ is $\\mu_{F}$ strongly monotone for $\\mu_{F}>0$ . We apply Algorithm 3 to solve ( 2.1 ) with $\\eta=\\frac{1}{3L_{F}}$ , $S=\\lfloor\\log_{2}(L_{F}/\\mu_{F})\\rfloor\\geq 1$ and $T\\geq 48SL_{F}/\\mu_{F}$ , and initial point $\\mathring{\\mathbf{z}}$ . Then, we have that $\\displaystyle\\mathbb{E}\\|\\mathcal{G}_{\\eta,H}(\\mathbf{z}_{S})\\|=O\\left(\\left(\\frac{1}{2}\\right)^{\\frac{T}{48SL_{F}/\\mu_{F}}}\\mu_{F}D_{\\star}+\\frac{S^{3/2}G}{\\sqrt{T}}\\right),$ where $O$ only suppresses the absolute constants."
+  },
+  {
+    "anchor": "S4.Thmtheorem4",
+    "kind": "ltx_theorem ltx_theorem_corollary",
+    "text": "Corollary 4.4 . Under the same setup as Theorem 4.3 , we have $\\mathbb{E}\\|\\mathcal{G}_{\\eta,H}(\\mathbf{z}_{S})\\|\\leq\\varepsilon,$ (4.5) where the number of stochastic first-order oracles $T$ is upper bounded by $O\\left(\\frac{L_{F}}{\\mu_{F}}\\log\\left(\\frac{L_{F}}{\\mu_{F}}\\right)\\log\\left(\\frac{\\mu_{F}D_{\\star}}{\\varepsilon}+e\\right)+\\frac{G^{2}\\log^{3}(L_{F}/\\mu_{F})}{\\varepsilon^{2}}\\right).$"
+  },
+  {
+    "anchor": "S4.Thmtheorem5",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 4.5 (Monotone $F$ ) . For problem ( MI ), let Assumption 1 hold and suppose that Assumption 2 holds with $B=0$ . We apply Algorithm 3 to solve ( 2.1 ) with any $L_{F}/2\\geq\\mu>0$ , $\\eta=\\frac{1}{3L_{F}}$ , $S=\\lfloor\\log_{2}(L_{F}/\\mu)\\rfloor\\geq 1$ and $T\\geq 48SL_{F}/\\mu$ , and initial point $\\mathring{\\mathbf{z}}$ . Then, we have that $\\mathbb{E}\\|\\mathcal{G}_{\\eta,H}(\\mathbf{z}_{S})\\|=O\\left(\\mu\\|\\mathbf{x}^{\\star}-\\mathring{\\mathbf{z}}\\|+\\left(\\frac{1}{2}\\right)^{\\frac{T}{48SL_{F}/\\mu}}\\mu\\|\\mathring{\\mathbf{z}}-\\mathbf{x}^{\\star}\\|+\\frac{S^{3/2}G}{\\sqrt{T}}\\right).$"
+  },
+  {
+    "anchor": "S4.Thmtheorem6",
+    "kind": "ltx_theorem ltx_theorem_corollary",
+    "text": "Corollary 4.6 . Under the same setup of Theorem 4.5 , let $T\\geq 2200$ and $\\mu=\\frac{96L_{F}\\log_{2}T}{T}$ . We apply Algorithm 3 to solve ( 2.1 ) with $\\eta=\\frac{1}{3L_{F}}$ , $S=\\lfloor\\log_{2}(L_{F}/\\mu)\\rfloor$ , and initial point $\\mathring{\\mathbf{z}}$ . Then, we have that $\\mathbb{E}\\|\\mathcal{G}_{\\eta,H}(\\mathbf{z}_{S})\\|=O\\left(\\frac{L_{F}D_{\\star}\\log_{2}T}{T}+\\frac{G(\\log_{2}T)^{3/2}}{\\sqrt{T}}\\right).$ (4.7) Consequently, to obtain $\\mathbb{E}\\|\\mathcal{G}_{\\eta,H}(\\mathbf{z}_{S})\\|\\leq\\varepsilon,$ (4.8) the required number of stochastic first-order oracles $T$ is upper bounded by $O\\left(1+\\frac{L_{F}D_{\\star}}{\\varepsilon}\\ln\\left(\\frac{L_{F}D_{\\star}}{\\varepsilon}+1\\right)+\\frac{G^{2}}{\\varepsilon^{2}}\\ln^{3}\\left(\\frac{G}{\\varepsilon}+1\\right)\\right),$ where we only suppress the absolute constants."
+  },
+  {
+    "anchor": "S5.Thmtheorem2",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 5.2 . For problem ( MI ), let Assumptions 1 and 2 hold. We apply Algorithm 3 to solve ( 2.1 ) with $\\mu=\\frac{32\\widehat{L}_{F}}{\\sqrt{T}}\\log_{2}^{3/2}\\left(\\frac{\\sqrt{T}}{48}\\right),~~~\\eta=\\frac{1}{3\\widehat{L}_{F}},~~~S=\\lfloor\\log_{2}(\\widehat{L}_{F}/\\mu)\\rfloor,~~~T\\geq 14175,$ and initial point $\\mathring{\\mathbf{z}}$ . Then, we have that $\\mathbb{E}\\|\\mathcal{G}_{\\eta,H}(\\mathbf{z}_{S})\\|=O\\left(\\mu D_{\\star}+\\left(\\frac{1}{2}\\right)^{\\frac{T}{48S\\widehat{L}_{F}/\\mu}}\\mu D_{\\star}+\\frac{S^{5/2}\\left(BD_{\\star}+G\\right)}{\\sqrt{T}}\\right).$"
+  },
+  {
+    "anchor": "S5.Thmtheorem3",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 5.3 . By the value of $\\mu=\\widetilde{O}\\left(\\frac{1}{\\sqrt{T}}\\right)$ and $T\\geq 48S\\widehat{L}_{F}/\\mu$ as shown in Lemma 6.7 , one can estimate that the complexity will be of the order $\\varepsilon^{-2}$ up to logarithmic terms. We follow by a corollary for the order of the terms and then we give the precise constants."
+  },
+  {
+    "anchor": "S5.Thmtheorem4",
+    "kind": "ltx_theorem ltx_theorem_corollary",
+    "text": "Corollary 5.4 . Under the same setup of Theorem 5.2 , with $\\mu=\\frac{32\\widehat{L}_{F}}{\\sqrt{T}}\\log_{2}^{3/2}\\left(\\frac{\\sqrt{T}}{48}\\right)$ , $T\\geq 14175$ , we have that $\\mathbb{E}\\|\\mathcal{G}_{\\eta,H}(\\mathbf{z}_{S})\\|=O\\left(\\frac{\\widehat{L}_{F}D_{\\star}(\\ln\\sqrt{T})^{3/2}}{\\sqrt{T}}+\\frac{(\\ln\\sqrt{T})^{5/2}(BD_{\\star}+G)}{\\sqrt{T}}\\right).$ (5.13) Consequently, to obtain $\\mathbb{E}\\|\\mathcal{G}_{\\eta,H}(\\mathbf{z}_{S})\\|\\leq\\varepsilon,$ (5.14) the number of required stochastic first-order oracles $T$ is upper bounded by $O\\left(1+\\frac{(L_{F}^{2}+B^{2})D_{\\star}^{2}+G^{2}}{\\varepsilon^{2}}\\ln^{5}\\left(\\frac{D_{\\star}(L_{F}+B)+G}{\\varepsilon}+1\\right)\\right),$ where we only suppress the absolute constants."
+  },
+  {
+    "anchor": "S6.Thmtheorem5",
+    "kind": "ltx_theorem ltx_theorem_fact",
+    "text": "Fact 6.5 . Let $F$ satisfy Assumption 2 with constants $B,G$ . Then, $F^{s}$ defined in ( 2.3 ), satisfies the BG assumption with the same constants. Moreover, $F^{s-1}$ is $(L_{F}+(2^{s}-1)\\mu)$ -Lipschitz, $((2^{s}-1)\\mu)$ -strongly monotone."
+  }
+]

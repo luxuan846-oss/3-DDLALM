@@ -1,0 +1,87 @@
+[
+  {
+    "anchor": "Thmass1",
+    "kind": "ltx_theorem ltx_theorem_ass",
+    "text": "Assumption 1 . We suppose $F\\left(\\mathbf{x}_{1}\\right)-\\min_{\\mathbf{x}\\in\\mathcal{X}}F(\\mathbf{x})\\leq\\Delta_{F}$ for the initial point $\\mathbf{x}_{1}$ . The feasible set $\\mathcal{X}$ is closed and convex with bounded diameter, i.e., $\\max_{\\mathbf{x},\\mathbf{y}\\in\\mathcal{X}}\\left\\|\\mathbf{x}-\\mathbf{y}\\right\\|\\leq D$ ."
+  },
+  {
+    "anchor": "Thmass2",
+    "kind": "ltx_theorem ltx_theorem_ass",
+    "text": "Assumption 2 . All functions $f_{1},\\dotsc,f_{K}$ are $L_{f}$ -Lipschitz continuous, and their Jacobians $\\nabla f_{1},\\dotsc,\\nabla f_{K}$ are $L_{J}$ -Lipschitz continuous on the bounded domain $\\mathcal{X}$ ."
+  },
+  {
+    "anchor": "Thmass3",
+    "kind": "ltx_theorem ltx_theorem_ass",
+    "text": "Assumption 3 . For $1\\leq i\\leq K$ , we assume that: $\\displaystyle\\mathbb{E}_{\\xi_{t}^{i}}\\left[f_{i}(\\mathbf{x};\\xi_{t}^{i})\\right]=f_{i}(\\mathbf{x}),\\quad\\mathbb{E}_{\\xi_{t}^{i}}\\left[\\nabla f_{i}(\\mathbf{x};\\xi_{t}^{i})\\right]=\\nabla f_{i}(\\mathbf{x}),$ $\\displaystyle\\mathbb{E}_{\\xi_{t}^{i}}\\left[\\left\\|f_{i}(\\mathbf{x};\\xi_{t}^{i})-f_{i}(\\mathbf{x})\\right\\|^{2}\\right]\\leq\\sigma^{2},\\quad\\mathbb{E}_{\\xi_{t}^{i}}\\left[\\left\\|\\nabla f_{i}(\\mathbf{x};\\xi_{t}^{i})-\\nabla f_{i}(\\mathbf{x})\\right\\|^{2}\\right]\\leq\\sigma_{J}^{2},$ where $\\{\\xi_{t}^{i}\\}_{i=1}^{K}$ are mutually independent."
+  },
+  {
+    "anchor": "Thmass4",
+    "kind": "ltx_theorem ltx_theorem_ass",
+    "text": "Assumption 4 . (Average smoothness and Lipschitz) For $1\\leq i\\leq K$ , we assume that: $\\displaystyle\\mathbb{E}_{\\xi_{t}^{i}}\\left[\\left\\|f_{i}(\\mathbf{x};\\xi_{t}^{i})-f_{i}(\\mathbf{y};\\xi_{t}^{i})\\right\\|^{2}\\right]$ $\\displaystyle\\leq L_{f}^{2}\\left\\|\\mathbf{x}-\\mathbf{y}\\right\\|^{2},$ $\\displaystyle\\mathbb{E}_{\\xi_{t}^{i}}\\left[\\left\\|\\nabla f_{i}(\\mathbf{x};\\xi_{t}^{i})-\\nabla f_{i}(\\mathbf{y};\\xi_{t}^{i})\\right\\|^{2}\\right]$ $\\displaystyle\\leq L_{J}^{2}\\left\\|\\mathbf{x}-\\mathbf{y}\\right\\|^{2}.$"
+  },
+  {
+    "anchor": "Thmtheorem1",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 1 . Under Assumptions 1 , 2 , 3 , 4 , PMVR-v1 enjoys the following guarantees: (i) By setting $B_{1}=\\Omega(1)$ , $\\eta=\\Theta(\\epsilon^{2})$ , and $\\alpha=\\Theta(\\epsilon^{2})$ , we can ensure that $\\mathbb{E}\\left[\\mathcal{F}(\\mathbf{x}_{\\tau})\\right]\\leq\\epsilon$ within $\\mathcal{O}(\\epsilon^{-3})$ iterations. (ii) By setting $B_{1}=\\Omega(\\epsilon^{-1})$ , $\\eta=\\Theta(\\epsilon)$ , and $\\alpha=\\Theta(\\epsilon)$ , we can ensure that $\\mathbb{E}\\left[\\mathcal{F}(\\mathbf{x}_{\\tau})\\right]\\leq\\epsilon$ within $\\mathcal{O}(\\epsilon^{-2})$ iterations."
+  },
+  {
+    "anchor": "Thmtheorem2",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 2 . Under Assumptions 1 , 2 , 3 , 4 , Stage-wise PMVR-v1 guarantees the following: (i) By setting $T_{s}=2^{s-1}$ , $B_{1}^{s}=1$ , and $\\eta_{s}=\\alpha_{s}=T_{s}^{-2/3}$ , we can ensure that $\\mathbb{E}\\left[\\mathcal{F}(\\mathbf{x}_{\\tau})\\right]\\leq\\epsilon$ within $\\mathcal{O}(\\epsilon^{-3})$ iterations. (ii) By setting $T_{s}=2^{s-1}$ , $B_{1}^{s}=\\sqrt{T_{s}}$ , and $\\eta_{s}=\\alpha_{s}=T_{s}^{-1/2}$ , we can ensure $\\mathbb{E}\\left[\\mathcal{F}(\\mathbf{x}_{\\tau})\\right]\\leq\\epsilon$ within $\\mathcal{O}(\\epsilon^{-2})$ iterations."
+  },
+  {
+    "anchor": "Thmtheorem3",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 3 . Under Assumptions 1 , 2 , 3 , 4 , our PMVR-v2 enjoys the following guarantees: (i) By setting $B_{1}=\\Omega(1)$ , $N=\\Omega(\\epsilon^{-1})$ , $\\eta=\\Theta(\\sqrt{\\epsilon})$ , and $\\alpha=\\Theta(\\epsilon)$ , we can ensure $\\mathbb{E}\\left[\\mathcal{G}(\\mathbf{x}_{\\tau})\\right]\\leq\\epsilon$ in $\\mathcal{O}(\\epsilon^{-1.5})$ iterations. (ii) By setting $B_{1}=\\Omega(\\epsilon^{-0.5})$ , $N=\\Omega(\\epsilon^{-1})$ , $\\eta=\\Theta(1)$ , and $\\alpha=\\Theta(\\sqrt{\\epsilon})$ , we can ensure $\\mathbb{E}\\left[\\mathcal{G}(\\mathbf{x}_{\\tau})\\right]\\leq\\epsilon$ in $\\mathcal{O}(\\epsilon^{-1})$ iterations."
+  },
+  {
+    "anchor": "Thmtheorem4",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 4 . Under Assumptions 1 , 2 , 3 , by setting $B_{1}=T$ , $\\eta=T^{-1/2}$ , and $\\alpha=1/2$ , our PMM-v1 algorithm ensures $\\mathbb{E}\\left[\\mathcal{F}(\\mathbf{x}_{\\tau})\\right]\\leq\\mathcal{O}(1/\\sqrt{T})$ ."
+  },
+  {
+    "anchor": "Thmtheorem5",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 5 . Under Assumptions 1 , 2 , 3 , by setting $B_{1}=N=T$ , $\\eta=\\Theta(1)$ , and $\\alpha=1/2$ , our PMM-v2 algortithm can ensure $\\mathbb{E}\\left[\\mathcal{G}(\\mathbf{x}_{\\tau})\\right]\\leq\\mathcal{O}(1/T)$ ."
+  },
+  {
+    "anchor": "Thmass5",
+    "kind": "ltx_theorem ltx_theorem_ass",
+    "text": "Assumption 5 . A function $F:\\mathcal{X}\\mapsto\\mathbb{R}$ is convex if $\\displaystyle F(\\mathbf{y})\\geq F(\\mathbf{x})+\\langle\\nabla F(\\mathbf{x}),\\mathbf{y}-\\mathbf{x}\\rangle,\\quad\\forall\\mathbf{x},\\mathbf{y}\\in\\mathcal{X}.$"
+  },
+  {
+    "anchor": "Thmass6",
+    "kind": "ltx_theorem ltx_theorem_ass",
+    "text": "Assumption 6 . A function $F:\\mathcal{X}\\mapsto\\mathbb{R}$ is $\\lambda$ -strongly convex if $\\displaystyle F(\\mathbf{y})\\geq F(\\mathbf{x})+\\langle\\nabla F(\\mathbf{x}),\\mathbf{y}-\\mathbf{x}\\rangle+\\frac{\\lambda}{2}\\|\\mathbf{y}-\\mathbf{x}\\|^{2},\\quad\\forall\\mathbf{x},\\mathbf{y}\\in\\mathcal{X}.$"
+  },
+  {
+    "anchor": "Thmtheorem6",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 6 . For convex objectives, under Assumptions 1 , 2 , 3 , 4 , Stage-wise PMVR-v1 enjoys the following guarantees: (i) By setting $B_{1}=\\Omega(1)$ , $\\eta_{s}=\\Theta(\\epsilon_{s}^{2})$ , $\\alpha_{s}=\\Theta(\\epsilon_{s}^{2})$ , and $T_{s}=\\Omega(\\epsilon_{s}^{-2})$ , we can ensure that $\\mathbb{E}\\left[F(\\mathbf{x}_{S})\\right]-\\min_{\\hat{\\mathbf{x}}}F(\\hat{\\mathbf{x}})\\leq\\epsilon$ in $\\mathcal{O}(\\epsilon^{-2})$ iterations. (ii) By setting $B_{1}=\\Omega(\\epsilon_{s}^{-1})$ , $\\eta_{s}=\\Theta(\\epsilon_{s})$ , $\\alpha_{s}=\\Theta(\\epsilon_{s})$ , and $T_{s}=\\Omega(\\epsilon_{s}^{-1})$ , we can ensure $\\mathbb{E}\\left[F(\\mathbf{x}_{S})\\right]-\\min_{\\hat{\\mathbf{x}}}F(\\hat{\\mathbf{x}})\\leq\\epsilon$ in $\\mathcal{O}(\\epsilon^{-1})$ iterations."
+  },
+  {
+    "anchor": "Thmtheorem7",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 7 . For strongly convex objective functions, under Assumptions 1 , 2 , 3 , 4 , our proposed Stage-wise PMVR-v2 algorithm enjoys the following guarantees: (i) Setting $B_{1}=\\Omega(1)$ , $N=\\Omega(\\lambda\\epsilon^{-1})$ , $\\eta_{s}=\\Theta(\\lambda\\epsilon_{s})$ , $\\alpha_{s}=\\Theta(\\lambda\\epsilon_{s})$ , and $T_{s}=\\Omega(\\lambda^{-1}\\epsilon_{s}^{-1})$ , we ensure $\\mathbb{E}\\left[F(\\mathbf{x}_{S})\\right]-\\min_{\\hat{\\mathbf{x}}}F(\\hat{\\mathbf{x}})\\leq\\epsilon$ in $S=\\mathcal{O}(\\log(\\frac{\\epsilon_{1}}{\\epsilon}))$ stages. (ii) By setting $B_{1}=\\Omega(\\epsilon_{s}^{-1})$ , $N=\\Omega(\\lambda\\epsilon^{-1})$ , $\\eta_{s}=\\Theta(\\lambda)$ , $\\alpha_{s}=\\Theta(\\lambda)$ , and $T_{s}=\\Omega(\\lambda^{-1})$ , we can ensure $\\mathbb{E}\\left[F(\\mathbf{x}_{S})\\right]-\\min_{\\hat{\\mathbf{x}}}F(\\hat{\\mathbf{x}})\\leq\\epsilon$ within $S=\\mathcal{O}(\\log(\\frac{\\epsilon_{1}}{\\epsilon}))$ stages."
+  },
+  {
+    "anchor": "Thmtheorem8",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 8 . Under Assumptions 1 , 2 , 3 , 4 , our PMFS-v1 enjoys the following guarantees: (i) By setting $B_{1}=1$ , $I=m/B_{1}$ , $\\alpha={B_{1}}/{m}$ and $\\eta={m^{-1/4}T^{-1/2}}$ , we can ensure that $\\mathbb{E}\\left[\\mathcal{F}(\\mathbf{x}_{\\tau})\\right]\\leq\\epsilon$ within $\\mathcal{O}(\\sqrt{m}\\epsilon^{-2})$ iterations. (ii) By setting $B_{1}=\\sqrt{m}$ , $I=m/B_{1}$ , $\\alpha={B_{1}}/{m}$ and $\\eta=T^{-1/2}$ , we can ensure that $\\mathbb{E}\\left[\\mathcal{F}(\\mathbf{x}_{\\tau})\\right]\\leq\\epsilon$ within $\\mathcal{O}(\\epsilon^{-2})$ iterations."
+  },
+  {
+    "anchor": "Thmtheorem9",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 9 . Under Assumptions 1 , 2 , 3 , 4 , our PMFS-v2 enjoys the following guarantees: (i) By setting $B_{1}=\\Omega(1)$ , $I=m/B_{1}$ , $N=\\Omega(\\epsilon^{-1})$ , $\\eta=\\Theta(1/\\sqrt{m})$ , and $\\alpha=\\Theta(1/m)$ , we can ensure $\\mathbb{E}\\left[\\mathcal{G}(\\mathbf{x}_{\\tau})\\right]\\leq\\epsilon$ in $\\mathcal{O}(\\sqrt{m}\\epsilon^{-1})$ iterations. (ii) By setting $B_{1}=\\Omega(\\sqrt{m})$ , $I=m/B_{1}$ , $N=\\Omega(\\epsilon^{-1})$ , $\\eta=\\Theta(1)$ , and $\\alpha=\\Theta(1/\\sqrt{m})$ , we can ensure $\\mathbb{E}\\left[\\mathcal{G}(\\mathbf{x}_{\\tau})\\right]\\leq\\epsilon$ in $\\mathcal{O}(\\epsilon^{-1})$ iterations."
+  },
+  {
+    "anchor": "Thmtheorem10",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 10 . For convex functions, under Assumptions 1 , 2 , 3 , 4 , our Stage-wise PMFS-v1 enjoys the following guarantees: (i) Setting $B_{1}=\\Omega(1)$ , $I=m/B_{1}$ , $\\eta_{s}=\\Theta(\\epsilon_{s}/\\sqrt{m})$ , $\\alpha_{s}=\\Theta(1/m)$ , and $T_{s}=\\Omega(\\sqrt{m}\\epsilon_{s}^{-1})$ , we can ensure $\\mathbb{E}\\left[F(\\mathbf{x}_{S})\\right]-\\min_{\\hat{\\mathbf{x}}}F(\\hat{\\mathbf{x}})\\leq\\epsilon$ in $\\mathcal{O}(\\sqrt{m}\\epsilon^{-1})$ iterations. (ii) By setting $B_{1}=\\Omega(\\sqrt{m})$ , $I=m/B_{1}$ , $\\eta_{s}=\\Theta(\\epsilon_{s})$ , $\\alpha_{s}=\\Theta(1/\\sqrt{m})$ , and $T_{s}=\\Omega(\\epsilon_{s}^{-1})$ , we can ensure $\\mathbb{E}\\left[F(\\mathbf{x}_{S})\\right]-\\min_{\\hat{\\mathbf{x}}}F(\\hat{\\mathbf{x}})\\leq\\epsilon$ in $\\mathcal{O}(\\sqrt{m}\\epsilon^{-1})$ iterations."
+  },
+  {
+    "anchor": "Thmtheorem11",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 11 . For strongly convex function, under Assumptions 1 , 2 , 3 , 4 , our proposed Stage-wise PMFS-v2 algorithm enjoys the following guarantees: (i) Setting $B_{1}=\\Omega(1)$ , $I=m/B_{1}$ , $N=\\Omega(\\lambda\\epsilon^{-1})$ , $\\eta_{s}=\\Theta(\\lambda/\\sqrt{m})$ , $\\alpha_{s}=\\Theta(1/m)$ , and $T_{s}=\\Omega(\\sqrt{m}/\\lambda)$ , we ensure $\\mathbb{E}\\left[F(\\mathbf{x}_{S})\\right]-\\min_{\\hat{\\mathbf{x}}}F(\\hat{\\mathbf{x}})\\leq\\epsilon$ in $\\mathcal{O}(\\log(\\frac{\\epsilon_{1}}{\\epsilon}))$ stages. (ii) By setting $B_{1}=\\Omega(\\sqrt{m}/\\lambda)$ , $I=m/B_{1}$ , $N=\\Omega(\\lambda\\epsilon^{-1})$ , $\\eta_{s}=\\Theta(1)$ , $\\alpha_{s}=\\Theta(1/(\\lambda\\sqrt{m}))$ , and $T_{s}=\\Omega(1)$ , we can ensure $\\mathbb{E}\\left[F(\\mathbf{x}_{S})\\right]-\\min_{\\hat{\\mathbf{x}}}F(\\hat{\\mathbf{x}})\\leq\\epsilon$ within $\\mathcal{O}(\\log(\\frac{\\epsilon_{1}}{\\epsilon}))$ stages."
+  }
+]

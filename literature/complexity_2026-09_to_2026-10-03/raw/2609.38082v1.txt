@@ -1,0 +1,819 @@
+Content selection saved. Describe the issue below:
+
+Exponential Deterministic Query Complexity of Goldstein Stationarity
+
+We study the deterministic query complexity of finding approximate Goldstein stationary points of globally Lipschitz functions that may be nonsmooth and nonconvex. Under prescribed bounds on the Lipschitz constant and on the difference between the initial function value and the infimum, we prove a lower bound on the worst-case number of oracle calls that is exponential in the dimension at fixed sufficiently small accuracy parameters. The result holds for a local oracle and gives explicit dependence on the accuracy parameters. A complementary deterministic algorithm using only function values gives an exponential upper bound, establishing the exponential order in the dimension in this regime. For a coarser stationarity requirement, we also give a deterministic first-order algorithm with a dimension-free query bound. Thus, the dimension dependence differs between the two accuracy regimes.
+
+Key words. Goldstein stationarity, deterministic oracle complexity, nonsmooth nonconvex optimization, local oracles
+
+MSC codes. 90C60, 90C56, 68Q25
+
+1. Introduction
+
+Nonsmooth nonconvex optimization problems arise, for example, in piecewise affine models and neural networks with nonsmooth activation functions [ 8 , 19 ] . For these problems, approximate stationarity provides a target that is weaker than global optimality. Unlike in smooth optimization, where a small gradient norm gives a natural measure of stationarity, the nonsmooth setting requires care in choosing a stationarity criterion for which finite-time guarantees are possible.
+
+We consider a globally Lipschitz objective $f:\mathbb{R}^{d}\to\mathbb{R}$ that is bounded below, without imposing convexity or smoothness. For objectives with a Lipschitz continuous gradient, gradient descent admits finite bounds on the number of gradient evaluations needed to obtain a small gradient norm. These bounds are independent of $d$ when the gradient Lipschitz constant, initial function-value gap, and required accuracy are fixed [ 19 , 8 ] . For a merely Lipschitz objective, however, asking for a small Clarke subgradient at the reported point can preclude a uniform finite-query guarantee over the function class [ 21 , 15 ] . Thus, simply replacing the gradient by a generalized derivative does not resolve the computational difficulty. Goldstein’s stationarity condition relaxes this pointwise requirement by allowing a convex combination of subgradients at nearby points [ 7 ] . More precisely, a point $\mathbf{x}$ is $(\delta,\epsilon)$ -Goldstein stationary if a convex combination of Clarke subgradients at points within distance $\delta>0$ of $\mathbf{x}$ has norm at most $\epsilon>0$ . Thus, $\delta$ determines the neighborhood from which subgradients are taken, whereas $\epsilon$ sets the allowable norm of such a convex combination. Section 2 gives the formal definitions.
+
+This condition has a direct connection to descent. Goldstein’s method uses a minimum-norm element of the convex hull of nearby subgradients: either its norm is small, or its negative direction yields a decrease in the objective [ 7 ] . The difficulty is to obtain enough information to choose such a direction from finitely many oracle calls. A first-order oracle at one point does not supply the convex hull of subgradients throughout a neighborhood. Consequently, a bound on the number of these conceptual descent steps does not by itself give a bound on oracle queries. Randomized first-order algorithms address this difficulty. For any fixed failure probability $\gamma\in(0,1)$ , they can find a $(\delta,\epsilon)$ -Goldstein stationary point with probability at least $1-\gamma$ using $\widetilde{O}(\delta^{-1}\epsilon^{-3})$ oracle calls, under fixed Lipschitz and initial-gap bounds; see Davis et al. [ 5 , Theorem 6] and Tian, Zhou, and So [ 20 , Theorem 3.4] . Here $\widetilde{O}$ suppresses logarithmic factors. Thus, for any fixed success probability below one, the query complexity is polynomially bounded in $d$ , $\delta^{-1}$ , and $\epsilon^{-1}$ , and is in fact independent of $d$ . These guarantees use exact first-order information and do not require a Lipschitz continuous gradient.
+
+For deterministic first-order algorithms, Kornowski and Shamir [ 14 ] and Jordan et al. [ 8 ] prove lower bounds on the worst-case number of oracle calls that grow linearly with $d$ at sufficiently small fixed accuracy parameters. Tian and So [ 19 ] obtain a dimension-dependent lower bound even with access to a more informative local oracle. These results establish a limitation of deterministic algorithms, rather than only of a particular way to remove random sampling from an existing method. They do not, however, determine whether polynomial dependence on $d$ is possible. Jordan et al. [ 8 ] asked whether a deterministic first-order algorithm can find a $(\delta,\epsilon)$ -Goldstein stationary point with a number of oracle calls polynomial jointly in $d$ , $\delta^{-1}$ , and $\epsilon^{-1}$ . At fixed accuracy parameters, the distinction between polynomial and exponential dimension dependence remains important even after a dimension-free guarantee has been ruled out. Our results address this question for the general Lipschitz function class.
+
+1.1. Contributions
+
+Let $L>0$ bound the Lipschitz constant, and let $\Delta>0$ bound the initial function-value gap $f(\mathbf{x}_{0})-\inf f$ at a prescribed initial point $\mathbf{x}_{0}$ . Our results describe how deterministic query complexity depends on the dimension and the accuracy parameters. For $0<\delta<\Delta/L$ and $0<\epsilon<L/3$ , Theorem 2.2 gives an explicit query complexity lower bound that is exponential in $d$ when $L,\Delta,\delta,\epsilon$ are fixed. It applies to every deterministic algorithm using the local oracle defined in Tian and So [ 19 ] . Query locations are unrestricted, and the output need not have been queried. In particular, the result rules out a guarantee polynomial jointly in $d$ , $\delta^{-1}$ , and $\epsilon^{-1}$ . The proof uses a resisting-oracle construction that accommodates exponentially many query points; Sections 3 – 4 develop the construction and the argument.
+
+A complementary deterministic algorithm uses only function values and gives an upper bound on the number of calls sufficient to find a $(\delta,\epsilon)$ -Goldstein stationary point for every admissible objective (Theorem 2.3 ). Together, the bounds give $\exp(\Theta(d))$ query complexity for each fixed choice of $L,\Delta,\delta,\epsilon$ in the range above; see Corollary 2.4 and the discussion following it. This determines the exponential order in $d$ , not the exact exponential base or the optimal joint dependence on dimension and accuracy.
+
+The conclusion changes when the stationarity condition permits a larger value of $\epsilon$ . For any $\delta>0$ and $L/\sqrt{2}<\epsilon<L$ , Proposition 5.3 gives a deterministic first-order algorithm with a query bound independent of $d$ , without imposing smoothness. Here the first-order oracle returns a function value and one Clarke subgradient at each query. We refer to this range of $\epsilon$ as coarse accuracy. Our bounds do not determine the dimension dependence for the intermediate range $1/3\leq\epsilon/L\leq 1/\sqrt{2}$ .
+
+1.2. Related work
+
+Randomized algorithms and stochastic oracles.
+
+Burke, Lewis, and Overton [ 2 ] used convex combinations of sampled gradients and proved convergence under their regularity assumptions; Kiwiel [ 10 ] strengthened the analysis and studied a modified algorithm. Zhang et al. [ 21 ] obtained a dimension-free finite-time bound under Hadamard directional differentiability and a direction-dependent first-order oracle. Davis et al. [ 5 ] and Tian, Zhou, and So [ 20 ] developed randomized procedures for general Lipschitz functions using exact values and gradients at differentiability points. For zeroth-order information, Lin, Zheng, and Jordan [ 17 ] related uniform smoothing to the Goldstein subdifferential and developed randomized methods based on function values.
+
+Random choices made by an algorithm are distinct from randomness in a stochastic oracle, which supplies sampled or noisy objective information. Cutkosky, Mehta, and Orabona [ 4 ] improved first-order query bounds through an online-to-non-convex conversion using unbiased stochastic gradients with bounded variance. Their neighborhood-stationarity condition requires the nearby points to average to the reported point and implies Goldstein stationarity for Lipschitz objectives. Kornowski and Shamir [ 16 ] obtained a zeroth-order query bound linear in $d$ for stochastic objectives accessed through sampled function values. The zeroth-order upper bound established below instead uses a deterministic algorithm and exact function values.
+
+Deterministic algorithms and local information.
+
+Tian and So [ 19 ] also prove a separate impossibility result for general zero-respecting algorithms, which do not explore coordinates along which the objective is locally constant near all preceding query points. Jordan et al. [ 8 ] show that removing function values precludes a uniform finite deterministic guarantee. Deterministic algorithms for smooth functions with logarithmic dependence on the gradient Lipschitz constant are given in [ 14 , 8 ] . The present lower bound assumes no such smoothness parameter and places no restriction on query locations.
+
+Concurrent work.
+
+After we finished our work, we noticed there is a recent paper by Kornowski [ 12 ] , which also establishes a lower bound on deterministic query complexity that is exponential in the dimension for Goldstein stationarity under a local oracle.
+
+Other local targets and verification.
+
+Kornowski and Shamir [ 15 ] prove a query complexity lower bound, exponential in the dimension, for approaching a point with a small Clarke subgradient, even with randomization and local information. That target is stronger than Goldstein stationarity: a convex combination of nearby subgradients can have small norm even when none of its constituent subgradients does. Kornowski, Padmanabhan, and Shamir [ 13 ] establish exponential difficulties for local guarantees formulated in terms of function values. Kalavasis, Stavropoulos, and Zampetakis [ 9 ] study verification complexity and derive search consequences, including an exponential lower bound on the number of zeroth-order queries for uniform Goldstein stationarity . Their result for ordinary Goldstein stationarity concerns the resolution of lattice-restricted queries. These results concern different combinations of stationarity target, oracle information, and query restrictions.
+
+DC functions and quantitative assumptions.
+
+Kong and Lewis [ 11 ] give a deterministic method for a class that includes differences of convex (DC) functions. Their guarantee depends on a directional oracle and an objective-specific measure of nonconvexity. The functions constructed in our lower-bound proof are also DC, so the comparison requires attention to the quantitative assumptions and the oracle information, not only to DC membership. Section 6 and Appendix C give this comparison.
+
+Organization.
+
+Section 2 defines the problem and oracle model and states the complexity bounds. Section 3 gives an overview of the construction and proves its geometric and interpolation properties. Section 4 then chooses the scalar parameters and proves the query complexity lower bound. Section 5 proves the upper bounds, and Section 6 discusses their scope and remaining questions. The appendices cover initialization and stopping, finite direction-net construction, DC structure, and a non-weakly-convex example.
+
+2. Problem formulation and complexity bounds
+
+We recall the stationarity criterion, specify the function class and oracle model, and state the query complexity bounds.
+
+2.1. Notation and nonsmooth preliminaries
+
+All vector norms are Euclidean, and $\left\langle\mathbf{x},\mathbf{y}\right\rangle=\mathbf{x}^{\top}\mathbf{y}$ . For $r>0$ and $\mathbf{x}\in\mathbb{R}^{d}$ , write
+
+$\mathbb{B}_{r}(\mathbf{x})=\{\mathbf{y}\in\mathbb{R}^{d}:\|\mathbf{y}-\mathbf{x}\|\leq r\},\qquad\mathbb{B}_{r}^{\circ}(\mathbf{x})=\{\mathbf{y}\in\mathbb{R}^{d}:\|\mathbf{y}-\mathbf{x}\|<r\}.$
+
+The symbols $\mathbb{S}^{d-1}$ , $\mathbf{0}$ , $\mathbf{e}_{j}$ , and $\mathbf{I}$ denote the unit sphere, the zero vector, the standard basis vectors, and the identity matrix, respectively. The orthogonal complement of $\mathbf{u}$ is denoted by $\mathbf{u}^{\perp}$ . For a scalar $a$ , write $a_{+}=\max\{a,0\}$ . The symbols $\mathrm{conv}$ , $\operatorname{int}$ , and $\arg\min f$ denote convex hull, interior, and the set of global minimizers of $f$ , respectively. For a finite set $S$ , its cardinality is $|S|$ . The notation $\Lip(f)$ denotes the least global Lipschitz constant. All logarithms are natural, and $\lfloor a\rfloor$ denotes the greatest integer not exceeding $a$ . The notation $\exp(\Theta(d))$ means upper and lower exponential bounds with positive exponent constants independent of $d$ .
+
+For a locally Lipschitz function $f:\mathbb{R}^{d}\to\mathbb{R}$ , a point $\mathbf{x}\in\mathbb{R}^{d}$ , and a direction $\mathbf{v}\in\mathbb{R}^{d}$ , its Clarke generalized directional derivative $f^{\circ}(\mathbf{x};\mathbf{v})$ and Clarke subdifferential $\partial f(\mathbf{x})$ are defined by
+
+$\displaystyle f^{\circ}(\mathbf{x};\mathbf{v})$ $\displaystyle=\limsup_{\begin{subarray}{c}\mathbf{y}\to\mathbf{x}\\ t\downarrow 0\end{subarray}}\frac{f(\mathbf{y}+t\mathbf{v})-f(\mathbf{y})}{t},$ (2.1) $\displaystyle\partial f(\mathbf{x})$ $\displaystyle=\{\mathbf{g}\in\mathbb{R}^{d}:\left\langle\mathbf{g},\mathbf{v}\right\rangle\leq f^{\circ}(\mathbf{x};\mathbf{v})\text{ for every }\mathbf{v}\in\mathbb{R}^{d}\}.$
+
+An unsubscripted $\partial$ always means this Clarke subdifferential.
+
+The following three consequences of ( 2.1 ) are used in the construction. If $f=h$ on an open neighborhood of $\mathbf{x}$ , then their difference quotients coincide locally, giving
+
+$f^{\circ}(\mathbf{x};\mathbf{v})=h^{\circ}(\mathbf{x};\mathbf{v})\quad\text{for every }\mathbf{v},\qquad\partial f(\mathbf{x})=\partial h(\mathbf{x}).$ (2.2)
+
+For $c>0$ , positive scaling commutes with the limsup and the subdifferential inequalities, giving
+
+$\partial(cf)(\mathbf{x})=c\,\partial f(\mathbf{x}).$ (2.3)
+
+For an affine function $h(\mathbf{x})=\left\langle\mathbf{a},\mathbf{x}\right\rangle+b$ , where $\mathbf{a}\in\mathbb{R}^{d}$ and $b\in\mathbb{R}$ ,
+
+$\partial h(\mathbf{x})=\{\mathbf{a}\}.$ (2.4)
+
+For $\delta>0$ , define the Goldstein subdifferential by
+
+$\partial_{\delta}f(\mathbf{x})=\mathrm{conv}\left(\bigcup_{\mathbf{y}\in\mathbb{B}_{\delta}(\mathbf{x})}\partial f(\mathbf{y})\right).$ (2.5)
+
+For $\epsilon>0$ , a point $\mathbf{x}$ is $(\delta,\epsilon)$ -Goldstein stationary if
+
+$\mathrm{dist}(\mathbf{0},\partial_{\delta}f(\mathbf{x})):=\inf_{\mathbf{g}\in\partial_{\delta}f(\mathbf{x})}\|\mathbf{g}\|\leq\epsilon.$ (2.6)
+
+Thus, $\delta$ is a neighborhood radius, while $\epsilon$ bounds the distance from the origin to $\partial_{\delta}f(\mathbf{x})$ . We follow the parameter order of Jordan et al. [ 8 ] . The same condition is called $(\epsilon,\delta)$ -Goldstein approximate stationarity, or $(\epsilon,\delta)$ -GAS, by Tian and So [ 19 , Definition 3] . The upper-bound argument will use a minimum-norm element of this set.
+
+If $f$ is globally $L$ -Lipschitz, then $\partial_{\delta}f(\mathbf{x})$ is nonempty, compact, and convex, and is contained in $\mathbb{B}_{L}(\mathbf{0})$ , for every $\mathbf{x}\in\mathbb{R}^{d}$ and $\delta>0$ .
+
+The Clarke subdifferential is nonempty and compact and lies in $\mathbb{B}_{L}(\mathbf{0})$ [ 3 , Proposition 2.1.2] . The graph over $\mathbb{B}_{\delta}(\mathbf{x})$ is a closed subset of the compact product $\mathbb{B}_{\delta}(\mathbf{x})\times\mathbb{B}_{L}(\mathbf{0})$ and is therefore compact. Projecting onto the subgradient coordinate shows that $\bigcup_{\mathbf{y}\in\mathbb{B}_{\delta}(\mathbf{x})}\partial f(\mathbf{y})$ is nonempty and compact. In finite dimensions, its convex hull is compact and remains in $\mathbb{B}_{L}(\mathbf{0})$ . See also [ 6 , Section 2] and [ 18 , Proposition 2.3 and Corollary 2.13] . ∎
+
+Consequently, the infimum in ( 2.6 ) is attained, and no additional closure is needed in ( 2.5 ).
+
+2.2. Function class, algorithms, and query counts
+
+Fix a prescribed initial point $\mathbf{x}_{0}\in\mathbb{R}^{d}$ . For $L,\Delta>0$ , let
+
+$\mathcal{F}_{d}(L,\Delta;\mathbf{x}_{0})=\left\{f:\mathbb{R}^{d}\to\mathbb{R}:\begin{array}[]{l}|f(\mathbf{x})-f(\mathbf{y})|\leq L\|\mathbf{x}-\mathbf{y}\|\quad\text{for all }\mathbf{x},\mathbf{y},\\ \inf_{\mathbf{x}\in\mathbb{R}^{d}}f(\mathbf{x})>-\infty,\\ f(\mathbf{x}_{0})-\inf_{\mathbf{x}\in\mathbb{R}^{d}}f(\mathbf{x})\leq\Delta\end{array}\right\}.$ (2.7)
+
+Thus $L$ is an upper bound, not necessarily the least Lipschitz constant. No convexity, smoothness, weak convexity, or representation-size assumption is imposed.
+
+A query is one call to an oracle at a specified point. The algorithm receives
+
+$d,\quad L,\quad\Delta,\quad\mathbf{x}_{0},\quad\delta,\quad\epsilon.$
+
+Its first oracle call is at $\mathbf{x}_{0}$ . Following the local-oracle definition in Tian and So [ 19 , Section 2.3 and Remark 1] , an admissible response to a query at $\mathbf{q}$ is any locally Lipschitz function $h_{\mathbf{q}}:\mathbb{R}^{d}\to\mathbb{R}$ satisfying
+
+$\mathcal{O}_{f}(\mathbf{q})=h_{\mathbf{q}},\qquad h_{\mathbf{q}}(\mathbf{y})=f(\mathbf{y})\quad\text{for all }\mathbf{y}\in\mathbb{B}_{\nu_{\mathbf{q}}}(\mathbf{q}),\qquad\nu_{\mathbf{q}}>0.$ (2.8)
+
+The radius $\nu_{\mathbf{q}}$ is not returned. Two oracle responses provide the same local information at $\mathbf{q}$ if they agree on an open neighborhood of $\mathbf{q}$ . Neither response specifies a ball of known radius on which agreement with the objective is guaranteed.
+
+A deterministic algorithm in this model may use all local information supplied by the oracle. Its internal computation, next query, stopping decision, and output depend only on the input and the local information in the previous oracle responses. In particular, replacing any finite collection of responses by functions that agree with them near the corresponding query points cannot change the subsequent computation before a new response is received. The neighborhoods need not have the same radius: the minimum of finitely many positive radii gives the common-radius condition in [ 19 ] . Information encoded solely outside these neighborhoods is not available to the algorithm.
+
+Query locations are unrestricted in $\mathbb{R}^{d}$ , repeated queries are allowed, and the output need not be a queried point. The pair $(f(\mathbf{q}),\partial f(\mathbf{q}))$ depends only on the local information at $\mathbf{q}$ . An algorithm using function values and the entire Clarke subdifferential is therefore a special case. The same applies to local derivative information whenever it is defined. For a fixed objective, replacing responses by locally agreeing functions induces the same execution. The first-order upper bound in Section 5.4 is stated for an oracle returning a function value and one Clarke subgradient per call; the zeroth-order upper bound uses only function values.
+
+Every oracle call is counted, including the initial one. Arbitrary finite internal computation with exact real information is allowed between calls; in particular, real arithmetic and comparisons are exact. An execution that computes forever without returning fails the finite-return requirement; no procedure for detecting such behavior is assumed. These are query-complexity conventions, not bounds on bit complexity or total running time. Finite preprocessing is allowed without any bound on its cost.
+
+For a deterministic algorithm $A$ , a valid output is a $(\delta,\epsilon)$ -Goldstein stationary point. If the execution returns such a point in finite time, let $\tau_{A}(f;\mathbf{x}_{0},\delta,\epsilon)$ be its total number of calls. If it never returns or returns an invalid point, set
+
+$\tau_{A}(f;\mathbf{x}_{0},\delta,\epsilon)=+\infty.$
+
+Dependence on the fixed input parameters $d,L,\Delta$ is suppressed in this notation. The optimal worst-case query complexity in this local model is
+
+$\mathcal{T}_{\rm det}(d,L,\Delta,\delta,\epsilon;\mathbf{x}_{0})=\inf_{A}\ \sup_{f\in\mathcal{F}_{d}(L,\Delta;\mathbf{x}_{0})}\tau_{A}(f;\mathbf{x}_{0},\delta,\epsilon).$ (2.9)
+
+The infimum is over deterministic algorithms in the model above. A uniform $T$ -call guarantee means that the same algorithm satisfies $\tau_{A}(f;\mathbf{x}_{0},\delta,\epsilon)\leq T$ for every admissible $f$ . Eventual success after more than $T$ calls gives a finite value $\tau_{A}>T$ , not $+\infty$ . Receiving the $T$ th response still permits a return within budget; requesting another call does not. Appendix A treats algorithm-chosen initial points and optional pre-query returns.
+
+2.3. Main theorems
+
+The lower bound uses the local oracle defined above, whereas the upper bound needs only values. Their comparison at fixed accuracy determines the exponential order in $d$ .
+
+Let $d\geq 3$ , $L,\Delta>0$ , $\mathbf{x}_{0}\in\mathbb{R}^{d}$ , and
+
+$0<\delta<\frac{\Delta}{L},\qquad 0<\epsilon<\frac{L}{3}.$
+
+For every integer $T\geq 1$ satisfying
+
+$T+1\leq\left(\frac{L-\epsilon}{2\epsilon}\right)^{(d-2)/2},$ (2.10)
+
+and every deterministic algorithm $A$ in the local-oracle model above, there exists a fixed $f\in\mathcal{F}_{d}(L,\Delta;\mathbf{x}_{0})$ with $\tau_{A}(f;\mathbf{x}_{0},\delta,\epsilon)>T$ . Every point actually queried among the first $T$ calls, and the output if $A$ returns within $T$ calls, satisfies
+
+$\mathrm{dist}(\mathbf{0},\partial_{\delta}f(\mathbf{q}))>\epsilon.$
+
+Moreover, $f(\mathbf{x}_{0})=0$ , $\inf f=-\Delta$ , and $\mathrm{int}(\arg\min f)\neq\varnothing$ .
+
+The order of quantifiers is $\forall A\,\exists f$ , with the input and budget fixed. A function $f$ witnessing failure of the algorithm within the budget is called a hard instance . It is allowed to depend on the algorithm as well as the fixed inputs and budget. Sections 3 – 4 give the construction and proof.
+
+Let $d\geq 1$ , $L,\Delta,\delta>0$ , $\mathbf{x}_{0}\in\mathbb{R}^{d}$ , and $0<\epsilon<L$ . A deterministic algorithm using only function values returns a $(\delta,\epsilon)$ -Goldstein stationary point of every $f\in\mathcal{F}_{d}(L,\Delta;\mathbf{x}_{0})$ within
+
+$1+\left(\frac{2\Delta}{\delta\epsilon}+1\right)\left(1+\frac{4L}{\epsilon}\right)^{d}$ (2.11)
+
+total calls. If $\epsilon\geq L$ , the initial point is already valid and the prescribed initial call suffices.
+
+Since $h_{\mathbf{q}}(\mathbf{q})=f(\mathbf{q})$ , this also bounds ( 2.9 ). Both bounds hold when each oracle call returns the function value together with either the entire Clarke subdifferential or one Clarke subgradient: the upper bound ignores subgradients, and the lower-bound construction has singleton subdifferentials at every query used in the construction.
+
+For every $d\geq 4$ and $\mathbf{x}_{0}\in\mathbb{R}^{d}$ ,
+
+$\left\lfloor\left(\frac{7}{2}\right)^{(d-2)/2}\right\rfloor\leq\mathcal{T}_{\rm det}\left(d,1,1,\tfrac{1}{2},\tfrac{1}{8};\mathbf{x}_{0}\right)\leq 1+33^{d+1}.$
+
+Consequently, the fixed-accuracy complexity is $\exp(\Theta(d))$ . There is no uniform deterministic bound that is a joint polynomial in $(d,\delta^{-1},\epsilon^{-1})$ for the full function class, even with $L=\Delta=1$ .
+
+Set
+
+$E_{d}=\left(\frac{7}{2}\right)^{(d-2)/2},\qquad T_{d}=\lfloor E_{d}\rfloor-1.$
+
+For $d\geq 4$ , $T_{d}\geq 1$ and $T_{d}+1\leq E_{d}$ . Theorem 2.2 , applied with $L=\Delta=1$ , $\delta=1/2$ , and $\epsilon=1/8$ , gives for every $A$ an admissible $f$ with $\tau_{A}(f)>T_{d}$ . Since finite query counts are integers, taking the supremum over $f$ and then the infimum over $A$ gives the lower bound $\lfloor E_{d}\rfloor$ .
+
+At the same parameters, ( 2.11 ) gives
+
+$1+(32+1)33^{d}=1+33^{d+1}.$
+
+The inequality $\lfloor E_{d}\rfloor\geq E_{d}/2$ then gives
+
+$\frac{d-2}{2}\log\frac{7}{2}-\log 2\leq\log\mathcal{T}_{\rm det}\left(d,1,1,\tfrac{1}{2},\tfrac{1}{8};\mathbf{x}_{0}\right)\leq(d+1)\log 33+\log 2.$
+
+This proves the exponential order. A joint polynomial guarantee in $(d,\delta^{-1},\epsilon^{-1})$ would reduce to a polynomial in $d$ at $(\delta,\epsilon)=(1/2,1/8)$ and contradict the lower bound for sufficiently large $d$ . ∎
+
+For general parameters with $0<\epsilon<L/3$ and $0<\delta<\Delta/L$ , the same integer-budget argument gives
+
+$\mathcal{T}_{\rm det}(d,L,\Delta,\delta,\epsilon;\mathbf{x}_{0})\geq\left\lfloor\left(\frac{L-\epsilon}{2\epsilon}\right)^{(d-2)/2}\right\rfloor\qquad(d\geq 3).$
+
+When the floor is at least two, apply Theorem 2.2 with a budget one smaller; when it is one, the initial call gives the bound. Together with Theorem 2.3 , this yields $\exp(\Theta(d))$ for fixed admissible parameters.
+
+3. A finite-set construction
+
+The construction below assigns the prescribed affine local data to a finite point set satisfying a cardinality condition. Its scalar parameters remain free until Section 4 .
+
+3.1. Overview of the construction
+
+The main difficulty is to make a finite query history consistent with one objective while excluding Goldstein stationarity at every relevant point. Affine agreement near the queries fixes the oracle responses, but it is not enough: the neighborhood $\mathbb{B}_{\delta}(\mathbf{q})$ used in the stationarity condition can extend well beyond the region of affine agreement at $\mathbf{q}$ . The construction therefore uses an interpolant whose subgradients share a positive projection in one direction, even where its local formulas change.
+
+Let $S=\{\mathbf{q}_{1},\ldots,\mathbf{q}_{N}\}\subset\mathbb{R}^{d}$ be a finite set of $N$ distinct points at which both local affine agreement and Goldstein nonstationarity are required. Choose a unit vector $\mathbf{u}$ with first coordinate $\alpha>0$ and with
+
+$|\langle\mathbf{u},\mathbf{q}_{i}-\mathbf{q}_{j}\rangle|\leq\gamma\|\mathbf{q}_{i}-\mathbf{q}_{j}\|\qquad(i\neq j),$
+
+where $0<\alpha<\gamma<1$ . A Gaussian estimate and a union bound allow $N$ to be exponential in $d$ . This bound on inner products with the pairwise differences replaces the exact orthogonality to query-dependent subspaces used in [ 8 , 19 ] .
+
+Let $\mathbf{P}=\mathbf{I}-\mathbf{u}\mathbf{u}^{\top}$ be the orthogonal projection onto $\mathbf{u}^{\perp}$ . For $N\geq 2$ , the interpolant is
+
+$F(\mathbf{x})=\min_{1\leq i\leq N}\left\{\mathbf{e}_{1}^{\top}(\mathbf{x}-\mathbf{q}_{i})+\beta\bigl(\|\mathbf{P}(\mathbf{x}-\mathbf{q}_{i})\|-r\bigr)_{+}\right\},$
+
+where $\beta>1/\sqrt{1-\gamma^{2}}$ is the penalty coefficient and $r>0$ is chosen in ( 3.9 ). Each indexed function is a branch. The norm in its penalty is the distance to the line through $\mathbf{q}_{i}$ parallel to $\mathbf{u}$ ; only the excess beyond $r$ is penalized. The bound on pairwise differences ensures that the $i$ th branch is strictly smaller than the others near $\mathbf{q}_{i}$ , where its own penalty vanishes. Hence $F(\mathbf{x})=\mathbf{e}_{1}^{\top}(\mathbf{x}-\mathbf{q}_{i})$ there. For a singleton, the affine function itself suffices.
+
+Every penalty is unchanged by translation along $\mathbf{u}$ , which gives
+
+$F(\mathbf{x}+t\mathbf{u})=F(\mathbf{x})+\alpha t.$
+
+The Clarke defining inequalities in the directions $\mathbf{u}$ and $-\mathbf{u}$ then give $\langle\mathbf{g},\mathbf{u}\rangle=\alpha$ for every $\mathbf{g}\in\partial F(\mathbf{x})$ . This common projection survives branch switches and convex combinations of subgradients. The bound $L_{F}$ from Lemma 3.2 need not be the least Lipschitz constant of $F$ . Scaling by $L/L_{F}$ and truncating below $-\Delta$ produce the required objective. The condition $\delta<\Delta/L$ keeps the truncation inactive on an open set containing each ball $\mathbb{B}_{\delta}(\mathbf{q}_{i})$ . The remaining task is to choose scalar parameters satisfying $L\alpha/L_{F}>\epsilon$ while the bound on pairwise differences still permits the desired number of points.
+
+These scalar parameters are fixed before any queries are generated. Each query at $\mathbf{q}$ receives the affine function $(L/L_{F})\mathbf{e}_{1}^{\top}(\mathbf{x}-\mathbf{q})$ , and only the answered part of the history is retained. If the algorithm returns within the budget, its output is added to $S$ , whether or not it was queried. The finite-set construction then supplies one objective realizing every retained response. When run on this fixed objective, the algorithm reproduces the retained history and the action following it by determinism and locality. Section 4 gives this resisting-oracle argument, including the case of an unqueried output.
+
+3.2. Choice of direction
+
+The direction $\mathbf{u}$ must satisfy two competing requirements: its first coordinate must remain positive, while projection onto $\mathbf{u}^{\perp}$ must retain enough of each pairwise difference to separate the affine branches. For $0<\alpha<\gamma<1$ , write
+
+$s_{\alpha}:=\sqrt{1-\alpha^{2}},\qquad c_{\gamma}:=\sqrt{1-\gamma^{2}}.$
+
+The estimate below ensures that orthogonal projection preserves at least the fraction $c_{\gamma}$ of the distance between any two points.
+
+Let $d\geq 3$ , $0<\alpha<\gamma<1$ , and $S=\{\mathbf{q}_{1},\ldots,\mathbf{q}_{N}\}\subset\mathbb{R}^{d}$ be a nonempty finite set of distinct points. If
+
+$N(N-1)\left(\frac{1-\gamma^{2}}{1-\alpha^{2}}\right)^{(d-2)/2}<1,$ (3.1)
+
+there is a unit vector $\mathbf{u}\in\mathbb{R}^{d}$ such that
+
+$\left\langle\mathbf{u},\mathbf{e}_{1}\right\rangle=\alpha,\qquad|\left\langle\mathbf{u},\mathbf{q}_{i}-\mathbf{q}_{j}\right\rangle|\leq\gamma\|\mathbf{q}_{i}-\mathbf{q}_{j}\|\quad(i\neq j).$ (3.2)
+
+For $N=1$ , condition ( 3.1 ) holds automatically and the second requirement is empty.
+
+For $N=1$ , the choice $\mathbf{u}=\alpha\mathbf{e}_{1}+s_{\alpha}\mathbf{e}_{2}$ suffices. For the rest of the proof, assume $N\geq 2$ . The symbols $\mathbb{P}$ and $\mathbb{E}$ denote probability and expectation. Choose $\mathbf{v}$ uniformly on the unit sphere in $\mathbf{e}_{1}^{\perp}$ and set
+
+$\mathbf{u}=\alpha\mathbf{e}_{1}+s_{\alpha}\mathbf{v}.$ (3.3)
+
+Then $\|\mathbf{u}\|=1$ and $\left\langle\mathbf{u},\mathbf{e}_{1}\right\rangle=\alpha$ . For a fixed unit vector $\mathbf{w}$ , define the set of choices that violate the inner-product bound by
+
+$\mathcal{E}(\mathbf{w}):=\left\{\mathbf{v}\in\mathbf{e}_{1}^{\perp}:\|\mathbf{v}\|=1,\ \bigl|\left\langle\alpha\mathbf{e}_{1}+s_{\alpha}\mathbf{v},\mathbf{w}\right\rangle\bigr|>\gamma\right\}.$
+
+Write $\mathbf{w}=a\mathbf{e}_{1}+b\boldsymbol{\omega}$ , where $a^{2}+b^{2}=1$ , $b\geq 0$ , and, when $b>0$ , $\boldsymbol{\omega}$ is a unit vector in $\mathbf{e}_{1}^{\perp}$ . If $b=0$ , then $|\left\langle\mathbf{u},\mathbf{w}\right\rangle|=\alpha<\gamma$ and $\mathcal{E}(\mathbf{w})$ is empty. For $b>0$ , Cauchy–Schwarz gives
+
+$|\left\langle\mathbf{u},\mathbf{w}\right\rangle|=|\alpha a+s_{\alpha}b\left\langle\mathbf{v},\boldsymbol{\omega}\right\rangle|\leq\sqrt{\alpha^{2}+s_{\alpha}^{2}|\left\langle\mathbf{v},\boldsymbol{\omega}\right\rangle|^{2}}.$
+
+Setting $\xi=\sqrt{(\gamma^{2}-\alpha^{2})/(1-\alpha^{2})}\in(0,1)$ gives
+
+$\mathcal{E}(\mathbf{w})\subseteq\left\{\mathbf{v}\in\mathbf{e}_{1}^{\perp}:\|\mathbf{v}\|=1,\ |\left\langle\mathbf{v},\boldsymbol{\omega}\right\rangle|>\xi\right\}.$ (3.4)
+
+Identify $\mathbf{e}_{1}^{\perp}$ with $\mathbb{R}^{n}$ , where $n=d-1$ , using $\boldsymbol{\omega}$ as the first coordinate vector. Let $\mathbf{G}=(G_{1},\ldots,G_{n})$ have independent standard normal coordinates. Rotational invariance allows the representation $\mathbf{v}=\mathbf{G}/\|\mathbf{G}\|$ , with $\mathbf{G}\neq\mathbf{0}$ almost surely. Put
+
+$Z=\sum_{j=2}^{n}G_{j}^{2},\qquad\lambda_{\xi}=\frac{\xi^{2}}{1-\xi^{2}}.$
+
+Then $G_{1}$ and $Z$ are independent, and
+
+$\left\langle\mathbf{v},\boldsymbol{\omega}\right\rangle=\frac{G_{1}}{\sqrt{G_{1}^{2}+Z}},\qquad\mathbb{P}\bigl(|\left\langle\mathbf{v},\boldsymbol{\omega}\right\rangle|>\xi\bigr)=\mathbb{P}\left(\frac{G_{1}^{2}}{G_{1}^{2}+Z}>\xi^{2}\right)=\mathbb{P}(G_{1}^{2}>\lambda_{\xi}Z).$
+
+For $s>0$ , Markov’s inequality applied to $e^{sG_{1}}$ gives
+
+$\mathbb{P}(G_{1}>s)=\mathbb{P}(e^{sG_{1}}>e^{s^{2}})\leq e^{-s^{2}}\mathbb{E}e^{sG_{1}}=e^{-s^{2}/2}.$
+
+By symmetry, and also at $s=0$ ,
+
+$\mathbb{P}(|G_{1}|>s)\leq 2e^{-s^{2}/2}\qquad(s\geq 0).$ (3.5)
+
+Conditioning on $Z$ and using independence, followed by ( 3.5 ), yields
+
+$\displaystyle\mathbb{P}(G_{1}^{2}>\lambda_{\xi}Z)$ $\displaystyle=\mathbb{E}\left[\mathbb{P}\left(|G_{1}|>\sqrt{\lambda_{\xi}Z}\mid Z\right)\right]$ $\displaystyle\leq 2\mathbb{E}e^{-\lambda_{\xi}Z/2}=2\prod_{j=2}^{n}\mathbb{E}e^{-\lambda_{\xi}G_{j}^{2}/2}$ $\displaystyle=2(1+\lambda_{\xi})^{-(n-1)/2}=2(1-\xi^{2})^{(d-2)/2}.$
+
+The first equality is the tower property; conditioning on $Z$ leaves the law of $G_{1}$ unchanged. Each factor is given by the Gaussian integral
+
+$\mathbb{E}e^{-\lambda_{\xi}G_{j}^{2}/2}=\frac{1}{\sqrt{2\pi}}\int_{-\infty}^{\infty}e^{-(1+\lambda_{\xi})t^{2}/2}\,\mathrm{d}t=(1+\lambda_{\xi})^{-1/2}.$
+
+Since $1-\xi^{2}=(1-\gamma^{2})/(1-\alpha^{2})$ , ( 3.4 ) gives, including the case $b=0$ ,
+
+$\mathbb{P}\bigl(\mathbf{v}\in\mathcal{E}(\mathbf{w})\bigr)\leq 2\left(\frac{1-\gamma^{2}}{1-\alpha^{2}}\right)^{(d-2)/2}.$
+
+For $i<j$ , let $\mathbf{w}_{ij}=(\mathbf{q}_{i}-\mathbf{q}_{j})/\|\mathbf{q}_{i}-\mathbf{q}_{j}\|$ . The absolute-value condition is unchanged when the two points are interchanged. It is therefore enough to consider the $N(N-1)/2$ unordered pairs. The union bound gives
+
+$\mathbb{P}\left(\mathbf{v}\in\bigcup_{i<j}\mathcal{E}(\mathbf{w}_{ij})\right)\leq\sum_{i<j}\mathbb{P}(\mathbf{v}\in\mathcal{E}(\mathbf{w}_{ij}))\leq N(N-1)\left(\frac{1-\gamma^{2}}{1-\alpha^{2}}\right)^{(d-2)/2}<1.$
+
+A choice outside this union in ( 3.3 ) gives ( 3.2 ). ∎
+
+No independence between the bad events is needed. Probability is used only to choose a fixed direction for a fixed set, not to randomize the optimization algorithm.
+
+3.3. Construction of an auxiliary Lipschitz function
+
+To preserve a common slope along $\mathbf{u}$ , each affine model is penalized only in the transverse directions. The penalty must make a branch uniquely active near its center without increasing the Lipschitz bound with the number of centers.
+
+Let $S=\{\mathbf{q}_{1},\ldots,\mathbf{q}_{N}\}\subset\mathbb{R}^{d}$ be a nonempty finite set of distinct points, and let $\mathbf{u}$ satisfy ( 3.2 ) for $0<\alpha<\gamma<1$ . Choose $\beta>1/c_{\gamma}$ , and define the unscaled Lipschitz bound
+
+$L_{F}:=\sqrt{\alpha^{2}+(s_{\alpha}+\beta)^{2}},\qquad s_{\alpha}=\sqrt{1-\alpha^{2}},\quad c_{\gamma}=\sqrt{1-\gamma^{2}}.$ (3.6)
+
+There is a globally $L_{F}$ -Lipschitz function $F:\mathbb{R}^{d}\to\mathbb{R}$ with the following properties:
+
+$F(\mathbf{x})=\mathbf{e}_{1}^{\top}(\mathbf{x}-\mathbf{q}_{i})$ on an open neighborhood of every $\mathbf{q}_{i}$ . Consequently, $F(\mathbf{q}_{i})=0$ and $\partial F(\mathbf{q}_{i})=\{\mathbf{e}_{1}\}$ .
+
+For every $\mathbf{x}\in\mathbb{R}^{d}$ and $t\in\mathbb{R}$ ,
+
+$F(\mathbf{x}+t\mathbf{u})=F(\mathbf{x})+\alpha t.$ (3.7)
+
+For every $\mathbf{x}\in\mathbb{R}^{d}$ and $\mathbf{g}\in\partial F(\mathbf{x})$ ,
+
+$\left\langle\mathbf{g},\mathbf{u}\right\rangle=\alpha.$ (3.8)
+
+For $N\geq 2$ , the neighborhood in (i) can be the open ball $\mathbb{B}_{r}^{\circ}(\mathbf{q}_{i})$ for the common radius in ( 3.9 ).
+
+For $N=1$ , take $F(\mathbf{x})=\mathbf{e}_{1}^{\top}(\mathbf{x}-\mathbf{q}_{1})$ . All claims follow from $\left\langle\mathbf{u},\mathbf{e}_{1}\right\rangle=\alpha$ and $L_{F}^{2}=1+2s_{\alpha}\beta+\beta^{2}\geq 1$ . For $N\geq 2$ , set
+
+$\mathbf{P}=\mathbf{I}-\mathbf{u}\mathbf{u}^{\top},\qquad s_{*}:=\min_{i\neq j}\|\mathbf{q}_{i}-\mathbf{q}_{j}\|>0,\qquad r:=\frac{\beta c_{\gamma}-1}{2\beta}s_{*}>0.$ (3.9)
+
+Since $\mathbf{P}$ is the orthogonal projection onto $\mathbf{u}^{\perp}$ ,
+
+$\|\mathbf{P}\mathbf{w}\|^{2}=\|\mathbf{w}\|^{2}-|\left\langle\mathbf{u},\mathbf{w}\right\rangle|^{2},\qquad\|\mathbf{P}\mathbf{w}\|\leq\|\mathbf{w}\|.$ (3.10)
+
+Define the branches by
+
+$F_{i}(\mathbf{x})=\mathbf{e}_{1}^{\top}(\mathbf{x}-\mathbf{q}_{i})+\beta\bigl(\|\mathbf{P}(\mathbf{x}-\mathbf{q}_{i})\|-r\bigr)_{+},$ (3.11)
+
+and let
+
+$\displaystyle F(\mathbf{x})$ $\displaystyle=\min_{1\leq i\leq N}F_{i}(\mathbf{x})$ (3.12) $\displaystyle=\mathbf{e}_{1}^{\top}\mathbf{x}+\min_{1\leq i\leq N}\left\{-\mathbf{e}_{1}^{\top}\mathbf{q}_{i}+\beta\max\{0,\|\mathbf{P}(\mathbf{x}-\mathbf{q}_{i})\|-r\}\right\}.$
+
+For the Lipschitz estimate, write $\mathbf{e}_{1}=\alpha\mathbf{u}+\mathbf{P}\mathbf{e}_{1}$ , with $\|\mathbf{P}\mathbf{e}_{1}\|=s_{\alpha}$ . The norm and positive-part maps are $1$ -Lipschitz. For $\mathbf{a}=\mathbf{x}-\mathbf{y}$ , they give
+
+$\displaystyle|F_{i}(\mathbf{x})-F_{i}(\mathbf{y})|$ $\displaystyle\leq\alpha|\left\langle\mathbf{u},\mathbf{a}\right\rangle|+(s_{\alpha}+\beta)\|\mathbf{P}\mathbf{a}\|$ $\displaystyle\leq\sqrt{\alpha^{2}+(s_{\alpha}+\beta)^{2}}\sqrt{|\left\langle\mathbf{u},\mathbf{a}\right\rangle|^{2}+\|\mathbf{P}\mathbf{a}\|^{2}}=L_{F}\|\mathbf{x}-\mathbf{y}\|.$
+
+If $F(\mathbf{y})=F_{i}(\mathbf{y})$ , then $F(\mathbf{x})-F(\mathbf{y})\leq F_{i}(\mathbf{x})-F_{i}(\mathbf{y})\leq L_{F}\|\mathbf{x}-\mathbf{y}\|$ . Interchanging $\mathbf{x}$ and $\mathbf{y}$ proves the same bound for $F$ , with no factor depending on $N$ .
+
+Local agreement. Equations ( 3.2 ) and ( 3.10 ) imply
+
+$\|\mathbf{P}(\mathbf{q}_{i}-\mathbf{q}_{j})\|\geq c_{\gamma}\|\mathbf{q}_{i}-\mathbf{q}_{j}\|\qquad(i\neq j).$ (3.13)
+
+Fix $i$ and write $\mathbf{x}=\mathbf{q}_{i}+\mathbf{h}$ , where $\|\mathbf{h}\|<r$ . The $i$ th penalty vanishes, giving $F_{i}(\mathbf{x})=\mathbf{e}_{1}^{\top}\mathbf{h}$ . For $j\neq i$ , put $\mathbf{w}=\mathbf{q}_{i}-\mathbf{q}_{j}$ . By ( 3.13 ),
+
+$\displaystyle F_{j}(\mathbf{q}_{i}+\mathbf{h})-F_{i}(\mathbf{q}_{i}+\mathbf{h})$ $\displaystyle=\mathbf{e}_{1}^{\top}\mathbf{w}+\beta(\|\mathbf{P}(\mathbf{w}+\mathbf{h})\|-r)_{+}$ $\displaystyle\geq-\|\mathbf{w}\|+\beta\|\mathbf{P}\mathbf{w}\|-\beta\|\mathbf{P}\mathbf{h}\|-\beta r$ $\displaystyle\geq(\beta c_{\gamma}-1)s_{*}-\beta\|\mathbf{h}\|-\beta r$ $\displaystyle=\beta(r-\|\mathbf{h}\|)>0.$
+
+Thus $F(\mathbf{x})=F_{i}(\mathbf{x})=\mathbf{e}_{1}^{\top}(\mathbf{x}-\mathbf{q}_{i})$ on $\mathbb{B}_{r}^{\circ}(\mathbf{q}_{i})$ . At the center, $F(\mathbf{q}_{i})=0$ , and locality gives $\partial F(\mathbf{q}_{i})=\{\mathbf{e}_{1}\}$ .
+
+Common projection. Since $\mathbf{P}\mathbf{u}=\mathbf{0}$ , translation along $\mathbf{u}$ leaves each penalty unchanged. Hence,
+
+$F_{i}(\mathbf{x}+t\mathbf{u})=F_{i}(\mathbf{x})+\alpha t,\qquad F(\mathbf{x}+t\mathbf{u})=F(\mathbf{x})+\alpha t\qquad(t\in\mathbb{R}).$
+
+The difference quotients in the directions $\mathbf{u}$ and $-\mathbf{u}$ are identically $\alpha$ and $-\alpha$ , respectively. Therefore
+
+$F^{\circ}(\mathbf{x};\mathbf{u})=\alpha,\qquad F^{\circ}(\mathbf{x};-\mathbf{u})=-\alpha.$
+
+For $\mathbf{g}\in\partial F(\mathbf{x})$ , the defining inequalities give
+
+$\left\langle\mathbf{g},\mathbf{u}\right\rangle\leq\alpha,\qquad-\left\langle\mathbf{g},\mathbf{u}\right\rangle\leq-\alpha,$
+
+which prove ( 3.8 ). This argument applies also where branches switch or a penalty is not differentiable; it requires no equality formula for the Clarke subdifferential of a minimum. ∎
+
+3.4. Scaling and lower truncation
+
+The interpolant is unbounded below along $-\mathbf{u}$ . Scaling to the prescribed Lipschitz bound and truncating at $-\Delta$ gives a bounded-below objective. The condition $\delta<\Delta/L$ leaves the truncation inactive on an open set containing each closed ball $\mathbb{B}_{\delta}(\mathbf{q}_{i})$ .
+
+Let $d\geq 3$ and $S=\{\mathbf{q}_{1},\ldots,\mathbf{q}_{N}\}\subset\mathbb{R}^{d}$ be a nonempty finite set of distinct points. Fix $0<\alpha<\gamma<1$ satisfying ( 3.1 ), choose $\beta>1/c_{\gamma}$ , and define $L_{F}$ by ( 3.6 ). Given $L,\Delta>0$ and $0<\delta<\Delta/L$ , there exist a fixed function $f:\mathbb{R}^{d}\to\mathbb{R}$ , a unit vector $\mathbf{u}$ , and a common radius $\rho>0$ such that:
+
+$\Lip(f)\leq L$ , $\inf f=-\Delta$ , and $\mathrm{int}(\arg\min f)\neq\varnothing$ ;
+
+for every $i$ and $\mathbf{x}\in\mathbb{B}_{\rho}^{\circ}(\mathbf{q}_{i})$ ,
+
+$f(\mathbf{x})=\frac{L}{L_{F}}\mathbf{e}_{1}^{\top}(\mathbf{x}-\mathbf{q}_{i}),\qquad\bigl(f(\mathbf{q}_{i}),\partial f(\mathbf{q}_{i})\bigr)=(0,\{L\mathbf{e}_{1}/L_{F}\});$ (3.14)
+
+for every $i$ and $\mathbf{g}\in\partial_{\delta}f(\mathbf{q}_{i})$ ,
+
+$\left\langle\mathbf{g},\mathbf{u}\right\rangle=\frac{L\alpha}{L_{F}},$ (3.15)
+
+and consequently
+
+$\mathrm{dist}(\mathbf{0},\partial_{\delta}f(\mathbf{q}_{i}))\geq\frac{L\alpha}{L_{F}}.$ (3.16)
+
+If $\mathbf{x}_{0}\in S$ , then $f\in\mathcal{F}_{d}(L,\Delta;\mathbf{x}_{0})$ , $f(\mathbf{x}_{0})=0$ , and its initial gap is exactly $\Delta$ .
+
+Choose $\mathbf{u}$ by Lemma 3.1 and construct $F$ by Lemma 3.2 . Set
+
+$\phi(\mathbf{x})=\frac{L}{L_{F}}F(\mathbf{x}),\qquad f(\mathbf{x})=\max\{\phi(\mathbf{x}),-\Delta\}.$ (3.17)
+
+Both $\phi$ and $f$ are globally $L$ -Lipschitz, since the scalar truncation map is $1$ -Lipschitz. Also $f\geq-\Delta$ .
+
+For $N\geq 2$ , take $\rho=\min\{r,\Delta/(2L)\}$ ; for $N=1$ , take $\rho=\Delta/(2L)$ . On $\mathbb{B}_{\rho}^{\circ}(\mathbf{q}_{i})$ , the interpolant has its prescribed affine form and
+
+$\phi(\mathbf{x})\geq-L\|\mathbf{x}-\mathbf{q}_{i}\|>-\Delta/2.$
+
+Thus $f=\phi$ there. Locality and ( 2.4 ) give ( 3.14 ).
+
+The translation identity ( 3.7 ) gives
+
+$\phi(\mathbf{q}_{i}-t\mathbf{u})=-\frac{L\alpha}{L_{F}}t.$
+
+For $t>\Delta L_{F}/(L\alpha)$ , this is strictly below $-\Delta$ . By continuity, $\phi<-\Delta$ on an open neighborhood of such a point, and $f$ is constant there. Consequently $\inf f=-\Delta$ and $\operatorname{int}(\arg\min f)\neq\varnothing$ . Every point in this open set has zero Clarke subgradient and is Goldstein stationary for every $\delta>0$ .
+
+To prove (iii), fix $\mathbf{y}\in\mathbb{B}_{\delta}(\mathbf{q}_{i})$ . Since $\phi(\mathbf{q}_{i})=0$ ,
+
+$\phi(\mathbf{y})\geq-L\delta>-\Delta.$
+
+Local agreement is also required at boundary points of the ball. With
+
+$\tau=\frac{\Delta-L\delta}{2L}>0,$
+
+any $\mathbf{z}\in\mathbb{B}_{\tau}^{\circ}(\mathbf{y})$ satisfies
+
+$\phi(\mathbf{z})\geq\phi(\mathbf{y})-L\|\mathbf{z}-\mathbf{y}\|>-L\delta-L\tau=-\frac{\Delta+L\delta}{2}>-\Delta.$
+
+Hence $f=\phi$ on an open neighborhood of every $\mathbf{y}\in\mathbb{B}_{\delta}(\mathbf{q}_{i})$ . By locality ( 2.2 ), scaling ( 2.3 ), and Lemma 3.2 ,
+
+$\partial f(\mathbf{y})=\frac{L}{L_{F}}\partial F(\mathbf{y}),\qquad\left\langle\mathbf{g},\mathbf{u}\right\rangle=\frac{L\alpha}{L_{F}}\quad\text{for every }\mathbf{g}\in\partial f(\mathbf{y}).$
+
+The projection remains unchanged under convex combinations, proving ( 3.15 ). Since $\|\mathbf{u}\|=1$ , Cauchy–Schwarz gives $\|\mathbf{g}\|\geq L\alpha/L_{F}$ throughout $\partial_{\delta}f(\mathbf{q}_{i})$ and thus ( 3.16 ). Finally, if $\mathbf{x}_{0}\in S$ , then $f(\mathbf{x}_{0})=0$ and the initial gap is exactly $\Delta$ , proving membership in ( 2.7 ). ∎
+
+The affine radius $r$ is not required to be comparable to $\delta$ , even when query points are close. The ball $\mathbb{B}_{\delta}(\mathbf{q}_{i})$ need not be contained in the corresponding affine neighborhood: the translation identity controls its subgradients regardless of which branches are active.
+
+4. The deterministic query complexity lower bound
+
+Increasing the penalty coefficient strengthens branch separation but raises $L_{F}$ , reducing the projection after scaling. The parameter choice below satisfies the separation condition, the required projection bound, and the probability bound for all pairwise differences simultaneously. The scalar parameters must be fixed before the queries, because $L/L_{F}$ appears in every oracle response.
+
+4.1. Choice of scalar parameters
+
+Let $d\geq 3$ , $L>0$ , and $0<\epsilon<L/3$ . Let the integer $T\geq 1$ satisfy ( 2.10 ). There are scalars $0<\alpha<\gamma<1$ and $\beta>1/c_{\gamma}$ , depending only on $d,L,\epsilon,T$ , for which $L_{F}$ in ( 3.6 ) satisfies
+
+$\frac{L\alpha}{L_{F}}>\epsilon,\qquad T(T+1)\left(\frac{1-\gamma^{2}}{1-\alpha^{2}}\right)^{(d-2)/2}<1.$ (4.1)
+
+Set $\theta=\epsilon/L$ and
+
+$n_{T}=T+1,\qquad\chi_{T}=[n_{T}(n_{T}-1)]^{1/(d-2)},\qquad\vartheta_{T}=\frac{1}{1+2\chi_{T}}.$
+
+Here $n_{T}$ allows for an unqueried output, and $n_{T}(n_{T}-1)$ accounts for the pairwise differences. Since $n_{T}\geq 2$ , it follows that $\chi_{T}>1$ . The budget condition and $n_{T}(n_{T}-1)<n_{T}^{2}$ give
+
+$\chi_{T}<\frac{1-\theta}{2\theta},\qquad\theta<\vartheta_{T}<\frac{1}{3}.$
+
+Choose $\vartheta=(\theta+\vartheta_{T})/2$ , so that $\theta<\vartheta<\vartheta_{T}$ , and set
+
+$\alpha=\sqrt{\frac{1+\vartheta}{2}},\qquad s_{\alpha}=\sqrt{\frac{1-\vartheta}{2}},\qquad\beta=\frac{s_{\alpha}}{\vartheta}.$
+
+Then $s_{\alpha}^{2}=1-\alpha^{2}$ . The identity
+
+$\vartheta^{2}\alpha^{2}+s_{\alpha}^{2}(1+\vartheta)^{2}=\frac{1+\vartheta}{2}\bigl(\vartheta^{2}+(1-\vartheta)(1+\vartheta)\bigr)=\alpha^{2}$
+
+implies
+
+$L_{F}^{2}=\alpha^{2}+(s_{\alpha}+\beta)^{2}=\frac{\alpha^{2}}{\vartheta^{2}},\qquad\frac{L\alpha}{L_{F}}=L\vartheta>\epsilon.$
+
+Also $\vartheta<\vartheta_{T}$ gives $\chi_{T}<s_{\alpha}^{2}/\vartheta$ . Therefore
+
+$0<\frac{\vartheta}{s_{\alpha}}<\frac{s_{\alpha}}{\chi_{T}}<s_{\alpha}.$
+
+Define
+
+$c_{\gamma}=\frac{1}{2}\left(\frac{\vartheta}{s_{\alpha}}+\frac{s_{\alpha}}{\chi_{T}}\right),\qquad\gamma=\sqrt{1-c_{\gamma}^{2}}.$
+
+These choices satisfy $0<c_{\gamma}<s_{\alpha}<1$ and therefore $0<\alpha<\gamma<1$ . They also give $\beta c_{\gamma}>1$ . Finally,
+
+$T(T+1)\left(\frac{1-\gamma^{2}}{1-\alpha^{2}}\right)^{(d-2)/2}=n_{T}(n_{T}-1)\left(\frac{c_{\gamma}}{s_{\alpha}}\right)^{d-2}=\left(\frac{\chi_{T}c_{\gamma}}{s_{\alpha}}\right)^{d-2}<1.$
+
+∎
+
+4.2. A resisting-oracle argument
+
+With the affine responses prescribed, the finite-set construction gives one objective agreeing with the resulting finite history. Locality and determinism then reproduce that history on the fixed objective.
+
+Fix the inputs, the budget $T$ , and a deterministic algorithm $A$ . Choose $\alpha,\gamma,\beta,L_{F}$ by Lemma 4.1 . First consider a run of $A$ with prescribed oracle responses, without yet choosing an objective. At each query point $\mathbf{q}$ , let the oracle return
+
+$\mathcal{O}(\mathbf{q})=\ell_{\mathbf{q}},\qquad\ell_{\mathbf{q}}(\mathbf{x})=\frac{L}{L_{F}}\mathbf{e}_{1}^{\top}(\mathbf{x}-\mathbf{q}).$
+
+The first call is at $\mathbf{x}_{0}$ and is counted. These responses determine the subsequent computation, although $\mathbf{u}$ and the objective have not yet been chosen. Only a finite answered history will be realized, not an infinite sequence of prescribed responses. Retain the sequence of queries and responses up to a return, a request for call $T+1$ , or internal computation that never produces another query or return. There are three cases.
+
+(i) Return within $T$ calls. If $A$ returns $\widehat{\mathbf{x}}$ after $1\leq m\leq T$ responses at $\mathbf{q}^{(1)},\ldots,\mathbf{q}^{(m)}$ , set
+
+$S=\{\mathbf{q}^{(1)},\ldots,\mathbf{q}^{(m)},\widehat{\mathbf{x}}\}.$ (4.2)
+
+The output is fixed by the answered history, even if it was not queried, and $|S|\leq m+1\leq T+1$ .
+
+(ii) Request for call $T+1$ . Retain the $T$ answered locations and set $S=\{\mathbf{q}^{(1)},\ldots,\mathbf{q}^{(T)}\}$ . No response at the next requested point, and no inclusion of that point in $S$ , is needed: reproducing the request already excludes a return within $T$ calls.
+
+(iii) No further query or return. If, after $1\leq m\leq T$ responses, no further query or return is ever produced, set $S=\{\mathbf{q}^{(1)},\ldots,\mathbf{q}^{(m)}\}$ .
+
+These cases exhaust the possible behavior before call $T+1$ ; the argument does not require detecting nontermination. In every case $\mathbf{q}^{(1)}=\mathbf{x}_{0}\in S$ and $1\leq N:=|S|\leq T+1$ . Repeated locations are removed only in forming the set, not from the query count.
+
+A fixed objective. By ( 4.1 ),
+
+$N(N-1)\left(\frac{1-\gamma^{2}}{1-\alpha^{2}}\right)^{(d-2)/2}<1.$
+
+Proposition 3.3 therefore supplies $\mathbf{u}$ , $F$ , and the fixed function $f(\mathbf{x})=\max\{LF(\mathbf{x})/L_{F},-\Delta\}$ satisfying
+
+$f\in\mathcal{F}_{d}(L,\Delta;\mathbf{x}_{0}),\qquad f(\mathbf{x}_{0})=0,\qquad\inf f=-\Delta,\qquad\mathrm{int}(\arg\min f)\neq\varnothing.$ (4.3)
+
+For every $\mathbf{q}\in S$ ,
+
+$\bigl(f(\mathbf{q}),\partial f(\mathbf{q})\bigr)=\bigl(0,\{L\mathbf{e}_{1}/L_{F}\}\bigr),\qquad\mathrm{dist}(\mathbf{0},\partial_{\delta}f(\mathbf{q}))\geq L\alpha/L_{F}>\epsilon.$ (4.4)
+
+The local oracle requires neighborhood agreement: there is a common $\rho>0$ such that $f=\ell_{\mathbf{q}}$ on $\mathbb{B}_{\rho}^{\circ}(\mathbf{q})$ for every $\mathbf{q}\in S$ . Thus each prescribed response agrees with $f$ on the closed ball $\mathbb{B}_{\rho/2}(\mathbf{q})$ , as required by ( 2.8 ); the radius is not disclosed. Thus all retained oracle responses are consistent with this one fixed function. Fix an oracle that returns $\ell_{\mathbf{q}}$ for $\mathbf{q}\in S$ and $f$ itself elsewhere. All its responses are admissible, and both the objective and the representatives are now fixed.
+
+Consistency of the executions. Run $A$ with this oracle and the same inputs. The first query and response are the same as in the run with prescribed responses. Inductively, once the two executions have received the same responses to the same queries, locality and determinism give identical internal computation and the same next action. If that action is another query in the retained history, its location lies in $S$ and receives the same affine response. If it is a return or the request for call $T+1$ , that action is reproduced. If the internal computation never produces another action, it is identical in both executions. This proves agreement through the retained history and the behavior immediately following it.
+
+In case (i), the returned point is invalid by ( 4.2 ) and ( 4.4 ); hence $\tau_{A}(f;\mathbf{x}_{0},\delta,\epsilon)=+\infty$ . Including an unqueried output in $S$ imposes no additional call. In case (ii), any valid eventual return requires at least $T+1$ calls; otherwise $\tau_{A}=+\infty$ . In case (iii), there is no finite return. Thus $\tau_{A}>T$ in every case. Every point actually queried among the first $T$ calls belongs to $S$ and therefore satisfies the strict nonstationarity bound in ( 4.4 ). The remaining properties are ( 4.3 ). ∎
+
+Because all queried points in the retained history are nonstationary, the argument also excludes a guarantee that merely one of the first $T$ queried points is stationary, without requiring the algorithm to identify it.
+
+Range of the parameter estimate.
+
+The value $1/3$ is a limit of this parameter estimate, not a threshold established for the optimization problem. Indeed, $\gamma>\alpha$ and $\beta>1/c_{\gamma}$ imply $\beta>1/s_{\alpha}$ , whence
+
+$\frac{\alpha^{2}}{L_{F}^{2}}<\frac{s_{\alpha}^{2}(1-s_{\alpha}^{2})}{1+3s_{\alpha}^{2}}\leq\frac{1}{9}.$
+
+The last inequality is equivalent to $(3s_{\alpha}^{2}-1)^{2}\geq 0$ . These estimates therefore cannot certify a projection of $L/3$ or larger.
+
+5. Deterministic upper bounds
+
+Goldstein nonstationarity implies descent over a segment of length $\delta$ . Lipschitz continuity allows the descent direction to be approximated by a finite net, and the initial gap bounds the number of accepted moves. This gives a deterministic zeroth-order method. When $L/\sqrt{2}<\epsilon<L$ , one returned subgradient suffices to choose the trial direction.
+
+5.1. A finite direction net
+
+An $\eta$ -net of the unit sphere approximates every unit direction to distance at most $\eta$ . The packing estimate below bounds its size; Appendix B gives a finite construction in the exact-real query model.
+
+For every $d\geq 1$ and $\eta>0$ , there is a nonempty finite set $\mathcal{V}\subset\mathbb{S}^{d-1}$ such that
+
+$\text{for every }\mathbf{v}\in\mathbb{S}^{d-1}\text{ there is }\mathbf{w}\in\mathcal{V}\text{ with }\|\mathbf{v}-\mathbf{w}\|\leq\eta,$ (5.1)
+
+and
+
+$|\mathcal{V}|\leq(1+2/\eta)^{d}.$ (5.2)
+
+The set and its ordering can be constructed deterministically using finite internal computation, independently of $f$ , in the exact-real model of Section 2 .
+
+For $\eta\geq 2$ , a fixed unit vector suffices. For $0<\eta<2$ , let $\mathbf{w}_{1},\ldots,\mathbf{w}_{M}$ be unit vectors with pairwise distances greater than $\eta$ . The balls $\mathbb{B}_{\eta/2}^{\circ}(\mathbf{w}_{j})$ are disjoint and contained in $\mathbb{B}_{1+\eta/2}^{\circ}(\mathbf{0})$ . Comparing their volumes gives
+
+$M(\eta/2)^{d}\leq(1+\eta/2)^{d},\qquad M\leq(1+2/\eta)^{d}.$
+
+Starting with a fixed unit vector, append a point at distance greater than $\eta$ from all previously selected points whenever one exists. The packing bound forces this process to stop, yielding ( 5.1 ) with the size bound ( 5.2 ).
+
+For a deterministic implementation, one must decide whether another point can be added. Appendix B gives a finite decision test and selects an admissible point from a fixed dense rational enumeration whenever the test succeeds. The insertion order gives the required ordering; no query to $f$ is used. ∎
+
+5.2. A descent step of length $\delta$
+
+A separating direction controls every subgradient along the corresponding segment in $\mathbb{B}_{\delta}(\mathbf{x})$ . This permits a step of length $\delta$ , rather than one whose admissible length depends on unknown local behavior.
+
+Let $f:\mathbb{R}^{d}\to\mathbb{R}$ be globally $L$ -Lipschitz, let $\delta>0$ , and assume
+
+$\mathrm{dist}(\mathbf{0},\partial_{\delta}f(\mathbf{x}))>\epsilon>0.$
+
+Then there is a unit vector $\mathbf{v}\in\mathbb{R}^{d}$ such that
+
+$f(\mathbf{x}-\delta\mathbf{v})<f(\mathbf{x})-\delta\epsilon.$ (5.3)
+
+Let $C=\partial_{\delta}f(\mathbf{x})$ , which is nonempty, compact, and convex by Lemma 2.1 , and choose a minimum-norm element $\mathbf{g}_{*}\in C$ . For $\mathbf{g}\in C$ and $0<s\leq 1$ , minimality gives
+
+$0\leq\|\mathbf{g}_{*}+s(\mathbf{g}-\mathbf{g}_{*})\|^{2}-\|\mathbf{g}_{*}\|^{2}=2s\left\langle\mathbf{g}_{*},\mathbf{g}-\mathbf{g}_{*}\right\rangle+s^{2}\|\mathbf{g}-\mathbf{g}_{*}\|^{2}.$
+
+Dividing by $s$ and letting $s\downarrow 0$ yields $\left\langle\mathbf{g}_{*},\mathbf{g}-\mathbf{g}_{*}\right\rangle\geq 0$ . Since $\|\mathbf{g}_{*}\|>\epsilon$ , the unit vector $\mathbf{v}=\mathbf{g}_{*}/\|\mathbf{g}_{*}\|$ satisfies
+
+$\left\langle\mathbf{g},\mathbf{v}\right\rangle\geq\|\mathbf{g}_{*}\|>\epsilon\qquad(\mathbf{g}\in C).$
+
+Lebourg’s mean value theorem [ 3 , Theorem 2.3.7] gives a point $\mathbf{z}=\mathbf{x}-\theta\delta\mathbf{v}$ , $\theta\in(0,1)$ , and a vector $\mathbf{g}\in\partial f(\mathbf{z})$ such that
+
+$f(\mathbf{x}-\delta\mathbf{v})-f(\mathbf{x})=-\delta\left\langle\mathbf{g},\mathbf{v}\right\rangle.$
+
+Since $\mathbf{z}\in\mathbb{B}_{\delta}(\mathbf{x})$ , the vector satisfies $\mathbf{g}\in C$ . The separation inequality therefore gives
+
+$f(\mathbf{x}-\delta\mathbf{v})-f(\mathbf{x})\leq-\delta\|\mathbf{g}_{*}\|<-\delta\epsilon.$
+
+∎
+
+5.3. Direction-net descent and query complexity
+
+Each iteration scans the same ordered net. Its radius is chosen to retain at least half of the decrease in Lemma 5.2 . Values at accepted trial points are retained for the next iteration.
+
+For $0<\epsilon<L$ , set $\eta=\epsilon/(2L)$ and fix an ordered net $\mathcal{V}=(\mathbf{w}_{1},\ldots,\mathbf{w}_{M})$ from Lemma 5.1 , with
+
+$M\leq(1+2/\eta)^{d}=\left(1+\frac{4L}{\epsilon}\right)^{d}.$ (5.4)
+
+Algorithm 1 queries every direction in the ordered net, then moves along the first one giving a decrease of at least $\delta\epsilon/2$ . If no direction gives this decrease, it returns the current point.
+
+Algorithm 1 Deterministic direction-net descent
+
+First, consider $0<\epsilon<L$ . Lemma 5.1 and Appendix B make the preprocessing finite and deterministic. The stored value is always $a=f(\mathbf{x})$ , because accepted trial values are reused.
+
+If $\mathbf{x}$ is not $(\delta,\epsilon)$ -Goldstein stationary, Lemma 5.2 gives a unit vector $\mathbf{v}$ satisfying ( 5.3 ). Choose $\mathbf{w}_{j}$ with $\|\mathbf{w}_{j}-\mathbf{v}\|\leq\eta$ . Then
+
+$\displaystyle f(\mathbf{x}-\delta\mathbf{w}_{j})$ $\displaystyle\leq f(\mathbf{x}-\delta\mathbf{v})+L\delta\|\mathbf{w}_{j}-\mathbf{v}\|$ $\displaystyle<f(\mathbf{x})-\delta\epsilon+L\delta\eta=f(\mathbf{x})-\delta\epsilon/2.$
+
+Thus $j\in J$ . The stopping condition $J=\varnothing$ therefore certifies stationarity.
+
+Each accepted move decreases the value by at least $\delta\epsilon/2$ . Let $\mathbf{x}^{(m)}$ denote the point reached after $m$ accepted moves. For every finite $m$ ,
+
+$m\frac{\delta\epsilon}{2}\leq f(\mathbf{x}_{0})-f(\mathbf{x}^{(m)})\leq f(\mathbf{x}_{0})-\inf f\leq\Delta.$
+
+Consequently,
+
+$m\leq\frac{2\Delta}{\delta\epsilon}.$ (5.5)
+
+Since every scan is finite, the move bound ( 5.5 ) forces termination. There are $m$ successful scans and one final unsuccessful scan. Counting the initial call and all $M$ trials in each scan, and using ( 5.4 ), gives
+
+$\displaystyle\tau_{A}(f;\mathbf{x}_{0},\delta,\epsilon)$ $\displaystyle\leq 1+(m+1)M$ $\displaystyle\leq 1+\left(\frac{2\Delta}{\delta\epsilon}+1\right)\left(1+\frac{4L}{\epsilon}\right)^{d}.$
+
+Repeated queries are charged again in this count; reusing stored values cannot increase it.
+
+If $\epsilon\geq L$ , Lemma 2.1 gives $\mathrm{dist}(\mathbf{0},\partial_{\delta}f(\mathbf{x}_{0}))\leq L\leq\epsilon$ . The prescribed initial call followed by a return therefore suffices. ∎
+
+The separating direction is used only in the analysis. The algorithm compares values, and its stopping test is sufficient but not necessary for stationarity. An accepted move is not excluded at a stationary iterate and remains subject to the same decrease bound.
+
+5.4. A first-order bound for coarse accuracy
+
+A single subgradient need not point in a useful descent direction. When $L/\sqrt{2}<\epsilon<L$ , however, an unsuccessful trial certifies stationarity: the current subgradient and one subgradient on the trial segment have an average of sufficiently small norm. The oracle returns $f(\mathbf{x})$ and one $\mathbf{g}\in\partial f(\mathbf{x})$ . The guarantee holds for every valid subgradient selection. No effective extraction from an arbitrary local-function representation is assumed.
+
+Let $d\geq 1$ , $L,\Delta,\delta>0$ , $\mathbf{x}_{0}\in\mathbb{R}^{d}$ , and $L/\sqrt{2}<\epsilon<L$ . Algorithm 2 returns a $(\delta,\epsilon)$ -Goldstein stationary point of every $f\in\mathcal{F}_{d}(L,\Delta;\mathbf{x}_{0})$ within
+
+$2+\frac{\Delta L}{\delta(2\epsilon^{2}-L^{2})}$ (5.6)
+
+first-order oracle calls.
+
+Set $s_{\mathrm{dec}}=(2\epsilon^{2}-L^{2})/L>0$ . The algorithm tries a step of length $\delta$ opposite to the returned subgradient and accepts it only when the decrease exceeds $\delta s_{\mathrm{dec}}$ .
+
+Algorithm 2 Single-direction descent for coarse accuracy
+
+The stored data satisfy $a=f(\mathbf{x})$ and $\mathbf{g}\in\partial f(\mathbf{x})$ . If $\|\mathbf{g}\|\leq\epsilon$ , then $\partial f(\mathbf{x})\subseteq\partial_{\delta}f(\mathbf{x})$ certifies the return.
+
+Otherwise, let $\mathbf{v}=\mathbf{g}/\|\mathbf{g}\|$ and $\mathbf{y}=\mathbf{x}-\delta\mathbf{v}$ . If the trial gives $f(\mathbf{x})-f(\mathbf{y})\leq\delta s_{\mathrm{dec}}$ , Lebourg’s mean value theorem gives $\mathbf{z}$ in the open segment from $\mathbf{x}$ to $\mathbf{y}$ and $\mathbf{h}\in\partial f(\mathbf{z})$ such that
+
+$f(\mathbf{y})-f(\mathbf{x})=-\delta\left\langle\mathbf{h},\mathbf{v}\right\rangle,\qquad\left\langle\mathbf{h},\mathbf{v}\right\rangle\leq s_{\mathrm{dec}}.$
+
+Both $\mathbf{g}$ and $\mathbf{h}$ belong to $\partial_{\delta}f(\mathbf{x})$ and have norm at most $L$ . Their average belongs to the same convex set, and
+
+$\displaystyle\left\|\frac{\mathbf{g}+\mathbf{h}}{2}\right\|^{2}$ $\displaystyle=\frac{\|\mathbf{g}\|^{2}+\|\mathbf{h}\|^{2}+2\left\langle\mathbf{g},\mathbf{h}\right\rangle}{4}$ $\displaystyle\leq\frac{2L^{2}+2\|\mathbf{g}\|s_{\mathrm{dec}}}{4}$ $\displaystyle\leq\frac{2L^{2}+2Ls_{\mathrm{dec}}}{4}=\epsilon^{2}.$
+
+Here $s_{\mathrm{dec}}>0$ justifies replacing $\|\mathbf{g}\|$ by $L$ . The return is therefore valid. The vector $\mathbf{h}$ is supplied by Lebourg’s theorem, not by the query at the endpoint. It need not equal $\mathbf{g}_{\mathbf{y}}$ , and the algorithm does not compute it.
+
+Every accepted move decreases the value by more than $\delta s_{\mathrm{dec}}$ . Thus any finite number $m$ of accepted moves satisfies
+
+$m\delta s_{\mathrm{dec}}\leq f(\mathbf{x}_{0})-\inf f\leq\Delta,\qquad m\leq\frac{\Delta}{\delta s_{\mathrm{dec}}}.$
+
+Finite work in each iteration and this bound force termination. There is one initial call, one call per accepted move, and at most one final unsuccessful trial, giving at most $m+2$ calls and hence ( 5.6 ). ∎
+
+As $\epsilon\downarrow L/\sqrt{2}$ , the denominator in ( 5.6 ) vanishes. The argument gives no guarantee at the endpoint and does not establish optimal behavior near it.
+
+6. Conclusions and discussion
+
+For fixed positive $L,\Delta,\delta$ with $\delta<\Delta/L$ and a fixed ratio $\epsilon/L\in(0,1/3)$ , deterministic query complexity is exponential in dimension, even in the local-oracle model of Section 2 . Function values alone suffice for the same exponential order. In contrast, the first-order method has a dimension-free query bound when $L/\sqrt{2}<\epsilon<L$ .
+
+6.1. Accuracy and information
+
+The dependence on accuracy remains unresolved in part. The present bounds do not determine the dimension dependence for $1/3\leq\epsilon/L\leq 1/\sqrt{2}$ , nor do they match the joint dependence on dimension and accuracy. Even at the parameters of Corollary 2.4 , the exponential constants are $\tfrac{1}{2}\log(7/2)$ and $\log 33$ . The calculation after Theorem 2.2 limits the projection estimate for the present construction to $\epsilon<L/3$ ; it does not establish a transition in the optimization problem. One question is whether the common projection captures the full distance of the Goldstein subdifferential from the origin.
+
+The lower bound is insensitive to the choice between full local information and a value with one Clarke subgradient, because the constructed objective is affine near every queried point in the construction and has a singleton subdifferential there. The zeroth-order upper bound works in both models.
+
+Determinism is essential to the resisting-oracle argument: the prescribed responses fix the history. The construction applied to different random seeds is not required to produce the same objective. Lemma 3.1 therefore does not provide a fixed hard instance with a failure probability for a randomized algorithm.
+
+The bounds concern exact queries, not total computation. No upper bound on direction-net preprocessing time is claimed, and the number of branches in the hard instance depends on the budget. Its interpolation radius can be arbitrarily small when queries are close, although $L_{F}$ and the common projection do not depend on that radius. No representation-size bound, minimum feature size, or gradient Lipschitz bound is assumed.
+
+6.2. Quantitative regularity
+
+Local affine agreement does not make the hard family globally smooth. Appendix D gives a two-branch member that is not weakly convex for any finite parameter. Results requiring smoothness or weak convexity therefore do not cover the whole family.
+
+Every finite hard instance is nevertheless DC by Appendix C . In comparing with Kong and Lewis [ 11 ] , the relevant issue is quantitative nonconvexity, not DC membership alone. Their directional oracle returns values, directional derivatives, and direction-dependent vectors. The complexity depends on an objective-specific nonconvexity modulus $\Lambda(\delta)$ defined through one-dimensional restrictions. To relate it to a DC decomposition, define
+
+$M_{\rm DC}(f)=\inf\{\Lip(q):q\text{ is convex and }f+q\text{ is convex}\}.$
+
+Here a feasible $q$ is a convex correction, $\Lip(q)=+\infty$ if it is not globally Lipschitz, and $\inf\varnothing=+\infty$ . Proposition 6.3 of Kong and Lewis [ 11 ] gives $\Lambda(\delta)\leq\Lip(q)$ for every Lipschitz convex correction, and hence $\Lambda(\delta)\leq M_{\rm DC}(f)$ . Appendix C gives
+
+$M_{\rm DC}(f)\leq L(N-1).$
+
+This estimate comes from one decomposition. It neither proves that an intrinsic nonconvexity parameter grows with $N$ nor bounds that parameter in terms of $L$ alone. Estimating $M_{\rm DC}(f)$ over all corrections would separate the cost of this representation from the objective’s intrinsic nonconvexity. More broadly, it remains to identify quantitative structural assumptions under which a specified oracle admits polynomial dimension dependence.
+
+Appendix A Initial-point conventions and stopping
+
+The following observations relate the prescribed-initial-point model to other initialization and stopping conventions. Choosing the initial point before receiving oracle information incurs no query loss; a free initial response shifts the count by one.
+
+Consider a deterministic algorithm that chooses its initial point from $(d,L,\Delta,\delta,\epsilon)$ before seeing any oracle information, makes its first query there, and counts that call. A uniform $T$ -call guarantee under that convention induces a uniform $T$ -call guarantee in the fixed-initial-point model at the particular initial point it chooses. Consequently, Theorem 2.2 , which holds for every prescribed $\mathbf{x}_{0}$ , transfers to that convention without losing a query.
+
+Fix the input parameters and the algorithm. If preprocessing does not terminate, there is no finite-return guarantee. Otherwise the chosen initial point $\mathbf{x}_{0}^{A}$ and the internal state before the first query are determined by the input alone. In the prescribed-initial-point model with $\mathbf{x}_{0}=\mathbf{x}_{0}^{A}$ , perform the same preprocessing and follow the algorithm. The two executions coincide on every $f\in\mathcal{F}_{d}(L,\Delta;\mathbf{x}_{0}^{A})$ , with the same charged first call. A uniform $T$ -call guarantee would therefore contradict Theorem 2.2 at this prescribed point. ∎
+
+Thus the algorithm-chosen convention in [ 8 , Section 2] incurs no query loss in applying the lower bound.
+
+Free initial responses.
+
+If the initial response at $\mathbf{x}_{0}$ is free and only $J$ subsequent calls are counted, charge once for that response to obtain the convention used here. Conversely, giving the initial response for free removes precisely that call. Hence,
+
+$T=J+1,\qquad T+1=J+2.$
+
+The set $S$ used in the construction has at most $J+2$ points: the initial point, $J$ subsequent locations, and a possible unqueried output. At the fixed accuracy parameters of Corollary 2.4 , the lower bound on additional calls is therefore $\lfloor(7/2)^{(d-2)/2}\rfloor-1$ , leaving the exponential order unchanged.
+
+Before the initial call.
+
+Allowing a return before the initial call does not change the lower bound. Such an output $\widehat{\mathbf{x}}$ is fixed by the input alone. For a budget covered by Theorem 2.2 , choose the parameters of Lemma 4.1 and take
+
+$S=\{\mathbf{x}_{0},\widehat{\mathbf{x}}\}.$
+
+This set has at most two distinct points, and hence at most $T+1$ . Proposition 3.3 applies and gives an admissible objective with
+
+$\mathrm{dist}(\mathbf{0},\partial_{\delta}f(\widehat{\mathbf{x}}))\geq\frac{L\alpha}{L_{F}}>\epsilon.$
+
+The no-query execution returns that same invalid point.
+
+If pre-query computation never terminates, it fails on every admissible objective, including the zero function. Otherwise the initial call is reached and the proof of Theorem 2.2 applies. Only the stopping convention changes.
+
+Appendix B Finite deterministic construction of the direction net
+
+The packing argument bounds the number of net points but does not determine when the sphere is covered. A finite decision test and a deterministic selection rule complete the construction. Both are independent of $f$ ; computational efficiency is not required.
+
+For $d=1$ , use the ordered set $(-\mathbf{e}_{1},\mathbf{e}_{1})$ when $0<\eta<2$ , and the singleton $\{\mathbf{e}_{1}\}$ when $\eta\geq 2$ . Their cardinalities satisfy the bound in Lemma 5.1 . Assume $d\geq 2$ below.
+
+B.1. Rational points on the sphere
+
+For a rational vector $\mathbf{t}\in\mathbb{Q}^{d-1}$ , define
+
+$R(\mathbf{t})=\left(\frac{2\mathbf{t}}{1+\|\mathbf{t}\|^{2}},\frac{1-\|\mathbf{t}\|^{2}}{1+\|\mathbf{t}\|^{2}}\right)\in\mathbb{R}^{d}.$
+
+With $s=\|\mathbf{t}\|^{2}$ , direct substitution gives
+
+$\|R(\mathbf{t})\|^{2}=\frac{4s+(1-s)^{2}}{(1+s)^{2}}=1.$
+
+Thus $R$ sends rational vectors to rational sphere points. The map extends continuously to $\mathbb{R}^{d-1}$ and parametrizes the sphere except for $-\mathbf{e}_{d}$ , with inverse $\mathbf{t}=\mathbf{w}^{\prime}/(1+w_{d})$ for $\mathbf{w}=(\mathbf{w}^{\prime},w_{d})$ and $w_{d}\neq-1$ . Density of rational parameters shows that $R(\mathbb{Q}^{d-1})\cup\{-\mathbf{e}_{d}\}$ is dense in the sphere. Enumerate $\mathbb{Q}^{d-1}$ by increasing bounds on absolute numerators and positive denominators, using lexicographic order within each finite bound and skipping repetitions. Applying $R$ and inserting $-\mathbf{e}_{d}$ at a fixed position gives a dense enumeration independent of the objective.
+
+B.2. A stopping test and finite termination
+
+For an ordered set $\mathcal{V}=(\mathbf{w}_{1},\ldots,\mathbf{w}_{M})$ of selected rational points, test
+
+$\exists\mathbf{x}\in\mathbb{R}^{d}:\quad\sum_{\ell=1}^{d}x_{\ell}^{2}=1,\quad\sum_{\ell=1}^{d}(x_{\ell}-w_{j,\ell})^{2}>\eta^{2}\quad(j=1,\ldots,M).$ (B.1)
+
+Here $x_{\ell}$ and $w_{j,\ell}$ denote vector coordinates. For $M=0$ , only the sphere equation remains, and the test is true. With $\eta$ as a free real parameter, ( B.1 ) is an existential formula with rational polynomial coefficients. Real quantifier elimination [ 1 ] gives an equivalent finite combination of polynomial sign conditions on $\eta$ . These can be evaluated by the exact arithmetic and comparisons allowed in Section 2 , without querying $f$ .
+
+If the test is false, $\mathcal{V}$ is an $\eta$ -net. If it is true, the set
+
+$U_{\mathcal{V}}=\{\mathbf{x}\in\mathbb{S}^{d-1}:\|\mathbf{x}-\mathbf{w}_{j}\|>\eta\text{ for }j=1,\ldots,M\}$
+
+is nonempty and relatively open. It therefore contains a point of the dense enumeration. Append the first enumerated point satisfying the strict inequalities, and repeat the decision test. The search terminates because some admissible point has a finite index. Each selected set is strictly $\eta$ -separated and hence has size at most $(1+2/\eta)^{d}$ . Since every decision and selection is finite, the procedure terminates with the required ordered net.
+
+Appendix C Difference-of-convex structure of the hard family
+
+A function is difference-of-convex (DC) if $f=p-q$ with $p$ and $q$ convex. Equivalently, $q$ is a convex correction making $f+q$ convex; it need not be unique. Each branch of the interpolant is convex, although their minimum need not be. Their sum gives a direct DC decomposition that also accommodates the lower truncation.
+
+Every finite hard instance produced by Proposition 3.3 is DC.
+
+If $N=1$ , then the construction is
+
+$F(\mathbf{x})=\mathbf{e}_{1}^{\top}(\mathbf{x}-\mathbf{q}_{1}),\qquad f(\mathbf{x})=\max\left\{\frac{L}{L_{F}}\mathbf{e}_{1}^{\top}(\mathbf{x}-\mathbf{q}_{1}),-\Delta\right\},$
+
+and $f$ is convex. Taking $p=f$ and $q=0$ gives
+
+$\Lip(q)=0=L(N-1),\qquad\Lip(p)\leq L=LN.$
+
+If $N\geq 2$ , let $F_{1},\ldots,F_{N}$ be the branches in ( 3.11 ), let $F=\min_{i}F_{i}$ , and define
+
+$H(\mathbf{x})=\sum_{i=1}^{N}F_{i}(\mathbf{x}),\qquad K(\mathbf{x})=\max_{1\leq i\leq N}\sum_{j\neq i}F_{j}(\mathbf{x}).$
+
+Then $H$ and $K$ are convex and $F=H-K$ . Moreover, with
+
+$p(\mathbf{x})=\max\left\{\frac{L}{L_{F}}H(\mathbf{x}),\frac{L}{L_{F}}K(\mathbf{x})-\Delta\right\},\qquad q(\mathbf{x})=\frac{L}{L_{F}}K(\mathbf{x}),$
+
+the functions $p,q$ are convex and satisfy $f=p-q$ . The displayed decomposition satisfies
+
+$\Lip(q)\leq L(N-1),\qquad\Lip(p)\leq LN.$
+
+The case $N=1$ is given in the statement. For $N\geq 2$ , every branch is convex: its penalty is the maximum of a convex norm-minus-constant function and zero, and its remaining term is affine. Thus $H$ and $K$ are convex, and
+
+$K=\max_{i}(H-F_{i})=H-\min_{i}F_{i}=H-F.$
+
+Substitution into ( 3.17 ) gives
+
+$f=\max\left\{\frac{L}{L_{F}}(H-K),-\Delta\right\}=\max\left\{\frac{L}{L_{F}}H,\frac{L}{L_{F}}K-\Delta\right\}-\frac{L}{L_{F}}K=p-q.$
+
+The functions $p$ and $q$ are convex. Since each $F_{i}$ is $L_{F}$ -Lipschitz, $H$ is $NL_{F}$ -Lipschitz and $K$ is $(N-1)L_{F}$ -Lipschitz. Scaling and taking the finite maximum give the claimed bounds on $\Lip(p)$ and $\Lip(q)$ . ∎
+
+Using the notation and DC comparison in Section 6 , the correction in Proposition C.1 gives
+
+$\Lambda(\delta)\leq M_{\rm DC}(f)\leq\Lip(q)\leq L(N-1).$
+
+This is an upper bound only; it does not establish a lower bound proportional to $N$ for either intrinsic quantity.
+
+For $N\geq 2$ , the translation identity gives $K(\mathbf{x}+t\mathbf{u})=K(\mathbf{x})+(N-1)\alpha t$ for the maximum of the branch sums defining $K$ . The displayed correction $q=(L/L_{F})K$ therefore satisfies
+
+$q(\mathbf{x}+t\mathbf{u})-q(\mathbf{x})=\frac{L\alpha(N-1)}{L_{F}}t.$
+
+Because $\|\mathbf{u}\|=1$ , this gives
+
+$\frac{L\alpha(N-1)}{L_{F}}\leq\Lip(q)\leq L(N-1).$
+
+For the parameter choice in Lemma 4.1 , $\alpha/L_{F}>\epsilon/L$ . Thus, for $N\geq 2$ and a fixed ratio $\epsilon/L>0$ , the Lipschitz constant of this correction is bounded above and below by positive constants times $LN$ . These constants can depend on $\epsilon/L$ , but not on $d$ or $N$ . The lower bound concerns only the displayed correction and does not compare it with all other admissible corrections. Estimating $M_{\rm DC}(f)$ over all corrections, or estimating $\Lambda(\delta)$ , requires a separate argument.
+
+Appendix D A non-weakly-convex instance
+
+A two-branch member of the construction has a downward cusp along a line. Adding a quadratic leaves the jump in the one-sided derivatives unchanged and cannot make the restriction convex.
+
+The interpolation formula ( 3.12 ), followed by the truncation ( 3.17 ), can define a function that is not $\varrho$ -weakly convex for any finite $\varrho\geq 0$ .
+
+Recall that $f$ is $\varrho$ -weakly convex if $f(\mathbf{x})+(\varrho/2)\|\mathbf{x}\|^{2}$ is convex. Fix $d\geq 3$ and $a>0$ , and take $\alpha=1/2$ , $\gamma=3/4$ , and $\beta=2$ . Then $c_{\gamma}=\sqrt{7}/4$ , $\beta c_{\gamma}>1$ , and $L_{F}=\sqrt{5+2\sqrt{3}}$ . Choose
+
+$\mathbf{u}=\frac{1}{2}\mathbf{e}_{1}+\frac{\sqrt{3}}{2}\mathbf{e}_{2},\qquad\mathbf{q}_{+}=a\mathbf{e}_{3},\qquad\mathbf{q}_{-}=-a\mathbf{e}_{3},\qquad S=\{\mathbf{q}_{+},\mathbf{q}_{-}\}.$
+
+The two-point set $S$ has only one pairwise difference up to sign, namely $\mathbf{q}_{+}-\mathbf{q}_{-}=2a\mathbf{e}_{3}$ . It is perpendicular to $\mathbf{u}$ , and Lemma 3.2 applies directly. Its radius is
+
+$s_{*}=2a,\qquad r=\frac{\sqrt{7}-2}{4}a,\qquad 0<r<a.$
+
+Since $\mathbf{P}\mathbf{e}_{3}=\mathbf{e}_{3}$ and $\mathbf{e}_{1}\perp\mathbf{e}_{3}$ , the affine terms on the line $\mathbf{x}=t\mathbf{e}_{3}$ satisfy
+
+$\mathbf{e}_{1}^{\top}(t\mathbf{e}_{3}-\mathbf{q}_{+})=0,\qquad\mathbf{e}_{1}^{\top}(t\mathbf{e}_{3}-\mathbf{q}_{-})=0.$
+
+The projected distances are $|t-a|$ and $|t+a|$ . For $|t|<a-r$ ,
+
+$F(t\mathbf{e}_{3})=2\min\{|t-a|-r,|t+a|-r\}=2(a-r)-2|t|>0.$
+
+Set $L=\Delta=1$ and $f(\mathbf{x})=\max\{F(\mathbf{x})/L_{F},-1\}$ . The truncation is inactive on this interval, giving
+
+$f(t\mathbf{e}_{3})=\frac{2(a-r)}{L_{F}}-\frac{2}{L_{F}}|t|.$ (D.1)
+
+For any finite $\varrho\geq 0$ , ( D.1 ) shows that the restriction $\psi(t)=f(t\mathbf{e}_{3})+(\varrho/2)t^{2}$ satisfies
+
+$\psi^{\prime}_{-}(0)=\frac{2}{L_{F}}>-\frac{2}{L_{F}}=\psi^{\prime}_{+}(0),$
+
+contrary to the ordering of one-sided derivatives of a convex function. Thus no finite weak-convexity parameter is possible. ∎
+
+This example concerns the interpolation family, not a separate low-dimensional query lower bound. It uses the directional assumptions of Lemma 3.2 directly, without invoking the cardinality condition of Lemma 3.1 .
+
+References

@@ -1,0 +1,177 @@
+[
+  {
+    "anchor": "Thmremark1",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 1 (Optimizer-agnostic transport) . The transport correction ( 4 ) depends only on the parameter trajectory $\\{\\theta_{s}\\}_{s\\in Q_{t}}$ , not on the specific update rule. Any optimizer—Adam, SGD, D-FTRL—that supplies iterates to the re-evaluation loop inherits the $\\sigma_{\\max}$ -factor improvement. We validate this observation by evaluating Adam+ IGT in Section 5.4 and D-FTRL+IGT in Appendix G.2 ."
+  },
+  {
+    "anchor": "Thmtheorem1",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 1 (Bilevel convergence under delay) . Under Assumptions 1 – 7 , define $\\rho_{\\mathrm{cpl}}:=L_{w\\theta}^{2}/(\\mu_{w}^{2}\\mu_{F})<1$ and $C_{\\rho}=(1-\\rho_{\\mathrm{cpl}})^{-1}$ . Algorithm 1 with step size $\\eta_{t}$ attains decision regret: $\\mathrm{Regret}_{T}^{\\mathrm{dec}}\\leq C_{\\rho}\\!\\left[\\frac{2D_{\\psi}\\sqrt{1+\\beta\\sigma_{\\max}}}{\\eta_{0}}+\\frac{\\eta_{0}\\,G^{2}T}{2}+2T\\,\\epsilon_{\\mathrm{inner}}^{2}+L_{F}\\!\\sum_{t=1}^{T}\\sum_{k\\in W_{t}}\\left\\|\\theta_{k+1}-\\theta_{k}\\right\\|^{2}\\right],$ (5) where $D_{\\psi}$ is the Bregman diameter of the feasible set. Setting $\\eta_{0}=c/\\sqrt{T}$ yields $\\mathrm{Regret}_{T}^{\\mathrm{dec}}=O\\!\\bigl(\\sqrt{T\\,\\sigma_{\\max}}+T\\,\\epsilon_{\\mathrm{inner}}^{2}\\bigr)$ , where $c=2D_{\\psi}^{1/2}(1+\\beta\\sigma_{\\max})^{1/4}/G$ balances the first two terms of ( 5 )."
+  },
+  {
+    "anchor": "Thmtheorem2",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 2 (Staleness amplification) . Let $\\mathcal{A}$ be any delayed optimizer treating $F(\\theta)$ as a black-box convex function using stale bilevel gradients without bilevel-aware correction. Then: (a) The gradient mismatch satisfies $\\left\\|\\hat{g}-\\nabla F(\\theta_{t})\\right\\|\\leq L_{F}\\left\\|\\theta_{t}-\\theta_{t-d_{t}}\\right\\|+C_{0}\\epsilon_{\\mathrm{inner}}$ . (b) On a hard quadratic bilevel instance, $\\mathrm{Regret}_{T}(\\mathcal{A})\\geq\\Omega(T\\epsilon_{\\mathrm{inner}}^{2})$ , regardless of step-size schedule, delay handling strategy, or queue length adaptation. (c) Bilevel aware correction reduces the transport error from $O(\\sigma_{\\max}^{2}\\eta^{2}G^{2})$ to $O(\\sigma_{\\max}\\eta^{2}G^{2})$ per round—a factor $\\sigma_{\\max}$ improvement."
+  },
+  {
+    "anchor": "Thmtheorem3",
+    "kind": "ltx_theorem ltx_theorem_theorem",
+    "text": "Theorem 3 (Inner-loop apathy) . Under Assumptions 1 – 7 , the decision regret decomposes as: $\\mathrm{Regret}_{T}^{\\mathrm{dec}}=\\underbrace{O\\!\\bigl(\\eta_{0}^{2}G^{2}T\\sigma_{\\max}\\bigr)}_{\\text{delay error}\\,(R_{1})}+\\underbrace{O(T\\,\\epsilon_{\\mathrm{inner}}^{2})}_{\\text{inner bias}\\,(R_{2})}+\\underbrace{O\\!\\Bigl(C_{\\mathrm{ap}}\\!\\sum_{t=1}^{T}\\sum_{k\\in W_{t}}\\left\\|\\theta_{k+1}-\\theta_{k}\\right\\|^{2}\\Bigr)}_{\\text{interaction}\\,(R_{3})}.$ (6) The interaction $R_{3}$ uses per-step squared changes ( $\\sigma_{t}\\eta^{2}G^{2}$ ) instead of squared total drift ( $\\sigma_{t}^{2}\\eta^{2}G^{2}$ )–a $\\sigma_{t}$ factor improvement; here $C_{\\mathrm{ap}}$ is an explicit bounded constant, so $\\epsilon_{\\mathrm{inner}}$ remains additive rather than multiplied by delay."
+  },
+  {
+    "anchor": "Thmproposition1",
+    "kind": "ltx_theorem ltx_theorem_proposition",
+    "text": "Proposition 1 ( DDE stability region) . Suppose $\\sigma_{\\max}<1/\\beta$ and $\\theta^{*}\\in\\mathrm{relint}(\\Theta)$ . Consider the continuous-time limit of IGT-OMD, $\\dot{\\theta}(t)=-\\eta(t)\\,g^{\\mathrm{IGT}}\\bigl(\\theta(t),\\,\\{\\theta(t-\\tau_{s})\\}_{s\\in Q(t)}\\bigr)$ , with $\\eta(t)=\\eta_{0}/\\sqrt{1+\\beta\\bar{\\sigma}(t)}$ . Linearizing around $\\theta^{*}$ , the system is asymptotically stable whenever $\\eta_{0}<\\min\\{1/(\\|H_{F}\\|\\sqrt{1+\\beta\\sigma_{\\max}}),\\sqrt{1+\\beta\\sigma_{\\max}}/(\\sigma_{\\max}\\sqrt{\\|L_{\\mathrm{IGT}}\\|})\\}$ , where $\\|H_{F}\\|$ denotes its spectral norm (equal to $\\lambda_{\\max}(H_{F})$ ; $H_{F}\\succ 0$ ). This is a sufficient local certificate for the bounded active-window embedding used in the analysis."
+  },
+  {
+    "anchor": "Thmproposition2",
+    "kind": "ltx_theorem ltx_theorem_proposition",
+    "text": "Proposition 2 (Discrete-continuous consistency) . Let $\\theta^{\\mathrm{disc}}_{k}$ denote IGT-OMD iterates and $\\theta^{\\mathrm{cont}}(t)$ the solution to the DDE in Proposition 1 with the same initial history. Under the assumptions of Proposition 1 and a uniform step bound $\\eta_{t}\\leq\\eta_{\\max}$ , the discrete trajectory tracks the continuous solution: $\\sup_{k\\,\\leq\\,T}\\,\\bigl\\|\\theta^{\\mathrm{disc}}_{k}-\\theta^{\\mathrm{cont}}(t_{k})\\bigr\\|\\;\\leq\\;C\\,\\eta_{\\max},$ with $t_{k}=\\sum_{s\\leq k}\\eta_{s}$ and a constant $C$ depending on $T$ , $\\left\\|H_{F}\\right\\|$ , $\\left\\|L_{\\mathrm{IGT}}\\right\\|$ , and $\\sigma_{\\max}$ but not on the discretization. Consequently, the discrete iterates inherit the asymptotic stability and contraction rate of the DDE up to $O(\\eta_{\\max})$ error."
+  },
+  {
+    "anchor": "Thmremark2",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 2 (Interior equilibrium) . Both propositions require $\\theta^{*}{\\in}\\mathrm{relint}(\\Theta)$ for DDE linearization; the regret bounds (Theorems 1 – 3 ) hold without this restriction. The boundary case is handled by the OMD projection in ( 3 )."
+  },
+  {
+    "anchor": "Thmremark3",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 3 (Constant delay as adversarial worst case) . Constant $d_{t}=d$ gives $\\sigma_{\\max}=d$ and maximizes $\\sum_{t}\\sigma_{t}$ among all delay patterns with the same total feedback budget. Hence, our constant-delay experiments are adversarial; variable delays can only improve on these bounds. We additionally validate under uniform delays in Appendix G.3 ."
+  },
+  {
+    "anchor": "Thmremark4",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 4 (Trajectory stability as hidden requirement) . Adam’s per-coordinate scaling constrains step magnitudes, ensuring transported gradients $g_{s}(\\theta_{t})$ remain accurate corrections. SGD lacks this preconditioning, so transport introduces noise in high-curvature directions. See Appendix G.2 ."
+  },
+  {
+    "anchor": "Thmremark5",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 5 (Practical implementation) . Algorithm 1 is stated with the synchronous OMD update and monotone envelope $\\bar{\\sigma}_{t}$ for consistency with the theory (Theorem 1 ). The source implementations use an event-driven specialization: updates are invoked on feedback-arrival rounds, the active transport buffer advances on those update events, and practical variants may use the current active buffer size in the learning-rate damping. The transport re-evaluation loop is modular: it produces a corrected gradient $g^{\\mathrm{IGT}}$ that can be fed to any base optimizer. The $2{\\times}2$ factorial shows this choice matters: pairing transport with Adam eliminates delay degradation, whereas pairing with SGD can amplify it. We recommend Adam or another adaptive optimizer as the base when applying Algorithm 1 to non-convex objectives."
+  },
+  {
+    "anchor": "Thmassumption1",
+    "kind": "ltx_theorem ltx_theorem_assumption",
+    "text": "Assumption 1 (Inner convexity and smoothness (A1)) . $\\mathcal{L}_{\\text{model}}(\\cdot;\\theta)$ is $\\mu_{w}$ -strongly convex and $L_{w}$ -smooth for all $\\theta\\in\\Theta$ ; both $\\mathcal{L}_{\\text{model}}$ and $\\mathcal{L}_{\\text{true}}$ are twice continuously differentiable jointly in $(w,\\theta)$ . The strong convexity ensures a unique inner minimizer $w^{*}(\\theta)$ for each $\\theta$ and guarantees invertibility of $H_{w}=\\nabla^{2}_{ww}\\mathcal{L}_{\\text{model}}(w^{*};\\theta)$ ."
+  },
+  {
+    "anchor": "Thmassumption2",
+    "kind": "ltx_theorem ltx_theorem_assumption",
+    "text": "Assumption 2 (Outer smoothness (A2)) . $\\mathcal{L}_{\\text{true}}(w;\\cdot)$ is $L_{\\theta}$ -smooth: $\\|\\nabla_{\\theta}\\mathcal{L}_{\\text{true}}(w;\\theta)-\\nabla_{\\theta}\\mathcal{L}_{\\text{true}}(w;\\theta^{\\prime})\\|\\leq L_{\\theta}\\|\\theta-\\theta^{\\prime}\\|$ for all $w,\\theta,\\theta^{\\prime}$ . The cross-partial derivatives satisfy $\\|\\nabla^{2}_{w\\theta}\\mathcal{L}_{\\text{model}}(w;\\theta)\\|\\leq L_{w\\theta}$ for all $(w,\\theta)$ ."
+  },
+  {
+    "anchor": "Thmassumption3",
+    "kind": "ltx_theorem ltx_theorem_assumption",
+    "text": "Assumption 3 (Inner-solver quality (A3)) . The warm-started inner solver achieves $\\|w_{t}-w^{*}(\\theta_{t})\\|\\leq\\epsilon_{\\mathrm{inner}}$ for all $t$ , and the executed decision has local excess loss $\\mathcal{L}_{\\text{true}}(w_{t};\\theta_{t})-\\mathcal{L}_{\\text{true}}(w^{*}(\\theta_{t});\\theta_{t})\\leq\\epsilon_{\\mathrm{inner}}^{2}$ after absorbing the local quadratic constant into $\\epsilon_{\\mathrm{inner}}$ . Running $K=O(\\ln(1/\\epsilon_{\\mathrm{inner}}))$ gradient descent steps from $w_{t-1}$ suffices when $\\mathcal{L}_{\\text{model}}$ is $\\mu_{w}$ -strongly convex and $L_{w}$ -smooth and the decision loss is locally quadratic around $w^{*}(\\theta_{t})$ ."
+  },
+  {
+    "anchor": "Thmassumption4",
+    "kind": "ltx_theorem ltx_theorem_assumption",
+    "text": "Assumption 4 (Bounded queue (A4)) . The feedback delay sequence $\\{d_{t}\\}$ has bounded maximum queue length: $\\sigma_{t}=|Q_{t}|\\leq\\sigma_{\\max}<\\infty$ for all $t$ . This subsumes fixed delays ( $d_{t}=d$ , $\\sigma_{\\max}=d$ ), i.i.d. delays ( $\\sigma_{\\max}=$ 99th-percentile queue length), and adversarial delays satisfying $d_{t}\\leq D$ (giving $\\sigma_{\\max}\\leq D$ )."
+  },
+  {
+    "anchor": "Thmassumption5",
+    "kind": "ltx_theorem ltx_theorem_assumption",
+    "text": "Assumption 5 (Cross-partial Lipschitz (A5)) . The mixed second derivative satisfies $\\|\\nabla^{2}_{w\\theta}\\mathcal{L}_{\\text{model}}(w;\\theta)-\\nabla^{2}_{w\\theta}\\mathcal{L}_{\\text{model}}(w^{\\prime};\\theta^{\\prime})\\|\\leq L_{w\\theta}(\\|w-w^{\\prime}\\|+\\|\\theta-\\theta^{\\prime}\\|)$ . The map $w\\mapsto[\\nabla^{2}_{ww}\\mathcal{L}_{\\text{model}}(w;\\theta)]^{-1}$ is $(L_{w}/\\mu_{w}^{2})$ -Lipschitz in $w$ . Together, these ensure that the per-round IGT re-evaluation cost ( 2 ) is $O(pq)$ (no inner solve required)."
+  },
+  {
+    "anchor": "Thmassumption6",
+    "kind": "ltx_theorem ltx_theorem_assumption",
+    "text": "Assumption 6 (Bounded hypergradients (A6)) . The IGT-corrected hypergradients are bounded: $\\|g_{t}^{\\mathrm{IGT}}\\|\\leq G$ for all $t$ and $\\theta\\in\\Theta$ . By the chain rule and triangle inequality, $G\\leq G_{\\mathrm{true}}+(L_{w\\theta}/\\mu_{w})\\epsilon_{\\mathrm{inner}}$ , where $G_{\\mathrm{true}}=\\sup_{\\theta}\\|\\nabla F(\\theta)\\|$ bounds the exact hypergradient."
+  },
+  {
+    "anchor": "Thmassumption7",
+    "kind": "ltx_theorem ltx_theorem_assumption",
+    "text": "Assumption 7 (Bilevel convexity (A7)) . The bilevel objective $F(\\theta)=\\mathcal{L}_{\\text{true}}(w^{*}(\\theta);\\theta)$ is $\\mu_{F}$ -strongly convex. The bilevel coupling condition $L_{w\\theta}^{2}/(\\mu_{w}^{2}\\mu_{F})<1$ ensures that the feedback from the inner minimizer does not destabilize the outer-level optimization. This assumption holds when the inner problem is well-conditioned ( $\\mu_{w}$ large) or the cross-coupling is weak ( $L_{w\\theta}$ small)."
+  },
+  {
+    "anchor": "Thmcorollary1",
+    "kind": "ltx_theorem ltx_theorem_corollary",
+    "text": "Corollary 1 (Comparison with non-delayed bilevel OMD) . Setting $\\sigma_{\\max}=0$ (no delay) and $\\beta=0$ , the bound reduces to $O(D_{\\psi}\\sqrt{T}+T\\epsilon_{\\mathrm{inner}}^{2})$ , which is the standard $O(\\sqrt{T})$ rate for convex OCO. [ 12 ] achieve the faster $O((G^{2}/\\mu_{F})\\ln T)$ rate by exploiting $\\mu_{F}$ -strong convexity of $F$ ; for the delay/transport terms (Lemma 2 ), our analysis uses convexity-only arguments and does not exploit strong convexity. (Strong convexity is used to absorb the inner-bias cross-term in Lemma 3 and, more prominently, in the pure-bias and interaction bounds of Theorem 3 .) With exact inner solver ( $\\epsilon_{\\mathrm{inner}}=0$ ) and adequate $K=O(\\ln T)$ inner steps, the bound reduces to $O(\\sqrt{T\\sigma_{\\max}})$ , which is comparable to the $O(\\sqrt{Td_{\\mathrm{tot}}})$ rate of single-level D-FTRL [ 4 ] with the queue-length $\\sigma_{\\max}$ replacing the total delay $d_{\\mathrm{tot}}=T\\sigma_{\\max}$ ."
+  },
+  {
+    "anchor": "Thmremark6",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 6 (Why $\\epsilon_{\\mathrm{inner}}$ enters additively) . The $T\\epsilon_{\\mathrm{inner}}^{2}$ cost is unavoidable (Theorem 2 (b)), but it enters additively rather than coupled with $\\sigma_{\\max}$ . This traces to Lemma 3 , where Young’s inequality decouples the inner approximation error from the queue length. The transport corrections $\\sum_{s\\in Q_{t}}\\left\\|\\theta_{s+1}-\\theta_{s}\\right\\|^{2}$ involve only the per-step displacements (bounded by $\\eta_{t}^{2}G^{2}$ ) rather than the accumulated displacement $\\left\\|\\theta_{t}-\\theta_{t-\\sigma_{t}}\\right\\|^{2}=O(\\sigma_{t}^{2}\\eta_{t}^{2}G^{2})$ , which would reintroduce a $\\sigma_{\\max}^{2}$ factor. IGT replaces this large term with the sum of squares, gaining a factor of $\\sigma_{\\max}$ in the transport error (Theorem 2 (c))."
+  },
+  {
+    "anchor": "Thmremark7",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 7 (Coupling condition and the non-vacuity threshold) . The coupling condition $L_{w\\theta}^{2}/(\\mu_{w}^{2}\\mu_{F})<1$ (Assumption 7 ) is not merely a proof convenience: when it fails, the inner-solver bias term $\\frac{L_{w\\theta}^{2}}{\\mu_{w}^{2}\\mu_{F}}[F(\\theta_{t})-F(\\theta^{*})]$ in Lemma 3 exceeds the regret it is meant to absorb. Physically, this means the bilevel problem is “too implicit” — the inner solution $w^{*}(\\theta)$ is so sensitive to $\\theta$ that approximate solves induce gradient errors larger than the true signal. Similarly, the $O(\\sqrt{T\\sigma_{\\max}})$ rate is non-vacuous (i.e., sublinear) only when $\\sigma_{\\max}=o(T)$ . At $\\sigma_{\\max}=\\Omega(T)$ — corresponding to total disconnection where feedback never arrives faster than the horizon — the regret bound becomes $O(T)$ , which is no better than static play. This threshold is intrinsic to delayed OCO: the same $O(T)$ vacuity occurs in the single-level bounds of D-FTRL [ 4 ] when $d_{\\mathrm{tot}}=\\Omega(T^{2})$ ."
+  },
+  {
+    "anchor": "Thmremark8",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 8 (Step-size choice and dynamic stability) . Theorem 1 is an OCO regret bound that holds for any $\\eta_{0}>0$ : no stability condition is imposed. Separately, Proposition 1 shows that the continuous-time limit of IGT-OMD is asymptotically stable only when $\\eta_{0}<1/(\\|H_{F}\\|\\sqrt{1+\\beta\\sigma_{\\max}})$ . The regret-optimal choice $\\eta_{0}=c/\\sqrt{T}$ satisfies this stability threshold for all $T\\geq\\|H_{F}\\|^{2}(1+\\beta\\sigma_{\\max})$ , i.e., beyond a modest horizon that depends on the problem conditioning. For small $T$ or very large $\\sigma_{\\max}$ , practitioners should additionally impose $\\eta_{0}\\leq 1/(\\|H_{F}\\|\\sqrt{1+\\beta\\sigma_{\\max}})$ to ensure the iterates remain in the stable regime; this only improves the bound by preventing transient oscillations that inflate $D_{\\psi}(\\theta^{*},\\theta_{t})$ ."
+  },
+  {
+    "anchor": "Thmcorollary2",
+    "kind": "ltx_theorem ltx_theorem_corollary",
+    "text": "Corollary 2 (Vector-valued extension) . The hard instance of Theorem 2 (b) extends to $p,q>1$ : replace $\\theta$ with a vector and construct $A,B\\in\\mathbb{R}^{q\\times p}$ such that $(A-B)^{\\top}(A-B)\\succeq C_{0}^{2}I$ . All scalar norms become Euclidean norms, and the lower-bound calculation carries through unchanged. Hence $\\mathrm{Regret}_{T}(\\mathcal{A})\\geq\\Omega(T\\epsilon_{\\mathrm{inner}}^{2})$ holds in full generality."
+  },
+  {
+    "anchor": "Thmremark9",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 9 (On the constant $C_{\\mathrm{ap}}$ ) . The constant $C_{\\mathrm{ap}}$ in the statement of Theorem 3 absorbs the $\\kappa^{2}\\sigma_{\\max}^{3}/(4\\mu_{F})$ prefactor of ( 40 ). This is not vacuous: under the queue-adaptive schedule, $\\|\\theta_{k+1}-\\theta_{k}\\|^{2}\\leq\\eta_{0}^{2}G^{2}/(1+\\beta\\sigma_{\\max})$ absorbs one factor of $\\sigma_{\\max}$ , and the leading-order rate $O(\\sqrt{T\\sigma_{\\max}})$ from Theorem 1 is determined by the $R_{1}$ and OMD-base terms, neither of which carries this prefactor."
+  },
+  {
+    "anchor": "Thmremark10",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 10 (Young’s-inequality budget) . The proof above applies Young’s inequality twice—once in Step 3 and once in Step 4—each absorbing a multiple of $\\|\\theta_{t}-\\theta^{*}\\|^{2}$ into the strong-convexity gain. Strictly, only $(\\mu_{F}/2)\\|\\theta_{t}-\\theta^{*}\\|^{2}$ is available per round; distributing the budget evenly across the two applications gives the same asymptotic rates with the constants in $R_{2}$ and $R_{3}$ inflated by a constant factor. The leading-order conclusion of Theorem 3 is unchanged."
+  },
+  {
+    "anchor": "Thmremark11",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 11 (Why “Inner-Loop Apathy”) . The name Inner-Loop Apathy reflects the structural decoupling Theorem 3 establishes: as the cross-partial Lipschitz constant $L_{\\theta w}\\to 0$ , the composite sensitivity $\\kappa=L_{g}\\,C_{1}\\to 0$ (since $C_{1}=L_{\\theta w}/\\mu_{w}$ ), and the interaction term $R_{3}\\to 0$ . In this limit the outer optimizer becomes “apathetic” to the inner solver’s approximation quality—the delay-error and inner-bias contributions decouple completely, and inner-solver imprecision affects the regret only through the additive $O(T\\epsilon_{\\mathrm{inner}}^{2})$ term. In the predict-then-optimise context, $L_{\\theta w}\\approx 0$ corresponds to the downstream decision problem being insensitive to the prediction model’s parameters, so that the staleness of the inner (prediction) solution does not propagate to the outer (decision) loss."
+  },
+  {
+    "anchor": "Thmremark12",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 12 (Why $\\epsilon_{\\mathrm{inner}}$ enters quadratically in $R_{2}$ ) . The quadratic scaling $O(T\\epsilon_{\\mathrm{inner}}^{2})$ in $R_{2}$ is not an artifact of the proof. Informally, the inner-solver error $\\epsilon_{\\mathrm{inner}}$ contributes an additive bias of $L_{g}\\sigma_{t}\\epsilon_{\\mathrm{inner}}$ to each gradient, which by Young’s inequality splits into $\\epsilon_{\\mathrm{inner}}^{2}$ (squared bias) and $\\|\\theta_{t}-\\theta^{*}\\|^{2}$ (deviation from optimum). The deviation is absorbed by the regret definition, leaving only the squared bias. In contrast, single-level methods (Theorem 2 ) cannot absorb the bias this way because the inner error covaries with the outer drift, preventing the Young’s decomposition from decoupling the two."
+  },
+  {
+    "anchor": "Thmremark13",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 13 (Limitation: strong convexity requirement for bias absorption) . Steps 3 and 4 of the proof above rely on $\\mu_{F}$ -strong convexity of $F$ (Assumption 7 ) to absorb the $\\|\\theta_{t}-\\theta^{*}\\|^{2}$ terms via Young’s inequality. If $F$ is merely convex ( $\\mu_{F}=0$ ), the pure-bias term $R_{2}$ cannot be absorbed leading to an uncontrolled linear drift. Two mitigation strategies exist: (i) dynamically increasing the inner-solver budget so that $\\epsilon_{\\mathrm{inner},t}=O(1/\\sqrt{t})$ , which makes the bias summable without strong convexity; or (ii) accepting a residual neighborhood of size $O(\\sigma_{\\max}\\epsilon_{\\mathrm{inner}})$ around the optimum. Our transport-error bounds (Theorem 1 ) hold for a general convex $F$ ; it is only the separation of the inner-bias and interaction terms that require $\\mu_{F}>0$ ."
+  },
+  {
+    "anchor": "Thmremark14",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 14 (Practical implication for inner-solver budget) . Inequality ( 40 ) reveals a concrete guideline: with adaptive step size $\\eta_{t}=\\eta_{0}/\\sqrt{1+\\beta\\bar{\\sigma}_{t}}$ , each step satisfies $\\|\\theta_{t+1}-\\theta_{t}\\|^{2}\\leq\\eta_{0}^{2}G^{2}/(1+\\beta\\bar{\\sigma}_{t})$ . Therefore $R_{3}\\leq O\\bigl(\\eta_{0}^{2}G^{2}\\sigma_{\\max}^{3}d_{\\mathrm{tot}}/\\beta\\bigr)$ , where $d_{\\mathrm{tot}}=\\sum_{t}d_{t}$ is the total delay mass. Setting $\\eta_{0}=O(1/\\sqrt{T})$ keeps $R_{3}=O(\\sigma_{\\max}^{3}d_{\\mathrm{tot}}/T)\\to 0$ , so the interaction term is sublinear in $T$ even when the inner solver is imperfect, provided $\\sigma_{\\max}$ and $d_{\\mathrm{tot}}/T$ are bounded."
+  },
+  {
+    "anchor": "Thmcorollary3",
+    "kind": "ltx_theorem ltx_theorem_corollary",
+    "text": "Corollary 3 (Stability phase transition) . Proposition 1 ’s criterion $\\mu_{\\min}>\\|L_{\\mathrm{IGT}}\\|\\sigma$ implies a phase transition at $\\sigma_{\\max}^{*}=\\mu_{\\min}/\\|L_{\\mathrm{IGT}}\\|=1/\\beta$ : (i) for $\\sigma_{\\max}<1/\\beta$ , the non-delayed step size $\\eta_{0}=1/\\|H_{F}\\|$ remains stable; (ii) for $\\sigma_{\\max}\\geq 1/\\beta$ , the adaptive schedule must damp $\\eta$ as $1/\\sqrt{\\beta\\sigma_{\\max}}$ , trading convergence speed for stability. This corollary explains the LQR result (Section 5.1 ) that single-level methods lose stability near $\\sigma\\approx 15$ : without adaptive damping, the coupling term $\\eta\\|L_{\\mathrm{IGT}}\\|\\sigma$ eventually exceeds $\\eta\\mu_{\\min}$ ."
+  },
+  {
+    "anchor": "Thmremark15",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 15 (Deterministic vs. stochastic delays) . Proposition 1 provides a deterministic worst-case stability guarantee: the queue length $\\sigma(t)$ may vary arbitrarily within $[0,\\sigma_{\\max}]$ , but is treated as a deterministic signal. In networked implementations where delay is stochastic, the fluctuations act as multiplicative noise on the gradient update: even if the mean system is stable, large delay variance (“jitter”) can cause the second moment $\\mathbb{E}[\\|\\xi(t)\\|^{2}]$ to diverge ( [ 30 ] , Ch. 9 on stochastic DDE s). Extending Proposition 1 to mean-square stability would require bounding the delay variance in addition to $\\sigma_{\\max}$ and is left for future work."
+  },
+  {
+    "anchor": "Thmremark16",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 16 (Comparison with Yu et al. (2025) and Ryabchenko et al. (2026)) . [ 8 ] establish characteristic-root stability for single-level ASGD via the scalar DDE $\\dot{x}=-vx(t-\\tau)$ , with stability margin $v\\tau<\\pi/2$ . Our Lemma 9 generalizes this to the bilevel-corrected dynamics by introducing the separating term $-\\eta\\mu_{i}z_{i}(t)$ (missing in single-level ASGD), which expands the stability region from $\\eta|\\ell_{i}|\\tau<\\pi/2$ to $\\eta|\\ell_{i}|\\sigma<\\mu_{i}$ (queue-length, not delay-time, criterion). [ 15 ] establishes that queue length is the right complexity measure for regret; our Lemma 10 establishes the same for stability ."
+  },
+  {
+    "anchor": "Thmremark17",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 17 (Interior Equilibrium Assumption) . Propositions 1 and 2 linearize around the Stackelberg equilibrium $\\theta^{*}$ , which requires $\\theta^{*}\\in\\mathrm{relint}(\\Theta)$ so that the projection operator $\\Pi_{\\Theta}$ is locally inactive and the unconstrained first-order condition $\\nabla F(\\theta^{*})=0$ holds. If $\\theta^{*}$ lies on the boundary of $\\Theta$ —as may occur when $\\Theta$ is a simplex and the optimal policy is pure—the projection introduces non-smooth dynamics (boundary chattering) that the linear DDE analysis cannot capture. In the bilevel predict-then-optimize setting with neural network parameters $\\theta\\in\\mathbb{R}^{p}$ and $\\mu_{F}$ -strong convexity (Assumption 7 ), the unconstrained minimizer of $F$ is unique and typically interior when $\\Theta$ is sufficiently large; the assumption is mild in practice but necessary for the linearization. The regret bounds of Theorems 1 – 3 do not require this condition."
+  },
+  {
+    "anchor": "Thmremark18",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 18 (Finiteness of $M$ ) . In the stable regime (Proposition 1 ), $\\theta^{\\mathrm{c}}(t)\\to\\theta^{*}$ exponentially. The derivative $\\dot{\\theta}^{\\mathrm{c}}(t)=f(t,\\theta^{\\mathrm{c}}(t))$ is bounded since $\\|f\\|\\leq(\\|H_{F}\\|+\\sigma_{\\max}\\|L_{\\mathrm{IGT}}\\|)\\|\\theta^{\\mathrm{c}}(t)-\\theta^{*}\\|$ , and differentiating again gives $\\ddot{\\theta}^{\\mathrm{c}}(t)=\\nabla f\\cdot\\dot{\\theta}^{\\mathrm{c}}$ , also bounded. Hence $M<\\infty$ ."
+  },
+  {
+    "anchor": "Thmremark19",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 19 (Euler vs. higher-order methods) . The $O(\\eta_{\\max}^{2})$ local truncation error and stability-aware global bound $O(\\eta_{\\max})$ are characteristic of the first-order Euler method applied to a contractive system. Using a higher-order integrator (e.g. Runge-Kutta on the DDE ) would reduce the local error to $O(\\eta_{\\max}^{p+1})$ for a method of order $p$ , giving a global bound of $O(\\eta_{\\max}^{p})$ under the same stability-aware analysis. For online optimization with $\\eta_{\\max}=O(1/\\sqrt{T})$ and $p=1$ , the $O(1/\\sqrt{T})$ global bound is already compatible with the regret rate — the tracking error vanishes at the same rate as the step size, so first-order Euler (which is Algorithm 1 ’s gradient-descent structure) is sufficient."
+  },
+  {
+    "anchor": "Thmremark20",
+    "kind": "ltx_theorem ltx_theorem_remark",
+    "text": "Remark 20 (Adaptive step size and the stability margin) . The adaptive schedule $\\eta_{t}=\\eta_{0}/\\sqrt{1+\\beta\\sigma(t)}$ serves a dual role: (i) it satisfies the stability threshold $\\eta_{t}<2\\gamma/(\\gamma^{2}+\\omega_{\\max}^{2})$ from Lemma 13 , and (ii) it enters the Gronwall bound ( 50 ) only through $\\eta_{\\max}$ , so adaptivity does not worsen the global approximation error. When $\\sigma(t)=0$ (idle rounds with no outstanding feedback), $\\eta_{t}=\\eta_{0}$ recovers the non-delayed step size, confirming that idle time is free (no additional discretization cost)."
+  }
+]

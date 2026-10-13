@@ -1,0 +1,917 @@
+Content selection saved. Describe the issue below:
+
+Trust the Direction, Search the Step: Zero-and-First-Order Methods for LLM Fine-Tuning
+
+Step-size selection remains a central challenge in large-scale neural network optimization; conservative steps slow convergence, while aggressive steps can destabilize it. We combine Z ero-and- F irst- O rder optimization (ZFO) and propose a framework that decouples direction selection from step-size. ZFO uses a trusted first-order optimizer to determine the direction and performs zeroth-order evaluations only along this one-dimensional subspace to choose how far to move. Using the current gradient information and two additional objective function evaluations, ZFO instances construct a local model of the objective function along the proposed direction and select a curvature-aware step within a bounded search interval. This yields an adaptive step-selection mechanism that costs less than a full line search. We provide theoretical guarantees to show that shared-sample evaluations produce reliable finite-difference curvature estimates, that the induced local model selects a near-optimal step along the search interval, and that ZFO converges to a neighborhood of a stationary point. Across the evaluated settings, language models and datasets, ZFO frequently improves optimization and final performance relative to fixed-step first-order baselines, with the magnitude and preferred local model depending on the objective. Our code is publicly available at: https://github.com/nizswan/Zeroth-First-Order-Framework .
+
+1 Introduction
+
+Gradient-based first-order (FO) optimization methods are the main workhorse of modern deep neural network training [ 14 , 31 , 25 ] . During training, gradient information provides the direction to move along , which, coupled with a step size (or learning rate), updates the model parameters. While the gradient direction is generally informative, the step size used along that direction is typically chosen through schedules, heuristics, or hyperparameter tuning [ 30 , 18 , 48 , 49 ] . For larger networks, whose local geometry can change rapidly during adaptation, a poorly chosen step size may lead to unstable training [ 13 ] . Despite these step-size instabilities, FO methods remain the standard choice for neural network adaptation because the FO gradient provides strong directional guidance.
+
+In contrast, zeroth-order (ZO) methods [ 34 , 26 , 38 , 16 , 5 , 6 , 17 , 7 ] do not compute gradients. They construct approximate gradient updates using only objective function evaluations, often via finite differences along random directions. Although ZO methods reduce computational overhead, gradient approximations are often noisy and high-variance in large-dimensional settings [ 2 , 23 ] . However, when FO provides the update direction, the high-dimensional problem becomes a univariate step-selection problem; see Figure 1 . Consequently, computationally inexpensive ZO evaluations become substantially informative for modeling local function behavior. This raises a natural question:
+
+If FO methods are strong at choosing an update direction, can ZO evaluations be used to decide how far to move along that direction?
+
+Figure 1 : The Zeroth First -Order ( Z F O) Framework. Left: A first-order optimizer proposes the direction $z_{t}$ at $\theta_{t}$ , which restricts the objective to the line $\theta_{t}+sz_{t}$ . Right: Along this line, $\theta_{t}+sz_{t}$ , the forward pass gives $\phi_{t}(0)$ , the backward pass gives $\phi_{t}^{\prime}(0)$ , and two symmetric probes at $\pm\epsilon$ supply curvature estimates. ZFO fits a local model $M(s)$ and takes the optimized step $s_{M}$ over the interval $[0,R_{t}]$ ; see Algorithm 1 .
+
+We investigate this question by using ZO evaluations not to replace gradients, but to select reliable step sizes. This idea is related to recent work on generalized Newton step selection GeN [ 9 ] , which uses function evaluations along a first-order direction to construct a curvature-informed step. In contrast, ZFO takes a broader view: rather than committing to a particular step construction, we formulate fixed-budget directional step selection as a local modeling problem. This perspective is not restricted to a specific optimization setup; in principle, the framework applies whenever an approximate gradient direction is available, but its appropriate magnitude is uncertain, a pattern that recurs in existing step-size rules [ 33 ] . This uncertainty becomes especially relevant in noisy or stochastic optimization settings.
+
+Large language model (LLM) fine-tuning is a natural setting for this hybridization. Modern fine-tuning pipelines construct minibatches of prompt-response examples and optimize a surrogate objective on these fixed examples. Once a minibatch is formed, nearby parameter evaluations can reuse the same data and require only additional forward evaluations of the perturbed model. This makes ZO probes especially useful—not as a replacement for gradients, but as a cheap mechanism for modeling objective variation along a trusted FO direction. In contrast, fully ZO LLM fine-tuning methods use forward evaluations to estimate high-dimensional gradients [ 34 , 26 ] . ZFO exploits this structure by assigning direction selection to a base FO optimizer, such as AdamW [ 31 ] or Muon [ 25 ] , while using a small number of ZO function evaluations to build a univariate local model of the objective function and select the step size along that direction. Taken together, the ZFO framework acts as a lightweight step-selection wrapper around a standard FO optimizer. This is particularly valuable in LLM fine-tuning, where local geometry can shift rapidly and poorly tuned learning rates can cause unstable or slow training [ 27 , 50 ] .
+
+Problem Setup. Let fine-tuning an LLM be represented by a conditional distribution $\pi_{\theta}(y\mid x)$ , where $x$ denotes an input prompt, $y$ denotes a model response, and $\theta\in\mathbb{R}^{d}$ are the model parameters. We initialize the model from a pretrained reference model and further optimize it using task-specific feedback. We summarize the main notation used throughout the paper in § D ; see Table D .
+
+At a given iteration $t$ , a FO fine-tuning algorithm constructs a minibatch of information, denoted by $S_{t}$ . This minibatch contains all quantities needed to define the current training objective. Depending on the method, $S_{t}$ may include prompts, sampled responses, supervised labels, etc. Conditioned on $S_{t}$ , the fine-tuning method defines a sampled surrogate objective optimized during the current update $F_{t}(\theta)=F(\theta;S_{t}).$ Different LLM fine-tuning algorithms instantiate this surrogate differently. Our framework does not require a particular choice of $F_{t}$ , and only assumes that the surrogate can be evaluated on the fixed minibatch $S_{t}$ .
+
+This fixed-batch viewpoint is standard in LLM fine-tuning [ 34 , 46 , 26 , 22 ] . Once $S_{t}$ is constructed, it is held fixed within the update. Evaluating $F_{t}$ at a nearby parameter value therefore does not require constructing a new batch or collecting new feedback; it only requires re-scoring the same prompt-response pairs under the perturbed model.
+
+A standard fine-tuning step computes a stochastic gradient of the sampled surrogate at the current parameters, and passes it through an optimizer such as AdamW. If we denote the resulting update direction by $g_{t}$ , the usual first-order gradient ascent update is: $\theta_{t+1}=\theta_{t}+\alpha g_{t},$ where $\alpha>0$ is the learning rate. This update contains two decisions: the direction $g_{t}$ and the step length controlled by $\alpha$ . The chosen fine-tuning surrogate and the optimizer determine the direction. The step length, however, is usually specified by a learning-rate schedule or hyperparameter tuning [ 32 ] . In LLM fine-tuning, this scalar choice can be sensitive; overly tiny steps may not entirely use the information in the current batch, while aggressive steps can destabilize training [ 51 ] .
+
+We improve the step-length decision while leaving the optimizer direction unchanged and formulate all objectives as maximization problems. Let $g_{t}\neq 0$ , and define the normalized direction
+
+$z_{t}=\frac{g_{t}}{\|g_{t}\|}.$ (1)
+
+We restrict the current surrogate to the one-dimensional path along this direction:
+
+$\phi_{t}(s)=F_{t}(\theta_{t}+sz_{t}),\quad{\rm for\;}s\in\mathbb{R}.$
+
+The standard optimizer step corresponds to $s_{\mathrm{FO}}=\alpha\|g_{t}\|.$ Thus, choosing the learning rate is equivalent to choosing a scalar displacement along the fixed-batch improvement of $\phi_{t}$ .
+
+Rather than relying only on a global learning-rate schedule, we ask whether the current surrogate $F_{t}$ supports a better step along the direction already selected by the optimizer. We search over a bounded interval $\mathcal{I}_{t}=[0,R_{t}],\quad R_{t}=\beta\alpha\|g_{t}\|,$ where $\beta>0$ controls the search radius relative to the baseline optimizer step. When $\beta=1$ , the interval ends at the usual first-order update; larger values allow the method to consider longer steps while remaining constrained to the same direction:
+
+$s_{t}^{\star}\approx\arg\max_{s\in\mathcal{I}_{t}}\phi_{t}(s).$ (2)
+
+A full line search would evaluate $\phi_{t}$ at many candidate values of $s$ , which is costly for LLMs. Instead, we use a fixed-budget step-selection procedure: the current value $\phi_{t}(0)$ is obtained from the usual forward evaluation of the surrogate on $S_{t}$ , and the backward pass gives the directional derivative $\phi_{t}^{\prime}(0)=\left\langle\nabla F_{t}(\theta_{t}),z_{t}\right\rangle.$ We then evaluate the same fixed-batch surrogate at two symmetric perturbations along the update direction:
+
+$\phi_{t}(\epsilon)=F_{t}(\theta_{t}+\epsilon z_{t}),\quad\phi_{t}(-\epsilon)=F_{t}(\theta_{t}-\epsilon z_{t}),\text{ for a small }\epsilon>0.$
+
+Together, these quantities $\left\{\phi_{t}(0),\phi_{t}^{\prime}(0),\phi_{t}(\epsilon),\phi_{t}(-\epsilon)\right\},$ define a local model of the surrogate improvement along the optimizer direction. The selected step $s_{t}$ is obtained by maximizing this model over $\mathcal{I}_{t}$ , and the parameters are updated as $\theta_{t+1}=\theta_{t}+s_{t}z_{t}.$ In this formulation, the base LLM fine-tuning algorithm determines the surrogate $F_{t}$ and the update direction $g_{t}$ , while our method determines how far to move along that direction; see Figure 1 . The procedure is therefore compatible with a broad class of LLM fine-tuning objectives. Due to space limitations, we defer the related work to § A .
+
+Our contributions. We develop ZFO as a general framework that separates first-order direction selection from low-query zeroth-order step selection. This formulation allows different local step-selection models to be developed and analyzed within the same optimization framework. Below, we summarize our main contributions:
+
+(i) A ZFO optimization framework. We propose the general ZFO framework in which a standard first-order optimizer proposes an update direction, and a small number of zeroth-order evaluations are used to choose an improved step size along this direction. Within this framework, we develop four practical ZFO instances based on Taylor and Padé local models. While existing methods such as GeN is a one step-selection rule, our ZFO is a fixed-budget directional modeling framework. GeN can be interpreted within the ZFO framework as a particular fixed-budget directional step-selection.
+
+(ii) Theoretical justification of adaptive step selection. Our theoretical analysis of the one-dimensional objective follows from restricting the training objective to the first-order search direction. We show that the finite-difference curvature estimates with common random numbers (CRNs) concentrate around their population counterparts with high probability. We further prove that maximizing the resulting local model yields a step whose objective value is near-optimal within a bounded search region. Finally, we establish a global stationarity guarantee showing that ZFO converges to a stationary neighborhood whose size is controlled by the accumulated step-selection error.
+
+(iii) Empirical validation across scales. We evaluate ZFO on both controlled low-dimensional problems and LLM fine-tuning tasks. The experiments show that ZFO is robust to the choice of initial learning rate and can match or outperform standard first-order and zeroth-order baselines on most benchmarks. These results demonstrate that lightweight zeroth-order step adaptation can improve the stability and reliability of first-order fine-tuning without incurring the cost of full line search or extensive hyperparameter tuning.
+
+2 Methodology
+
+We fix an iteration $t$ and suppress the subscript $t$ for readability. We use this convention throughout the section.
+
+Local derivative estimates. We recall that the forward-backward pass provides $\phi(0)$ and the directional derivative, $\phi^{\prime}(0)=\langle\nabla F(\theta),z\rangle.$ ZFO adds two symmetric fixed-batch evaluations,
+
+$\phi(\epsilon)=F(\theta+\epsilon z),\;{\rm and\;}\phi(-\epsilon)=F(\theta-\epsilon z).$
+
+We estimate the second directional derivative by the central finite difference
+
+$\widehat{\phi^{\prime\prime}}(0)=\frac{\phi(\epsilon)-2\phi(0)+\phi(-\epsilon)}{\epsilon^{2}}.$
+
+Using the available first-order derivative, the same two probes also yield
+
+$\widehat{\phi^{\prime\prime\prime}}(0)=\frac{3}{\epsilon^{3}}\left(\phi(\epsilon)-\phi(-\epsilon)-2\epsilon\phi^{\prime}(0)\right).$
+
+For compactness, define: $a=\phi^{\prime}(0),b=\widehat{\phi^{\prime\prime}}(0),$ and $c=\widehat{\phi^{\prime\prime\prime}}(0).$ ZFO uses these quantities to construct a local approximation of $\phi$ (see Figure 1 ), considering both polynomial models derived from Taylor expansions and rational models derived from Padé approximations.
+
+(a) Taylor models. The second-order Taylor model is $T_{2}(s)=\phi(0)+as+\frac{1}{2}bs^{2}.$ Since $T_{2}$ is quadratic, the maximizer is obtained by checking the endpoints of $I$ and, when feasible, the stationary point $s=-{a}/{b}.$ Similarly, the third-order Taylor model is $T_{3}(s)=\phi(0)+as+\frac{1}{2}bs^{2}+\frac{1}{6}cs^{3}.$ The candidate maximizers are the endpoints of $I$ and the real roots inside $I$ of $a+bs+\frac{1}{2}cs^{2}=0.$
+
+(b) Padé models. The Padé variants approximate $\phi$ using rational functions. The second-order Padé model is
+
+$P_{2}(s)=\phi(0)+\frac{as}{1+q_{2}s},\quad q_{2}=-\frac{b}{2a},$
+
+Similarly, the third-order Padé model is
+
+$P_{3}(s)=\phi(0)+\frac{as+\rho s^{2}}{1+q_{3}s},\text{ where }q_{3}=-\frac{c}{3b},\quad\rho=\frac{b}{2}+aq_{3}.$
+
+If a Padé denominator has a pole inside $I$ , or if its coefficients are ill-defined, ZFO rejects the Padé step and falls back to the quadratic Taylor step. This safeguard avoids unstable rational extrapolation near singularities.
+
+Model selection and update. Each ZFO variant corresponds to one model choice from $\{T_{2},T_{3},P_{2},P_{3}\}.$ For a chosen model $M$ in this set, ZFO computes the step by solving
+
+$s_{M}\in\arg\max_{s\in I}M(s).$ (3)
+
+Algorithm 1 Zeroth First -Order ( Z F O) Framework
+
+All ZFO variants use the same direction, surrogate, and feasible interval. They differ only in how they convert two additional evaluations into a scalar step length. GeN [ 9 ] also fits within this abstraction as a specific quadratic ZFO instance. GeN uses two function evaluations along the first-order direction to construct a generalized Newton step. Our instances reuse the directional derivative already available from the backward pass so that the same two probes recover both second- and third-order directional information and support Taylor and Padé models. GeN uses curvature-based rejection as its safeguard, while the instances studied here optimize over a bounded interval and fall back when a Padé model is ill-defined. ZFO’s novelty is the fixed-budget local-model abstraction, its family of Taylor/Padé instantiations, and the associated unified analysis and empirical validation. Algorithm 1 summarizes our framework.
+
+3 Theoretical Analysis
+
+This section provides a theoretical justification for the ZFO step-selection framework. The analysis has three components. First, we show that shared-batch evaluations yield reliable finite-difference estimates of directional curvature; see § 3.1 ( i ). Second, conditional on the sampled examples, we show that maximizing the local ZFO model returns a step whose objective value is close to the best value attainable over the search interval; see § 3.1 ( ii ). Third, we connect this local step-selection property to a global stationarity guarantee for the ZFO update sequence; see § 3.2 . We omit the iteration index $t$ when no ambiguity arises.
+
+3.1 Local Convergence Analysis
+
+Shared-batch common-random-numbers (CRN). ZFO evaluates all local objective values on the same minibatch. At a fixed iteration, the examples are sampled once and then reused across the evaluations $\left\{\phi(-\epsilon),\phi(0),\phi(\epsilon)\right\}.$ After conditioning on these shared examples, $\phi$ becomes a deterministic function of the scalar step length, $s$ . This conditional determinism is the basis of the local approximation analysis. Let $\tau=\{\tau_{1},\ldots,\tau_{n}\}$ denote the shared sampled examples used under CRN. For each example $\tau_{i}$ , define the per-sample directional objective $\phi_{i}(s)=F(\theta+sz;\tau_{i}).$ The empirical shared-batch CRN objective is $\phi(s)=\frac{1}{n}\sum_{i=1}^{n}\phi_{i}(s).$
+
+The population counterpart of the empirical CRN objective is $\psi(s)=\mathbb{E}_{\tau}[\phi_{i}(s)],$ where the expectation is taken with respect to the distribution used to generate the empirical objective.
+
+(i) Local smoothness assumptions. The first group of assumptions ensures that the directional objective admits Taylor expansions with controlled remainders.
+
+For each example $\tau_{i}$ , the per-sample directional objective $\phi_{i}$ is five times continuously differentiable on the interval $[-\epsilon,R]$ : $\phi_{i}\in C^{5}([-\epsilon,R]).$
+
+There exist constants $W,M,B,L>0$ such that, for every $i$ and every $s\in[-\epsilon,R]$ , $|\phi_{i}^{\prime\prime}(s)|\leq W,$ $|\phi_{i}^{\prime\prime\prime}(s)|\leq M,$ $|\phi_{i}^{(4)}(s)|\leq B,$ and $|\phi_{i}^{(5)}(s)|\leq L.$
+
+(ii) Sampling assumptions. Population concentration is analyzed at a fixed iterate and direction under the independent-example assumptions below. Algorithm 1 reuses its batch across probes, but also computes the direction from that batch; CRN alone does not establish the independence needed by this concentration argument. Thus Theorem 1 is a fixed-direction result, whereas the approximation guarantee in Theorem 2 is pathwise once the batch and direction are fixed. Bounded directional derivatives imply the sub-Gaussian condition by Hoeffding’s lemma; see ( 4 ).
+
+For each index $i$ , the same example $\tau_{i}$ is used to evaluate $\{\phi_{i}(-\epsilon),\phi_{i}(0),\phi_{i}(\epsilon)\}.$ Moreover, for $i\neq j$ , the examples $\tau_{i}$ and $\tau_{j}$ are sampled independently.
+
+(Sub-Gaussian Deviation) For each $\phi_{i},$ the directional deviations at $s=0$ are sub-gaussian up to third order, i.e., there exists constant $\sigma$ such that, for every $k\in\{0,1,2,3\}$ and all $\lambda\in\mathbb{R},$ $\mathbb{E}[\exp(\lambda[\phi_{i}^{(k)}(0)-\psi^{(k)}(0)])]\leq\exp(\frac{\lambda^{2}\sigma^{2}}{2}).$
+
+Suppose Assumptions 1 – 4 hold. Then, with probability at least $1-\delta$ , $\left|\widehat{\phi^{\prime\prime}}(0)-\psi^{\prime\prime}(0)\right|\leq\frac{B\epsilon^{2}}{12}+\sigma\sqrt{\frac{2\log(4/\delta)}{n}},$ and $\left|\widehat{\phi^{\prime\prime\prime}}(0)-\psi^{\prime\prime\prime}(0)\right|\leq\frac{L\epsilon^{2}}{20}+\sigma\sqrt{\frac{2\log(4/\delta)}{n}}.$
+
+Theorem 1 shows that the finite-difference curvature estimates used by ZFO concentrate around their population counterparts. Each bound contains two terms. The first term is a deterministic finite-difference bias controlled by the perturbation scale $\epsilon$ and the relevant higher-order derivative bound. The second term is a stochastic sampling term that decreases at the classic rate $1/\sqrt{n}$ . Thus, under CRN, the two additional objective evaluations provide statistically meaningful curvature information.
+
+After conditioning on the shared examples, the empirical objective $\phi$ is deterministic. Let $s_{M}\in\arg\max_{s\in[0,R]}T_{2}(s)$ denote the model-selected step by $T_{2}$ , and let $s_{\phi}\in\arg\max_{s\in[0,R]}\phi(s)$ denote the best step for the empirical CRN objective over the same interval.
+
+Suppose Assumptions 1 and 2 hold. Then the step selected by maximizing the second-order Taylor model satisfies $\phi(s_{M})\geq\phi(s_{\phi})-\frac{MR^{3}}{3}-\frac{B\epsilon^{2}R^{2}}{12}.$
+
+Theorem 2 shows that, once the examples are fixed, ZFO selects a step that is close to the best step available in the search interval. The first error term, $\frac{MR^{3}}{3},$ is the deterministic Taylor approximation error over the interval. The second error term, $\frac{B\epsilon^{2}R^{2}}{12},$ is the error caused by estimating curvature through finite differences. The guarantee is strongest when the search radius $R$ is moderate, the perturbation scale $\epsilon$ is small, and the directional objective has limited higher-order variation. The same proof strategy extends to the third-order Taylor model. For the Padé variants, the local model is rational rather than polynomial. These models can better capture nonlinear curvature changes over a finite interval. Their approximation guarantees follow from the same maximizer-comparison argument, replacing the Taylor remainder by a rational residual term. We defer the analysis of these variants to § B.1 .
+
+3.2 Global convergence Analysis
+
+We now connect the local analysis to the true optimization objective $J$ . Recall that ZFO optimizes on the surrogate $F_{t},$ whose expectation under the current sampling distribution is $\bar{F}_{t}(\theta+sz_{t})=\psi(s)$ . For instance, standard policy optimization [ 53 ] and its modern extensions [ 45 , 46 ] construct surrogates such that $\nabla J(\theta_{t})=\nabla\bar{F}(\theta_{t})$ at the current-iterate. Define the expected directional alignment quantity $q_{t}=\mathbb{E}[\langle\nabla J(\theta_{t}),z_{t}\rangle].$ We start by stating two main classical assumptions that we use in the sequel.
+
+The true objective $J:\mathbb{R}^{d}\to\mathbb{R}$ is $\mathcal{L}_{J}$ -smooth and bounded above by $J^{\star}$ . That is, for all $x,y$ , $J(y)\geq J(x)+\langle\nabla J(x),y-x\rangle-\frac{\mathcal{L}_{J}}{2}\|y-x\|^{2},$ and $J(\theta_{t})\leq J^{\star}$ for all iterations $t$ . Additionally, the expected surrogate $\bar{F}$ is also $\mathcal{L}_{\bar{F}}$ -smooth.
+
+There exists $\mu>0$ such that, for all $t$ , $q_{t}=\mathbb{E}_{t}[\langle\nabla J(\theta_{t}),z_{t}\rangle]\geq\mu\|\nabla J(\theta_{t})\|.$
+
+Assumption 6 is natural since gradient methods estimate an ascent direction for the objective [ 46 ] . Although optimizers such as AdamW rescale this direction, the resulting update remains positively oriented with $\nabla J(\theta_{t})$ in expectation [ 3 ] , supporting the assumption of $\mu>0$ .
+
+We start with a Lemma that bounds the step-selection error at iteration $t$ of the objective: $\max_{s\in I_{t}}J(\theta_{t}+sz_{t})-J(\theta_{t}+s_{t}z_{t}).$ This quantity measures the loss in objective value by using the ZFO-selected step $s_{t}$ instead of the best step available in the interval $I_{t}$ for the true objective $J$ .
+
+Let Assumptions 1 - 5 hold, then $\max_{s\in I_{t}}J(\theta_{t}+sz_{t})-J(\theta_{t}+s_{t}z_{t})\leq\Delta_{t},$ holds with probability at least $1-\delta,$ where
+
+$\Delta_{t}\coloneq(\mathcal{L}_{J}+\mathcal{L}_{\bar{F}})R_{t}^{2}+2\sigma(1+R_{t})\sqrt{\frac{2\log(4/\delta)}{n}}+2WR_{t}^{2}+\phi(s_{\phi})-\phi(s_{M}).$
+
+This lemma quantifies the loss in objective value when the ZFO step $s_{t}$ , selected through the local model, is used instead of the best step in the interval $I_{t}$ . The error term $\Delta_{t}$ combines smoothness mismatch, finite-sample concentration error, approximation error, and the model-selection gap $\phi(s_{\phi})-\phi(s_{M})$ . E.g., when the local model is the second-order Taylor model $T_{2}$ , using Theorem 2 we get
+
+$\Delta_{t}\leq(\mathcal{L}_{J}+\mathcal{L}_{\bar{F}})R_{t}^{2}+2\sigma(1+R_{t})\sqrt{\frac{2\log(4/\delta)}{n}}+2WR_{t}^{2}+\frac{MR^{3}}{3}+\frac{B\epsilon^{2}R^{2}}{12}.$
+
+Finally, Theorem 3 converts the local quality of the ZFO step-selection rule into a global stationarity guarantee.
+
+Let Assumptions 5 – 6 hold and $q_{t}/\mathcal{L}_{J}\in I_{t}.$ Then, for every $T>0$ , with probability at least $1-\delta,$ we have
+
+$\min_{0\leq t\leq T}\mathbb{E}\|\nabla J(\theta_{t})\|^{2}\leq\frac{2\mathcal{L}_{J}(J^{\star}-J(\theta_{0}))}{\mu^{2}T}+\frac{2\mathcal{L}_{J}\tilde{\Delta}_{T}}{\mu^{2}},\text{ where }\tilde{\Delta}_{T}=\frac{1}{T}\sum_{t=0}^{T-1}\mathbb{E}[\Delta_{t}].$
+
+The upper bound in Theorem 3 has two terms. The first term, $\frac{2\mathcal{L}_{J}(J^{\star}-J(\theta_{0}))}{\mu^{2}T},$ is the usual optimization term and decays at rate $1/T$ . The second term, $\frac{2\mathcal{L}_{J}\tilde{\Delta}_{T}}{\mu^{2}},$ is the price paid for imperfect step selection. Thus, ZFO does not necessarily converge exactly to a stationary point unless the average step-selection error vanishes. Instead, it converges to a neighborhood of stationarity whose size is controlled by the error $\bar{\Delta}_{T}.$
+
+Table 1: Evaluation performance for baseline first-order (FO) fine-tuning (using AdamW) and zeroth-order (ZO) fine-tuning (using MeZO) against ZFO methods across models and reasoning benchmarks. All runs report the final evaluation and mean results over 3 seeds. Green is the best and red is the second best result.
+
+The three results establish the theoretical foundation of ZFO. The CRN concentration theorem establishes the statistical reliability of the finite-difference curvature estimates; the deterministic approximation theorem shows that maximizing the ZFO model yields a near-optimal local step; and the global stationarity theorem shows that controlled step-selection error preserves convergence to stationarity. Together, these results justify the central mechanism of ZFO: a small number of fixed-batch objective evaluations can recover useful local curvature information and improve step selection over a fixed first-order update while retaining a principled convergence interpretation.
+
+4 Experiments
+
+Organization of the Results. We organize our experimental results as follows: In the main paper , ( i ) we compare ZFO against first-order fine-tuning with AdamW and zeroth-order fine-tuning with MeZO across several LLMs and datasets in Table 1 ; ( ii ) we conduct a focused Qwen-2.5-Math-1.5B sub-study over additional reasoning benchmarks in Table 2 ; ( iii ) we evaluate ZFO on classical optimization problems to assess its benefits beyond LLM fine-tuning in Figure 2 ; ( iv ) we summarize the ablation studies in the appendix; and ( v ) we report wall-clock and memory overheads in Figures 3 and 4 to quantify the computational cost of ZFO. We defer the remaining experiments and expanded diagnostics to the Appendix C.2 , where ( vi ) we provide the complete six-problem classical optimization study in Table 8 and Figure 5 , ( vii ) we validate the local ZFO approximants on analytical functions in Figure 6 and the step-selection mechanism on controlled toy RLVR environments in Figure 7 , ( viii ) we provide learning-rate sensitivity curves in Figure 8 and study the interaction between $\alpha$ and $\beta$ in Figure 9 , including the complementary $\beta=1$ control in Table 12 , ( ix ) we analyze the frequency of the steps selected by each ZFO method in Table 13 , ( x ) we summarize cross-setting improvements in Table 9 and compare against additional first-order baselines (Prodigy [ 37 ] and AdamW [ 31 ] ) in Table 10 , and ( xi ) we evaluate the sequential ZFO-Seq against line-search baselines (Armijo [ 39 ] , BB [ 4 ] , Polyak [ 42 ] , and PLS [ 33 ] ) in Table 11 . Unless otherwise stated, all reported results are averaged over three seeds. The LLM experiments use the implementation described in § C.1.1 . Additional experimental configuration details are provided in § C.1.2 .
+
+RLVR, LLMs, and Datasets used for Fine-tuning. We report the performance of various high-dimensional models configured for an RLVR setup using the GRPO policy gradient [ 47 ] and the AdamW optimizer [ 31 ] , including Qwen-2.5-MATH-1.5B [ 54 ] , Phi-2 [ 24 ] , Gemma-2-2B [ 52 ] , and Llama-3.2-1B [ 19 ] on the datasets GSM8K [ 12 ] , SVAMP [ 41 ] , AsDiv [ 35 ] , OpenBookQA [ 36 ] , and a (512/256 train/evaluation) subset of MATH [ 21 ] ; Table 3 summarizes the model and dataset details.
+
+Learning rate scheduler. For a fair comparison, we fix the learning rate $\alpha$ to the value that performs the best for the FO baseline, chosen from the set $\{10^{-6},5\times 10^{-6},10^{-5}\}$ , and consequently select the best bound $\beta$ from $\{3,5,10\}$ ; the remainder of the configuration details are in § C.1.2 .
+
+4.1 ZFO for LLM fine-tuning and classic optimization
+
+(i) Does directional ZO step selection improve FO optimization? We show the performance of the ZFO framework on LLM fine-tuning in Table 1 , where at least one ZFO variant improves on the first-order fine-tuning (FO FT) baseline for every model-dataset pair, indicating that ZFO’s benefits are not confined to a single model family or benchmark. We observe the largest gains where the FO baseline is relatively weak or highly variable, including SVAMP for Phi-2 and Gemma-2-2B, as well as AsDiv for Llama and MATH and OpenBookQA for Qwen. When the FO baseline is already strong, such as Qwen on SVAMP, ZFO yields smaller but still positive improvements in mean performance. Although the best-performing ZFO variant changes across tasks and models, Padé 3 provides a strong representative instance of the framework, improving over FO in 14 of the 16 LLM settings summarized in Table 9 . Padé 3 is a strong representative default in our experiments, although the preferred local model remains task-dependent.
+
+(ii) Qwen Sub-Study. Table 2 extends the main results by isolating Qwen-2.5-Math-1.5B on four reasoning benchmarks: ARC-Challenge [ 11 ] , StrategyQA [ 15 ] , FOLIO [ 20 ] , and CODAH [ 10 ] . At least one ZFO method outperforms the FT baseline on every dataset, with the largest improvements on ARC-Challenge ( $\uparrow$ $8.81$ over FO FT) and CODAH ( $\uparrow$ $4.92$ over FO FT). Even under the best learning rate configurations, the main results and the Qwen sub-study indicate that FO FT exhibits seed variance under our settings.
+
+Table 2: Qwen-2.5-Math-1.5B study on ZFO methods in our settings via additional reasoning benchmarks. Results report evaluation performance averaged over 3 seeds for FO and ZFO methods.
+
+(iii) Classic Optimization. To show that ZFO is not intrinsically tied to RLVR and to examine ZFO’s performance beyond LLM fine-tuning, Figure 2 presents three classic optimization problems; see Table 8 for the comprehensive summary of the six classic optimization problems. At least one ZFO variant achieves a substantially lower median objective than its corresponding FO baseline on every displayed problem after 100 updates. Taylor 3 –AdamW yields the strongest results on nonlinear least squares and Beale, while Padé 3 –AdamW performs best on Rosenbrock. Consistent with our LLM experiments, the best approximant varies across problems, indicating that the gains from step selection depend on the local objective.
+
+Figure 2 : Results on classic optimization problems. We plot the median $\log_{10}$ objective over three perturbed initializations. GeN has a similar computational budget as ZFO, as both methods perform two additional function evaluations per iteration. We study the extended classic optimization problems in Table 8 and Figure 5 .
+
+(iv) Ablation Studies. We provide additional ablation studies in Appendix C.2 to better understand when and how ZFO improves step selection. Figure 8 compares ZFO against AdamW across fixed learning rates, showing that gains in Table 1 cannot generally be recovered by simply changing the FO learning rate. Figure 9 further studies the interaction between the learning rate $\alpha$ and search bound $\beta$ , where increasing $\beta$ is generally beneficial at smaller learning rates but can become unstable once $\alpha$ is large, showing that the two parameters are complementary but not interchangeable. Figure 7 provides a clear $\beta=1$ control. Table 13 shows that the four ZFO instances use the search interval differently, ranging from primarily interior steps for Taylor 3 to mostly endpoint decisions for Padé 2 .
+
+4.2 Computational Cost
+
+The relative computational overhead of ZFO is small. A standard iteration involves 4 key components: a rollout call for the trajectory $\tau_{t},$ a reward evaluation $R(\tau_{t})$ , a forward pass, and a backward pass. In contrast, our ZFO methods leave all 4 operations untouched and only call two additional forward-pass probes. Since these probes are only forward passes, the overhead is small and comparable to the forward-only cost structure of ZO methods such as MeZO [ 34 ] . From this perspective, we present both wall-clock time costs in Figure 3 and memory overhead costs in Figure 4 . We train the models on an NVIDIA H100 80GB GPU.
+
+Figure 3 : Wall-clock time comparison. ZFO step selection adds little wall-clock overhead. Across five benchmarks, trajectory rollout dominates iteration time, while the additional ZFO computation contributes only a small fraction of the time that FO-only updates cost.
+
+Figure 4 : GPU memory requirement comparisons. by FO FT vs ZFO FT across three configurations. The top right panel depicts the relative memory allocation for FO and ZFO FT.
+
+Figure 3 decomposes per-iteration runtime for Qwen-2.5-MATH-1.5B on the benchmarks reported in Table 1 . ZFO adds $\sim 5.2\%$ relative wall-clock overhead in this configuration; ZFO incurs real memory overhead.
+
+Figure 4 reports peak GPU memory across three model–dataset pairs, alongside a per-phase breakdown for Qwen-2.5-MATH-1.5B. The overhead ranges from 11.0% (Qwen/GSM8K) to 19.1% (Phi-2/OpenBookQA). We attribute this range to configuration differences; ZFO probes are absorbed with a smaller relative increase, whereas configurations with a small fixed group size and a larger batch see the overhead grow more. The memory allocation panel shows that the dominant cost remains the reference forward pass, while storing the update direction and applying the final blend sit below the existing bottleneck; hence, ZFO does not introduce a new peak; it widens the existing one. We note that the memory-saving trick MeZO relies on does not transfer here, since our update direction is the FO gradient rather than a random direction.
+
+5 Limitations, Discussion, and Conclusion
+
+What can two probes recover? The backward pass already supplies the local slope; two symmetric probes add estimates of curvature and its variation. Theorem 2 translates local-model error into a bound on the value lost relative to the best step in $I$ . A wider interval permits larger updates but increases approximation error. Bounds and Padé fallbacks limit extrapolation and avoid poles, but do not guarantee that every step improves the surrogate. Theorem 3 then connects step-selection accuracy to convergence. Under the stated assumptions, ZFO therefore retains a stationarity guarantee even with approximate steps.
+
+Padé 2 Behavior. Padé 2 provides a useful diagnostic because, as shown in the toy validation in § C , it behaves the most like FO since its updates select the endpoint of the search region unless a pole is detected, in which case it falls back to Taylor 2 . This makes Padé 2 a conservative reference for distinguishing whether ZFO gains come from expanding the search region alone or intelligent step selection. In Tables 1 and 2 , the richer surrogates frequently outperform Padé 2 (e.g., Qwen on MATH, ARC-Challenge, and CODAH). Conversely, when Padé 2 improves over FO, then the increased search region contributes in beneficial ways that are not obtainable simply by scaling $\alpha.$
+
+Beyond the Four Instances. We view Taylor 2 , Taylor 3 , Padé 2 , and Padé 3 as initial ZFO instances rather than the strongest possible realizations of the framework. Each method is a simple analytic model built from lightweight probes, yet these lightweight probes already yield measurable gains in evaluation performance and training stability across several benchmarks. The main opportunity ZFO provides is not limited to the specific empirical gains reported in this paper, but instead lies in the observation that a meaningful curvature signal can be extracted along the FO direction at low additional cost.
+
+Conclusion. Step-size selection is a classic problem in large-scale optimization. The direction selected by a first-order optimizer is valuable, but the step length remains uncertain. We show that two additional function evaluations along that direction are sufficient to construct useful local models of the one-dimensional objective. This creates a general fixed-query step-selection framework, ZFO. In contrast to ZO methods, ZFO does not estimate a gradient with zeroth-order queries; it estimates how the objective changes along a gradient direction whose orientation has already been supplied by a first-order optimizer.
+
+Existing methods have already explored function-based step selection along a first-order direction, most notably GeN. Our contribution elevates this idea from a single-step rule to a fixed-query directional modeling framework—the same two probes can support multiple local models, including higher-order Taylor and rational Padé approximations, while the analysis separates finite-difference estimation error, local-model approximation error, and global optimization error. Therefore, ZFO is not primarily a new Taylor or Padé step-size formula. It is a fixed-query framework for exploiting zeroth-order information along an already trusted first-order direction, together with a theory that explains the statistical and optimization error introduced by this separation. In that sense, GeN is a special case of the broader ZFO abstraction, rather than an unrelated baseline. In the same spirit, we encourage the practitioners to add their favorite functional approximators to the ZFO framework.
+
+Across our experiments, ZFO often improves step selection over the fixed FO update. The quality of the selected step remains dependent on the local model, search radius, and alignment of the underlying first-order direction.
+
+Acknowledgment. During this work, Aritra Dutta was partially supported by the Florida Department of Health Grant AWD00007072 and the National Science Foundation Grant 2321986.
+
+References
+
+Organization. We organize the Appendix as follows: In Section A , we detail the related work. In Section B , we quote the general assumptions and provide detailed proofs of our theoretical result in the main paper. Finally, in Section C , we discuss the configuration details for our experiments in § C.1 and provide additional performance insights in § C.2 .
+
+Appendix A Related work
+
+We position ZFO within three lines of work that motivate or contrast with our approach. Together, these related works inspire ZFO’s central premise that cheap query calls can help model local objective behavior along the gradient direction.
+
+Policy Optimization Stability & Update Regulation. Stability in policy optimization has motivated a range of update-regulation strategies. In policy optimization, methods such as TRPO [ 45 ] enforce a KL-constrained trust region, while PPO [ 46 ] replaces explicit constraints with a clipped surrogate objective to stabilize updates. More recent approaches, such as GRPO [ 47 ] , further emphasize that training stability is highly sensitive to the way policy updates are regulated. Related works also consider wrapper-based stabilization strategies for policy-gradient methods that regulate whether an update should be accepted [ 1 ] . Our work is motivated by the same stability concern; however, we approach it from a different perspective by explicitly modeling the objective along the update direction path.
+
+Zeroth-Order Optimization. Our work is also related to ZO optimization for fine-tuning large language models. Methods such as MeZO and CARS use central finite differences along random directions to approximate gradient or curvature behavior [ 34 , 26 ] ; particularly, MeZO uses finite differences along random directions to approximate the gradient, and CARS uses a second-order finite difference to approximate the Hessian. Extensions of MeZO include curvature, sparsity, and query-efficient estimators. Hi-ZOO incorporates a diagonal Hessian estimate at the cost of an extra forward pass [ 56 ] . Sparse-MeZO restricts updates to noise-resistant weights to enable larger step sizes [ 29 ] . GraCe leverages gradient sparsity to achieve a dependence on dimension in query complexity [ 44 ] . HiSo carries Hessian-informed ZO into the federated setting [ 28 ] . Complementary benchmarking has mapped the landscape of ZO optimizers across fine-tuning paradigms [ 55 ] . Recent theoretical work further establishes that ZO optimization is equivalent to single-step policy optimization [ 43 ] , suggesting a natural connection between zeroth-order methods and RLVR that ZFO exploits.
+
+Line-Search & Adaptive Step Size. Broadly, our method is similar to line-search and adaptive learning-rate methods, including Polyak step size [ 42 ] , Barzilai-Borwein [ 4 ] , and stochastic variants such as Probabilistic line-search [ 33 ] and Stochastic Armijo line-search [ 40 ] . These approaches adapt step sizes by repeatedly evaluating candidate points along a univariate objective, often requiring multiple queries. In contrast, our method uses only two symmetric probes to approximately recover higher-order directional information to construct a local model of the objective. This results in a fixed-budget alternative to classical line-search methods.
+
+Generalized Newton Step Selection. Among closely related recent methods, generalized Newton step selection or GeN [ 9 ] has already explored function-based step selection along a first-order direction, providing an early example of combining FO directions with low-query step-size adaptation. Our contribution is to elevate this idea from a single-step rule to a fixed-query directional modeling framework: the same two probes can support multiple local models, including higher-order Taylor and rational Padé approximations, while the analysis separates finite-difference estimation error, local-model approximation error, and global optimization error. GeN is a special case of the broader ZFO abstraction, rather than an unrelated baseline.
+
+Appendix B Addendum to Theoretical Analysis
+
+This section provides the theoretical foundations needed to characterize when, why, and how ZFO can reliably improve step selection. We first establish concentration guarantees for the finite-difference curvature estimates, then bound how closely the resulting models recover the best step within their local interval, and we finally connect these local guarantees to global stationarity of the ZFO update. Together, these results separate the sources of error introduced by stochastic estimation, local function approximation, and step selection, providing a theoretical justification for the mechanisms used by ZFO.
+
+To justify using finite-difference curvature information for ZFO step selection, we first ask whether the second- and third-order directional derivatives estimated from a shared batch can reliably approximate their population counterparts.
+
+Hoeffding’s Inequality. Let $X$ be a random variable such that $a\leq X\leq b$ almost surely. Then Hoeffding’s lemma gives
+
+$\mathbb{E}\left[\exp\left(\lambda(X-\mathbb{E}[X])\right)\right]\leq\exp\left(\frac{\lambda^{2}(b-a)^{2}}{8}\right),\qquad{\rm for\;all\;}\lambda\in\mathbb{R}.$ (4)
+
+Thus, every bounded random variable is sub-Gaussian with parameter $\sigma=(b-a)/2$ .
+
+Let $X_{1},\ldots,X_{n}$ be independent sub-Gaussian random variables with parameter $\sigma>0$ , i.e.,
+
+$\mathbb{E}\left[e^{\lambda X_{i}}\right]\leq e^{\lambda^{2}\sigma^{2}/2},\quad\forall\lambda\in\mathbb{R}.$
+
+Then the sub-Gaussian concentration inequality gives:
+
+$\displaystyle\mathbb{P}\left(\left|\frac{1}{n}\sum_{i=1}^{n}X_{i}\right|\leq\sigma\sqrt{\frac{2\log(2/\zeta)}{n}}\right)\geq 1-\zeta.$ (5)
+
+Suppose Assumptions 1 – 4 hold. Then, with probability at least $1-\delta$ , $\left|\widehat{\phi^{\prime\prime}}(0)-\psi^{\prime\prime}(0)\right|\leq\frac{B\epsilon^{2}}{12}+\sigma\sqrt{\frac{2\log(4/\delta)}{n}},$ and $\left|\widehat{\phi^{\prime\prime\prime}}(0)-\psi^{\prime\prime\prime}(0)\right|\leq\frac{L\epsilon^{2}}{20}+\sigma\sqrt{\frac{2\log(4/\delta)}{n}}.$
+
+Fix an index $i\in\{1,\ldots,n\}$ . By Assumption 1 and the second-order central finite-difference expansion, there exists $\hat{\xi}_{i}\in(-\epsilon,\epsilon)$ such that
+
+$\frac{\phi_{i}(\epsilon)-2\phi_{i}(0)+\phi_{i}(-\epsilon)}{\epsilon^{2}}=\phi_{i}^{\prime\prime}(0)+\frac{\epsilon^{2}}{12}\phi_{i}^{(4)}(\hat{\xi}_{i}).$
+
+Using Assumption 2 , the remainder satisfies
+
+$\left|\frac{\epsilon^{2}}{12}\phi_{i}^{(4)}(\hat{\xi}_{i})\right|\leq\frac{B\epsilon^{2}}{12}.$
+
+Averaging the above identity over the shared batch gives
+
+$\widehat{\phi^{\prime\prime}}(0)=\frac{1}{n}\sum_{i=1}^{n}\phi_{i}^{\prime\prime}(0)+\frac{1}{n}\sum_{i=1}^{n}\frac{\epsilon^{2}}{12}\phi_{i}^{(4)}(\hat{\xi}_{i}).$
+
+Therefore, by the triangle inequality,
+
+$\left|\widehat{\phi^{\prime\prime}}(0)-\psi^{\prime\prime}(0)\right|\leq\left|\frac{1}{n}\sum_{i=1}^{n}\left(\phi_{i}^{\prime\prime}(0)-\psi^{\prime\prime}(0)\right)\right|+\frac{B\epsilon^{2}}{12}.$
+
+By Assumptions 3 and 4 , the random variables $\phi_{i}^{\prime\prime}(0)-\psi^{\prime\prime}(0),\quad i=1,\ldots,n,$ are independent, centered, and sub-Gaussian with parameter $\sigma$ . Applying Inequality 5 with $\zeta=\delta/2$ yields, with probability at least $1-\delta/2$ ,
+
+$\left|\frac{1}{n}\sum_{i=1}^{n}\left(\phi_{i}^{\prime\prime}(0)-\psi^{\prime\prime}(0)\right)\right|\leq\sigma\sqrt{\frac{2\log(4/\delta)}{n}}.$
+
+Consequently,
+
+$\left|\widehat{\phi^{\prime\prime}}(0)-\psi^{\prime\prime}(0)\right|\leq\frac{B\epsilon^{2}}{12}+\sigma\sqrt{\frac{2\log(4/\delta)}{n}}.$
+
+We now repeat the same argument for the third derivative estimate. By the third-order finite-difference expansion, for each $i$ there exists $\tilde{\xi}_{i}\in(-\epsilon,\epsilon)$ such that
+
+$\frac{3\left(\phi_{i}(\epsilon)-\phi_{i}(-\epsilon)-2\epsilon\phi_{i}^{\prime}(0)\right)}{\epsilon^{3}}=\phi_{i}^{\prime\prime\prime}(0)+\frac{\epsilon^{2}}{20}\phi_{i}^{(5)}(\tilde{\xi}_{i}).$
+
+Assumption 2 gives
+
+$\left|\frac{\epsilon^{2}}{20}\phi_{i}^{(5)}(\tilde{\xi}_{i})\right|\leq\frac{L\epsilon^{2}}{20}.$
+
+Averaging over the shared batch and applying the triangle inequality gives
+
+$\left|\widehat{\phi^{\prime\prime\prime}}(0)-\psi^{\prime\prime\prime}(0)\right|\leq\left|\frac{1}{n}\sum_{i=1}^{n}\left(\phi_{i}^{\prime\prime\prime}(0)-\psi^{\prime\prime\prime}(0)\right)\right|+\frac{L\epsilon^{2}}{20}.$
+
+Again, by Assumptions 3 and 4 , the centered variables $\phi_{i}^{\prime\prime\prime}(0)-\psi^{\prime\prime\prime}(0),\qquad i=1,\ldots,n,$ are independent and sub-Gaussian with parameter $\sigma$ . Applying Inequality 5 with $\zeta=\delta/2$ yields, with probability at least $1-\delta/2$ ,
+
+$\left|\frac{1}{n}\sum_{i=1}^{n}\left(\phi_{i}^{\prime\prime\prime}(0)-\psi^{\prime\prime\prime}(0)\right)\right|\leq\sigma\sqrt{\frac{2\log(4/\delta)}{n}}.$
+
+Thus,
+
+$\left|\widehat{\phi^{\prime\prime\prime}}(0)-\psi^{\prime\prime\prime}(0)\right|\leq\frac{L\epsilon^{2}}{20}+\sigma\sqrt{\frac{2\log(4/\delta)}{n}}.$
+
+Finally, taking a union bound over the two concentration events shows that both inequalities hold simultaneously with probability at least $1-\delta$ . Therefore,
+
+$\left|\widehat{\phi^{\prime\prime}}(0)-\psi^{\prime\prime}(0)\right|\leq\frac{B\epsilon^{2}}{12}+\sigma\sqrt{\frac{2\log(4/\delta)}{n}},$
+
+and
+
+$\left|\widehat{\phi^{\prime\prime\prime}}(0)-\psi^{\prime\prime\prime}(0)\right|\leq\frac{L\epsilon^{2}}{20}+\sigma\sqrt{\frac{2\log(4/\delta)}{n}}.$
+
+This completes the proof. ∎
+
+B.1 ZFO Maximum Error
+
+Suppose Assumptions 1 and 2 hold. Then the step selected by maximizing the second-order Taylor model satisfies $\phi(s_{M})\geq\phi(s_{\phi})-\frac{MR^{3}}{3}-\frac{B\epsilon^{2}R^{2}}{12}.$
+
+By Assumption 1 and Taylor’s theorem, there exists $\xi_{s}$ such that
+
+$\phi(s)=\phi(0)+s\phi^{\prime}(0)+s^{2}\frac{\phi^{\prime\prime}(0)}{2}+s^{3}\frac{\phi^{(3)}(\xi_{s})}{6}.$
+
+Similarly, for some $\hat{\xi}_{s}$ , the approximation $T_{2}$ admits the expansion,
+
+$T_{2}(s)=\phi(0)+s\phi^{\prime}(0)+s^{2}\frac{\phi^{\prime\prime}(0)}{2}+\epsilon^{2}s^{2}\frac{\phi^{(4)}(\hat{\xi}_{s})}{24}.$
+
+Subtracting these identities gives
+
+$\phi(s)-T_{2}(s)=s^{3}\frac{\phi^{(3)}(\xi_{s})}{6}-\epsilon^{2}s^{2}\frac{\phi^{(4)}(\hat{\xi}_{s})}{24}.$
+
+Therefore, by the triangle inequality and Assumption 2 we have,
+
+$|\phi(s)-T_{2}(s)|\leq\left|s^{3}\frac{\phi^{(3)}(\xi_{s})}{6}\right|+\left|\epsilon^{2}s^{2}\frac{\phi^{(4)}(\hat{\xi}_{s})}{24}\right|\leq\left|s^{3}\frac{M}{6}\right|+\left|\epsilon^{2}s^{2}\frac{B}{24}\right|\leq\frac{M{R}^{3}}{6}+\frac{\epsilon^{2}B{R}^{2}}{24}.$
+
+Consequently,
+
+$|\phi(s)-T_{2}(s)|\leq\frac{M{R}^{3}}{6}+\frac{\epsilon^{2}B{R}^{2}}{24}\eqqcolon\varphi.$
+
+We have
+
+$s_{\phi}\coloneqq\arg\max_{s\in[0,{R}]}\phi(s).$
+
+By the definitions of $s_{\phi}$ and $s_{M}$ ,
+
+$\phi(s_{\phi})\geq\phi(s_{M})\qquad\text{and}\qquad T_{2}(s_{M})\geq T_{2}(s_{\phi}).$
+
+Chaining these inequalities with the uniform bound $\varphi$ yields
+
+$\phi(s_{M})\geq T_{2}(s_{M})-\varphi\geq T_{2}(s_{\phi})-\varphi\geq\phi(s_{\phi})-2\varphi.$
+
+Therefore,
+
+$\phi(s_{M})\geq\phi(s_{\phi})-\frac{M{R}^{3}}{3}-\frac{\epsilon^{2}B{R}^{2}}{12}.$
+
+∎
+
+Additional Model Error Bounds. To understand how accurately ZFO’s local models can choose a step, we next ask how much objective value may be lost when maximizing a finite-difference Taylor or Padé approximation. The proof technique used in Theorem 2 generalizes naturally to higher-order ZFO models. This allows us to characterize the approximation gap of Taylor 3 and Padé over the search region $[0,{R}].$ Corollary 1 establishes a similar bound for Taylor 3 as Theorem 2 did for Taylor 2 . Corollaries 2 and 3 adapt a similar structure through the residual $r(s)\coloneqq D(s)\phi(s)-N(s).$ All three results yield finite-difference and model truncation errors.
+
+Padé 3 alternative forms. Third-order matching does not uniquely determine the Padé form, since the numerator and denominator degrees can be allocated differently. The construction above uses a quadratic numerator and linear denominator, corresponding to a $2/1$ approximant. Below, we consider the complementary $1/2$ form, with a linear numerator and quadratic denominator, which is also used in our LLM experiments. Both constructions match the local expansion through third order under their respective nondegeneracy conditions, but generally produce different performance curves. These choices illustrate the flexibility of ZFO’s rational surrogate construction.
+
+Let $P_{k}(s)$ be the $k$ -th order Padé approximation of $\phi(s)$ over $[0,{R}]$ , where $P_{k}(s)=\frac{N(s)}{D(s)},N(s)=a_{0}+a_{1}s,$ with $D(s)=1+d_{1}s$ for $k=2$ and $D(s)=1+d_{1}s+d_{2}s^{2}$ for $k=3$ , and ${R}=s_{\rm FO}\beta,$ such that $\beta>0$ . The coefficients of $N(s)$ and $D(s)$ are chosen so that $P_{k}(s)$ agrees with the $k$ -th order Taylor model $T_{k}(s)$ when Taylor expanded. Define the Padé residual $r(s):=D(s)\phi(s)-N(s).$
+
+When we use the Padé 2 and Padé 3 models we assume the following:
+
+The Padé denominator is bounded away from zero on $[0,{R}]$ , i.e., there exists $\eta>0$ such that $|D(s)|\geq\eta,\forall s\in[0,{R}],$ for both Padé 2 and Padé 3 .
+
+The Padé residual has bounded higher-order derivatives, i.e., there exist $Q,P>0$ such that $|r^{(3)}(s)|\leq Q\quad\text{(Pad\'{e}${}_{2}$)},\quad|r^{(4)}(s)|\leq P\quad\text{(Pad\'{e}${}_{3}$)},\quad\forall s\in[0,{R}].$
+
+Assumption 7 is consistent with our safeguard of Padé 3 falling back to Taylor 2 when encountering a pole.
+
+Suppose Assumptions 1 - 2 hold. Then the step selected by maximizing the third-order Taylor model satisfies $\phi(s_{M})\geq\phi(s_{\phi})-\frac{BR^{4}}{12}-\frac{B\epsilon^{2}R^{2}}{12}-\frac{L\epsilon^{2}R^{3}}{60}.$
+
+By Assumption 1 and Taylor’s theorem, there exists $\xi_{s}$ such that
+
+$\phi(s)=\phi(0)+s\phi^{\prime}(0)+s^{2}\frac{\phi^{\prime\prime}(0)}{2}+s^{3}\frac{\phi^{\prime\prime\prime}(0)}{6}+s^{4}\frac{\phi^{(4)}(\xi_{s})}{24}.$
+
+Similarly, the approximation $T_{3}$ admits the expansion, for some $\hat{\xi}_{s}$ and $\tilde{\xi}_{s}$ ,
+
+$T_{3}(s)=\phi(0)+s\phi^{\prime}(0)+s^{2}\frac{\phi^{\prime\prime}(0)}{2}+s^{3}\frac{\phi^{\prime\prime\prime}(0)}{6}+\epsilon^{2}s^{2}\frac{\phi^{(4)}(\hat{\xi}_{s})}{24}+\epsilon^{2}s^{3}\frac{\phi^{(5)}(\tilde{\xi}_{s})}{120}.$
+
+Subtracting these identities gives
+
+$\phi(s)-T_{3}(s)=s^{4}\frac{\phi^{(4)}(\xi_{s})}{24}-\epsilon^{2}s^{2}\frac{\phi^{(4)}(\hat{\xi}_{s})}{24}-\epsilon^{2}s^{3}\frac{\phi^{(5)}(\tilde{\xi}_{s})}{120}.$
+
+Therefore, by the triangle inequality and Assumption 2 ,
+
+$|\phi(s)-T_{3}(s)|\leq\left|s^{4}\frac{\phi^{(4)}(\xi_{s})}{24}\right|+\left|\epsilon^{2}s^{2}\frac{\phi^{(4)}(\hat{\xi}_{s})}{24}\right|+\left|\epsilon^{2}s^{3}\frac{\phi^{(5)}(\tilde{\xi}_{s})}{120}\right|\leq\left|s^{4}\frac{B}{24}\right|+\left|\epsilon^{2}s^{2}\frac{B}{24}\right|+\left|\epsilon^{2}s^{3}\frac{L}{120}\right|$
+
+$\leq\frac{B{R}^{4}}{24}+\frac{\epsilon^{2}B{R}^{2}}{24}+\frac{\epsilon^{2}L{R}^{3}}{120}.$
+
+Consequently,
+
+$|\phi(s)-T_{3}(s)|\leq\frac{B{R}^{4}}{24}+\frac{\epsilon^{2}B{R}^{2}}{24}+\frac{\epsilon^{2}L{R}^{3}}{120}\eqqcolon\varphi.$
+
+Define
+
+$s_{\phi}\coloneqq\arg\max_{s\in[0,{R}]}\phi(s).$
+
+By the definitions of $s_{\phi}$ and $s_{M}$ ,
+
+$\phi(s_{\phi})\geq\phi(s_{M})\qquad\text{and}\qquad T_{3}(s_{M})\geq T_{3}(s_{\phi}).$
+
+Chaining these inequalities with the uniform bound $\varphi$ yields
+
+$\phi(s_{M})\geq T_{3}(s_{M})-\varphi\geq T_{3}(s_{\phi})-\varphi\geq\phi(s_{\phi})-2\varphi.$
+
+Therefore,
+
+$\phi(s_{M})\geq\phi(s_{\phi})-\frac{B{R}^{4}}{12}-\frac{\epsilon^{2}B{R}^{2}}{12}-\frac{\epsilon^{2}L{R}^{3}}{60}.$
+
+∎
+
+Let Assumptions 1 - 2 and 7 - 8 hold. Then the step selected by maximizing the Padé 2 model satisfies $\phi(s_{M})\geq\phi(s_{\phi})-\frac{B\epsilon^{2}{R}^{2}}{12\eta}-\frac{Q{R}^{3}}{3\eta}.$
+
+Since $P_{2}(s)=N(s)/D(s)$ , we have
+
+$\phi(s)-P_{2}(s)=\frac{D(s)\phi(s)-N(s)}{D(s)}=\frac{r(s)}{D(s)}.$
+
+By construction, $P_{2}(s)$ agrees with the second-order Taylor model $T_{2}(s)$ when Taylor expanded. Since $\phi(0)$ and $\phi^{\prime}(0)$ are exact, this gives
+
+$r(0)=0,\qquad r^{\prime}(0)=0.$
+
+Notice that
+
+$r(s)=D(s)(\phi(s)-P_{2}(s))=(1+d_{1}s)\left(\frac{\phi^{\prime\prime}(0)-\widehat{\phi^{\prime\prime}}(0)}{2}s^{2}+\mathcal{O}(s^{3})\right).$
+
+Therefore, the second-order coefficient satisfies
+
+$\frac{r^{\prime\prime}(0)}{2}=\frac{\phi^{\prime\prime}(0)-\widehat{\phi^{\prime\prime}}(0)}{2},$
+
+and using the finite-difference error from Lemma 2 yields
+
+$\left|\frac{r^{\prime\prime}(0)}{2}\right|\leq\frac{B\epsilon^{2}}{24}.$
+
+Taylor expanding $r(s)$ gives
+
+$r(s)=\frac{s^{2}}{2}r^{\prime\prime}(0)+\frac{s^{3}}{6}r^{(3)}(\xi_{s})$
+
+for some $\xi_{s}\in[0,s]$ . Therefore, by Assumption 8 ,
+
+$|r(s)|\leq\frac{B\epsilon^{2}s^{2}}{24}+\frac{Qs^{3}}{6}.$
+
+Since $|D(s)|\geq\eta$ by Assumption 7 ,
+
+$|\phi(s)-P_{2}(s)|\leq\frac{1}{\eta}\left[\frac{B\epsilon^{2}{R}^{2}}{24}+\frac{Q{R}^{3}}{6}\right]\eqqcolon\varphi.$
+
+By the definition of $s_{M}=\arg\max_{s\in[0,{R}]}P_{2}(s)$ ,
+
+$P_{2}(s_{M})\geq P_{2}(s_{\phi}).$
+
+Chaining this inequality with the uniform bound $\varphi$ yields
+
+$\phi(s_{M})\geq P_{2}(s_{M})-\varphi\geq P_{2}(s_{\phi})-\varphi\geq\phi(s_{\phi})-2\varphi.$
+
+Substituting the value of $\varphi$ gives
+
+$\phi(s_{M})\geq\phi(s_{\phi})-\frac{B\epsilon^{2}{R}^{2}}{12\eta}-\frac{Q{R}^{3}}{3\eta}.$
+
+Hence, the result. ∎
+
+Let Assumptions 1 - 2 and 7 - 8 hold. Then the step selected by maximizing the Padé 3 model satisfies $\phi(s_{M})\geq\phi(s_{\phi})-\frac{B\epsilon^{2}{R}^{2}}{12\eta}-\frac{L\epsilon^{2}{R}^{3}}{60\eta}-\frac{|d_{1}|B\epsilon^{2}{R}^{3}}{12\eta}-\frac{P{R}^{4}}{12\eta}.$
+
+Since $P_{3}(s)=N(s)/D(s)$ , we have
+
+$\phi(s)-P_{3}(s)=\frac{D(s)\phi(s)-N(s)}{D(s)}=\frac{r(s)}{D(s)}.$
+
+By construction, $P_{3}(s)$ agrees with the third-order Taylor model $T_{3}(s)$ when Taylor expanded. Since $\phi(0)$ and $\phi^{\prime}(0)$ are exact, this gives
+
+$r(0)=0,\qquad r^{\prime}(0)=0.$
+
+Notice that
+
+$r(s)=D(s)(\phi(s)-p_{3}(s))=(1+d_{1}s+d_{2}s^{2})\left(\frac{\phi^{\prime\prime}(0)-\hat{\phi}^{\prime\prime}(0)}{2}s^{2}+\frac{\phi^{\prime\prime\prime}(0)-\hat{\phi}^{\prime\prime\prime}(0)}{6}s^{3}+\mathcal{O}(s^{4})\right).$
+
+Therefore, the second-order coefficient satisfies
+
+$\frac{r^{\prime\prime}(0)}{2}=\frac{\phi^{\prime\prime}(0)-\hat{\phi}^{\prime\prime}(0)}{2},$
+
+and using the finite-difference error yields
+
+$\left|\frac{r^{\prime\prime}(0)}{2}\right|\leq\frac{B\epsilon^{2}}{24}.$
+
+Similarly, the third-order coefficient satisfies
+
+$\frac{r^{\prime\prime\prime}(0)}{6}=\frac{\phi^{\prime\prime\prime}(0)-\hat{\phi}^{\prime\prime\prime}(0)}{6}+d_{1}\frac{\phi^{\prime\prime}(0)-\hat{\phi}^{\prime\prime}(0)}{2}.$
+
+Consequently,
+
+$\left|\frac{r^{\prime\prime\prime}(0)}{6}\right|\leq\frac{L\epsilon^{2}}{120}+|d_{1}|\frac{B\epsilon^{2}}{24}.$
+
+Taylor expanding $r(s)$ gives
+
+$r(s)=\frac{s^{2}}{2}r^{\prime\prime}(0)+\frac{s^{3}}{6}r^{\prime\prime\prime}(0)+\frac{s^{4}}{24}r^{(4)}(\xi_{s})$
+
+for some $\xi_{s}\in[0,s]$ . Therefore, by Assumption 8 ,
+
+$|r(s)|\leq\frac{B\epsilon^{2}s^{2}}{24}+\left(\frac{L\epsilon^{2}}{120}+|d_{1}|\frac{B\epsilon^{2}}{24}\right)s^{3}+\frac{Ps^{4}}{24}.$
+
+Since $|D(s)|\geq\eta$ by Assumption 7 ,
+
+$|\phi(s)-P_{3}(s)|\leq\frac{1}{\eta}\left[\frac{B\epsilon^{2}{R}^{2}}{24}+\left(\frac{L\epsilon^{2}}{120}+|d_{1}|\frac{B\epsilon^{2}}{24}\right){R}^{3}+\frac{P{R}^{4}}{24}\right]\eqqcolon\varphi.$
+
+By the definition of $s_{M}=\arg\max_{s\in[0,{R}]}P_{3}(s)$ ,
+
+$P_{3}(s_{M})\geq P_{3}(s_{\phi}).$
+
+Chaining this inequality with the uniform bound $\varphi$ yields
+
+$\phi(s_{M})\geq P_{3}(s_{M})-\varphi\geq P_{3}(s_{\phi})-\varphi\geq\phi(s_{\phi})-2\varphi.$
+
+Substituting the value of $\varphi$ gives
+
+$\phi(s_{M})\geq\phi(s_{\phi})-\frac{B\epsilon^{2}{R}^{2}}{12\eta}-\frac{L\epsilon^{2}{R}^{3}}{60\eta}-\frac{|d_{1}|B\epsilon^{2}{R}^{3}}{12\eta}-\frac{P{R}^{4}}{12\eta}.$
+
+∎
+
+Together, these three corollaries and Theorem 2 quantify how the additional curvature information used by ZFO models affects the worst-case approximation gap. The Taylor 3 bound replaces the $\mathcal{O}({R}^{3})$ term in Theorem 2 with an $\mathcal{O}({R}^{4})$ term. Hence the relationship between the errors of Taylor 2 and Taylor 3 can be most significantly characterized by the power of their search regions ${R}.$ The Padé 2 bound remains closer in order to the Taylor 2 bound, but introduces the residual-controlled $\frac{QR^{3}}{3\eta}$ term. The Padé 3 bound exhibits a similar $\mathcal{O}({R}^{4})$ term as Taylor 3 and also uses a residual error term. Overall, the two corollaries reinforce the same conclusion as Theorem 2 ; when the search region is moderate and the perturbation scale is small, then ZFO maximizers achieve values close to the best step within a local trust region.
+
+ZFO Dominance. The following theorem is referenced in the main text as an appendix result. As a supplementary result beyond the main-text analysis, we next ask whether the ZFO-selected Taylor 2 step can be guaranteed to perform at least as well as the original first-order step under suitable local curvature conditions.
+
+Under Assumption 1 and Assumptions 9 - 11 , we compare the Taylor2 step with the typical FO step by bounding the curvature approximation error, imposing strong concavity on $[0,{R}]$ , and requiring the Taylor-model maximizer to be an interior point. The theorem gives conditions to guarantee $\phi(s_{M})\geq\phi(s_{\rm FO})$ .
+
+Let the difference between the second derivative of $\phi$ and the second order approximation of $\phi$ at $s=0$ be bounded, i.e., there exists $D>0$ such that $|\phi^{\prime\prime}(s)-\frac{\phi(\epsilon)-2\phi(0)+\phi(-\epsilon)}{\epsilon^{2}}|\leq D;\forall s\in[0,{R}].$
+
+Let $\phi$ be $\nu$ -strongly concave on $[0,{R}]$ , i.e., $\phi(u)\leq\phi(s)+\phi^{\prime}(s)(u-s)-\frac{\nu}{2}(u-s)^{2};$ for all $s,u\in[0,{R}]$ where $\nu>0.$
+
+Let the maximum of $T_{2}(s)$ be an interior point, i.e., $-\frac{\epsilon^{2}\phi^{\prime}(0)}{\phi(\epsilon)-2\phi(0)+\phi(-\epsilon)}\in[0,{R}]$ and $\phi(\epsilon)-2\phi(0)+\phi(-\epsilon)<0$ .
+
+If Assumption 1 and Assumptions 9 - 11 hold, and if $s_{\rm FO}\in[0,{R}]$ , then the following relation holds between $\phi(s_{M})$ and $\phi(s_{\rm FO})$ :
+
+$\text{if }|s_{\rm FO}-s_{M}|=0\text{ or }|s_{\rm FO}-s_{M}|\geq\frac{2Ds_{M}}{\nu},\text{ then }\phi(s_{M})\geq\phi(s_{\rm FO}).$
+
+We have
+
+$T_{2}(s)=\phi(0)+\phi^{\prime}(0)s+\frac{1}{2}\widehat{\phi^{\prime\prime}}(0)s^{2},$
+
+which gives
+
+$T_{2}^{\prime}(s)=\phi^{\prime}(0)+\widehat{\phi^{\prime\prime}}(0)s.$
+
+By Assumption 11 , there exists $s_{M}\in[0,{R}]$ such that
+
+$T_{2}^{\prime}(s_{M})=0,$
+
+which gives
+
+$\phi^{\prime}(0)+\widehat{\phi^{\prime\prime}}(0)s_{M}=0,$
+
+and therefore
+
+$s_{M}=-\frac{\phi^{\prime}(0)}{\widehat{\phi^{\prime\prime}}(0)}.$
+
+Notice that
+
+$\phi^{\prime}(s)-T_{2}^{\prime}(s)=\phi^{\prime}(s)-\phi^{\prime}(0)-\widehat{\phi^{\prime\prime}}(0)s=\int_{0}^{s}\left(\phi^{\prime\prime}(u)-\widehat{\phi^{\prime\prime}}(0)\right)du.$
+
+Therefore, by Assumption 9 ,
+
+$|\phi^{\prime}(s_{M})-T_{2}^{\prime}(s_{M})|=\left|\int_{0}^{s_{M}}\left(\phi^{\prime\prime}(u)-\widehat{\phi^{\prime\prime}}(0)\right)du\right|\leq\int_{0}^{s_{M}}\left|\phi^{\prime\prime}(u)-\widehat{\phi^{\prime\prime}}(0)\right|du\leq\int_{0}^{s_{M}}Ddu=Ds_{M}.$
+
+Since $T_{2}^{\prime}(s_{M})=0$ , this gives
+
+$|\phi^{\prime}(s_{M})|\leq Ds_{M}.\qquad(\star)$
+
+Let
+
+$d=s_{\rm FO}-s_{M}.$
+
+If $|d|=0$ , then $s_{\rm FO}=s_{M}$ , and hence
+
+$\phi(s_{M})=\phi(s_{\rm FO}).$
+
+Now suppose $|d|>0$ . By Assumption 10 ,
+
+$\phi(s_{\rm FO})\leq\phi(s_{M})+\phi^{\prime}(s_{M})d-\frac{\nu}{2}d^{2},$
+
+which gives
+
+$\phi(s_{\rm FO})-\phi(s_{M})\leq\phi^{\prime}(s_{M})d-\frac{\nu}{2}d^{2}.$
+
+Furthermore, by $(\star)$ ,
+
+$\phi^{\prime}(s_{M})d\leq|\phi^{\prime}(s_{M})||d|\leq Ds_{M}|d|.$
+
+Therefore,
+
+$\phi(s_{\rm FO})-\phi(s_{M})\leq Ds_{M}|d|-\frac{\nu}{2}d^{2}=|d|\left(Ds_{M}-\frac{\nu}{2}|d|\right).$
+
+Thus, if
+
+$|d|\geq\frac{2Ds_{M}}{\nu},$
+
+then
+
+$Ds_{M}-\frac{\nu}{2}|d|\leq 0,$
+
+and therefore
+
+$\phi(s_{\rm FO})-\phi(s_{M})\leq 0.$
+
+Hence
+
+$\phi(s_{M})\geq\phi(s_{\rm FO}).$
+
+Finally, since $d=s_{\rm FO}-s_{M}$ , the sufficient condition is
+
+$|s_{\rm FO}-s_{M}|\geq\frac{2Ds_{M}}{\nu}.$
+
+If $s_{\rm FO}=\alpha\phi^{\prime}(0)$ , then
+
+$|s_{\rm FO}-s_{M}|=\left|\alpha\phi^{\prime}(0)-\left(-\frac{\phi^{\prime}(0)}{\widehat{\phi^{\prime\prime}}(0)}\right)\right|=|\phi^{\prime}(0)|\left|\alpha+\frac{1}{\widehat{\phi^{\prime\prime}}(0)}\right|.$
+
+Using $s_{M}=-\frac{\phi^{\prime}(0)}{\widehat{\phi^{\prime\prime}}(0)}$ , this gives the equivalent condition
+
+$\left|\alpha+\frac{1}{\widehat{\phi^{\prime\prime}}(0)}\right|\geq-\frac{2D}{\nu\widehat{\phi^{\prime\prime}}(0)}.$
+
+Therefore, if $|s_{\rm FO}-s_{M}|=0$ or $|s_{\rm FO}-s_{M}|\geq\frac{2Ds_{M}}{\nu}$ , then $\phi(s_{M})\geq\phi(s_{\rm FO}).$ ∎
+
+B.2 ZFO Global Stationarity
+
+To connect the local ZFO step-selection guarantees to overall optimization behavior, we finally ask whether repeatedly applying these approximate directional steps still drives the training process toward a stationary point of the population objective.
+
+ZFO is computed on the sampled surrogate $F_{t}(\theta)=F(\theta;S_{t})$ , where $S_{t}$ is generated at the current iterate $\theta_{t}$ and then fixed for nearby perturbations. We define the expected surrogate obtained under the current sampling distribution $\bar{F}_{t}(\theta)\coloneqq\mathbb{E}_{S}[F(\theta;S)]$ . In our theoretical analysis, the true objective $J$ and the expected surrogate $\bar{F}_{t}$ have the same gradient $\nabla\bar{F}_{t}(\theta)=\nabla J(\theta_{t})$ . In this formulation $F_{t}$ is used for parameter updates, while its expectation $\bar{F}_{t}$ develops a reliable objective signal.
+
+Let Assumptions 1 - 5 hold, then
+
+$\max_{s\in I_{t}}J(\theta_{t}+sz_{t})-J(\theta_{t}+s_{t}z_{t})\leq\Delta_{t},$ holds with probability at least $1-\delta,$ where
+
+$\Delta_{t}\coloneq(\mathcal{L}_{J}+\mathcal{L}_{\bar{F}})R_{t}^{2}+2\sigma(1+R_{t})\sqrt{\frac{2\log(4/\delta)}{n}}+2WR_{t}^{2}+\phi(s_{\phi})-\phi(s_{M}).$
+
+Let $j_{t}(s)\coloneqq J(\theta_{t}+sz_{t})$ , so that
+
+$\Delta_{t}\geq j_{t}(s^{*})-j_{t}(s_{M}),$
+
+where $s^{*}$ maximizes $j_{t}(s)$ over $s\in I_{t}$ .
+
+Since $\nabla J(\theta_{t})=\nabla\bar{F}(\theta_{t})$ , we have $j_{t}^{\prime}(0)=\psi_{t}^{\prime}(0)$ . Therefore, for any $s\in I_{t}$ ,
+
+$j_{t}(s)-j_{t}(0)=sj_{t}^{\prime}(0)+\int_{0}^{s}(s-u)j_{t}^{\prime\prime}(u)du.$
+
+Similarly,
+
+$\psi_{t}(s)-\psi_{t}(0)=s\psi_{t}^{\prime}(0)+\int_{0}^{s}(s-u)\psi_{t}^{\prime\prime}(u)du.$
+
+Subtracting these identities gives
+
+$[j_{t}(s)-j_{t}(0)]-[\psi_{t}(s)-\psi_{t}(0)]=\int_{0}^{s}(s-u)[j_{t}^{\prime\prime}(u)-\psi_{t}^{\prime\prime}(u)]du.$
+
+By Assumption 5 , $j_{t}^{\prime\prime}(u)\leq\mathcal{L}_{J}$ and $\psi_{t}^{\prime\prime}(u)\leq\mathcal{L}_{\bar{F}}$ , and therefore, by the triangle inequality,
+
+$[j_{t}(s)-j_{t}(0)]-[\psi_{t}(s)-\psi_{t}(0)]\leq(\mathcal{L}_{J}+\mathcal{L}_{\bar{F}})\int_{0}^{s}(s-u)du=\frac{\mathcal{L}_{J}+\mathcal{L}_{\bar{F}}}{2}s^{2}.$
+
+Consequently,
+
+$j_{t}(s^{*})-j_{t}(0)\leq\frac{\mathcal{L}_{J}+\mathcal{L}_{\bar{F}}}{2}(s^{*})^{2}+\psi_{t}(s^{*})-\psi_{t}(0),$
+
+and similarly,
+
+$j_{t}(s_{M})-j_{t}(0)\geq\psi_{t}(s_{M})-\psi_{t}(0)-\frac{\mathcal{L}_{J}+\mathcal{L}_{\bar{F}}}{2}(s_{M})^{2}.$
+
+Combining these inequalities yields
+
+$\max_{s\in I_{t}}J(\theta_{t}+sz_{t})-J(\theta_{t}+s_{M}z_{t})\leq\psi_{t}(s^{*})-\psi_{t}(s_{M})+(\mathcal{L}_{J}+\mathcal{L}_{\bar{F}})R_{t}^{2}.$
+
+We now bound the difference $\psi_{t}(s^{*})-\psi_{t}(s_{M})$ . By the triangle inequality,
+
+$\psi_{t}(s^{*})-\psi_{t}(s_{M})\leq|\psi_{t}(s^{*})-\phi_{t}(s^{*})|+\phi_{t}(s^{*})-\phi_{t}(s_{M})+|\phi_{t}(s_{M})-\psi_{t}(s_{M})|.$
+
+By the definition of $s_{\phi}$ ,
+
+$\phi_{t}(s^{*})-\phi_{t}(s_{M})\leq\phi_{t}(s_{\phi})-\phi_{t}(s_{M}).$
+
+Furthermore,
+
+$|\psi_{t}(s^{*})-\phi_{t}(s^{*})|+|\phi_{t}(s_{M})-\psi_{t}(s_{M})|\leq 2\max_{s\in I_{t}}|\psi_{t}(s)-\phi_{t}(s)|.$
+
+To bound $\max_{s\in I_{t}}|\psi_{t}(s)-\phi_{t}(s)|$ , Taylor expanding gives
+
+$|\psi_{t}(s)-\phi_{t}(s)|=\left|(\psi_{t}-\phi_{t})(0)+s(\psi_{t}^{\prime}-\phi_{t}^{\prime})(0)+\frac{(\psi_{t}^{\prime\prime}-\phi_{t}^{\prime\prime})(\xi)}{2}s^{2}\right|$
+
+$\leq|(\psi_{t}-\phi_{t})(0)|+|(\psi_{t}^{\prime}-\phi_{t}^{\prime})(0)|R_{t}+WR_{t}^{2}.$
+
+Therefore, by Assumption 4 ,
+
+$\max_{s\in I_{t}}|\psi_{t}(s)-\phi_{t}(s)|\leq\sigma(1+R_{t})\sqrt{\frac{2\log(4/\delta)}{n}}+WR_{t}^{2}.$
+
+Consequently,
+
+$\Delta_{t}\coloneq(\mathcal{L}_{J}+\mathcal{L}_{\bar{F}})R_{t}^{2}+2\sigma(1+R_{t})\sqrt{\frac{2\log(4/\delta)}{n}}+2WR_{t}^{2}+(\phi_{t}(s_{\phi})-\phi_{t}(s_{M})).$
+
+∎
+
+Suppose Assumptions 5 – 6 hold. Assume also that $q_{t}/\mathcal{L}_{J}\in I_{t}.$ Then, for every $T>0$ , with probability at least $1-\delta,$
+
+$\min_{0\leq t\leq T}\mathbb{E}\|\nabla J(\theta_{t})\|^{2}\leq\frac{2\mathcal{L}_{J}(J^{\star}-J(\theta_{0}))}{\mu^{2}T}+\frac{2\mathcal{L}_{J}\tilde{\Delta}_{T}}{\mu^{2}},\text{ where }\tilde{\Delta}_{T}=\frac{1}{T}\sum_{t=0}^{T-1}\mathbb{E}[\Delta_{t}].$
+
+Since $\frac{q_{t}}{\mathcal{L}_{J}}\in I_{t}$ , the comparison step exists within the relevant search interval. Therefore,
+
+$\max_{s\in I_{t}}J(\theta_{t}+sz_{t})\geq J\left(\theta_{t}+\frac{q_{t}}{\mathcal{L}_{J}}z_{t}\right).$
+
+By Assumption 5 ,
+
+$J\left(\theta_{t}+\frac{q_{t}}{\mathcal{L}_{J}}z_{t}\right)\geq J(\theta_{t})+\frac{q_{t}}{\mathcal{L}_{J}}\langle\nabla J(\theta_{t}),z_{t}\rangle-\frac{\mathcal{L}_{J}}{2}\frac{q_{t}^{2}}{\mathcal{L}_{J}^{2}}.$
+
+Taking expectation over the randomness used to construct $z_{t}$ , with the history before iteration $t$ held fixed, and using $q_{t}=\mathbb{E}_{t}[\langle\nabla J(\theta_{t}),z_{t}\rangle]$ , gives
+
+$\mathbb{E}_{t}\left[J\left(\theta_{t}+\frac{q_{t}}{\mathcal{L}_{J}}z_{t}\right)\right]\geq J(\theta_{t})+\frac{q_{t}^{2}}{\mathcal{L}_{J}}-\frac{\mathcal{L}_{J}}{2}\frac{q_{t}^{2}}{\mathcal{L}_{J}^{2}}=J(\theta_{t})+\frac{q_{t}^{2}}{2\mathcal{L}_{J}}.$
+
+Consequently,
+
+$\mathbb{E}_{t}\left[\max_{s\in I_{t}}J(\theta_{t}+sz_{t})\right]\geq J(\theta_{t})+\frac{q_{t}^{2}}{2\mathcal{L}_{J}}.$
+
+By construction,
+
+$J(\theta_{t+1})=J(\theta_{t}+s_{t}z_{t})\geq\max_{s\in I_{t}}J(\theta_{t}+sz_{t})-\Delta_{t}.$
+
+Taking $\mathbb{E}_{t}$ on both sides therefore gives
+
+$\mathbb{E}_{t}[J(\theta_{t+1})]\geq J(\theta_{t})+\frac{q_{t}^{2}}{2\mathcal{L}_{J}}-\mathbb{E}_{t}[\Delta_{t}].$
+
+Assumption 6 gives $q_{t}^{2}\geq\mu^{2}\|\nabla J(\theta_{t})\|^{2}$ , and therefore
+
+$\frac{\mu^{2}}{2\mathcal{L}_{J}}\|\nabla J(\theta_{t})\|^{2}\leq\mathbb{E}_{t}[J(\theta_{t+1})]-J(\theta_{t})+\mathbb{E}_{t}[\Delta_{t}].$
+
+Taking full expectation yields
+
+$\frac{\mu^{2}}{2\mathcal{L}_{J}}\mathbb{E}\|\nabla J(\theta_{t})\|^{2}\leq\mathbb{E}[J(\theta_{t+1})]-\mathbb{E}[J(\theta_{t})]+\widehat{\Delta}_{t},$
+
+where $\widehat{\Delta}_{t}=\mathbb{E}[\Delta_{t}]$ . Summing from $t=0$ to $T$ and using Assumption 5 yields
+
+$\frac{\mu^{2}}{2\mathcal{L}_{J}}\sum_{t=0}^{T}\mathbb{E}\|\nabla J(\theta_{t})\|^{2}\leq J^{\star}-J(\theta_{0})+\sum_{t=0}^{T}\widehat{\Delta}_{t}.$
+
+Finally,
+
+$\min_{0\leq t\leq T}\mathbb{E}\|\nabla J(\theta_{t})\|^{2}\leq\frac{1}{T}\sum_{t=0}^{T}\mathbb{E}\|\nabla J(\theta_{t})\|^{2},$
+
+and therefore, using $\tilde{\Delta}_{T}=\frac{1}{T}\sum_{t=0}^{T}\widehat{\Delta}_{t}$ ,
+
+$\min_{0\leq t\leq T}\mathbb{E}\|\nabla J(\theta_{t})\|^{2}\leq\frac{2\mathcal{L}_{J}(J^{\star}-J(\theta_{0}))}{\mu^{2}T}+\frac{2\mathcal{L}_{J}\tilde{\Delta}_{T}}{\mu^{2}}.$
+
+∎
+
+B.3 Finite Difference Lemmas
+
+Finite-Difference Theorems and Proofs. We provide the proofs for two finite-difference approximations used by ZFO in the form of Lemmas.
+
+Let $\phi(s)$ be four times differentiable in an $\epsilon$ -neighborhood, then:
+
+$\widehat{\phi^{\prime\prime}}(0)\coloneq\frac{\phi(\epsilon)-2\phi(0)+\phi(-\epsilon)}{\epsilon^{2}}=\phi^{\prime\prime}(0)+\mathcal{O}(\epsilon^{2})$
+
+Expanding $\phi(s)$ by its Taylor Series expansion gives
+
+$\phi(s)=\phi(0)+s\phi^{\prime}(0)+s^{2}\frac{\phi^{\prime\prime}(0)}{2}+s^{3}\frac{\phi^{\prime\prime\prime}(0)}{6}+s^{4}\frac{\phi^{(4)}(\xi_{s})}{24},$
+
+hence
+
+$\phi(\epsilon)=\phi(0)+\epsilon\phi^{\prime}(0)+\epsilon^{2}\frac{\phi^{\prime\prime}(0)}{2}+\epsilon^{3}\frac{\phi^{\prime\prime\prime}(0)}{6}+\epsilon^{4}\frac{\phi^{(4)}(\xi_{\epsilon})}{24}$
+
+and
+
+$\phi(-\epsilon)=\phi(0)-\epsilon\phi^{\prime}(0)+\epsilon^{2}\frac{\phi^{\prime\prime}(0)}{2}-\epsilon^{3}\frac{\phi^{\prime\prime\prime}(0)}{6}+\epsilon^{4}\frac{\phi^{(4)}(\xi_{-\epsilon})}{24}.$
+
+Adding the two gives
+
+$\phi(\epsilon)+\phi(-\epsilon)=2\phi(0)+\epsilon^{2}\phi^{\prime\prime}(0)+\epsilon^{4}\frac{\phi^{(4)}(\hat{\xi})}{12},$
+
+subtracting $2\phi(0)$ gives
+
+$\phi(\epsilon)-2\phi(0)+\phi(-\epsilon)=\epsilon^{2}\phi^{\prime\prime}(0)+\epsilon^{4}\frac{\phi^{(4)}(\hat{\xi})}{12},$
+
+and dividing by $\epsilon^{2}$ gives
+
+$\frac{\phi(\epsilon)-2\phi(0)+\phi(-\epsilon)}{\epsilon^{2}}=\phi^{\prime\prime}(0)+\epsilon^{2}\frac{\phi^{(4)}(\hat{\xi})}{12}=\phi^{\prime\prime}(0)+\mathcal{O}(\epsilon^{2}).$
+
+∎
+
+The equality above represents a natural second-order central finite difference; we prove the asymmetric finite difference for Lemma 3 below,
+
+Let $\phi(s)$ be five times differentiable in an $\epsilon$ -neighborhood, then:
+
+$\widehat{\phi^{\prime\prime\prime}}(0)\coloneq 3\frac{\phi(\epsilon)-\phi(-\epsilon)-2\epsilon\phi^{\prime}(0)}{\epsilon^{3}}=\phi^{\prime\prime\prime}(0)+\mathcal{O}(\epsilon^{2}).$
+
+Consider the new expansion of $\phi(s)$
+
+$\phi(s)=\phi(0)+s\phi^{\prime}(0)+s^{2}\frac{\phi^{\prime\prime}(0)}{2}+s^{3}\frac{\phi^{\prime\prime\prime}(0)}{6}+s^{4}\frac{\phi^{(4)}(0)}{24}+s^{5}\frac{\phi^{(5)}(\xi_{s})}{120}.$
+
+Then taking the difference between $\phi(\epsilon)$ and $\phi(-\epsilon)$ returns
+
+$\phi(\epsilon)-\phi(-\epsilon)=2\epsilon\phi^{\prime}(0)+\epsilon^{3}\frac{\phi^{\prime\prime\prime}(0)}{3}+\epsilon^{5}\frac{\phi^{(5)}(\hat{\xi})}{60}.$
+
+Using $\phi^{\prime}(0)$ gives
+
+$\phi(\epsilon)-\phi(-\epsilon)-2\epsilon\phi^{\prime}(0)=\epsilon^{3}\frac{\phi^{\prime\prime\prime}(0)}{3}+\epsilon^{5}\frac{\phi^{(5)}(\hat{\xi})}{60},$
+
+and dividing by $\frac{\epsilon^{3}}{3}$ returns
+
+$\frac{3(\phi(\epsilon)-\phi(-\epsilon)-2\epsilon\phi^{\prime}(0))}{\epsilon^{3}}=\phi^{\prime\prime\prime}(0)+\epsilon^{2}\frac{\phi^{(5)}(\hat{\xi})}{20}=\phi^{\prime\prime\prime}(0)+\mathcal{O}(\epsilon^{2}).$
+
+∎
+
+Table 3 : Summary of the models and datasets used in the large-model experiments. Parameter counts denote the total number of model parameters. Dataset sizes are reported as the number of training/evaluation examples used in our experiments. MATH uses the 512/256 train/evaluation subset described in the main text.
+
+Table 4: Fixed experimental settings used across all large language RLVR-ZFO runs.
+
+Table 5: Training configuration types used across runs. Batch represents batch size, Group represents group size, Max Len. and Output Len. represent Max Length and Maximum Output Length.
+
+Table 6: Hyperparameter Configuration. Learning rates, bounds, and configuration types used for the main empirical study. FO LR and ZO LR denote the learning rates used for first-order and zeroth-order fine-tuning, respectively. BT2, BT3, BP2, and BP3 represent the selected bounds for Taylor2, Taylor3, Padé2, and Padé3, respectively. Learning rate search is over $\{1\mathrm{e}-6,5\mathrm{e}{-6},1\mathrm{e}{-5}\}$ and bound search is over $\{3,5,10\}$ . ALL indicates that every lr for MeZO produced the same result.
+
+Appendix C Addendum to Experimental Results
+
+This addendum collects supplementary diagnostics that complement the main results. We first validate the ZFO step-selection mechanism on two low-dimensional toy RLVR environments, then discuss the local-approximation behavior of each ZFO method on a panel of analytic test functions, and finally report cross-setting win ratios that summarize how consistently each variant improves over the FO baseline.
+
+C.1 Configuration
+
+This section specifies the objective and implementation choices used throughout our experiments. First, we define the GRPO surrogate, optimized by each method, then report the hyperparameter configurations used for the main large-model runs, Qwen sub-study, and toy validation.
+
+C.1.1 Surrogate Objective Formulation
+
+GRPO Surrogate. For this paper, the surrogate $F_{t}$ instantiates the GRPO objective. Let $\mathcal{P}_{t}$ denote the set of prompts in the current batch, with $|\mathcal{P}_{t}|$ the batch size and $G$ the number of examples sampled per prompt. For each prompt $i\in\{1,\ldots,|\mathcal{P}_{t}|\}$ and each sampled example $j\in\{1,\ldots,G\}$ , let $\tau_{i,j,t}$ denote the sampled example, $|\tau_{i,j,t}|$ its length, and $(x_{i,j,v},y_{i,j,v})$ the state-action pair at token position $v$ . The surrogate is
+
+$F_{t}(\theta;S_{t})=\frac{1}{|\mathcal{P}_{t}|G}\sum_{i=1}^{|\mathcal{P}_{t}|}\sum_{j=1}^{G}\widetilde{A}_{i,j,t}\log\pi_{\theta}(\tau_{i,j,t})-\kappa\cdot\mathrm{KL}(\pi_{\theta}\|\pi_{\rm ref}),$
+
+where $\kappa>0$ is the KL coefficient, $\widetilde{A}_{i,j,t}$ is the group-relative advantage given as
+
+$\widetilde{A}_{i,j,t}=\rho(\tau_{i,j,t})-\frac{1}{G}\sum_{k=1}^{G}\rho(\tau_{i,k,t}),$
+
+and $\rho$ is the verifiable reward given by
+
+$\rho(\tau_{i,j,t})=\mathds{1}_{\tau_{i,j,t}\in\mathcal{C}_{t}},$
+
+with $\mathcal{C}_{t}$ denoting the set of sampled examples deemed correct by the verifier at iteration $t$ . The KL penalty is computed at the token level and averaged across the batch:
+
+$\mathrm{KL}(\pi_{\theta}\|\pi_{\rm ref})=\frac{1}{|\mathcal{P}_{t}|G}\sum_{i=1}^{|\mathcal{P}_{t}|}\sum_{j=1}^{G}\frac{1}{|\tau_{i,j,t}|}\sum_{v=1}^{|\tau_{i,j,t}|}\bigl[\log\pi_{\theta}(y_{i,j,v}\mid x_{i,j,v})-\log\pi_{\rm ref}(y_{i,j,v}\mid x_{i,j,v})\bigr].$
+
+Table 7: Learning rate, bound, and configuration type used for the Qwen sub-study on additional reasoning benchmarks. Learning rate search is over $\{$ 5e-6, 1e-5 $\}$ and bound search is over $\{3,5\}$ .
+
+Implementation-Level Interpretation of $\alpha$ and $\beta$ . In the theory, we describe the ZFO search interval using the effective radius $R_{t}=\beta s_{\rm FO}$ , where $s_{\rm FO}$ represents the scale of the base first-order step. Conceptually, this makes the learning rate $\alpha$ and the bound $\beta$ nearly interchangeable as step-scale controls. Under an idealized linear scaling view, replacing $(\alpha,\beta)$ with another pair having the same product $\alpha\beta$ would therefore produce a comparable search radius.
+
+In implementation, however, the two quantities enter at different stages. The base optimizer first forms its tentative AdamW update using learning rate $\alpha$ . If $\theta_{t}$ is the parameter vector before this tentative update and $\widehat{\theta}_{t}$ is the parameter vector after it, then the realized optimizer displacement is
+
+$d_{t}=\widehat{\theta}_{t}-\theta_{t}.$
+
+ZFO then searches along this displacement through parameters $\theta_{t}+ad_{t}$ with $a\in[0,\beta]$ . Thus the implemented effective search radius is $R_{t}=\beta\|d_{t}\|$ .
+
+Therefore, matched-product pairs such as $(\alpha,\beta)=(10^{-6},5)$ and $(5\times 10^{-6},1)$ should be understood as equivalent in nominal search scale, but not necessarily identical in implementation. They can produce different results because $\alpha$ affects the optimizer displacement $d_{t}$ before ZFO constructs its search line.
+
+LLM implementation. GRPO supplies the optimizer direction and first-order coefficient. Symmetric probes evaluate a separate reward-minus-KL score on fixed sampled sequences, with rewards held constant. The probe values and GRPO slope jointly define the local model used for step selection. The theory analyzes an idealized ZFO setting in which the directional derivative and function probes are evaluations of the same sampled surrogate. The RLVR implementation approximates this setting by holding sampled responses and rewards fixed during the probes.
+
+C.1.2 Empirical Configurations
+
+All large-model runs share the fixed hyperparameters listed in Table 4 . We hold these values constant so that observed differences in performance can be attributed to the update method as opposed to incidental variance in sampling, regularization, or optimization settings. Each reported result is averaged over the three seeds $\{100,101,102\},$ and the standard deviations reported in Tables 1 and 2 are based on these various runs.
+
+We evaluate the models after each epoch, and all runs use the same early-stopping rule; we terminate the training when evaluation accuracy is unchanged for three consecutive epochs. Otherwise, we continue training until the maximum epoch count specified for the corresponding configuration. Per-run hyperparameters differ across model-dataset pairs and include the learning rate $\alpha$ , the bound hyperparameter $\beta,$ and the selected configuration from Table 5 . We summarize four configuration types in Table 5 and represent a performance-versus-cost trade-off. Config a is the default, with the largest group size and longest context length. Configs b – d are progressively cheaper alternatives selected when a is infeasible based on either memory or time constraints. Config b reduces both batch and group sizes for memory-constrained runs, c trades group size for a larger batch when throughput is more valuable than rollout diversity, and d additionally shortens the context and reduces epochs.
+
+These per-run details are reported in Table 6 for the main results, including the FO learning rate, ZO learning rate, and each ZFO bound $\beta$ . The FO learning rate is selected from the sweep $\{$ 1e-6, 5e-6, 1e-5 $\}$ , and the corresponding bound for each ZFO method is then chosen from a validated sweep over $\{3,5,10\}$ . The ZO learning rate is tuned independently from the sweep { $1e-8,5e-8,1e-7,5e-7\}$ , since ZO methods generally require a smaller effective step scale than FO updates. The performance reported is the mean verifiable reward on the evaluation set. The Qwen sub-study from Table 2 follows a similar protocol but fixes config c across runs (a memory-conservative choice given the sub-study sweeps over four datasets), restricts the learning rate sweep to $\{$ 5e-6, 1e-5 $\}$ , and limits the bound sweep to $\{3,5\}.$ The Qwen sub-study configurations are reported in Table 7 .
+
+The toy models in Figure 7 use a lightweight configuration designed to validate the ZFO step-selection mechanism in a controlled low-dimensional setting. Both environments share a context dimension of 6, a sequence length of 4, and a two-layer policy network of hidden width 48. Each run uses a dataset of 200 contexts trained for 50 steps with batch size $16$ , group size $G=4$ , perturbation scale $\epsilon=10^{-2},$ and KL coefficient of 0.1. The bound hyperparameter $\beta$ is fixed to 1, so the ZFO search interval collapses to the FO typical step.
+
+Table 3 depicts the models and datasets used throughout our large-model experiments, along with their corresponding parameter counts and dataset sizes. We consider models ranging from 1.23B to 2.7B parameters across a diverse set of mathematical reasoning, commonsense reasoning, and knowledge-based benchmarks. We additionally report the datasets used in our Qwen sub-study to provide a complete summary of the main experimental settings considered.
+
+Table 8 : Compact summary of the Classical Optimization Problems used in Figure 5 . Before optimization, each listed initial position $\theta_{0}$ is perturbed independently per seed as $\theta_{0,s}=\theta_{0}+\xi_{s}$ , where $\xi_{s}\sim\mathcal{N}(0,0.04I)$ applies independent Gaussian noise (standard deviation $0.2$ ) to every coordinate, drawn from a dedicated, task-specific random stream and shared across all FO, ZFO, and GeN methods evaluated on that task–seed pair.
+
+Our MeZO baseline uses a forward-only, two-sided finite-difference update along an unnormalized Gaussian perturbation direction. At each iteration, sampled responses, group-centered reward advantages, and reference-policy log probabilities are held fixed across the positive and negative perturbations. The evaluated objective combines advantage-weighted completion log probabilities with a nonnegative $k_{3}$ KL penalty, averaged over completion tokens within each sequence. Both terms use completion-only masking, and responses are decoded from the end of the padded prompt. Objective evaluations run in evaluation mode, with log-ratio clipping for numerical stability. The perturbation direction is regenerated from the same random seed for both probes and the parameter update, avoiding backpropagation.
+
+C.2 Additional Insights
+
+Optimization Beyond Neural Network Training. To evaluate whether ZFO extends beyond neural network optimization, we consider six classical optimization problems: linear least squares, nonlinear least squares, logistic regression, low-rank matrix factorization, Rosenbrock, and Beale. A summary of the problems can be found in Table 8 . We evaluate Taylor2, Taylor3, Padé2, and Padé3 with both SGD and AdamW-style directions, alongside their first-order baselines and GeN [ 9 ] and present the results in Figure 5 . Every method receives an independent search over the 18 learning rates, $\{1,2,5\}\times 10^{-5,\ldots,0}$ , while ZFO methods use a fixed bound $\beta=3$ and perturbation radius $\epsilon=10^{-3}$ . GeN uses $\gamma=0.9$ and $\Phi=1$ for fair comparison against the ZFO methods. Each experiment runs for 100 gradient updates over three seeds.
+
+Figure 5 : Median $\log_{10}$ objective over three seeds for six optimization problems. Solid curves use AdamW directions, and dashed curves use SGD directions. Each method uses its best learning rate from the same 18-point search. Lower values indicate better optimization.
+
+The results show that ZFO’s benefits are substantial but depend on both the local model and direction. Taylor 3 –AdamW attains the lowest final median objectives on nonlinear least squares and Beale, whereas Padé 3 –AdamW performs best on Rosenbrock. Several ZFO and GeN variants also accelerate matrix factorization relative to ordinary SGD. On linear least squares, most adaptive methods improve moderately over their corresponding first-order baselines, whereas logistic regression converges to essentially the same objective across methods. Some combinations also stall or underperform, particularly on the nonconvex objectives. Thus, the experiment supports ZFO’s applicability beyond LLMs and its ability to yield order-of-magnitude improvements in favorable geometries.
+
+All Roads Lead to $\phi$ . Figure 6 examines the four ZFO surrogates, Taylor 2 , Taylor 3 , Padé 2 , and Padé 3 , on a panel of locally analytic functions. In each panel, $f(x_{0})$ and $f^{\prime}(x_{0})$ are computed exactly, while the second and third derivatives are approximated by the same finite differences discussed in this paper. The top row consists of functions that are either sub-linear or polynomial on a tight interval; hence the approximations are nearly indistinguishable from the actual function. The bottom row deliberately widens the window by introducing functions that do not have sub-linear properties. Across both rows, the consistent takeaway is that all four interpolants generally agree with a bit of variance on super-polynomial functions.
+
+Figure 6 : ZFO approximations on a variety of locally analytic functions. Each panel plots Taylor 2 , Taylor 3 , Padé 2 , and Padé 3 around an $x_{0}.$ Top row consists of panels where all four interpolants are visually indistinguishable from the actual function. The bottom row consists of panels that expose the qualitative differences between the Taylor and Padé approximants.
+
+Toy Model Validation. We first validate the ZFO framework on two low-dimensional toy RLVR environments shown in Figure 7 . The first toy model, Grouped Sequence Bandit , is a sequence-decision task that requires a learning algorithm to choose a short sequence of tokens to match a hidden target sequence. Specifically, the model samples a complete sequence based on a small input and updates the parameters based on the reward feedback. The second model, Grouped Path-Matching , uses a similar idea, but makes the reward structure more dependent on the entire sequence path. Instead of rewarding independent tokens, the policy receives a higher reward when its sampled actions remain aligned with the hidden target path. Both environments use a stochastic policy trained with grouped advantages and KL regularization against a frozen reference, replicating the surrogate structure of $F_{t}(\theta;\mathcal{S}_{t})$ used in our larger experiments. Each method is averaged over 5 seeds with the bound hyperparameter $\beta=1$ ; the remainder of the configuration can be found in § C.1.2 .
+
+Figure 7 reports the training curves and final performance across both environments. Across both toy environments, the ZFO methods improve over the FO and ZO baselines, supporting the central claim that additional function evaluations can improve step-size selection along a fixed direction. Importantly, these improvements occur with the same search scale, since all methods use $\beta=1.$ Thus, the ZFO methods are not benefiting from a larger trust region; rather, they are using local curvature behavior to select more effective intermediate steps within the same update interval. This is most visible in the separation between Taylor 2 , Taylor 3 , and Padé 3 relative to FO, showing that the additional curvature information can meaningfully alter the chosen step even when the learning rate is fixed. The behavior of Padé2 further supports this interpretation; among the ZFO methods, Padé2 is the most restricted in the sense it contains only a linear numerator and denominator. Consequently, when $\beta=1$ , Padé2 often selects a step close to the standard FO update, making it the ZFO variant most similar to FO. This trend is reflected in the final performance summaries with Taylor 3 performing the best in both environments – Taylor 2 and Padé 3 trailing close behind. Overall, these toy results provide validation of the ZFO step-selection mechanism before moving to higher-dimensional models.
+
+Figure 7 : Toy RLVR validation on the Grouped Sequence Bandit and Grouped Path-Matching environments. ZFO methods improve over FO and ZO baselines under the same search scale $\beta=1$ , showing that local curvature models can select more effective steps along update directions.
+
+Learning Rate Sensitivity Curves. Figure 8 establishes that ZFO’s gains rise from intelligent step selection rather than a hidden learning-rate effect. In each panel, we plot ZFO trajectories alongside FO FT runs surrounding the base learning rate to compare against ZFO runs. The three panels highlight complementary behaviors; e.g., Qwen on OpenBookQA shows ZFO trajectories outperforming FO runs with the same nominal search regions, reinforcing the extremely large margin in Table 1 . Phi-2 on Svamp shows ZFO trajectories steadily improving over the FO baselines. Llama on AsDiv shows that the most conservative FO baseline eventually destabilizes during training, whereas ZFO methods remain stable. Together, these curves indicate that ZFO occupies a regime that FO cannot reach by fixed learning rates.
+
+Figure 8 : Stability of ZFO. Empirical evaluation curves demonstrating ZFO’s capacity to stabilize and improve over fine-tuning with AdamW (FO FT). Demonstrations involve AdamW FT (FO FT) curves of multiple learning rates.
+
+Bound vs. Learning Rate Ablation. Figure 9 reports the full ablation over the learning rate $\alpha$ and search bound $\beta$ that was summarized in the main paper. We sweep both hyperparameters across all four ZFO methods on Qwen-2.5-Math-1.5B, evaluating after 10 epochs on subsets (512/256 train/eval) of GSM8K and SVAMP. As discussed in the main paper, at smaller learning rates, increasing $\beta$ produces near-monotonic improvements, while at larger learning rates the gains saturate as the search region $R$ grows too large. Comparing $(\alpha=10^{-6},\beta=5)$ against $(\alpha=5\times 10^{-6},\beta=1)$ also shows that configurations with the same nominal search region yield different final performance, indicating that $\alpha$ and $\beta$ are complementary rather than interchangeable. See § C.1.1 for the formal implementation of $R.$
+
+Examining Figure 9 closely, we observe the high-reward region forms a diagonal band that shifts toward smaller $\beta$ as $\alpha$ grows. At $\alpha=10^{-6}$ and $\alpha=5\times 10^{-6}$ , performance improves steadily as $\beta$ increases from $1$ to $100$ across all four methods. At $\alpha=10^{-5}$ , the best results pull back toward small $\beta.$ Combining the largest bound with $\alpha=10^{-5}$ collapses the reward to near-zero for almost all methods.
+
+Figure 9 : Ablation study inspecting the relationship between the learning rate $\alpha$ and search hyperparameter $\beta$ on the reward rate. We report the performance over a training set of 512 elements and an evaluation set of 256 elements on the Qwen-2.5-MATH-1.5B model and datasets, GSM8K and SVAMP, on the top and bottom row, respectively. From left to right, the panels represent all four ZFO methods ( Taylor 2 , Taylor 3 , Padé 2 , Padé 3 ) presented in this paper.
+
+Cross-Setting Improvement Frequency. As an additional appendix diagnostic, we summarize how often each ZFO variant improves over the corresponding FO baseline across the reported evaluation settings in Table 9 . Across the 12 main result settings and the 4 Qwen sub-study settings, Taylor 2 , Taylor 3 , Padé 2 , and Padé 3 improve over FO in 14/16, 7/16, 13/16, and 14/16 settings, respectively. This supports the view that ZFO is driven by a recurring advantage in adaptive step selection across settings.
+
+Table 9: Win ratios for each ZFO method across the main results and Qwen sub-study. A win denotes a setting in which the method achieves a higher mean accuracy than the corresponding FO baseline.
+
+Additional first-order baselines.
+
+To compare ZFO with different learning-rate adaptation strategies, we additionally evaluate AdamW with a warmup-cosine schedule [ 30 ] and the parameter-free Prodigy optimizer [ 37 ] in Table 10 . We preserve the Qwen-2.5-Math-1.5B model, dataset-specific training configurations, GRPO objective, evaluation protocol, and seeds used in the corresponding main and sub-study experiments. For AdamW with cosine decay, the learning rate selected for the constant-rate FO baseline is used as the peak rate; it gets reached by linear warmup over the first $10\%$ of optimizer steps and then decayed to zero according to a cosine schedule. Prodigy instead uses its recommended configuration with adjustment factor $1.0$ , $d_{\mathrm{coef}}=1.0$ , decoupled weight decay $0.01$ , and no external learning-rate schedule. To contextualize these baselines within the range of behavior exhibited by ZFO, the table also reports the lowest- and highest-mean ZFO variants for each dataset.
+
+Table 10: Comparison with additional first-order baselines. AdamW with linear warmup and cosine decay and Prodigy are compared with the worst- and best-performing ZFO variants for each Qwen-2.5-Math-1.5B dataset. The ZFO extrema are selected by mean final evaluation performance across Taylor 2 , Taylor 3 , Padé 2 , and Padé 3 ; the selected variant is shown in parentheses. The best result in each row is bold.
+
+Table 10 shows that the strongest ZFO variant outperforms both AdamW with cosine decay and Prodigy across all eight datasets on Qwen. AdamW with cosine decay remains the stronger of the two additional FO baselines, while Prodigy consistently trails both the scheduled AdamW baseline and the best ZFO method. However, the worst-performing ZFO variant falls below AdamW with cosine decay on several datasets, indicating that the advantage does not arise uniformly across every local model. Overall, these results suggest that ZFO can improve over many step-adaptive baselines, while also signaling that the choice of local approximation remains important.
+
+ZFO Sequential Line Search. The four ZFO methods in the main paper select a step using a local model constructed from a fixed budget of two probes. ZFO-Seq extends this design to a sequential budget of $k>2$ fixed-batch evaluations. The first two probes construct the initial model $M\in\{T_{2},T_{3},P_{2},P_{3}\}$ as in Algorithm 1 , and the remaining $k-2$ probes are spent refining the model’s proposal.
+
+At each refinement step, the current candidate maximizer is evaluated on the shared minibatch $S_{t}$ , and a new candidate is proposed by fitting a parabola through the best evaluated point in $I_{t}$ and its two nearest evaluated neighbors, aligning with safeguarded successive parabolic interpolation [ 8 ] . The returned step is the best evaluated point rather than a model maximizer. Every candidate must survive an actual evaluation of $\phi_{t}$ before it can be selected. Since $(0,\phi_{t}(0))\in E_{t}$ by construction, ZFO-Seq guarantees $\phi_{t}(s_{t})\geq\phi_{t}(0)$ at every iteration, a monotone non-decrease of the empirical surrogate. This replaces the model-selection gap $\phi(s_{\phi})-\phi(s_{M})$ with the gap attained by the best of $k$ evaluated points, which shrinks under refinement. Algorithm 2 summarizes the procedure.
+
+Table 11 reports the evaluation accuracy for a variety of line-search methods on the Qwen-2.5-Math-1.5B model (seed 100, configuration C, learning rate 1e-5, search bound $\beta=3$ ). Each ZFO-Seq model used $P_{3}$ as its default initialization.
+
+Algorithm 2 : ZFO-Seq
+
+Table 11 : Comparison with line-search algorithms. Extended line-search results comparing the basic ZFO-Seq method against Armijo, Barzilai-Borwein, Polyak, and a simplified probabilistic line search (PLS) on the Qwen Model. The best result is in bold , and the second best result is underlined .
+
+Table 11 compares ZFO-Seq against several established line-search methods. ZFO-Seq achieves the strongest result on CODAH, while remaining within approximately two points of the best-performing method on both ARC-Challenge and SVAMP. Armijo and Barzilai-Borwein remain slightly stronger on these latter settings, whereas Polyak and PLS generally trail ZFO-Seq . Thus, ZFO-Seq is competitive with classical line-search and adaptive step-size methods across the three evaluated settings.
+
+Unit-Bound Ablation. To determine whether ZFO benefits require a search interval larger than the standard first-order update, we additionally evaluate the four ZFO models with the bound fixed to $\beta=1$ on Qwen-2.5-Math-1.5B. Under this setting, ZFO may shorten or reshape the AdamW update but cannot select a step beyond the endpoint corresponding to the nominal FO displacement. ARC-Challenge and StrategyQA use three-epoch versions of configuration a , while ASDiv uses a three-epoch version of configuration c ; we denote these shortened configurations by a’ and c’ , respectively. Their batch size, group size, context length, and maximum output length otherwise remain unchanged. All methods use the fixed RLVR settings in Table 4 , including perturbation scale $\epsilon=10^{-3}$ , and results are averaged over seeds $\{100,101,102\}$ . Table 12 reports the resulting final evaluation accuracy.
+
+Table 12: Qwen-2.5-Math-1.5B sub-study ablation with ${\beta=1}$ . Results are mean $\pm$ standard deviation, over three seeds. All datasets are trained with 3 epochs (ARC-Challenge, StrategyQA; config a’), (ASDiv; config c’). Under this 3-epoch configuration, reducing the ARC FO learning rate from $10^{-5}$ to $5\times 10^{-6}$ improves accuracy from $31.71\pm 8.11$ to $55.12\pm 0.60$ . The ASDiv FO result uses the third-epoch checkpoint of the matched FO runs.
+
+Table 12 shows that ZFO can modify training behavior even when it is not permitted to move beyond the nominal FO update. On ARC-Challenge, all four ZFO variants outperform AdamW at the shared learning rate of $10^{-5}$ ; however, reducing the separately tuned FO learning rate to $5\times 10^{-6}$ raises its accuracy to $55.12$ , so the ARC result is best interpreted as ZFO recovering a competitive step scale. On StrategyQA, Taylor 3 performs best at $74.87$ , followed by Taylor 2 and Padé 2 , whereas Padé 3 falls below FO. On ASDiv, FO remains narrowly best, although Taylor 2 , Padé 2 , and Padé 3 remain within $0.26$ points. Thus, $\beta=1$ is sufficient for gains in some settings, but we argue that the ZFO methods’ largest gains arise from the ability to safely navigate larger learning rates.
+
+Location of ZFO Steps. We next examine where the ZFO methods select steps within the search interval $I_{t}=[0,R]$ . This diagnostic distinguishes between selecting no update ( $s_{t}=0$ ), the largest permitted update ( $s_{t}=R$ ), and an interior step. Because numerical solutions may lie arbitrarily close to an endpoint, we report both the exact interior frequency, $0<s_{t}<R$ , and a 1%-trimmed interior frequency, $0.01<s_{t}/R<0.99$ . We also report the median normalized step $s_{t}/R$ . Statistics are computed within each run. Table 13 summarizes the $\beta=1$ Family-B cohort, consisting of 48 runs across four configurations, and the fixed- $\beta=3$ cohort, consisting of 108 runs across nine model-dataset pairs.
+
+Table 13: Distribution of ZFO-selected steps over the search interval $[0,R]$ . Frequencies are macro-averaged across runs. Exact and 1%-trimmed interior selections are reported separately, and median steps are normalized by $R$ . For Padé 3 , fallback frequency denotes activation of the quadratic safeguard. The largest interior frequency for each value of $\beta$ is bold.
+
+Table 13 reveals distinct step-selection behaviors across the four ZFO models. Taylor 3 makes the most frequent use of the interval interior under both bounds. Its exact interior frequency increases from $65.83\%$ at $\beta=1$ to $80.77\%$ at $\beta=3$ , while its 1%-trimmed interior frequency rises more substantially from $23.88\%$ to $70.28\%$ . The difference between the two interior measures at $\beta=1$ , together with a median normalized step of $0.00156$ , indicates that many of its nominally interior selections lie close to the zero endpoint. At $\beta=3$ , however, most selections remain interior even after trimming, showing that Taylor 3 frequently chooses steps that are meaningfully separated from both boundaries.
+
+The other models rely more heavily on endpoint selections. Taylor 2 most often selects the full step $s_{t}=R$ , doing so in $57.66\%$ of updates at $\beta=1$ and $64.59\%$ at $\beta=3$ . Padé 2 never selects an interior point in either cohort and therefore acts empirically as a binary rule between $s_{t}=0$ and $s_{t}=R$ . Padé 3 also remains largely endpoint-driven. The median of textttPadé 3 shifts from zero at $\beta=1$ to the upper endpoint at $\beta=3$ . Its fallback frequency simultaneously increases from $12.49\%$ to $54.95\%$ , indicating that the quadratic safeguard becomes substantially more important over the larger search interval. Overall, the results show that the cubic Taylor model uses higher-order information primarily to select intermediate step lengths, whereas the remaining models more often use their local approximations to choose between suppressing and taking the full permitted update.
+
+Appendix D Notation

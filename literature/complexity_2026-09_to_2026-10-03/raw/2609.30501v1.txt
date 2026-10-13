@@ -1,0 +1,389 @@
+Content selection saved. Describe the issue below:
+
+To Solve Bilevel Optimization with Nonconvex Lower Levels, We Need Second-Order Stationarity
+
+Although bilevel optimization (BLO) has emerged as a powerful framework for addressing many complex and nested machine learning problems in recent years, most existing studies are confined to the lower-level strongly convex (LLSC) or lower-level generally convex (LLGC) settings (i.e., the lower-level objective function is assumed to be, at least, convex). While the LLSC/LLGC assumptions render more tractable algorithmic design and theoretical analysis, they are too rigid to encompass many machine learning problems in practice. The limitations of LLSC/LLGC assumptions in BLO motivate us to investigate solving the BLO problem in the general lower-level nonconvex (LLNC) settings, which remains in its infancy. In the literature on LLNC-BLO, most of the existing works either require additional structures in the lower-level objective function for tractable theoretical analysis, or adopt the first-order stationarity reformulation as a lower-level surrogate problem, which is inherited from the LLSC/LLGC settings but could lose their effectiveness in the LLNC setting. To bridge this gap, in this work, we propose to reformulate the nonconvex lower-level problem using a second-order stationarity-based surrogate, the solution of which guarantees a local optimal solution at the lower level. Based on this reformulation, we propose the $\mathsf{PROBE}~$ ( P erturbed g r adient alg o rithm for b ilevel probl e m) and show that it overcomes the limitations of prior works by probing and escaping lower-level saddle points. We theoretically prove that $\mathsf{PROBE}~$ achieves a finite-time convergence rate of $\mathcal{O}(T^{-\frac{2}{5}})$ , where $T$ denotes iterations. To our knowledge, this work is the first to establish the finite-time convergence rate guarantee for achieving lower-level second-order stationary solutions in general LLNC-BLO. Our experiments on both a large language model-based data curation task and a meta-learning task also show that $\mathsf{PROBE}~$ outperforms state-of-the-art methods.
+
+1 Introduction
+
+In recent years, bilevel optimization (BLO) ( Bracken and McGill, 1973 ; Liu et al., 2021 ; Zhang et al., 2024 ) has received significant attention in the machine learning community due to the rise of a wide range of complex and nested machine learning problems, such as reinforcement learning ( Hong et al., 2023 ; Kudo et al., 2026 ) , meta-learning ( Franceschi et al., 2018 ; Ji et al., 2021 ) , adversarial training ( Zhang et al., 2022b ) , large language model (LLM) fine-tuning ( Shen et al., 2024a ) , to name just a few. In general, a BLO problem can be formulated as follows:
+
+$\displaystyle\mathrm{BLO:}\,\,\min_{x\in\mathbb{R}^{p},y\in\mathbb{R}^{q}}f(x,y)\hskip 30.00005pt\text{subject to }$ $\displaystyle y\in\mathcal{S}(x):=\argmin_{y}g(x,y),\vskip-5.0pt$ (1)
+
+where $f(x,y)$ and $g(x,y)$ are the upper- and lower-level objective functions, respectively. Clearly, the challenge of solving a BLO problem stems from the nested structure, i.e., part of the decision variables $y$ in the upper-level objective $f(x,y)$ is obtained from the set of optimizers $S(x)$ given an upper-level variable $x\in\mathbb{R}^{p}$ . To address this challenge and for tractable algorithmic design and analysis, most existing works in the BLO literature have relied on the restrictive lower-level strong convexity (LLSC) assumption, i.e., $g(x,\cdot)$ is strongly convex with respect to (w.r.t.) $y$ for any given $x\in\mathbb{R}^{p}$ ( Ghadimi and Wang, 2018 ; Ji et al., 2021 ; Yang et al., 2021 ; Dagréou et al., 2022 ) , thereby ensuring a singleton solution set for the lower-level problem and well-defined upper-level hypergradient through the implicit function theorem. To address the limitation of the stringent LLSC assumption, a recent line of works in the BLO literature relaxes LLSC to lower-level general convexity (LLGC), i.e., $g(x,\cdot)$ is convex w.r.t. $y$ ( Cao et al., 2023 ; Jiang et al., 2023 ; Liu et al., 2023 ) . Unfortunately, LLGC remains highly restrictive, since most modern learning models are based on deep neural networks, which are highly nonconvex and violate the LLGC assumption.
+
+To date, research on bilevel optimization (BLO) problems with nonconvex lower levels (LLNC) remains in its infancy, and existing results are limited. To the best of our knowledge, early attempts to address LLNC-BLO ( Kwon et al., 2023 ; Shen and Chen, 2023 ; Xiao et al., 2023 ; Chen et al., 2024 ; Liu et al., 2024 ; Jiang et al., 2025a ; Jiang et al., 2025b ; Ma et al., 2026 ) have achieved only partial success and exhibit various limitations. One key reason for this stagnation is that, under LLNC, finding an optimal solution $y^{*}(x)$ to the lower-level problem is already intractable in general (typically NP-hard). This difficulty is further compounded by the potential non-uniqueness of $y^{*}(x)$ and the challenge of establishing well-defined upper-level hypergradients given a $y^{*}(x)$ . Consequently, the aforementioned works either impose specific structural assumptions or consider relaxations of the LLNC-BLO problem. For example, some existing works ( Kwon et al., 2023 ; Jiang et al., 2025a ; Jiang et al., 2025b ) assume bounded domains for the variables (either $x$ , $y$ , or both), which limits their practical applicability. Other works relax the LLNC-BLO formulation by replacing the lower-level optimality condition $y\in\arg\min_{y}g(x,y)$ with the first-order stationarity condition, i.e., seeking $y$ -solutions that satisfy $\nabla_{y}g(x,y)=0$ . Although some studies further assume that the lower-level objective $g(x,y)$ satisfies the Polyak–Łojasiewicz (PL) condition ( Shen and Chen, 2023 ; Xiao et al., 2023 ; Liu et al., 2024 ; Ma et al., 2026 ) , thereby ensuring that any first-order stationary point (FOSP) is globally optimal. However, the PL condition is restrictive, since nonconvex problems may generally exhibit flat regions, saddle points, or suboptimal local minima, under which the PL condition fails to hold.
+
+In this work, we argue that algorithmic designs using the FOSP relaxation as a surrogate for the lower-level problem could be easily trapped in undesirable saddle points of the lower-level objective (i.e., points that are FOSP but not local minima), thereby yielding poor solutions to the overall LLNC-BLO problem. For example, consider the simple LLNC-BLO problem in Fig. 1 where $x,y\in\mathbb{R}$ , $f(x,y)=(x-2)^{2}+y^{2}$ , $g(x,y)=\frac{1}{4}y^{4}-\frac{1}{2}xy^{2}$ . It can be readily verified that the PL condition fails to hold even for this simple example. Consequently, sequences generated by existing algorithms based on the FOSP surrogate converge only to saddle points of $g(x,\cdot)$ (cf. Fig. 1(a) ), leading to solutions that are significantly suboptimal compared to the true optimum (cf. Fig. 1(b) ).
+
+(a) Converging trajectories.
+
+(b) Convergence gaps in (a).
+
+Figure 1 : Example: $x,y\in\mathbb{R}$ , $f(x,y)=(x-2)^{2}+y^{2}$ , $g(x,y)=\frac{1}{4}y^{4}-\frac{1}{2}xy^{2}$ . Fig. 1(a) shows the contour plot of $f(x,y)$ along with converging trajectories with initial points $(0,2)$ and $(3,0)$ , and Fig. 1(b) plots $|f(x_{t},y_{t})-f^{*}|$ vs. iteration $t$ , illustrating how far the convergent sequences are from solving the LLNC-BLO problem. Our $\mathsf{PROBE}~$ (Alg. 1 ) is the only method that escapes the saddle point and finds true solutions , compared to existing baselines methods: PBGD ( Shen and Chen, 2023 ) , GALET ( Xiao et al., 2023 ) , MEHA ( Liu et al., 2024 ) , and SUN-DSBO-SE ( Ma et al., 2026 ) .
+
+To address the limitations of FOSP-based lower-level surrogates, in this paper, we propose using second-order stationarity as a surrogate for LLNC-BLO problems. Mathematically, second-order stationarity requires not only $\nabla_{y}g(x,y)=0$ , but also that the Hessian with respect to $y$ is positive semidefinite (PSD), i.e., $\lambda_{\min}(\nabla_{yy}^{2}g(x,y))\geq 0$ . Our rationale for adopting this second-order-stationarity-based lower-level surrogate (SOS-LLS) is that a PSD Hessian enforces local convexity in the lower-level problem, thereby ruling out undesirable saddle points and guaranteeing at least local optimality with respect to $y$ . As a concrete example, Fig. 1 shows that our $\mathsf{PROBE}~$ method, based on SOS-LLS, successfully recovers true optimal solutions to the LLNC-BLO problem.
+
+Table 1 : Comparison of $\mathsf{PROBE}~$ (Alg. 1 ) with state-of-the-art LLNC-BLO methods. $\dagger$ : BLO Setting states the assumptions on the lower level of the LLNC-BLO. $\ddagger$ : Surrogate Problem refers to the relaxed surrogate of the lower level of the LLNC-BLO problem. Moreau envelope-based surrogates reduce to first-order stationarity under smoothness conditions ( Ma et al., 2026 ) .
+
+Despite the significant advantage of avoiding undesirable saddle points, solving LLNC-BLO problems through the SOS-LLS reformulation remains largely underexplored, and both algorithm design and analysis are highly nontrivial. This is primarily due to two fundamental challenges: (i) the SOS-LLS reformulation leads to a constrained problem that is inherently non-smooth, posing difficulties for algorithmic design; and (ii) under the LLNC setting, the upper-level hypergradient is ill-defined, leaving no natural metric to quantify the upper-level stationarity gap. In this paper, we address these challenges through the following key contributions:
+
+Theoretical Foundations: For the first time in the literature, we propose to incorporate second-order stationarity as the lower-level surrogate for LLNC-BLO problems, which allows to avoid undesirable saddle point solutions at the lower level without assuming the overly restrictive PL condition (cf. Table 1 ). Building on the SOS-LLS reformulation, we introduce a new augmented convergence metric that leverages second-order stationarity to induce local curvature. By progressively shrinking the augmentation parameter, the proposed metric recovers solutions to the original LLNC-BLO problem, thereby providing a principled foundation for both algorithm design and analysis.
+
+Algorithmic Design and Analysis: Based on the proposed SOS-LLS reformulation, we propose $\mathsf{PROBE}~$ ( P erturbed g r adient alg o rithm for b ilevel probl e m), a new algorithm that efficiently probes and guarantees escaping saddle points in the lower level of LLNC-BLO problems. Theoretically, we show that $\mathsf{PROBE}~$ achieves a finite-time convergence rate of $\mathcal{O}(T^{-\frac{2}{5}})$ at the upper level while guaranteeing local optimality at the lower level for solving LLNC-BLO problems, where $T$ denotes iteration counts.
+
+Empirical Validation: We validate the effectiveness of our $\mathsf{PROBE}~$ method through a dataset curation task for LLM fine-tuning and a meta-learning task, both of which can be formulated as a BLO problem. Our experimental results demonstrate that $\mathsf{PROBE}~$ outperforms existing baselines. We further conduct ablation studies to further reveal the significance of the key components in our proposed $\mathsf{PROBE}~$ method.
+
+2 Related Work
+
+In this section, we provide an overview on two related lines of research: (i) bilevel optimization (BLO), with a focus on methods that address BLO problems in the LLNC settings; and (ii) mechanisms for escaping saddle points in single-level nonconvex optimization theory for machine learning.
+
+1) Bilevel Optimization (BLO): The study of BLO traces its roots back to as early as Bracken and McGill (1973) ; Ye and Zhu (1995) . In recent years, BLO has received significant attention within the machine learning community, primarily driven by the growing necessity of solving nested-structured optimization problems in modern machine learning applications. As mentioned earlier, most existing works in the BLO literature are based on the restrictive LLSC condition ( Franceschi et al., 2018 ; Ghadimi and Wang, 2018 ; Shaban et al., 2019 ; Arbel and Mairal, 2021 ; Ji et al., 2021 ; Yang et al., 2021 ; Dagréou et al., 2022 ) , which significantly limits the practical applicability of the BLO framework. Due to the limitations of LLSC, researchers have recently started to relax the LLSC assumption to the LLGC assumption ( Cao et al., 2023 ; Chen et al., 2023 ; Jiang et al., 2023 ; Liu et al., 2023 ; Shen et al., 2024b ) . However, the convexity requirement in LLGC still excludes a wide range of practical scenarios. The widening gap between the demand for solving general BLO problems in the LLNC setting and the limited theoretical understanding of this BLO setting motivates the studies of LLNC-BLO. However, this area remains in its infancy, and existing works either impose strong structural assumptions or consider FOSP-based relaxations of the LLNC-BLO problem ( Kwon et al., 2023 ; Shen and Chen, 2023 ; Xiao et al., 2023 ; Chen et al., 2024 ; Liu et al., 2024 ; Jiang et al., 2025a ; Jiang et al., 2025b ; Ma et al., 2026 ) . As shown in the illustrative example in Figure 1 and Table 1 , these methods fail to distinguish local minima from saddle points at the lower level, leading to solutions that are significantly suboptimal compared to the true optimum of the original LLNC-BLO problems.
+
+2) Escaping Saddle Points in Single-Level Nonconvex Optimization: It is well-known that in the absence of convexity, traditional single-level optimization becomes significantly more challenging: finding a global optimum is NP-hard in general ( Murty et al., 1987 ) . In fact, even finding a local minimum solution in nonconvex optimization is highly nontrivial. One of the primary challenges stems from the ubiquity of saddle points, particularly in the landscape of high-dimensional objective functions ( Dauphin et al., 2014 ) , which is the typical regime where modern machine learning tasks reside. Although second-order methods naturally tackle this issue by actively probing and escaping saddle points, their dimension-dependent convergence rates preclude them from practical large-scale applications. In the machine learning literature, the question of how to escape saddle points in nonconvex optimization was first systematically studied in Ge et al. (2015) . However, the convergence rate established in Ge et al. (2015) scales polynomially with the dimension. Inspired by this breakthrough, a significant amount of research effort has been dedicated to designing algorithms that reduce the dimension dependence to scale at a polylog fashion ( Agarwal et al., 2017 ; Jin et al., 2017 ; Allen-Zhu and Li, 2018 ; Fang et al., 2018 ; Jin et al., 2018 ; Liu et al., 2018 ; Jin et al., 2021 ; Zhang and Li, 2021 ) . Another closely related line of research focuses on zeroth-order methods for escaping saddle points ( Vlatakis-Gkaragkounis et al., 2019 ; Zhang et al., 2022a ; Zhang and Gu, 2022 ; Ren et al., 2023 ) . To our knowledge, the only works that incorporated saddle point escaping techniques in the BLO framework are Huang et al. (2025) ; Chen et al. (2025) . However, these studies are limited to the LLSC-based setting and only considered escaping saddle points at the upper level, which are fundamentally different from and much simpler than our setting, where we investigate saddle point escaping at the lower level for the LLNC setting.
+
+3 The Second-Order Stationarity-Based Lower-Level Surrogate
+
+In this section, we present the second-order stationarity-based lower-level surrogate reformulation for the LLNC-BLO problem. We begin by introducing several standard smoothness conditions that are needed to formally define second-order stationary points:
+
+The upper- and lower-level objective functions $f$ and $g$ are twice differentiable, and there exist positive constants $\nu,\ell,\rho$ , such that for any $z=(x,y)$ and $z^{\prime}=(x^{\prime},y^{\prime})$ , it holds that:
+
+$\displaystyle|f(z)-f(z^{\prime})|\leq\nu\|z-z^{\prime}\|,\,\,\,\,\,\,\|\nabla f(z)-\nabla f(z^{\prime})\|\leq\ell\|z-z^{\prime}\|,$ $\displaystyle\|\nabla g(z)-\nabla g(z^{\prime})\|\leq\ell\|z-z^{\prime}\|,\,\,\,\,\,\,\|\nabla^{2}g(z)-\nabla^{2}g(z^{\prime})\|\leq\rho\|z-z^{\prime}\|,$
+
+where $\|\cdot\|$ denotes Euclidean and spectral norm for vectors and matrices hereafter, respectively.
+
+We note that the smoothness assumptions above are not only widely adopted in the BLO literature ( Ghadimi and Wang, 2018 ; Ji et al., 2021 ; Yang et al., 2021 ; Xiao et al., 2023 ) , but they have also been numerically observed and verified in large-scale modern machine learning models, such as LLMs ( Castin et al., 2023 ; Malladi et al., 2023 ; Li et al., 2024 ) .
+
+Equipped with these smoothness properties, we now formally define stationary points, local minima, and saddle points for the lower-level of the LLNC-BLO problem.
+
+Suppose Assumption 1 holds, and let $\lambda_{\min}(\cdot)$ denote the minimal eigenvalue of a matrix. For any given $x\in\mathbb{R}^{p}$ and any positive $\epsilon$ ,
+
+$y$ is a first-order stationary point (FOSP) if $\nabla_{y}g(x,y)=0$ . It is an $\epsilon$ -FOSP if $\|\nabla_{y}g(x,y)\|\leq\epsilon$ .
+
+$y$ is a second-order stationary point (SOSP) if $\nabla_{y}g(x,y)=0$ and $\lambda_{\min}(\nabla^{2}_{yy}g(x,y))\geq 0$ . It is an $\epsilon$ -SOSP if $\|\nabla_{y}g(x,y)\|\leq\epsilon$ and $\lambda_{\min}(\nabla^{2}_{yy}g(x,y))\geq-\sqrt{\rho\epsilon}$ .
+
+We note that the definition of $\epsilon$ -second-order stationary point here has also been adopted in the literature ( Nesterov and Polyak, 2006 ; Jin et al., 2017 ; Jin et al., 2018 ; Zhang and Li, 2021 ) .
+
+Suppose that $g$ is differentiable. For any given $x\in\mathbb{R}^{p}$ , $y$ is a local minimum if $\nabla_{y}g(x,y)=0$ and there exists $\delta>0$ such that $g(x,y)\leq g(x,y^{\prime})$ for all $y^{\prime}\in\mathbb{B}_{y}(\delta)$ , where $\mathbb{B}_{y}(\delta)$ denotes an open ball of radius $\delta$ centered at $y$ . In contrast, $y$ is a saddle point if $\nabla_{y}g(x,y)=0$ and it is not a local minimum.
+
+When all saddle points are strict, i.e., $\lambda_{\min}(\nabla^{2}_{yy}g(x,y))<0$ holds for all saddle points, attaining a second-order stationary point is equivalent to reaching a local minimum. In fact, this “strict” property has been extensively verified and documented for saddle points across various nonconvex landscapes (e.g., tensor decomposition or low-rank matrix recovery, see, e.g., ( Ge et al., 2015 ; Bhojanapalli et al., 2016 ; Ge et al., 2016 ; Jin et al., 2017 ; Sun et al., 2018 ) , and see Appendix D for more discussions.) 1 1 1 While finding an SOSP does not theoretically preclude convergence to non-strict saddle points that could occur in highly overparameterized deep learning landscapes, it remains strictly far more advantageous than relying on FOSP. SOSP guarantees the evasion of all strict saddle points, including local maxima, by explicitly exploiting directions of negative curvature. Furthermore, because escaping non-strict saddle points generally requires computationally intractable higher-order derivatives, targeting an SOSP represents the strongest practically verifiable optimality condition. Empirically, the non-strict saddles satisfying SOSP conditions in deep networks often lie on flat manifolds that yield highly desirable generalization properties. .
+
+Given the NP-hardness of finding global optima for general nonconvex objective functions, it is standard practice to target local optimal solutions instead (i.e., points that satisfy the necessary conditions for global optimality). However, as previously noted, simply relaxing the lower-level optimality constraint to merely finding an FOSP ( Shen and Chen, 2023 ; Xiao et al., 2023 ; Liu et al., 2024 ; Ma et al., 2026 ) is problematic, as it introduces the risk of converging to undesirable saddle points. Fortunately, under the strict saddle assumption, identifying an SOSP yields local minima. Thus, we propose to reformulate the LLNC-BLO problem with the following SOSP-based surrogate:
+
+$\min_{x\in\mathbb{R}^{p},y\in\mathbb{R}^{q}}f(x,y),\hskip 20.00003pt\text{subject to }\nabla_{y}g(x,y)=0,\,\,\,\lambda_{\min}(\nabla^{2}_{yy}g(x,y))\geq 0.$ (2)
+
+4 The Proposed $\mathsf{PROBE}~$ Algorithm
+
+Based on the SOSP-based lower-level surrogate for LLNC-BLO problems, in this section, we will investigate how to design an efficient algorithm for solving in Eq. 2 . We start with defining an appropriate metric to measure the convergence error in designing algorithms for solving Eq. 2 .
+
+Suppose that $(\tilde{x},\tilde{y})$ is an $\epsilon^{\prime}$ -SOSP for $g(\tilde{x},\cdot)$ for some positive $\epsilon^{\prime}$ . According to Definition 1 , we have that $\nabla_{yy}^{2}g(\tilde{x},\tilde{y})+(\sqrt{\rho\epsilon^{\prime}}+\sigma)I_{q}$ is positive definite for any arbitrarily small positive value $\sigma>0$ (which can be adaptively selected according to $\epsilon^{\prime}$ ). It then follows that the augmented objective function $g(\tilde{x},y)+\frac{\mu}{2}\|y-\tilde{y}\|^{2}$ is locally $\frac{\sigma}{2}$ -strongly convex within a sufficiently small neighborhood of $\tilde{y}$ , where the parameter $\mu\triangleq\mu(\epsilon^{\prime},\sigma):=\sqrt{\rho\epsilon^{\prime}}+\sigma$ . By leveraging this local quadratic curvature, we can define the following $\mu$ - augmented implicit function with a small positive radius $r^{\prime}=\frac{\sigma}{\rho}$ :
+
+$\displaystyle\Phi_{\mu}(\tilde{x}):=f(\tilde{x},y_{\mu}^{*}(\tilde{x})),\,\,\,\text{where }y_{\mu}^{*}(\tilde{x}):=\argmin_{y\in\mathbb{B}_{\tilde{y}}(r^{\prime})}\{g(\tilde{x},y)+\frac{\mu}{2}\|y-\tilde{y}\|^{2}\},$
+
+where the existence and uniqueness of $y_{\mu}^{*}(\tilde{x})$ can be guaranteed by the local strong convexity. Indeed, the introduction of $\mu$ -regularization restores a locally strongly convex curvature, thereby enabling the use of existing techniques from the LLSC-BLO setting, such as hypergradient-based methods ( Ghadimi and Wang, 2018 ; Grazzi et al., 2020 ; Ji et al., 2021 ; Huang et al., 2025 ) . Consequently, following from the Implicit Function Theorem (IFT), the gradient of $\Phi_{\mu}(\tilde{x})$ , referred to as the $\mu$ -augmented hypergradient in this paper, can be computed as:
+
+$\displaystyle\nabla\Phi_{\mu}(\tilde{x})$ $\displaystyle=\nabla_{x}f(\tilde{x},y_{\mu}^{*}(\tilde{x}))+\frac{dy_{\mu}^{*}(\tilde{x})}{dx}\nabla_{y}f(\tilde{x},y_{\mu}^{*}(\tilde{x}))$ $\displaystyle=\nabla_{x}f(\tilde{x},y_{\mu}^{*}(\tilde{x}))-\nabla_{xy}^{2}g(\tilde{x},y_{\mu}^{*}(\tilde{x}))\left[\nabla_{yy}^{2}g(\tilde{x},y_{\mu}^{*}(\tilde{x}))+\mu I_{q}\right]^{-1}\nabla_{y}f(\tilde{x},y_{\mu}^{*}(\tilde{x})).$
+
+The $\mu$ -augmented hypergradient naturally gives rise to the following convergence metric:
+
+Suppose $y$ is an $\epsilon^{\prime}$ -SOSP for a given $x$ (as defined in Def. 1 ) and all saddle points are strict. For any positive $\epsilon,\mu=\sqrt{\rho\epsilon^{\prime}}+\sigma$ , $(x,y)$ is said to be an $(\epsilon,\mu)$ -stationary solution to Eq. 2 if it satisfies: $\Pi(x,y):=\|\nabla\Phi_{\mu}(x)\|^{2}+\epsilon^{\prime}\leq\epsilon$ .
+
+With the formal definition of this convergence metric and the SOSP-based lower-level surrogate for the LLNC-BLO problem, the following key question naturally arises:
+
+Although this question is challenging to answer in the highly complex LLNC setting, one may obtain some high-level qualitative understanding by measuring the “bias” of the $\mu$ -augmented hypergradient when a hypergradient is well-defined (note that in LLNC-BLO, a hypergradient could be ill-posed if the Hessian of the lower-level problem is rank-deficient). More specifically, note that if the sequence generated by an algorithm is able to escape strict saddle points, it typically reaches a local minimum, where the lower-level objective function usually exhibits sufficient local curvature in a bounded local neighborhood, so that its landscape can be bounded from below by a quadratic function. Consider a scenario in which $\nabla_{yy}^{2}g(\tilde{x},y_{\mu}^{*}(\tilde{x}))\succeq\mu_{0}I_{q}$ holds for some $\mu_{0}>0$ , so that a hypergradient is well-defined. Due to the fact that $A^{-1}-B^{-1}=A^{-1}(B-A)B^{-1}$ , we can bound the discrepancy between the $\mu$ -augmented hypergradient and the true hypergradient as follows:
+
+$\displaystyle\|\nabla\Phi_{\mu}(\tilde{x})-\nabla\Phi_{0}(\tilde{x})\|$ $\displaystyle=\left\|\nabla_{xy}^{2}g\left(\left[\nabla_{yy}^{2}g\right]^{-1}(\mu I_{q})\left[\nabla_{yy}^{2}g+\mu I_{q}\right]^{-1}\right)\nabla_{y}f\right\|$ $\displaystyle\leq\|\nabla_{xy}^{2}g\|\cdot\left\|\left[\nabla_{yy}^{2}g\right]^{-1}\right\|\cdot\mu\cdot\left\|\left[\nabla_{yy}^{2}g+\mu I_{q}\right]^{-1}\right\|\cdot\|\nabla_{y}f\|$ $\displaystyle\overset{(a)}{\leq}\ell\cdot\frac{1}{\mu_{0}}\cdot\mu\cdot\frac{1}{\mu_{0}+\mu}\cdot\nu\leq\frac{\ell\nu}{\mu_{0}^{2}}(\sqrt{\rho\epsilon^{\prime}}+\sigma)=\mathcal{O}(\sqrt{\epsilon^{\prime}}+\sigma),$
+
+where $(a)$ follows from Assumption 1 . This shows that the $\mu$ -augmented hypergradient incurs an approximation bias that scales at most linearly with both the square root of the SOSP violation $\sqrt{\epsilon^{\prime}}$ and the augmentation parameter $\sigma$ . To mitigate the impact of such “bias”, we can adaptively shrink both $\epsilon_{t}$ and $\sigma_{t}$ in the design of our algorithm to progressively refine the lower-level solutions. Specifically, by using a dynamic sequence $\{\mu_{t}=\sqrt{\rho\epsilon_{t}}+\sigma_{t}\}_{t}$ that approaches $0^{+}$ as $t\to\infty$ , the “bias” can be gradually eliminated to induce convergence to a solution with vanishing bias to the original LLNC-BLO problem. Based on this intuition, we propose $\mathsf{PROBE}~$ ( P erturbed g r adient alg o rithm for b ilevel probl e m), which is summarized in Algorithms 1 and 2 . In what follows, we will first describe the basic idea and the key steps of $\mathsf{PROBE}$ . The theoretical convergence analysis of $\mathsf{PROBE}~$ will be provided in Section 5 .
+
+Algorithm 1 The overall $\mathsf{PROBE}~$ algorithmic framework.
+
+Algorithm 2 The perturbed gradient descent subroutine PGD( $K,x,y^{0},\beta,r,\varrho,\Delta_{G},\Delta_{K}$ ).
+
+1) Basic Idea: $\mathsf{PROBE}~$ employs a double-loop framework, where the inner loop is dedicated to finding an $\epsilon_{t}$ -SOSP of the lower-level objective $g(x_{t},\cdot)$ for a given upper-level variable $x_{t}$ in step $t$ , while the outer loop utilizes this approximation to construct a $\mu_{t}$ -augmented hypergradient, which guides the update of the upper-level variable $x_{t}$ towards the minimum of $\Phi_{\mu_{t}}(\cdot)$ with a shrinking $\mu_{t}$ .
+
+2) SOSP Approximation via PGD (Inner-Loop): The inner-loop (Algorithm 2 ) employs Perturbed Gradient Descent (PGD, Jin et al. (2017) ) to identify SOSP approximations. In order to escape saddle points, PGD monitors the gradient: if $\|\nabla_{y}g(x,y^{k})\|\leq\varrho$ , it injects a uniform noise $\xi\sim\text{Unif}(\mathbb{B}_{\bf{0}}(r))$ for a more aggressive exploration, where $r$ denotes the radius of a ball and will be selected later. After several steps, the algorithm confirms that the iterate has reached an approximate SOSP if the function value has an insufficient reduction (i.e., $g(x,y^{k})-g(x,\tilde{y})>-\Delta_{G}$ ). Finally, the inner-loop returns the identified $\epsilon_{t}$ -SOSP to the outer-loop at each outer iteration $t$ by adaptively and properly selecting parameters ( $K_{t},\varrho_{t},\Delta_{G,t},\Delta_{K,t}$ ).
+
+3) $\mu_{t}$ -Hypergradient Estimation and Update (Outer-Loop): Building upon the lower-level solution $y_{t+1}$ identified by the inner-loop, the outer-loop ( $\mathsf{PROBE}~$ , Algorithm 1 ) proceeds to update the upper-level variable. In the $\mu_{t}$ -augmented hypergradient, the primary computational bottleneck lies in estimating the Hessian inverse $[\nabla_{yy}^{2}g(x_{t},y_{t+1})+\mu_{t}I_{q}]^{-1}$ . We address this by employing the Conjugate Gradient (CG) method ( Grazzi et al., 2020 ; Ji et al., 2021 ) , an inversion-free approach that only queries Hessian-vector products. This allows $\mathsf{PROBE}~$ to efficiently compute the adjoint variable $v_{t+1}$ within $N_{t}$ iterations at every time slot $t$ . Furthermore, we equip the $N_{t}$ -step CG with a warm start mechanism (conducting CG in the $t$ -round beginning from the last output $v_{t}$ ), which significantly accelerates convergence to reach a faster rate. Finally, using the estimated $\mu_{t}$ -augmented hypergradient $\widehat{\nabla}\Phi_{\mu_{t}}(x_{t})$ , we perform a gradient descent step to update upper-level variable to $x_{t+1}$ . As will be mentioned in the next section, to ensure the convergence to a good solution of the original LLNC-BLO problem, we dynamically increase and decrease the parameters $K_{t}$ and $\sigma_{t}$ , respectively, to shrink $\mu_{t}=\sqrt{\rho\epsilon_{t}}+\sigma_{t}$ toward $0$ at an appropriate rate.
+
+5 Finite-Time Convergence Analysis of $\mathsf{PROBE}~$
+
+In this section, we will conduct theoretical convergence analysis of our proposed $\mathsf{PROBE}~$ algorithm. Toward this end, we first restate the iteration complexity performance guarantee of the PGD method ( Jin et al., 2017 ) , which is adapted in the context of LLNC-BLO in Algorithm 2 .
+
+Under Assumption 1 , with hyperparameter choices in Appendix B , for any $\delta^{\prime}\in(0,1),\epsilon_{t}\leq\ell^{2}/\rho,\Delta_{g,t}\geq g(x_{t},y_{t})-\inf_{y}g(x_{t},y)$ , with probability at least $1-\delta^{\prime}$ , Algorithm 2 outputs an $\epsilon_{t}$ -SOSP with iterations no more than $K_{t}=\mathcal{O}\big(\frac{\ell\Delta_{g,t}}{\epsilon_{t}^{2}}\log^{4}\big(\frac{q\ell\Delta_{g,t}}{\epsilon_{t}^{2}\delta^{\prime}}\big)\big)$ .
+
+We note that, besides PGD, several algorithms have been proposed to escape saddle points while maintaining nearly dimension-free convergence rates ( Jin et al., 2018 ; Jin et al., 2021 ; Zhang and Li, 2021 ) . While these approaches offer improvements in iteration complexity to some degree (from $\epsilon_{t}^{-2}$ to $\epsilon_{t}^{-1.75}$ at most), they typically introduce additional algorithmic modules, such as Negative Curvature Finding (NCF) and Nesterov-style acceleration, which significantly complicate the implementation of the inner-loop algorithm. Moreover, rather than offering a “last-iteration” convergence guarantee, these accelerated methods only guarantee an approximate SOSP being visited at some point within the trajectory. This renders them ill-suited for algorithm designs for LLNC-BLO, which requires a terminal SOSP estimate. We are now ready to state the main convergence result for $\mathsf{PROBE}~$ .
+
+By selecting $K_{t}=\widetilde{\Theta}\big((t+1)^{\frac{8}{5}}\big)$ , $\sigma_{t}=\Theta\big((t+1)^{-p}\big)$ and $\alpha_{t}=\Theta\big((t+1)^{-q}\big)$ with $p\in(0,\frac{1}{3}),3p\leq q<1$ , for any $\delta\in(0,1)$ , with probability at least $1-\delta$ , the sequence $\{x_{t},y_{t}\}_{t}$ generated by Algorithm 1 satisfies the following convergence guarantee: $\min_{\frac{T}{2}\leq t\leq T}\Pi(x_{t},y_{t})=\mathcal{O}(\frac{1}{T^{1-q}}+\frac{1}{T^{2p}}+\frac{1}{T^{\frac{4}{5}}})$ . By selecting $(p,q)=(\frac{1}{5},\frac{3}{5})$ , we have $\min_{\frac{T}{2}\leq t\leq T}\Pi(x_{t},y_{t})=\mathcal{O}\big(T^{-\frac{2}{5}}\big)$ .
+
+Proof Sketch. Our convergence analysis is organized in three key steps (proof details of Theorem 1 are relegated to Appendix B due to limited space):
+
+Step 1) Bounding the Variable Drifts: We first control the tracking errors of the lower-level variable $y$ and the adjoint multiplier $v$ . A major challenge here is decomposing and bounding several intertwined gaps: the inner-iteration solver error (i.e., taking $y$ for example hereafter, $\|y_{t+1}-y_{\mu_{t}}^{*}(x_{t})\|$ ), and the parameter-induced shift across varying $\mu$ (i.e., $\|y_{\mu_{t+1}}^{*}(x_{t})-y_{\mu_{t}}^{*}(x_{t})\|$ ).
+
+Step 2) Controlling the Augmented Implicit Function Shift: Next, we analyze the dynamics of $\Phi_{\mu_{t+1}}(x_{t+1})-\Phi_{\mu_{t}}(x_{t})$ , which is challenging due to simultaneous updates in both the variable $x$ and the parameter $\mu$ . We decompose this shift into two components: (i) the contribution from the dynamics of $x$ , which can be controlled using the smoothness of the augmented implicit function and, consequently, the descent lemma; and (ii) the contribution induced by the drift in $\mu$ , which can be converted to the drift in $y$ that has already been controlled in the previous step.
+
+Step 3) Lyapunov Analysis and Telescoping: Finally, building upon the aforementioned results, we construct a dynamic Lyapunov function to decouple the descent of $\Phi_{\mu_{t}}$ from the tracking errors. By using a telescoping sum, we show that all error terms are bounded by the sum of a constant and a convergent series, thereby establishing the finite-time convergence rate.∎
+
+Three remarks on Theorem 1 are in order: First , to our knowledge, this work is the first that incorporates second-order stationarity as a surrogate for LLNC-BLO and propose an algorithm with a finite-time convergence rate of $\mathcal{O}\big(T^{-\frac{2}{5}}\big)$ with lower-level SOSP guarantee. While existing LLNC-BLO methods ( Shen and Chen, 2023 ; Xiao et al., 2023 ; Liu et al., 2024 ; Ma et al., 2026 ) also provided finite-time convergence analysis, a direct comparison with them is difficult due to the fact that most of these works assume the PL condition, which is not needed in this work. Second , there is a trade-off in choosing $\sigma_{t}=\sigma_{0}(t+1)^{-p}$ : a larger $p$ -value yields faster convergence rate $\mathcal{O}(T^{-2p})$ in Theorem 1 . However, the condition $q\geq 3p$ implies a small learning rate $\alpha_{t}=\alpha_{0}(t+1)^{-q}$ . Also, the smoothness coefficient of $\Phi_{\mu_{t}}$ scales as $L_{t}=\Theta(\sigma_{t}^{-3})$ , implying that $\alpha_{t}=\Theta(L_{t}^{-1})=\Theta((t+1)^{-3p})$ when $q=3p$ is required for a fast convergence, which in turn necessitates a relatively small $p$ . To balance these two directions, we choose $(p,q)=(\frac{1}{5},\frac{3}{5})$ to achieve the most efficient convergence rate $\mathcal{O}\big(T^{-\frac{2}{5}}\big)$ . Third , instead of using a fixed number of inner-loop iterations $K$ , $\mathsf{PROBE}~$ gradually increases $K_{t}$ over time, leading to a two-timescale algorithmic design. Specifically, we introduce a $\mu$ -augmentation to allow a well-defined hypergradient in LLNC-BLO. This term introduces an error that can be controlled by gradually letting $\{\mu_{t}\}\to 0$ . Hence, $K_{t}$ needs to be increasing rather than fixed to decrease the inner-loop error $\epsilon_{t}$ and thus $\mu_{t}$ , leading to this two-timescale design.
+
+6 Experimental Results
+
+(a) Loss vs Iteration.
+
+(b) Loss vs Running time.
+
+Figure 2 : Baseline comparison.
+
+In this section, we will validate the efficacy of our $\mathsf{PROBE}~$ method by using a data curation task for LLM finetuning. Specifically, we first curate a high quality dataset from multiple datasets of unknown qualities, which is then used to fine-tune an LLM to mitigate toxicity, reduce verbosity, and improve coherence. This data curation task can be formulated as an LLNC-BLO problem ( Shen et al., 2024a ; Pan et al., 2025 ) , where the lower level aims to determine the mixing proportion of each dataset, and the upper level further fine-tunes the model as a validation process:
+
+$\displaystyle\min_{x,y}\sum\nolimits_{i=1}^{n_{0}}\mathcal{L}\big(r_{y(x)}(p_{i}),r_{i}\big),\,\,\,\,\,\,\text{s.t. }y(x)\in\argmin_{y}\sum\nolimits_{j=1}^{\mathcal{D}}\text{SoftMax}_{x}(j)\sum\nolimits_{i=1}^{n_{j}}\mathcal{L}\big(r_{y}(p_{i}),r_{i}\big),$
+
+where $x$ is the weight vector for training datasets, $y$ represents the LLM parameters, $(p,r)$ denotes a prompt-response pair, $\mathcal{L}$ is the loss, $\text{SoftMax}_{x}(j)=\exp(x_{j})/\sum_{j^{\prime}}\exp(x_{j^{\prime}})$ , index $0$ stands for validation set, and $1,\dotsc,\mathcal{D}$ are training indices. Clearly, the lower-level problem is nonconvex. We conduct experiments on the HelpSteer ( Wang et al., 2024 ) dataset, which incorporates data of varying quality. We employ Llama-3.2-3B-Instruct ( Meta, 2024 ) as the base model. More implementation details are relegated to Appendix A due to space limitation.
+
+1) Baseline Comparison: We compare our $\mathsf{PROBE}~$ method against state-of-the-art LLNC-BLO baselines: PBGD ( Shen and Chen, 2023 ) , GALET ( Xiao et al., 2023 ) , MEHA ( Liu et al., 2024 ) , and SUN-DSBO-SE ( Ma et al., 2026 ) . Figure 2 illustrates the upper-level loss along with the standard error bars over $5$ trials, which shows that PBGD and GALET fail to converge on this data curation task. As detailed in Appendix A , PBGD performs well at the lower level. However, its oversimplified FOSP-based surrogate could not avoid being trapped at undesirable saddle points at the lower level, leading to weak performance at the upper level. In contrast, MEHA, SUN-DSBO-SE, and $\mathsf{PROBE}~$ converge to much better solutions at upper level. Although the theoretical convergence rates of these methods are not directly comparable due to different metrics, $\mathsf{PROBE}~$ outperforms all baselines in terms of wall-clock running time, demonstrating its efficiency.
+
+(a) Lower-level loss with $K$ .
+
+(b) Upper-level loss with $K$ .
+
+(c) Lower-level loss with $\mu$ .
+
+(d) Upper-level loss with $\mu$ .
+
+Figure 3 : Hyperparameter investigation.
+
+2) Hyper-parameter Experimentation and Ablation Study: In this experiment, we study how the selections of hyperparameters $K$ and $\mu$ impact the performance of $\mathsf{PROBE}$ , as shown in Fig. 3 . For simplicity, we fix $K$ and $\mu$ for each experiment. As shown in Figures 3(a) and 3(b) , increasing the inner-loop PGD iterations, $K$ , yields a significant improvement in the upper-level loss. This aligns with our theoretical insights: a small $K$ restricts PGD’s ability to probe and escape saddle points. Consequently, the lower-level problem stagnates at a suboptimal position, which in turn leads to unsatisfactory upper-level performance. In contrast, when $K$ is sufficiently large, $\mathsf{PROBE}~$ reliably finds a lower-level SOSP, yielding substantial overall performance improvements. Figures 3(c) and 3(d) show the influence of the augmentation parameter $\mu$ , both of which show that the larger $\mu$ facilitates a slightly lower loss value. Also, Figure 3(d) shows that the trajectory fluctuates dramatically when $\mu$ is insufficient to restore the Hessian positive definiteness. This highlights the important tradeoff and provides a guidance in selecting $\mu$ .
+
+(a) Lower-level loss.
+
+(b) Upper-level loss.
+
+Figure 4 : Ablation Study.
+
+We also conduct the following ablation study by replacing the PGD method in Algorithm 2 with the vanilla gradient descent method, keeping all other components of $\mathsf{PROBE}~$ unchanged. As shown in Figure 4 , without saddle points escaping, $\mathsf{PROBE}~$ is easily trapped in solutions seemingly better at the lower level but are suboptimal at the upper level, highlighting the importance of our SOSP-based lower-level surrogate and the efficacy of our proposed $\mathsf{PROBE}~$ . Due to space limitation, we provide further numerical details and a meta-learning experiment in Appendix A .
+
+7 Conclusion
+
+In this paper, we investigated bilevel optimization with non-convex lower levels. We showed that existing first-order stationarity-based surrogates often fail to escape lower-level saddle points. To address this challenge, we proposed a second-order stationarity-based surrogate, based on which we developed a new algorithm called $\mathsf{PROBE}~$ and established its finite-time convergence rate. We conducted experiments on dataset curation tasks for LLM finetuning to validate our $\mathsf{PROBE}~$ algorithm. We note that the focus of this work is on deterministic LLNC-BLO problems. Future directions include extending our framework into stochastic LLNC-BLO problems.
+
+References
+
+Appendix
+
+Appendix A Additional Numerical Results
+
+A.1 Meta-Learning Experiments
+
+Meta-learning seeks to improve model generalization and is naturally formulated as a BLO problem ( Franceschi et al., 2018 ; Ji et al., 2021 ; Hu et al., 2023 ; Qin et al., 2025 ) . Specifically, the lower level implements task-specific adaptation on the training data, while the upper level enhances the representation utility to ensure generalization ability of the model.
+
+We train a multi-layer perceptron (MLP, corresponding to $x$ ) with depth $2$ , width $512$ and ReLU activation, along with an additional $256$ -dimensional linear layer (corresponding to $y$ ) on MNIST dataset. In particular, we construct 5 MNIST heterogeneous training datasets, each containing $80\%$ of a selected pair of digits (e.g., $(0,1)$ ) and $20\%$ of other digit pairs. The validation set are constructed from the MNIST test split, using the same ratio of five digit-pair tasks. The formal formulation is given as follows:
+
+$\displaystyle\min_{x,y}\sum_{s\in\mathcal{D}_{0}}\mathcal{L}\big((x\circ y)(s),l(s)\big)$ subject to $\displaystyle y\in\mathcal{S}(x):=\argmin_{y}\sum_{j=1}^{5}\sum_{s\in\mathcal{D}_{j}}\mathcal{L}\big((x\circ y)(s),l(s)\big),$
+
+where $s$ denotes the digit sample, $l(s)$ denotes its label, $x\circ y(s)$ denotes the model output, $\mathcal{L}$ denotes the cross-entropy loss function, and $\mathcal{D}_{j},j\in\{0,\dotsc,5\}$ are the datasets. Since the loss function is convex, and $y$ corresponds to a linear layer, the lower-level problem is convex (but not strongly convex) w.r.t. $y$ . We consider this meta-learning task to demonstrate the capability of $\mathsf{PROBE}~$ in the LLGC setting.
+
+As shown in Figure 5 , all baselines and our $\mathsf{PROBE}~$ converge at both upper and lower levels. All baseline methods succeed in this meta-learning task because the FOSP-based relaxed surrogate aligns exactly with the original BLO problem in this LLGC environment, preventing them from getting trapped at saddle points (In fact, no saddle points exist due to the convexity). $\mathsf{PROBE}$ , on the other hand, still achieves the fastest convergence, demonstrating both its validity in the LLGC setting and its consistent efficiency.
+
+(a) Lower-level loss.
+
+(b) Upper-level loss.
+
+Figure 5 : Baseline comparison in meta-learning task.
+
+A.2 Implementation Details and Additional Results on Data Curation Task
+
+In the data curation task, we fine-tune an LLM, Llama-3.2-3B-Instruct ( Meta, 2024 ) model, on the HelpSteer ( Wang et al., 2024 ) dataset, which naturally contains prompts with responses of varying quality. During training, corresponding to the lower-level problem in our formulation, the LLM learns to distinguish between two datasets and is expected to assign higher weights to the one with higher response quality. During validation, corresponding to the upper-level problem, the performance of the fine-tuned LLM is evaluated on high-quality prompt-response data. Specifically, the datasets are constructed as follows: for each response data in HelpSteer, we compute its average score, and include the corresponding prompt-response pair in the high-quality set if $s\geq 2.5$ , or in the low-quality set if $s\leq 2$ (the only validation set merely include high-quality validation data). Llama-3.2-3B-Instruct is trained using LoRA technique with $\text{rank}=8$ , and all data curation experiments are conducted on a cluster of 2 NVIDIA H200 GPUs (approximately 140GB each) using PyTorch’s DistributedDataParallel.
+
+The hyperparameter selection is detailed as follows. The batch size is set to $32$ . For a fair comparison, we fix the total number of iterations to $T=20,000$ , which implies: (i) for single-loop methods, the algorithm runs for $20,000$ rounds; and (ii) for double-loop methods, the product of inner-loop steps and outer-loop steps equals $20,000$ . Additionally, we simplify our method by using fixed values for $K$ , $N$ , and $\mu$ to ensure fairness in the comparison. Accordingly, we uniformly select $100$ iterations to report. The learning rates for all algorithms are set to $10^{-5}$ . For $\mathsf{PROBE}$ , we set $T=100$ , $K=200$ , $\mu=0.1$ . We set $\Delta_{K}=10$ , and other PGD parameters are set to $10^{-2}$ as our default setup. For these baselines, the detailed setups are specified as follows. For MEHA, we examined additional learning rate $\eta\in\{0.1,2.0\}$ and penalty coefficient $c\in\{0.1,1,2,5,10\}$ . For SUN-DSBO-SE, we examined proximal parameter $\gamma\in\{0.01,0.05,0.1\}$ and penalty parameter $\mu_{0}\in\{0.01,0.1,1,10\}$ . For PBGD, we examined the penalty coefficient in $\{0.1,1,10\}$ . For GALET, we also tested larger inner-loop step counts $(10,20)$ , but these configurations resulted in numerical errors; we therefore used the best stable configuration with both inner-loop counts set to $5$ . The reported baseline performances correspond to the best-performing configurations among those tested rather than unfavorable or arbitrarily selected settings. Each experiment is repeated $5$ times, and the corresponding standard error bars are shown in all figures. We also apply an exponential moving average (EMA) to enhance visibility.
+
+The lower-level performances of all methods are shown in Figure 6 . As noted earlier, GALET finds some seemingly favorable solutions for the lower-level problem (Its loss values also decrease from around $8$ , and the seemingly immediate convergence observed in the figure is due to the use of EMA). Nevertheless, when considered alongside Figure 2 , it is clear that these solutions are actually suboptimal in general. In stark contrast, MEHA, SUN-DSBO-SE, and our $\mathsf{PROBE}~$ not only converge during training, but also performs consistently well in the validation process. Among them, our $\mathsf{PROBE}~$ is the most efficient method, achieving convergence in the shortest running time.
+
+(a) Loss vs Iteration.
+
+(b) Loss vs Running time.
+
+Figure 6 : Baseline (lower-level) comparison.
+
+Appendix B Proof of Main Result
+
+By selecting parameters as follows:
+
+$\displaystyle\sigma_{t}=\Theta\left((t+1)^{-p}\right),\,\,\,\,\,\,\epsilon_{t}=\frac{\sigma_{t}^{4}}{\rho},\,\,\,\,\,\,\mu_{t}=\sqrt{\rho\epsilon_{t}}+\sigma_{t},\,\,\,\,\,\,\alpha_{t}=\Theta\left((t+1)^{-q}\right),\,\,\,\,\,\,\beta_{t}=\Theta\left(\frac{1}{\ell}\right),$ $\displaystyle N_{t}=\widetilde{\Theta}((t+1)^{\frac{p}{2}}),\,\,\,\,\,\,K_{t}=\widetilde{\Theta}((t+1)^{8p}),$ $\displaystyle\delta^{\prime}\in(0,\frac{1}{T}),\,\,\,\,\,\,\Delta_{g,t}\geq g(x_{t},y_{t})-\inf_{y}g(x_{t},y),\,\,\,\,\,\,\chi_{t}=3\max\left\{\log\left(\frac{q\ell\Delta_{g,t}}{\epsilon_{t}^{2}\delta^{\prime}}\right),4\right\},$ $\displaystyle r_{t}=\Theta\left(\frac{\epsilon_{t}}{\ell\chi_{t}^{2}}\right),\,\,\,\,\,\,\varrho_{t}=\Theta\left(\frac{\epsilon_{t}}{\chi_{t}^{2}}\right),\,\,\,\,\,\,\Delta_{G,t}=\Theta\left(\frac{\epsilon_{t}^{1.5}}{\chi_{t}^{3}\rho^{0.5}}\right),\,\,\,\,\,\,\Delta_{K,t}=\Theta\left(\frac{\ell\chi_{t}}{\rho^{0.5}\epsilon_{t}^{0.5}}\right),$
+
+for any $\delta=T\delta^{\prime}\in(0,1)$ , $p\in(0,\frac{1}{3})$ , $3p\leq q<1$ , the sequence $\{x_{t},y_{t}\}_{t}$ generated by Algorithm 1 satisfies the following convergence guarantee w.p. $1-\delta$ :
+
+$\displaystyle\min_{\frac{T}{2}\leq t\leq T}\Pi(x_{t},y_{t})=\mathcal{O}\left(\frac{1}{T^{1-q}}+\frac{1}{T^{2p}}+\frac{1}{T^{\frac{4}{5}}}\right).$
+
+When selecting $p=\frac{1}{5}$ and $q=\frac{3}{5}$ , we have $\min_{\frac{T}{2}\leq t\leq T}\Pi(x_{t},y_{t})=\mathcal{O}\left(T^{-\frac{2}{5}}\right)$ .
+
+We prove this result with several sub-steps.
+
+Part $\mathcal{A}$ . We first control $\|v_{\mu_{t+1}}^{*}(x_{t})-v_{\mu_{t}}^{*}(x_{t})\|$ . To begin with, we define:
+
+$v_{\mu}^{*}(x_{t}):=-\left[\nabla_{yy}^{2}g(x_{t},y_{\mu}^{*}(x_{t}))+\mu I_{q}\right]^{-1}\nabla_{y}f(x_{t},y_{\mu}^{*}(x_{t})),$
+
+For any fixed $t\geq 0$ , let $H_{\mu}=\nabla_{yy}^{2}g(x_{t},y_{\mu}^{*}(x_{t}))+\mu I_{q}$ and $w_{\mu}=\nabla_{y}f(x_{t},y_{\mu}^{*}(x_{t}))$ . Then, we have:
+
+$\displaystyle\|v_{\mu_{t+1}}^{*}(x_{t})-v_{\mu_{t}}^{*}(x_{t})\|$ $\displaystyle=\|H_{\mu_{t+1}}^{-1}w_{\mu_{t+1}}-H_{\mu_{t}}^{-1}w_{\mu_{t}}\|$ (3) $\displaystyle\leq\|H_{\mu_{t+1}}^{-1}(w_{\mu_{t+1}}-w_{\mu_{t}})\|+\|(H_{\mu_{t+1}}^{-1}-H_{\mu_{t}}^{-1})w_{\mu_{t}}\|$ $\displaystyle\overset{\flat}{\leq}\frac{\ell}{\sigma_{t+1}}\|y_{\mu_{t+1}}^{*}(x_{t})-y_{\mu_{t}}^{*}(x_{t})\|+\|H_{\mu_{t+1}}^{-1}\|\cdot\|H_{\mu_{t}}-H_{\mu_{t+1}}\|\cdot\|H_{\mu_{t}}^{-1}\|\cdot\nu,$
+
+where $\flat$ is due to Assumption 1 and $A^{-1}-B^{-1}=A^{-1}(B-A)B^{-1}$ . For the second term, we have:
+
+$\|H_{\mu_{t}}-H_{\mu_{t+1}}\|\leq\rho\|y_{\mu_{t}}^{*}(x_{t})-y_{\mu_{t+1}}^{*}(x_{t})\|+|\mu_{t}-\mu_{t+1}|.$
+
+Thus, to tackle Equation 3 , we need to control the gap $\|y_{\mu_{t}}^{*}(x_{t})-y_{\mu_{t+1}}^{*}(x_{t})\|$ . To this end, we first define the following supporting function for any fixed $t$ :
+
+$h_{\mu}(y)=g(x_{t},y)+\frac{\mu}{2}\|y-y_{t+1}\|^{2}.$
+
+Since our Alg. 2 ensures that w.p. $1-\delta^{\prime}$ , $y_{t+1}$ is an $\epsilon_{t}$ -SOSP, we know that $\|\nabla_{y}g(x_{t},y_{t+1})\|\leq\epsilon_{t}$ and $\lambda_{\min}(\nabla_{yy}^{2}g(x_{t},y_{t+1}))\geq-\sqrt{\rho\epsilon_{t}}$ . According to our parameter selection, we can get $\mu_{t}=\Theta(\sigma_{t})$ and $\sqrt{\rho\epsilon_{t}}=\sigma_{t}^{2}$ . Accordingly, we have:
+
+$\displaystyle\lambda_{\min}(\nabla^{2}h_{\mu_{t}}(y_{t+1}))\geq\mu_{t}-\sqrt{\rho\epsilon_{t}}=:=\iota_{t},$ $\displaystyle\lambda_{\min}(\nabla^{2}h_{\mu_{t+1}}(y_{t+1}))\geq\mu_{t+1}-\sqrt{\rho\epsilon_{t}}:=\tilde{\iota}_{t+1}.$
+
+Note that $\sigma_{t}=\Theta((t+1)^{-p})$ with $p\in(0,\frac{1}{3})$ , we can easily get $\iota_{t}=\Theta(\sigma_{t})$ and $\tilde{\iota}_{t+1}=\Theta(\sigma_{t})$ . Therefore, within a sufficiently small ball $\mathcal{B}_{y_{t+1}}(\frac{\iota_{t}}{2\rho})$ , we have $\lambda_{\min}(\nabla^{2}h_{\mu_{t}}(y))\geq\frac{\iota_{t}}{2}$ . Thus, noting that $\nabla h_{\mu_{t}}(y_{\mu_{t}}^{*}(x_{t}))=0$ , we can obtain:
+
+$\displaystyle\|y_{\mu_{t}}^{*}(x_{t})-y_{t+1}\|\leq\frac{2}{\iota_{t}}\|\nabla h_{\mu_{t}}(y_{t+1})\|=\frac{2}{\iota_{t}}\|\nabla_{y}g(x_{t},y_{t+1})\|\leq\frac{2\epsilon_{t}}{\iota_{t}}=\frac{2\sigma_{t}^{4}/\rho}{\iota_{t}},$ $\displaystyle\implies$ $\displaystyle\|y_{\mu_{t}}^{*}(x_{t})-y_{t+1}\|=\mathcal{O}(\sigma_{t}^{3}).$
+
+Similarly, within a small ball centered at $y_{t+1}$ , $h_{\mu_{t+1}}$ remains $\frac{\tilde{\iota}_{t+1}}{2}$ -strong convex, which implies:
+
+$\displaystyle\frac{\tilde{\iota}_{t+1}}{2}\|y_{\mu_{t+1}}^{*}(x_{t})-y_{\mu_{t}}^{*}(x_{t})\|^{2}$ $\displaystyle\leq\langle\nabla h_{\mu_{t+1}}(y_{\mu_{t}}^{*}(x_{t}))-\nabla h_{\mu_{t+1}}(y_{\mu_{t+1}}^{*}(x_{t})),y_{\mu_{t}}^{*}(x_{t})-y_{\mu_{t+1}}^{*}(x_{t})\rangle$ $\displaystyle\overset{\dagger}{=}\langle\nabla_{y}g(x_{t},y_{\mu_{t}}^{*}(x_{t}))+\mu_{t+1}(y_{\mu_{t}}^{*}(x_{t})-y_{t+1}),y_{\mu_{t}}^{*}(x_{t})-y_{\mu_{t+1}}^{*}(x_{t})\rangle$ $\displaystyle\overset{\ddagger}{=}\langle(\mu_{t+1}-\mu_{t})(y_{\mu_{t}}^{*}(x_{t})-y_{t+1}),y_{\mu_{t}}^{*}(x_{t})-y_{\mu_{t+1}}^{*}(x_{t})\rangle$ $\displaystyle\overset{\flat}{\leq}|\mu_{t+1}-\mu_{t}|\cdot\|y_{\mu_{t}}^{*}(x_{t})-y_{t+1}\|\cdot\|y_{\mu_{t+1}}^{*}(x_{t})-y_{\mu_{t}}^{*}(x_{t})\|,$
+
+where $\dagger$ is because $y_{\mu_{t+1}}^{*}(x_{t})$ minimizes $h_{\mu_{t+1}}$ , $\ddagger$ is due to $\nabla_{y}g(x_{t},y_{\mu_{t}}^{*}(x_{t}))+\mu_{t}(y_{\mu_{t}}^{*}(x_{t})-y_{t+1})=0$ , and $\flat$ is induced by the Cauchy-Schwarz inequality. Thus, we have:
+
+$\|y_{\mu_{t+1}}^{*}(x_{t})-y_{\mu_{t}}^{*}(x_{t})\|\leq\frac{2|\mu_{t+1}-\mu_{t}|}{\tilde{\iota}_{t+1}}\|y_{\mu_{t}}^{*}(x_{t})-y_{t+1}\|.$
+
+Substituting the bound $\|y_{\mu_{t}}^{*}(x_{t})-y_{t+1}\|=\mathcal{O}(\sigma_{t}^{3})$ and applying the rigorous lower bound $\tilde{\iota}_{t+1}=\Theta(\sigma_{t})$ , we can get:
+
+$\|y_{\mu_{t+1}}^{*}(x_{t})-y_{\mu_{t}}^{*}(x_{t})\|=\mathcal{O}(\sigma_{t}^{2})|\mu_{t}-\mu_{t+1}|.$
+
+We then substitute the above results into Equation 3 to get:
+
+$\displaystyle\|v_{\mu_{t+1}}^{*}(x_{t})-v_{\mu_{t}}^{*}(x_{t})\|\leq\frac{\ell}{\sigma_{t+1}}\|y_{\mu_{t+1}}^{*}(x_{t})\!-\!y_{\mu_{t}}^{*}(x_{t})\|+\|H_{\mu_{t+1}}^{-1}\|\cdot\|H_{t}-H_{t+1}\|\cdot\|H_{\mu_{t}}^{-1}\|\cdot\nu$ $\displaystyle\implies$ $\displaystyle\|v_{\mu_{t+1}}^{*}(x_{t})-v_{\mu_{t}}^{*}(x_{t})\|=\left(\frac{\ell}{\sigma_{t+1}}+\frac{\nu\rho}{\sigma_{t}\sigma_{t+1}}\right)\mathcal{O}(\sigma_{t}^{2})|\mu_{t}-\mu_{t+1}|+\frac{\nu}{\sigma_{t}\sigma_{t+1}}|\mu_{t}-\mu_{t+1}|.$
+
+This indicates:
+
+$\displaystyle\|v_{\mu_{t+1}}^{*}(x_{t})-v_{\mu_{t}}^{*}(x_{t})\|$ $\displaystyle=\mathcal{O}\left(\frac{1}{\sigma_{t}\sigma_{t+1}}|\mu_{t}-\mu_{t+1}|\right)=\mathcal{O}\left(\frac{(t+1)^{-p-1}}{(t+1)^{-p}(t+2)^{-p}}\right)$ $\displaystyle=\mathcal{O}\left(\frac{(t+1)^{-p-1}}{(t+1)^{-2p}2^{-p}}\right)=\mathcal{O}\big((t+1)^{p-1}\big).$
+
+Part $\mathcal{B}$ . We then consider the error introduced by the Conjugate Gradient step. Recall that $v_{\mu_{t}}^{*}(x_{t})=[\nabla_{yy}^{2}g(x_{t},y_{\mu_{t}}^{*}(x_{t}))+\mu_{t}I_{q}]^{-1}\nabla_{y}f(x_{t},y_{\mu_{t}}^{*}(x_{t}))$ , and we now define $E_{t}:=\|v_{t}-v_{\mu_{t-1}}^{*}(x_{t-1})\|^{2}$ . Note that Conjugate Gradient actually solves a linear system $H_{t}v=b_{t}$ , where $H_{t}=\nabla_{yy}^{2}g(x_{t},y_{t+1})+\mu_{t}I_{q}$ and $b_{t}=\nabla_{y}f(x_{t},y_{t+1})$ at each step $t$ . We correspondingly denote the exact solution to this linear system as $v_{t}^{\circ}=H_{t}^{-1}b_{t}$ . According to Grazzi et al. (2020) , by selecting $N_{t}=\widetilde{\Theta}(\sqrt{(t+1)^{p}})$ , we can obtain:
+
+$\displaystyle\|v_{t+1}-v_{t}^{\circ}\|\leq 2(t+1)^{\frac{p}{2}}\left(\frac{(t+1)^{\frac{p}{2}}-1}{(t+1)^{\frac{p}{2}}+1}\right)^{N_{t}}\|v_{t}-v_{t}^{\circ}\|,\,\,\,\implies\,\,\,\|v_{t+1}-v_{t}^{\circ}\|\leq\frac{1}{\sqrt{2}}\|v_{t}-v_{t}^{\circ}\|.$
+
+Therefore, we have:
+
+$\displaystyle\sqrt{E_{t+1}}=\|v_{t+1}-v_{\mu_{t}}^{*}(x_{t})\|\leq\|v_{t+1}-v_{t}^{\circ}\|+\|v_{t}^{\circ}-v_{\mu_{t}}^{*}(x_{t})\|.$
+
+Thus, we need to bound $\|v_{t}-v_{t}^{\circ}\|$ , which can be controlled by:
+
+$\displaystyle\|v_{t}-v_{t}^{\circ}\|\leq\sqrt{E_{t}}+\underbrace{\|v_{\mu_{t-1}}^{*}(x_{t-1})-v_{\mu_{t-1}}^{*}(x_{t})\|}_{\mathchoice{\raisebox{-2.0pt}{\makebox[8.51111pt]{\pic@makebox@{\makebox}{}(0.0,0.0){\put(0.0,0.0){\circle{0.0}}}\pic@makebox@{\makebox}{}(0.0,0.0){\put(-0.5,0.0){$\displaystyle 1$}}}}}{\raisebox{-2.0pt}{\makebox[8.51111pt]{\pic@makebox@{\makebox}{}(0.0,0.0){\put(0.0,0.0){\circle{0.0}}}\pic@makebox@{\makebox}{}(0.0,0.0){\put(-0.5,0.0){$\textstyle 1$}}}}}{\raisebox{-2.0pt}{\makebox[7.15778pt]{\pic@makebox@{\makebox}{}(0.0,0.0){\put(0.0,0.0){\circle{0.0}}}\pic@makebox@{\makebox}{}(0.0,0.0){\put(-0.5,0.0){$\scriptstyle 1$}}}}}{\raisebox{-2.0pt}{\makebox[6.25555pt]{\pic@makebox@{\makebox}{}(0.0,0.0){\put(0.0,0.0){\circle{0.0}}}\pic@makebox@{\makebox}{}(0.0,0.0){\put(-0.5,0.0){$\scriptscriptstyle 1$}}}}}}+\underbrace{\|v_{\mu_{t-1}}^{*}(x_{t})-v_{\mu_{t}}^{*}(x_{t})\|}_{\mathchoice{\raisebox{-2.0pt}{\makebox[8.51111pt]{\pic@makebox@{\makebox}{}(0.0,0.0){\put(0.0,0.0){\circle{0.0}}}\pic@makebox@{\makebox}{}(0.0,0.0){\put(-0.5,0.0){$\displaystyle 2$}}}}}{\raisebox{-2.0pt}{\makebox[8.51111pt]{\pic@makebox@{\makebox}{}(0.0,0.0){\put(0.0,0.0){\circle{0.0}}}\pic@makebox@{\makebox}{}(0.0,0.0){\put(-0.5,0.0){$\textstyle 2$}}}}}{\raisebox{-2.0pt}{\makebox[7.15778pt]{\pic@makebox@{\makebox}{}(0.0,0.0){\put(0.0,0.0){\circle{0.0}}}\pic@makebox@{\makebox}{}(0.0,0.0){\put(-0.5,0.0){$\scriptstyle 2$}}}}}{\raisebox{-2.0pt}{\makebox[6.25555pt]{\pic@makebox@{\makebox}{}(0.0,0.0){\put(0.0,0.0){\circle{0.0}}}\pic@makebox@{\makebox}{}(0.0,0.0){\put(-0.5,0.0){$\scriptscriptstyle 2$}}}}}}+\underbrace{\|v_{\mu_{t}}^{*}(x_{t})-v_{t}^{\circ}\|}_{\mathchoice{\raisebox{-2.0pt}{\makebox[8.51111pt]{\pic@makebox@{\makebox}{}(0.0,0.0){\put(0.0,0.0){\circle{0.0}}}\pic@makebox@{\makebox}{}(0.0,0.0){\put(-0.5,0.0){$\displaystyle 3$}}}}}{\raisebox{-2.0pt}{\makebox[8.51111pt]{\pic@makebox@{\makebox}{}(0.0,0.0){\put(0.0,0.0){\circle{0.0}}}\pic@makebox@{\makebox}{}(0.0,0.0){\put(-0.5,0.0){$\textstyle 3$}}}}}{\raisebox{-2.0pt}{\makebox[7.15778pt]{\pic@makebox@{\makebox}{}(0.0,0.0){\put(0.0,0.0){\circle{0.0}}}\pic@makebox@{\makebox}{}(0.0,0.0){\put(-0.5,0.0){$\scriptstyle 3$}}}}}{\raisebox{-2.0pt}{\makebox[6.25555pt]{\pic@makebox@{\makebox}{}(0.0,0.0){\put(0.0,0.0){\circle{0.0}}}\pic@makebox@{\makebox}{}(0.0,0.0){\put(-0.5,0.0){$\scriptscriptstyle 3$}}}}}}.$
+
+We now control each of these terms. For 1 , we first note that:
+
+$\displaystyle\|v_{\mu}^{*}(x)-v_{\mu}^{*}(x^{\prime})\|$ $\displaystyle\leq$ $\displaystyle\left\|\left[\nabla_{yy}^{2}g(x,y_{\mu}^{*}(x))+\mu I_{q}\right]^{-1}\big(\nabla_{y}f(x,y_{\mu}^{*}(x))-\nabla_{y}f(x^{\prime},y_{\mu}^{*}(x^{\prime}))\big)\right\|$ $\displaystyle+\left\|\left(\left[\nabla_{yy}^{2}g(x,y_{\mu}^{*}(x))+\mu I_{q}\right]^{-1}-\left[\nabla_{yy}^{2}g(x^{\prime},y_{\mu}^{*}(x^{\prime}))+\mu I_{q}\right]^{-1}\right)\nabla_{y}f(x^{\prime},y_{\mu}^{*}(x^{\prime}))\right\|$ $\displaystyle\leq$ $\displaystyle\left(\frac{\ell}{\sigma}+\frac{\nu\rho}{\sigma^{2}}\right)\left(1+\frac{\ell}{\sigma}\right)\|x-x^{\prime}\|=\Theta(\sigma^{-3})\|x-x^{\prime}\|,$
+
+meaning that its Lipschitz continuity coefficient is in the order of $\Theta(\sigma^{-3})$ . Therefore, we have:
+
+1 $\displaystyle\leq\Theta(\sigma_{t}^{-3})\alpha_{t-1}\|\widehat{\nabla}\Phi_{\mu_{t-1}}(x_{t-1})\|\,\,\,\implies\,\,\,\mathchoice{\raisebox{-2.0pt}{\makebox[10.44444pt]{\pic@makebox@{\makebox}{}(0.0,0.0){\put(0.0,0.0){\circle{0.0}}}\pic@makebox@{\makebox}{}(0.0,0.0){\put(-0.5,0.0){$\displaystyle 1$}}}}}{\raisebox{-2.0pt}{\makebox[10.44444pt]{\pic@makebox@{\makebox}{}(0.0,0.0){\put(0.0,0.0){\circle{0.0}}}\pic@makebox@{\makebox}{}(0.0,0.0){\put(-0.5,0.0){$\textstyle 1$}}}}}{\raisebox{-2.0pt}{\makebox[8.51111pt]{\pic@makebox@{\makebox}{}(0.0,0.0){\put(0.0,0.0){\circle{0.0}}}\pic@makebox@{\makebox}{}(0.0,0.0){\put(-0.5,0.0){$\scriptstyle 1$}}}}}{\raisebox{-2.0pt}{\makebox[7.40283pt]{\pic@makebox@{\makebox}{}(0.0,0.0){\put(0.0,0.0){\oval(0.0,0.0)}}\pic@makebox@{\makebox}{}(0.0,0.0){\put(-0.5,0.0){$\scriptscriptstyle 1$}}}}}=\mathcal{O}\big((t+1)^{3p-q}\big)\|\widehat{\nabla}\Phi_{\mu_{t-1}}(x_{t-1})\|.$
+
+For 2 , we can follow Part $\mathcal{A}$ to get $\mathchoice{\raisebox{-2.0pt}{\makebox[10.44444pt]{\pic@makebox@{\makebox}{}(0.0,0.0){\put(0.0,0.0){\circle{0.0}}}\pic@makebox@{\makebox}{}(0.0,0.0){\put(-0.5,0.0){$\displaystyle 2$}}}}}{\raisebox{-2.0pt}{\makebox[10.44444pt]{\pic@makebox@{\makebox}{}(0.0,0.0){\put(0.0,0.0){\circle{0.0}}}\pic@makebox@{\makebox}{}(0.0,0.0){\put(-0.5,0.0){$\textstyle 2$}}}}}{\raisebox{-2.0pt}{\makebox[8.51111pt]{\pic@makebox@{\makebox}{}(0.0,0.0){\put(0.0,0.0){\circle{0.0}}}\pic@makebox@{\makebox}{}(0.0,0.0){\put(-0.5,0.0){$\scriptstyle 2$}}}}}{\raisebox{-2.0pt}{\makebox[7.40283pt]{\pic@makebox@{\makebox}{}(0.0,0.0){\put(0.0,0.0){\oval(0.0,0.0)}}\pic@makebox@{\makebox}{}(0.0,0.0){\put(-0.5,0.0){$\scriptscriptstyle 2$}}}}}=\mathcal{O}((t+1)^{p-1})$ .
+
+For 3 , we have:
+
+3 $\displaystyle\leq\left\|\left[\nabla_{yy}^{2}g(x_{t},y_{\mu_{t}}^{*}(x_{t}))+\mu_{t}I_{q}\right]^{-1}\big(\nabla_{y}f(x_{t},y_{\mu_{t}}^{*}(x_{t}))-\nabla_{y}f(x_{t},y_{t+1})\big)\right\|$ $\displaystyle\,\,\,\,\,\,+\left\|\left(\left[\nabla_{yy}^{2}g(x_{t},y_{\mu_{t}}^{*}(x_{t}))+\mu_{t}I_{q}\right]^{-1}-H_{t}^{-1}\right)\nabla_{y}f(x_{t},y_{t+1})\right\|,$ $\displaystyle\implies\mathchoice{\raisebox{-2.0pt}{\makebox[10.44444pt]{\pic@makebox@{\makebox}{}(0.0,0.0){\put(0.0,0.0){\circle{0.0}}}\pic@makebox@{\makebox}{}(0.0,0.0){\put(-0.5,0.0){$\displaystyle 3$}}}}}{\raisebox{-2.0pt}{\makebox[10.44444pt]{\pic@makebox@{\makebox}{}(0.0,0.0){\put(0.0,0.0){\circle{0.0}}}\pic@makebox@{\makebox}{}(0.0,0.0){\put(-0.5,0.0){$\textstyle 3$}}}}}{\raisebox{-2.0pt}{\makebox[8.51111pt]{\pic@makebox@{\makebox}{}(0.0,0.0){\put(0.0,0.0){\circle{0.0}}}\pic@makebox@{\makebox}{}(0.0,0.0){\put(-0.5,0.0){$\scriptstyle 3$}}}}}{\raisebox{-2.0pt}{\makebox[7.40283pt]{\pic@makebox@{\makebox}{}(0.0,0.0){\put(0.0,0.0){\oval(0.0,0.0)}}\pic@makebox@{\makebox}{}(0.0,0.0){\put(-0.5,0.0){$\scriptscriptstyle 3$}}}}}$ $\displaystyle=\frac{\ell}{\sigma_{t}}\mathcal{O}(\sigma_{t}^{3})+\frac{\nu\rho}{\sigma_{t}^{2}}\mathcal{O}(\sigma_{t}^{3})=\mathcal{O}\big((t+1)^{-p}\big).$
+
+Substituting them back, we can get:
+
+$\displaystyle\|v_{t}-v_{t}^{\circ}\|=\sqrt{E_{t}}+\mathcal{O}\big((t+1)^{3p-q}\big)\|\widehat{\nabla}\Phi_{\mu_{t-1}}(x_{t-1})\|+\mathcal{O}\big((t+1)^{-p}\big),$ $\displaystyle\implies$ $\displaystyle\sqrt{E_{t+1}}=\frac{1}{\sqrt{2}}\sqrt{E_{t}}+\mathcal{O}\big((t+1)^{3p-q}\big)\|\widehat{\nabla}\Phi_{\mu_{t-1}}(x_{t-1})\|+\mathcal{O}\big((t+1)^{-p}\big).$
+
+According to the Young’s inequality with constant $1/2$ , we have:
+
+$\displaystyle E_{t+1}$ $\displaystyle=\left(1+\frac{1}{2}\right)\left(\frac{1}{\sqrt{2}}\sqrt{E_{t}}\right)^{2}+(1+2)\left(\mathcal{O}\big((t+1)^{3p-q}\big)\|\widehat{\nabla}\Phi_{\mu_{t-1}}(x_{t-1})\|+\mathcal{O}\big((t+1)^{-p}\big)\right)^{2}$ $\displaystyle=\frac{3}{4}E_{t}+\mathcal{O}\big((t+1)^{6p-2q}\big)\|\widehat{\nabla}\Phi_{\mu_{t-1}}(x_{t-1})\|^{2}+\mathcal{O}\big((t+1)^{-2p}\big).$
+
+Part $\mathcal{C}$ . In this part, we control the shift $\Phi_{\mu_{t+1}}(x_{t+1})-\Phi_{\mu_{t}}(x_{t})$ . We first compute the smoothness coefficient of $\Phi_{\mu}$ as follows. According to Assumption 1 , for any $x,x^{\prime}$ we have:
+
+$\displaystyle\|\nabla\Phi_{\mu}(x)-\nabla\Phi_{\mu}(x^{\prime})\|$ $\displaystyle\leq$ $\displaystyle\|\nabla_{x}f(x,y_{\mu}^{*}(x))-\nabla_{x}f(x^{\prime},y_{\mu}^{*}(x^{\prime}))\|$ $\displaystyle+\left\|\big(\nabla_{xy}^{2}g(x,y_{\mu}^{*}(x))-\nabla_{xy}^{2}g(x^{\prime},y_{\mu}^{*}(x^{\prime}))\big)v_{\mu}^{*}(x)\right\|+\left\|\nabla_{xy}^{2}g(x^{\prime},y_{\mu}^{*}(x^{\prime}))\big(v_{\mu}^{*}(x)-v_{\mu}^{*}(x^{\prime})\big)\right\|$ $\displaystyle\leq$ $\displaystyle\big(\ell+\|v_{\mu}^{*}(x)\|\cdot\rho\big)\big(\|x-x^{\prime}\|+\|y_{\mu}^{*}(x)-y_{\mu}^{*}(x^{\prime})\|\big)+\ell\|v_{\mu}^{*}(x)-v_{\mu}^{*}(x^{\prime})\|$ $\displaystyle\leq$ $\displaystyle\left(\ell+\frac{\nu}{\sigma}\cdot\rho\right)\big(\|x-x^{\prime}\|+\|y_{\mu}^{*}(x)-y_{\mu}^{*}(x^{\prime})\|\big)$ $\displaystyle+\ell\left\|\left[\nabla_{yy}^{2}g(x,y_{\mu}^{*}(x))+\mu I_{q}\right]^{-1}\big(\nabla_{y}f(x,y_{\mu}^{*}(x))-\nabla_{y}f(x^{\prime},y_{\mu}^{*}(x^{\prime}))\big)\right\|$ $\displaystyle+\ell\left\|\left(\left[\nabla_{yy}^{2}g(x,y_{\mu}^{*}(x))+\mu I_{q}\right]^{-1}-\left[\nabla_{yy}^{2}g(x^{\prime},y_{\mu}^{*}(x^{\prime}))+\mu I_{q}\right]^{-1}\right)\nabla_{y}f(x^{\prime},y_{\mu}^{*}(x^{\prime}))\right\|$ $\displaystyle\leq$ $\displaystyle\left(\ell+\frac{\nu\rho}{\sigma}+\frac{\ell^{2}}{\sigma}+\frac{\nu\ell\rho}{\sigma^{2}}\right)\left(\|x-x^{\prime}\|+\frac{\ell}{\sigma}\|x-x^{\prime}\|\right)$ $\displaystyle\leq$ $\displaystyle\left(\ell+\frac{\nu\rho}{\sigma}+\frac{\ell^{2}}{\sigma}+\frac{\nu\ell\rho}{\sigma^{2}}\right)\left(1+\frac{\ell}{\sigma}\right)\|x-x^{\prime}\|\triangleq L_{\mu}\|x-x^{\prime}\|.$
+
+We denote $L_{t}:=L_{\mu_{t}}$ . Given the $L_{t+1}$ -smoothness of $\Phi_{\mu_{t+1}}$ with $L_{t+1}=\Theta((t+1)^{3p})$ , and applying the update rule $x_{t+1}=x_{t}-\alpha_{t}\widehat{\nabla}\Phi_{\mu_{t}}(x_{t})$ with $q\geq 3p$ , the descent lemma yields:
+
+$\displaystyle\Phi_{\mu_{t+1}}(x_{t+1})-\Phi_{\mu_{t+1}}(x_{t})$ $\displaystyle\leq$ $\displaystyle\langle\nabla\Phi_{\mu_{t+1}}(x_{t}),x_{t+1}-x_{t}\rangle+\frac{L_{t+1}}{2}\|x_{t+1}-x_{t}\|^{2}$ $\displaystyle=$ $\displaystyle-\alpha_{t}\langle\nabla\Phi_{\mu_{t+1}}(x_{t}),\widehat{\nabla}\Phi_{\mu_{t}}(x_{t})\rangle+\frac{L_{t+1}\alpha_{t}^{2}}{2}\|\widehat{\nabla}\Phi_{\mu_{t}}(x_{t})\|^{2}$ $\displaystyle\leq$ $\displaystyle-\frac{\alpha_{t}}{2}\|\nabla\Phi_{\mu_{t}}(x_{t})\|^{2}-\frac{\alpha_{t}}{4}\|\widehat{\nabla}\Phi_{\mu_{t}}(x_{t})\|^{2}+\frac{\alpha_{t}}{2}\|\nabla\Phi_{\mu_{t+1}}(x_{t})-\widehat{\nabla}\Phi_{\mu_{t}}(x_{t})\|^{2},$
+
+where in the last inequality, we use the fact that $\|a-b\|^{2}=\|a\|^{2}+\|b\|^{2}-2\langle a,b\rangle$ . For the last term, we can control it by:
+
+$\displaystyle\|\nabla\Phi_{\mu_{t+1}}(x_{t})-\widehat{\nabla}\Phi_{\mu_{t}}(x_{t})\|\leq$ $\displaystyle\underbrace{\|\nabla_{x}f(x_{t},y_{\mu_{t+1}}^{*}(x_{t}))-\nabla_{x}f(x_{t},y_{t+1})\|}_{\text{Term A}}$ $\displaystyle+\underbrace{\|\nabla_{xy}^{2}g(x_{t},y_{\mu_{t+1}}^{*}(x_{t}))v_{\mu_{t+1}}^{*}(x_{t})-\nabla_{xy}^{2}g(x_{t},y_{t+1})v_{t+1}\|}_{\text{Term B}}.$
+
+Then, we have:
+
+Term A $\displaystyle\leq\ell\|y_{\mu_{t+1}}^{*}(x_{t})-y_{t+1}\|=\mathcal{O}\big(\|y_{\mu_{t+1}}^{*}(x_{t})-y_{\mu_{t}}^{*}(x_{t})\|+\|y_{\mu_{t}}^{*}(x_{t})-y_{t+1}\|\big),$ $\displaystyle\implies\text{Term A}$ $\displaystyle=\mathcal{O}(t^{-3p-1})+\mathcal{O}(t^{-3p})=\mathcal{O}(t^{-3p}).$
+
+Besides, we have:
+
+Term B $\displaystyle\leq\rho\|y_{\mu_{t+1}}^{*}(x_{t})-y_{t+1}\|\cdot\|v_{\mu_{t+1}}^{*}(x_{t})\|+\ell(\|v_{\mu_{t+1}}^{*}(x_{t})-v_{\mu_{t}}^{*}(x_{t})\|+\sqrt{E_{t+1}}),$ $\displaystyle\implies\text{Term B}$ $\displaystyle=\mathcal{O}(t^{-3p}\cdot t^{p})+\mathcal{O}(t^{p-1})+\mathcal{O}(\sqrt{E_{t+1}})=\mathcal{O}(t^{-2p}+t^{p-1}+\sqrt{E_{t+1}}).$
+
+Thus, we combine them to get:
+
+$\|\nabla\Phi_{\mu_{t+1}}(x_{t})-\widehat{\nabla}\Phi_{\mu_{t}}(x_{t})\|^{2}=\mathcal{O}(t^{-4p}+t^{2p-2}+E_{t+1}).$
+
+Also, we consider the the gap $|\Phi_{\mu_{t+1}}(x_{t})-\Phi_{\mu_{t}}(x_{t})|$ . According to Assumption 1 , we have:
+
+$\displaystyle|\Phi_{\mu_{t+1}}(x_{t})-\Phi_{\mu_{t}}(x_{t})|$ $\displaystyle=|f(x_{t},y_{\mu_{t+1}}^{*}(x_{t}))-f(x_{t},y_{\mu_{t}}^{*}(x_{t}))|\leq\nu\|y_{\mu_{t+1}}^{*}(x_{t})-y_{\mu_{t}}^{*}(x_{t})\|,$ $\displaystyle\implies|\Phi_{\mu_{t+1}}(x_{t})-\Phi_{\mu_{t}}(x_{t})|$ $\displaystyle\overset{\flat}{=}\mathcal{O}(\sigma_{t}^{2})|\mu_{t}-\mu_{t+1}|=\mathcal{O}\big((t+1)^{-3p-1}\big),$
+
+where $\flat$ can be implied by Part $\mathcal{A}$ .
+
+We can introduce positive constants $C_{1},C_{1}^{\prime}$ to construct the following result:
+
+$\displaystyle\Phi_{\mu_{t+1}}(x_{t+1})-\Phi_{\mu_{t}}(x_{t})$ $\displaystyle=$ $\displaystyle[\Phi_{\mu_{t+1}}(x_{t+1})-\Phi_{\mu_{t+1}}(x_{t})]+[\Phi_{\mu_{t+1}}(x_{t})-\Phi_{\mu_{t}}(x_{t})]$ $\displaystyle\leq$ $\displaystyle-\frac{\alpha_{t}}{2}\|\nabla\Phi_{\mu_{t}}(x_{t})\|^{2}-\frac{\alpha_{t}}{4}\|\widehat{\nabla}\Phi_{\mu_{t}}(x_{t})\|^{2}+C_{1}\alpha_{t}E_{t+1}+C_{1}^{\prime}\big(\alpha_{t}t^{-4p}+\alpha_{t}t^{2p-2}+t^{-3p-1}\big).$
+
+Part $\mathcal{D}$ . Recall Part $\mathcal{B}$ , with positive constants $C_{2},C_{2}^{\prime}$ , we have:
+
+$E_{t+1}\leq\frac{3}{4}E_{t}+C_{2}t^{6p-2q}\|\widehat{\nabla}\Phi_{\mu_{t-1}}(x_{t-1})\|^{2}+C_{2}^{\prime}t^{-2p}.$
+
+We construct the following Lyapunov function:
+
+$V_{t}=\Phi_{\mu_{t}}(x_{t})+M\alpha_{t}E_{t},$
+
+where $M=3C_{1}$ . Then, we have:
+
+$\displaystyle V_{t+1}-V_{t}$ $\displaystyle=\Phi_{\mu_{t+1}}(x_{t+1})-\Phi_{\mu_{t}}(x_{t})+M(\alpha_{t+1}E_{t+1}-\alpha_{t}E_{t})$ $\displaystyle\leq-\frac{\alpha_{t}}{2}\|\nabla\Phi_{\mu_{t}}(x_{t})\|^{2}-\frac{\alpha_{t}}{4}\|\widehat{\nabla}\Phi_{\mu_{t}}(x_{t})\|^{2}+C_{1}^{\prime}\big(\alpha_{t}t^{-4p}+\alpha_{t}t^{2p-2}+t^{-3p-1}\big)$ $\displaystyle\,\,\,\,\,\,+(C_{1}\alpha_{t}+M\alpha_{t+1})E_{t+1}-M\alpha_{t}E_{t}$ $\displaystyle\leq-\frac{\alpha_{t}}{2}\|\nabla\Phi_{\mu_{t}}(x_{t})\|^{2}-\frac{\alpha_{t}}{4}\|\widehat{\nabla}\Phi_{\mu_{t}}(x_{t})\|^{2}+C_{1}^{\prime}\big(\alpha_{t}t^{-4p}+\alpha_{t}t^{2p-2}+t^{-3p-1}\big)$ $\displaystyle\,\,\,\,\,\,+(C_{1}\alpha_{t}+M\alpha_{t+1})\left(\frac{3}{4}E_{t}+C_{2}t^{6p-2q}\|\widehat{\nabla}\Phi_{\mu_{t-1}}(x_{t-1})\|^{2}+C_{2}^{\prime}t^{-2p}\right)-M\alpha_{t}E_{t}$ $\displaystyle\overset{\flat}{\leq}-\frac{\alpha_{t}}{2}\|\nabla\Phi_{\mu_{t}}(x_{t})\|^{2}-\frac{\alpha_{t}}{4}\|\widehat{\nabla}\Phi_{\mu_{t}}(x_{t})\|^{2}+\underbrace{4C_{1}C_{2}\alpha_{t}t^{6p-2q}}_{\eta_{t}}\|\widehat{\nabla}\Phi_{\mu_{t-1}}(x_{t-1})\|^{2}$ $\displaystyle\,\,\,\,\,\,+\underbrace{C_{1}^{\prime\prime}\big(t^{-4p-q}+t^{2p-2-q}+t^{-2p-q}+t^{-3p-1}\big)}_{R_{t}},$
+
+where $\flat$ is due to $M=3C_{1}$ and $\alpha_{t}\geq\alpha_{t+1}$ , and $C_{1}^{\prime\prime}$ is another constant. When $q\geq 3p$ , we can select proper $\alpha_{t}$ to ensure $\eta_{t+1}\leq\frac{1}{8}\alpha_{t}$ , and denote $T_{0}=\lceil\frac{T}{2}\rceil$ . Then, we can get:
+
+$\displaystyle\sum_{t=T_{0}}^{T}\frac{\alpha_{t}}{2}\|\nabla\Phi_{\mu_{t}}(x_{t})\|^{2}$ $\displaystyle\leq\sum_{t=T_{0}}^{T}\frac{\alpha_{t}}{2}\|\nabla\Phi_{\mu_{t}}(x_{t})\|^{2}-\sum_{t=T_{0}}^{T}\frac{\alpha_{t}}{8}\|\widehat{\nabla}\Phi_{\mu_{t}}(x_{t})\|^{2}+\eta_{1}\|\widehat{\nabla}\Phi_{\mu_{T_{0}}}(x_{0})\|^{2}$ $\displaystyle\leq V_{T_{0}}-V_{T+1}+\eta_{1}\|\widehat{\nabla}\Phi_{\mu_{T_{0}}}(x_{0})\|^{2}+\sum_{t=T_{0}}^{T}R_{t}.$
+
+Noting that $V_{T+1}$ is bounded below by $\inf\Phi$ , the constant terms can be bounded by $\mathcal{O}(1)$ . For the residual sum $\sum_{t=T_{0}}^{T}R_{t}$ , the dominant term is $\mathcal{O}(t^{-q-2p})$ . Integrating this term yields $\sum_{t=T_{0}}^{T}R_{t}=\mathcal{O}(T^{1-q-2p})$ . Dividing both sides by $\sum_{t=T_{0}}^{T}\alpha_{t}=\Theta(T^{1-q})$ , we finally get:
+
+$\displaystyle\min_{1\leq t\leq T}\|\nabla\Phi_{\mu_{t}}(x_{t})\|^{2}$ $\displaystyle=\frac{\mathcal{O}(1)+\mathcal{O}(T^{1-q-2p})}{\Theta(T^{1-q})}=\mathcal{O}\left(\frac{1}{T^{1-q}}+\frac{1}{T^{2p}}\right).$
+
+When selecting $p=1/5$ and $q=3/5$ , and noting $\min_{T_{0}\leq t\leq T}\epsilon_{t}=\mathcal{O}(T^{-\frac{4}{5}})$ the convergence rate is $\min_{T_{0}\leq t\leq T}\Pi(x_{t},y_{t})=\mathcal{O}(T^{-\frac{2}{5}})$ . ∎
+
+Given Theorem 1 , we can immediately obtain the following result:
+
+Whenever the lower-level local minimum satisfies the local curvature condition $\nabla_{yy}^{2}g(x,y)\succeq\mu_{0}I_{q}$ for some $\mu_{0}>0$ , the bias bound yields $\|\nabla\Phi_{\mu}(x)-\nabla\Phi_{0}(x)\|=\mathcal{O}(\mu)$ . Combining this bound with the parameter selection in Theorem 1 gives:
+
+$\min_{\lceil T/2\rceil\leq t\leq T}\|\nabla\Phi_{0}(x_{t})\|^{2}=\mathcal{O}(T^{-2/5}).$
+
+Appendix C Details of Illustrative Example
+
+To intuitively show the rationale of our SOSP-based relaxed surrogate, we consider the following concrete example with $x,y\in\mathbb{R}$ :
+
+$\displaystyle\min_{x\in\mathbb{R}^{p},y\in\mathbb{R}^{q}}f(x,y)=(x-2)^{2}+y^{2}$ subject to $\displaystyle\,\,y\in\mathcal{S}(x):=\argmin_{y}g(x,y)=\frac{1}{4}y^{4}-\frac{1}{2}xy^{2}.$
+
+As mentioned earlier, to tackle this nonconvex lower-level BLO problem, existing works instead solve a surrogate lower-level problem by finding a first-order stationary point, i.e., a point where $\nabla_{y}g(x,y)=0$ , or by solving its equivalent formulations under certain other assumptions ( Xiao et al., 2023 ; Shen and Chen, 2023 ; Liu et al., 2024 ; Ma et al., 2026 ) .
+
+Specifically, the required derivatives are:
+
+$\displaystyle\nabla_{y}g(x,y)=y^{3}-xy=y(y^{2}-x),\,\,\,\,\,\,\nabla_{yy}^{2}g(x,y)=3y^{2}-x.$
+
+Setting the gradient to $0$ , we obtain the following FOSP set:
+
+$\displaystyle\{(x,0),(x^{\prime},\sqrt{x^{\prime}}),(x^{\prime},-\sqrt{x^{\prime}}):\forall x\in\mathbb{R},x^{\prime}\geq 0\}.$
+
+When substituting $\nabla_{y}g(x,y)=0$ into the upper-level problem, we obtain the following solutions: $(x^{*},y^{*})\in\{(2,0),(1.5,\sqrt{1.5}),(1.5,-\sqrt{1.5})\}$ , where $(2,0)$ is a saddle point of $g(x,\cdot)$ , and the other two serve as the true solutions. As shown in Figure 1 , these aforementioned methods can be entirely drawn toward the saddle point, failing to solve the original BLO problem. In contrast, our $\mathsf{PROBE}~$ escapes the saddle point and finds the optimal solution.
+
+Appendix D Scope and Implications of SOSP Guarantees
+
+While we established a finite-time convergence rate of $\mathcal{O}(T^{-\frac{2}{5}})$ for $\mathsf{PROBE}~$ in Section 5 , it remains important to clarify the class of solutions to which the method converges. In this section, we discuss our SOSP-based solutions in detail.
+
+The theoretical guarantee is to achieve some SOSP solution. Our theoretical results guarantee that $\mathsf{PROBE}~$ reaches a lower-level SOSP and thereby avoids strict saddle points. However, they do not guarantee the selection of the “best” solution among multiple lower-level local minima. Although the objective values of any given collection of local minima can be compared directly, guaranteeing the selection of the best solution among all local minima is equivalent to finding a global minimum of the lower-level problem, which is computationally intractable for general nonconvex problems (NP-hard). Therefore, without additional structural assumptions, the effects of different lower-level local solutions on the upper-level problem cannot be characterized in general.
+
+An SOSP provides a strictly stronger stationarity guarantee than an FOSP. The lower-level guarantee that $\mathsf{PROBE}~$ reaches an SOSP does not rely on the strict-saddle property. Rather, this property is used only to conclude that an SOSP corresponds to a lower-level local minimum. Even when strictness does not hold, an SOSP still excludes any stationary point that admits a direction of negative curvature and therefore provides a strictly stronger stationarity guarantee than an FOSP. This advantage is also well documented in the literature ( Dauphin et al., 2014 ; Allen-Zhu and Li, 2018 ) . This distinction is particularly important in BLO: as shown in Figure 1 , FOSP-based methods can become trapped at lower-level saddle points and consequently converge to incorrect upper-level solutions, whereas $\mathsf{PROBE}~$ escapes these saddle points and finds the correct solution.
+
+Empirical evidence shows the prevalence of strict saddles in practice. We conducted an experiment using the same LLM-based setting as in Appendix A . Specifically, we identified all the saddle points encountered along each trajectory and computed the minimum eigenvalue of the lower-level Hessian at each of them. As shown in Table 2 , across five repeated trials, all $61$ encountered saddle points exhibited a negative minimum eigenvalue, providing empirical evidence that the saddles encountered in these runs are strict. This implies that most saddle points are strict in practice, demonstrating the applicability of our theories.
+
+Table 2: Numerical classification of the perturbation-triggered lower-level stationary-point candidates encountered along five $\mathsf{PROBE}~$ trajectories. Undetermined refers to candidates that could not be classified conclusively because of numerical instability.

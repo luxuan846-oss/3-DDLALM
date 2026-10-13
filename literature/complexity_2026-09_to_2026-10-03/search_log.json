@@ -1,0 +1,26 @@
+[
+  {
+    "name": "math_oc_new",
+    "query": "cat:math.OC AND submittedDate:[202609010000 TO 202610032359]",
+    "count": 1035,
+    "status": "ok"
+  },
+  {
+    "name": "ml_algorithms_new",
+    "query": "(cat:math.OC OR cat:cs.LG OR cat:stat.ML OR cat:cs.DS OR cat:math.NA) AND (all:complexity OR all:stationary OR all:convergence OR all:regret OR all:minimax OR all:bilevel OR all:gradient OR all:oracle) AND submittedDate:[202609010000 TO 202610032359]",
+    "status": "failed",
+    "error": "HTTP Error 500: Internal Server Error"
+  },
+  {
+    "name": "optimization_updates",
+    "query": "(cat:math.OC OR cat:cs.LG OR cat:stat.ML OR cat:cs.DS OR cat:math.NA) AND (all:complexity OR all:stationary OR all:convergence OR all:regret OR all:minimax OR all:bilevel OR all:gradient OR all:oracle) AND lastUpdatedDate:[202609010000 TO 202610032359]",
+    "count": 2766,
+    "status": "ok"
+  },
+  {
+    "name": "neurips_2026",
+    "query": "(all:NeurIPS OR all:NIPS) AND all:2026 AND (cat:math.OC OR cat:cs.LG OR cat:stat.ML OR cat:cs.DS OR cat:math.NA) AND (all:complexity OR all:stationary OR all:convergence OR all:regret OR all:minimax OR all:bilevel OR all:gradient OR all:oracle)",
+    "count": 179,
+    "status": "ok"
+  }
+]

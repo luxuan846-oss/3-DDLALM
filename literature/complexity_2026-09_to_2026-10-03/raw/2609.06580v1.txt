@@ -1,0 +1,493 @@
+Content selection saved. Describe the issue below:
+
+Stochastic Nonconvex Bilevel Optimization: Improved Rates Without Rare-Visit Assumption
+
+We investigate stochastic simple bilevel optimization with smooth and possibly nonconvex upper- and lower-level objectives. Existing stochastic extensions of dynamic barrier gradient descent (DBGD) either obtain fast convergence under an unverifiable trajectory-dependent “rare-visit” assumption, or remove this assumption at a substantially higher oracle cost. We show that a simple denominator-only regularization of the DBGD multiplier eliminates the need for such an assumption while preserving fast convergence rates. Specifically, our method achieves $(\varepsilon,\varepsilon)$ -stationarity in $\mathcal{O}(\varepsilon^{-2})$ iterations using $\mathcal{O}(\varepsilon^{-4})$ upper-level and $\mathcal{O}(\varepsilon^{-7})$ lower-level stochastic gradients, which improves upon the best assumption-free complexities. We additionally derive anytime parameter schedules. Keywords. Simple Bilevel Programming, Stochastic Optimization, Dynamic Barrier.
+
+1 Introduction
+
+In this paper, we consider a simple stochastic nonconvex bilevel program , given by
+
+$\min_{x\in\H{}}\left\{f(x)\colon\quad x\in\argmin_{y\in\H{}}g(y)\right\},$ (P)
+
+where $f=\Exp{f_{\xi}},g=\Exp{g_{\zeta}}\colon\H{\to}\R$ are defined over a real Hilbert space and are smooth and not necessarily convex, and only accessible through a stochastic oracle call. Here, the term simple refers to the fact that $f$ does not depend on the lower-level variable $y$ and $g$ does not depend on the upper-level variable $x$ . In this context, the lower-level function $g$ serves as a primary requirement, whereas the upper-level objective $f$ selects amongst lower-level solutions. This problem is also referred to as a nonconvex hierarchical program . Such a formulation has many applications, such as in hyperparameter training ( Franceschi et al., 2018 ) or in machine unlearning ( Reisizadeh et al., 2026 ) , to name a few.
+
+Even in a deterministic setting, nonconvex bilevel programs are hard. The lower-level constraint is global, and may have a nonconvex or even disconnected solution set. Therefore, classical ideas from convex bilevel programming, such as Tikhonov regularizations Kaushik and Yousefian (2021) ; Samadi and Yousefian (2025) ; Alves et al. (2025) ; Cortild et al. (2025b) or forming outer approxiations of the lower-level solution set Jiang et al. (2023) ; Cao et al. (2023) ; Cao et al. (2024) do not translate.
+
+As solving Problem ( P ) to global optimality is intractable, we merely solve it to $(\varepsilon_{f},\varepsilon_{g})$ -stationarity, which was introduced in Cao et al. (2026) and will be rigorously defined in Section 2 . It is such that $\nabla g(x)$ is small, so that the point is nearly stationary for the lower-level, and such that there is no evident first-order direction that improves the upper-level objective.
+
+To achieve this notion of stationarity, Cao et al. Cao et al. (2026) make use of Dynamic Barrier Gradient Descent (DBGD), originally proposed in Gong et al. (2021) , which combines upper- and lower-level descent through an adaptive dual multiplier. Extending this approach to the present stochastic setting is nontrivial, as directly replacing the gradient by a stochastic estimator may cause singularities within the multiplier definition, since the lower-level gradient estimator may vanish away from stationary points.
+
+Recently, Ahmadi et al. Ahmadi et al. (2026) address this issue by perturbing both the numerator and the denominator of the dual multiplier. The resulting method achieves fast rates under a trajectory-dependent “rare-visit” assumption, which is unverifiable a priori , and remove this condition through a penality-regularization, which leads to substantially slower rates. We instead perturb only the denominator, giving rise to
+
+$\underbrace{\frac{[\beta(\|\nabla g\|^{2}+\rho)-\langle\nabla f,\nabla g\rangle]_{+}}{\|\nabla g\|^{2}+\rho}}_{\text{Ahmadi et al. \cite[cite]{\@@bibref{Authors Phrase1YearPhrase2}{ahmadi_stochastic_2026}{\@@citephrase{(}}{\@@citephrase{)}}}}}\quad\text{v.s.}\quad\underbrace{\frac{[\beta\|\nabla g\|^{2}-\langle\nabla f,\nabla g\rangle]_{+}}{\|\nabla g\|^{2}+\rho}}_{\text{Ours}}.$
+
+Despite the multipliers differing only by an additive constant in the numerator, this modification allows us to establish faster convergence rates under standard, verifiable assumptions. We provide a more thorough comparison of these works in Table 1 .
+
+Table 1: Comparison of iteration count, and upper- and lower-level (stochastic) oracle calls to reach a $(\varepsilon,\varepsilon)$ -stationary point, and the additionally required assumptions.
+
+“Rate-Visit” Assumption $\varsigma\in(0,1/2]$ : unverifiable a priori as it involves the trajectory of the algorithm.
+
+Mean-squared smoothness of the individual realization $f_{\xi}$ and $g_{\zeta}$ .
+
+Contributions. We propose a new algorithm, SDBGD, to solve Problem ( P ), converging to an $(\varepsilon,\varepsilon)$ -stationary point in $\mathcal{O}(\varepsilon^{-2})$ iterations, requiring a total of $\mathcal{O}(\varepsilon^{-4})$ stochastic oracle calls to $f$ and $\mathcal{O}(\varepsilon^{-7})$ stochastic oracle calls to $g$ . Importantly, we do not rely on an unverifiable assumption, such as the “rare-visit” assumption. We additionally provide anytime convergence rates, not requiring knowledge of the final horizon. We finally compare our method numerically to the ones proposed by Ahmadi et al. Ahmadi et al. (2026) on a simple example.
+
+2 Problem Setup and Stationarity
+
+Let be a real Hilbert space with associated inner product $\langle\cdot,\cdot\rangle$ and induced norm $\|\cdot\|$ . We consider the stochastic simple bilevel problem
+
+$\min_{x\in\H{}}\left\{f(x)\colon\quad x\in\argmin g\right\},$ (P)
+
+where, for all $x\in$ , $f(x)=\ExpD{\xi}{f_{\xi}(x)}$ and $g(x)=\ExpD{\zeta}{g_{\zeta}(x)}$ , with $f_{\xi},g_{\zeta}\colon\H{\to}\R$ stochastic realizations of $f$ and $g$ respectively. We assume the following. {assumption} The expectations defining $f$ and $g$ are well-defined and differentiable, with, for all $x\in$ , $\nabla f(x)=\ExpD{\xi}{\nabla f_{\xi}(x)}$ and $\nabla g(x)=\ExpD{\zeta}{\nabla g_{\zeta}(x)}$ .
+
+We further assume that $\argmin g\neq\emptyset$ and that $\inf f>-\infty$ .
+
+We additionally assume the following.
+
+There exist constants $L_{f},L_{g},G_{f}>0,\sigma_{f}^{2},\sigma_{g}^{2}\geq 0$ such that
+
+$f$ and $g$ are respectively $L_{f}$ - and $L_{g}$ -smooth;
+
+the upper-level gradient is uniformly bounded, namely $\|\nabla f(x)\|\leq G_{f}$ for all $x\in$ ;
+
+the stochastic gradients have uniformly bounded variance, namely
+
+$\ExpD{\xi}{\|\nabla f_{\xi}(x)-\nabla f(x)\|^{2}}\leq\sigma_{f}^{2}\quad\text{and}\quad\ExpD{\zeta}{\|\nabla g_{\zeta}(x)-\nabla g(x)\|^{2}}\leq\sigma_{g}^{2}\quad\forall x\in\H{.}$
+
+Uniformly bounded variance is a standard assumption in stochastic optimization Robbins and Siegmund (1971) ; Nemirovski et al. (2009) , although recent trends aim to relax it under weaker growth or variance-at-solution conditions Bach and Moulines (2011) ; Needell et al. (2016) ; Khaled and Richtárik (2023) ; Alacaoglu et al. (2025) ; Cortild et al. (2025a) ; Garrigos et al. (2025) ; Cortild and Cartis (2026) , at the cost of a more complex error handling. We retain the bounded-variance assumption here in order to simplify the results and isolate the difficulties arising from the stochasticity itself.
+
+Assumption 2 does not require the lower-level gradient $\nabla g$ to be uniformly bounded, nor does it require the individual realizations $f_{\xi}$ and $g_{\zeta}$ to be smooth. This is in contrast with Ahmadi et al. (2026) , where boundedness of $\nabla g$ is required, and smoothness of the stochastic realizations is used for their variance-reduced variant.
+
+Since Problem ( P ) is nonconvex, we do not aim to solve it globally and instead introduce a notion of stationarity. We follow the convention of Cao et al. (2026) and measure stationarity in terms of squared gradient norms. This choice is equivalent to measuring it in terms of norms and rescaling $(\varepsilon_{f},\varepsilon_{g})$ , and is convenient as our analysis naturally controls the squared quantities.
+
+A point $x\in$ is $(\varepsilon_{f},\varepsilon_{g})$ -stationary for Problem ( P ) if there exists $\lambda\geq 0$ satisfying
+
+$\|\nabla f(x)+\lambda\nabla g(x)\|^{2}\leq\varepsilon_{f}\quad\text{and}\quad\|\nabla g(x)\|^{2}\leq\varepsilon_{g}.$
+
+The second condition requires $x$ to be near-stationary for the lower-level objective. We emphasize that, since $g$ is nonconvex, lower-level stationarity does in general not mean proximity to $\argmin g$ . Definition 2.1 should therefore be understood as a first-order approximation for solving Problem ( P ). The first condition describes first-order compatibility between the upper- and lower-level objectives. In fact, up to error $\sqrt{\varepsilon_{f}}$ , the component of $\nabla f(x)$ orthogonal to $\nabla g(x)$ vanishes, while its parallel component either vanishes or points in the opposite direction to $\nabla g(x)$ . As such, there is no first-order direction that can substantially decrease $f$ without increasing $g$ .
+
+3 Stochastic Dynamic Barrier Gradient Descent
+
+The deterministic Dynamic Barrier Gradient Descent (DBGD) method of Cao et al. (2026) updates $x_{k}$ with step-size $\eta_{k}>0$ along the direction
+
+$d_{k}^{\text{DBGD}}=\nabla f(x_{k})+\lambda_{k}^{\text{DBGD}}\nabla g(x_{k}),\quad\lambda_{k}^{\text{DBGD}}=\frac{[\beta_{k}\|\nabla g(x_{k})\|^{2}-\langle\nabla f(x_{k}),\nabla g(x_{k})\rangle]_{+}}{\|\nabla g(x_{k})\|^{2}}.$
+
+The choice of multiplier $\lambda_{k}^{\text{DBGD}}$ is so that $\langle\nabla g(x_{k}),d_{k}^{\text{DBGD}}\rangle\geq\beta_{k}\|\nabla g(x_{k})\|^{2}$ , enforcing descent in the lower-level objective while retaining as much as possible in the upper-level. This multiplier may be viewed as the Lagrange multiplier associated with the projection problem $\min\{\frac{1}{2}\|\nabla f(x_{k})-d\|^{2}\colon\;\beta_{k}\|\nabla g(x_{k})\|^{2}\leq\langle d,\nabla g(x_{k})\rangle\}$ , namely
+
+$\lambda_{k}^{\text{DBGD}}=\arg\max_{\lambda\geq 0}\min_{d}\left\{\frac{1}{2}\|\nabla f(x_{k})-d\|^{2}+\lambda(\beta_{k}\|\nabla g(x_{k})\|^{2}-\langle d,\nabla g(x_{k})\rangle)\right\}.$ (1)
+
+The term dynamic barrier refers to the lower bound on $\langle d,\nabla g(x_{k})\rangle$ enforced in the projection dynamics, which provides a trade-off between loss minimization and constraint satisfaction, and is not directly related to an explicit barrier function.
+
+In the stochastic setting, we no longer access the full gradients $\nabla g(x_{k})$ and $\nabla f(x_{k})$ , but only unbiased stochastic mini-batch estimators of batch-sizes $B_{f,k}$ and $B_{g,k}$ respectively, given by
+
+$\nabla f_{k}=\frac{1}{B_{f,k}}\sum_{i=1}^{B_{f,k}}\nabla f_{\xi_{k,i}}(x_{k})\quad\text{and}\quad\nabla g_{k}=\frac{1}{B_{g,k}}\sum_{j=1}^{B_{g,k}}\nabla g_{\zeta_{k,j}}(x_{k}).$ (2)
+
+Directly substituting these quantities into the multiplier definition may be undefined, as $\|\nabla g_{k}\|$ may be small, or even zero, far from lower-level stationary points.
+
+We instead regularize the denominator with a parameter $\rho_{k}>0$ , thus dividing by $\|\nabla g_{k}\|^{2}+\rho_{k}$ rather than $\|\nabla g_{k}\|^{2}$ . This prevents the singularity in the multiplier definition, while recovering the deterministic definition as $\rho_{k}\to 0$ . This yields the multiplier definition
+
+$\hat{\lambda}_{k}=\frac{[\beta_{k}\|\nabla g_{k}\|^{2}-\langle\nabla f_{k},\nabla g_{k}\rangle]_{+}}{\|\nabla g_{k}\|^{2}+\rho_{k}}.$ (3)
+
+Importantly, unlike the multiplier definition in Ahmadi et al. (2026) , we do not add a corresponding $\rho_{k}\beta_{k}$ term to the numerator. Although the definitions are very similar, they lead to fundamentally different convergence properties, and require distinct arguments.
+
+We introduce $\lambda_{k}$ and $d_{k}$ as quantities for our analysis, but they do not need to be computed:
+
+$\lambda_{k}=\frac{[\beta_{k}\|\nabla g(x_{k})\|^{2}-\langle\nabla f(x_{k}),\nabla g(x_{k})\rangle]_{+}}{\|\nabla g(x_{k})\|^{2}+\rho_{k}},\quad d_{k}=\nabla f(x_{k})+\lambda_{k}\nabla g(x_{k}).$
+
+In the following algorithm, $\eta_{k}>0$ is the step-size, $\beta_{k}>0$ is the barrier parameter, $\rho_{k}>0$ is the regularization parameter, and $B_{f,k}\geq 1$ and $B_{g,k}\geq 1$ represent the batch-sizes for the upper- and lower-level gradient estimators, respectively.
+
+[H] Stochastic Dynamic Barrier Gradient Descent (SDBGD) {algorithmic} \For $k=0,\ldots,K-1$ \State Draw independent $\xi_{k,i}$ and $\zeta_{k,j}$ for $i=1,\ldots,B_{f,k}$ and $j=1,\ldots,B_{g,k}$ . \State Define the independent mini-batches as in ( 2 ). \State Compute $\hat{\lambda}_{k}$ according to ( 3 ). \State Compute $\hat{d}_{k}=\nabla f_{k}+\hat{\lambda}_{k}\nabla g_{k}$ . \State Update $x_{k+1}=x_{k}-\eta_{k}\hat{d}_{k}$ . \EndFor
+
+We make use of the random iterate $x_{N_{K}}$ , where $N_{K}$ is drawn at random according to
+
+$\mathbb{P}(N_{K}=k)=\frac{\eta_{k}\beta_{k}}{\sum_{k^{\prime}=0}^{K-1}\eta_{k^{\prime}}\beta_{k^{\prime}}}\quad\text{for $k\in\{0,\ldots,K-1\}$}.$ (4)
+
+Balancing the stochastic error with the regularization parameter $\rho_{k}$ yields the following horizon-dependent and anytime rates. The proof is deferred to Appendix A.3 , and all proportionality constants are independent of $K$ (or $k$ ).
+
+Let Assumptions 2 and 2 hold, let $(x_{k})$ be the iterates generated by Algorithm 3 , and let $N_{K}$ be chosen at random according to ( 4 ).
+
+(Horizon-Dependent) Given a horizon $K\geq 1$ , let $a\in(0,1/3)$ , and select
+
+$\eta_{k}\equiv\eta\propto K^{-a}\in(0,(2L_{f}+4L_{g})^{-1}),~~~\beta_{k}\equiv\beta\propto\eta^{-3}K^{-1}\in(0,1),~~~\rho_{k}\equiv\rho\propto\eta^{-2}K^{-2},$
+
+$B_{f,k}\equiv B_{f}\propto\eta^{4}K^{2},\quad\text{and}\quad B_{g,k}\equiv B_{g}\propto\eta^{6}K^{4}.$
+
+Then it holds that
+
+$\Exp{\|d_{N_{K}}\|^{2}}\leq\mathcal{O}(K^{-1+2a})\quad\text{and}\quad\Exp{\|\nabla g(x_{N_{K}})\|^{2}}\leq\mathcal{O}(K^{-2a}).$
+
+(Anytime) Let $a\in(0,1/3)$ , and select
+
+$\eta_{k}\propto(k+1)^{-a}\in(0,(2L_{f}+4L_{g})^{-1}),\quad\beta_{k}\propto\eta_{k}^{-3}(k+1)^{-1}\in(0,1),\quad\rho_{k}\propto\eta_{k}^{-2}(k+1)^{-2},$
+
+$B_{f,k}\propto\eta_{k}^{4}(k+1)^{2},\quad\text{and}\quad B_{g,k}\propto\max(\eta_{k}^{-2},\eta_{k}^{6}(k+1)^{4}).$
+
+Then it holds that, for any $K\geq 2$ ,
+
+$\Exp{\|d_{N_{K}}\|^{2}}\leq\dcases\mathcal{O}(K^{-2a})\hskip 9.24994pt&\text{if $0<a<1/4$},\\ \mathcal{O}(K^{2a-1}\log(K))\text{if $1/4\leq a<1/3$},$
+
+and
+
+$\Exp{\|\nabla g(x_{N_{K}})\|^{2}}\leq\mathcal{O}\left(K^{-2a}\log(K)\right).$
+
+The parameter $a\in(0,1/3)$ controls the tradeoff between the two stationary residuals. The balanced choice $a=1/4$ yields a rate of ${\mathcal{O}}(K^{-1/2})$ or $\tilde{\mathcal{O}}(K^{-1/2})$ for both.
+
+Under the horizon-dependent schedule of Corollary 3.1 with $a=1/4$ , we reach a $(\varepsilon,\varepsilon)$ -stationary point in $\mathcal{O}(\varepsilon^{-2})$ iterations, resulting in $\mathcal{O}(\varepsilon^{-4})$ upper-level and $\mathcal{O}(\varepsilon^{-7})$ lower-level stochastic oracle calls.
+
+4 Numerical Illustration
+
+We consider the following toy problem:
+
+$\min_{x\in\R^{2}}\left\{f(x)=\sqrt{1+\|x-c\|^{2}}\colon\quad x\in\argmin_{y=(y_{1},y_{2})\in\R^{2}}g(x)=2-\cos(y_{1})-\exp(-y_{2}^{2}/2)\right\},$
+
+using stochastic gradients $\nabla f_{\xi}=\nabla f+\xi$ and $\nabla g_{\zeta}=\nabla g+\zeta$ with Gaussian noise. We compare SDBGD with SDBPG, PR-SDBPG and VR-PR-SDBPG Ahmadi et al. (2026) under a common oracle budget of $10^{8}$ , using anytime schedules for all methods. The details are provided in Appendix B .
+
+In Figure 1 , we plot the upper- and lower-level stationary measures for all four methods. While our method does not empirically improve upon the previously proposed ones, its theoretical guarantees are stronger and does not require any unverifiable assumption.
+
+Figure 1: Comparison of stationarity measures in terms of stochastic oracle calls.
+
+5 Conclusion
+
+We introduced SDBGD, a denominator-regularized stochastic variant of DBGD Cao et al. (2026) for stochastic simple nonconvex bilevel programming. Under standard assumptions, SDBGD achieves $\mathcal{O}(\varepsilon^{-2})$ iteration complexity, using $\mathcal{O}(\varepsilon^{-4})$ upper-level and $\mathcal{O}(\varepsilon^{-7})$ lower-level stochastic oracle calls. These rates do not require an unverifiable trajectory-dependent “rare-visit” assumption as in Ahmadi et al. (2026) , and improve upon the assumption-free guarantees of Ahmadi et al. (2026) . We additionally provided an anytime parameter schedule and a simple numerical illustration. Overall, our results show that minor differences in the multiplier definition can substantially affect the theoretical guarantees.
+
+Open Question. The stochastic variants of DBGD proposed here and in Ahmadi et al. (2026) differ only slightly in their multiplier definition, yet yield considerably different guarantees. This suggests directly substituting the gradient for a stochastic estimator thereof may not be the natural stochastic analogue of DBGD. Since deterministic DBGD admits a projected dynamical system interpretation ( 1 ), an interesting direction might be to consider a stochastic projected dynamical system to derive the stochastic multiplier. We leave the following for future work:
+
+What is the appropriate stochastic analogue of deterministic multiplier-based bilevel methods?
+
+Acknowledgments. Daniel Cortild acknowledges the support of the Clarendon Funds Scholarship. Mathias Staudigl’s research is supported by the Deutsche Forschungsgemeinschaft (DFG) – Projektnummer 556222748 “non-stationary hierarchical minimization”. Juan Peypouquet benefited from the support of the FMJH Program Gaspard Monge for optimization and operations research and their interactions with data science. Coralia Cartis’ work was supported by the Hong Kong Innovation and Technology Commission (InnoHK Project CIMDA) and by the EPSRC grant EP/Y028872/1, Mathematical Foundations of Intelligence: An “Erlangen Programme” for AI.
+
+References
+
+Appendix A Proofs
+
+Throughout Appendix A , we let $(x_{k})$ be the iterates generated by Algorithm 3 , and we assume Assumptions 2 and 2 hold. We define the filtration $\mathcal{F}_{k}=\sigma(x_{0},\{\xi_{\ell,i},\zeta_{\ell,j}\}_{\ell<k})$ so that $x_{k}$ is $\mathcal{F}_{k}$ -measurable, and denote by $\ExpD{k}{\cdot}=\Exp{\cdot|\mathcal{F}_{k}}$ the conditional expectation. We let $\Exp{\cdot}$ denote the total expectation. For convenience, we define the following shorthands
+
+$\dcases\Delta_{f}&=f(x_{0})-\inf f,\\ \Delta_{g}=g(x_{0})-\inf g,\\ \nu_{f,k}^{2}=\frac{\sigma_{f}^{2}}{B_{f,k}},\\ \nu_{g,k}^{2}=\frac{\sigma_{g}^{2}}{B_{g,k}},\\ \tau_{k}^{2}=2\nu_{f,k}^{2}+2\left(\frac{3\beta_{k}}{2}+\frac{2G_{f}}{\sqrt{\rho_{k}}}\right)^{2}\nu_{g,k}^{2},\\ C_{f,k}=G_{f}\tau_{k}+L_{f}\eta_{k}\tau_{k}^{2},\\ C_{g,k}=\beta_{k}\rho_{k}+\frac{G_{f}}{2}\sqrt{\rho_{k}}+\frac{\tau_{k}^{2}}{2\beta_{k}}+L_{g}\eta_{k}\tau_{k}^{2},\\ R_{k}=4C_{f,k}+8\beta_{k}C_{g,k}+\frac{C_{g,k}}{L_{g}\eta_{k}}+8\beta_{k}L_{g}\eta_{k}G_{f}^{2},\\ \delta_{f,k}=f(x_{k})-\ExpD{k}{f(x_{k+1})},\\ \delta_{g,k}=g(x_{k})-\ExpD{k}{g(x_{k+1})}.$
+
+A.1 Preliminary Results
+
+For $D\geq 0$ , if $x\geq 0$ and $x\leq C+D\sqrt{x}$ , then $x\leq 2C+D^{2}$ .
+
+This follows from $D\sqrt{x}\leq\frac{D^{2}}{2}+\frac{x}{2}$ .
+
+Let $a,b\in$ and $\beta,\rho>0$ . Define
+
+$\lambda=\frac{[\beta\|b\|^{2}-\langle a,b\rangle]_{+}}{\|b\|^{2}+\rho}\quad\text{and}\quad d=a+\lambda b.$
+
+Then it holds that
+
+$\displaystyle\langle b,d\rangle\geq\beta\|b\|^{2}-\rho\lambda,$ (5a) $\displaystyle\lambda\langle b,d\rangle=\beta\lambda\|b\|^{2}-\rho\lambda^{2},$ (5b) $\displaystyle 0\leq\lambda\leq\beta+\frac{\|a\|}{2\sqrt{\rho}},$ (5c) $\displaystyle\lambda\|b\|^{2}\leq\beta\|b\|^{2}+\|a\|\cdot\|b\|.$ (5d)
+
+We consider two cases:
+
+If $\beta\|b\|^{2}-\langle a,b\rangle\leq 0$ , then $\lambda=0$ and $d=a$ . As such, ( 5a )-( 5d ) are readily verified.
+
+If $\beta\|b\|^{2}-\langle a,b\rangle>0$ , then
+
+$\lambda=\frac{\beta\|b\|^{2}-\langle a,b\rangle}{\|b\|^{2}+\rho}.$
+
+As $d=a+\lambda b$ , Inequality ( 5a ) holds with equality. Multiplying by $\lambda$ yields Equality ( 5b ). Moreover, it holds that
+
+$\lambda\leq\frac{\beta\|b\|^{2}+\|a\|\cdot\|b\|}{\|b\|^{2}+\rho}\leq\beta+\frac{\|a\|\cdot\|b\|}{\|b\|^{2}+\rho}\leq\beta+\frac{\|a\|}{2\sqrt{\rho}},$
+
+where the latter follows by $\frac{t}{t^{2}+\rho}\leq\frac{1}{2\sqrt{\rho}}$ for all $t\geq 0$ . As such, Inequality ( 5c ) holds. Finally,
+
+$\lambda\|b\|^{2}=\left(\beta\|b\|^{2}-\langle a,b\rangle\right)\cdot\frac{\|b\|^{2}}{\|b\|^{2}+\rho}\leq\beta\|b\|^{2}+\|a\|\cdot\|b\|,$
+
+thus yielding Inequality ( 5d ).
+
+Define $D_{\beta,\rho}\colon\H{\times}\H{\to}$ by
+
+$D_{\beta,\rho}(a,b)=a+\frac{[\beta\|b\|^{2}-\langle a,b\rangle]_{+}}{\|b\|^{2}+\rho}b.$
+
+Then, for any $a,a^{\prime},b,b^{\prime}\in$ , it holds that
+
+$\|D_{\beta,\rho}(a,b)-D_{\beta,\rho}(a^{\prime},b^{\prime})\|\leq\|a-a^{\prime}\|+\left(\frac{3\beta}{2}+\frac{2\|a\|}{\sqrt{\rho}}\right)\|b-b^{\prime}\|.$
+
+Specifically, almost surely,
+
+$\ExpD{k}{\|d_{k}-\hat{d}_{k}\|^{2}}\leq\tau^{2}_{k}.$
+
+The following hold:
+
+For a fixed $b\in$ , we define $\phi_{b}(a)=a+\frac{[\beta\|b\|^{2}-\langle a,b\rangle]+}{\|b\|^{2}+\rho}b$ . On the half-space $\beta\|b\|^{2}-\langle a,b\rangle\leq 0$ , $\phi_{b}\equiv I$ , and therefore $D\phi_{b}(a)\equiv I$ on the interior of the half-space, where it then holds that $\|D\phi_{b}(a)\|_{\text{op}}=1$ . On the interior of the other half-space, namely for $\beta\|b\|^{2}-\langle a,b\rangle>0$ , it holds that $D\phi_{b}(a)\equiv I-\frac{b\otimes b}{\|b\|^{2}+\rho}$ , whose eigenvalues are $1$ on $b^{\perp}$ and $\frac{\rho}{\|b\|^{2}+\rho}\in[0,1)$ for $\rho\geq 0$ . Specifically, $\|D\phi_{b}(a)\|_{\text{op}}\leq 1$ .
+
+Now, fix $a$ and $a^{\prime}$ . If both lie within the same half-space, then, it holds that
+
+$\displaystyle\|\phi_{b}(a)-\phi_{b}(a^{\prime})\|$ $\displaystyle\leq\left|\int_{0}^{1}D\phi_{b}(a+t(a^{\prime}-a))[a^{\prime}-a]dt\right|$ $\displaystyle\leq\int_{0}^{1}\|D\phi_{b}(a+t(a^{\prime}-a))\|_{\text{op}}\|a^{\prime}-a\|dt\leq\|a-a^{\prime}\|.$
+
+If they do not lie within the same half-space, define $\tilde{a}$ as the unique point on the segment $[a,a^{\prime}]$ satisfying $\beta\|b\|^{2}-\langle a,b\rangle=0$ . Then it holds that
+
+$\displaystyle\|\phi_{b}(a)-\phi_{b}(a^{\prime})\|$ $\displaystyle\leq\|\phi_{b}(a)-\phi_{b}(\tilde{a})\|+\|\phi_{b}(\tilde{a})-\phi_{b}(a^{\prime})\|$ $\displaystyle\leq\|a-\tilde{a}\|+\|\tilde{a}-a^{\prime}\|=\|a-a^{\prime}\|,$
+
+where the latter holds as $a,\tilde{a},a^{\prime}$ are colinear. Specifically, it holds that, for fixed $b\in$ and arbitrary $a,a^{\prime}\in$ ,
+
+$\|D_{\beta,\rho}(a,b)-D_{\beta,\rho}(a^{\prime},b)\|\leq\|a-a^{\prime}\|.$
+
+Now fix $a\in$ , and define $\lambda_{a}(b)=\frac{\beta\|b\|^{2}-\langle a,b\rangle}{\|b\|^{2}+\rho}$ and $\psi_{a}(b)=a+[\lambda_{a}(b)]_{+}b$ . In the inactive region, $\psi_{a}(b)\equiv a$ , so that $D\psi_{a}(b)\equiv 0$ . In the active region, it holds that
+
+$D\psi_{a}(b)[u]=D\lambda_{a}(b)[u]b+\lambda_{a}(b)u,$
+
+where
+
+$D\lambda_{a}(b)[u]=\frac{2\rho\beta\langle b,u\rangle}{(\|b\|^{2}+\rho)^{2}}-\frac{\langle a,u\rangle}{\|b\|^{2}+\rho}+\frac{2\langle b,u\rangle\langle a,b\rangle}{(\|b\|^{2}+\rho)^{2}}.$
+
+As such,
+
+$\|D\psi_{a}(b)[u]\|\leq\left(\frac{2\rho\beta\|b\|^{2}}{(\|b\|^{2}+\rho)^{2}}+\frac{\|a\|\|b\|}{\|b\|^{2}+\rho}+\frac{2\|b\|^{3}\|a\|}{(\|b\|^{2}+\rho)^{2}}+\lambda_{a}(b)\right)\|u\|.$
+
+Since it holds that
+
+$\frac{\|b\|^{2}}{(\|b\|^{2}+\rho)^{2}}\leq\frac{1}{4\rho},\quad\frac{\|b\|}{\|b\|^{2}+\rho}\leq\frac{1}{2\sqrt{\rho}},\quad\frac{\|b\|^{3}}{(\|b\|^{2}+\rho)^{2}}\leq\frac{1}{2\sqrt{\rho}},$
+
+and, by Inequality ( 5c ) of Lemma A.3 ,
+
+$\lambda_{a}(b)\leq\beta+\frac{\|a\|}{2\sqrt{\rho}},$
+
+we deduce that
+
+$\|D\psi_{a}(b)\|_{\text{op}}\leq\frac{\beta}{2}+\frac{\|a\|}{2\sqrt{\rho}}+\frac{\|a\|}{\sqrt{\rho}}+\beta+\frac{\|a\|}{2\sqrt{\rho}}=\frac{3\beta}{2}+\frac{2\|a\|}{\sqrt{\rho}}.$
+
+We note that the inactive and active regions are no longer half-spaces. However, for a given $a\in$ , any segment $[b,b^{\prime}]$ can be split into finitely many segments that each lie entirely within one of the regions, since these regions are parametrized by a polynomial. As such, by the same reasoning as the previous case, it holds that, for fixed $a\in$ and arbitrary $b,b^{\prime}\in$ ,
+
+$\|D_{\beta,\rho}(a,b)-D_{\beta,\rho}(a,b^{\prime})\|\leq\left(\frac{3\beta}{2}+\frac{2\|a\|}{\sqrt{\rho}}\right)\|b-b^{\prime}\|.$
+
+Since
+
+$\|D_{\beta,\rho}(a,b)-D_{\beta,\rho}(a^{\prime},b^{\prime})\|\leq\|D_{\beta,\rho}(a,b)-D_{\beta,\rho}(a,b^{\prime})\|+\|D_{\beta,\rho}(a^{\prime},b^{\prime})-D_{\beta,\rho}(a,b^{\prime})\|,$
+
+the above two bounds yield the first result.
+
+The second result follows by using $d_{k}=D_{\beta_{k},\rho_{k}}(\nabla f(x_{k}),\nabla g(x_{k}))$ and $\hat{d}_{k}=D_{\beta_{k},\rho_{k}}(\nabla f_{k},\nabla g_{k})$ , and recalling the bounds
+
+$\ExpD{k}{\|\nabla f(x_{k})-\nabla f_{k}\|^{2}}\leq\nu_{f,k}^{2},\quad\ExpD{k}{\|\nabla g(x_{k})-\nabla g_{k}\|^{2}}\leq\nu_{g,k}^{2},\quad\|\nabla f(x_{k})\|\leq G_{f}.$
+
+As such,
+
+$\displaystyle\ExpD{k}{\|d_{k}-\hat{d}_{k}\|^{2}}$ $\displaystyle\leq 2\ExpD{k}{\|\nabla f(x_{k})-\nabla f_{k}\|^{2}}+2\left(\frac{3\beta_{k}}{2}+\frac{2\|\nabla f(x_{k})\|}{\sqrt{\rho}_{k}}\right)^{2}\ExpD{k}{\|\nabla g(x_{k})-\nabla g_{k}\|^{2}}$ $\displaystyle\leq 2\nu_{f,k}^{2}+2\left(\frac{3\beta_{k}}{2}+\frac{2G_{f}}{\sqrt{\rho_{k}}}\right)^{2}\nu_{g,k}=\tau_{k}^{2},$
+
+as wanted.
+
+A.2 Descent Analysis and Energy Bound
+
+We now derive descent lemmas for both the upper- and lower-level objectives. Combining these bounds yields a weighted stationarity bound, from which the convergence rates in Section A.3 follow.
+
+For every $k\geq 0$ , almost surely,
+
+$(1-L_{f}\eta_{k})\|d_{k}\|^{2}\leq\frac{\delta_{f,k}}{\eta_{k}}+\beta_{k}^{2}\|\nabla g(x_{k})\|^{2}+\beta_{k}G_{f}\|\nabla g(x_{k})\|+C_{f,k}.$
+
+By $L_{f}$ -smoothness of $f$ and Lemma A.5 ,
+
+$\displaystyle\ExpD{k}{f(x_{k+1})}$ $\displaystyle=\ExpD{k}{f(x_{k}-\eta_{k}\hat{d}_{k})}$ $\displaystyle\leq\ExpD{k}{f(x_{k})-\eta_{k}\langle\nabla f(x_{k}),\hat{d}_{k}\rangle+\frac{L_{f}\eta_{k}^{2}}{2}\|\hat{d}_{k}\|^{2}}$ $\displaystyle=\ExpD{k}{f(x_{k})-\eta_{k}\langle\nabla f(x_{k}),\hat{d}_{k}-d_{k}\rangle-\eta_{k}\langle\nabla f(x_{k}),d_{k}\rangle+\frac{L_{f}\eta_{k}^{2}}{2}\|\hat{d}_{k}-d_{k}+d_{k}\|^{2}}$ $\displaystyle\leq\ExpD{k}{f(x_{k})+\eta_{k}\|\nabla f(x_{k})\|\cdot\|\hat{d}_{k}-d_{k}\|-\eta_{k}\langle\nabla f(x_{k}),d_{k}\rangle+L_{f}\eta_{k}^{2}\|\hat{d}_{k}-d_{k}\|^{2}+L_{f}\eta_{k}^{2}\|d_{k}\|^{2}}$ $\displaystyle\leq f(x_{k})+\eta_{k}G_{f}\tau_{k}-\eta_{k}\langle\nabla f(x_{k}),d_{k}\rangle+L_{f}\eta_{k}^{2}\tau_{k}^{2}+L_{f}\eta_{k}^{2}\|d_{k}\|^{2}.$
+
+The result follows by Lemma A.3 , by noting that
+
+$\displaystyle\langle\nabla f(x_{k}),d_{k}\rangle$ $\displaystyle=\langle d_{k}-\lambda_{k}\nabla g(x_{k}),d_{k}\rangle$ $\displaystyle=\|d_{k}\|^{2}-\lambda_{k}\langle\nabla g(x_{k}),d_{k}\rangle$ $\displaystyle\stackrel{{\scriptstyle\eqref{lem:helpful:1b}}}{{=}}\|d_{k}\|^{2}-\beta_{k}\lambda_{k}\|\nabla g(x_{k})\|^{2}+\rho_{k}\lambda_{k}^{2}$ $\displaystyle\stackrel{{\scriptstyle\eqref{lem:helpful:1d}}}{{\geq}}\|d_{k}\|^{2}-\beta_{k}^{2}\|\nabla g(x_{k})\|^{2}-\beta_{k}\|\nabla f(x_{k})\|\cdot\|\nabla g(x_{k})\|+\rho_{k}\lambda_{k}^{2},$
+
+and by bounding away $\rho_{k}\lambda_{k}^{2}\geq 0$ .
+
+For every $k\geq 0$ , almost surely,
+
+$\frac{\beta_{k}}{2}\|\nabla g(x_{k})\|^{2}\leq\frac{\delta_{g,k}}{\eta_{k}}+L_{g}\eta_{k}\|d_{k}\|^{2}+C_{g,k}.$
+
+By $L_{g}$ -smoothness of $g$ , mirroring the steps in the proof of Lemma A.7 ,
+
+$\displaystyle\ExpD{k}{g(x_{k+1})}$ $\displaystyle\leq g(x_{k})+\eta_{k}\|\nabla g(x_{k})\|\tau_{k}-\eta_{k}\langle\nabla g(x_{k}),d_{k}\rangle+\eta_{k}^{2}L_{g}\tau_{k}^{2}+\eta_{k}^{2}L_{g}\|d_{k}\|^{2}.$
+
+By Young’s Inequality, it holds that
+
+$\|\nabla g(x_{k})\|\tau_{k}\leq\frac{\beta_{k}\|\nabla g(x_{k})\|^{2}}{2}+\frac{\tau_{k}^{2}}{2\beta_{k}},$
+
+and by Lemma A.3 , we get that
+
+$\langle\nabla g(x_{k}),d_{k}\rangle\stackrel{{\scriptstyle\eqref{lem:helpful:1a}}}{{\geq}}\beta_{k}\|\nabla g(x_{k})\|^{2}-\rho_{k}\lambda_{k}\stackrel{{\scriptstyle\eqref{lem:helpful:1c}}}{{\geq}}\beta_{k}\|\nabla g(x_{k})\|^{2}-\beta_{k}\rho_{k}-\rho_{k}\frac{G_{f}}{2\sqrt{\rho_{k}}},$
+
+which concludes.
+
+Assume $\eta_{k}\leq\frac{1}{2(L_{f}+2L_{g})}$ and $0<\beta_{k}\leq 1$ . For every $k\geq 0$ , almost surely,
+
+$\|d_{k}\|^{2}\leq\frac{4}{\eta_{k}}\delta_{f,k}+\frac{8\beta_{k}\eta_{k}L_{g}+1}{\eta_{k}^{2}L_{g}}\delta_{g,k}+R_{k},$
+
+and
+
+$\frac{\beta_{k}}{2}\|\nabla g(x_{k})\|^{2}\leq 4L_{g}\delta_{f,k}+\frac{8L_{g}\beta_{k}\eta_{k}+2}{\eta_{k}}\delta_{g,k}+\eta_{k}L_{g}R_{k}+C_{g,k}.$
+
+Define $H_{k}=\frac{\delta_{g,k}}{\eta_{k}}+L_{g}\eta_{k}\|d_{k}\|^{2}+C_{g,k}$ , so that $H_{k}\geq\frac{\beta_{k}}{2}\|\nabla g(x_{k})\|^{2}$ by Lemma A.9 . Then, since $\beta_{k}^{2}\|\nabla g(x_{k})\|^{2}\leq 2\beta_{k}H_{k}$ and $\beta_{k}G_{f}\|\nabla g(x_{k})\|\leq\sqrt{2\beta_{k}}G_{f}\sqrt{H_{k}}$ , we deduce from Lemma A.7 that
+
+$\displaystyle(1-L_{f}\eta_{k})\|d_{k}\|^{2}$ $\displaystyle\leq\frac{\delta_{f,k}}{\eta_{k}}+2\beta_{k}H_{k}+\sqrt{2\beta_{k}}G_{f}\sqrt{H_{k}}+C_{f,k}$ $\displaystyle=\frac{\delta_{f,k}}{\eta_{k}}+\frac{2\beta_{k}\delta_{g,k}}{\eta_{k}}+2\beta_{k}L_{g}\eta_{k}\|d_{k}\|^{2}+\sqrt{2\beta_{k}}G_{f}\sqrt{H_{k}}+C_{f,k}+2\beta_{k}C_{g,k}.$
+
+As $1-L_{f}\eta_{k}-2\beta_{k}L_{g}\eta_{k}\geq\frac{1}{2}$ , we get
+
+$\|d_{k}\|^{2}\leq\frac{2\delta_{f,k}}{\eta_{k}}+\frac{4\beta_{k}\delta_{g,k}}{\eta_{k}}+2\sqrt{2\beta_{k}}G_{f}\sqrt{H_{k}}+2C_{f,k}+4\beta_{k}C_{g,k},$
+
+which may be rewritten as
+
+$\frac{H_{k}}{L_{g}\eta_{k}}\leq\frac{2\delta_{f,k}}{\eta_{k}}+\frac{4\beta_{k}\delta_{g,k}}{\eta_{k}}+\frac{\delta_{g,k}}{L_{g}\eta_{k}^{2}}+2\sqrt{2\beta_{k}}G_{f}\sqrt{L_{g}\eta_{k}}\sqrt{\frac{H_{k}}{L_{g}\eta_{k}}}+2C_{f,k}+4\beta_{k}C_{g,k}+\frac{C_{g,k}}{L_{g}\eta_{k}}.$
+
+Using Lemma A.1 with $x=\frac{H_{k}}{L_{g}\eta_{k}}$ , we get that
+
+$\frac{H_{k}}{L_{g}\eta_{k}}\leq\frac{4\delta_{f,k}}{\eta_{k}}+\frac{8\beta_{k}\delta_{g,k}}{\eta_{k}}+\frac{2\delta_{g,k}}{L_{g}\eta_{k}^{2}}+4C_{f,k}+8\beta_{k}C_{g,k}+\frac{2C_{g,k}}{L_{g}\eta_{k}}+8\beta_{k}G_{f}^{2}L_{g}\eta_{k},$
+
+which, equivalently, may be written as the first wanted inequality. Substituting this into Lemma A.9 yields the second claimed inequality.
+
+Assume $\eta_{k}\leq\frac{1}{2(L_{f}+2L_{g})}$ , $0<\beta_{k}\leq 1$ , $(\eta_{k})$ and $(\beta_{k})$ are nonincreasing, and $N_{K}$ is sampled according to ( 4 ). Then it holds that, for $K\geq 1$ ,
+
+$\Exp{\|\nabla g(x_{N_{K}})\|^{2}}\leq\frac{8\eta_{0}L_{g}}{\sum_{k=0}^{K-1}\eta_{k}\beta_{k}}\Delta_{f}+\frac{16\eta_{0}\beta_{0}L_{g}+4}{\sum_{k=0}^{K-1}\eta_{k}\beta_{k}}\Delta_{g}+\frac{2\sum_{k=0}^{K-1}\left(\eta_{k}^{2}L_{g}R_{k}+\eta_{k}C_{g,k}\right)}{{\sum_{k=0}^{K-1}\eta_{k}\beta_{k}}}.$
+
+Moreover, if $(\beta_{k}/\eta_{k})$ is nonincreasing,
+
+$\Exp{\|d_{N_{K}}\|^{2}}\leq\frac{4\beta_{0}}{\sum_{k=0}^{K-1}\eta_{k}\beta_{k}}\Delta_{f}+\frac{8\beta_{0}^{2}L_{g}+\frac{\beta_{0}}{\eta_{0}}}{L_{g}\sum_{k=0}^{K-1}\eta_{k}\beta_{k}}\Delta_{g}+\frac{\sum_{k=0}^{K-1}\eta_{k}\beta_{k}R_{k}}{\sum_{k=0}^{K-1}\eta_{k}\beta_{k}},$
+
+and, if $(\beta_{k}/\eta_{k})$ is nondecreasing,
+
+$\Exp{\|d_{N_{K}}\|^{2}}\leq\frac{\beta_{K-1}}{\eta_{K-1}}\left(\frac{4\eta_{0}}{\sum_{k=0}^{K-1}\eta_{k}\beta_{k}}\Delta_{f}+\frac{8L_{g}\beta_{0}\eta_{0}+1}{L_{g}{\sum_{k=0}^{K-1}\eta_{k}\beta_{k}}}\Delta_{g}+\frac{\sum_{k=0}^{K-1}\eta_{k}^{2}R_{k}}{\sum_{k=0}^{K-1}\eta_{k}\beta_{k}}\right).$
+
+Note that
+
+$\sum_{k=0}^{K-1}\Exp{\delta_{f,k}}=f(x_{0})-\Exp{f(x_{K})}\leq f(x_{0})-\inf f=\Delta_{f},$
+
+and, similarly, $\sum_{k=0}^{K-1}\Exp{\delta_{g,k}}\leq\Delta_{g}$ . Moreover, for any nonincreasing sequence $(w_{k})$ , summation by parts allows us to write
+
+$\displaystyle\sum_{k=0}^{K-1}w_{k}\Exp{\delta_{f,k}}$ $\displaystyle=(w_{0}(f(x_{0})-\inf f)-w_{K}\Exp{f(x_{K})-\inf f})+\sum_{k=0}^{K-1}\Exp{f(x_{k+1})-\inf f}(w_{k+1}-w_{k})$ $\displaystyle\leq w_{0}(f(x_{0})-\inf f),$
+
+which we shall use throughout this proof. A similar result of course holds for $g$ .
+
+We separate the proof of the three inequalities:
+
+For the first inequality, we multiply the second inequality of Lemma A.11 by $2\eta_{k}$ , take total expectations, and sum for $k=0,\ldots,K-1$ , to obtain
+
+$\sum_{k=0}^{K-1}\eta_{k}\beta_{k}\Exp{\|\nabla g(x_{k})\|^{2}}\leq 8L_{g}\sum_{k=0}^{K-1}\eta_{k}\Exp{\delta_{f,k}}+\sum_{k=0}^{K-1}(16\eta_{k}\beta_{k}L_{g}+4)\Exp{\delta_{g,k}}+2\sum_{k=0}^{K-1}\eta_{k}^{2}L_{g}R_{k}+\eta_{k}C_{g,k}.$
+
+As $(\eta_{k})$ and $(\eta_{k}\beta_{k})$ are nonincreasing, we can apply summation by parts to obtain the wanted inequality, after division by $\sum_{k=0}^{K-1}\eta_{k}\beta_{k}$ .
+
+By multiplying the first inequality of Lemma A.11 by $\eta_{k}\beta_{k}$ , we obtain
+
+$\sum_{k=0}^{K-1}\eta_{k}\beta_{k}\Exp{\|d_{k}\|^{2}}\leq 4\sum_{k=0}^{K-1}\beta_{k}\Exp{\delta_{f,k}}+\sum_{k=0}^{K-1}\frac{8\beta_{k}^{2}L_{g}+\frac{\beta_{k}}{\eta_{k}}}{L_{g}}\Exp{\delta_{g,k}}+\sum_{k=0}^{K-1}\eta_{k}\beta_{k}R_{k}.$
+
+As $(\beta_{k})$ and $(\beta_{k}/\eta_{k})$ are nonincreasing, we can apply summation by parts to obtain the wanted inequality, after division by $\sum_{k=0}^{K-1}\eta_{k}\beta_{k}$ .
+
+Finally, we multiply the first inequality of Lemma A.11 by $\eta_{k}^{2}$ , we obtain for $k\leq K-1$ , since $(\beta_{k}/\eta_{k})$ is nondecreasing,
+
+$\displaystyle\eta_{k}\beta_{k}\|d_{k}\|^{2}$ $\displaystyle\leq\frac{\beta_{k}}{\eta_{k}}\eta_{k}^{2}\|d_{k}\|^{2}$ $\displaystyle\leq\frac{\beta_{K-1}}{\eta_{K-1}}\left(4\eta_{k}\delta_{f,k}+\frac{8L_{g}\beta_{k}\eta_{k}+1}{L_{g}}\delta_{g,k}+\eta_{k}^{2}R_{k}\right).$
+
+As such, taking total expectation and summing for $k=0,\ldots,K-1$ yields
+
+$\sum_{k=0}^{K-1}\eta_{k}\beta_{k}\Exp{\|d_{k}\|^{2}}\leq\frac{\beta_{K-1}}{\eta_{K-1}}\left(4\sum_{k=0}^{K-1}\eta_{k}\Exp{\delta_{f,k}}+\sum_{k=0}^{K-1}\frac{8L_{g}\beta_{k}\eta_{k}+1}{L_{g}}\Exp{\delta_{g,k}}+\sum_{k=0}^{K-1}\eta_{k}^{2}R_{k}\right).$
+
+As $(\eta_{k})$ and $(\eta_{k}\beta_{k})$ are nonincreasing, we may apply summation by parts to obtain the wanted quantity, after division by $\sum_{k=0}^{K-1}\eta_{k}\beta_{k}$ .
+
+A.3 Proof of Corollary 3.1
+
+A.3.1 Horizon-Dependent Parameters
+
+We consider the constant parameter setting of Theorem A.13 , namely $\eta_{k}\equiv\eta,\beta_{k}\equiv\beta,\rho_{k}\equiv\rho,B_{f,k}\equiv B_{f},B_{g,k}\equiv B_{g}$ . This implies that $\tau_{k}\equiv\tau,C_{f,k}\equiv C_{f},C_{g,k}\equiv C_{g},R_{k}\equiv R$ .
+
+We assume that $\eta,\beta,\rho\leq 1$ and that $B_{f},B_{g}\geq 1$ . Therefore,
+
+$C_{f}=\mathcal{O}\left(\tau+\eta\tau^{2}\right)\quad\text{and}\quad C_{g}=\mathcal{O}\left(\beta\rho+\sqrt{\rho}+\frac{\tau^{2}}{\beta}+\eta\tau^{2}\right)=\mathcal{O}\left(\sqrt{\rho}+\frac{\tau^{2}}{\beta}\right),$
+
+so that
+
+$\displaystyle R=\mathcal{O}\left(C_{f}+\beta C_{g}+\frac{C_{g}}{\eta}+\beta\eta\right)$ $\displaystyle=\mathcal{O}\left(\tau+\eta\tau^{2}+\beta\sqrt{\rho}+\tau^{2}+\frac{\sqrt{\rho}}{\eta}+\frac{\tau^{2}}{\beta\eta}+\beta\eta\right)$ $\displaystyle=\mathcal{O}\left(\tau+\frac{\tau^{2}}{\beta\eta}+\frac{\sqrt{\rho}}{\eta}+\beta\eta\right)$
+
+Theorem A.13 thus yields
+
+$\displaystyle\Exp{\|d_{N_{K}}\|^{2}}$ $\displaystyle\leq\mathcal{O}\left(\frac{1}{\eta K}+\frac{\beta}{\eta K}+\frac{1}{\eta^{2}K}+R\right)$ $\displaystyle\leq\mathcal{O}\left(\frac{1}{\eta K}+\frac{\beta}{\eta K}+\frac{1}{\eta^{2}K}+\tau+\frac{\tau^{2}}{\beta\eta}+\frac{\sqrt{\rho}}{\eta}+\beta\eta\right)$ $\displaystyle\leq\mathcal{O}\left(\frac{1}{\eta^{2}K}+\tau+\frac{\tau^{2}}{\beta\eta}+\frac{\sqrt{\rho}}{\eta}+\beta\eta\right).$
+
+Balancing $\tau$ yields $\tau\propto\beta\eta$ . Balancing $\rho$ yields $\rho\propto\beta^{2}\eta^{4}$ .
+
+Finally, balancing $\beta$ yields $\beta\propto\eta^{-3}K^{-1}$ . In order to achieve $\tau\propto\beta\eta\propto\eta^{-2}K^{-1}$ , we must have
+
+$\frac{1}{B_{f}}+\frac{\beta^{2}}{B_{g}}+\frac{1}{\rho B_{g}}\propto\eta^{-4}K^{-2}\implies B_{f}\propto\eta^{4}K^{2},\quad B_{g}\propto\max(\eta^{-2},\eta^{6}K^{4}).$
+
+In that case, it holds that
+
+$\Exp{\|d_{N_{K}}\|^{2}}\leq\mathcal{O}(\eta^{-2}K^{-1}).$
+
+Moreover, Theorem A.13 also yields that
+
+$\displaystyle\Exp{\|\nabla g(x_{N_{K}})\|^{2}}$ $\displaystyle\leq\mathcal{O}\left(\frac{1}{\beta K}+\frac{1}{K}+\frac{1}{\eta\beta K}+\frac{\eta R}{\beta}+\frac{C_{g}}{\beta}\right)$ $\displaystyle\leq\mathcal{O}\left(\frac{1}{\beta K}+\frac{1}{K}+\frac{1}{\eta\beta K}+\frac{\eta\tau}{\beta}+\frac{\tau^{2}}{\beta^{2}}+\frac{\sqrt{\rho}}{\beta}+\eta^{2}+\frac{\sqrt{\rho}}{\beta}+\frac{\tau^{2}}{\beta^{2}}\right)$ $\displaystyle=\mathcal{O}\left(\frac{1}{\eta\beta K}+\frac{\eta\tau}{\beta}+\frac{\tau^{2}}{\beta^{2}}+\frac{\sqrt{\rho}}{\beta}+\eta^{2}\right).$
+
+Under the chosen parameters, the remaining terms are of order $\mathcal{O}(\eta^{2})$ or lower, so that
+
+$\Exp{\|\nabla g(x_{k})\|^{2}}\leq\mathcal{O}\left(\eta^{2}\right).$
+
+Setting $\eta\propto K^{-a}$ for $a\in(0,1/3)$ yields the wanted result.
+
+A.3.2 Anytime Parameters
+
+The parameter choice follows from the parameters selected in the finite-horizon setting. Under these choices, it holds that
+
+$\beta_{k}\propto(k+1)^{3a-1},\quad\rho_{k}\propto(k+1)^{2a-2},$
+
+$B_{f,k}\propto(k+1)^{2-4a},\quad B_{g,k}\propto(k+1)^{\max(2a,4-6a)}=(k+1)^{4-6a}.$
+
+Specifically,
+
+$\displaystyle\tau_{k}^{2}$ $\displaystyle=\mathcal{O}\left(\frac{1}{B_{f,k}}+\frac{\beta_{k}^{2}}{B_{g,k}}+\frac{1}{\rho_{k}B_{g,k}}\right)$ $\displaystyle=\mathcal{O}\left((k+1)^{4a-2}+(k+1)^{6a-2-(4-6a)}+(k+1)^{2-2a-(4-6a)}\right)$ $\displaystyle=\mathcal{O}((k+1)^{\max(12a-6,4a-2)})$ $\displaystyle=\mathcal{O}((k+1)^{4a-2})$
+
+Thus
+
+$C_{f,k}\propto\tau_{k}+\eta_{k}\tau_{k}^{2}\propto(k+1)^{2a-1}+(k+1)^{3a-2}\propto(k+1)^{2a-1},$
+
+and
+
+$\displaystyle C_{g,k}$ $\displaystyle\propto\beta_{k}\rho_{k}+\sqrt{\rho_{k}}+\frac{\tau_{k}^{2}}{\beta_{k}}+\eta_{k}\tau_{k}^{2}$ $\displaystyle\propto(k+1)^{5a-3}+(k+1)^{a-1}+(k+1)^{a-1}+(k+1)^{3a-2}$ $\displaystyle\propto(k+1)^{a-1}.$
+
+Therefore
+
+$\displaystyle R_{k}$ $\displaystyle\propto C_{f,k}+\beta_{k}C_{g,k}+\frac{C_{g,k}}{\eta_{k}}+\beta_{k}\eta_{k}$ $\displaystyle\propto(k+1)^{2a-1}+(k+1)^{4a-2}+(k+1)^{2a-1}+(k+1)^{2a-1}$ $\displaystyle\propto(k+1)^{2a-1},$
+
+and
+
+$R_{k}\eta_{k}\beta_{k}\propto(k+1)^{4a-2}\quad\text{and}\quad R_{k}\eta_{k}^{2}\propto(k+1)^{-1}.$
+
+As such, Theorem A.13 gives us that, if $(\beta_{k}/\eta_{k})\propto(k+1)^{4a-1}$ is nonincreasing, namely if $a\leq 1/4$ , then
+
+$\Exp{\|d_{N_{K}}\|^{2}}\leq\mathcal{O}\left(\frac{1+\sum_{k=0}^{K-1}(k+1)^{4a-2}}{\sum_{k=0}^{K-1}(k+1)^{2a-1}}\right)=\dcases\mathcal{O}(K^{-2a})\quad&\text{if $0<a<1/4$},\\ \mathcal{O}(K^{-1/2}\log(K))\text{if $a=1/4$},,$
+
+and if $(\beta_{k}/\eta_{k})\propto(k+1)^{4a-1}$ is nondecreasing, namely if $a\geq 1/4$ , then
+
+$\Exp{\|d_{N_{K}}\|^{2}}\leq\mathcal{O}\left(K^{4a-1}\frac{1+\sum_{k=0}^{K-1}(k+1)^{-1}}{\sum_{k=0}^{K-1}(k+1)^{2a-1}}\right)=\mathcal{O}(K^{2a-1}\log(K)),$
+
+which combined yields
+
+$\Exp{\|d_{N_{K}}\|^{2}}\leq\dcases\mathcal{O}(K^{-2a})\quad&\text{if $0<a<1/4$},\\ \mathcal{O}(K^{2a-1}\log(K))\text{if $1/4\leq a<1/3$}..$
+
+We also have
+
+$\Exp{\|\nabla g(x_{N_{K}})\|^{2}}\leq\mathcal{O}\left(\frac{1+\sum_{k=0}^{K-1}(k+1)^{-1}}{\sum_{k=0}^{K-1}(k+1)^{2a-1}}\right)=\mathcal{O}(K^{-2a}\log(K)).$
+
+Appendix B Experimental Setup
+
+The goal of the numerical example in Section 4 is to provide a toy example showcasing a comparison between the methods SDBGD, SDBPG, PR-SDBPG and VR-PR-SDBPG. In this section, we provide a complete description of the experiment, allowing for complete reproducability.
+
+Problem Setup. As mentioning in Section 4 , we select
+
+$f(x)=\sqrt{1+\|x-c\|^{2}}\quad\text{and}\quad g(x_{1},x_{2})=2-\cos(x_{1})-\exp(-x_{2}^{2}/2),$
+
+where $c=(7.1,1)$ . This choices implies that
+
+$\argmin g=\{(2\pi m,0)\colon m\in\mathbb{Z}\},$
+
+so that the solution to ( P ) is $(2\pi,0)$ . These functions satisfy our assumptions with $L_{f}=1,L_{g}=1,G_{f}=1$ .
+
+Stochastic Oracle. We having access to stochastic gradients given by
+
+$\nabla f_{\xi}(x)=\nabla f(x)+\xi\quad\text{and}\quad\nabla g_{\zeta}(x)=\nabla g(x)+\zeta,$
+
+where $\xi\sim\mathcal{N}(0,\sigma_{f}^{2}I)$ and $\zeta\sim\mathcal{N}(0,\sigma_{g}^{2}I)$ , so that assumption of uniformly bounded variance is satisfied. We select $\sigma_{f}=\sigma_{g}=0.5$ .
+
+Algorithmic Setup. All methods are implemented in an anytimes fashion. Our method, SDBGD, uses the anytime schedule described in Corollary 3.1 with $a=1/4$ . For the methods in Ahmadi et al. [ 1 ] , whose theory only cover horizon-dependent schedules, we form anytime schedules by replacing the horizon $K$ by the current effective horizon $k+1$ . Each method is started at the same initial point $x_{0}=(1.5,1.5)$ and is given the same stochastic oracle budget $\mathcal{B}=10^{8}$ .
+
+Parameter Selection. The choice of parameters is given in Table 2 . The powers of $t_{k}=(k+1)$ follow the theoretical results, whereas the proportionality constants are chosen manually and not varied between runs.
+
+Table 2: Parameter choices for the compared methods. Here, $t_{k}=k+1$ for convenience.
+
+Oracle Accounting. During iteration $k$ , the methods SDBGD, SDBPG and PR-SDBPG use $B_{f,k}+B_{g,k}$ stochastic oracle calls. Method VR-PR-SDBPG makes use of $2(B_{f,k}+B_{g,k})$ . An iteration is executed only if its complete oracle cost fits within the remaining oracle budget.
+
+Evaluation Protocol. We perform $10$ independent runs, and plot the empirical mean of the upper-level stationarity measure $\|d_{k}\|^{2}$ and if the lower-level stationarity measure $\|\nabla g(x_{k})\|^{2}$ . We note that full gradients are only used for evaluation purposes and are never called by the algorithm.
+
+Computer Resources. The experiment is written in Python 3.13, and was executed on an Apple Silicon MacBook Pro, with a M5 chip and 16GB of RAM.
+
+Code Availability. The code is available on the author’s GitHub page: https://github.com/DanielCortild/Stochastic-Nonconvex-Bilevel .

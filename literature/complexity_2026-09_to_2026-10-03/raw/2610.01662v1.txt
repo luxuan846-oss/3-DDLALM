@@ -1,0 +1,1491 @@
+Content selection saved. Describe the issue below:
+
+Lower Bounds for Stochastic First-Order Algorithms with Variance Reduction in Nonconvex–Concave Minimax Optimization Thanks: This work was supported by the National Key R&D Program of China (Grant Nos. 2025YFA1017801 and 2025YFA1017800) and the National Natural Science Foundation of China (Grant No. 12471294).
+
+We establish complexity lower bounds for stochastic first-order algorithms in nonconvex–concave minimax optimization, allowing algorithms to use variance reduction. Our main contribution is a lower bound for a zero-respecting algorithm class that permits variance reduction, extending beyond the algorithmic restrictions imposed by some existing lower bounds. We consider objectives with an $L$ -Lipschitz continuous joint gradient, a compact convex dual domain of Euclidean radius at most $D_{Y}$ , and a primal value function, defined by maximizing the objective over the dual variable, with initial suboptimality at most $\Delta$ . The target accuracy $\varepsilon$ is measured by the gradient norm of the Moreau envelope of the constrained primal value function with parameter $1/(2L)$ . Under an unbiased stochastic first-order oracle with variance at most $\sigma^{2}$ and mean-square smoothness, we prove the lower bound $\Omega\!\left(L^{2}D_{Y}\Delta\varepsilon^{-3}+L^{3}D_{Y}^{2}\Delta\sigma^{2}\varepsilon^{-6}\right)$ . This result quantifies the dependence on accuracy, dual-domain radius, and oracle noise even when variance reduction is allowed. We also establish complementary lower bounds for nonconvex–strongly-concave minimax optimization. With dual strong-concavity parameter $\mu>0$ and condition number $\kappa:=L/\mu$ , we obtain $\Omega\!\left(L\Delta\sqrt{\kappa}\,\varepsilon^{-2}+L\Delta\kappa\sigma^{2}\varepsilon^{-4}\right)$ under the bounded-variance oracle model. Under the additional mean-square smoothness condition with constant $\bar{L}$ , we obtain $\Omega\!\left(L\Delta\sqrt{\kappa}\,\varepsilon^{-2}+\Delta\bar{L}\sigma\kappa^{3/2}\varepsilon^{-3}\right)$ . Together, these results identify complexity barriers across the concave and strongly concave regimes, with the main nonconvex–concave bound remaining valid for algorithms that use variance reduction.
+
+1 Introduction
+
+Minimax optimization provides a natural framework for robust learning, adversarial training, and related problems in which a decision is optimized against a worst-case response [ 9 , 10 ] . We study the stochastic first-order oracle complexity of problems of the form
+
+$\min_{x\in X}\Phi(x),\qquad\Phi(x):=\max_{y\in Y}F(x,y),$
+
+where $X\subseteq\mathbb{R}^{n}$ is closed and convex, $Y\subseteq\mathbb{R}^{p}$ is compact and convex, and $F$ is jointly smooth. Our main focus is the nonconvex–concave (NC–C) setting, in which $F$ may be nonconvex in $x$ and is concave in $y$ . We also consider the nonconvex–strongly-concave (NC–SC) setting as a complementary regime. Strong concavity guarantees a unique dual maximizer and a differentiable primal value function, whereas the NC–C value function may be nonsmooth. We therefore measure stationarity through the Moreau envelope of the constrained primal value function.
+
+Existing research has established first-order upper and lower bounds for both minimax regimes. In particular, deterministic NC–C optimization has an $\mathcal{O}(\varepsilon^{-3})$ complexity dependence, while stochastic methods attain an $\mathcal{O}(\varepsilon^{-6})$ dependence under bounded variance and mean-square smoothness [ 14 , 13 , 8 , 16 ] . However, some existing stochastic lower bounds restrict oracle access in ways that exclude variance reduction. They therefore do not directly resolve whether the same complexity barrier persists for algorithms allowed to use coupled gradient evaluations with a shared random sample. This distinction matters because variance reduction improves the stochastic accuracy dependence in single-level nonconvex optimization [ 1 , 4 ] .
+
+Our central goal is to establish lower bounds for stochastic first-order NC–C minimax optimization when variance reduction is allowed . We construct a mean-square-smooth stochastic oracle and prove a lower bound for zero-respecting algorithms that permits the same-sample queries used by variance-reduction methods. The result retains the $\mathcal{O}(\varepsilon^{-6})$ stochastic dependence, extending the scope of existing lower bounds rather than introducing a new accuracy exponent. We also develop complementary NC–SC lower bounds under bounded variance and mean-square smoothness, using a common chain-based construction.
+
+1.1 Related work
+
+Nonconvex optimization.
+
+Carmon et al. [ 2 , 3 ] developed zero-chain constructions and established the deterministic first-order lower bound $\Omega(L\Delta\varepsilon^{-2})$ under an $L$ -Lipschitz gradient and an initial function-value gap bounded by $\Delta$ . For stochastic first-order oracles, Arjevani et al. [ 1 ] established $\Omega(L\Delta\varepsilon^{-2}+L\Delta\sigma^{2}\varepsilon^{-4})$ under bounded variance, where $\sigma^{2}$ bounds the oracle variance. Under mean-square smoothness with constant $\bar{L}$ , they obtained $\Omega(\Delta\bar{L}\sigma\varepsilon^{-3}+(\Delta\bar{L}+\sigma^{2})\varepsilon^{-2})$ . This matches the accuracy dependence of recursive variance-reduction methods such as SPIDER [ 4 ] . Their oracle model also permits the same-sample gradient evaluations considered here, but their single-level hard instances do not capture primal–dual interactions.
+
+Nonconvex–concave minimax optimization.
+
+Under Moreau-envelope stationarity, Wu et al. [ 14 ] established the deterministic lower bound $\Omega(L^{2}D_{Y}\Delta\varepsilon^{-3})$ and the bounded-variance stochastic lower bound $\Omega(L^{3}D_{Y}^{2}\Delta\sigma^{2}\varepsilon^{-6})$ , where $D_{Y}$ bounds the dual-domain radius. Pan et al. [ 13 ] obtained the same deterministic $\varepsilon^{-3}$ order under their normalization. Pan and Li [ 12 ] considered a different inner structure satisfying a Polyak–Łojasiewicz condition.
+
+On the upper-bound side, deterministic first-order methods achieve essentially $\widetilde{O}(L^{2}D_{Y}\Delta\varepsilon^{-3})$ complexity [ 8 ] . In the stochastic setting, SAPD+ and SPDE achieve $O(\varepsilon^{-6})$ oracle complexity under bounded variance, while VR-SPDE achieves $O(\varepsilon^{-6})$ under mean-square smoothness [ 16 ] . These results motivate a lower bound that explicitly allows variance reduction. Our main result supplies such a bound: it preserves the $\mathcal{O}(\varepsilon^{-6})$ stochastic barrier under mean-square smoothness for a zero-respecting algorithm class with same-sample oracle access.
+
+Nonconvex–strongly-concave minimax optimization.
+
+Let $\kappa:=L/\mu$ , where $\mu$ is the dual strong-concavity parameter. Li et al. [ 7 ] established the deterministic lower bound $\Omega(L\Delta\sqrt{\kappa}\,\varepsilon^{-2})$ for zero-respecting first-order algorithms and the bounded-variance stochastic lower bound $\Omega(L\Delta\sqrt{\kappa}\,\varepsilon^{-2}+L\Delta\kappa^{1/3}\sigma^{2}\varepsilon^{-4})$ . Zhang et al. [ 17 ] studied related deterministic and finite-sum bounds using a different construction and oracle formulation. More recently, Zhang et al. [ 18 ] established $\Omega(L\Delta\kappa\sigma^{2}\varepsilon^{-4})$ under bounded variance and $\Omega(\bar{L}\Delta\sigma\bar{\kappa}^{3/2}\varepsilon^{-3})$ under mean-square smoothness, with $\bar{\kappa}$ denoting the condition parameter used in their formulation. Their hard instances use a quadratic lifting of a single-level nonconvex zero-chain.
+
+On the upper-bound side, Lin et al. [ 8 ] established $\widetilde{O}(L\Delta\sqrt{\kappa}\,\varepsilon^{-2})$ deterministic complexity. SPDE and VR-SPDE achieve $O(\kappa\varepsilon^{-4})$ and $O(\kappa^{3/2}\varepsilon^{-3})$ stochastic oracle complexity, respectively [ 16 ] . Our NC–SC results complement existing lower bounds through a product-weighted chain that also underlies our main NC–C construction. Under the same stationarity criterion and stochastic oracle conventions, the stochastic terms have the same $\kappa$ and $\varepsilon$ dependences as the corresponding upper bounds.
+
+1.2 Main results and contributions
+
+Our main contribution is an NC–C lower bound for stochastic first-order algorithms that are allowed to use variance reduction. The NC–SC results provide complementary bounds and demonstrate how a common construction applies to both minimax regimes.
+
+An NC–C lower bound allowing variance reduction. We establish $\Omega(L^{2}D_{Y}\Delta\varepsilon^{-3}+L^{3}D_{Y}^{2}\Delta\sigma^{2}\varepsilon^{-6})$ for zero-respecting algorithms under an unbiased, bounded-variance, mean-square-smooth oracle; see Theorem 4.8 . The algorithm class permits same-sample queries and therefore allows variance reduction. We realize a smooth nonconvex zero-chain as the value function of a concave minimax problem with a bounded dual domain. A dual path delays coordinate revelation, while a Bernoulli gate preserves this delay and the value function under mean-square smoothness. The resulting stochastic lower bound has the same $\mathcal{O}(\varepsilon^{-6})$ dependence as VR-SPDE [ 16 ] .
+
+A complementary bounded-variance NC–SC lower bound. We establish $\Omega(L\Delta\sqrt{\kappa}\,\varepsilon^{-2}+L\Delta\kappa\sigma^{2}\varepsilon^{-4})$ ; see Theorem 6.5 . A quadratic strongly-concave dual lift produces the deterministic propagation term, and a clipped stochastic dual potential hides the next block with positive probability, yielding the stochastic term.
+
+A complementary mean-square-smooth NC–SC lower bound. We establish $\Omega(L\Delta\sqrt{\kappa}\,\varepsilon^{-2}+\Delta\bar{L}\sigma\kappa^{3/2}\varepsilon^{-3})$ ; see Theorem 7.6 . We retain the delayed strongly-concave chain and replace the clipped noise potential by a smooth stochastic potential whose sample gradients satisfy both bounded variance and mean-square smoothness. These NC–SC results complement recent work rather than claim priority for this regime.
+
+Table 1 summarizes selected stochastic first-order upper and lower bounds.
+
+Table 1: Selected stochastic first-order complexity bounds for NC–SC and NC–C minimax optimization. Only the dependence on $\kappa$ and $\varepsilon$ is displayed. MSS denotes mean-square smoothness, and ZR denotes zero-respecting algorithms.
+
+Notation, definitions, and assumptions.
+
+The norm $\|\cdot\|$ and inner product $\langle\cdot,\cdot\rangle$ are Euclidean. For a differentiable vector-valued map $G$ , $\nabla G$ denotes its Jacobian, so $\nabla G(u)^{\top}v$ is the gradient of $\langle G(u),v\rangle$ . A function is $C^{1,1}$ if it is continuously differentiable with Lipschitz gradient. The notation $O$ and $\Omega$ suppresses constant factors, while $\widetilde{O}$ additionally suppresses logarithmic factors.
+
+For our problem classes, $L$ is the joint gradient Lipschitz constant, $D_{Y}$ bounds the dual-domain radius, and $\Delta$ bounds the initial value-function gap: $\max_{y\in Y}\|y\|\leq D_{Y}$ and $\Phi(0)-\inf_{x\in X}\Phi(x)\leq\Delta$ , with $0\in X$ . In the NC–SC setting, $\mu>0$ is the dual strong-concavity parameter and $\kappa=L/\mu$ . Let $\overline{\Phi}:=\Phi+\iota_{X}$ , where $\iota_{X}$ is zero on $X$ and $+\infty$ outside $X$ . Its Moreau envelope with parameter $\lambda>0$ is $\overline{\Phi}_{\lambda}(z):=\inf_{u\in X}\{\Phi(u)+\|u-z\|^{2}/(2\lambda)\}$ . We use $S_{\rm OS}(z):=\|\nabla\overline{\Phi}_{1/(2L)}(z)\|$ and require a random output $\widehat{z}$ to satisfy $\mathbb{E}[S_{\rm OS}(\widehat{z})^{2}]\leq\varepsilon^{2}$ . This criterion applies to both minimax regimes, including nonsmooth value functions.
+
+For a joint query point $z=(x,y)$ and random sample $\omega$ , the oracle returns $G(z;\omega)$ satisfying $\mathbb{E}_{\omega}[G(z;\omega)]=\nabla F(z)$ and $\mathbb{E}_{\omega}\|G(z;\omega)-\nabla F(z)\|^{2}\leq\sigma^{2}$ . Under mean-square smoothness, it also satisfies $\mathbb{E}_{\omega}\|G(z;\omega)-G(z^{\prime};\omega)\|^{2}\leq\bar{L}^{2}\|z-z^{\prime}\|^{2}$ , with the same sample used at both points. Zero-respecting algorithms cannot activate coordinates before they are revealed by oracle responses, but our mean-square-smooth model permits same-sample queries. Formal definitions and parameter conditions are given in Section 2 and the corresponding theorems.
+
+Organization.
+
+Section 2 defines the function classes, stationarity criteria, and oracle models. Section 3 develops the common smooth chain. Section 4 proves the NC–C result. Section 5 constructs the deterministic delayed chain for NC–SC problems, and Sections 6 and 7 establish the corresponding bounded-variance and mean-square-smooth lower bounds. Section 8 concludes the paper.
+
+2 Problem setup
+
+We specify the function classes, the stationarity criteria, the zero-respecting algorithm classes, and the coordinate revelation framework used in the proofs.
+
+2.1 Function classes and stationarity measures
+
+For a differentiable objective $F:X\times Y\to\mathbb{R}$ , let
+
+$\Phi(x):=\max_{y\in Y}F(x,y),\qquad x\in X.$
+
+No convexity is required in the primal variable.
+
+Given $L>0$ , $\mu\geq 0$ , $\Delta>0$ , and $D>0$ , let $\mathcal{F}_{\mathrm{NC}\text{-}\mu\mathrm{C}}(L,\mu,\Delta,D)$ denote the class of continuously differentiable objectives $F:X\times Y\to\mathbb{R}$ , over all finite dimensions, satisfying:
+
+$X\subseteq\mathbb{R}^{d_{x}}$ and $Y\subseteq\mathbb{R}^{d_{y}}$ are nonempty closed convex sets containing zero, and
+
+$\operatorname{diam}(Y)\leq D.$
+
+$F$ is jointly $L$ -smooth:
+
+$\|\nabla F(z)-\nabla F(z^{\prime})\|\leq L\|z-z^{\prime}\|,\qquad z,z^{\prime}\in X\times Y.$
+
+For every $x\in X$ , the function $F(x,\cdot)$ is concave on $Y$ .
+
+The primal value function
+
+$\Phi(x):=\max_{y\in Y}F(x,y)$
+
+satisfies
+
+$\Phi(0)-\inf_{x\in X}\Phi(x)\leq\Delta.$
+
+For every $x\in X$ and $y,y^{\prime}\in Y$ ,
+
+$F(x,y^{\prime})\leq F(x,y)+\langle\nabla_{y}F(x,y),y^{\prime}-y\rangle-\frac{\mu}{2}\|y^{\prime}-y\|^{2}.$
+
+Strong concavity bounds $F(x,\cdot)$ ensures existence and uniqueness of its maximizer $y^{*}(x)$ on the closed set $Y$ . The value function is differentiable and satisfies
+
+$\nabla\Phi(x)=\nabla_{x}F(x,y^{*}(x)).$
+
+For the NC–C class, define the extended value function $\phi:=\Phi+\iota_{X}$ . For $0<\lambda<L^{-1}$ , its proximal point and Moreau envelope are
+
+$\displaystyle p_{\lambda}(x)$ $\displaystyle:=\operatorname*{arg\,min}_{w\in X}\left\{\Phi(w)+\frac{1}{2\lambda}\|w-x\|^{2}\right\},$ (2.1) $\displaystyle\phi_{\lambda}(x)$ $\displaystyle:=\min_{w\in X}\left\{\Phi(w)+\frac{1}{2\lambda}\|w-x\|^{2}\right\}.$
+
+The envelope is continuously differentiable, with
+
+$\nabla\phi_{\lambda}(x)=\lambda^{-1}(x-p_{\lambda}(x)).$
+
+Let $(\boldsymbol{x}^{0},\boldsymbol{y}^{0})=(0,0)$ . For every $t\geq 0$ , let
+
+$\mathcal{S}_{x}^{t}:=\bigcup_{i=0}^{t}\left(\operatorname{supp}(\boldsymbol{x}^{i})\cup\operatorname{supp}(\boldsymbol{g}_{x}^{i})\right),\qquad\mathcal{S}_{y}^{t}:=\bigcup_{i=0}^{t}\left(\operatorname{supp}(\boldsymbol{y}^{i})\cup\operatorname{supp}(\boldsymbol{g}_{y}^{i})\right),$
+
+where $(\boldsymbol{g}_{x}^{i},\boldsymbol{g}_{y}^{i})$ is the gradient response returned by the oracle at the $i$ -th query. A first-order algorithm is called zero-respecting if every feasible iterate $(\boldsymbol{x}^{t+1},\boldsymbol{y}^{t+1})\in X\times Y$ satisfies
+
+$\operatorname{supp}(\boldsymbol{x}^{t+1})\subseteq\mathcal{S}_{x}^{t},\qquad\operatorname{supp}(\boldsymbol{y}^{t+1})\subseteq\mathcal{S}_{y}^{t}.$
+
+2.2 Oracle and algorithm classes
+
+The stochastic first-order oracle of a differentiable function $f:\mathcal{X}\times\mathcal{Y}\rightarrow\mathbb{R}$ returns
+
+$\mathcal{O}_{f}^{\text{sfo}}(x,y)=(f(x,y),\widehat{\nabla}_{x}f(x,y;\xi),\widehat{\nabla}_{y}f(x,y;\xi)),\qquad(x,y)\in\mathcal{X}\times\mathcal{Y},$
+
+where $\xi$ is a random variable satisfying
+
+$\mathbb{E}_{\xi}[\widehat{\nabla}f(x,y;\xi)]=\nabla f(x,y),\qquad\mathbb{E}_{\xi}\left[\|\widehat{\nabla}f(x,y;\xi)-\nabla f(x,y)\|^{2}\right]\leq\sigma^{2}.$
+
+Under the mean-square smoothness (MSS) assumption, we additionally require
+
+$\mathbb{E}_{\xi}\!\left[\left\|\widehat{\nabla}f(x,y;\xi)-\widehat{\nabla}f(x^{\prime},y^{\prime};\xi)\right\|^{2}\right]\leq\bar{L}^{2}\left\|(x,y)-(x^{\prime},y^{\prime})\right\|^{2},\qquad(x,y),(x^{\prime},y^{\prime})\in\mathcal{X}\times\mathcal{Y},$
+
+where the same random variable $\xi$ is used at both query points.
+
+Let $(\boldsymbol{x}^{0},\boldsymbol{y}^{0})=(0,0)$ . For every $t\geq 0$ , let
+
+$\mathcal{S}_{x}^{t}:=\bigcup_{i=0}^{t}\left(\operatorname{supp}(\boldsymbol{x}^{i})\cup\operatorname{supp}(\boldsymbol{g}_{x}^{i})\right),\qquad\mathcal{S}_{y}^{t}:=\bigcup_{i=0}^{t}\left(\operatorname{supp}(\boldsymbol{y}^{i})\cup\operatorname{supp}(\boldsymbol{g}_{y}^{i})\right),$
+
+where $(\boldsymbol{g}_{x}^{i},\boldsymbol{g}_{y}^{i})$ is the gradient response returned by the oracle at the $i$ -th query. A first-order algorithm is called zero-respecting if every feasible iterate $(\boldsymbol{x}^{t+1},\boldsymbol{y}^{t+1})\in X\times Y$ satisfies
+
+$\operatorname{supp}(\boldsymbol{x}^{t+1})\subseteq\mathcal{S}_{x}^{t},\qquad\operatorname{supp}(\boldsymbol{y}^{t+1})\subseteq\mathcal{S}_{y}^{t}.$
+
+2.3 Zero-chain framework
+
+For $u\in\mathbb{R}^{d}$ and $\theta\geq 0$ , define
+
+$\operatorname{prog}_{\theta}(u):=\max\bigl(\{j\in[d]:|u_{j}|>\theta\}\cup\{0\}\bigr).$
+
+In particular, $\operatorname{prog}_{0}(u)$ is the largest index in the support of $u$ .
+
+For $z\in\mathbb{R}^{d}$ , define
+
+$\operatorname{prog}_{0}(z):=\max\bigl(\{j\in[d]:z_{j}\neq 0\}\cup\{0\}\bigr).$
+
+A differentiable function $F:\mathbb{R}^{d}\to\mathbb{R}$ is a first-order zero-chain if, for every $z\in\mathbb{R}^{d}$ ,
+
+$\operatorname{prog}_{0}(\nabla F(z))\leq\min\{\operatorname{prog}_{0}(z)+1,d\}.$
+
+Let $p\in(0,1]$ , and let $f:\mathcal{X}\subseteq\mathbb{R}^{d}\rightarrow\mathbb{R}$ be a differentiable function equipped with a stochastic first-order oracle $\mathcal{O}_{f}^{\text{sfo}}(\boldsymbol{x})=(f(\boldsymbol{x}),\widehat{\nabla}f(\boldsymbol{x};\xi))$ . We call $f$ a probability- $p$ zero-chain with respect to this oracle if, for every $\boldsymbol{x}\in\mathcal{X}$ with $r:=\text{prog}_{0}(\boldsymbol{x})<d$ ,
+
+$\mathbb{P}_{\xi}\left(\text{prog}_{0}(\widehat{\nabla}f(\boldsymbol{x};\xi))=r+1\right)\leq p,\qquad\mathbb{P}_{\xi}\left(\text{prog}_{0}(\widehat{\nabla}f(\boldsymbol{x};\xi))>r+1\right)=0.$
+
+Here, the probability is taken over the randomness of the oracle.
+
+3 Common hard-instance components
+
+We construct a common zero-chain $\varphi_{m}:\mathbb{R}^{m}\to\mathbb{R}$ whose smoothness, unfinished-chain gradient barrier, and initial gap are uniform in the dimension:
+
+$\displaystyle\operatorname{prog}_{0}(\nabla\varphi_{m}(u))$ $\displaystyle\leq\operatorname{prog}_{0}(u)+1,$ (3.1) $\displaystyle\inf_{\{u\in\mathbb{R}^{m}:\,u_{m}\leq 1/2\}}\|\nabla\varphi_{m}(u)\|$ $\displaystyle\geq c_{b},$ (3.2) $\displaystyle\operatorname{Lip}(\nabla\varphi_{m})$ $\displaystyle\leq C_{\varphi},\qquad\varphi_{m}(0)-\inf\varphi_{m}=O(m).$ (3.3)
+
+The decomposition $\varphi_{m}=H_{m}+\|G\|^{2}$ will support both concave and strongly-concave saddle realizations.
+
+Set $q_{*}=2\pi/3$ and define the activation function
+
+$\theta(t)=\min\{\pi/2,\max\{0,q_{*}(t-1/4)\}\},\qquad S(t)=\begin{cases}0,&t\leq 1/4,\\ \sin^{2}\theta(t),&1/4<t<1,\\ 1,&t\geq 1.\end{cases}$
+
+Next define
+
+$\gamma(t)=\begin{cases}t/4,&|t|\leq 1,\\ \dfrac{\operatorname{sgn}(t)}{4}\left(2-\dfrac{(3-|t|)^{2}}{4}\right),&1<|t|<3,\\ \operatorname{sgn}(t)/2,&|t|\geq 3.\end{cases}$
+
+The function $\gamma$ is $C^{1,1}$ , nondecreasing, and satisfies $\gamma(0)=0$ , $\gamma^{\prime}(0)=1/4$ , and $|\gamma|\leq 1/2$ . The positive decreasing profile
+
+$\mathcal{K}(t)=\frac{3}{10}\bigl(1+\gamma(t)^{2}\bigr)-\frac{2}{5}\gamma(t),\qquad\mathcal{K}^{\prime}(t)=\left(\frac{3}{5}\gamma(t)-\frac{2}{5}\right)\gamma^{\prime}(t)\leq 0.$
+
+satisfies $k_{-}:=7/40\leq\mathcal{K}(t)\leq 23/40=:k_{+}$ and $\mathcal{K}^{\prime}(0)=-1/10$ . Finally, define the negative-tail penalty
+
+$J(t)=\begin{cases}0,&t\geq-1/2,\\ (t+1/2)^{2}/2,&-3/2<t<-1/2,\\ -t-1,&t\leq-3/2.\end{cases}$ (3.4)
+
+It is nonnegative and $C^{1,1}$ , with $J^{\prime}(0)=0$ and $J^{\prime}(t)=-1$ for $t\leq-3/2$ .
+
+3.1 Construction of the common chain
+
+For $m\geq 1$ and $u\in\mathbb{R}^{m}$ , define
+
+$P_{0}(u)=1,\qquad P_{i}(u)=\prod_{j=1}^{i}S(u_{j}),\qquad W_{i}(u)=P_{i-1}(u)\bigl(1-S(u_{i})\bigr),\quad i\in[m].$ (3.5)
+
+Since $W_{i}=P_{i-1}-P_{i}$ ,
+
+$\sum_{i=1}^{m}W_{i}(u)=1-P_{m}(u)\leq 1.$
+
+Moreover, $W_{i}(u)\neq 0$ implies $S(u_{j})>0$ for $j<i$ , while $u_{1},\ldots,u_{i-1}\geq 1$ and $u_{i}=0$ imply $W_{i}(u)=1$ . Define
+
+$\displaystyle G_{i}(u)$ $\displaystyle=W_{i}(u)\sqrt{\mathcal{K}(u_{i})},\qquad G(u)=(G_{1}(u),\ldots,G_{m}(u)),$ $\displaystyle Q_{m}(u)$ $\displaystyle=\|G(u)\|^{2}=\sum_{i=1}^{m}W_{i}(u)^{2}\mathcal{K}(u_{i}).$
+
+At an unfinished frontier,
+
+$\partial_{i}\!\left[W_{i}(u)^{2}\mathcal{K}(u_{i})\right]=\mathcal{K}^{\prime}(0)=-\frac{1}{10}.$
+
+The square-norm representation also yields the exact strongly-concave lift
+
+$\max_{y\in\mathbb{R}^{m}}\left\{\sqrt{2\mu\alpha}\langle G(x/\beta),y\rangle-\frac{\mu}{2}\|y\|^{2}\right\}=\alpha\|G(x/\beta)\|^{2},$
+
+whose maximizer is shown feasible in Lemma 6.1 . The common chain is
+
+$H_{m}(u)=-4\sum_{i=1}^{m}S(u_{i})+\sum_{i=1}^{m}J(u_{i}),\qquad\varphi_{m}(u)=H_{m}(u)+Q_{m}(u)=H_{m}(u)+\|G(u)\|^{2}.$ (3.6)
+
+The following estimates are independent of $m$ .
+
+There are constants $C_{1},C_{2}>0$ such that, for all $m\geq 1$ and $u,u^{\prime},v\in\mathbb{R}^{m}$ ,
+
+$\sum_{i=1}^{m}W_{i}(u)\leq 1,\qquad\|G(u)\|^{2}\leq k_{+},$
+
+$\displaystyle\|G(u)-G(u^{\prime})\|$ $\displaystyle\leq C_{1}\|u-u^{\prime}\|,\qquad\|\nabla G(u)^{\top}v\|\leq C_{1}\|v\|_{\infty},$ (3.7) $\displaystyle\|\nabla G(u)^{\top}v-\nabla G(u^{\prime})^{\top}v\|$ $\displaystyle\leq C_{2}\|v\|\,\|u-u^{\prime}\|.$ (3.8)
+
+The coordinatewise bounds for $S$ and $J$ give
+
+$\displaystyle\|\nabla H_{m}(u)-\nabla H_{m}(u^{\prime})\|$ $\displaystyle\leq H_{0}\|u-u^{\prime}\|,\qquad H_{0}:=8q_{*}^{2}+1,$ $\displaystyle\|\nabla H_{m}(u)\|$ $\displaystyle\leq B_{H}\sqrt{m},\qquad B_{H}:=4q_{*}+1.$
+
+Set
+
+$C_{\varphi}:=H_{0}+2(C_{1}^{2}+C_{2}\sqrt{k_{+}})<88,\qquad c_{b}:=\frac{3}{160}.$
+
+The numerical bounds $H_{0}<181/5$ , $B_{H}<47/5$ , and $B_{H}+2C_{1}\sqrt{k_{+}}<15$ yield the next two structural properties.
+
+The function $\varphi_{m}$ is $C^{1,1}$ , and
+
+$\displaystyle\varphi_{m}(0)-\inf_{u}\varphi_{m}(u)$ $\displaystyle\leq\frac{43}{10}m,\qquad\|\nabla\varphi_{m}(u)\|\leq 15\sqrt{m},$ $\displaystyle\|\nabla\varphi_{m}(u)-\nabla\varphi_{m}(u^{\prime})\|$ $\displaystyle\leq C_{\varphi}\|u-u^{\prime}\|.$
+
+If $u_{m}\leq 1/2$ , then
+
+$\|\nabla\varphi_{m}(u)\|\geq c_{b}.$ (3.9)
+
+Let $0\leq r<m$ . If $u_{j}=0$ for every $j>r$ , then $\nabla H_{m}(u)$ is supported on the first $r$ coordinates and $\nabla Q_{m}(u)$ on the first $r+1$ coordinates. Hence
+
+$\operatorname{prog}_{0}(u)\leq r\quad\Longrightarrow\quad\operatorname{prog}_{0}(\nabla\varphi_{m}(u))\leq r+1.$
+
+4 The NC–C lower bound under mean-square smoothness
+
+We realize the common chain as the value function of a concave saddle problem. A long dual path gives the deterministic term, while a Bernoulli-gated four-node path gives the stochastic term under mean-square smoothness.
+
+4.1 A concave realization of the common chain
+
+For $n\geq 2$ , set
+
+$\tau_{n}:=\frac{1}{2(n-1)},\qquad\vartheta_{n}:=\frac{1}{\sqrt{2(n-1)}},$
+
+and define the symmetric tridiagonal matrix
+
+$B_{n}:=\begin{pmatrix}1+\tau_{n}&-1&0&\cdots&0\\ -1&2&-1&\ddots&\vdots\\ 0&-1&2&\ddots&0\\ \vdots&\ddots&\ddots&2&-1\\ 0&\cdots&0&-1&1+\tau_{n}\end{pmatrix}\in\mathbb{R}^{n\times n}.$ (4.1)
+
+Then, for every $v\in\mathbb{R}^{n}$ ,
+
+$v^{\mathsf{T}}B_{n}v=\sum_{j=1}^{n-1}(v_{j}-v_{j+1})^{2}+\frac{v_{1}^{2}+v_{n}^{2}}{2(n-1)}.$
+
+The endpoint terms make $B_{n}$ positive definite. For $u\in\mathbb{R}^{m}$ and $v=(v^{1},\ldots,v^{m})\in\mathbb{R}^{mn}$ , with $v^{i}\in\mathbb{R}^{n}$ , set
+
+$\mathcal{D}_{m,n}(u,v)=H_{m}(u)-\frac{1}{2}\sum_{i=1}^{m}(v^{i})^{\mathsf{T}}B_{n}v^{i}+\vartheta_{n}\sum_{i=1}^{m}W_{i}(u)\bigl(v_{1}^{i}-\gamma(u_{i})v_{n}^{i}\bigr).$ (4.2)
+
+For every $n\geq 2$ ,
+
+$\displaystyle e_{1}^{\mathsf{T}}B_{n}^{-1}e_{1}=e_{n}^{\mathsf{T}}B_{n}^{-1}e_{n}$ $\displaystyle=\frac{6(n-1)}{5},$ $\displaystyle e_{1}^{\mathsf{T}}B_{n}^{-1}e_{n}$ $\displaystyle=\frac{4(n-1)}{5}.$ (4.3)
+
+The unique unconstrained maximizer of $\mathcal{D}_{m,n}(u,\cdot)$ has blocks
+
+$v^{i,*}(u)=\vartheta_{n}W_{i}(u)B_{n}^{-1}\bigl(e_{1}-\gamma(u_{i})e_{n}\bigr),$ (4.4)
+
+and satisfies
+
+$\max_{v}\mathcal{D}_{m,n}(u,v)=H_{m}(u)+Q_{m}(u)=\varphi_{m}(u).$ (4.5)
+
+Moreover,
+
+$\|v^{*}(u)\|\leq 2n,\qquad\|v^{*}(u)\|_{\infty}\leq 2\sqrt{n}.$ (4.6)
+
+We use the normalized dual set
+
+$\mathcal{Y}_{m,n}=\left\{v:\|v\|\leq 2n,\ \|v\|_{\infty}\leq 2\sqrt{n}\right\}.$ (4.7)
+
+It is compact, convex, and contains the origin and every maximizer in Lemma 4.1 .
+
+There is a universal constant $C_{\rm c}\geq\max\{1,C_{\varphi}\}$ such that $\mathcal{D}_{m,n}$ is jointly $C_{\rm c}$ -smooth on $\mathbb{R}^{m}\times\mathcal{Y}_{m,n}$ for every $m\geq 1$ and $n\geq 2$ . The same constant can be chosen to give joint $C_{\rm c}$ -smoothness on $\mathbb{R}^{m}\times\{v:\|v\|\leq 8\}$ when $n=4$ . The function is concave in $v$ .
+
+Relative to the coordinate order
+
+$v_{1}^{1},\ldots,v_{n}^{1},u_{1},v_{1}^{2},\ldots,v_{n}^{2},u_{2},\ldots,v_{1}^{m},\ldots,v_{n}^{m},u_{m},$ (4.8)
+
+$\mathcal{D}_{m,n}$ is a first-order zero-chain: a point supported on the first $r$ coordinates has gradient supported on the first $r+1$ coordinates, with the order truncated at its total length.
+
+Let
+
+$\Phi(x)=\alpha\varphi_{m}(x/\beta)$
+
+be $L$ -smooth, where $\alpha,\beta>0$ , and suppose that
+
+$\frac{\varepsilon}{2L\beta}\leq\frac{1}{2},\qquad\frac{\alpha c_{b}}{\beta}\geq 2\varepsilon.$
+
+If $x_{m}=0$ , then $S_{\rm OS}(x)>\varepsilon$ .
+
+Define
+
+$x^{+}=\mathop{\rm argmin}_{w\in\mathbb{R}^{m}}\{\Phi(w)+L\|w-x\|^{2}\},\qquad g=2L(x-x^{+}).$
+
+The proximal objective is strongly convex because $\Phi$ is $L$ -smooth. Its first-order condition and the Moreau-envelope gradient formula give
+
+$g=\nabla\Phi(x^{+})=\frac{\alpha}{\beta}\nabla\varphi_{m}(x^{+}/\beta),\qquad g=\nabla\Phi_{1/(2L)}(x).$
+
+Suppose that $\|g\|\leq\varepsilon$ . Since $x_{m}=0$ ,
+
+$\frac{|x_{m}^{+}|}{\beta}\leq\frac{\|x^{+}-x\|}{\beta}=\frac{\|g\|}{2L\beta}\leq\frac{1}{2}.$
+
+Lemma 3.2 then implies
+
+$\|g\|=\frac{\alpha}{\beta}\|\nabla\varphi_{m}(x^{+}/\beta)\|\geq\frac{\alpha c_{b}}{\beta}\geq 2\varepsilon,$
+
+a contradiction. Therefore $S_{\rm OS}(x)>\varepsilon$ . ∎
+
+For the deterministic obstruction, choose
+
+$\displaystyle\beta_{\rm d}$ $\displaystyle=\frac{8C_{\rm c}\varepsilon}{c_{b}L},\qquad\alpha_{\rm d}=\frac{L\beta_{\rm d}^{2}}{4C_{\rm c}},\qquad m_{\rm d}=\left\lfloor\frac{\Delta}{10\alpha_{\rm d}}\right\rfloor,$ (4.9) $\displaystyle n_{\rm d}$ $\displaystyle=\left\lfloor c_{n}D\sqrt{\frac{L}{\alpha_{\rm d}}}\right\rfloor,\qquad\eta_{\rm d}=\frac{D}{4n_{\rm d}},\qquad 0<c_{n}\leq\frac{1}{8\sqrt{C_{\rm c}}}.$ (4.10)
+
+On the primal domain $X_{\rm d}=\mathbb{R}^{m_{\rm d}}$ , define
+
+$F_{\rm d}(x,y)=\alpha_{\rm d}\,\mathcal{D}_{m_{\rm d},n_{\rm d}}\left(\frac{x}{\beta_{\rm d}},\frac{y}{\eta_{\rm d}}\right),\qquad Y_{\rm d}=\eta_{\rm d}\mathcal{Y}_{m_{\rm d},n_{\rm d}}.$ (4.11)
+
+The radius bound in ( 4.7 ) gives $\operatorname{diam}(Y_{\rm d})\leq D$ , and Lemma 4.1 gives
+
+$\Phi_{\rm d}(x):=\max_{y\in Y_{\rm d}}F_{\rm d}(x,y)=\alpha_{\rm d}\varphi_{m_{\rm d}}(x/\beta_{\rm d}).$ (4.12)
+
+There exist universal constants $c_{\mathrm{d}},c_{\mathrm{acc}}>0$ such that, for every $L,D,\Delta>0$ and every
+
+$0<\varepsilon\leq c_{\mathrm{acc}}\min\{\sqrt{L\Delta},LD\},$
+
+there exist finite-dimensional closed convex sets $\mathcal{X}_{\mathrm{d}},\mathcal{Y}_{\mathrm{d}}$ and an instance $F_{\mathrm{d}}:\mathcal{X}_{\mathrm{d}}\times\mathcal{Y}_{\mathrm{d}}\to\mathbb{R}$ defined in ( 4.11 ), which is jointly $L$ -smooth and concave in $y$ , satisfies $\operatorname{diam}(\mathcal{Y}_{\mathrm{d}})\leq D$ and $\Phi_{\mathrm{d}}(0)-\inf_{x\in\mathcal{X}_{\mathrm{d}}}\Phi_{\mathrm{d}}(x)\leq\Delta$ , where $\Phi_{\mathrm{d}}(x):=\max_{y\in\mathcal{Y}_{\mathrm{d}}}F_{\mathrm{d}}(x,y)$ .
+
+For every deterministic zero-respecting first-order algorithm, if its primal output $\widehat{x}\in\mathcal{X}_{\mathrm{d}}$ is obtained after
+
+$q<c_{\mathrm{d}}L^{2}D\Delta\varepsilon^{-3}$
+
+calls to the exact-gradient oracle, then
+
+$S_{\mathrm{OS}}(\widehat{x})>\varepsilon,$
+
+Consequently, the deterministic zero-respecting first-order oracle complexity of finding an $\varepsilon$ -stationary point is
+
+$\Omega\!\left(L^{2}D\Delta\varepsilon^{-3}\right).$
+
+The choice of $c_{n}$ and the upper bound on $n_{\rm d}$ give
+
+$\eta_{\rm d}\geq\frac{1}{4c_{n}}\sqrt{\frac{\alpha_{\rm d}}{L}}=\frac{\beta_{\rm d}}{8c_{n}\sqrt{C_{\rm c}}}\geq\beta_{\rm d}.$
+
+Under this diagonal change of variables, joint smoothness is at most
+
+$C_{\rm c}\alpha_{\rm d}\max\{\beta_{\rm d}^{-2},\eta_{\rm d}^{-2}\}=\frac{L}{4}\leq L.$
+
+Concavity is preserved by scaling. The dual set is compact and convex, and its diameter has already been bounded. The exact value identity and Lemma 3.2 give
+
+$\Phi_{\rm d}(0)-\inf\Phi_{\rm d}\leq 5\alpha_{\rm d}m_{\rm d}\leq\Delta.$
+
+Since $C_{\rm c}\geq C_{\varphi}$ , the value function is itself $L$ -smooth: $\operatorname{Lip}(\nabla\Phi_{\rm d})\leq\alpha_{\rm d}C_{\varphi}/\beta_{\rm d}^{2}\leq L/4$ .
+
+Each shared-sample batch is selected using only earlier oracle returns. Lemma 4.2 therefore allows the revealed prefix to grow by at most one coordinate per call, regardless of the number of points in the batch. The terminal primal coordinate has position $m_{\rm d}(n_{\rm d}+1)$ , so fewer calls than this leave it unrevealed. The output support condition in Definition 2.4 also forces that coordinate of $\widehat{x}$ to be zero.
+
+The scales satisfy $\alpha_{\rm d}c_{b}/\beta_{\rm d}=2\varepsilon$ and $\varepsilon/(2L\beta_{\rm d})\leq 1/2$ . Hence Lemma 4.3 rules out the required stationarity at every such output. Taking $c_{\rm acc}$ sufficiently small ensures that the arguments of both floors in ( 4.9 )–( 4.10 ) are at least four. Consequently,
+
+$m_{\rm d}=\Theta\!\left(\frac{L\Delta}{\varepsilon^{2}}\right),\qquad n_{\rm d}=\Theta\!\left(\frac{LD}{\varepsilon}\right),$
+
+and their product gives the oracle bound in Proposition 4.4 . Finally, the exact-gradient oracle is unbiased, has zero variance, and is same-sample mean-square smooth with constant at most $L\leq\bar{L}$ . ∎
+
+4.2 The stochastic contribution under mean-square smoothness
+
+For the stochastic obstruction, fix $n_{0}=4$ and let $(E_{n_{0}}w)_{j}=w_{j}-w_{j+1}$ and $\mathcal{E}v=(E_{n_{0}}v^{1},\ldots,E_{n_{0}}v^{m_{\rm s}})$ .
+
+Choose
+
+$\beta_{\rm s}=\frac{24C_{\rm c}\varepsilon}{c_{b}L},\qquad\alpha_{\rm s}=\frac{L\beta_{\rm s}^{2}}{8C_{\rm c}},\qquad m_{\rm s}=\left\lfloor\frac{\Delta}{10\alpha_{\rm s}}\right\rfloor,\qquad\zeta=\frac{16}{D}.$ (4.13)
+
+Define the stochastic mean on $X_{\rm s}=\mathbb{R}^{m_{\rm s}}$ and
+
+$Y_{\rm s}=\{y:\|y\|\leq D/2\}.$
+
+Using the concave realization in ( 4.2 ), set
+
+$F_{\rm s}(x,y)=\alpha_{\rm s}\mathcal{D}_{m_{\rm s},n_{0}}\bigl(x/\beta_{\rm s},\zeta y\bigr).$ (4.14)
+
+The normalized domain is the ball $\|v\|\leq 8$ , which contains the maximizer in Lemma 4.1 . Therefore,
+
+$\Phi_{\rm s}(x)=\max_{y\in Y_{\rm s}}F_{\rm s}(x,y)=\alpha_{\rm s}\varphi_{m_{\rm s}}(x/\beta_{\rm s}).$ (4.15)
+
+Define the edge energy and the sampling probability by
+
+$H_{\rm e}(y)=-\frac{\alpha_{\rm s}}{2}\|\mathcal{E}(\zeta y)\|^{2},\qquad G_{\rm e}=32\alpha_{\rm s}\zeta,\qquad p=\frac{G_{\rm e}^{2}}{G_{\rm e}^{2}+\sigma^{2}},$ (4.16)
+
+and let
+
+$f_{\rm s}(x,y;\omega)=F_{\rm s}(x,y)+\left(\frac{\omega}{p}-1\right)H_{\rm e}(y),\qquad\omega\sim\operatorname{Bernoulli}(p).$ (4.17)
+
+One fresh $\omega$ is shared by all query points in a call. This definition also covers $\sigma=0$ , when $p=1$ and the oracle is exact.
+
+For a sufficiently small universal $c_{\rm acc}>0$ , suppose that $0<\varepsilon\leq c_{\rm acc}\min\{\sqrt{L\Delta},LD\}$ . The sample gradient in ( 4.17 ) is unbiased and has variance at most $\sigma^{2}$ on $X_{\rm s}\times Y_{\rm s}$ . Moreover,
+
+$\mathbb{E}_{\omega}\|\nabla f_{\rm s}(z;\omega)-\nabla f_{\rm s}(z^{\prime};\omega)\|^{2}\leq\left(L_{\rm s}^{2}+\frac{4\sigma^{2}}{D^{2}}\right)\|z-z^{\prime}\|^{2},$ (4.18)
+
+where $L_{\rm s}\leq L/2$ is a joint smoothness bound for $F_{\rm s}$ . In particular, the oracle is $\bar{L}$ -mean-square smooth whenever
+
+$L\leq\bar{L},\qquad\sigma\leq\frac{D\bar{L}}{4}.$ (4.19)
+
+Let $M=(n_{0}-1)m_{\rm s}=3m_{\rm s}$ . Every zero-respecting algorithm using at most $q\leq M/(4p)$ shared-sample calls satisfies
+
+$\Pr(\widehat{x}_{m_{\rm s}}=0)\geq\frac{3}{4}.$ (4.20)
+
+The conclusion holds for every prescribed finite number of query points in a shared-sample batch.
+
+In the sample function, the coefficient of the difference-edge energy is multiplied by $\omega/p$ . When $\omega=0$ , no internal dual edge can expose a new coordinate. The endpoint anchors are diagonal, and the coupling retains only the deterministic transitions into the first coordinate of a dual block and from its last coordinate to the corresponding primal coordinate. When $\omega=1$ , the tridiagonal edge term can reveal at most the next coordinate in the full order ( 4.8 ).
+
+To count the necessary successful draws, regard all deterministic transitions as free and retain the ordered sequence
+
+$v_{2}^{1},\ldots,v_{n_{0}}^{1},v_{2}^{2},\ldots,v_{n_{0}}^{2},\ldots,v_{2}^{m_{\rm s}},\ldots,v_{n_{0}}^{m_{\rm s}}.$
+
+This sequence has length $M$ . The support argument in Lemma 4.2 prevents any of its coordinates from being skipped. Every new coordinate in this sequence requires a successful draw, and a single call reveals at most one of them: all points in that batch were selected from the previously revealed support before the common draw. Revealing the terminal primal coordinate therefore requires at least $M$ successful draws. The same conclusion applies to a transcript-derived output by Definition 2.4 .
+
+Pad the transcript with unused independent draws if the algorithm stops before $q$ calls, and let $S_{q}=\sum_{t=1}^{q}\omega_{t}\sim\operatorname{Binomial}(q,p)$ . Pathwise, $\widehat{x}_{m_{\rm s}}\neq 0$ implies $S_{q}\geq M$ . Markov’s inequality gives
+
+$\Pr(\widehat{x}_{m_{\rm s}}\neq 0)\leq\Pr(S_{q}\geq M)\leq\frac{qp}{M}\leq\frac{1}{4},$
+
+proving ( 4.20 ), including for randomized algorithms. ∎
+
+There are universal constants $c_{\rm s},c_{\rm acc}>0$ such that, under ( 4.19 ) and
+
+$0<\varepsilon\leq c_{\rm acc}\min\{\sqrt{L\Delta},LD\},$
+
+the instance ( 4.14 ) belongs to $\mathcal{F}_{\rm NC\text{-}C}(L,\Delta,D)$ , and the sample function ( 4.17 ) defines an MSS oracle. Every zero-respecting algorithm using at most
+
+$c_{\rm s}\frac{L^{3}D^{2}\Delta\sigma^{2}}{\varepsilon^{6}}$ (4.21)
+
+shared-sample calls satisfies $\mathbb{E}S_{\rm OS}(\widehat{x})>\varepsilon$ .
+
+Lemma 4.5 establishes smoothness of the mean function and regularity of the oracle. Concavity follows from ( 4.14 ). The dual ball has diameter $D$ , and the exact value identity gives
+
+$\Phi_{\rm s}(0)-\inf\Phi_{\rm s}\leq 5\alpha_{\rm s}m_{\rm s}\leq\Delta.$
+
+These facts prove class membership. In addition, $C_{\rm c}\geq C_{\varphi}$ implies $\operatorname{Lip}(\nabla\Phi_{\rm s})\leq L/8$ , so the value function satisfies the smoothness hypothesis of Lemma 4.3 .
+
+To obtain a strict lower bound in expectation, apply that lemma with target $3\varepsilon/2$ . The scales satisfy
+
+$\frac{3\varepsilon/2}{2L\beta_{\rm s}}\leq\frac{1}{2},\qquad\frac{\alpha_{\rm s}c_{b}}{\beta_{\rm s}}=3\varepsilon.$
+
+On the event in ( 4.20 ), we therefore have $S_{\rm OS}(\widehat{x})>3\varepsilon/2$ . This event has probability at least $3/4$ , which gives $\mathbb{E}S_{\rm OS}(\widehat{x})>\varepsilon$ .
+
+It remains to show that the proposed call budget is covered by Lemma 4.6 . Decreasing $c_{\rm acc}$ ensures that the argument of the floor defining $m_{\rm s}$ is at least four, and hence
+
+$m_{\rm s}=\Theta\!\left(\frac{L\Delta}{\varepsilon^{2}}\right),\qquad G_{\rm e}=\Theta\!\left(\frac{\varepsilon^{2}}{LD}\right),\qquad\frac{1}{p}=1+\Theta\!\left(\frac{L^{2}D^{2}\sigma^{2}}{\varepsilon^{4}}\right).$
+
+Consequently,
+
+$\frac{M}{p}=\Omega\!\left(\frac{L\Delta}{\varepsilon^{2}}+\frac{L^{3}D^{2}\Delta\sigma^{2}}{\varepsilon^{6}}\right).$
+
+Taking $c_{\rm s}$ sufficiently small makes the budget in ( 4.21 ) at most $M/(4p)$ , as required. ∎
+
+4.3 Proof of the NC–C lower bound
+
+There are constants $c,c_{0}>0$ such that the following holds. Let $L,\Delta,D>0$ , $\bar{L}\geq L$ , and $0\leq\sigma\leq D\bar{L}/4$ , and suppose that
+
+$0<\varepsilon\leq c_{0}\min\{\sqrt{L\Delta},LD\}.$
+
+There is a hard instance in $\mathcal{F}_{\rm NC\text{-}C}(L,\Delta,D)$ , equipped with an unbiased stochastic gradient oracle of variance at most $\sigma^{2}$ and mean-square smoothness at most $\bar{L}$ , such that every zero-respecting randomized first-order algorithm using at most
+
+$c\left(\frac{L^{2}D\Delta}{\varepsilon^{3}}+\frac{L^{3}D^{2}\Delta\sigma^{2}}{\varepsilon^{6}}\right)$ (4.22)
+
+shared-sample oracle calls returns a primal output satisfying $\mathbb{E}S_{\rm OS}(\widehat{x})>\varepsilon$ . The expectation is over both oracle and algorithmic randomness.
+
+Set
+
+$A=\frac{L^{2}D\Delta}{\varepsilon^{3}},\qquad B=\frac{L^{3}D^{2}\Delta\sigma^{2}}{\varepsilon^{6}}.$
+
+Choose $c_{0}$ small enough for both component propositions. If $A\geq B$ , use the fixed deterministic instance from Proposition 4.4 . If $B>A$ , use the fixed stochastic instance from Proposition 4.7 . This choice depends only on the prescribed problem parameters, not on the algorithm. In either case, $A+B\leq 2\max\{A,B\}$ . Choosing, for example, $c\leq\min\{c_{\rm d},c_{\rm s}\}/4$ places the call budget in ( 4.22 ) within the applicable component bound, including the strict inequality required by the deterministic proposition. Both constructions are admissible in the MSS class, and both conclusions cover the output support condition and algorithmic randomness. This proves the theorem. ∎
+
+5 A delayed dual chain for the NC–SC lower bounds
+
+The deterministic NC–SC obstruction inserts a dual path of length $n$ between consecutive primal coordinates. Taking $n=\Theta(\sqrt{\kappa})$ produces the condition-number factor; the initial-gap budget fixes the number of blocks.
+
+5.1 Construction of the delayed chain
+
+Fix integers $m\geq 1$ and $n\geq 2$ . Define the tridiagonal path matrix
+
+$Q_{n}=\begin{pmatrix}1+1/n&-1&&&\\ -1&2&-1&&\\ &\ddots&\ddots&\ddots&\\ &&-1&2&-1\\ &&&-1&1+1/n\end{pmatrix}.$ (5.1)
+
+For $v\in\mathbb{R}^{n}$ ,
+
+$v^{\top}Q_{n}v=\sum_{j=1}^{n-1}(v_{j}-v_{j+1})^{2}+\frac{v_{1}^{2}+v_{n}^{2}}{n},\qquad\frac{1}{2n^{2}}\leq\lambda_{\min}(Q_{n})\leq\frac{2}{n^{2}},\qquad\|Q_{n}v\|\leq 5\|v\|.$
+
+The difference terms propagate information along the path, while the endpoint terms make $Q_{n}$ positive definite. For $x\in\mathbb{R}^{m}$ , write $y=(y^{1},\ldots,y^{m})$ , where $y^{i}\in\mathbb{R}^{n}$ , and let
+
+$Y_{m,n}=\{y:\|y\|\leq n,\ \|y\|_{\infty}\leq\sqrt{n}\}.$
+
+Define
+
+$D_{m,n}(x,y)=H_{m}(x)-\frac{1}{2}\sum_{i=1}^{m}(y^{i})^{\top}Q_{n}y^{i}+\sum_{i=1}^{m}\frac{W_{i}(x)}{\sqrt{n}}(y_{1}^{i}-\gamma(x_{i})y_{n}^{i}).$ (5.2)
+
+The source term exposes $y_{1}^{i}$ , the quadratic chain propagates to $y_{n}^{i}$ , and the terminal coupling exposes $x_{i}$ ; the prefix factor in $W_{i+1}$ then activates the next block.
+
+Maximizing each dual block preserves the product-weight form with the profile
+
+$a_{n}=\frac{2n-1}{3n-1},\qquad b_{n}=\frac{n}{3n-1},\qquad\mathcal{K}_{n}(t)=\frac{a_{n}}{2}(1+\gamma(t)^{2})-b_{n}\gamma(t).$
+
+The following lemma records dimension-free smoothness, strong concavity, and the exact value function.
+
+Set
+
+$L_{\rm d}=H_{0}+\frac{3}{2}D_{W}+\frac{5}{2}C_{W}+6.$
+
+Then $D_{m,n}$ is jointly $L_{\rm d}$ -smooth on $\mathbb{R}^{m}\times Y_{m,n}$ , and $1/(2n^{2})$ -strongly concave in $y$ . Its value function is
+
+$\varphi_{m,n}(x)=H_{m}(x)+\sum_{i=1}^{m}W_{i}(x)^{2}\mathcal{K}_{n}(x_{i}),\qquad\varphi_{m,n}(0)-\inf_{x}\varphi_{m,n}(x)\leq 5m.$
+
+The gradient barrier and sequential-revelation property are as follows.
+
+Let $c_{d}=1/72$ . If $x_{m}\leq 1/2$ , then
+
+$\|\nabla\varphi_{m,n}(x)\|\geq c_{d}.$
+
+Under the order
+
+$y_{1}^{1},\ldots,y_{n}^{1},x_{1},\ y_{1}^{2},\ldots,y_{n}^{2},x_{2},\ \ldots,y_{1}^{m},\ldots,y_{n}^{m},x_{m},$
+
+each oracle response reveals at most one new coordinate. Consequently, after fewer than $m(n+1)$ batch calls, a zero-respecting algorithm has $\widehat{x}_{m}=0$ .
+
+5.2 Scaling and the deterministic lower bound
+
+We now scale the path length, smoothness, gradient barrier, and initial gap.
+
+Let $\kappa\geq 32L_{\rm d}$ and
+
+$0<\varepsilon\leq c_{\rm acc,d}\sqrt{L\Delta},\qquad c_{\rm acc,d}=\frac{c_{d}}{\sqrt{10240L_{\rm d}}}.$
+
+There is a fixed deterministic instance in the NC–SC class of Definition such that every zero-respecting algorithm making at most
+
+$N\leq c_{\rm det}\frac{L\Delta\sqrt{\kappa}}{\varepsilon^{2}},\qquad c_{\rm det}=\frac{c_{d}^{2}}{10240L_{\rm d}\sqrt{8L_{\rm d}}},$
+
+oracle calls satisfies $\|\nabla\Phi(\widehat{x})\|\geq 16\varepsilon$ .
+
+Choose
+
+$n=\left\lfloor\sqrt{\frac{\kappa}{8L_{\rm d}}}\right\rfloor,\quad\beta_{d}=\frac{16L_{\rm d}\varepsilon}{c_{d}L},\quad\alpha_{d}=\frac{L\beta_{d}^{2}}{L_{\rm d}},\quad m_{d}=\left\lfloor\frac{\Delta}{5\alpha_{d}}\right\rfloor,$
+
+and define
+
+$F_{d}(x,y)=\alpha_{d}D_{m_{d},n}(x/\beta_{d},y/\beta_{d}),\qquad y\in\beta_{d}Y_{m_{d},n}.$
+
+First,
+
+$\alpha_{d}=\frac{L}{L_{\rm d}}\left(\frac{16L_{\rm d}\varepsilon}{c_{d}L}\right)^{2}=\frac{256L_{\rm d}\varepsilon^{2}}{c_{d}^{2}L}.$
+
+The accuracy condition therefore implies
+
+$\alpha_{d}\leq\frac{\Delta}{40},\qquad\frac{\Delta}{5\alpha_{d}}\geq 8,\qquad m_{d}\geq\frac{\Delta}{10\alpha_{d}}.$
+
+Moreover, $\kappa\geq 32L_{\rm d}$ implies
+
+$\sqrt{\frac{\kappa}{8L_{\rm d}}}\geq 2,\qquad n\geq\frac{1}{2}\sqrt{\frac{\kappa}{8L_{\rm d}}}=\frac{\sqrt{\kappa}}{2\sqrt{8L_{\rm d}}}.$
+
+We first verify class membership. Lemma 5.1 gives the certified joint smoothness bound
+
+$\widehat{L}_{\rm det}:=\frac{\alpha_{d}}{\beta_{d}^{2}}L_{\rm d}=L.$
+
+Its initial value-function gap is at most
+
+$5\alpha_{d}m_{d}\leq\Delta.$
+
+The scaled dual strong-concavity parameter is at least
+
+$\frac{\alpha_{d}}{\beta_{d}^{2}}\frac{1}{2n^{2}}=\frac{L}{2L_{\rm d}n^{2}}\geq\frac{L}{\kappa}=\mu,$
+
+where the inequality uses $n^{2}\leq\kappa/(8L_{\rm d})$ .
+
+We next bound the number of oracle calls. Equip $F_{d}$ with its exact-gradient oracle. The support argument in Lemma 5.2 applies to every realization of an algorithm’s internal randomness and to every finite batch. Fewer than $m_{d}(n+1)$ calls therefore leave the final primal coordinate zero. The lower bounds on $m_{d}$ and $n$ imply
+
+$\frac{m_{d}(n+1)}{2}\geq\frac{\Delta\sqrt{\kappa}}{40\alpha_{d}\sqrt{8L_{\rm d}}}=c_{\rm det}\frac{L\Delta\sqrt{\kappa}}{\varepsilon^{2}}.$
+
+Thus the stated budget is strictly smaller than $m_{d}(n+1)$ , and hence $\widehat{x}_{m_{d}}=0$ . Finally,
+
+$\frac{\alpha_{d}}{\beta_{d}}=\frac{L\beta_{d}}{L_{\rm d}}=\frac{16\varepsilon}{c_{d}}.$
+
+The scaled value function is $\Phi_{d}(x)=\alpha_{d}\varphi_{m_{d},n}(x/\beta_{d})$ ; therefore Lemma 5.2 yields
+
+$\|\nabla\Phi_{d}(\widehat{x})\|=\frac{\alpha_{d}}{\beta_{d}}\|\nabla\varphi_{m_{d},n}(\widehat{x}/\beta_{d})\|\geq 16\varepsilon.$
+
+∎
+
+6 The bounded-variance NC–SC lower bound
+
+We obtain the bounded-variance lower bound by combining the common chain with a clipped stochastic coupling.
+
+6.1 A strongly-concave lift of the common chain
+
+The mean objective realizes the common chain exactly. The clipped perturbation agrees with the original coupling near an unrevealed coordinate and has bounded derivative.
+
+Define $\chi$ for $t\geq 0$ by
+
+$\chi(t)=\begin{cases}t,&0\leq t\leq 1/4,\\ \frac{1}{4}+\frac{1}{2}(v-v^{2}+v^{3}/3),\quad v=2t-1/2,&1/4<t<3/4,\\ 5/12,&t\geq 3/4\end{cases},$
+
+and extend it oddly to $t<0$ . The values and first derivatives agree at the joins, so $\chi\in C^{1,1}$ . Moreover, $|\chi|\leq 1$ , $|\chi^{\prime}|\leq 1$ , and $\chi(t)=t$ on $[-1/4,1/4]$ . Write $\chi_{\beta}(t)=\beta\chi(t/\beta)$ . To choose the scales, let
+
+$D_{0}=H_{0}+2\sqrt{2}C_{2}<92,\qquad C_{*}=697.$
+
+The estimates from Section 3 give $4D_{0}<C_{*}$ , $64C_{1}^{2}<C_{*}$ , and $2C_{\varphi}<C_{*}$ . For the target accuracy $\varepsilon$ , choose
+
+$\beta=\frac{16C_{*}\varepsilon}{c_{b}L},\quad\alpha=\frac{L\beta^{2}}{C_{*}},\quad m=\left\lfloor\frac{\Delta}{5\alpha}\right\rfloor,\quad Y=\{y\in\mathbb{R}^{m}:\|y\|\leq 2\sqrt{\alpha/\mu}\}.$ (6.1)
+
+Assume
+
+$0<\varepsilon\leq c_{\rm acc,bv}\sqrt{L\Delta},\qquad c_{\rm acc,bv}=\frac{c_{b}}{\sqrt{10240C_{*}}},\qquad\kappa\geq 2.$ (6.2)
+
+Then $\alpha\leq\Delta/40$ , $m\geq 8$ , and $m\geq\Delta/(10\alpha)$ . Here $\alpha/\beta^{2}$ sets the smoothness scale, $\alpha/\beta$ sets the gradient scale, and $m$ uses the available initial-gap budget.
+
+Define the mean objective by
+
+$F(x,y)=\alpha H_{m}(x/\beta)+\sqrt{2\mu\alpha}\langle G(x/\beta),y\rangle-\frac{\mu}{2}\|y\|^{2},\qquad y\in Y.$ (6.3)
+
+The function $F$ in ( 6.3 ) is jointly $L$ -smooth on $\mathbb{R}^{m}\times Y$ and $\mu$ -strongly concave in $y$ . Its unique maximizer and value function are
+
+$y^{*}(x)=\sqrt{2\alpha/\mu}\,G(x/\beta),\qquad\Phi(x)=\alpha\varphi_{m}(x/\beta),\qquad\Phi(0)-\inf\Phi\leq\Delta.$
+
+In addition, $\|\nabla\Phi(x)-\nabla\Phi(x^{\prime})\|\leq(L/2)\|x-x^{\prime}\|$ for all $x,x^{\prime}$ .
+
+We now perturb the sample objective without changing its mean. Define
+
+$V(x,y)=\sqrt{2\mu\alpha}\sum_{i=1}^{m}G_{i}(x/\beta)\chi_{\beta}(y_{i}).$ (6.4)
+
+Let
+
+$\nu^{2}=2(k_{+}+C_{1}^{2})<23,\qquad\Gamma^{2}=\nu^{2}\mu\alpha,\qquad p=\frac{\Gamma^{2}}{\Gamma^{2}+\sigma^{2}},\qquad\omega\sim\operatorname{Bernoulli}(p),$
+
+and set
+
+$f(x,y;\omega)=F(x,y)+(\omega/p-1)V(x,y).$ (6.5)
+
+The sample gradient is unbiased and, for every feasible $(x,y)$ ,
+
+$\mathbb{E}\|\nabla f(x,y;\omega)-\nabla F(x,y)\|^{2}\leq\sigma^{2}.$
+
+If every query in a batch is supported on the first $q<m$ blocks $(x_{i},y_{i})$ , the union of its gradient supports is contained in the first $q$ blocks when $\omega=0$ , and in the first $q+1$ blocks when $\omega=1$ . Thus the oracle is a shared-sample probability- $p$ zero-chain for the block order $((x_{1},y_{1}),\ldots,(x_{m},y_{m}))$ .
+
+6.2 From Bernoulli delays to an oracle lower bound
+
+Revealing the terminal block requires $m$ successful draws; before that event the common-chain barrier keeps the value-function gradient large.
+
+For the instance ( 6.3 )–( 6.5 ), if $N\leq m/(2p)$ , every zero-respecting algorithm satisfies
+
+$\mathbb{E}\|\nabla\Phi(\widehat{x})\|\geq 8\varepsilon.$
+
+Let
+
+$S_{N}=\sum_{t=1}^{N}\omega_{t},\qquad\omega_{t}\overset{\rm iid}{\sim}\operatorname{Bernoulli}(p).$
+
+Let $R_{t}$ denote the largest block revealed after $t$ calls, with $R_{0}=0$ . Lemma 6.2 gives, pathwise,
+
+$R_{t}\leq\min\{m,R_{t-1}+\omega_{t}\}.$
+
+Induction gives $R_{N}\leq\min\{m,S_{N}\}$ . The final output is also zero-respecting, so
+
+$\widehat{x}_{j}=0\qquad\text{for every }j>\min\{m,S_{N}\}.$
+
+In particular, $S_{N}<m$ implies $\widehat{x}_{m}=0$ , including when $\widehat{x}$ is computed from the final transcript without being queried. Since $\mathbb{E}S_{N}=Np$ , Markov’s inequality and the assumed budget give
+
+$\Pr(S_{N}\geq m)\leq\frac{\mathbb{E}S_{N}}{m}=\frac{Np}{m}\leq\frac{1}{2}.$
+
+Consequently,
+
+$\Pr(\widehat{x}_{m}=0)\geq\Pr(S_{N}<m)\geq\frac{1}{2}.$
+
+On the event $\mathcal{E}=\{\widehat{x}_{m}=0\}$ , Lemma 3.2 and
+
+$\frac{\alpha}{\beta}=\frac{L\beta}{C_{*}}=\frac{16\varepsilon}{c_{b}}$
+
+give
+
+$\|\nabla\Phi(\widehat{x})\|=\frac{\alpha}{\beta}\|\nabla\varphi_{m}(\widehat{x}/\beta)\|\geq 16\varepsilon.$
+
+It follows that
+
+$\mathbb{E}\|\nabla\Phi(\widehat{x})\|\geq\mathbb{E}\bigl[\|\nabla\Phi(\widehat{x})\|\mathbf{1}_{\mathcal{E}}\bigr]\geq 16\varepsilon\Pr(\mathcal{E})\geq 8\varepsilon.$
+
+∎
+
+The scales in ( 6.1 ) make $m$ proportional to $L\Delta/\varepsilon^{2}$ , while the inverse success probability contributes a factor proportional to $1+\kappa\sigma^{2}/\varepsilon^{2}$ . The next proposition records this substitution with explicit universal constants.
+
+Under ( 6.2 ),
+
+$\frac{m}{2p}\geq c_{\rm bv}\left(\frac{L\Delta}{\varepsilon^{2}}+\frac{L\Delta\kappa\sigma^{2}}{\varepsilon^{4}}\right),\qquad c_{\rm bv}=\min\left\{\frac{c_{b}^{2}}{5120C_{*}},\frac{c_{b}^{4}}{1310720\nu^{2}C_{*}^{2}}\right\}.$
+
+From ( 6.1 ),
+
+$\alpha=\frac{L}{C_{*}}\left(\frac{16C_{*}\varepsilon}{c_{b}L}\right)^{2}=\frac{256C_{*}\varepsilon^{2}}{c_{b}^{2}L}.$
+
+The accuracy condition in ( 6.2 ) implies
+
+$\varepsilon^{2}\leq\frac{c_{b}^{2}L\Delta}{10240C_{*}},\qquad\alpha\leq\frac{\Delta}{40}.$
+
+Hence $\Delta/(5\alpha)\geq 8$ , and
+
+$m=\left\lfloor\frac{\Delta}{5\alpha}\right\rfloor\geq\frac{\Delta}{10\alpha}.$
+
+Moreover,
+
+$\Gamma^{2}=\nu^{2}\mu\alpha,\qquad\frac{1}{p}=1+\frac{\sigma^{2}}{\Gamma^{2}}.$
+
+It follows that
+
+$\frac{m}{2p}=\frac{m}{2}\left(1+\frac{\sigma^{2}}{\Gamma^{2}}\right)\geq\frac{\Delta}{20\alpha}+\frac{\Delta\sigma^{2}}{20\alpha\Gamma^{2}}.$
+
+The first term satisfies
+
+$\frac{\Delta}{20\alpha}=\frac{c_{b}^{2}}{5120C_{*}}\frac{L\Delta}{\varepsilon^{2}}.$
+
+For the second term, $\mu=L/\kappa$ and
+
+$\alpha^{2}=\frac{65536C_{*}^{2}\varepsilon^{4}}{c_{b}^{4}L^{2}},$
+
+so
+
+${\frac{\Delta\sigma^{2}}{20\alpha\Gamma^{2}}=\frac{c_{b}^{4}}{1310720\nu^{2}C_{*}^{2}}\frac{L\Delta\kappa\sigma^{2}}{\varepsilon^{4}}.}$
+
+Combining the two estimates and taking the smaller of their numerical coefficients proves the proposition. ∎
+
+There are absolute constants $\kappa_{0},c_{\rm BV},c_{\rm acc}>0$ such that the following holds. Fix $L,\mu,\Delta>0$ and write $\kappa=L/\mu$ . For $\kappa\geq\kappa_{0}$ , $\sigma\geq 0$ , and $0<\varepsilon\leq c_{\rm acc}\sqrt{L\Delta}$ , there is one fixed instance and oracle in the NC–SC bounded-variance class for which every zero-respecting first-order algorithm using at most
+
+$N\leq c_{\rm BV}\left(\frac{L\Delta\sqrt{\kappa}}{\varepsilon^{2}}+\frac{L\Delta\kappa\sigma^{2}}{\varepsilon^{4}}\right)$
+
+oracle calls satisfies $\mathbb{E}\|\nabla\Phi(\widehat{x})\|>\varepsilon$ .
+
+Set
+
+$\displaystyle\kappa_{0}$ $\displaystyle=\max\{2,32L_{\rm d}\},\qquad c_{\rm acc}=\min\left\{\frac{c_{b}}{\sqrt{10240C_{*}}},\frac{c_{d}}{\sqrt{10240L_{\rm d}}}\right\},$ $\displaystyle c_{\rm BV}$ $\displaystyle=\frac{1}{2}\min\{c_{\rm det},c_{\rm bv}\}.$
+
+Let
+
+$A=\frac{L\Delta\sqrt{\kappa}}{\varepsilon^{2}},\qquad B=\frac{L\Delta\kappa\sigma^{2}}{\varepsilon^{4}}.$
+
+Proposition 5.3 gives a fixed deterministic instance with hardness threshold
+
+$T_{\rm d}=c_{\rm det}A.$
+
+Its exact-gradient oracle has variance zero and therefore satisfies the bounded-variance condition for every prescribed $\sigma\geq 0$ . The residual bound holds pathwise, so it also holds in expectation for randomized zero-respecting algorithms.
+
+Lemma 6.3 and Proposition 6.4 give a second fixed instance for which every budget satisfying
+
+$N\leq c_{\rm bv}\left(\frac{L\Delta}{\varepsilon^{2}}+B\right)$
+
+has
+
+$\mathbb{E}\|\nabla\Phi(\widehat{x})\|\geq 8\varepsilon.$
+
+In particular, this instance is hard up to the threshold
+
+$T_{\rm s}=c_{\rm bv}B.$
+
+Choose the deterministic instance when $T_{\rm d}\geq T_{\rm s}$ and the stochastic instance otherwise. This selection depends only on $L,\Delta,\kappa,\sigma,\varepsilon$ . Furthermore,
+
+${\max\{T_{\rm d},T_{\rm s}\}=\max\{c_{\rm det}A,c_{\rm bv}B\}\geq\frac{1}{2}\min\{c_{\rm det},c_{\rm bv}\}(A+B)=c_{\rm BV}(A+B).}$
+
+Thus the budget in the theorem does not exceed the hardness threshold of the selected fixed instance. Proposition 5.3 gives residual at least $16\varepsilon$ in the deterministic case, while Lemma 6.3 gives expected residual at least $8\varepsilon$ in the stochastic case. In either case the expected residual is strictly larger than $\varepsilon$ , which proves the claim. ∎
+
+7 The mean-square-smooth NC–SC lower bound
+
+We next impose mean-square smoothness in addition to bounded variance and gate the common chain through a shared Bernoulli sample.
+
+7.1 A Bernoulli-gated strongly-concave construction
+
+Define
+
+$\displaystyle Q_{m}(u)$ $\displaystyle=\|G(u)\|^{2},\qquad V_{0}=2C_{1}\sqrt{k_{+}},$ $\displaystyle C_{Q}$ $\displaystyle=2(C_{1}^{2}+C_{2}\sqrt{k_{+}}),\qquad C_{\lambda}=\frac{2(C_{\varphi}+C_{Q})}{V_{0}}.$
+
+The constants satisfy
+
+$V_{0}<\frac{51}{10},\qquad C_{Q}<52,\qquad C_{\lambda}<56.$
+
+Lemmas 3.1 and 3.2 give
+
+$\displaystyle\|\nabla Q_{m}(u)\|$ $\displaystyle\leq V_{0},\qquad\|\nabla Q_{m}(u)-\nabla Q_{m}(u^{\prime})\|\leq C_{Q}\|u-u^{\prime}\|,$ (7.1) $\displaystyle\|\nabla\varphi_{m}(u)-\nabla\varphi_{m}(u^{\prime})\|$ $\displaystyle\leq C_{\varphi}\|u-u^{\prime}\|.$
+
+For $\sigma>0$ , $\bar{L}\geq L$ , and target accuracy $\varepsilon>0$ , set
+
+$\displaystyle a$ $\displaystyle=\sqrt{\kappa/8},\quad c=2\mu,\quad\delta=\frac{4\varepsilon}{ac_{b}},\quad p=\left(\frac{\delta V_{0}}{\sigma}\right)^{2},$ (7.2) $\displaystyle B$ $\displaystyle=\frac{\bar{L}}{2},\quad\lambda=\frac{2C_{\lambda}\sigma}{\bar{L}},\quad\ell=\frac{\delta C_{\varphi}}{\lambda},\quad m=\left\lfloor\frac{\Delta}{10\delta\lambda}\right\rfloor.$
+
+Assume $\kappa\geq 8$ and
+
+$0<\varepsilon\leq\min\left\{\frac{ac_{b}\sigma}{4V_{0}},\quad\frac{ac_{b}\Delta\bar{L}}{160C_{\lambda}\sigma},\quad\frac{ac_{b}\mu C_{\lambda}\sigma}{2C_{\varphi}\bar{L}}\right\}.$ (7.3)
+
+The three accuracy bounds ensure, respectively, that $p\in(0,1]$ , $\delta\lambda\leq\Delta/20$ , and $\ell\leq\mu$ . In particular, $m\geq\Delta/(20\delta\lambda)\geq 1$ , so the chain has positive length.
+
+Define the base sample function
+
+$\widetilde{h}(v;\omega)=\delta\lambda\left[H_{m}(v/\lambda)+\frac{\omega}{p}Q_{m}(v/\lambda)\right],\qquad\omega\sim\operatorname{Bernoulli}(p).$ (7.4)
+
+The expected base function is
+
+$h(v)=\mathbb{E}_{\omega}\widetilde{h}(v;\omega)=\delta\lambda\varphi_{m}(v/\lambda).$
+
+For $x,y\in\mathbb{R}^{m}$ , define
+
+$\displaystyle F(x,y)$ $\displaystyle=h(y)-\frac{c}{2}\|y-ax\|^{2},$ (7.5) $\displaystyle f(x,y;\omega)$ $\displaystyle=\widetilde{h}(y;\omega)-\frac{c}{2}\|y-ax\|^{2}.$
+
+The random term appears only in the $y$ -gradient; the deterministic quadratic supplies strong concavity and transfers the base-chain barrier to $\nabla\Phi$ .
+
+The function $F$ in ( 7.5 ) is jointly $L$ -smooth and $\mu$ -strongly concave in $y$ . Its value function is finite, differentiable, and satisfies $\Phi(0)-\inf_{x}\Phi(x)\leq\Delta.$ The sample gradient is unbiased with variance at most $\sigma^{2}$ , and, for every $z,z^{\prime}\in\mathbb{R}^{2m}$ , the same-sample oracle satisfies
+
+$\mathbb{E}_{\omega}\|\nabla f(z;\omega)-\nabla f(z^{\prime};\omega)\|^{2}\leq\bar{L}^{2}\|z-z^{\prime}\|^{2}.$ (7.6)
+
+Let a finite shared-sample batch be supported on the first $r<m$ blocks. If $\omega=0$ , every returned gradient has the same support; if $\omega=1$ , only $y_{r+1}$ may additionally appear. Hence the oracle in ( 7.5 ) is a shared-sample probability- $p$ zero-chain relative to $\mathcal{B}$ .
+
+Fix $z^{k}=(x^{k},y^{k})$ , $k\in[K]$ , with
+
+$\operatorname{supp}(x^{k})\cup\operatorname{supp}(y^{k})\subseteq[r].$ (7.7)
+
+The two gradient blocks are
+
+$\displaystyle\nabla_{x}f(z^{k};\omega)$ $\displaystyle=ca(y^{k}-ax^{k}),$ (7.8) $\displaystyle\nabla_{y}f(z^{k};\omega)$ $\displaystyle=g(y^{k};\omega)-c(y^{k}-ax^{k}),$ (7.9) $\displaystyle g(y^{k};\omega)$ $\displaystyle=\delta\left[\nabla H_{m}(y^{k}/\lambda)+\frac{\omega}{p}\nabla Q_{m}(y^{k}/\lambda)\right].$ (7.10)
+
+Equation ( 7.7 ) and Lemma 3.3 give
+
+$\displaystyle\operatorname{supp}(y^{k}-ax^{k})$ $\displaystyle\subseteq[r],$ (7.11) $\displaystyle\operatorname{supp}(\nabla_{x}f(z^{k};0))\cup\operatorname{supp}(\nabla_{y}f(z^{k};0))$ $\displaystyle\subseteq[r],$ (7.12) $\displaystyle\operatorname{supp}(\nabla_{x}f(z^{k};1))$ $\displaystyle\subseteq[r],\qquad\operatorname{supp}(\nabla_{y}f(z^{k};1))\subseteq[r+1].$ (7.13)
+
+Let $R_{t}$ be the largest revealed block after call $t$ , with $R_{0}=0$ . Since the batch is selected before the fresh draw $\omega_{t}$ , ( 7.12 )–( 7.13 ) hold simultaneously for its query points and yield
+
+$R_{t}\leq\min\{m,R_{t-1}+\omega_{t}\}.$ (7.14)
+
+Therefore, conditionally on the preceding transcript $\mathcal{H}_{t-1}$ ,
+
+$\Pr(R_{t}=R_{t-1}+1\mid\mathcal{H}_{t-1})\leq p,\qquad\Pr(R_{t}>R_{t-1}+1\mid\mathcal{H}_{t-1})=0.$
+
+∎
+
+Under the parameters above, every zero-respecting randomized algorithm using at most $N\leq m/(2p)$ oracle calls satisfies
+
+$\mathbb{E}\|\nabla\Phi(\widehat{x})\|\geq\frac{4}{3}\varepsilon$
+
+for the instance ( 7.5 ).
+
+If the algorithm stops before call $N$ , pad its transcript with zero queries and retain the same output. This only enlarges the available history. Let
+
+$S_{t}:=\sum_{s=1}^{t}\omega_{s},\qquad S_{0}:=0.$
+
+Iterating ( 7.14 ) gives, for every $t\in[N]$ ,
+
+$R_{t}\leq\min\{m,S_{t}\}.$ (7.15)
+
+Indeed, if $R_{t-1}\leq S_{t-1}$ , then
+
+$R_{t}\leq R_{t-1}+\omega_{t}\leq S_{t-1}+\omega_{t}=S_{t}.$
+
+If $S_{N}<m$ , equation ( 7.15 ) gives $R_{N}<m$ ; the output condition in Definition 2.4 then gives
+
+$\widehat{x}_{m}=0.$
+
+Since $\omega_{t}\overset{\rm iid}{\sim}\operatorname{Bernoulli}(p)$ ,
+
+$\mathbb{E}S_{N}=\sum_{t=1}^{N}\mathbb{E}\omega_{t}=Np.$
+
+Markov’s inequality and $N\leq m/(2p)$ imply
+
+$\Pr(S_{N}\geq m)\leq\frac{\mathbb{E}S_{N}}{m}=\frac{Np}{m}\leq\frac{1}{2}.$ (7.16)
+
+For
+
+$\mathcal{E}:=\{S_{N}<m\},$
+
+equation ( 7.16 ) gives
+
+$\Pr(\mathcal{E})\geq\frac{1}{2},\qquad\mathcal{E}\subseteq\{\widehat{x}_{m}=0\}.$ (7.17)
+
+For each $x$ , Lemma 7.1 gives a unique inner maximizer $y^{*}(x)$ . Since the dual domain is $\mathbb{R}^{m}$ , its first-order condition is
+
+$0=\nabla_{y}F(x,y^{*}(x))=\nabla h(y^{*}(x))-c(y^{*}(x)-ax).$ (7.18)
+
+Danskin’s theorem and ( 7.18 ) give
+
+$\displaystyle\nabla\Phi(x)$ $\displaystyle=\nabla_{x}F(x,y^{*}(x))=ca(y^{*}(x)-ax),$ (7.19) $\displaystyle\nabla h(y^{*}(x))$ $\displaystyle=c(y^{*}(x)-ax)=\frac{1}{a}\nabla\Phi(x),$ (7.20) $\displaystyle\|y^{*}(x)-ax\|$ $\displaystyle=\frac{1}{ca}\|\nabla\Phi(x)\|.$ (7.21)
+
+The $\ell$ -Lipschitz continuity of $\nabla h$ , followed by ( 7.20 )–( 7.21 ), yields
+
+$\|\nabla h(ax)\|\leq\ell\|ax-y^{*}(x)\|+\frac{1}{a}\|\nabla\Phi(x)\|=\frac{1}{a}\left(1+\frac{\ell}{c}\right)\|\nabla\Phi(x)\|.$ (7.22)
+
+The scaling of the base chain gives
+
+$\nabla h(v)=\delta\nabla\varphi_{m}(v/\lambda).$ (7.23)
+
+If $x_{m}=0$ , then $(ax/\lambda)_{m}=0\leq 1/2$ . Hence Lemma 3.2 and ( 7.23 ) imply
+
+$\|\nabla h(ax)\|=\delta\|\nabla\varphi_{m}(ax/\lambda)\|\geq\delta c_{b}.$ (7.24)
+
+Thus the gradient at $ax$ remains large even though the inner maximizer need not have sparse support. Combining ( 7.22 ) and ( 7.24 ), with $\ell\leq\mu=c/2$ , gives
+
+$\|\nabla\Phi(x)\|\geq\frac{a\delta c_{b}}{1+\ell/c}\geq\frac{2a\delta c_{b}}{3}=\frac{8}{3}\varepsilon.$ (7.25)
+
+By ( 7.17 ), the pointwise estimate ( 7.25 ) applies to $\widehat{x}$ on $\mathcal{E}$ . Therefore
+
+$\mathbb{E}\|\nabla\Phi(\widehat{x})\|\geq\mathbb{E}\!\left[\|\nabla\Phi(\widehat{x})\|\mathbf{1}_{\mathcal{E}}\right]\geq\frac{8}{3}\varepsilon\,\Pr(\mathcal{E})\geq\frac{4}{3}\varepsilon.$
+
+∎
+
+7.2 Scaling and completion of the lower bound
+
+It remains to express the progress threshold in the problem parameters. The choice of $m$ enforces the initial-gap budget, while the Bernoulli probability enforces the variance budget. Their ratio yields the stochastic term in Theorem 7.6 .
+
+Under ( 7.3 ),
+
+$\frac{m}{2p}\geq c_{\rm mss}\frac{\Delta\bar{L}\sigma\kappa^{3/2}}{\varepsilon^{3}},\qquad c_{\rm mss}=\frac{c_{b}^{3}}{40960\sqrt{8}\,C_{\lambda}V_{0}^{2}}.$
+
+From ( 7.2 ),
+
+$\delta\lambda=\frac{4\varepsilon}{ac_{b}}\frac{2C_{\lambda}\sigma}{\bar{L}}=\frac{8C_{\lambda}\sigma\varepsilon}{ac_{b}\bar{L}}.$
+
+The second bound in ( 7.3 ) is equivalent to
+
+$\frac{8C_{\lambda}\sigma\varepsilon}{ac_{b}\bar{L}}\leq\frac{\Delta}{20},$
+
+and therefore
+
+$\frac{\Delta}{10\delta\lambda}\geq 2.$ (7.26)
+
+For every $q\geq 2$ , $\lfloor q\rfloor\geq q/2$ . Applying this fact to ( 7.26 ) gives
+
+$m=\left\lfloor\frac{\Delta}{10\delta\lambda}\right\rfloor\geq\frac{\Delta}{20\delta\lambda}.$ (7.27)
+
+Using ( 7.27 ) and $p=\delta^{2}V_{0}^{2}/\sigma^{2}$ , we obtain
+
+$\frac{m}{2p}\geq\frac{\Delta}{40\delta\lambda p}=\frac{\Delta\bar{L}\sigma}{80C_{\lambda}V_{0}^{2}\delta^{3}}.$ (7.28)
+
+Since
+
+$\delta^{3}=\left(\frac{4\varepsilon}{ac_{b}}\right)^{3}=\frac{64\varepsilon^{3}}{a^{3}c_{b}^{3}},$
+
+equation ( 7.28 ) becomes
+
+$\frac{m}{2p}\geq\frac{\Delta\bar{L}\sigma a^{3}c_{b}^{3}}{5120C_{\lambda}V_{0}^{2}\varepsilon^{3}}.$ (7.29)
+
+Finally,
+
+$a^{3}=\left(\frac{\kappa}{8}\right)^{3/2}=\frac{\kappa^{3/2}}{8\sqrt{8}}.$
+
+Substitution into ( 7.29 ) yields
+
+$\frac{m}{2p}\geq\frac{c_{b}^{3}}{40960\sqrt{8}\,C_{\lambda}V_{0}^{2}}\frac{\Delta\bar{L}\sigma\kappa^{3/2}}{\varepsilon^{3}}=c_{\rm mss}\frac{\Delta\bar{L}\sigma\kappa^{3/2}}{\varepsilon^{3}}.$
+
+∎
+
+To combine this threshold with the deterministic condition-number term, we first place the deterministic instance in the same oracle class. This is where the assumption $\bar{L}\geq L$ is used.
+
+Under the hypotheses of Proposition 5.3 and $\bar{L}\geq L$ , its deterministic instance, equipped with the exact gradient oracle, belongs to the mean-square-smooth class for every variance budget $\sigma^{2}\geq 0$ .
+
+Both instances now belong to the same class. We select the instance with the larger certified query threshold; this choice depends only on the problem parameters.
+
+There exist universal constants $\kappa_{0},c_{\rm MS}>0$ such that the following holds. Fix $L,\mu,\Delta>0$ , $\bar{L}\geq L$ , and $\sigma>0$ , and write $\kappa=L/\mu$ . Suppose that $\kappa\geq\kappa_{0}$ and that
+
+$0<\varepsilon\leq c_{\rm acc,d}\sqrt{L\Delta},$
+
+where $c_{\rm acc,d}$ is defined in Proposition 5.3 . Assume also the stochastic accuracy range ( 7.3 ), with $a=\sqrt{\kappa/8}$ and the universal constants defined below. Then there is a fixed finite-dimensional instance and oracle in the NC–SC mean-square-smooth instance class of Definitions and 2.3 for which every zero-respecting randomized first-order algorithm using at most
+
+$N\leq c_{\rm MS}\left(\frac{L\Delta\sqrt{\kappa}}{\varepsilon^{2}}+\frac{\Delta\bar{L}\sigma\kappa^{3/2}}{\varepsilon^{3}}\right)$
+
+shared-sample batch calls satisfies $\mathbb{E}\|\nabla\Phi(\widehat{x})\|>\varepsilon$ . The claim holds for every finite batch size and every primal output allowed by Definition 2.4 . The instance is chosen using only the problem parameters, independently of the algorithm and its randomness.
+
+Set
+
+$\kappa_{0}:=\max\{8,32L_{\rm d}\},\qquad c_{\rm MS}:=\frac{1}{2}\min\{c_{\rm det},c_{\rm mss}\},$
+
+and abbreviate
+
+$A:=\frac{L\Delta\sqrt{\kappa}}{\varepsilon^{2}},\qquad B:=\frac{\Delta\bar{L}\sigma\kappa^{3/2}}{\varepsilon^{3}}.$ (7.30)
+
+For the deterministic term, $\kappa\geq\kappa_{0}\geq 32L_{\rm d}$ satisfies the parameter condition in Proposition 5.3 . That proposition gives a fixed deterministic instance $\mathcal{I}_{\rm d}$ for which every zero-respecting algorithm with
+
+$N\leq c_{\rm det}A$ (7.31)
+
+satisfies $\|\nabla\Phi_{\rm d}(\widehat{x})\|\geq 16\varepsilon$ . By Lemma 7.5 , $\mathcal{I}_{\rm d}$ belongs to the mean-square-smooth class.
+
+For the stochastic term, Proposition 7.4 gives
+
+$c_{\rm mss}B\leq\frac{m}{2p}.$
+
+Hence Lemma 7.3 implies that every algorithm using
+
+$N\leq c_{\rm mss}B$ (7.32)
+
+calls on the fixed stochastic instance $\mathcal{I}_{\rm s}$ in ( 7.5 ) satisfies $\mathbb{E}\|\nabla\Phi_{\rm s}(\widehat{x})\|\geq 4\varepsilon/3$ . Lemma 7.1 shows that $\mathcal{I}_{\rm s}$ belongs to the same mean-square-smooth class.
+
+Define
+
+$\mathcal{I}_{*}:=\begin{cases}\mathcal{I}_{\rm d},&c_{\rm det}A\geq c_{\rm mss}B,\\ \mathcal{I}_{\rm s},&c_{\rm det}A<c_{\rm mss}B.\end{cases}$
+
+The choice of $\mathcal{I}_{*}$ uses only $(L,\bar{L},\mu,\Delta,\sigma,\varepsilon)$ . In particular, the same selected instance applies to every algorithm in the stated class. Moreover,
+
+$\max\{c_{\rm det}A,c_{\rm mss}B\}\geq\frac{1}{2}\min\{c_{\rm det},c_{\rm mss}\}(A+B)=c_{\rm MS}(A+B).$ (7.33)
+
+Thus every $N\leq c_{\rm MS}(A+B)$ satisfies $N\leq\max\{c_{\rm det}A,c_{\rm mss}B\}$ . If $\mathcal{I}_{*}=\mathcal{I}_{\rm d}$ , then ( 7.31 ) holds for every realization of the algorithmic randomness, and hence
+
+$\mathbb{E}\|\nabla\Phi_{*}(\widehat{x})\|\geq 16\varepsilon>\varepsilon.$
+
+If $\mathcal{I}_{*}=\mathcal{I}_{\rm s}$ , then ( 7.32 ) gives
+
+$\mathbb{E}\|\nabla\Phi_{*}(\widehat{x})\|\geq\frac{4}{3}\varepsilon>\varepsilon.$
+
+Substituting ( 7.30 ) proves the stated lower bound. ∎
+
+When $\sigma=0$ , Proposition 5.3 and Lemma 7.5 give the deterministic $\Omega(L\Delta\sqrt{\kappa}/\varepsilon^{2})$ lower bound under the deterministic accuracy condition alone. The positive- $\sigma$ range ( 7.3 ) is used only for the Bernoulli-gated construction.
+
+8 Conclusion
+
+This work establishes complexity barriers for stochastic first-order minimax optimization, with a primary focus on NC–C problems when variance reduction is allowed. Our main result shows that the $\varepsilon^{-6}$ stochastic barrier persists under mean-square smoothness for zero-respecting randomized algorithms with same-sample oracle access. Its significance lies not in a new accuracy exponent, but in extending the lower bound to an algorithm class that permits variance reduction. The complementary NC–SC results capture the dependence on accuracy and conditioning under bounded variance and mean-square smoothness.
+
+The common product-weighted chain separates the difficulty of attaining value-function stationarity from the delay in revealing primal–dual information. This separation enables hard instances across different concavity and stochastic regularity regimes, while preserving the coupled oracle access used by variance-reduction methods. Together, the results show that stronger stochastic regularity does not by itself guarantee an improved minimax accuracy dependence: the interaction between primal and dual variables remains a fundamental source of difficulty within the algorithm class considered here.
+
+An important next step is to determine whether these barriers extend beyond zero-respecting algorithms. Resolving this question would clarify the extent to which the observed complexity is intrinsic to stochastic minimax optimization rather than tied to coordinate-revelation restrictions.
+
+References
+
+Appendix A Proofs for the common chain
+
+A.1 Proof of Lemma 3.1
+
+We first bound the scalar derivatives. Since $W_{i}=P_{i-1}-P_{i}$ , the first inequality telescopes. Also $\|G\|^{2}=\sum_{i}W_{i}^{2}\mathcal{K}(u_{i})\leq k_{+}\sum_{i}W_{i}^{2}\leq k_{+}$ . Direct maximization of the explicit piecewise derivatives gives the sharper bounds
+
+$|\gamma^{\prime}|\leq 1/4,\quad|\gamma^{\prime\prime}|\leq 1/8,\quad\|\mathcal{K}^{\prime}\|_{\infty}=\frac{11}{80},\quad\|\mathcal{K}^{\prime\prime}\|_{\infty}=\frac{7}{80}.$
+
+Since $b=\sqrt{\mathcal{K}}$ and $\mathcal{K}\geq k_{-}>0$ , the piecewise formulas also give
+
+$|b|\leq b_{0}:=\sqrt{k_{+}}<\frac{19}{25},\qquad|b^{\prime}|\leq b_{1}:=\frac{107}{1000},\qquad|b^{\prime\prime}|\leq b_{2}:=\frac{13}{200}.$
+
+The maximum of $|b^{\prime}|$ is attained at the join $t=-1$ and equals $11/(160\sqrt{67/160})<107/1000$ ; the one-sided maximum of $|b^{\prime\prime}|$ is attained at $t=1$ and is smaller than $13/200$ .
+
+We next bound the derivatives of the product weights. For bounds independent of the number of coordinates, consider independent Bernoulli variables with success probabilities $S(u_{j})$ . The square-root probability vector on all binary outcomes is
+
+$c(u)=\bigotimes_{j=1}^{m}\bigl(\cos\theta(u_{j}),\sin\theta(u_{j})\bigr).$
+
+Work on an open piece of the scalar definitions, where $\theta$ is affine or constant. Along a direction $h$ , put $v_{j}=\theta^{\prime}(u_{j})h_{j}$ . Replacing one or two tensor factors by their orthogonal unit vectors gives mutually orthogonal vectors $c_{j},c_{jk}$ and
+
+$\nabla c(u)[h]=\sum_{j}v_{j}c_{j},\qquad\nabla^{2}c(u)[h,h]=-\|v\|^{2}c+2\sum_{j<k}v_{j}v_{k}c_{jk}.$
+
+Consequently, $\|\nabla c(u)[h]\|\leq q_{*}\|h\|$ and $\|\nabla^{2}c(u)[h,h]\|\leq\sqrt{3}q_{*}^{2}\|h\|^{2}$ . Differentiating the coordinatewise square yields
+
+$\|\nabla(c^{2})(u)[h]\|_{1}\leq 2q_{*}\|h\|,\qquad\|\nabla^{2}(c^{2})(u)[h,h]\|_{1}\leq 2(1+\sqrt{3})q_{*}^{2}\|h\|^{2}.$
+
+Grouping outcomes according to their first failure cannot increase the $\ell_{1}$ norm. With
+
+$C_{W}=2q_{*},\qquad D_{W}=2(1+\sqrt{3})q_{*}^{2},$
+
+we therefore obtain
+
+$\sum_{i}|\langle\nabla W_{i}(u),h\rangle|\leq C_{W}\|h\|,\qquad\sum_{i}|h^{\top}\nabla^{2}W_{i}(u)h|\leq D_{W}\|h\|^{2}.$
+
+These estimates yield the required bounds for $G$ . Applying the product rule to $G_{i}=W_{i}b(u_{i})$ , and setting
+
+$C_{1}=b_{0}C_{W}+b_{1},\qquad C_{2}=b_{0}D_{W}+2b_{1}C_{W}+b_{2},$
+
+gives
+
+$\sum_{i}|\langle\nabla G_{i}(u),h\rangle|\leq C_{1}\|h\|,\qquad\sum_{i}|h^{\top}\nabla^{2}G_{i}(u)h|\leq C_{2}\|h\|^{2}.$
+
+The explicit constants satisfy
+
+$C_{W}<\frac{21}{5},\qquad D_{W}<\frac{97}{4},\qquad C_{1}<\frac{33}{10},\qquad C_{2}<\frac{97}{5}.$
+
+The first directional estimate and integration along the segment from $u$ to $u^{\prime}$ give the first inequality in ( 3.7 ); duality gives the second. For the scalar map $u\mapsto\langle G(u),v\rangle$ , the second estimate bounds every Hessian quadratic form by $C_{2}\|v\|_{\infty}\|h\|^{2}\leq C_{2}\|v\|\|h\|^{2}$ . The Hessian is symmetric, so its operator norm is at most $C_{2}\|v\|$ . Integration along a segment proves ( 3.8 ). Although the auxiliary angle $\theta$ is piecewise affine, the functions $W_{i}$ and $G_{i}$ have continuous first derivatives at every join. The resulting Lipschitz estimates therefore hold globally. ∎
+
+A.2 Proof of Lemma 3.2
+
+We first establish the gap and smoothness bounds. We have $H_{m}(0)=0$ , $\varphi_{m}(0)=\mathcal{K}(0)=3/10$ , and $\varphi_{m}\geq-4m$ . Thus
+
+$\varphi_{m}(0)-\inf_{u}\varphi_{m}(u)\leq 4m+\frac{3}{10}\leq\frac{43}{10}m<5m.$
+
+Further,
+
+$\nabla\|G(u)\|^{2}=2\nabla G(u)^{\top}G(u).$
+
+Splitting the product-rule difference and applying Lemma 3.1 gives
+
+$\|\nabla Q_{m}(u)-\nabla Q_{m}(u^{\prime})\|\leq 2(C_{1}^{2}+C_{2}\sqrt{k_{+}})\|u-u^{\prime}\|.$
+
+Together with the gradient-difference bound for $H_{m}$ and $\|\nabla H_{m}\|\leq B_{H}\sqrt{m}$ , this proves the smoothness and gradient estimates.
+
+We next prove the stationarity barrier. Write $s_{i}=S(u_{i})$ and set
+
+$R_{i}=\sum_{j>i}\left(\prod_{i<k<j}s_{k}^{2}\right)(1-s_{j})^{2}\mathcal{K}(u_{j}).$
+
+Since $(1-s)^{2}\leq 1-s^{2}$ , telescoping gives $0\leq R_{i}\leq k_{+}<1$ . Direct differentiation gives
+
+$\displaystyle\partial_{i}\varphi_{m}={}$ $\displaystyle P_{i-1}^{2}\bigl((1-s_{i})^{2}\mathcal{K}^{\prime}(u_{i})-2(1-s_{i})S^{\prime}(u_{i})\mathcal{K}(u_{i})+2s_{i}S^{\prime}(u_{i})R_{i}\bigr)$ $\displaystyle-4S^{\prime}(u_{i})+J^{\prime}(u_{i}).$ (A.1)
+
+The only positive term on the right-hand side can be $2P_{i-1}^{2}s_{i}S^{\prime}(u_{i})R_{i}$ , and it is at most $2k_{+}S^{\prime}(u_{i})$ . The term $-4S^{\prime}(u_{i})$ therefore dominates it uniformly. More precisely, because $\mathcal{K}^{\prime}\leq 0$ , $J^{\prime}\leq 0$ , $R_{i}\leq k_{+}$ , and $P_{i-1}\leq 1$ , $\partial_{i}\varphi_{m}\leq(2k_{+}-4)S^{\prime}(u_{i})\leq-2S^{\prime}(u_{i})$ . If $s_{i}\geq 1/2$ , then $S^{\prime}(u_{i})^{2}=4q_{*}^{2}s_{i}(1-s_{i})\geq 2q_{*}^{2}(1-s_{i})$ , so $(\partial_{i}\varphi_{m})^{2}\geq 8q_{*}^{2}(1-s_{i})$ .
+
+Suppose, to the contrary, that $u_{m}\leq 1/2$ and $\|\nabla\varphi_{m}(u)\|<c_{b}$ . Let $k$ be the first index with $s_{k}\leq 1/2$ , which exists since $S(u_{m})\leq S(1/2)=1/4$ . For $i<k$ , the preceding estimate implies
+
+$\sum_{i<k}(1-s_{i})\leq\frac{\|\nabla\varphi_{m}(u)\|^{2}}{8q_{*}^{2}},\qquad P_{k-1}\geq 1-\frac{c_{b}^{2}}{8q_{*}^{2}}>\frac{127}{128}.$
+
+By monotonicity of $S$ and $S(5/8)=1/2$ , we have $u_{k}\leq 5/8$ . On $[-1,5/8]$ , the linear part of $\gamma$ gives the bound
+
+$\mathcal{K}^{\prime}(t)\leq-\frac{49}{640}.$
+
+If $u_{k}<-1$ , then $J^{\prime}(u_{k})\leq-1/2$ , contradicting the assumed gradient bound. Otherwise $u_{k}\in[-1,5/8]$ and $1-s_{k}\geq 1/2$ . The sum of the terms in ( A.1 ) other than its first term has already been bounded above by zero. Consequently,
+
+$\partial_{k}\varphi_{m}\leq-\left(\frac{127}{128}\right)^{2}\frac{1}{4}\frac{49}{640}<-\frac{3}{160}=-c_{b},$
+
+again a contradiction. This proves ( 3.9 ). ∎
+
+A.3 Proof of Lemma 3.3
+
+The separable term has no coordinates beyond $r$ . For every $j>r$ , we have $u_{j}=0$ , and therefore
+
+$\partial_{j}H_{m}(u)=-4S^{\prime}(0)+J^{\prime}(0)=0.$
+
+Hence $\nabla H_{m}(u)$ is supported on the first $r$ coordinates.
+
+For the coupling term, define
+
+$q_{i}(u)=P_{i-1}(u)^{2}(1-S(u_{i}))^{2}\mathcal{K}(u_{i}),\qquad Q_{m}(u)=\sum_{i=1}^{m}q_{i}(u).$
+
+Fix $j>r+1$ . We prove $\partial_{j}q_{i}(u)=0$ for every $i$ . If $i<j$ , then $q_{i}$ depends only on $u_{1},\ldots,u_{i}$ , so it is independent of $u_{j}$ . If $i=j$ , then $P_{j-1}$ contains the factor $S(u_{r+1})=S(0)=0$ , while $P_{j-1}$ is independent of $u_{j}$ . Thus both $q_{j}(u)$ and $\partial_{j}q_{j}(u)$ vanish. Finally, if $i>j$ , then $P_{i-1}$ contains both $S(u_{r+1})$ and $S(u_{j})$ . Differentiation with respect to $u_{j}$ may replace the latter by $S^{\prime}(u_{j})$ , but the distinct factor $S(u_{r+1})=0$ remains. Hence $\partial_{j}q_{i}(u)=0$ also in this case. Summing over $i$ gives
+
+$\partial_{j}Q_{m}(u)=0,\qquad j>r+1.$
+
+Therefore $\nabla Q_{m}(u)$ , and hence $\nabla\varphi_{m}(u)=\nabla H_{m}(u)+\nabla Q_{m}(u)$ , has no nonzero component after coordinate $r+1$ . At coordinate $r+1$ , the derivative can be nonzero; for example, if $u_{1},\ldots,u_{r}\geq 1$ , then $\partial_{r+1}q_{r+1}(u)=\mathcal{K}^{\prime}(0)=-1/10$ . This is the one-coordinate propagation used in the oracle lower bound. ∎
+
+Appendix B Structural proofs for the NC–C construction
+
+B.1 Proof of Lemma 4.1
+
+Fix the endpoint values $a=v_{1}$ and $b=v_{n}$ . Minimizing the difference energy over the interior coordinates gives the linear interpolation between $a$ and $b$ , with energy $(a-b)^{2}/(n-1)$ . Eliminating these coordinates therefore gives the endpoint Schur complement
+
+$\begin{pmatrix}\tau_{n}+(n-1)^{-1}&-(n-1)^{-1}\\ -(n-1)^{-1}&\tau_{n}+(n-1)^{-1}\end{pmatrix}.$
+
+Substituting $\tau_{n}=1/[2(n-1)]$ and inverting this matrix proves ( 4.3 ); the same calculation applies when $n=2$ , in which case there are no interior coordinates.
+
+Positive definiteness gives a unique maximizer, whose first-order equation is
+
+$B_{n}v^{i}=\vartheta_{n}W_{i}(u)\bigl(e_{1}-\gamma(u_{i})e_{n}\bigr).$
+
+This proves ( 4.4 ). Completing the square and using ( 4.3 ) yields
+
+$\frac{\vartheta_{n}^{2}W_{i}(u)^{2}}{2}(e_{1}-\gamma(u_{i})e_{n})^{\mathsf{T}}B_{n}^{-1}(e_{1}-\gamma(u_{i})e_{n})=W_{i}(u)^{2}\mathcal{K}(u_{i}).$
+
+Summing over the blocks gives ( 4.5 ).
+
+The vectors $B_{n}^{-1}e_{1}$ and $B_{n}^{-1}e_{n}$ interpolate linearly between their endpoint values in ( 4.3 ). Every entry therefore lies between zero and $6(n-1)/5$ . Since $|\gamma|\leq 1/2$ ,
+
+$\|v^{i,*}(u)\|_{\infty}\leq 2\sqrt{n}\,W_{i}(u),\qquad\|v^{i,*}(u)\|\leq 2nW_{i}(u).$
+
+The bounds $W_{i}\geq 0$ and $\sum_{i}W_{i}^{2}\leq 1$ then establish ( 4.6 ). ∎
+
+B.2 Proof of Lemma 4.2
+
+The dual Hessian is $-\operatorname{diag}(B_{n},\ldots,B_{n})$ , and $\|B_{n}\|_{\rm op}\leq 5$ . This proves concavity and the required bound for the dual Hessian block.
+
+To bound the remaining blocks, write $T_{i}(u)=W_{i}(u)\gamma(u_{i})$ . The directional derivative estimates in the proof of Lemma 3.1 give
+
+$\sum_{i}|\nabla W_{i}(u)[h]|\leq C_{W}\|h\|,\qquad\sum_{i}|\nabla^{2}W_{i}(u)[h,h]|\leq D_{W}\|h\|^{2}.$
+
+The product rule, together with $|\gamma|\leq 1/2$ , $|\gamma^{\prime}|\leq 1/4$ , $|\gamma^{\prime\prime}|\leq 1/8$ , and $\sum_{i}W_{i}\leq 1$ , yields
+
+$\displaystyle\sum_{i}|\nabla T_{i}(u)[h]|$ $\displaystyle\leq\left(\frac{C_{W}}{2}+\frac{1}{4}\right)\|h\|,$ $\displaystyle\sum_{i}|\nabla^{2}T_{i}(u)[h,h]|$ $\displaystyle\leq\left(\frac{D_{W}}{2}+\frac{C_{W}}{2}+\frac{1}{8}\right)\|h\|^{2}.$
+
+On $\mathcal{Y}_{m,n}$ , both $\vartheta_{n}|v_{1}^{i}|$ and $\vartheta_{n}|v_{n}^{i}|$ are at most two. When $n=4$ and $\|v\|\leq 8$ , they are at most $8/\sqrt{6}$ . Pairing the second directional estimates with these bounded endpoint coefficients gives a dimension-free bound for the primal Hessian block. The first directional estimates and $\vartheta_{n}\leq 1/\sqrt{2}$ give a dimension-free bound for the mixed block. Together with the bound for $\nabla^{2}H_{m}$ , these estimates prove joint smoothness on both domains after fixing a sufficiently large universal $C_{\rm c}$ . We also require $C_{\rm c}\geq C_{\varphi}$ for the later value-function estimates. All second-derivative bounds hold almost everywhere and extend to global gradient bounds because the first derivatives are continuous.
+
+For the support statement, a dual gradient block has the form
+
+$\nabla_{v^{i}}\mathcal{D}_{m,n}=-B_{n}v^{i}+\vartheta_{n}W_{i}(u)\bigl(e_{1}-\gamma(u_{i})e_{n}\bigr).$
+
+The tridiagonal term can expose only the next dual coordinate. Before $u_{i}$ is revealed, $u_{i}=0$ , so the source at the last dual coordinate vanishes because $\gamma(0)=0$ . At such a point, the contribution to the new primal component is
+
+$\partial_{u_{i}}\mathcal{D}_{m,n}=-\vartheta_{n}W_{i}(u)\gamma^{\prime}(0)v_{n}^{i}.$
+
+Here $H_{m}$ and $\partial_{i}W_{i}$ contribute zero because $S^{\prime}(0)=J^{\prime}(0)=0$ , while all later dual blocks are zero. Thus $u_{i}$ cannot appear before $v_{n}^{i}$ . Finally, every later source contains the factor $S(u_{i})=S(0)=0$ ; its derivative at an unrevealed primal coordinate also vanishes because $S^{\prime}(0)=0$ . These observations cover each possible location of the frontier in ( 4.8 ) and establish the zero-chain property. ∎
+
+B.3 Proof of Lemma 4.5
+
+We first bound the smoothness of the mean function on its actual domain. Decreasing $c_{\rm acc}$ , if necessary, ensures $\zeta\beta_{\rm s}\leq 1$ . The ball version of Lemma 4.2 then gives
+
+$L_{\rm s}\leq C_{\rm c}\alpha_{\rm s}\max\{\beta_{\rm s}^{-2},\zeta^{2}\}=\frac{L}{8}\leq\frac{L}{2}.$
+
+Since $\mathbb{E}(\omega/p-1)=0$ , the sample gradient is unbiased. On $Y_{\rm s}$ , $\|\zeta y\|\leq 8$ , and $\|\mathcal{E}\|_{\rm op}\leq 2$ . Therefore
+
+$\|\nabla H_{\rm e}(y)\|\leq 4\alpha_{\rm s}\zeta\|\zeta y\|\leq G_{\rm e}.$
+
+The choice of $p$ gives $\mathbb{E}(\omega/p-1)^{2}=(1-p)/p=\sigma^{2}/G_{\rm e}^{2}$ , and hence
+
+$\mathbb{E}\|\nabla f_{\rm s}(z;\omega)-\nabla F_{\rm s}(z)\|^{2}\leq\frac{\sigma^{2}}{G_{\rm e}^{2}}G_{\rm e}^{2}=\sigma^{2}.$
+
+The gradient of $H_{\rm e}$ is $4\alpha_{\rm s}\zeta^{2}$ -Lipschitz. Because the same centered multiplier is used at $z$ and $z^{\prime}$ , the cross term vanishes, giving
+
+$\mathbb{E}\|\nabla f_{\rm s}(z;\omega)-\nabla f_{\rm s}(z^{\prime};\omega)\|^{2}\leq\left(L_{\rm s}^{2}+\frac{4\sigma^{2}}{D^{2}}\right)\|z-z^{\prime}\|^{2}.$
+
+Under ( 4.19 ), the coefficient is at most $L^{2}/4+\bar{L}^{2}/4\leq\bar{L}^{2}/2$ , which proves the stated MSS guarantee. ∎
+
+Appendix C Proofs for the deterministic NC–SC chain
+
+C.1 Proof of Lemma 5.1
+
+We first record the spectral bounds for $Q_{n}$ . For any $v\in\mathbb{R}^{n}$ , write $v_{j}=v_{1}+\sum_{k<j}(v_{k+1}-v_{k})$ . Cauchy–Schwarz gives
+
+$\|v\|^{2}\leq 2nv_{1}^{2}+2n^{2}\sum_{k<n}(v_{k}-v_{k+1})^{2}\leq 2n^{2}v^{\top}Q_{n}v.$
+
+This proves the lower eigenvalue bound. Testing the Rayleigh quotient on the all-ones vector gives the upper bound, and $\sum_{j<n}(v_{j}-v_{j+1})^{2}\leq 4\|v\|^{2}$ , together with $(v_{1}^{2}+v_{n}^{2})/n\leq\|v\|^{2}$ , gives $\|Q_{n}v\|\leq 5\|v\|$ .
+
+We next verify joint smoothness. For the coupling term, write $a_{i}=y_{1}^{i}/\sqrt{n}$ and $b_{i}=y_{n}^{i}/\sqrt{n}$ . The coordinate constraint in $Y_{m,n}$ gives $|a_{i}|,|b_{i}|\leq 1$ . The absolute value of its second directional derivative in a primal direction $h$ is at most
+
+$\frac{3}{2}D_{W}\|h\|^{2}+\frac{1}{2}C_{W}\|h\|^{2}+\frac{1}{8}\|h\|^{2}.$
+
+The three terms arise from differentiating $W_{i}$ twice, from the mixed product derivative of $W_{i}\gamma(x_{i})$ , and from differentiating $\gamma$ twice, respectively. Here we use the directional estimates for $W_{i}$ from Lemma 3.1 . For a dual direction $v$ , the coefficients $(v_{1}^{i}-\gamma(x_{i})v_{n}^{i})/\sqrt{n}$ have absolute value at most $\sqrt{5/4}\|v^{i}\|/\sqrt{n}\leq\|v^{i}\|$ . The same weight estimate, together with $|\gamma^{\prime}|\leq 1/4$ and $\sum_{i}W_{i}\leq 1$ , therefore bounds the mixed derivative by $(C_{W}+1/4)\|v\|$ . The dual Hessian has operator norm at most $5$ .
+
+Adding the $H_{0}$ bound for the Hessian of $H_{m}$ gives
+
+$\|\nabla^{2}D_{m,n}(x,y)\|_{\rm op}\leq H_{0}+\frac{3}{2}D_{W}+\frac{1}{2}C_{W}+\frac{1}{8}+2\left(C_{W}+\frac{1}{4}\right)+5\leq L_{\rm d}.$
+
+The second-derivative estimates hold almost everywhere, and the first derivatives are continuous at the scalar joins. Integration along the segment between two feasible points thus gives
+
+$\|\nabla D_{m,n}(x,y)-\nabla D_{m,n}(x^{\prime},y^{\prime})\|\leq L_{\rm d}\|(x,y)-(x^{\prime},y^{\prime})\|.$
+
+For strong concavity, the dual Hessian is block diagonal:
+
+$\nabla^{2}_{yy}D_{m,n}(x,y)=-\operatorname{diag}(Q_{n},\ldots,Q_{n})\preceq-\frac{1}{2n^{2}}I.$
+
+Fix $x$ and let $d=y^{\prime}-y$ . The spectral bound gives
+
+$D_{m,n}(x,y^{\prime})\leq D_{m,n}(x,y)+\langle\nabla_{y}D_{m,n}(x,y),d\rangle-\frac{1}{4n^{2}}\|d\|^{2}.$
+
+Thus $D_{m,n}(x,\cdot)$ is $1/(2n^{2})$ -strongly concave.
+
+It remains to identify the maximizer, value function, and gap. Direct multiplication verifies
+
+$[Q_{n}^{-1}e_{1}]_{j}=\frac{n(2n-j)}{3n-1},\qquad[Q_{n}^{-1}e_{n}]_{j}=\frac{n(n+j-1)}{3n-1}.$
+
+The unconstrained maximizer of block $i$ is
+
+$y^{i,*}(x)=\frac{W_{i}(x)}{\sqrt{n}}Q_{n}^{-1}(e_{1}-\gamma(x_{i})e_{n}).$
+
+Using $|\gamma|\leq 1/2$ in the inverse formulas shows that every coordinate of $y^{i,*}$ lies in $[0,\sqrt{n}W_{i}(x)]$ . Hence $\|y^{*}\|_{\infty}\leq\sqrt{n}$ and $\|y^{*}\|^{2}\leq n^{2}\sum_{i}W_{i}^{2}\leq n^{2}$ . The concatenated unconstrained maximizer therefore belongs to $Y_{m,n}$ . Completing the square in each block gives the stated formula for $\varphi_{m,n}$ .
+
+Positive definiteness gives $\mathcal{K}_{n}\geq 0$ . Also $a_{n}\leq 2/3$ , $b_{n}\leq 2/5$ , and $|\gamma|\leq 1/2$ , so
+
+$0\leq\mathcal{K}_{n}(t)\leq\frac{1}{3}\left(1+\frac{1}{4}\right)+\frac{1}{5}=\frac{37}{60}<1.$
+
+It follows that $\varphi_{m,n}\geq-4m$ , while $\varphi_{m,n}(0)=a_{n}/2\leq 1/3$ . This implies the initial-gap bound. ∎
+
+C.2 Proof of Lemma 5.2
+
+We first prove the value-function barrier. The bounds $0\leq\mathcal{K}_{n}<1$ and $\mathcal{K}_{n}^{\prime}=(a_{n}\gamma-b_{n})\gamma^{\prime}\leq 0$ allow us to repeat the derivative estimate in Lemma 3.2 , replacing $\mathcal{K}$ by $\mathcal{K}_{n}$ . In particular, $\partial_{i}\varphi_{m,n}\leq-2S^{\prime}(x_{i})$ , which is the estimate needed to control the prefix product.
+
+Suppose that $x_{m}\leq 1/2$ and $\|\nabla\varphi_{m,n}(x)\|<c_{d}$ . Let $k$ be the first index with $S(x_{k})\leq 1/2$ ; it exists because $S(x_{m})\leq 1/4$ . The prefix estimate in the proof of Lemma 3.2 gives
+
+$P_{k-1}\geq 1-\frac{c_{d}^{2}}{8q_{*}^{2}}>\frac{127}{128},\qquad x_{k}\leq\frac{5}{8}.$
+
+For $t\in[-1,5/8]$ and every $n\geq 2$ ,
+
+$\mathcal{K}_{n}^{\prime}(t)\leq\frac{1}{4}\left(\frac{5a_{n}}{32}-b_{n}\right)=-\frac{22n+5}{128(3n-1)}\leq-\frac{11}{192}.$
+
+If $x_{k}<-1$ , then $J^{\prime}(x_{k})\leq-1/2$ . Otherwise the first term in the derivative formula gives
+
+$\partial_{k}\varphi_{m,n}(x)\leq-\left(\frac{127}{128}\right)^{2}\frac{1}{4}\frac{11}{192}<-\frac{1}{72}=-c_{d}.$
+
+Both alternatives contradict the assumed gradient bound.
+
+We next verify the coordinate order. Consider a query supported on a prefix of the displayed order. Within the current dual block, tridiagonality of $Q_{n}$ allows the gradient to expose only the next dual coordinate. Before any coordinate of that block is revealed, its source term can expose only $y_{1}^{i}$ . The other endpoint does not bypass the path: if $x_{i}=0$ , then $\gamma(x_{i})=0$ , while its primal derivative is proportional to $y_{n}^{i}$ . Thus $x_{i}$ can first be exposed after $y_{n}^{i}$ . Finally, $S(0)=S^{\prime}(0)=J^{\prime}(0)=0$ makes every later block and every possible forward derivative vanish until the preceding primal coordinate is available.
+
+It follows that $D_{m,n}$ is a first-order zero-chain in the sense of Definition 2.5 for this coordinate order. Every point in a batch is chosen from the same preceding transcript, so the union of the returned gradient supports also advances by at most one coordinate. After fewer than $m(n+1)$ calls, the terminal coordinate $x_{m}$ has not been revealed. The zero-respecting condition on the final output therefore gives $\widehat{x}_{m}=0$ . Positive scalar rescaling preserves this support argument. ∎
+
+Appendix D Structural proofs for the bounded-variance construction
+
+D.1 Proof of Lemma 6.1
+
+We first identify the maximizer, value function, and gap. Put $r=\sqrt{2\mu\alpha}$ and $u=x/\beta$ . For fixed $x$ , completing the square in the dual variable gives
+
+$r\langle G(u),y\rangle-\frac{\mu}{2}\|y\|^{2}=-\frac{\mu}{2}\left\|y-\frac{r}{\mu}G(u)\right\|^{2}+\frac{r^{2}}{2\mu}\|G(u)\|^{2}.$
+
+Hence the unconstrained maximizer is
+
+$y^{*}(x)=\frac{r}{\mu}G(u)=\sqrt{\frac{2\alpha}{\mu}}G(u).$
+
+Lemma 3.1 gives $\|G(u)\|^{2}\leq k_{+}<2$ , and therefore
+
+$\|y^{*}(x)\|<\sqrt{\frac{2\alpha}{\mu}}\sqrt{2}=2\sqrt{\frac{\alpha}{\mu}}.$
+
+Thus $y^{*}(x)$ lies in the interior of $Y$ . Since $r^{2}/(2\mu)=\alpha$ , maximizing the preceding square identity yields
+
+$\Phi(x)=\alpha H_{m}(u)+\alpha\|G(u)\|^{2}=\alpha\varphi_{m}(x/\beta).$
+
+The map $x\mapsto x/\beta$ is a bijection of $\mathbb{R}^{m}$ . Consequently,
+
+$\Phi(0)-\inf_{x}\Phi(x)=\alpha\bigl(\varphi_{m}(0)-\inf_{u}\varphi_{m}(u)\bigr)\leq 5\alpha m\leq\Delta,$
+
+where the last inequality uses $m=\lfloor\Delta/(5\alpha)\rfloor$ .
+
+We next verify joint smoothness. The two gradient blocks are
+
+$\nabla_{x}F(x,y)=\frac{\alpha}{\beta}\nabla H_{m}(u)+\frac{r}{\beta}\nabla G(u)^{\top}y,\qquad\nabla_{y}F(x,y)=rG(u)-\mu y.$
+
+For a second feasible point $(x^{\prime},y^{\prime})$ , put
+
+$u^{\prime}=x^{\prime}/\beta,\qquad a=\|x-x^{\prime}\|,\qquad b=\|y-y^{\prime}\|.$
+
+Then $\|u-u^{\prime}\|=a/\beta$ . Split the coupling difference as
+
+$\nabla G(u)^{\top}y-\nabla G(u^{\prime})^{\top}y^{\prime}=\bigl(\nabla G(u)-\nabla G(u^{\prime})\bigr)^{\top}y+\nabla G(u^{\prime})^{\top}(y-y^{\prime}).$
+
+Using Lemma 3.1 , the bound $\|y\|\leq 2\sqrt{\alpha/\mu}$ , and $r\sqrt{\alpha/\mu}=\sqrt{2}\alpha$ , we obtain
+
+$\displaystyle\|\nabla_{x}F(x,y)-\nabla_{x}F(x^{\prime},y^{\prime})\|$ $\displaystyle\leq B_{xx}a+B_{xy}b,$ $\displaystyle\|\nabla_{y}F(x,y)-\nabla_{y}F(x^{\prime},y^{\prime})\|$ $\displaystyle\leq B_{xy}a+\mu b,$
+
+where
+
+$B_{xx}=\frac{\alpha}{\beta^{2}}(H_{0}+2\sqrt{2}C_{2})=\frac{LD_{0}}{C_{*}}\leq\frac{L}{4},\qquad B_{xy}=\frac{rC_{1}}{\beta}=LC_{1}\sqrt{\frac{2}{\kappa C_{*}}}.$
+
+The choices $C_{*}>4D_{0}$ , $C_{*}>64C_{1}^{2}$ , and $\kappa\geq 2$ ensure $B_{xx}<L/4$ , $B_{xy}<L/8$ , and $\mu\leq L/2$ . In particular,
+
+$B_{xx}+2B_{xy}+\mu\leq L.$
+
+For a bound on the full gradient, collect the block estimates in
+
+$M=\begin{pmatrix}B_{xx}&B_{xy}\\ B_{xy}&\mu\end{pmatrix}.$
+
+The two preceding inequalities imply
+
+$\|\nabla F(x,y)-\nabla F(x^{\prime},y^{\prime})\|\leq\|M\|_{\rm op}\sqrt{a^{2}+b^{2}}.$
+
+The matrix is symmetric with nonnegative entries, so its operator norm is bounded by its largest row sum. Thus
+
+$\widehat{L}_{\rm BV}:=\|M\|_{\rm op}\leq\max\{B_{xx}+B_{xy},B_{xy}+\mu\}\leq\frac{5L}{8}<L.$
+
+It follows that
+
+$\|\nabla F(x,y)-\nabla F(x^{\prime},y^{\prime})\|\leq L\|(x,y)-(x^{\prime},y^{\prime})\|.$
+
+The value function is also smooth. The exact value-function formula gives
+
+$\nabla\Phi(x)=\frac{\alpha}{\beta}\nabla\varphi_{m}(x/\beta)$
+
+and the $C_{\varphi}$ -smoothness of $\varphi_{m}$ implies
+
+$\|\nabla\Phi(x)-\nabla\Phi(x^{\prime})\|\leq\frac{\alpha C_{\varphi}}{\beta^{2}}\|x-x^{\prime}\|=\frac{LC_{\varphi}}{C_{*}}\|x-x^{\prime}\|\leq\frac{L}{2}\|x-x^{\prime}\|.$
+
+Finally, strong concavity follows from
+
+$\nabla^{2}_{yy}F(x,y)=-\mu I.$
+
+Equivalently, fix $x$ and let $d=y^{\prime}-y$ . Since the coupling term is affine in $y$ , direct expansion gives
+
+$F(x,y^{\prime})=F(x,y)+\langle\nabla_{y}F(x,y),d\rangle-\frac{\mu}{2}\|d\|^{2}.$
+
+Thus $F(x,\cdot)$ is $\mu$ -strongly concave, and the maximizer identified above is unique. ∎
+
+D.2 Proof of Lemma 6.2
+
+We first verify unbiasedness and the variance bound. Write
+
+$u=x/\beta,\qquad\chi_{\beta}(y)=(\chi_{\beta}(y_{1}),\ldots,\chi_{\beta}(y_{m})).$
+
+Then $V(x,y)=r\langle G(u),\chi_{\beta}(y)\rangle$ , where $r=\sqrt{2\mu\alpha}$ , and hence
+
+$\nabla_{x}V(x,y)=\frac{r}{\beta}\nabla G(u)^{\top}\chi_{\beta}(y),\qquad\nabla_{y}V(x,y)=r\bigl(G_{i}(u)\chi_{\beta}^{\prime}(y_{i})\bigr)_{i=1}^{m}.$
+
+For the primal component, use the $\ell_{\infty}$ -to-Euclidean Jacobian estimate in ( 3.7 ) and $\|\chi_{\beta}(y)\|_{\infty}\leq\beta$ . For the dual component, use $|\chi_{\beta}^{\prime}|\leq 1$ and $\|G(u)\|^{2}\leq k_{+}$ . Together these give
+
+$\|\nabla_{x}V\|\leq rC_{1},\qquad\|\nabla_{y}V\|\leq r\sqrt{k_{+}}.$
+
+Consequently,
+
+$\|\nabla V\|^{2}\leq r^{2}(C_{1}^{2}+k_{+})=2\mu\alpha(C_{1}^{2}+k_{+})=\nu^{2}\mu\alpha=\Gamma^{2}.$
+
+Let $Z=\omega/p-1$ . Since $\mathbb{E}\omega=p$ ,
+
+$\mathbb{E}Z=0,\qquad\mathbb{E}\nabla f=\nabla F+(\mathbb{E}Z)\nabla V=\nabla F.$
+
+Moreover, $Z=-1$ when $\omega=0$ and $Z=(1-p)/p$ when $\omega=1$ . Therefore
+
+$\mathbb{E}Z^{2}=(1-p)+p\left(\frac{1-p}{p}\right)^{2}=\frac{1-p}{p}.$
+
+It follows that
+
+$\mathbb{E}\|\nabla f-\nabla F\|^{2}=(\mathbb{E}Z^{2})\|\nabla V\|^{2}\leq\frac{1-p}{p}\Gamma^{2}=\sigma^{2}.$
+
+We next verify block progress. The information argument uses the sample function itself. Expanding its definition gives
+
+$f(x,y;\omega)=\alpha H_{m}(u)-\frac{\mu}{2}\|y\|^{2}+r\sum_{i=1}^{m}G_{i}(u)\left[y_{i}+\left(\frac{\omega}{p}-1\right)\chi_{\beta}(y_{i})\right].$
+
+Suppose that a query point is supported on the first $q$ blocks, so $x_{j}=y_{j}=0$ for every $j>q$ . If $i\geq q+2$ , the prefix in $G_{i}$ contains $S(u_{q+1})=S(0)=0$ , and hence $G_{i}(u)=0$ . Every first derivative of $G_{i}$ also vanishes: differentiating the factor $S(u_{q+1})$ produces $S^{\prime}(0)=0$ , while differentiating any other factor leaves $S(u_{q+1})=0$ . Thus no term with $i\geq q+2$ contributes to the sample gradient.
+
+The only possible new block is $i=q+1$ . When $\omega=0$ , its sample coupling is
+
+$rG_{q+1}(u)h_{0}(y_{q+1}),\qquad h_{0}(t)=t-\chi_{\beta}(t).$
+
+Since $\chi_{\beta}(0)=0$ and $\chi_{\beta}^{\prime}(0)=1$ ,
+
+$h_{0}(0)=h_{0}^{\prime}(0)=0.$
+
+The primal derivatives of this coupling contain $h_{0}(0)$ , and its $y_{q+1}$ -derivative contains $h_{0}^{\prime}(0)$ ; all of them therefore vanish. The separable terms also produce no new block because $S^{\prime}(0)=J^{\prime}(0)=0$ and $-\mu y_{q+1}=0$ . Hence a failed draw reveals no new block.
+
+When $\omega=1$ , define
+
+$h_{1}(t)=t+\left(\frac{1}{p}-1\right)\chi_{\beta}(t).$
+
+Then
+
+$h_{1}(0)=0,\qquad h_{1}^{\prime}(0)=\frac{1}{p}.$
+
+Thus the $(q+1)$ -st dual gradient component may be nonzero, whereas the preceding argument still excludes every block beyond $q+1$ . All query points are selected before the shared draw $\omega$ . The same support conclusion therefore holds for their entire gradient batch: a failed draw reveals no new block, and a successful draw reveals at most the next one. The bound is independent of the finite batch size. ∎
+
+Appendix E Regularity proofs for the mean-square-smooth construction
+
+E.1 Proof of Lemma 7.1
+
+We first verify unbiasedness and the variance bound. Write $g(v;\omega)=\nabla_{v}\widetilde{h}(v;\omega)$ . The deterministic coupling cancels when the sample gradient is centered. Equations ( 7.1 ) and ( 7.4 ) therefore give
+
+$\mathbb{E}g(v;\omega)=\nabla h(v),\qquad\mathbb{E}\|g(v;\omega)-\nabla h(v)\|^{2}=\delta^{2}\frac{1-p}{p}\|\nabla Q_{m}(v/\lambda)\|^{2}\leq\frac{\delta^{2}V_{0}^{2}}{p}=\sigma^{2}.$
+
+We next establish same-sample mean-square smoothness. For two points evaluated with the same $\omega$ , write the gradient difference as its mean plus the centered Bernoulli term. The cross term has zero expectation, and hence
+
+$\mathbb{E}\|g(v;\omega)-g(v^{\prime};\omega)\|^{2}\leq\frac{\delta^{2}}{\lambda^{2}}\left(C_{\varphi}^{2}+\frac{C_{Q}^{2}}{p}\right)\|v-v^{\prime}\|^{2}.$
+
+Therefore the base mean-square Lipschitz constant is at most
+
+$\frac{\delta C_{\varphi}+\delta C_{Q}/\sqrt{p}}{\lambda}\leq\frac{\sigma(C_{\varphi}+C_{Q})}{V_{0}\lambda}=\frac{B}{2}=\frac{\bar{L}}{4},$
+
+where $\delta\leq\sigma/V_{0}$ and $\sqrt{p}=\delta V_{0}/\sigma$ .
+
+The gradient of $h$ is $\ell$ -Lipschitz.
+
+Strong concavity follows from the smoothness inequality for $h$ . Fix $x$ and set $d=y^{\prime}-y$ :
+
+$h(y^{\prime})\leq h(y)+\langle\nabla h(y),d\rangle+\frac{\ell}{2}\|d\|^{2}.$
+
+Expanding the quadratic term and using $c-\ell\geq\mu$ gives
+
+$F(x,y^{\prime})\leq F(x,y)+\langle\nabla_{y}F(x,y),d\rangle-\frac{\mu}{2}\|d\|^{2}.$
+
+Thus $F(x,\cdot)$ is $\mu$ -strongly concave. The same quadratic upper bound tends to $-\infty$ as $\|y\|\to\infty$ . Consequently, the inner maximum is finite and attained at a unique point $y^{*}(x)$ ; Danskin’s theorem gives differentiability of $\Phi$ .
+
+We now verify joint smoothness. The gradient of the quadratic coupling is $c(1+a^{2})$ -Lipschitz in $(x,y)$ . Indeed, for increments $(d_{x},d_{y})$ , its gradient increment has norm
+
+$c\sqrt{1+a^{2}}\,\|d_{y}-ad_{x}\|\leq c(1+a^{2})\|(d_{x},d_{y})\|.$
+
+Moreover,
+
+$c(1+a^{2})=\frac{2L}{\kappa}+\frac{L}{4}\leq\frac{L}{2}.$
+
+Thus the certified joint gradient Lipschitz constant of $F$ is
+
+$\widehat{L}_{\rm MSS}:=\ell+c(1+a^{2})\leq\mu+\frac{L}{2}\leq\frac{5L}{8}<L.$
+
+For the sample gradient, embed $g(y;\omega)$ in the full primal–dual space and apply the triangle inequality in $L^{2}(\Omega;\mathbb{R}^{2m})$ . Its joint mean-square Lipschitz constant is at most $\bar{L}/4+c(1+a^{2})\leq 3\bar{L}/4\leq\bar{L}$ , proving ( 7.6 ).
+
+Finally, we bound the initial gap. Lemma 3.2 gives $\varphi_{m}(0)-\inf\varphi_{m}\leq 5m$ , so $h(0)-\inf h\leq 5\delta\lambda m\leq\Delta/2$ . The descent lemma for the lower-bounded $\ell$ -smooth function $h$ gives $\|\nabla h(0)\|^{2}\leq 2\ell(h(0)-\inf h)$ . For any $y$ ,
+
+$h(y)-\frac{c}{2}\|y\|^{2}\leq h(0)+\langle\nabla h(0),y\rangle-\frac{c-\ell}{2}\|y\|^{2}.$
+
+Maximizing this upper bound gives $\Phi(0)\leq h(0)+\|\nabla h(0)\|^{2}/[2(c-\ell)]$ . Conversely, evaluating the inner problem at $y=ax$ gives $\Phi(x)\geq h(ax)$ , so $\inf_{x}\Phi(x)\geq\inf h$ . Combining these inequalities yields
+
+$\Phi(0)-\inf_{x}\Phi(x)\leq\frac{c}{c-\ell}(h(0)-\inf h)\leq 2\cdot\frac{\Delta}{2}=\Delta.$
+
+∎
+
+E.2 Proof of Lemma 7.5
+
+Let $F_{\rm d}$ be the deterministic instance from Proposition 5.3 . Equip it with the constant-sample representation
+
+$f_{\rm d}(z;\omega):=F_{\rm d}(z)\qquad\text{for every sample }\omega.$
+
+Then, for every $z$ ,
+
+$\mathbb{E}_{\omega}\nabla f_{\rm d}(z;\omega)=\nabla F_{\rm d}(z).$ (E.1)
+
+Consequently,
+
+$\mathbb{E}_{\omega}\|\nabla f_{\rm d}(z;\omega)-\nabla F_{\rm d}(z)\|^{2}=0\leq\sigma^{2}.$ (E.2)
+
+For any $z,z^{\prime}$ , the $L$ -smoothness in Proposition 5.3 and $\bar{L}\geq L$ give
+
+$\mathbb{E}_{\omega}\|\nabla f_{\rm d}(z;\omega)-\nabla f_{\rm d}(z^{\prime};\omega)\|^{2}\leq\bar{L}^{2}\|z-z^{\prime}\|^{2}.$ (E.3)
+
+Proposition 5.3 also gives
+
+$F_{\rm d}(x,\cdot)\text{ is }\mu\text{-strongly concave},\qquad\Phi_{\rm d}(0)-\inf_{x}\Phi_{\rm d}(x)\leq\Delta.$
+
+Equations ( E.1 )–( E.3 ) verify the remaining stochastic-oracle requirements. Hence $(F_{\rm d},f_{\rm d})$ belongs to the same mean-square-smooth class. ∎

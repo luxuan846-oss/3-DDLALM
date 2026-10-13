@@ -1,0 +1,357 @@
+\section{Introduction}
+\label{sec:introduction}
+In this paper, we study the structured nonsmooth nonconvex composite problem
+\begin{align}
+    \min_{\bx\in\RR^n}\quad & F(\bx) := f(\bx) + h(\calA(\bx)),
+    \tag{\textbf{P}}
+    \label{prob:main}
+\end{align}
+where $f\colon\RR^n\to\RR$ is a possibly nonconvex function with a Lipschitz
+continuous gradient, $\calA\colon\RR^n\to\RR^m$ is a smooth and possibly nonlinear
+mapping, and $h\colon\RR^m\to\RR\cup\{+\infty\}$ is a proper closed convex function
+whose proximal mapping is easy to evaluate; the complete assumptions are stated in
+Section~\ref{sec:assumptions}. The two components play complementary roles: $f$ is
+usually a smooth loss or data-fidelity term, whereas $h$ is a nonsmooth convex function
+that imposes robustness, sparsity, or other structure on the transformed variable
+$\calA(\bx)$
+\cite{charisopoulos2021low,markovsky2008structured,parekh2015convex}. Several models
+of practical interest take this form. 
+
+\subsection{Motivating Examples}
+
+\textbf{Robust phase retrieval}~\cite{duchi2019solving}.
+Given measurement vectors $\mathbf a_i\in\RR^n$ and observations
+$b_i\approx\langle\mathbf a_i,\bx^\star\rangle^2$, a fraction of which may be grossly
+corrupted, one solves
+\begin{equation*}
+  \min_{\bx\in\RR^n}\;\frac1m\sum_{i=1}^m
+  \bigl|\langle\mathbf a_i,\bx\rangle^2-b_i\bigr|.
+\end{equation*}
+This is~Problem \eqref{prob:main} with $f\equiv0$, $h=\frac1m\|\cdot\|_1$, and
+$\calA(\bx)_i=\langle\mathbf a_i,\bx\rangle^2-b_i$; the $\ell_1$ loss makes the
+model robust to outliers.
+
+\textbf{Robust low-rank matrix recovery}~\cite{charisopoulos2021low}.
+Given a linear measurement map $\mathcal M\colon\RR^{d_1\times d_2}\to\RR^m$ and
+observations $\mathbf b$ containing outliers, a rank-$r$ matrix is recovered in
+factorized form via
+\begin{equation*}
+  \min_{\mathbf U\in\RR^{d_1\times r},\,\mathbf V\in\RR^{d_2\times r}}
+  \frac1m\bigl\|\mathcal M(\mathbf U\mathbf V^\top)-\mathbf b\bigr\|_1.
+\end{equation*}
+Here $\bx=(\mathbf U,\mathbf V)$, $h=\frac1m\|\cdot\|_1$, and
+$\calA(\bx)=\mathcal M(\mathbf U\mathbf V^\top)-\mathbf b$ is bilinear in
+$(\mathbf U,\mathbf V)$, so the model again has the form~Problem \eqref{prob:main}.
+
+\textbf{Minimizing a pointwise maximum}~\cite{zhang2020single}.
+For smooth losses $f_1,\dots,f_m$, such as the losses on $m$ data subgroups, one solves
+\begin{equation*}
+  \min_{\bx\in\RR^n}\;\max_{1\le i\le m} f_i(\bx).
+\end{equation*}
+This is~Problem \eqref{prob:main} with $h(u)=\max_{1\le i\le m}u_i$ and
+$\calA(\bx)=(f_1(\bx),\dots,f_m(\bx))$; a smooth regularizer, if present, enters
+through $f$, and the proximal mapping of $h$ reduces to a projection onto the unit
+simplex.
+
+\subsection{Related Work}
+
+Introducing the auxiliary variable $\by=\calA(\bx)$ rewrites~Problem \eqref{prob:main} as
+the equality-constrained problem
+\begin{equation}\label{prob:split}
+  \min_{\bx,\by}\; f(\bx)+h(\by)\quad\text{s.t.}\quad \calA(\bx)=\by,
+\end{equation}
+which brings it within the scope of penalty methods and augmented Lagrangian methods
+(ALMs). For general nonlinearly constrained nonconvex problems, both families control
+feasibility through the penalty parameter. Quadratic penalty methods increase the
+penalty without bound~\cite{kong2019complexity,lin2022complexity}. ALMs were
+originally introduced to avoid such unbounded penalties
+\cite{hestenes1969multiplier,powell1969method}, and in convex programming any fixed
+penalty suffices~\cite{rockafellar1973multiplier}; in the nonconvex setting, however,
+inexact ALMs still increase the penalty across outer iterations to obtain complexity
+guarantees~\cite{sahin2019inexact,li2021rate}, and proximal ALM, which keeps the
+penalty fixed within a run, chooses its value according to the target accuracy
+\cite{xie2021proximal}. Single-loop methods have attracted growing attention because
+they avoid solving subproblems to high accuracy, yet they rely on the same mechanism:
+single-loop quadratic penalty schemes increase the penalty~\cite{alacaoglu2024complexity},
+and linearized ALMs use small dual steps oraccuracy $eps$-dependent parameters
+\cite{shi2025momentum}. A large penalty inflates the smoothness constant of the
+primal update, which forces small step sizes and makes the primal subproblems
+increasingly ill-conditioned.
+
+The split formulation~\eqref{prob:split} also carries favorable structure. Its
+constraint Jacobian $[J_{\calA}(\bx),\,-I]$ has full row rank at every $\bx$, so
+constraint qualifications hold automatically, and its objective separates into a
+smooth part in $\bx$ and a prox-friendly part in $\by$. Nonconvex ADMM and related
+Lagrangian-based splitting methods exploit exactly this structure
+\cite{bot2020proximal,cohen2022dynamic,hallak2023adaptive,elbourkhissi2025perturbed}.
+The structure, however, does not remove the need for a large penalty. For nonlinear
+$\calA$, adaptive Lagrangian schemes require penalty levels proportional to
+$1/\epsilon$~\cite{hallak2023adaptive}, and linearized perturbed ALMs use
+accuracy-dependent penalty and perturbation parameters~\cite{elbourkhissi2025perturbed}.
+The nonconvex--linear minimax route attains $\mathcal O(\epsilon^{-3})$
+\cite{pan2021efficient,he2024approximation,xu2026rada}, but its dual regularization
+acts as an effective penalty that grows as the target accuracy decreases. Fixed-penalty
+guarantees are available for smooth nonlinear equality constraints under a uniform LICQ
+\cite{elbourkhissi2025linearized,liu2026fixed}, but they do not cover the nonsmooth
+term $h(\by)$ in~\eqref{prob:split}. It therefore remains open whether a single-loop
+ALM can keep every penalty-type parameter independent of both the accuracy
+and the target accuracy while retaining an explicit first-order update for
+$h\circ\calA$.
+
+From another perspective, Problem~\eqref{prob:main} also admits a minimax reformulation. In particular, eliminating $\by$ from the Lagrangian of~\eqref{prob:split} gives
+\begin{equation}\label{eq:ncl}
+  \min_{\bx\in\RR^n}\max_{\blmbd\in\RR^m}\;
+  \calL(\bx,\blmbd) =  \Phi(\bx,\blmbd)-h^*(\blmbd), \qquad \Phi(\bx,\blmbd):=f(\bx)+\langle\blmbd,\calA(\bx)\rangle,
+\end{equation}
+where $\operatorname{dom}h^*\subseteq\mathbb B(\mathbf 0,L_h)$ by
+Assumption~\ref{ass:h}. This is a nonconvex--linear instance of the smooth
+nonconvex--concave (NC-C) minimax problem. Since $\blmbd$ is exactly the multiplier of $\calA(\bx)=\by$, KKT points
+of~\eqref{prob:split} and game-stationary (GS) points of~\eqref{eq:ncl} agree up to
+constants, and ALMs can be read as single-loop minimax methods. 
+For large-scale problems, we focus on single-loop first-order methods, which
+update each variable by one explicit step per iteration without an inner
+solver. The basic method of this kind for~\eqref{eq:ncl} is gradient
+descent--ascent (GDA). It converges slowly because regularity fails on both
+sides: $\Phi$ is only linear in $\blmbd$, so the best response
+$\blmbd^\star(\bx)$ is in general set-valued, and $\Phi$ is nonconvex in $\bx$,
+so $\bx^\star(\blmbd)$ need not be unique or stable. Even with two timescales,
+GDA needs $\mathcal O(\epsilon^{-6})$ iterations to reach an $\epsilon$-GS
+point~\cite{lin2020gradient}.
+
+Two techniques improve on this rate, each restoring regularity on one side.
+The first is primal smoothing, which adds $\frac{1}{2\gamma}\|\bx-\bz\|^2$ with
+a fixed $\gamma$ and moves the center slowly by
+$\bz^{t+1}=\bz^t+\beta(\bx^{t+1}-\bz^t)$. The target accuracy enters only
+through $\beta$: with $\beta=\Theta(\epsilon^2)$, the resulting Smoothed GDA
+finds an $\epsilon$-GS point in $\mathcal O(\epsilon^{-4})$ iterations. For the
+pointwise maximum of finitely many smooth functions, i.e.,~\eqref{eq:ncl} with
+$h(\bu)=\max_i u_i$, strict complementarity permits a constant $\beta$ and
+improves the bound to $\mathcal O(\epsilon^{-2})$~\cite{zhang2020single}.
+
+The second technique is dual regularization, which subtracts
+$\frac{1}{2s}\|\blmbd-\bmu\|^2$ from the dual objective and makes it strongly
+concave. In our reduced augmented-Lagrangian formulation, this regularization
+has an effective-penalty interpretation:
+\begin{equation}\label{eq:intro-effective-penalty}
+  \max_{\blmbd}\mathcal P_s(\bx,\blmbd;\bz,\bmu)
+  =\calD_{\rho+s}(\bx,\bmu)
+    +\frac{1}{2\gamma}\|\bx-\bz\|^2,
+\end{equation}
+where $\mathcal P_s$ is defined in~\eqref{eq:potential} and
+$\calD_{\rho+s}$ is the reduced augmented Lagrangian~\eqref{eq:reduced-al}
+with penalty $\rho+s$; see Lemma~\ref{lem:effective-penalty}.
+A zero center $\bmu=\mathbf 0$ recovers a quadratic penalty with
+coefficient $\rho+s$, which can leave a nonzero feasibility residual
+when $s$ is fixed. Updating $\bmu$ instead provides a multiplier-update
+mechanism that may recover feasibility while keeping $\rho+s$ fixed;
+its convergence and complexity depend on the coupled updates.
+
+With the dual center fixed at $\bmu=\mathbf 0$, Perturbed GDA
+attains an $\mathcal O(\epsilon^{-4})$ complexity for finding an
+$\epsilon$-GS point~\cite{lu2020hybrid,xu2023unified}, and Li et al. establish
+a matching algorithm-specific lower bound~\cite{li2026smoothing}.
+Methods exploiting the NC-L structure attain
+$\mathcal O(\epsilon^{-3})$~\cite{pan2021efficient,he2024approximation,xu2026rada}.
+These guarantees rely on accuracy-dependent regularization parameters,
+corresponding to an effective penalty that increases as $\epsilon$ decreases. To improve the iteration complexity, Li et al. combine primal smoothing
+with zero-centered dual perturbation to develop Perturbed Smoothed GDA,
+which yields a genuine improvement in complexity order, reducing
+the GS complexity of Perturbed GDA from $\mathcal O(\epsilon^{-4})$
+to $\mathcal O(\epsilon^{-3})$ with a matching lower
+bound~\cite{li2026smoothing}. However, the dual regularization coefficient still satisfies
+$1/s=\Theta(\epsilon)$.
+
+With a moving dual center $\bmu$ and fixed primal and dual regularization
+coefficients, DS-GDA achieves $\mathcal O(\epsilon^{-4})$ complexity
+for nonconvex--concave problems. Faster rates are available under a
+uniform one-sided K{\L} condition~\cite{zheng2023universal}.
+Without primal smoothing, PPALA reports
+$\widetilde{\mathcal O}(\epsilon^{-2})$ complexity with fixed parameters
+for functionally constrained optimization~\cite{kim2024fast}.
+However, its feasibility argument relies on asymptotic reasoning,
+and a corresponding finite-iteration feasibility bound remains
+to be verified.
+
+In all guarantees above that reach $\mathcal O(\epsilon^{-3})$, some
+parameter grows with $1/\epsilon$: either the penalty, as in penalty methods
+and GDPA, or the dual regularization, as in Perturbed Smoothed GDA. Practical
+ALM implementations, in contrast, usually keep the penalty fixed. Growing the
+penalty is costly for a single-loop method, because the Lipschitz constant of
+$\nabla_{\bx}\calD_\rho$ increases with $\rho$ and forces the primal stepsize
+to shrink. This leads to the following question.
+\begin{quote}
+  \textbf{(Q)}
+  \emph{To reach $\mathcal O(\epsilon^{-3})$, must a single-loop linearized ALM
+  let some parameter grow with $1/\epsilon$? If so, must this growth be
+  carried by the penalty parameter?}
+\end{quote}
+We answer the first part affirmatively and the second part negatively. By
+Lemma~\ref{lem:effective-penalty}, the relevant quantity is the effective
+penalty $\rho+s$. For any arbitrary choice of constant primal and dual center
+stepsizes, SPLALM requires $\Omega(\epsilon^{-4})$ iterations whenever
+$\rho+s\le c_1/\epsilon$ (Theorem~\ref{thm:lower-bound}). Conversely, with
+$\rho$ fixed, $s$ of order $1/\epsilon$, and the dual center fixed at zero,
+SPLALM reduces to perturbed smoothed GDA applied to $\calD_\rho$ and reaches
+an $\epsilon$-KKT point in $\mathcal O(\epsilon^{-3})$
+iterations~\cite[Theorem~3.3]{li2026smoothing}.
+% TODO: cite our beta=0 theorem once it is written and checked.
+The growth required by the lower bound can thus be carried entirely by the
+dual regularization, while the penalty stays fixed.
+Appendix~\ref{sec:upper-bound} gives a schedule with increasing $s_k$ that
+attains the same rate without fixing $\epsilon$ in advance.
+Table~\ref{tab:known-results} summarizes representative complexity
+guarantees.
+
+% The fixed-$s$ question, including the role of primal smoothing and structural conditions that may yield faster rates, remains the subject of the research objectives stated below.
+
+\begin{table*}[tp]
+\centering
+\begin{threeparttable}
+\scriptsize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+\multirow{3}{*}{Algorithms}
+ & \multicolumn{4}{c}{Regularization and penalty parameters}
+ & \multicolumn{2}{c}{Complexity} \\
+\cmidrule(lr){2-5}\cmidrule(lr){6-7}
+ & \multirow{2}{*}{\makecell{Penalty\\parameter}}
+ & \multirow{2}{*}{\makecell{Primal smoothing\\$\frac{1}{2\gamma}\|\bx-\bz\|^2$}}
+ & \multicolumn{2}{c}{\makecell{Dual regularization\\$-\frac{1}{2s}\|\blmbd-\bmu\|^2$}}
+ & \multirow{2}{*}{Upper bound} & \multirow{2}{*}{Lower bound} \\
+\cmidrule(lr){4-5}
+ & & & Center $\bmu$ & Parameter $s$ & & \\
+\midrule
+\rowcolor{gray!15}
+\multicolumn{7}{@{}l}{\textbf{GDA-based Methods}} \\[2pt]
+\makecell[l]{\emph{Smoothed GDA}\\\cite{zhang2020smoothed,li2026smoothing}}
+ & --- & $\gamma=\Theta(1)$ & --- & ---
+ & $\mathcal O(\epsilon^{-4})$ & $\Omega(\epsilon^{-4})$ \\[3pt]
+\makecell[l]{\emph{Perturbed GDA}\\\cite{lu2020hybrid,xu2023unified,li2026smoothing}}
+ & --- & ---
+ & $\bmu\equiv\mathbf 0$ & $\Theta(\epsilon^{-1})$
+ & $\mathcal O(\epsilon^{-4})$ & $\Omega(\epsilon^{-4})$ \\[3pt]
+\makecell[l]{\emph{Perturbed Smoothed GDA}\\\cite{li2026smoothing}}
+ & --- & $\gamma=\Theta(1)$
+ & $\bmu\equiv\mathbf 0$ & $\Theta(\epsilon^{-1})$
+ & $\mathcal O(\epsilon^{-3})$ & $\Omega(\epsilon^{-3})$ \\[3pt]
+\makecell[l]{\emph{RADA}\\\cite{xu2026rada}}
+ & --- & ---
+ & $\bmu\not\equiv\mathbf 0$ & $(r_\epsilon+\beta_k)^{-1}$
+ & $\mathcal O(\epsilon^{-3})$ & --- \\[3pt]
+\makecell[l]{\emph{DS-GDA}\\\cite{zheng2023universal}}
+ & --- & $\gamma=\Theta(1)$
+ & $\bmu\not\equiv\mathbf 0$ & $\Theta(1)$
+ & $\underline{\mathcal O(\epsilon^{-4})}$ & --- \\
+\midrule
+\rowcolor{gray!15}
+\multicolumn{7}{@{}l}{\textbf{Penalty and augmented Lagrangian-based methods}} \\[2pt]
+\makecell[l]{\emph{Quadratic penalty}\\\cite{alacaoglu2024complexity}}
+ & $\rho_k=\Theta((k+1)^{1/4})$ & ---
+ & $\bmu\equiv\mathbf 0$ & $\Theta((k+1)^{1/4})$
+ & $\widetilde{\mathcal O}(\epsilon^{-4})$ & --- \\[3pt]
+% \makecell[l]{\emph{MLALM}\\\cite{shi2025momentum}}
+%  & \makecell{$\rho=\Theta(K^{1/4})$\\$=\Theta(\epsilon^{-1})$}
+%  & --- & --- & ---
+%  & $\mathcal O(\epsilon^{-4})$ & --- \\[3pt]
+\makecell[l]{\emph{GDPA}\\\cite{luSingleLoopGradientDescent2022}}
+ & $\rho_k=\Theta(\epsilon^{-1})$
+ & ---
+ & $\bmu\equiv\mathbf 0$ & $\Theta(\epsilon^{-1})$
+ & $\mathcal O(\epsilon^{-3})$ & --- \\[3pt]
+\makecell[l]{\emph{PPALA}\\\cite{kim2024fast}}
+ & $\rho=\Theta(1)$ & ---
+ & $\bmu\not\equiv\mathbf 0$ & $\Theta(1)$
+ & $\widetilde{\mathcal O}(\epsilon^{-2})$ & --- \\[3pt]
+ \midrule
+\makecell[l]{\textbf{\emph{SPLALM}}\\\emph{Theorem~\ref{thm:lower-bound}}}
+ & $\rho>0$ & $\gamma=\Theta(1)$
+ & any & \makecell{$\rho+s$\\$\le c_1\epsilon^{-1}$}
+ & ? & $\Omega(\epsilon^{-4})$ \\[3pt]
+\makecell[l]{\textbf{\emph{SPLALM}}\\\emph{Theorem~\ref{thm:main}}}
+ & $\rho=\Theta(1)$ & $\gamma=\Theta(1)$
+ & $\bmu\not\equiv\mathbf 0$ & $\Theta((k+1)^{1/3})$
+ & $\mathcal O(\epsilon^{-3})$ & ? \\
+\bottomrule
+\end{tabular}
+\caption{Representative single-loop methods, grouped by their original
+formulation. The constrained rows concern nonlinear constraints. Upper bounds display the dependence on $\epsilon$, suppressing
+problem constants and bounded initial gaps. The regularization columns specify parameters and centers, not gradient
+stepsizes; primal smoothing uses a separate
+moving center. ``---'' denotes an absent regularizer or an unreported lower
+bound; question marks denote results to be established. Constant parameters
+are independent of $\epsilon$ and $k$. The rates use each method's stated
+stationarity criterion and assumptions; lower bounds are algorithm-specific.}
+\label{tab:known-results}
+\end{threeparttable}
+\end{table*}
+\clearpage
+
+In this paper, we provide a precise characterization addressing (Q). Our
+contributions can be summarized as follows.
+\begin{enumerate}
+    \item \textbf{A lower bound independent of the center stepsizes.}
+    We study SPLALM, which performs alternating gradient descent--ascent
+    steps on the reduced augmented Lagrangian $\calD_\rho$ with a fixed
+    penalty $\rho>0$, a dual regularization with parameter $s$, and moving
+    primal and dual centers (Definition~\ref{def:splalm}). The family contains
+    the update structures of quadratic-penalty, perturbed smoothed GDA, doubly
+    smoothed GDA, smoothed GDA, and linearized ALM methods acting on
+    $\calD_\rho$ (Table~\ref{tab:special-cases}), and every member has the
+    effective penalty $\rho+s$ (Lemma~\ref{lem:effective-penalty}). By
+    carefully designing hard instances, we establish a lower bound of
+    $\Omega(\epsilon^{-4})$ for SPLALM with any arbitrary choice of constant
+    center stepsizes $(\alpha,\beta)\in[0,1]^2$, whenever
+    $\epsilon(\rho+s)\le c_1$ (Theorem~\ref{thm:lower-bound}). On each hard
+    instance, SPLALM started from zero requires at least this many iterations
+    to guarantee that one of its outputs is an $\epsilon$-KKT point. Hence
+    moving the centers cannot compensate for an effective penalty
+    $\rho+s=o(\epsilon^{-1})$.
+    % TODO: GS version. A strictly convex perturbation of the outer function
+    % would convert this bound into a lower bound of the same order for game
+    % stationarity of the output pairs (x^{k+1},q^k). Restore this sentence
+    % only after the perturbation lemma is proved.
+
+    \item \textbf{The necessary scale of the effective penalty.}
+    We demonstrate that, with $\rho$ fixed, $s=\Theta(\epsilon^{-1})$, and
+    $\beta=0$, SPLALM reduces to perturbed smoothed GDA applied to
+    $\calD_\rho$ and finds an $\epsilon$-KKT point within
+    $\mathcal O(\epsilon^{-3})$ iterations. The result follows
+    from~\cite[Theorem~3.3]{li2026smoothing} once the initial gap and the
+    stationarity measure are expressed through the constants of
+    $\mathcal I(\mathbf C,\Delta)$. Together with the lower bound, this
+    establishes $\epsilon^{-1}$ as the order that the effective penalty must
+    reach, and suffices to reach, for constant parameters. In other words, the
+    dual regularization alone can carry this growth while the penalty stays
+    fixed.
+    % TODO: add the theorem reference after the beta=0 upper bound is written
+    % and checked (notes/prompts/gptpro-beta0-upper-check.md).
+
+    \item \textbf{Tightness under a fixed effective penalty.}
+    For $\beta=1$, SPLALM reduces to smoothed GDA applied to $\calD_\rho$, and
+    we establish the iteration complexity $\mathcal O(\epsilon^{-4})$ uniformly
+    over $\mathcal I(\mathbf C,\Delta)$ by adapting~\cite{zhang2020smoothed}.
+    This certifies that the lower bound is tight for fixed $\rho$ and $s$ and
+    sufficiently small $\gamma$, $\eta$, and $\tau$. These results lead to the
+    following conceptual picture: the order of the iteration complexity is
+    determined by $\rho+s$ alone, and the center stepsizes do not change it.
+    % TODO: add the theorem reference after the beta=1 upper bound is written.
+\end{enumerate}
+
+% Open questions moved from the former (Q2) and (Q3); to be placed in the
+% concluding section: (i) the complexity gain of primal smoothing under a
+% fixed s and a moving dual center; (ii) structural conditions on
+% (f,h,A) that yield a center--primal error bound and faster rates under a
+% fixed effective penalty.
+
+
+
+
+\paragraph{Organization}
+Section~\ref{sec:preliminaries} introduces the problem class and the KKT and
+game-stationarity criteria. Section~\ref{sec:algorithm-framework} introduces
+the SPLALM family and the complexity measure, and shows that every member
+of the family has the effective penalty
+$\rho+s$. Section~\ref{sec:lower-bound} states the main results, and
+Section~\ref{sec:lb-proof} proves the lower bound.
