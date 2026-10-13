@@ -1,20 +1,88 @@
-% !TEX root = ../main.tex
 \section{Hard Instances and Proof of Theorem~\ref{thm:lower-bound}}
 \label{sec:lb-proof}
 
-The proof uses two instances, according to the size of the primal center
-stepsize \(\alpha\). Set \(\varpi:=\max\{1,4\tau,4\gamma\tau\}\) and
-\(\alpha_\epsilon:=1024\varpi\epsilon^2\).
+In Section~\ref{sec:lower-bound}, we stated a lower bound on the iteration
+complexity of SPLALM Family within the general 
+with constant center stepsizes. In this section, we
+prove Theorem~\ref{thm:lower-bound}. Specifically, for every \(\epsilon\)
+and \(\theta\) satisfying the conditions of Theorem~\ref{thm:lower-bound}
+and every pair \((\alpha,\beta)\in[0,1]^2\), we construct a hard instance
+\(I\in\mathcal I(\mathbf C_0,\Delta)\) and show that
+\(\mathrm{SPLALM}_{\theta,\alpha,\beta}\), started from the zero
+initialization of Definition~\ref{def:splalm}, requires at least the stated
+number of iterations to produce an \(\epsilon\)-KKT output. Since such an
+instance exists for every admissible choice of parameters, no choice of
+parameters improves on the worst-case bound. Throughout this section,
+\(\alpha\) and \(\beta\) are fixed across all iterations; time-varying
+center stepsizes are treated in Section~\ref{sec:time-varying}. In
+quantified form,
+\[
+\forall\,(\alpha,\beta)\in[0,1]^2,\quad
+\exists\,I\in\mathcal I(\mathbf C_0,\Delta):\quad
+T^{\mathrm{KKT}}_\epsilon(\theta,\alpha,\beta;I)
+\ge\frac{\Delta\,\epsilon^{-4}}{32768\,\gamma\max\{1,4\tau,4\gamma\tau\}}.
+\]
+Different parameters may use different instances; this is the meaning of
+taking the infimum over parameters before the supremum over instances in
+Definition~\ref{def:complexity-measure}.
+
+The lower bounds of~\cite[Section~5]{li2026smoothing}
+and~\cite[Appendix~C.1]{mahdavinia2022tight} choose the initialization
+together with the hard function, along an eigenvector of the iteration
+matrix. The two papers also cover different sets of parameters.
+\cite{li2026smoothing} establish tightness for the parameters of their
+upper bounds, with \(r_y=\Theta(\epsilon/D_{\mathcal Y})\). The proof
+in~\cite[Appendix~C.1]{mahdavinia2022tight} fixes
+\(\eta_y=\Theta(1/\ell)\) and considers every \(\eta_x\).
+Theorem~\ref{thm:lower-bound} fixes the gradient stepsizes \(\eta,\tau\),
+covers every pair of constant center stepsizes, and keeps the
+initialization fixed in advance.
+
+Given a threshold \(\alpha_\epsilon\), specified in
+Section~\ref{subsec:lb-combine}, we assign each pair \((\alpha,\beta)\) to
+one of three instances according to the partition
+\[
+[0,1]^2=\{\alpha\le\alpha_\epsilon\}
+\ \cup\ \{\alpha>\alpha_\epsilon,\ \beta>0\}
+\ \cup\ \{\alpha>\alpha_\epsilon,\ \beta=0\}.
+\]
+Each instance handles only the pairs assigned to it.
+Section~\ref{subsec:lb-plateau} treats \(\alpha\le\alpha_\epsilon\) with a
+plateau instance, on which the primal center moves slowly.
+Section~\ref{subsec:lb-rotation} treats \(\alpha>\alpha_\epsilon\) and
+\(\beta>0\) with a rotating instance, on which the certificate stays above
+\(\epsilon\) for all iterations. Section~\ref{subsec:lb-huber} treats
+\(\beta=0\) with an instance whose outer function is a Huber function.
+Section~\ref{subsec:lb-combine} specifies \(\alpha_\epsilon\), \(c_1\), and
+\(c_2\), and combines the three cases.
 
 \paragraph{Small \(\alpha\).}
 Take \(\calA\equiv0\), \(h=|\cdot|\), and let \(f\) be a one-dimensional
-Huber function whose slope equals \(g:=2\epsilon\) on a plateau of height
-\(\Delta\). Since \(\calA\equiv0\), the multipliers stay at zero, and the
-center \(z^k\) moves by at most \(\alpha\gamma g\) per iteration, so
-\(x^k\le\gamma g(1+\alpha k)\). The iterates therefore stay on the plateau,
+Huber function with derivative \(-2\epsilon\) on a linear interval
+and initial objective gap \(\Delta\). Since \(\calA\equiv0\), the multipliers stay at zero, and the
+center \(z^k\) moves by at most \(2\alpha\gamma\epsilon\) per iteration, so
+\(x^k\le2\gamma\epsilon(1+\alpha k)\). The iterates therefore stay on the plateau,
 where \(R_k=2\epsilon\), for \(\Omega\bigl(\Delta/(\gamma\alpha\epsilon^2)\bigr)\)
 iterations. For \(\alpha\le\alpha_\epsilon\), this is
 \(\Omega(\Delta\epsilon^{-4})\).
+
+
+Figure~\ref{fig:plateau-instance} illustrates the constant-gradient interval and
+its transition to the quadratic region.
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.92\linewidth]{figures/plateau_instance.pdf}
+\caption{The one-dimensional Huber instance, illustrated with
+\(\Delta=1\) and \(\epsilon=0.1\), where
+\(x_\star=\Delta/(2\epsilon)+\epsilon\).
+The shaded interval \([0,x_\star-2\epsilon]\) has derivative
+\(-2\epsilon\), and \(f(0)=\Delta\).
+The inset enlarges the quadratic region
+\([x_\star-2\epsilon,x_\star+2\epsilon]\), where
+\(f(x)=\tfrac12(x-x_\star)^2\) and \(f(x_\star)=0\).
+The two linear tails ensure bounded sublevel sets.}
+\label{fig:plateau-instance}
+\end{figure}
 
 \paragraph{Large \(\alpha\).}
 Take \(h=\|\cdot\|_2\), \(\calA(\bx)=b(\bx-\bx_c)\), and let \(f\) be a
