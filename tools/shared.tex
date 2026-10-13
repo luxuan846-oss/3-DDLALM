@@ -199,6 +199,7 @@
 \@ifundefined{newsiamremark}{
   \@ifundefined{assumption}{\newtheorem{assumption}{Assumption}}{}
   \@ifundefined{remark}{\newtheorem{remark}[theorem]{Remark}}{}
+  \@ifundefined{example}{\newtheorem{example}[theorem]{Example}}{}
 }{
   \@ifundefined{assumption}{
     \theoremstyle{plain}
@@ -209,6 +210,7 @@
     \newtheorem{assumption}{Assumption}
   }{}
   \@ifundefined{remark}{\newsiamremark{remark}{Remark}}{}
+  \@ifundefined{example}{\newsiamremark{example}{Example}}{}
 }
 \@ifundefined{proof}{\newenvironment{proof}[1][Proof]{\par\noindent\textbf{#1.}\space}{\hfill$\square$\par}}{}
 \@ifundefined{noproof}{\newenvironment{noproof}{\par\noindent\textbf{Proof.}\space}{\hfill\par}}{}

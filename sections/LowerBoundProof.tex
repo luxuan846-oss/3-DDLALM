@@ -1,105 +1,203 @@
 \section{Hard Instances and Proof of Theorem~\ref{thm:lower-bound}}
 \label{sec:lb-proof}
 
-In Section~\ref{sec:lower-bound}, we stated a lower bound on the iteration
-complexity of SPLALM Family within the general 
-with constant center stepsizes. In this section, we
-prove Theorem~\ref{thm:lower-bound}. Specifically, for every \(\epsilon\)
-and \(\theta\) satisfying the conditions of Theorem~\ref{thm:lower-bound}
-and every pair \((\alpha,\beta)\in[0,1]^2\), we construct a hard instance
-\(I\in\mathcal I(\mathbf C_0,\Delta)\) and show that
-\(\mathrm{SPLALM}_{\theta,\alpha,\beta}\), started from the zero
-initialization of Definition~\ref{def:splalm}, requires at least the stated
-number of iterations to produce an \(\epsilon\)-KKT output. Since such an
-instance exists for every admissible choice of parameters, no choice of
-parameters improves on the worst-case bound. Throughout this section,
-\(\alpha\) and \(\beta\) are fixed across all iterations; time-varying
-center stepsizes are treated in Section~\ref{sec:time-varying}. In
-quantified form,
+In Section~\ref{sec:lower-bound}, we established a lower bound on the iteration
+complexity of the SPLALM family that holds for every choice of constant center
+stepsizes. In this section, we prove this result by constructing hard instances.
+
+Fix \(\epsilon\) and \(\theta\) satisfying the conditions of
+Theorem~\ref{thm:lower-bound}. The lower bound has the quantified form
 \[
 \forall\,(\alpha,\beta)\in[0,1]^2,\quad
 \exists\,I\in\mathcal I(\mathbf C_0,\Delta):\quad
 T^{\mathrm{KKT}}_\epsilon(\theta,\alpha,\beta;I)
-\ge\frac{\Delta\,\epsilon^{-4}}{32768\,\gamma\max\{1,4\tau,4\gamma\tau\}}.
+\geq \Omega(\Delta\epsilon^{-4}).
 \]
-Different parameters may use different instances; this is the meaning of
-taking the infimum over parameters before the supremum over instances in
-Definition~\ref{def:complexity-measure}.
-
-The lower bounds of~\cite[Section~5]{li2026smoothing}
-and~\cite[Appendix~C.1]{mahdavinia2022tight} choose the initialization
-together with the hard function, along an eigenvector of the iteration
-matrix. The two papers also cover different sets of parameters.
-\cite{li2026smoothing} establish tightness for the parameters of their
-upper bounds, with \(r_y=\Theta(\epsilon/D_{\mathcal Y})\). The proof
-in~\cite[Appendix~C.1]{mahdavinia2022tight} fixes
-\(\eta_y=\Theta(1/\ell)\) and considers every \(\eta_x\).
-Theorem~\ref{thm:lower-bound} fixes the gradient stepsizes \(\eta,\tau\),
-covers every pair of constant center stepsizes, and keeps the
-initialization fixed in advance.
+Thus, different choices of \((\alpha,\beta)\) may require different hard
+instances. For each pair, we construct an instance in
+\(\mathcal I(\mathbf C_0,\Delta)\) on which
+\(\mathrm{SPLALM}_{\theta,\alpha,\beta}\), started from the zero
+initialization prescribed in Definition~\ref{def:splalm}, requires at least
+the stated number of iterations to produce an \(\epsilon\)-KKT output.
 
 Given a threshold \(\alpha_\epsilon\), specified in
-Section~\ref{subsec:lb-combine}, we assign each pair \((\alpha,\beta)\) to
-one of three instances according to the partition
+Section~\ref{subsec:lb-combine}, we organize the construction into three cases:
 \[
-[0,1]^2=\{\alpha\le\alpha_\epsilon\}
-\ \cup\ \{\alpha>\alpha_\epsilon,\ \beta>0\}
-\ \cup\ \{\alpha>\alpha_\epsilon,\ \beta=0\}.
+\begin{aligned}
+[0,1]^2
+={}&\bigl\{(\alpha,\beta)\in[0,1]^2:\alpha\le\alpha_\epsilon\bigr\}\\
+&\cup\bigl\{(\alpha,\beta)\in[0,1]^2:\alpha>\alpha_\epsilon,\ \beta>0\bigr\}\\
+&\cup\bigl\{(\alpha,\beta)\in[0,1]^2:\alpha>\alpha_\epsilon,\ \beta=0\bigr\}.
+\end{aligned}
 \]
-Each instance handles only the pairs assigned to it.
-Section~\ref{subsec:lb-plateau} treats \(\alpha\le\alpha_\epsilon\) with a
-plateau instance, on which the primal center moves slowly.
-Section~\ref{subsec:lb-rotation} treats \(\alpha>\alpha_\epsilon\) and
-\(\beta>0\) with a rotating instance, on which the certificate stays above
-\(\epsilon\) for all iterations. Section~\ref{subsec:lb-huber} treats
-\(\beta=0\) with an instance whose outer function is a Huber function.
-Section~\ref{subsec:lb-combine} specifies \(\alpha_\epsilon\), \(c_1\), and
-\(c_2\), and combines the three cases.
+Each case is covered by a separate hard instance.
 
-\paragraph{Small \(\alpha\).}
-Take \(\calA\equiv0\), \(h=|\cdot|\), and let \(f\) be a one-dimensional
-Huber function with derivative \(-2\epsilon\) on a linear interval
-and initial objective gap \(\Delta\). Since \(\calA\equiv0\), the multipliers stay at zero, and the
-center \(z^k\) moves by at most \(2\alpha\gamma\epsilon\) per iteration, so
-\(x^k\le2\gamma\epsilon(1+\alpha k)\). The iterates therefore stay on the plateau,
-where \(R_k=2\epsilon\), for \(\Omega\bigl(\Delta/(\gamma\alpha\epsilon^2)\bigr)\)
-iterations. For \(\alpha\le\alpha_\epsilon\), this is
-\(\Omega(\Delta\epsilon^{-4})\).
+% The lower bounds of~\cite[Section~5]{li2026smoothing}
+% and~\cite[Appendix~C.1]{mahdavinia2022tight} choose the initialization
+% together with the hard function, along an eigenvector of the iteration
+% matrix. The two papers also cover different sets of parameters.
+% \cite{li2026smoothing} establish tightness for the parameters of their
+% upper bounds, with \(r_y=\Theta(\epsilon/D_{\mathcal Y})\). The proof
+% in~\cite[Appendix~C.1]{mahdavinia2022tight} fixes
+% \(\eta_y=\Theta(1/\ell)\) and considers every \(\eta_x\).
+% Theorem~\ref{thm:lower-bound} fixes the gradient stepsizes \(\eta,\tau\),
+% covers every pair of constant center stepsizes, and keeps the
+% initialization fixed in advance.
+
+% Each instance handles only the pairs assigned to it.
+% Section~\ref{subsec:lb-plateau} treats \(\alpha\le\alpha_\epsilon\) with a
+% plateau instance, on which the primal center moves slowly.
+% Section~\ref{subsec:lb-rotation} treats \(\alpha>\alpha_\epsilon\) and
+% \(\beta>0\) with a rotating instance, on which the certificate stays above
+% \(\epsilon\) for all iterations. Section~\ref{subsec:lb-huber} treats
+% \(\beta=0\) with an instance whose outer function is a Huber function.
+% Section~\ref{subsec:lb-combine} specifies \(\alpha_\epsilon\), \(c_1\), and
+% \(c_2\), and combines the three cases.
+
+% \paragraph{Small \(\alpha\).}
+% Take \(\calA\equiv0\), \(h=|\cdot|\), and let \(f\) be a one-dimensional
+% Huber function with derivative \(-2\epsilon\) on a linear interval
+% and initial objective gap \(\Delta\). Since \(\calA\equiv0\), the multipliers stay at zero, and the
+% center \(z^k\) moves by at most \(2\alpha\gamma\epsilon\) per iteration, so
+% \(x^k\le2\gamma\epsilon(1+\alpha k)\). The iterates therefore stay on the plateau,
+% where \(R_k=2\epsilon\), for \(\Omega\bigl(\Delta/(\gamma\alpha\epsilon^2)\bigr)\)
+% iterations. For \(\alpha\le\alpha_\epsilon\), this is
+% \(\Omega(\Delta\epsilon^{-4})\).
 
 
-Figure~\ref{fig:plateau-instance} illustrates the constant-gradient interval and
-its transition to the quadratic region.
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.92\linewidth]{figures/plateau_instance.pdf}
-\caption{The one-dimensional Huber instance, illustrated with
-\(\Delta=1\) and \(\epsilon=0.1\), where
-\(x_\star=\Delta/(2\epsilon)+\epsilon\).
-The shaded interval \([0,x_\star-2\epsilon]\) has derivative
-\(-2\epsilon\), and \(f(0)=\Delta\).
-The inset enlarges the quadratic region
-\([x_\star-2\epsilon,x_\star+2\epsilon]\), where
-\(f(x)=\tfrac12(x-x_\star)^2\) and \(f(x_\star)=0\).
-The two linear tails ensure bounded sublevel sets.}
-\label{fig:plateau-instance}
-\end{figure}
+% Figure~\ref{fig:plateau-instance} illustrates the constant-gradient interval and
+% its transition to the quadratic region.
+% \begin{figure}[htbp]
+% \centering
+% \includegraphics[width=0.92\linewidth]{figures/plateau_instance.pdf}
+% \caption{The one-dimensional Huber instance, illustrated with
+% \(\Delta=1\) and \(\epsilon=0.1\), where
+% \(x_\star=\Delta/(2\epsilon)+\epsilon\).
+% The shaded interval \([0,x_\star-2\epsilon]\) has derivative
+% \(-2\epsilon\), and \(f(0)=\Delta\).
+% The inset enlarges the quadratic region
+% \([x_\star-2\epsilon,x_\star+2\epsilon]\), where
+% \(f(x)=\tfrac12(x-x_\star)^2\) and \(f(x_\star)=0\).
+% The two linear tails ensure bounded sublevel sets.}
+% \label{fig:plateau-instance}
+% \end{figure}
 
-\paragraph{Large \(\alpha\).}
-Take \(h=\|\cdot\|_2\), \(\calA(\bx)=b(\bx-\bx_c)\), and let \(f\) be a
-quadratic with negative curvature \(-\kappa\) near \(\bx_c\). While the
-trajectory stays in \(\mathcal R_\rho\), Proposition~\ref{prop:embedding}
-shows that the update is the linear time-invariant system
-\(\bw^{k+1}=\mathbb T\bw^k\). We choose \(b\) and \(\kappa\) so that
-\(\mathbb T\) has an eigenvalue \(\zeta\) with \(|\zeta|=1\). Along its
-eigenvector \(\bv\), the iterates rotate without decay, and the certificate
-keeps a fixed positive value. The zero initialization is not parallel to
-\(\bv\). We write it as \(\bv+\br\), where \(\br\) lies in the invariant
-subspace of the remaining eigenvalues, all strictly inside the unit circle.
-The shifts \(\bx_c\) and \(\blmbd_c\) make \(\bv+\br\) correspond to the
-origin. A bound on the transient \(\mathbb T^k\br\) keeps the trajectory in
-\(\mathcal R_\rho\) and gives \(R_k\ge\frac76\epsilon\) for all \(k\). The
-case \(\beta=0\) uses a separate one-dimensional instance with a Huber outer
-function \(h\).
+% \paragraph{Large \(\alpha\).}
+% Take \(h=\|\cdot\|_2\), \(\calA(\bx)=b(\bx-\bx_c)\), and let \(f\) be a
+% quadratic with negative curvature \(-\kappa\) near \(\bx_c\). While the
+% trajectory stays in \(\mathcal R_\rho\), Proposition~\ref{prop:embedding}
+% shows that the update is the linear time-invariant system
+% \(\bw^{k+1}=\mathbb T\bw^k\). We choose \(b\) and \(\kappa\) so that
+% \(\mathbb T\) has an eigenvalue \(\zeta\) with \(|\zeta|=1\). Along its
+% eigenvector \(\bv\), the iterates rotate without decay, and the certificate
+% keeps a fixed positive value. The zero initialization is not parallel to
+% \(\bv\). We write it as \(\bv+\br\), where \(\br\) lies in the invariant
+% subspace of the remaining eigenvalues, all strictly inside the unit circle.
+% The shifts \(\bx_c\) and \(\blmbd_c\) make \(\bv+\br\) correspond to the
+% origin. A bound on the transient \(\mathbb T^k\br\) keeps the trajectory in
+% \(\mathcal R_\rho\) and gives \(R_k\ge\frac76\epsilon\) for all \(k\). The
+% case \(\beta=0\) uses a separate one-dimensional instance with a Huber outer
+% function \(h\).
+
+\subsection{Small primal center stepsize $\alpha$}
+\label{subsec:lb-plateau}
+
+In this subsection, we treat the pairs \((\alpha,\beta)\) with
+\(\alpha\le\alpha_\epsilon\). We construct a hard instance on which, for
+every \(\beta\in[0,1]\), \(\mathrm{SPLALM}_{\theta,\alpha,\beta}\) requires
+more than \(\Delta/(16\gamma\alpha\epsilon^2)\) iterations to produce an
+\(\epsilon\)-KKT output. The hard instance is given below.
+
+\begin{example}
+\label{ex:plateau}
+Let \(0<\epsilon\le\min\{1/2,\sqrt{\Delta}/2\}\) and
+\(x_\star:=\Delta/(2\epsilon)+\epsilon\). Define \(\calA\equiv0\),
+\(h(y)=|y|\), and \(f:\RR\to\RR\) by
+\[
+f(x)=
+\begin{cases}
+2\epsilon(x_\star-x)-2\epsilon^2, & x<x_\star-2\epsilon,\\[4pt]
+\dfrac12(x-x_\star)^2, & |x-x_\star|\le2\epsilon,\\[4pt]
+2\epsilon(x-x_\star)-2\epsilon^2, & x>x_\star+2\epsilon.
+\end{cases}
+\]
+Then \(f\) is \(1\)-smooth with \(|f'|\le2\epsilon\le1\), \(\calA\) satisfies
+\(L_{\calA}=G_{\calA}=0\), and \(h\) is convex and \(1\)-Lipschitz. Since
+\(\epsilon\le\sqrt{\Delta}/2\), we have \(x_\star\ge2\epsilon\), thus \(f(0)=2\epsilon x_\star-2\epsilon^2=\Delta\). Moreover, \(\inf f=f(x_\star)=0\). Hence
+\((f,\calA,h)\in\mathcal I(\mathbf C_0,\Delta)\).
+\end{example}
+
+\begin{remark}
+\label{rem:plateau}
+The construction ensures that \(\inf f=0\) and \(f(0)=\Delta\),  which allows us to establish the
+lower bound with an explicit dependence on the prescribed constant gap.
+\end{remark}
+
+\begin{lemma}
+\label{lem:plateau}
+Let \((\alpha,\beta)\in[0,1]^2\), and suppose that \(\epsilon\) satisfies the
+condition in Example~\ref{ex:plateau} and \(\epsilon^2\le\Delta/(16\gamma)\).
+Run \(\mathrm{SPLALM}_{\theta,\alpha,\beta}\) on Example~\ref{ex:plateau}.
+Then the following hold.
+\begin{enumerate}[label=(\roman*)]
+\item For all \(k\ge0\), \(\lambda^k=\mu^k=0\), \(y^{k+1}=0\), and
+  \(R_k=|f'(x^{k+1})|\).
+\item For every integer \(k\) with \(0\le k\le\Delta/(16\gamma\alpha\epsilon^2)\),
+  \[
+  z^k\le2\alpha\gamma\epsilon\,k,\qquad
+  0\le x^k-z^k\le2\gamma\epsilon,\qquad
+  x^k\le x_\star-2\epsilon .
+  \]
+  When \(\alpha=0\), these bounds hold for all \(k\ge0\).
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+(i) Since \(\calA\equiv0\) and \(\partial h(0)=[-1,1]\), every pair
+\((x,0)\) lies in \(\mathcal R_\rho\), and \(\Psi_\rho(x,\lambda)=f(x)\). The
+\(\lambda\)-update in~\eqref{eq:gda-recursion} reads
+\(\lambda^{k+1}=\lambda^k-\frac{\tau}{s}(\lambda^k-\mu^k)\). Starting from
+\(\lambda^0=\mu^0=0\), induction gives \(\lambda^k=\mu^k=0\) for all \(k\).
+Proposition~\ref{prop:embedding} then gives \(y^{k+1}=0\) and
+\(R_k=\max\{|f'(x^{k+1})|,0\}\).
+
+(ii) Write \(e^k:=x^k-z^k\). The bounds hold at \(k=0\). Suppose they hold
+at some \(k\) with \(k+1\le\Delta/(16\gamma\alpha\epsilon^2)\). Then
+\(2\alpha\gamma\epsilon k\le\Delta/(8\epsilon)\). Because
+\(\epsilon^2\le\Delta/(16\gamma)\) and \(\epsilon^2\le\Delta/4\),
+\[
+x^k\le2\gamma\epsilon+\frac{\Delta}{8\epsilon}
+\le\frac{\Delta}{4\epsilon}\le x_\star-2\epsilon .
+\]
+Hence \(f'(x^k)=-2\epsilon\). By (i), the primal update is
+\(x^{k+1}=x^k+2\eta\epsilon-\frac{\eta}{\gamma}e^k\). Set
+\(d^k:=(1-\frac{\eta}{\gamma})e^k+2\eta\epsilon\). Since \(\eta\le\gamma\)
+and \(0\le e^k\le2\gamma\epsilon\), we have \(0\le d^k\le2\gamma\epsilon\).
+The center update gives \(z^{k+1}=z^k+\alpha d^k\) and
+\(e^{k+1}=(1-\alpha)d^k\). Therefore
+\(z^{k+1}\le2\alpha\gamma\epsilon(k+1)\) and
+\(0\le e^{k+1}\le2\gamma\epsilon\). Finally,
+\(x^{k+1}=z^{k+1}+e^{k+1}\) satisfies the display above with \(k\) replaced
+by \(k+1\). When \(\alpha=0\), the same argument applies with
+\(z^k=0\) for every \(k\).
+\end{proof}
+
+\begin{proposition}
+\label{prop:plateau}
+Under the conditions of Lemma~\ref{lem:plateau},
+\(T^{\mathrm{KKT}}_\epsilon(\theta,\alpha,\beta;I)>\Delta/(16\gamma\alpha\epsilon^2)\)
+if \(\alpha>0\), and \(T^{\mathrm{KKT}}_\epsilon(\theta,\alpha,\beta;I)=+\infty\)
+if \(\alpha=0\), where \(I\) is the instance of Example~\ref{ex:plateau}.
+\end{proposition}
+
+\begin{proof}
+Let \(r:=\Delta/(16\gamma\alpha\epsilon^2)\) if \(\alpha>0\) and \(r:=\infty\)
+if \(\alpha=0\). By Lemma~\ref{lem:plateau}, \(x^{k+1}\le x_\star-2\epsilon\)
+for every integer \(k\) with \(k+1\le r\). For these \(k\),
+\(R_k=|f'(x^{k+1})|=2\epsilon>\epsilon\). By
+Definition~\ref{def:complexity-measure},
+\(T^{\mathrm{KKT}}_\epsilon(\theta,\alpha,\beta;I)\ge\lfloor r\rfloor+1>r\).
+\end{proof}
 
 \todo{Subsections: plateau instance; rotating instance (parameters, spectral
 decomposition, transient bound, verification); \(\beta=0\) instance; proof of
