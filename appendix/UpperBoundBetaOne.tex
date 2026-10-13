@@ -2,6 +2,73 @@
 \section{Proof of Theorem~\ref{thm:upper-beta1}}
 \label{app:upper-beta1}
 
+\subsection{Curvature and smoothness of the potential function}
+\label{subsec:curvature-smoothness}
+Let us define the constants
+\begin{equation}
+    L_{\calD,\bx}
+    :=
+    L_f + L_{\calA}L_h + \rho G_{\calA}^{2},
+    \label{eq:x-weak-convexity-modulus}
+\end{equation}
+and 
+\[
+    \mu_\gamma
+    :=
+    \frac{1}{\gamma}-L_{\calD,\bx},
+    \qquad
+    L_x
+    :=
+    L_{\calD,\bx}+\frac{1}{\gamma},
+    \qquad
+    L_\lambda(s)
+    :=
+    \frac{1}{\rho}+\frac{1}{s},
+\] where $L_f$, $L_{\calA}$, $G_{\calA}$, and $L_h$ are the constants of
+Assumptions~\ref{ass:smoothness} and~\ref{ass:h}. 
+
+The following proposition summarizes the curvature and smoothness properties
+of the smoothed perturbed potential function $\mathcal P_s$.
+The proof is deferred to Appendix~\ref{app:curvature-smoothness}.
+
+\begin{proposition}
+\label{prop:curvature-smoothness}
+Suppose that Assumptions~\ref{ass:smoothness} and~\ref{ass:h} hold, and let the smoothing parameter  
+$ 0 < \gamma < \frac{1}{2L_{\calD,\bx}}$. Then, for all $s>0$, $\mathcal P_s$ is
+$\mu_\gamma $-strongly convex in $\bx$ and
+$1/s$-strongly concave in $\blmbd$. Moreover, for all
+$\bx,\bx'\in\RR^n$,
+$\blmbd,\blmbd'\in\RR^m$,
+$\bz\in\RR^n$, and
+$\bmu\in\RR^m$, it holds that 
+\begin{align}
+    &\bigl\|
+    \nabla_{\bx}\mathcal{P}_s(\bx,\blmbd,\bz,\bmu)
+    -
+    \nabla_{\bx}\mathcal{P}_s(\bx',\blmbd',\bz,\bmu)
+    \bigr\|
+    \le
+    L_x\|\bx-\bx'\|
+    +
+    G_{\calA}\|\blmbd-\blmbd'\|,
+    \label{eq:payoff-x-smoothness}
+    \\
+    &\bigl\|
+    \nabla_{\blmbd}\mathcal{P}_s(\bx,\blmbd,\bz,\bmu)
+    -
+    \nabla_{\blmbd}\mathcal{P}_s(\bx',\blmbd',\bz,\bmu)
+    \bigr\|
+    \le
+    G_{\calA}\|\bx-\bx'\|
+    +
+    L_\lambda(s)\|\blmbd-\blmbd'\|
+    \label{eq:payoff-lambda-smoothness}.
+\end{align}
+In particular, $\mathcal P_s$ is $L_x$-smooth in $\bx$ and $L_\lambda(s)$-smooth in $\blmbd$.
+\end{proposition}
+
+\subsection{Proof of the iteration complexity bound}
+
 Throughout this appendix, let
 \[
 L:=\sqrt2\,\max\Bigl\{L_{\calD,\bx},\ G_{\calA},\ \frac1\rho\Bigr\},
