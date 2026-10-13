@@ -194,29 +194,38 @@
 \newcommand{\hy}{\widehat{y}}
 \newcommand{\ul}[1]{\underline{#1}}
 \makeatletter
+% Each environment has its own counter, reset at the start of each section.
 \@ifundefined{theorem}{\newtheorem{theorem}{Theorem}[section]}{}
-\@ifundefined{lemma}{\newtheorem{lemma}[theorem]{Lemma}}{}
 \@ifundefined{newsiamremark}{
-  \@ifundefined{assumption}{\newtheorem{assumption}{Assumption}}{}
-  \@ifundefined{remark}{\newtheorem{remark}[theorem]{Remark}}{}
-  \@ifundefined{example}{\newtheorem{example}[theorem]{Example}}{}
+  \@ifundefined{lemma}{\newtheorem{lemma}{Lemma}[section]}{}
+  \@ifundefined{corollary}{\newtheorem{corollary}{Corollary}[section]}{}
+  \@ifundefined{proposition}{\newtheorem{proposition}{Proposition}[section]}{}
+  \@ifundefined{definition}{\newtheorem{definition}{Definition}[section]}{}
+  \@ifundefined{assumption}{\newtheorem{assumption}{Assumption}[section]}{}
+  \@ifundefined{remark}{\newtheorem{remark}{Remark}[section]}{}
+  \@ifundefined{example}{\newtheorem{example}{Example}[section]}{}
 }{
+  % Override the shared counters supplied by the SIAM class.
+  \theoremstyle{plain}
+  \theoremheaderfont{\normalfont\scshape}
+  \theorembodyfont{\normalfont\itshape}
+  \theoremseparator{.}
+  \theoremsymbol{}
+  \renewtheorem{lemma}{Lemma}[section]
+  \renewtheorem{corollary}{Corollary}[section]
+  \renewtheorem{proposition}{Proposition}[section]
+  \renewtheorem{definition}{Definition}[section]
+  \theoremheaderfont{\normalfont\itshape}
+  \theorembodyfont{\normalfont}
   \@ifundefined{assumption}{
-    \theoremstyle{plain}
-    \theoremheaderfont{\normalfont\itshape}
-    \theorembodyfont{\normalfont}
-    \theoremseparator{.}
-    \theoremsymbol{}
-    \newtheorem{assumption}{Assumption}
+    \newtheorem{assumption}{Assumption}[section]
   }{}
-  \@ifundefined{remark}{\newsiamremark{remark}{Remark}}{}
-  \@ifundefined{example}{\newsiamremark{example}{Example}}{}
+  \@ifundefined{remark}{\newtheorem{remark}{Remark}[section]}{}
+  \@ifundefined{example}{\newtheorem{example}{Example}[section]}{}
 }
 \@ifundefined{proof}{\newenvironment{proof}[1][Proof]{\par\noindent\textbf{#1.}\space}{\hfill$\square$\par}}{}
 \@ifundefined{noproof}{\newenvironment{noproof}{\par\noindent\textbf{Proof.}\space}{\hfill\par}}{}
 \makeatother
-
-% \newtheorem{remark}[theorem]{Remark}  % 与theorem共享编号
 
 \newcommand{\bcL}{\overline{\calL}}
 \newcommand{\KL}{K\L\xspace}

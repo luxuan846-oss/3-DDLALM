@@ -7,10 +7,8 @@
 \makeatother
 \documentclass[review,onefignum,onetabnum,nohypdvips]{siamart220329}
 \input{tools/shared}
-
-\headers{Growing the Dual Regularization, Not the Penalty}{L. Li, K. Deng, C. Cui, and J. Hu}
-
-\title{{Growing the Dual Regularization, Not the Penalty: A Fixed-Penalty Single-Loop Augmented Lagrangian Method for Nonconvex Composite Optimization}}
+\headers{Shrink the Dual Regularization, Keep the Penalty}{L. Li, K. Deng, C. Cui, and J. Hu}
+\title{{Shrink the Dual Regularization, Keep the Penalty: Tight Complexity of Linearized Augmented Lagrangian Methods}}
 \author{
 Luxuan Li\thanks{School of Mathematical Sciences, Beihang University,
 Beijing 100191, China}
@@ -29,7 +27,23 @@ Beijing 100084, China}
 \maketitle
 
 \begin{abstract}
-We study a class of structured nonconvex constrained optimization problems with nonsmooth composite terms.  We develop a dual-damping linearized augmented Lagrangian method and analyze its approximate KKT residual guarantees.
+We study single-loop linearized augmented Lagrangian methods for the
+nonconvex composite problem $\min_{\bx} f(\bx)+h(\calA(\bx))$, where $f$ and
+$\calA$ are smooth and $h$ is convex and Lipschitz. We consider a family of
+methods that perform one gradient descent--ascent step per iteration on the
+reduced augmented Lagrangian with a fixed penalty $\rho$, a dual
+regularization with parameter $s$, and moving primal and dual centers. Every
+member of this family has the effective penalty $\rho+s$. We show that the
+iteration complexity of the family for finding an $\epsilon$-KKT point is
+determined by $\rho+s$ alone; the center stepsizes do not change its order.
+If $\epsilon(\rho+s)$ is at most a constant, then for any arbitrary choice of
+constant center stepsizes there is an instance on which the method, started
+from zero, requires $\Omega(\epsilon^{-4})$ iterations, and this order is
+attained within the family. If $\rho$ is fixed and $s$ is of order
+$1/\epsilon$, a member of the family finds an $\epsilon$-KKT point in
+$\mathcal O(\epsilon^{-3})$ iterations. Hence the effective penalty must reach
+the order $1/\epsilon$ to improve on $\epsilon^{-4}$, and this growth can be
+carried by the dual regularization alone, with the penalty kept fixed.
 \end{abstract}
 
 \begin{keywords}
@@ -44,8 +58,12 @@ nonsmooth composite optimization, augmented Lagrangian method, dual-regularizati
 \input{sections/Preliminaries}
 \input{sections/LowerBound}
 \input{sections/LowerBoundProof}
-\input{sections/TimeVarying}
+
+\appendix
+\input{appendix/LowerBoundRotation}
+\input{appendix/UpperBoundBetaOne}
 \input{sections/UpperBound}
+\input{appendix/UpperBoundProofs}
 
 \bibliographystyle{tools/siamplain}
 \bibliography{tools/refer}

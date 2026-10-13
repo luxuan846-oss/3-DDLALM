@@ -1,0 +1,107 @@
+%  强凸强凹引理
+
+\begin{proof}
+For fixed $\blmbd$, the gradient of the reduced function is
+\begin{equation}
+    \nabla_{\bx}\mathcal D_\rho(\bx,\blmbd)
+    =
+    \nabla f(\bx)
+    +J_{\calA}(\bx)^\top\bq(\bx,\blmbd).
+    \label{eq:reduced-x-gradient}
+\end{equation}
+The map $u\mapsto u-\operatorname{prox}_{h/\rho}(u)$ is nonexpansive.
+Consequently,
+\begin{equation}
+    \|\bq(\bx,\blmbd)-\bq(\bx',\blmbd)\|
+    \le
+    \rho G_{\calA}\|\bx-\bx'\|.
+    \label{eq:q-lipschitz}
+\end{equation}
+Moreover, the proximal optimality condition gives
+$\bq(\bx,\blmbd)\in\partial h(\by(\bx,\blmbd))$, and hence
+$\|\bq(\bx,\blmbd)\|\le L_h$.  Assumptions~\ref{ass:smoothness}
+and~\ref{ass:h} therefore imply
+\begin{equation}
+\begin{aligned}
+    &\|\nabla_{\bx}\mathcal D_\rho(\bx,\blmbd)
+       -\nabla_{\bx}\mathcal D_\rho(\bx',\blmbd)\| \\
+    &\quad\le
+    \bigl(L_f+L_{\calA}L_h+\rho G_{\calA}^2\bigr)
+    \|\bx-\bx'\|
+    =L_{\calD,\bx}\|\bx-\bx'\|.
+\end{aligned}
+\label{eq:reduced-gradient-lipschitz}
+\end{equation}
+Thus $\mathcal D_\rho(\cdot,\blmbd)$ is
+$L_{\calD,\bx}$-weakly convex.  Adding the term
+$\|\bx-\bz\|^2/(2\gamma)$ shows that
+$\mathcal P(\cdot,\blmbd;\bz,\bmu)$ is
+$(1/\gamma-L_{\calD,\bx})$-strongly convex.  Since
+$1/\gamma>2L_{\calD,\bx}$, its strong-convexity modulus is at least
+$L_{\calD,\bx}$.
+
+For fixed $\bx$, the function $\mathcal D_\rho(\bx,\cdot)$ is concave,
+because it is the pointwise infimum over $\by$ of functions affine in
+$\blmbd$.  Adding
+$-\|\blmbd-\bmu\|^2/(2s)$ makes
+$\mathcal P(\bx,\cdot;\bz,\bmu)$ $1/s$-strongly concave.
+\end{proof}
+
+
+%  Basic estimate of the reduced potential
+\begin{proof}
+The \(\bx\)-update is a gradient step on \(\mathcal P_k\) with
+\((\blmbd^k,\bz^k,\bmu^k)\) fixed.  The descent lemma and
+\(\Delta_{\bx}^{k+1}=-\eta_k\nabla_{\bx}\mathcal P_k(\bx^k,\blmbd^k)\)
+give
+\begin{equation}
+    \mathcal P_k(\bx^{k+1},\blmbd^k)
+    -\mathcal P_k(\bx^k,\blmbd^k)
+    \le
+    -\left(\frac{1}{\eta_k}-\frac{L_x}{2}\right)
+    \|\Delta_{\bx}^{k+1}\|^2.
+    \label{eq:x-descent}
+\end{equation}
+
+With \(\bx^{k+1}\) fixed, the dual update satisfies
+\(\Delta_{\blmbd}^{k+1}=\tau_k
+\nabla_{\blmbd}\mathcal P_k(\bx^{k+1},\blmbd^k)\).  Applying the smoothness
+bound \eqref{eq:dual-gradient-smoothness} yields
+\begin{equation}
+    \mathcal P_k(\bx^{k+1},\blmbd^{k+1})
+    -\mathcal P_k(\bx^{k+1},\blmbd^k)
+    \le
+    \left(\frac{1}{\tau_k}+\frac{L_{\lambda,k}}{2}\right)
+    \|\Delta_{\blmbd}^{k+1}\|^2.
+    \label{eq:auxiliary-dual-ascent}
+\end{equation}
+
+The center update gives the exact identity
+\begin{equation}
+\begin{aligned}
+    &\mathcal P(\bx^{k+1},\blmbd^{k+1};\bz^{k+1},\bmu^k)
+    -\mathcal P(\bx^{k+1},\blmbd^{k+1};\bz^k,\bmu^k) \\
+    &\qquad=
+    -\frac{\alpha_k(2-\alpha_k)}{2\gamma}
+    \|\bx^{k+1}-\bz^k\|^2.
+\end{aligned}
+\label{eq:center-drift}
+\end{equation}
+
+Finally, the multiplier-center update gives
+\begin{equation}
+\begin{aligned}
+    &-\frac{1}{2s_k}\|\blmbd^{k+1}-\bmu^{k+1}\|^2
+    +\frac{1}{2s_k}\|\blmbd^{k+1}-\bmu^k\|^2 \\
+    &\qquad=
+    \frac{\beta_k(2-\beta_k)}{2s_k}
+    \|\blmbd^{k+1}-\bmu^k\|^2.
+\end{aligned}
+\label{eq:mu-drift}
+\end{equation}
+Changing \(s_k\) to \(s_{k+1}\) contributes the final term in
+\eqref{eq:basic-one-step}.  Adding
+\eqref{eq:x-descent}, \eqref{eq:auxiliary-dual-ascent},
+\eqref{eq:center-drift}, and the two parameter-drift identities proves
+\eqref{eq:basic-one-step}.
+\end{proof}

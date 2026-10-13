@@ -20,17 +20,24 @@ instances. For each pair, we construct an instance in
 initialization prescribed in Definition~\ref{def:splalm}, requires at least
 the stated number of iterations to produce an \(\epsilon\)-KKT output.
 
-Given a threshold \(\alpha_\epsilon\), specified in
-Section~\ref{subsec:lb-combine}, we organize the construction into three cases:
+We split \([0,1]^2\) into three parts by the threshold
+\[
+\alpha_\epsilon:=1024\max\{1,4\tau,4\gamma\tau\}\,\epsilon^2,
+\]
+namely
 \[
 \begin{aligned}
 [0,1]^2
 ={}&\bigl\{(\alpha,\beta)\in[0,1]^2:\alpha\le\alpha_\epsilon\bigr\}\\
 &\cup\bigl\{(\alpha,\beta)\in[0,1]^2:\alpha>\alpha_\epsilon,\ \beta>0\bigr\}\\
-&\cup\bigl\{(\alpha,\beta)\in[0,1]^2:\alpha>\alpha_\epsilon,\ \beta=0\bigr\}.
+&\cup\bigl\{(\alpha,\beta)\in[0,1]^2:\alpha>\alpha_\epsilon,\ \beta=0\bigr\},
 \end{aligned}
 \]
-Each case is covered by a separate hard instance.
+and use a separate hard instance for each part. For
+\(\alpha\le\alpha_\epsilon\), the bound obtained in
+Section~\ref{subsec:lb-plateau} is of order \(\Delta\epsilon^{-4}\). This
+threshold ensures the parameter estimates required by the rotating instance
+in Section~\ref{subsec:lb-rotation}.
 
 % The lower bounds of~\cite[Section~5]{li2026smoothing}
 % and~\cite[Appendix~C.1]{mahdavinia2022tight} choose the initialization
@@ -121,7 +128,7 @@ f(x)=
 2\epsilon(x-x_\star)-2\epsilon^2, & x>x_\star+2\epsilon.
 \end{cases}
 \]
-Then \(f\) is \(1\)-smooth with \(|f'|\le2\epsilon\le1\), \(\calA\) satisfies
+Then \(f\) is \(1\)-smooth with \(\|\nabla f\|\le2\epsilon\le1\), \(\calA\) satisfies
 \(L_{\calA}=G_{\calA}=0\), and \(h\) is convex and \(1\)-Lipschitz. Since
 \(\epsilon\le\sqrt{\Delta}/2\), we have \(x_\star\ge2\epsilon\), thus \(f(0)=2\epsilon x_\star-2\epsilon^2=\Delta\). Moreover, \(\inf f=f(x_\star)=0\). Hence
 \((f,\calA,h)\in\mathcal I(\mathbf C_0,\Delta)\).
@@ -129,9 +136,21 @@ Then \(f\) is \(1\)-smooth with \(|f'|\le2\epsilon\le1\), \(\calA\) satisfies
 
 \begin{remark}
 \label{rem:plateau}
-The construction ensures that \(\inf f=0\) and \(f(0)=\Delta\),  which allows us to establish the
-lower bound with an explicit dependence on the prescribed constant gap.
+The construction ensures that \(\inf f=0\) and \(f(0)=\Delta\), so the
+initial objective gap is exactly \(\Delta\). This allows us to make the
+dependence of the iteration lower bound on \(\Delta\) explicit.
 \end{remark}
+
+This instance shows that a small primal center stepsize can force
+\(\Omega\bigl(\Delta/(\gamma\alpha\epsilon^2)\bigr)\) iterations even on a
+smooth one-dimensional problem, regardless of the dual center stepsize.
+The iterates must traverse a long constant-gradient interval before an
+output can satisfy the KKT tolerance. A small \(\alpha\) limits how quickly
+the center moves, and the primal variable stays within a bounded distance
+of that center. Since the multipliers remain zero, every output on this
+interval has KKT residual \(2\epsilon>\epsilon\). The next lemma bounds the
+distance traveled and converts it into a lower bound on the number of
+iterations.
 
 \begin{lemma}
 \label{lem:plateau}
@@ -141,14 +160,22 @@ Run \(\mathrm{SPLALM}_{\theta,\alpha,\beta}\) on Example~\ref{ex:plateau}.
 Then the following hold.
 \begin{enumerate}[label=(\roman*)]
 \item For all \(k\ge0\), \(\lambda^k=\mu^k=0\), \(y^{k+1}=0\), and
-  \(R_k=|f'(x^{k+1})|\).
-\item For every integer \(k\) with \(0\le k\le\Delta/(16\gamma\alpha\epsilon^2)\),
+  \(R_k=\|\nabla f(x^{k+1})\|\).
+\item If \(\alpha>0\), then for every integer \(k\) with \(0\le k\le\Delta/(16\gamma\alpha\epsilon^2)\),
   \[
-  z^k\le2\alpha\gamma\epsilon\,k,\qquad
-  0\le x^k-z^k\le2\gamma\epsilon,\qquad
-  x^k\le x_\star-2\epsilon .
+  \|z^k-z^0\|\le2\alpha\gamma\epsilon\,k,\qquad
+  \|x^k-z^k\|\le2\gamma\epsilon,
+  \]
+  and
+  \[
+  \|x^k-x^0\|\le2\gamma\epsilon(1+\alpha k)
+  \le x_\star-2\epsilon .
   \]
   When \(\alpha=0\), these bounds hold for all \(k\ge0\).
+\item Let \(I\) denote the instance of Example~\ref{ex:plateau}. Then
+  \(T^{\mathrm{KKT}}_\epsilon(\theta,\alpha,\beta;I)>\Delta/(16\gamma\alpha\epsilon^2)\)
+  if \(\alpha>0\), and \(T^{\mathrm{KKT}}_\epsilon(\theta,\alpha,\beta;I)=+\infty\)
+  if \(\alpha=0\).
 \end{enumerate}
 \end{lemma}
 
@@ -159,46 +186,498 @@ Then the following hold.
 \(\lambda^{k+1}=\lambda^k-\frac{\tau}{s}(\lambda^k-\mu^k)\). Starting from
 \(\lambda^0=\mu^0=0\), induction gives \(\lambda^k=\mu^k=0\) for all \(k\).
 Proposition~\ref{prop:embedding} then gives \(y^{k+1}=0\) and
-\(R_k=\max\{|f'(x^{k+1})|,0\}\).
+\(R_k=\max\{\|\nabla f(x^{k+1})\|,0\}\).
 
-(ii) Write \(e^k:=x^k-z^k\). The bounds hold at \(k=0\). Suppose they hold
-at some \(k\) with \(k+1\le\Delta/(16\gamma\alpha\epsilon^2)\). Then
-\(2\alpha\gamma\epsilon k\le\Delta/(8\epsilon)\). Because
-\(\epsilon^2\le\Delta/(16\gamma)\) and \(\epsilon^2\le\Delta/4\),
+(ii) We use the Euclidean norm, which coincides with the absolute value
+in one dimension. By (i), the primal update gives
 \[
-x^k\le2\gamma\epsilon+\frac{\Delta}{8\epsilon}
-\le\frac{\Delta}{4\epsilon}\le x_\star-2\epsilon .
+x^{k+1}-z^k
+=\left(1-\frac{\eta}{\gamma}\right)(x^k-z^k)-\eta\nabla f(x^k).
 \]
-Hence \(f'(x^k)=-2\epsilon\). By (i), the primal update is
-\(x^{k+1}=x^k+2\eta\epsilon-\frac{\eta}{\gamma}e^k\). Set
-\(d^k:=(1-\frac{\eta}{\gamma})e^k+2\eta\epsilon\). Since \(\eta\le\gamma\)
-and \(0\le e^k\le2\gamma\epsilon\), we have \(0\le d^k\le2\gamma\epsilon\).
-The center update gives \(z^{k+1}=z^k+\alpha d^k\) and
-\(e^{k+1}=(1-\alpha)d^k\). Therefore
-\(z^{k+1}\le2\alpha\gamma\epsilon(k+1)\) and
-\(0\le e^{k+1}\le2\gamma\epsilon\). Finally,
-\(x^{k+1}=z^{k+1}+e^{k+1}\) satisfies the display above with \(k\) replaced
-by \(k+1\). When \(\alpha=0\), the same argument applies with
-\(z^k=0\) for every \(k\).
+Since \(\|\nabla f(x)\|\le2\epsilon\) for every \(x\) and
+\(0<\eta\le\gamma\),
+\[
+\|x^{k+1}-z^k\|
+\le\left(1-\frac{\eta}{\gamma}\right)\|x^k-z^k\|+2\eta\epsilon.
+\]
+The center update implies
+\[
+\|x^{k+1}-z^{k+1}\|=(1-\alpha)\|x^{k+1}-z^k\|,
+\qquad
+\|z^{k+1}-z^k\|=\alpha\|x^{k+1}-z^k\|.
+\]
+Starting from \(x^0=z^0\), induction gives
+\(\|x^k-z^k\|\le2\gamma\epsilon\) and
+\(\|x^{k+1}-z^k\|\le2\gamma\epsilon\) for all \(k\ge0\).
+Consequently,
+\[
+\|z^k-z^0\|
+\le\sum_{j=0}^{k-1}\|z^{j+1}-z^j\|
+\le2\alpha\gamma\epsilon k.
+\]
+Using \(x^0=z^0=0\), we obtain
+\[
+\|x^k-x^0\|
+\le\|x^k-z^k\|+\|z^k-z^0\|
+\le2\gamma\epsilon(1+\alpha k).
+\]
+If \(\alpha>0\), then for every integer \(k\le\Delta/(16\gamma\alpha\epsilon^2)\), the
+assumptions \(\epsilon^2\le\Delta/(16\gamma)\) and
+\(\epsilon^2\le\Delta/4\) imply
+\[
+\|x^k-x^0\|
+\le2\gamma\epsilon+\frac{\Delta}{8\epsilon}
+\le\frac{\Delta}{4\epsilon}
+\le\frac{\Delta}{2\epsilon}-\epsilon
+=x_\star-2\epsilon.
+\]
+In particular, \(x^k\le\|x^k-x^0\|\le x_\star-2\epsilon\), so the
+iterate lies in the constant-gradient region. When \(\alpha=0\), the
+center remains at \(z^k=z^0=0\), and the same conclusion holds for every
+\(k\ge0\).
+
+(iii) Suppose \(\alpha>0\). By (ii), every output with
+\(k+1\le\Delta/(16\gamma\alpha\epsilon^2)\) satisfies
+\(x^{k+1}\le x_\star-2\epsilon\). By (i), its residual is
+\(R_k=\|\nabla f(x^{k+1})\|=2\epsilon>\epsilon\).
+Thus, none of the first
+\(\lfloor\Delta/(16\gamma\alpha\epsilon^2)\rfloor\) outputs is an
+\(\epsilon\)-KKT point. Definition~\ref{def:complexity-measure} yields
+\[
+T^{\mathrm{KKT}}_\epsilon(\theta,\alpha,\beta;I)
+\ge\left\lfloor\frac{\Delta}{16\gamma\alpha\epsilon^2}\right\rfloor+1
+>\frac{\Delta}{16\gamma\alpha\epsilon^2}.
+\]
+When \(\alpha=0\), (ii) keeps every iterate in the constant-gradient region.
+Hence \(R_k=2\epsilon>\epsilon\) for all \(k\ge0\), and
+\(T^{\mathrm{KKT}}_\epsilon(\theta,\alpha,\beta;I)=+\infty\).
 \end{proof}
 
-\begin{proposition}
-\label{prop:plateau}
-Under the conditions of Lemma~\ref{lem:plateau},
-\(T^{\mathrm{KKT}}_\epsilon(\theta,\alpha,\beta;I)>\Delta/(16\gamma\alpha\epsilon^2)\)
-if \(\alpha>0\), and \(T^{\mathrm{KKT}}_\epsilon(\theta,\alpha,\beta;I)=+\infty\)
-if \(\alpha=0\), where \(I\) is the instance of Example~\ref{ex:plateau}.
-\end{proposition}
+For \(0<\alpha\le\alpha_\epsilon\), Lemma~\ref{lem:plateau}~(iii) gives
+\[
+T^{\mathrm{KKT}}_\epsilon(\theta,\alpha,\beta;I)
+>\frac{\Delta}{16\gamma\alpha\epsilon^2}
+\ge\frac{\Delta\,\epsilon^{-4}}{16384\,\gamma\max\{1,4\tau,4\gamma\tau\}}.
+\]
+
+\subsection{Large primal center stepsize \texorpdfstring{$\alpha$}{alpha}, and \texorpdfstring{$\beta>0$}{beta>0}}
+\label{subsec:lb-rotation}
+
+In this subsection, we prove the lower bound for
+\(\alpha>\alpha_\epsilon\) and \(\beta>0\). For every such pair, we construct
+a hard instance on which SPLALM, initialized at zero, never produces an
+\(\epsilon\)-KKT point.
+
+% On the region where the objective is quadratic, and as long as the prox
+% outputs vanish, every update of SPLALM is linear. One iteration is therefore
+% a fixed matrix acting on the current state, and the eigenvalues of this
+% matrix determine the trajectory. If all eigenvalues had modulus less than
+% one, the iterates would converge to a KKT point and the residual would
+% vanish; if some eigenvalue had modulus greater than one, the iterates would
+% leave the quadratic region. We therefore choose the parameters so that the
+% matrix has a non-real eigenvalue of modulus one. The corresponding component
+% of the trajectory rotates with constant amplitude and never settles at a
+% fixed point. The initialization is fixed at zero and is not on this
+% component. We show that the trajectory from zero differs from the rotation
+% by a decaying term that stays small at every iteration, so the residual
+% stays above \(\epsilon\). The hard instance is given below.
+
+Motivated by the quadratic hard instances in~\cite[Example~5.1]{li2026smoothing}
+and~\cite[Appendix~C.1]{mahdavinia2022tight}, we construct the following instance.
+
+\begin{example}
+\label{ex:rotation}
+Let \(b,\kappa,X>0\) and \(x_c,\lambda_c\in\mathbb C\) be given in
+Appendix~\ref{app:lb-rotation-params}, and set \(R_*:=\frac54X\). Define
+\(\calA(x)=b(x-x_c)\), \(h(y)=\|y\|_2\), and
+\[
+f(x)=\psi\bigl(\|x-x_c\|\bigr)-b\langle\lambda_c,x-x_c\rangle,
+\qquad
+\psi(r)=
+\begin{cases}
+-\dfrac{\kappa}{2}r^2, & 0\le r\le R_*,\\[4pt]
+\dfrac{\kappa}{2}(r-2R_*)^2-\kappa R_*^2, & R_*\le r\le3R_*,\\[4pt]
+\kappa R_*(r-3R_*)-\dfrac{\kappa}{2}R_*^2, & r\ge3R_*.
+\end{cases}
+\]
+\end{example}
+To establish this lower bound, we analyze the SPLALM updates on
+Example~\ref{ex:rotation}. Specifically, since \(h=\|\cdot\|_2\), Proposition~\ref{prop:reduction} ensures that both proximal outputs vanish
+whenever
+\[
+\max_{j\in\{k,k+1\}}\|\lambda^k+\rho\calA(x^j)\|\le1.
+\] 
+Under this condition, SPLALM follows~\eqref{eq:gda-recursion}. In the regime where \(\|x-x_c\|\le R_*\) and \(\|\lambda+\rho\calA(x)\|\le1\),
+the reduced function takes the quadratic form
+\[
+\Psi_\rho(x,\lambda)
+=-\frac{a}{2}\|x-x_c\|^2+b\langle\lambda-\lambda_c,x-x_c\rangle .
+\]
+Here \(a:=\kappa-\rho b^2\). The gradients of this quadratic function are
+linear in \(x-x_c\) and \(\lambda-\lambda_c\). 
+Therefore, let define the iteration sequence \(\bw^k:=(x^k,\lambda^k,z^k,\mu^k)\) and
+\(\bw_c:=(x_c,\lambda_c,x_c,\lambda_c)\). Whenever the proximal condition
+above and \(\|x^k-x_c\|\le R_*\) hold, the four updates take the linear form
+\[
+\bw^{k+1}-\bw_c=\mathbb T(\bw^k-\bw_c),
+\] with $\mathbb T$ defined as 
+\begin{equation}
+\label{eq:rot-matrix}
+\mathbb T=\begin{pmatrix}
+1+\eta a-\tfrac{\eta}{\gamma} & -\eta b & \tfrac{\eta}{\gamma} & 0\\[2pt]
+\tau b\bigl(1+\eta a-\tfrac{\eta}{\gamma}\bigr) & 1-\tfrac{\tau}{s}-\eta\tau b^2
+  & \tfrac{\eta\tau b}{\gamma} & \tfrac{\tau}{s}\\[2pt]
+\alpha\bigl(1+\eta a-\tfrac{\eta}{\gamma}\bigr) & -\alpha\eta b
+  & 1-\alpha+\tfrac{\alpha\eta}{\gamma} & 0\\[2pt]
+\beta\tau b\bigl(1+\eta a-\tfrac{\eta}{\gamma}\bigr)
+  & \beta\bigl(1-\tfrac{\tau}{s}-\eta\tau b^2\bigr)
+  & \tfrac{\beta\eta\tau b}{\gamma} & 1-\beta+\tfrac{\beta\tau}{s}
+\end{pmatrix}.
+\end{equation}
+Under the conditions above, analyzing the SPLALM iterates reduces to
+studying the spectral properties of \(\mathbb T\).
+The core idea is to construct a bounded trajectory whose KKT residual remains
+above \(\epsilon\). We choose \(a\) and \(b\) so that \(\mathbb T\) has a
+non-real eigenvalue of modulus one, which gives a component that does not
+decay.
+
+The construction in~\cite[Section~5.1.1]{li2026smoothing} chooses both the
+hard instance and the initial point, with the latter lying along an
+eigenvector of the iteration matrix. In our setting, the initial point is
+fixed at zero, and we choose the instance alone. We therefore need to
+obtain the required trajectory from this prescribed initial point. To this
+end, we choose the centers \(x_c\) and \(\lambda_c\) in the instance so that
+the shifted initial state is the sum of an eigenvector of \(\mathbb T\)
+and a decaying component. The following lemma gives the spectral
+properties and this decomposition for the parameters defined
+in Appendix~\ref{app:lb-rotation-params}.
+
+\begin{lemma}
+\label{lem:rot-spectral}
+Under the conditions of Lemma~\ref{lem:rot-estimates}, let
+\(\mathbb T\) be the matrix in~\eqref{eq:rot-matrix}. Then:
+\begin{enumerate}[label=(\roman*)]
+\item \(\mathbb T\bv=\zeta\bv\), where \(|\zeta|=1\) and \(\zeta\notin\RR\);
+\item \(\br\) lies in a \(\mathbb T\)-invariant subspace on which the spectral
+  radius of \(\mathbb T\) is less than one;
+\item \(\bv+\br=-\bw_c\).
+\end{enumerate}
+\end{lemma}
+ 
+By Lemma~\ref{lem:rot-spectral}, the linear recursion initialized at zero
+has the explicit solution
+\[
+\bw^k-\bw_c=\zeta^k\bv+\mathbb T^k\br.
+\]
+We next bound \(\mathbb T^k\br\) uniformly in \(k\) to verify that this
+sequence stays in the quadratic region, both proximal outputs vanish,
+and the KKT residual remains above \(\epsilon\).
+
+\begin{lemma}
+\label{lem:rot-estimates}
+Let \(\alpha>\alpha_\epsilon\), \(0<\beta\le1\), \(0<\epsilon<c_2\), and
+\(\epsilon(\rho+s)\le c_1\), with \(c_1,c_2\) as specified in
+Theorem~\ref{thm:lower-bound}. Then:
+\begin{enumerate}[label=(\roman*)]
+\item the instance of Example~\ref{ex:rotation} belongs to
+  \(\mathcal I(\mathbf C_0,\Delta)\);
+\item for all \(k\ge0\),
+\[
+\|(\mathbb T^k\br)_x\|\le\frac X4,
+\qquad
+\|(\mathbb T^k\br)_\lambda\|\le
+s\Bigl(\frac{\gamma}{\eta}+\frac54\Bigr)bX.
+\]
+\end{enumerate}
+\end{lemma}
+The proofs of Lemmas~\ref{lem:rot-spectral} and~\ref{lem:rot-estimates} are
+given in Appendix~\ref{app:lb-rotation}.
+
+Using these estimates, we now show that the sequence generated by the linear
+recursion coincides with the SPLALM iterates and that its KKT residual
+remains above \(\epsilon\) at every iteration.
+
+\begin{lemma}
+\label{lem:rot-trajectory}
+Under the conditions of Lemma~\ref{lem:rot-estimates}, the iterates of
+\(\mathrm{SPLALM}_{\theta,\alpha,\beta}\) on Example~\ref{ex:rotation}
+satisfy, for all \(k\ge0\),
+\[
+x^k-x_c=\zeta^kX+(\mathbb T^k\br)_x,
+\qquad
+\lambda^k-\lambda_c=\zeta^k\Lambda+(\mathbb T^k\br)_\lambda,
+\]
+and \(R_k\ge\frac76\epsilon\). Hence
+\(T^{\mathrm{KKT}}_\epsilon(\theta,\alpha,\beta;I)=+\infty\).
+\end{lemma}
 
 \begin{proof}
-Let \(r:=\Delta/(16\gamma\alpha\epsilon^2)\) if \(\alpha>0\) and \(r:=\infty\)
-if \(\alpha=0\). By Lemma~\ref{lem:plateau}, \(x^{k+1}\le x_\star-2\epsilon\)
-for every integer \(k\) with \(k+1\le r\). For these \(k\),
-\(R_k=|f'(x^{k+1})|=2\epsilon>\epsilon\). By
-Definition~\ref{def:complexity-measure},
-\(T^{\mathrm{KKT}}_\epsilon(\theta,\alpha,\beta;I)\ge\lfloor r\rfloor+1>r\).
+We prove by induction that, for all \(k\ge0\),
+\[
+\bw^k-\bw_c=\zeta^k\bv+\mathbb T^k\br.
+\]
+\emph{Base case \(k=0\).} By Lemma~\ref{lem:rot-spectral}~(iii),
+\(\bv+\br=-\bw_c\). Since \(\bw^0=\zero\), the identity holds for \(k=0\).
+
+\emph{Inductive step.} Assume that the identity holds for some \(k\ge0\).
+Since \(|\zeta|=1\), Lemma~\ref{lem:rot-estimates}~(ii) gives
+\[
+\frac34X\le\|x^k-x_c\|\le\frac54X=R_*.
+\]
+Thus, \(x^k\) lies in the quadratic region. Moreover, the induction
+hypothesis and Lemma~\ref{lem:rot-spectral}~(iii) imply
+\(\|\lambda^k-\lambda_c\|\le\|\Lambda\|+\|(\mathbb T^k\br)_\lambda\|\)
+and \(\|\lambda_c\|\le\|\Lambda\|+\|\br_\lambda\|\).
+Lemma~\ref{lem:rot-estimates}~(ii) and the parameter bounds in
+Lemma~\ref{lem:rot-parameter-bounds} therefore yield
+\[
+\|\lambda^k+\rho\calA(x^k)\|
+\le2\|\Lambda\|+2s\Bigl(\frac{\gamma}{\eta}+\frac54\Bigr)bX+\frac54\rho bX
+\le\frac13\Bigl(2+\frac14\Bigr)=\frac34.
+\]
+Hence \((x^k,\lambda^k)\in\mathcal R_\rho\). By
+Proposition~\ref{prop:reduction}, the primal update is given by the first
+row of~\eqref{eq:rot-matrix}. Using the induction hypothesis and
+\(\mathbb T\bv=\zeta\bv\), we obtain
+\[
+x^{k+1}-x_c=\zeta^{k+1}X+(\mathbb T^{k+1}\br)_x.
+\]
+Lemma~\ref{lem:rot-estimates}~(ii) then gives
+\(\frac34X\le\|x^{k+1}-x_c\|\le\frac54X\).
+The same estimate as above, with \(x^{k+1}\) in place of \(x^k\), yields
+\[
+\|\lambda^k+\rho\calA(x^{k+1})\|\le\frac34.
+\]
+Thus, \((x^{k+1},\lambda^k)\in\mathcal R_\rho\) as well, so
+Proposition~\ref{prop:reduction} also applies to the dual update.
+Together with the center updates, this gives
+\[
+\bw^{k+1}-\bw_c
+=\mathbb T(\bw^k-\bw_c)
+=\zeta^{k+1}\bv+\mathbb T^{k+1}\br.
+\]
+This completes the induction. In particular, both proximal outputs vanish
+at every iteration, and all primal iterates lie in the prescribed annulus.
+
+Finally, we bound the residual. By Proposition~\ref{prop:embedding},
+\[
+R_k=\max\bigl\{\|{-a}(x^{k+1}-x_c)+b(\lambda^k-\lambda_c)\|,\
+b\|x^{k+1}-x_c\|\bigr\}.
+\]
+The second term is at least \(\frac34bX\). For the first term,
+Lemma~\ref{lem:rot-estimates}~(ii) and Lemma~\ref{lem:rot-parameter-bounds} give
+\[
+\|{-a}(x^{k+1}-x_c)+b(\lambda^k-\lambda_c)\|
+\ge b\|\Lambda\|-s\Bigl(\frac{\gamma}{\eta}+\frac54\Bigr)b^2X-\frac54aX
+\ge\frac{27}{32}b\|\Lambda\|-s\Bigl(\frac{\gamma}{\eta}+\frac52\Bigr)b^2X .
+\]
+If \(\|\Lambda\|\ge X\), Lemma~\ref{lem:rot-parameter-bounds} bounds the
+right-hand side below by \(\frac{23}{32}b\|\Lambda\|\). If
+\(X\ge\|\Lambda\|\), we use the second term instead. In both cases,
+\(R_k\ge\frac b2\max\{X,\|\Lambda\|\}=\frac b6\ge\frac76\epsilon\).
+\end{proof}
+ 
+
+
+\subsection{Large primal center stepsize \texorpdfstring{$\alpha$}{alpha}, and \texorpdfstring{$\beta=0$}{beta=0}}
+\label{subsec:lb-huber}
+
+In this subsection, we prove the lower bound for \(\alpha>\alpha_\epsilon\)
+and \(\beta=0\). The instance below keeps the objective of
+Example~\ref{ex:plateau} and changes the inner mapping and the outer
+function. On this instance, \(\mathrm{SPLALM}_{\theta,\alpha,0}\), initialized
+at zero, never produces an \(\epsilon\)-KKT point, for every
+\(\alpha\in[0,1]\).
+
+\begin{example}
+\label{ex:huber}
+Let \(\epsilon\) satisfy the condition in Example~\ref{ex:plateau}, and let
+\(f\) be the function defined there. Set
+\[
+q_h:=2s+1,
+\qquad
+a_0:=\frac{4\epsilon(\rho+3s+1)}{q_h}.
+\]
+Define \(\calA\equiv a_0\) and \(h:\RR\to\RR\) by
+\[
+h(y)=
+\begin{cases}
+\dfrac{q_h}{2}y^2, & |y|\le q_h^{-1},\\[4pt]
+|y|-\dfrac{1}{2q_h}, & |y|>q_h^{-1}.
+\end{cases}
+\]
+Then \(h\) is convex and \(1\)-Lipschitz, and \(\calA\) satisfies
+\(L_{\calA}=G_{\calA}=0\). Since \(F=f+h(a_0)\) differs from \(f\) by a
+constant, Remark~\ref{rem:plateau} gives
+\(F(0)-\inf F=f(0)-\inf f=\Delta\). Together with the properties of \(f\)
+established in Example~\ref{ex:plateau}, this gives
+\((f,\calA,h)\in\mathcal I(\mathbf C_0,\Delta)\).
+\end{example}
+
+When \(\beta=0\), the dual center stays at \(\mu^k=\mu^0=0\). The dual
+perturbation term \(-\frac{1}{2s}\|\lambda\|^2\) in~\eqref{eq:potential}
+therefore pulls \(\lambda^k\) toward zero at every iteration. On this
+instance, the output \(y^{k+1}\) equals \(a_0\) only when
+\(\lambda^k=\nabla h(a_0)=q_ha_0\), whereas the dual iterates converge to a
+smaller value. The difference keeps the feasibility residual
+\(\|\calA(x^{k+1})-y^{k+1}\|\) above \(\epsilon\) at every iteration. Since
+\(J_{\calA}=0\), the multiplier does not enter the primal update, and the
+dual iterates have the closed form given in the next lemma.
+
+\begin{lemma}
+\label{lem:huber}
+Let \(\alpha\in[0,1]\) and \(\beta=0\). Suppose that \(\epsilon\) satisfies
+the condition in Example~\ref{ex:plateau} and \(\epsilon(\rho+s)\le c_1\),
+with \(c_1\) as specified in Theorem~\ref{thm:lower-bound}. Run
+\(\mathrm{SPLALM}_{\theta,\alpha,0}\) on Example~\ref{ex:huber}, and set
+\[
+\varphi:=1-\frac{\tau}{s}-\frac{\tau}{\rho+q_h},
+\qquad
+\bar\lambda:=\frac{s\,q_ha_0}{\rho+q_h+s}.
+\]
+Then the following hold.
+\begin{enumerate}[label=(\roman*)]
+\item For all \(k\ge0\),
+  \[
+  \mu^k=0,\qquad
+  \lambda^k=\bar\lambda\bigl(1-\varphi^k\bigr),\qquad
+  y^{k+1}=\frac{\rho a_0+\lambda^k}{\rho+q_h}.
+  \]
+\item For all \(k\ge0\),
+  \(R_k\ge\|\calA(x^{k+1})-y^{k+1}\|\ge3\epsilon\). Hence, with \(I\) the
+  instance of Example~\ref{ex:huber},
+  \(T^{\mathrm{KKT}}_\epsilon(\theta,\alpha,0;I)=+\infty\).
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+We first collect three bounds on the parameters. Since \(0<\tau\le s\) and
+\(\rho+q_h>2s\),
+\begin{equation}
+\label{eq:huber-ratio}
+-\frac12<-\frac{\tau}{\rho+q_h}\le\varphi<1,
+\qquad
+\frac{s}{\rho+q_h}<\frac12 .
+\end{equation}
+Hence \(\varphi^k\ge-\frac12\) and \(0\le1-\varphi^k\le2\) for all
+\(k\ge0\). Since \(2s\le\rho+q_h+s\), it follows that
+\(0\le\bar\lambda(1-\varphi^k)\le2\bar\lambda\le q_ha_0\). Finally,
+\(s\ge\tau\) gives \(1\le(\rho+s)/\tau\), so the third term in the
+definition of \(c_1\) yields
+\[
+q_ha_0=4\epsilon(\rho+3s+1)
+\le4\epsilon\bigl(3+\tau^{-1}\bigr)(\rho+s)
+\le4c_1\bigl(3+\tau^{-1}\bigr)
+\le\frac14 .
+\]
+
+(i) Since \(\beta=0\) and \(\mu^0=0\), the dual center update gives
+\(\mu^k=0\) for all \(k\). Next, fix \(x\in\RR\) and
+\(\lambda\in[0,q_ha_0]\), and set
+\(y_\lambda:=(\rho a_0+\lambda)/(\rho+q_h)\). Then
+\(0\le y_\lambda\le a_0\le q_h^{-1}\), where the last inequality uses
+\(q_ha_0\le\frac14\). On \([-q_h^{-1},q_h^{-1}]\), the function \(h\) is
+differentiable with \(\nabla h(y)=q_hy\), and \(y_\lambda\) satisfies
+\[
+q_hy_\lambda-\lambda-\rho\bigl(a_0-y_\lambda\bigr)=0,
+\]
+which is the optimality condition of the strongly convex problem
+in~\eqref{eq:reduced-al}. Hence \(y(x,\lambda)=y_\lambda\), and
+\[
+\calA(x)-y(x,\lambda)=\frac{q_ha_0-\lambda}{\rho+q_h}.
+\]
+By Danskin's theorem,
+\(\nabla_\lambda\calD_\rho(x,\lambda)=\calA(x)-y(x,\lambda)\).
+
+We now prove the formula for \(\lambda^k\) by induction. It holds for
+\(k=0\) because \(\lambda^0=0\). Assume that it holds for some \(k\ge0\).
+Then \(\lambda^k\in[0,q_ha_0]\), so
+\(y^{k+1}=y(x^{k+1},\lambda^k)=y_{\lambda^k}\). Together with
+\(\mu^k=0\), the dual update in~\eqref{eq:splalm-updates} reads
+\[
+\lambda^{k+1}
+=\lambda^k+\tau\Bigl[\frac{q_ha_0-\lambda^k}{\rho+q_h}
+-\frac{\lambda^k}{s}\Bigr]
+=\varphi\lambda^k+\frac{\tau q_ha_0}{\rho+q_h}.
+\]
+A direct computation shows that
+\(\bar\lambda=\varphi\bar\lambda+\tau q_ha_0/(\rho+q_h)\). Subtracting the
+two identities gives
+\(\lambda^{k+1}-\bar\lambda=\varphi(\lambda^k-\bar\lambda)
+=-\bar\lambda\varphi^{k+1}\), which completes the induction.
+
+(ii) Since \(J_{\calA}=0\), \eqref{eq:kkt-residual} gives
+\(R_k=\max\{\|\nabla f(x^{k+1})\|,\|\calA(x^{k+1})-y^{k+1}\|\}\). By (i)
+and \(q_ha_0-\bar\lambda=q_ha_0(\rho+q_h)/(\rho+q_h+s)\),
+\[
+\calA(x^{k+1})-y^{k+1}
+=\frac{q_ha_0-\lambda^k}{\rho+q_h}
+=\frac{q_ha_0}{\rho+q_h+s}\Bigl(1+\frac{s}{\rho+q_h}\varphi^k\Bigr)
+=4\epsilon\Bigl(1+\frac{s}{\rho+q_h}\varphi^k\Bigr),
+\]
+where the last equality uses \(\rho+q_h+s=\rho+3s+1\).
+By~\eqref{eq:huber-ratio}, \(\frac{s}{\rho+q_h}\varphi^k>-\frac14\), so
+\(\|\calA(x^{k+1})-y^{k+1}\|>3\epsilon\). Thus no output is an
+\(\epsilon\)-KKT point, and
+\(T^{\mathrm{KKT}}_\epsilon(\theta,\alpha,0;I)=+\infty\).
 \end{proof}
 
-\todo{Subsections: plateau instance; rotating instance (parameters, spectral
-decomposition, transient bound, verification); \(\beta=0\) instance; proof of
-Theorem~\ref{thm:lower-bound} with constants \(c_1,c_2\).}
+\subsection{Proof of Theorem~\ref{thm:lower-bound}}
+\label{subsec:lb-combine}
+
+We now combine the three instances. Let \(c_1\) and \(c_2\) be given
+by~\eqref{eq:rot-thresholds}. The constant \(c_1\) depends only on
+\((\gamma,\eta,\tau)\), and \(c_2\) depends only on \((\gamma,\tau,\Delta)\),
+as required in Theorem~\ref{thm:lower-bound}.
+
+\begin{proof}[Proof of Theorem~\ref{thm:lower-bound}]
+Fix \(\epsilon\in(0,c_2)\), \(\rho>0\), and \(s\ge\tau\) with
+\(\epsilon(\rho+s)\le c_1\), and fix \((\alpha,\beta)\in[0,1]^2\). The
+definition of \(c_2\) gives \(\epsilon\le\frac1{64}\le\frac12\),
+\(\epsilon\le\sqrt\Delta/2\), and
+\(\epsilon^2\le\Delta/(64\gamma)\le\Delta/(16\gamma)\). Hence the conditions
+of Example~\ref{ex:plateau}, Lemma~\ref{lem:plateau}, and
+Example~\ref{ex:huber} on \(\epsilon\) hold. We treat the three parts of the
+partition of \([0,1]^2\) separately.
+
+\emph{Case 1: \(\alpha\le\alpha_\epsilon\).} Let \(I\) be the instance of
+Example~\ref{ex:plateau}, which belongs to \(\mathcal I(\mathbf C_0,\Delta)\).
+If \(\alpha=0\), Lemma~\ref{lem:plateau}~(iii) gives
+\(T^{\mathrm{KKT}}_\epsilon(\theta,\alpha,\beta;I)=+\infty\). If
+\(0<\alpha\le\alpha_\epsilon\), Lemma~\ref{lem:plateau}~(iii) and the
+definition of \(\alpha_\epsilon\) give
+\[
+T^{\mathrm{KKT}}_\epsilon(\theta,\alpha,\beta;I)
+>\frac{\Delta}{16\gamma\alpha\epsilon^2}
+\ge\frac{\Delta}{16\gamma\alpha_\epsilon\epsilon^2}
+=\frac{\Delta\,\epsilon^{-4}}{16384\,\gamma\max\{1,4\tau,4\gamma\tau\}}.
+\]
+Both bounds hold for every \(\beta\in[0,1]\).
+
+\emph{Case 2: \(\alpha>\alpha_\epsilon\) and \(\beta>0\).} The conditions of
+Lemma~\ref{lem:rot-estimates} hold. Let \(I\) be the instance of
+Example~\ref{ex:rotation}. By Lemma~\ref{lem:rot-estimates}~(i),
+\(I\in\mathcal I(\mathbf C_0,\Delta)\), and Lemma~\ref{lem:rot-trajectory}
+gives \(T^{\mathrm{KKT}}_\epsilon(\theta,\alpha,\beta;I)=+\infty\).
+
+\emph{Case 3: \(\alpha>\alpha_\epsilon\) and \(\beta=0\).} The conditions of
+Lemma~\ref{lem:huber} hold. Let \(I\) be the instance of
+Example~\ref{ex:huber}, which belongs to \(\mathcal I(\mathbf C_0,\Delta)\).
+Lemma~\ref{lem:huber}~(ii) gives
+\(T^{\mathrm{KKT}}_\epsilon(\theta,\alpha,0;I)=+\infty\).
+
+The three cases cover \([0,1]^2\). Hence, for every
+\((\alpha,\beta)\in[0,1]^2\), some \(I\in\mathcal I(\mathbf C_0,\Delta)\)
+satisfies
+\[
+T^{\mathrm{KKT}}_\epsilon(\theta,\alpha,\beta;I)
+\ge\frac{\Delta\,\epsilon^{-4}}{16384\,\gamma\max\{1,4\tau,4\gamma\tau\}}.
+\]
+Taking the supremum over \(I\) and then the infimum over \((\alpha,\beta)\)
+in Definition~\ref{def:complexity-measure} gives the bound on
+\(T^{\mathrm{KKT}}_\epsilon(\calC_\theta,\mathcal I(\mathbf C_0,\Delta))\).
+\end{proof}
+
+In Cases~2 and~3, the method never produces an \(\epsilon\)-KKT output.
+The finite bound comes only from Case~1, and it determines the order
+\(\epsilon^{-4}\) in Theorem~\ref{thm:lower-bound}.
