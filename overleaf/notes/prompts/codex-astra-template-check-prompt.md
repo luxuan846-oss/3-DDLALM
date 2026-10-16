@@ -1,5 +1,7 @@
 # 任务：核对"统一模板（rho >= 0）"论断与相关文献
 
+> 历史任务草案，状态更新于 2026-10-16。原报告未确认完成，不能标为已完成；正文含旧路径、旧定义和需要重新核对的覆盖关系，不直接执行。当前文献核对任务见 `notes/prompts/gptpro-literature-research-prompt.md`，当前范围见 `notes/progress/PROJECT_STATUS.md`。
+
 > 状态（2026-10-12）：尚未执行，未生成报告。文中路径为旧稿（`sections/Methodology.tex`、`notes/PROJECT_STATUS.md` 等已迁移或删除），执行前需更新。
 
 

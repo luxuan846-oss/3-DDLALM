@@ -1,5 +1,7 @@
 # 会话交接：2026-10-12（论文重构与下界章节准备）
 
+> 历史记录，状态标记更新于 2026-10-16。下文保留当时的讨论、判断与任务，可能已被后续决定取代；当前进度与待办仅以 `notes/progress/PROJECT_STATUS.md` 为准，不执行本记录中的旧任务。
+
 新会话先读本文件，再读 `notes/progress/PROJECT_STATUS.md` 和 `notes/project/lower-bound-references.md`。
 
 ## 1. 论文当前结构（`main.tex`，已推送 Overleaf，提交 8ab1ce6，之后 Overleaf 上删除了 AGENTS.md 等三个非论文文件）

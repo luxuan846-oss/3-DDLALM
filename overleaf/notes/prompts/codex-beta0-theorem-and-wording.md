@@ -1,5 +1,7 @@
 # 交给 Codex：写入 β=0 上界、合并推论、修正措辞
 
+> 写入任务已完成，状态更新于 2026-10-16。定理、附录证明与合并推论已在源码中，不重复执行本提示词。常数换算核查及当前稿措辞待办见 `notes/progress/PROJECT_STATUS.md`；写入完成不代表核查完成。
+
 工作目录：`/Users/liluxuan/Documents/My_Papers/3_DDLALM/overleaf`。先读 `CLAUDE.md`（尤其「论文正文的用词来源」）、`notes/progress/PROJECT_STATUS.md`、`notes/project/writing-phrasebook.md`。
 
 只做下面四项。不要改动其他内容，不要推送 Overleaf，不要删除文件。

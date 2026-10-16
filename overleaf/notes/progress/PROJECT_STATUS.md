@@ -1,61 +1,79 @@
-# DDLALM / SPLALM 项目状态（从 Cowork 项目导出，2026-10-01；第 1–4 节于 2026-10-13 更新）
+# SPLALM 项目状态
 
-> **最新进度（2026-10-14）：先读 `notes/progress/SESSION_HANDOFF_20261014.md`**（论文定位调整、全文逻辑、第 4 节与附录进度、待办），再读 `SESSION_HANDOFF_20261012.md`（第 2 节定义）。文献清单见 `notes/project/lower-bound-references.md`，正文用词见 `notes/project/writing-phrasebook.md`。
+更新日期：2026-10-16。**本文件是当前进度与待办的唯一入口。** 依据当前本地源码、已有核查记录及 10 月 15–16 日讨论整理。本次更新没有重新核对数学证明，也没有重新编译论文。
 
+历史交接、旧任务表、研究主线和白板用于追溯讨论，不作为当前待办。源码说明已经写入什么；核查记录说明已经核对什么；两者分别记录。
 
-本文件供 Claude Code 读取。完整研究主线见同目录 `notes/project/ddlalm-research-questions.md`（第八版 + 第 7 节最新结果）。
-**当前任务清单以同目录 `notes/project/ddlalm-task-plan.md`（2026-10-01 更新）为准**；10-01 的文献核对与 ρ 一致性推导见 `notes/progress/ddlalm-verification-20261001.md`。两者中出现的 `claude/...` 路径指 Cowork 项目里的同名文件，本地副本在 `notes/`。
+## 1. 当前阶段与范围
 
-## 1. 论文与定位（2026-10-13 调整）
-- 稿子：`main.tex`（SIAM 模板）。当前标题（2026-10-13 改）："Shrink the Dual Regularization, Keep the Penalty: Tight Complexity of Linearized Augmented Lagrangian Methods"；页眉 "Shrink the Dual Regularization, Keep the Penalty"。摘要已按新定位重写（其中 β=0 的 O(ε^{-3}) 与"order attained within the family"两句依赖待完成的两个上界）。原标题 "Growing the Dual Regularization, Not the Penalty: A Fixed-Penalty Single-Loop ALM for Nonconvex Composite Optimization"。
-- **定位调整**：论文不再以"提出一种固定罚 ALM 算法"为主线，改为对单环 ALM 族 $\mathcal C_\theta$ 的**紧性分析**。主体是下界；两个上界通过退化为已有方法（Smoothed GDA、Perturbed Smoothed GDA）引用并改写。
-- 改标题的理由：引言把对偶正则系数写成 1/s，原 "Growing" 方向易读反；原副标题是算法论文写法。标题中的 "Tight" 依赖下界证明与 β=1 上界，二者完成前此词超前于已证内容。
-- 算法名：SPLALM；旧笔记中的 DDLALM 指同一方法。
-- 时变线已删除（2026-10-13）：第 5 节 `TimeVarying.tex` 已删。`thm:main`（s_k=Θ(k^{1/3})，α_k、β_k 时变，O(ε^{-3})，需水平有界假设）已移到附录 B（accuracy-independent schedule，`sections/UpperBound.tex` 路径未变，\input 移到 \appendix 之后），其证明为附录 C；正文第 6 节已不存在。
+- 阶段：完整初稿的完善。算法名为 SPLALM，旧材料中的 DDLALM 指同一项目。
+- 主线：单环线性化 ALM 族 $\mathcal C_\theta$ 在指定参数区域内的复杂度下界，以及与已有方法上界的联系。重点说明组合罚参数 $\rho+s$、对偶正则与中心步长各自的作用。
+- 新结果重点：对所有常数中心步长一致成立的下界。两个上界分别由 Smoothed GDA、Perturbed Smoothed GDA 的分析换算得到。
+- 当前源码标题：*Shrink the Dual Regularization, Keep the Penalty: Tight Complexity of Linearized Augmented Lagrangian Methods*。用户已接受调整标题；新标题尚未确定。
+- 评议参照：以 SIOPT 中贡献类型相近的工作为主，再依据成果讨论 Mathematical Programming。旧任务表中的结果与期刊对应关系不作为当前决定。
+- 已关闭：把下界推广到时变或单调中心步长，不列入本轮必须完成的工作。
 
-## 2. 核心问题
-- 单环 ALM 固定罚参数 ρ 时，能否只靠增长 s，把复杂度从 ε^{-4} 降到 ε^{-3}？复杂度由中心步长决定，还是由有效罚参数 ρ+s 决定？
-- 导师意见（2026-09-29）：Q1 第一优先；Q2（原始光滑的作用）、Q3（结构条件）放到结论的开放问题。
+## 2. 已写入的结果与适用范围
 
-## 3. 全文逻辑与结果（2026-10-13）
-主结论：在常数参数族 $\mathcal C_\theta$ 内，复杂度的阶由有效罚参数 ρ+s 决定，与中心步长无关；临界尺度为 ρ+s=Θ(1/ε)，增长可全部由 s 承担（ρ 固定）。
+1. **下界 `thm:lower-bound`。** 固定 $0<\eta\le\gamma$、$\tau>0$、$\Delta>0$，对充分小的精度、$\rho>0$、$s\ge\tau$ 且 $\epsilon(\rho+s)\le c_1$，每组常数 $(\alpha,\beta)\in[0,1]^2$ 均有从全零初值出发的困难实例，给出 $\Omega(\epsilon^{-4})$。常数 $c_1,c_2$ 不依赖 $\rho,s,\alpha,\beta$，精确量词和常数见定理。平台、旋转、Huber 三分支及主定理证明均已写入；部分核查待完成，见第 4 节。
+2. **上界 `thm:upper-beta1`。** 在该定理的步长条件下，取 $\beta=1$、$\alpha=c\epsilon^2$，得到 $O(\epsilon^{-4})$。在同一问题类、固定 $\rho$ 且满足上下界共同条件时，与下界形成族复杂度的紧性结论。不能把该上界常数未经核对地用于随精度增长的 $\rho$。
+3. **上界 `thm:upper-beta0`。** 固定 $\rho,\gamma,\eta,\tau$ 并满足 `eq:beta0-stepsizes`，取 $s=c_s/\epsilon$、$\alpha=c_\alpha\epsilon$、$\beta=0$，得到 $O(\epsilon^{-3})$。$c_s$ 足够大、$c_\alpha$ 足够小，参数在单次运行内保持常数。定理、Remark、附录证明均已写入；$C_*$ 的引用换算仍待独立逐行核对。
+4. **合并推论 `cor:effective-penalty`。** 已写入上述下界区域与固定 $\rho$ 的充分参数路径。$\rho=c/\epsilon$、$s$ 固定及上侧其他参数路径的族内复杂度尚未由这些结果刻画。
+5. **补充上界 `thm:main`。** 递增 $s_k$ 的 accuracy-independent schedule 仍在附录中，使用额外的水平有界假设。它与已经关闭的“时变中心步长下界推广”分别处理。
 
-- **关键措辞（2026-10-13 定）**：不能写"中心步长不改变复杂度的阶"。实际证明的是两件事：(1) ρ+s 小（ε(ρ+s)≤c_1）时，任何常数中心步长都只能做到 ε^{-4}；(2) ρ+s 足够大（s=c_s/ε，c_s 足够大）时，存在一组合适的中心步长达到 ε^{-3}，即 β=0、α=Θ(ε)：对偶中心固定在零，原始中心按 α=Θ(ε) 移动。没有证明任意中心步长都能达到 ε^{-3}；α 取与精度无关的常数时是否可行未知。正确说法：**能达到的最好的复杂度阶由 ρ+s 决定**；"增长后不需要移动中心"只对对偶中心成立，原始中心仍要移动。摘要、贡献 3、结论第一段都按此写。
+表述约束：低参数区域内，调节常数中心步长无法突破上述下界；固定 $\rho$ 时，已有一组参数达到较好的上界。不能写“中心步长与复杂度无关”“增大 $\rho$ 在所有区域都无效”或“整个上侧区域只由 $\rho+s$ 决定”。$\beta=0$ 固定的是对偶中心，原始中心仍移动。$O(\epsilon^{-3})$ 的可达性本身不等于该区域的复杂度最优性。
 
-| 紧性 | 结论 | 依据 | 状态 |
-|---|---|---|---|
-| 复杂度紧 | ε(ρ+s)≤c_1 时复杂度为 Θ(ε^{-4}) | 下界 `thm:lower-bound`（所有常数 (α,β)）+ β=1 上界 O(ε^{-4}) | 下界证明未完成；β=1 上界未写 |
-| 参数紧 | 低于 c_1/ε 为 ε^{-4}；ρ 固定、s=Θ(1/ε) 为 ε^{-3} | 下界 + β=0 上界 O(ε^{-3}) | β=0 上界未写 |
-| 中心与参数 | 移动中心代替不了 ρ+s 的增长；增长后也不需要移动中心 | 下界覆盖所有 β；ε^{-3} 在 β=0 达到 | 同上 |
+## 3. 当前稿件与产物
 
-- 下界定理（`thm:lower-bound`）：固定 0<η≤γ、τ>0、Δ>0，存在 c_1(γ,η,τ)、c_2(γ,τ,Δ)，使对所有 ε<c_2、ρ>0、s≥τ 且 ε(ρ+s)≤c_1、(α,β)∈[0,1]²，存在**从全零初值出发**的实例 I∈I(C_0,Δ)，T_ε ≥ Δε^{-4}/(16384γ max{1,4τ,4γτ})。三块构造：小 α 平台实例；大 α、β>0 旋转实例（R_k≥7ε/6）；β=0 Huber 实例（可行性残差 >2ε）。
-- β=1 上界：β=1 时 μ^k=λ^k，SPLALM 即作用在 D_ρ 上的 Smoothed GDA，引用 Li et al. 2026 Thm B.1（及 Zhang et al. 2020）。已核对：ℓ=max{L_{D,x}, G_A, 1/ρ}；Li Condition 3.2（r_y=0）逐项对应；初始间隙 ≤ Δ + L_h²/(2ρ) + (G_f+G_A L_h)²/μ_γ；R_k ≤ (11/10)·S_{k+1}；乘子 ‖λ^k‖≤L_h，对偶投影不触发；上界的 α=O(10^{-8}ε²) 落在下界平台区间内，与旋转实例相容。2026-10-13 补核：可直接引用 Zhang–Xiao–Sun–Luo (NeurIPS 2020, arXiv:2010.15768v3) Theorem 3.4。其 Assumption 3.3 只要求 ψ=max_{y∈Y} f 有有限下界（inf F>−∞ 即可，min/inf 问题消除；φ^t≥下界见其附录）；参数条件 (3.3) 与 Li Condition 3.2（r_y=0）逐字相同；驻点定义（其 Def 3.1）与 Li 的 ε-GS 相同，度量点同为 (x^{t+1},y^{t+1})。其光滑常数 L 取联合 Euclid 范数，可取 L=√2ℓ。证明两种情形：(i) 残差 ≤ λ√β，(ii) 残差 ≤ λ̄√((φ^0−inf F)/(Tβ))，取 α=cε²（c≤1/λ²）与 T≥λ̄²Δ̂/(cε⁴) 即得，c 不依赖 Δ。Zhang 的 Prop 4.1、Lemma B.11、B.12 本身未逐行复核（已发表结果，按引用处理）。NeurIPS 版的定理编号待对照。
-- β=0 上界（推断，待核对）：β=0 时 SPLALM 即 r_y=1/s 的 Perturbed Smoothed GDA，Li Thm 3.3(i) 在 r_y=Θ(ε/D_Y)（s=Θ(L_h/ε)）下给出 O(ε^{-3})。需逐项核对 Condition 3.2(ii)、初始间隙、残差换算（多一项 τL_h/s=O(ε)）。相容性：上界需 s≳4L_h/ε，下界只覆盖 ρ+s≤c_1/ε（c_1≤1/224），不重叠。
-- 数值核对：零初值旋转实例 300 组随机参数 min_k R_k/ε ≥ 2.63（10-12）；附录 A 谱分解、衰减子空间、瞬态界、(i) 中五个不等式在 20000 组参数下成立（10-13，数值证据，非证明）。
-- 统一模板（ρ∈[0,ρ̄] 覆盖 ρ=0 的 GDA 型方法）仍只有推导和数值；论文中以 `rem:family-not-oracle` 与第 3 节嵌入小节处理。
+| 位置 | 文件 | 状态 |
+|---|---|---|
+| §1 | `sections/Introduction.tex` | 问题、比较表与贡献已写入；随评议完善定位与措辞 |
+| §2 | `sections/Preliminaries.tex` | 问题类、驻点判据与 oracle 定义 |
+| §3 | `sections/AlgorithmFamily.tex` | 算法族、复杂度、组合罚参数与特殊情形 |
+| §4 | `sections/LowerBound.tex` | 两个上界、下界及合并推论均已写入 |
+| §5 | `sections/LowerBoundProof.tex` | GDA 递推对应、三个困难实例分支与主定理证明均已写入 |
+| §6 | `sections/Conclusion.tex` | 总结与开放问题已写入 |
+| 附录 A | `appendix/LowerBoundRotation.tex` | 已有 10-13 解析核查记录 |
+| 附录 B | `appendix/UpperBoundBetaOne.tex` | β=1 上界证明已写入 |
+| 附录 C | `appendix/UpperBoundBetaZero.tex` | β=0 上界证明已写入；末尾保留未核对事项 |
+| 附录 D、E | `sections/UpperBound.tex`、`appendix/UpperBoundProofs.tex` | 递增参数上界及证明，作为补充 |
 
-## 4. 待办（2026-10-14 更新，详见 `SESSION_HANDOFF_20261014.md` 第 4、5 节）
-1. **已完成写入，2026-10-14**（`notes/prompts/codex-beta0-theorem-and-wording.md`）：§4 新增 `thm:upper-beta0` 和 Remark；证明写入 `appendix/UpperBoundBetaZero.tex`；`cor:effective-penalty` 已合并上下界；摘要、(Q) 回答段、贡献 2/3、比较表和结论已同步。限定 $s=c_s/\epsilon$（$c_s$ 足够大）与 $\alpha=\Theta(\epsilon)$，所有参数在单次运行内为常数。**引用换算待复核**：GPT Pro 从 Li26 v2 §4.2 (4.19)–(4.23) 得到的 $C_*$ 存在性、依赖关系和平均常数尚未独立逐行复核，已在附录末尾保留 LaTeX 注释。写入完成不代表这一核对完成。本条优先于上方有关 β=0 尚未写入的旧记录。
-2. 核对 §5 的 β=0 小节与定理证明小节（用户已写）。
-3. §4、§5 的两个 `\todo`（GS 版本可选；推广到 Smoothed GDA / DS-GDA 待定）。
-4. Organization 是否补附录说明。
-5. 小项：bib 重复 `zhang2020single`；引言第 76 行笔误；Zhang Lemma B.11 中 $\lambda_1$ 的依赖与 NeurIPS 编号。
-6. Codex 完成后推送 Overleaf。
+- 旋转示意图：`figures/plot_rotation_instance.py` 与 `figures/rotation_instance.pdf` 已存在，不再列为待生成；本次未重跑脚本，也未重新验收图形。
+- `sections/RelatedWorkDraft.tex` 和旧独立核查产物已清理；附录 A 的详细核查记录保留。
+- `main.pdf` 为已有产物；本次未重新编译，阅读时以源码为准。
 
-已完成：附录 A 解析核对；β=1 上界；结构调整（§3 算法族、§4 Main Results、§5 下界证明、§6 结论、附录 A–D）；标题、摘要、引言按新定位重写；比较表；结论一节；时变线删除；推送 Overleaf（最新 `a23c410`）。
+## 4. 当前待办
 
-## 5. 已确认的文献判断
-- Liu–Deng–Wang–Wen（arXiv:2608.19847，NR-LALM）：每步解 Jacobian 线性方程组（Gauss–Newton 型），不是梯度步；在 uniform LICQ 下 O(ε^{-2})，属于正则性驱动的结果。
-- 与 SPLALM 同类（梯度步、固定参数）的参照：Zhang–Luo（SIOPT 2022，线性约束 + 多面体，Hoffman，O(ε^{-2})，不需要 A 满秩）；Zhang–Pu–Luo（arXiv:2207.06304，凸约束，局部误差界 + CRCQ）。
-- 投稿定位：常数步长子类紧性 → SIOPT；全步长规则下的分离 → Mathematical Programming, Series A；固定参数达到 O(ε^{-3}) → MOR。
-- 2026-10-01 更正：(1) GS 的 O(ε^{-5/2}) 应引 arXiv:2609.17973（Zhang, Xu），不是 Pan–Zheng–Li 的 Remark 3.3（该说法未在原文中找到，to be verified）；`notes/project/ddlalm-research-questions.md` §1.10 仍是旧说法。(2) Li et al. 2026 的下界只在其各定理的步长条件下成立，不是对所有步长。(3) MIALM（arXiv:1911.09900）是线性 A，收敛分析允许 ρ_k 有界；它不在我们算法类内的理由是双循环与子问题精度趋零。
-- 快于 ε^{-4} 的路线（2026-10-13 定）：族内取 s=Θ(1/ε)、β=0，即 Perturbed Smoothed GDA（Li et al. 2026 Thm 3.3(i)），见第 3 节。
+### 优先完成
 
-## 6. Cowork 项目中的其他记录（未导出，需要时在 claude.ai 项目 "Valerie-DDLALM" 中查看）
-- `claude/gptpro-q1-step4-prompt.md`：交给 GPT Pro 的第 4 步任务说明
-- `DDLALM_Q1_lower_bound_完整聊天记录_2026-09-29 (1).md`：与 GPT 的完整讨论
-- `claude/ddlalm-fenchel-view-and-literature.md`、`claude/ddlalm-vs-rada.md`、`claude/ddlalm-dsgda-analysis.md`：文献与结构对照
-- `claude/ddlalm-session-20260927*.md`：早期讨论记录（部分结论已被后续版本取代）
-- 已导出到 `notes/`：`notes/project/ddlalm-task-plan.md`（2026-10-01 更新版）、`notes/progress/ddlalm-verification-20261001.md`
+1. **β=0 上界引用换算。** 对照 Li26 v2 §4.2 (4.19)–(4.23)，核对 `eq:beta0-gs-rate` 中 $C_*$ 的存在性、参数依赖、精度一致性和平均常数。证明材料见 `notes/gpt-proofs/beta0-upper-check-20261013.md`。写入完成不代表核查完成。
+2. **下界证明衔接。** 核对 §5 的 `subsec:lb-huber` 与主定理证明，确认分支覆盖、零初值、实例类成员关系和统一常数。附录 A 的既有通过记录不能替代这些分支的核查。
+3. **初稿评议与叙事完善。** 使用 `notes/prompts/gptpro-draft-review-prompt.md`。依据实际定理调整标题、摘要、问题 (Q)、贡献与结论，突出参数区域下界增加的认识。当前摘要仍使用 “$s$ of order $1/\epsilon$” 的简写；需核对其是否应补明充分大的系数与中心步长条件，不能沿用旧记录声称全部措辞已同步。
 
-文献库：`notes/project/literature.md`（按 Q1 下界、固定罚与正则性、minimax、ALM、经典基础分类；含 bib key、核对状态、待加入与重复条目）。
+### 与定位直接相关的文献核对
+
+- 按 `notes/prompts/gptpro-literature-research-prompt.md` 核对最接近的参数区域下界、组合罚参数恒等式的来源和比较表。
+- PPALA：核对问题类、驻点判据、有限步可行性与算法结构；不能预设其与本文在同一问题类上比较。
+- LP-ALM、NR-LALM、GDPA：区分问题假设、更新方式和参数条件。LP-ALM 的参数对应目前是待核对的粗对应；固定 $\rho$ 的定量收益需要可比条件下的计算。
+- β=1 引用中的 Zhang Lemma B.11 常数依赖，以及 arXiv v3 / NeurIPS 版本编号，仍保留为待核对项。
+
+### 最后处理的编辑项
+
+- `sections/Introduction.tex` 中 “oraccuracy $eps$-dependent” 笔误。
+- `tools/refer.bib` 中 `zhang2020single` 与 `zhang2020smoothed` 重复条目，合并时同步实际引用。
+- 主体与附录顺序确定后，决定 Organization 是否补充附录说明。
+- GS 版本和向一般 Smoothed GDA / DS-GDA 的下界推广为可选事项，不作为当前必做任务。
+
+## 5. 材料使用规则
+
+- 当前定位和任务只在本文件维护。完成任务时更新对应条目，不在文件末尾追加与旧正文冲突的“最新状态”。
+- `SESSION_HANDOFF_*.md`、`ddlalm-task-plan.md`、`ddlalm-research-questions.md`、讨论记录与 Booming 白板为历史资料。里面的旧标题、旧初值、章节号和任务不能自动恢复为当前要求。
+- `notes/gpt-proofs/` 保存证明来源；`lb-proof-materials.md` 的 Part I 平台分支仍有用途，Part II 与 Part III 的适用关系按文件顶部说明读取。
+- `appendix-a-audit-20261013.md`、`ddlalm-verification-20261001.md` 保存已有核查依据。本次进度整理不新增数学核查结论。
+- `literature.md`、`lower-bound-references.md`、`writing-phrasebook.md` 分别用于文献总表、下界参考和英文表达来源。
+- `notes/conversations/` 与 `notes/skills/` 按用户要求保留。历史对话与方法副本不自动成为当前执行指令；对话时间覆盖见该目录 README。
+- 已撤回判断：不能由任意 oracle 下界推断本文的参数区域下界会被替代。同一问题类与度量下的 oracle 下界能向子族转移，但转移本身不增加下界的阶。
+
+## 6. 同步范围
+
+本地论文入口为 `main.tex`。GitHub 远端是 `github`（`luxuan846-oss/3-DDLALM`）；`origin` 是 Overleaf，不能混用。用户本次授权把笔记更新提交并推送 GitHub。Overleaf 不属于本次推送范围；远端实时状态应通过 Git 查询，不沿用历史交接中的提交号。

@@ -1,6 +1,8 @@
 # 会话交接：2026-10-14（定位调整后的全文状态）
 
-新会话先读本文件，再读 `notes/progress/PROJECT_STATUS.md`。`SESSION_HANDOFF_20261013.md` 记录了 10-13 的细节，与本文件冲突时以本文件为准。全文逻辑的最新版在 Obsidian：`/Users/liluxuan/Documents/Obsidian/261003-文章逻辑.md`。
+> 历史记录，状态标记更新于 2026-10-16。下文保留当时的讨论、判断与任务，可能已被后续决定取代；当前进度与待办仅以 `notes/progress/PROJECT_STATUS.md` 为准，不执行本记录中的旧任务。
+
+以下为 10-14 时点的交接，当前新会话先读 `notes/progress/PROJECT_STATUS.md`。10-14 当时使用的全文逻辑笔记位于 Obsidian：`/Users/liluxuan/Documents/Obsidian/261003-文章逻辑.md`。
 
 ## 1. 论文定位与主结论
 

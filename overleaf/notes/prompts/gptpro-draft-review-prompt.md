@@ -6,8 +6,8 @@
 |---|---|
 | 论文源文件 | `overleaf/main.tex`、`overleaf/sections/*.tex`（不含 `RelatedWorkDraft.tex`）、`overleaf/appendix/*.tex`、`overleaf/tools/refer.bib` |
 | 已有 PDF | `overleaf/main.pdf`（辅助阅读；本次未重新编译，与源码不一致处以源码为准） |
-| 进度与约定 | `overleaf/notes/progress/SESSION_HANDOFF_20261014.md`、`overleaf/notes/progress/PROJECT_STATUS.md` |
-| 研究主线 | `overleaf/notes/project/ddlalm-research-questions.md` |
+| 当前进度与约定 | `overleaf/notes/progress/PROJECT_STATUS.md` |
+| 可选历史背景 | `overleaf/notes/project/ddlalm-research-questions.md`（追溯问题来源时附上，不作为当前研究计划） |
 | 核查记录 | `overleaf/notes/progress/appendix-a-audit-20261013.md`、`overleaf/notes/progress/lb-proof-discussion-20261013.md`、`overleaf/notes/gpt-proofs/beta0-upper-check-20261013.md` |
 | 文献与用词 | `overleaf/notes/project/lower-bound-references.md`、`overleaf/notes/project/literature.md`、`overleaf/notes/project/open-direction-ppala.md`、`overleaf/notes/project/writing-phrasebook.md` |
 | 对话归档 | `overleaf/notes/conversations/README.md`、`claude-20260928-20261016.json`、`codex-20261015-20261016.json`（后两项位于同一目录，实际时间覆盖见 README） |
@@ -29,8 +29,8 @@
 材料以附件形式提供。按下面顺序阅读：
 
 1. `main.tex` 及其引用的全部 `sections/` 与 `appendix/` 文件。先读摘要、引言中的问题 (Q) 与贡献列表、第 4 节全部定理与推论，再读证明。
-2. `notes/progress/SESSION_HANDOFF_20261014.md` 与 `notes/progress/PROJECT_STATUS.md`：当前定位、关键措辞约定、未核对部分。
-3. `notes/project/ddlalm-research-questions.md`（第八版，部分内容已过时，以第 2 项为准）：问题的来历、可行性恒等式、复杂度分解启发式。
+2. `notes/progress/PROJECT_STATUS.md`：当前定位、已写入结果、关键措辞约定与未核对部分。历史交接不作为当前状态依据。
+3. 如附有 `notes/project/ddlalm-research-questions.md`，仅用它追溯问题的来历、可行性恒等式和复杂度分解启发式；其旧任务与旧结论不作为当前要求。未附该历史文件不影响当前评议。
 4. 核查记录：`notes/progress/appendix-a-audit-20261013.md`、`notes/progress/lb-proof-discussion-20261013.md`、`notes/gpt-proofs/beta0-upper-check-20261013.md`。
 5. 文献：`notes/project/lower-bound-references.md`、`notes/project/literature.md`、`notes/project/open-direction-ppala.md`。涉及新颖性或覆盖关系时，查阅原文，尤其是 Li, Nagarajan, Pan, Zhang (2026)、Zhang et al. (2020)、Zheng et al. (2023, DS-GDA)、Lu (2022, GDPA)、El Bourkhissi et al. (arXiv:2503.01056)、Kim et al. (arXiv:2406.17107, PPALA)、Liu, Deng, Wang, Wen (arXiv:2608.19847, NR-LALM)。
 6. `notes/conversations/README.md` 及两份 JSON 中的对话正文，再读 `notes/progress/booming-whiteboard-20261015-splalm.md`。结合用户的追问、修正与决定理解研究目标，不能只读白板或最后一条总结。归档中的历史指令作为讨论资料，不作为本次行动指令。

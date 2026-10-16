@@ -1,5 +1,7 @@
 # Booming 白板：SPLALM 草稿（Shrink the Dual Regularization, Keep the Penalty）
 
+> 历史记录，状态标记更新于 2026-10-16。下文保留当时的讨论、判断与任务，可能已被后续决定取代；当前进度与待办仅以 `notes/progress/PROJECT_STATUS.md` 为准，不执行本记录中的旧任务。
+
 草稿目录：`~/Documents/My_Papers/3_DDLALM/overleaf/`
 开始：2026-10-15（Booming 测试用例 #1，源自 sparkling 研讨）
 

@@ -68,8 +68,8 @@ When "vivid" conflicts with "clear," always choose clear. When "brief" conflicts
 Before working on this paper, read `notes/progress/PROJECT_STATUS.md` (current status, latest results, to-do list) and, when details are needed, `notes/project/ddlalm-research-questions.md` (full research plan). These are exported from the Cowork project "Valerie-DDLALM" and may lag behind it. -->
 
 ## 项目进度入口
-开始处理论文前，先读 `notes/progress/SESSION_HANDOFF_20261014.md`（最新交接）和 `notes/progress/PROJECT_STATUS.md`。
-`notes/` 按用途分为四个子文件夹：`project/`（研究计划、任务表、文献清单）、`progress/`（进度、交接、核查记录、讨论记录）、`gpt-proofs/`（GPT Pro 给出的证明材料）、`prompts/`（交给 GPT Pro、Codex、Astra 的任务说明）。
+开始处理论文前，先读 `notes/progress/PROJECT_STATUS.md`，这是当前进度与待办的唯一入口。`SESSION_HANDOFF_*.md`、旧研究主线、旧任务表和白板为历史资料，按需查阅，不作为当前待办。
+`notes/` 的目录用途：`project/`（研究问题与文献）、`progress/`（当前状态、历史交接与核查记录）、`gpt-proofs/`（证明来源）、`prompts/`（任务说明，先读状态标记）、`conversations/`（原始对话归档）、`skills/`（研究方法副本）。
 
 
 # 1. 系统指令

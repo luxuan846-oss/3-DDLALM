@@ -1,5 +1,7 @@
 # Codex 任务：绘制第 4.2 节旋转实例示意图
 
+> 输出文件已存在，状态更新于 2026-10-16。见 `figures/plot_rotation_instance.py` 与 `figures/rotation_instance.pdf`，不再列为待生成。下文路径与章节号为旧稿；本次仅确认产物存在，未重跑或重新验收。
+
 工作目录：`/Users/liluxuan/Documents/My_Papers/3_DDLALM/overleaf`
 
 ## 目标
