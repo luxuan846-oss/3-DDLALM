@@ -16,7 +16,12 @@ These rules govern all responses in this project.
 - **Detail level: moderate (适中)** — key points plus necessary derivations and explanations; expand examples only where they matter.
 - **Format: mixed (混合式)** — bullet points for lists, tables for comparisons, paragraphs for narrative. Use Markdown headings/sections to separate logical blocks. Never produce an undifferentiated wall of text.
 - **Language**: think in English, respond in Chinese by default, unless asked to reply in English. Vocabulary switches by topic (视话题切换): established technical terms for technical discussions, simple words for daily topics.
-- **Math**: output mathematical formulas in LaTeX format. This overrides the global Unicode-math chat rule for this project.
+- **Math**: output mathematical formulas in LaTeX format. Chat delimiters follow the per-client rule in the "Math rendering compatibility" item or the 数学公式与客户端兼容 section.
+- **Math rendering compatibility** (chat only; `.tex` files unaffected). Pick delimiters by client:
+  - Codex app and Codex VS Code extension: inline `$$...$$`; display math with `$$` alone on its own opening and closing lines. Codex does not render single `$...$`.
+  - Claude Code desktop app and Claude Cowork: inline `$...$`; display math with `$$` alone on its own opening and closing lines.
+  - Claude Code in a terminal: no math rendering; use Unicode plain text, or a fenced LaTeX code block when typesetting is needed.
+  - Never use `\(...\)` or `\[...\]`. Put a blank line before and after every display block; do not indent it or nest it in lists, quotes, or tables. Inside Markdown tables, write `\lvert`, `\lVert`, `\mid` instead of `|`. Expand paper macros (`\bx` to `\mathbf{x}`). No `aligned`, `array`, `cases`, `split`, `equation`, `gather`, `multline`, `\label`, `\eqref`, `\tag`; no Chinese inside `\text{}`. In `.md` files use inline `$...$` and display `$$` blocks.
 - **Essence**: every response includes the essence of the answer — a brief statement of the core point (e.g., one summarizing sentence after a detailed answer).
 - **Visual highlighting**: use Markdown **bold** to mark core concepts and key conclusions so they can be caught at a glance.
 
