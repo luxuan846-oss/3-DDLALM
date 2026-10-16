@@ -14,7 +14,7 @@
 - **Detail level: moderate (适中)** — key points plus necessary derivations and explanations; expand examples only where they matter.
 - **Format: mixed (混合式)** — bullet points for lists, tables for comparisons, paragraphs for narrative. Use Markdown headings/sections to separate logical blocks. Never produce an undifferentiated wall of text.
 - **Language**: think in English, respond in Chinese by default, unless asked to reply in English. Vocabulary switches by topic (视话题切换): established technical terms for technical discussions, simple words for daily topics.
-- **Math**: output mathematical formulas in LaTeX format. This overrides the global Unicode-math chat rule for this project.
+- **Math**: output mathematical formulas in LaTeX format. Chat delimiters follow the per-client rule in the "Math rendering compatibility" item or the 数学公式与客户端兼容 section.
 - **Essence**: every response includes the essence of the answer — a brief statement of the core point (e.g., one summarizing sentence after a detailed answer).
 - **Visual highlighting**: use Markdown **bold** to mark core concepts and key conclusions so they can be caught at a glance.
 
@@ -68,7 +68,7 @@ When "vivid" conflicts with "clear," always choose clear. When "brief" conflicts
 Before working on this paper, read `notes/progress/PROJECT_STATUS.md` (current status, latest results, to-do list) and, when details are needed, `notes/project/ddlalm-research-questions.md` (full research plan). These are exported from the Cowork project "Valerie-DDLALM" and may lag behind it. -->
 
 ## 项目进度入口
-开始处理论文前，先读 `notes/progress/SESSION_HANDOFF_20261013.md`（最新交接）和 `notes/progress/PROJECT_STATUS.md`。
+开始处理论文前，先读 `notes/progress/SESSION_HANDOFF_20261014.md`（最新交接）和 `notes/progress/PROJECT_STATUS.md`。
 `notes/` 按用途分为四个子文件夹：`project/`（研究计划、任务表、文献清单）、`progress/`（进度、交接、核查记录、讨论记录）、`gpt-proofs/`（GPT Pro 给出的证明材料）、`prompts/`（交给 GPT Pro、Codex、Astra 的任务说明）。
 
 
@@ -85,7 +85,7 @@ Before working on this paper, read `notes/progress/PROJECT_STATUS.md` (current s
 3. 一句话只表达一个主要意思；使用主动语态和明确主语。
 4. 有步骤时使用编号列表。
 5. 不使用为了显得易懂而加入的类比。
-6. 
+   
 ## 2. 输出格式
 - 默认采用**精简执行模式**：先给精华总结，再给结论，随后只展开完成当前请求所必需的依据或操作结果。
 - **精华总结**放在回答第一步，用一句或两句概括最重要的结果、判断或状态。
@@ -96,44 +96,29 @@ Before working on this paper, read `notes/progress/PROJECT_STATUS.md` (current s
 - 小任务短答；技术或研究任务根据复杂度保留必要的结构和推导。用户未要求详细解释时，不展开完整过程；限定条件除外，见「严谨性」。
 - 数学公式继续使用 LaTeX。
 - 标题不使用括弧补充；正文仅在补充内容较长时才使用括弧。
-当回答中包含数学公式时，必须以当前聊天页面能够直接渲染的数学形式展示，不能仅输出 LaTeX 源代码。
 
-具体要求：
+### 数学公式与客户端兼容
 
-1. 行内公式只用 `$...$`，行间公式只用 `$$...$$`。禁止使用 `\(...\)` 和 `\[...\]`：当前聊天页面先做 Markdown 解析，会吃掉反斜杠，导致公式显示为源码。
+本节规定聊天回复中的公式写法，适用于 Codex app、Codex VS Code 插件、Claude Code 与 Claude Cowork；不改变 `.tex` 源文件。本节优先于其他位置的数学排版约定。；
 
-2. 最终目标是让用户直接看到排版后的数学符号，而不是看到 `$`、反斜杠命令、花括号或其他 LaTeX 源码标记。
+1. **按客户端选分隔符。** 回复前先确认自己运行在哪个客户端，然后只用下表对应的写法：
 
-3. 不要用反引号、代码块、verbatim 环境或纯文本形式包裹需要展示为数学公式的内容。
+| 客户端 | 行内公式 | 独立公式 |
+|---|---|---|
+| Codex app、Codex VS Code 插件 | `$$...$$` | 单独成行的 `$$` 包围 |
+| Claude Code 桌面端、Claude Cowork | `$...$` | 单独成行的 `$$` 包围 |
+| Claude Code 终端 CLI | 不渲染；用 Unicode 纯文本 | 需要排版时给 LaTeX 代码块 |
 
-4. 用户提供的 LaTeX 如果包含自定义宏，展示前必须将其展开为标准 LaTeX 命令，不能直接保留依赖论文 preamble 的未定义宏。
+   Codex 不把单个 `$...$` 识别为公式，会原样显示美元符号。Claude 桌面端会吞掉 `\(` 中的反斜杠。因此所有客户端都不用 `\(...\)` 与 `\[...\]`，同一回复不混用分隔符。
+2. **行内公式保持简短。** 分隔符紧贴公式内容，内部首尾不留空格，不跨行。长公式、分式较多的公式和多步推导使用独立公式。
+3. **独立公式单独成段。** 开始和结束的 `$$` 各占一行，从行首开始，同一行不写其他内容；整个公式块前后各留一行空行。公式块不缩进，不嵌入列表、引用、表格、标题或代码块。每个公式块表达一个主要关系；多步推导用多个公式块和正文连接。
+4. **表格内公式不写竖线。** Markdown 表格先按 `|` 切分单元格，再解析公式。表格中的公式用 `\lvert`、`\rvert`、`\lVert`、`\rVert`、`\mid`，不写 `|`、`\|`。
+5. **展开论文宏。** 聊天界面不依赖论文 preamble。将 `\EE`、`\be`、`\bx`、`\bz`、`\calA`、`\calJ` 等宏展开为 `\mathbb{E}`、`\mathbf{e}`、`\mathbf{x}`、`\mathbf{z}`、`\mathcal{A}`、`\mathcal{J}`。含义不明的宏先查定义，不猜测其数学含义。
+6. **使用标准语法。** 命令参数显式加花括号；使用 `\mathbf{e}`，不写 `\mathbf e`。聊天正文中的 LaTeX 命令使用单个反斜杠，不进行 JSON 式双重转义。范数写 `\lVert x\rVert`。中文解释放在公式外，不写 `\text{中文}`。
+7. **减少排版依赖。** 聊天公式不使用 `\label`、`\ref`、`\eqref`、`\tag`、`\color`，不使用 `equation`、`align`、`aligned`、`array`、`split`、`cases`、`gather`、`multline` 等环境；将长推导写成多个简单的独立公式。
+8. **区分展示与源码。** 需要渲染的公式不加反引号或代码围栏。用户明确索要 LaTeX 源码时才用代码块。写入 `.md` 文件时（Obsidian 等），行内公式用 `$...$`，独立公式用单独成行的 `$$`；文件中不使用行内 `$$...$$`。
+9. **检查与修复。** 发送前检查分隔符配对、独立公式换行、表格竖线、自定义宏和多余转义。用户反馈显示为源码时，直接按上表重排相关公式。没有界面观察或用户确认时，不声称已经验证实际渲染效果。
 
-5. 例如：
-   - `\EE` 展开为 `\mathbb{E}`
-   - `\be` 展开为 `\mathbf{e}`
-   - `\bx` 展开为 `\mathbf{x}`
-   - `\bz` 展开为 `\mathbf{z}`
-   - `\calJ` 展开为 `\mathcal{J}`
-
-6. 所有带参数的 LaTeX 命令必须显式使用花括号。使用 `\mathbf{e}`、`\mathbb{E}`、`\mathcal{J}`，不要写成 `\mathbf e`、`\mathbb E`、`\mathcal J`。
-
-7. 删除仅用于论文源码排版、但当前聊天页面无法识别或不需要的命令，例如颜色宏、自定义文本宏、自定义环境以及其他未定义命令，只保留数学内容和标准 LaTeX 命令。
-
-8. 用户提供的自定义宏若语义可以确定，应直接转换成对应的标准 LaTeX；若宏的含义无法从上下文确定，不要原样输出，应根据上下文尽可能恢复其数学含义。
-
-9. 当用户说“渲染公式”“渲染一下”“不要源码形式”“把公式显示出来”等类似要求时，最终回答只展示渲染后的数学表达，不再同时给出对应 LaTeX 源码，除非用户明确要求源码。
-
-10. 输出前检查所有数学表达，确保：
-   - 不存在 `\EE`、`\be`、`\bx`、`\bz`、`\calJ` 等自定义宏；
-   - 不存在缺少花括号的数学命令；
-   - 不存在多余的转义反斜杠；
-   - 不存在 `\\|x\\|` 这类错误的双重转义；
-   - 数学公式没有被代码格式包裹；
-   - 当前聊天页面显示的是实际排版后的数学符号，而不是 LaTeX 源代码。
-
-11. 如果某种 LaTeX 写法在语法上合法，但当前聊天页面没有实际渲染，则必须改写为当前页面能够渲染的等价形式；“LaTeX 语法正确”不能替代“页面实际渲染成功”。
-
-12. 对范数、期望、条件期望、集合、向量等常用符号优先使用标准写法，并保证视觉结果正确。例如范数应显示为双竖线，向量粗体、期望黑板体、集合花体均应在页面中实际呈现。
 ## 3. 行文风格
 - 直接、陈述、务实，无填充与装饰，只聚焦核心需求。
 - 解释性内容先讲中心思想，再展开解释。

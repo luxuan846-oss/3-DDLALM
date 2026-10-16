@@ -20,7 +20,7 @@
 - **写作规则**：`CLAUDE.md` 新增「论文正文的用词来源」；固定表达库 `notes/project/writing-phrasebook.md`（目前收 Li 2026、Mahdavinia 2022）。记忆新增"不引入只用一次的符号"。
 - **初始化 Remark**：已由另一会话移到算法族定义之后（`Preliminaries.tex`），用户决定不写局限句。
 - **引言**：第 159 行 "genius" 改为 "genuine"。
-- **推送补充**：`Preliminaries.tex`、`Introduction.tex` 现有正文改动，需要推送；`TimeVarying.tex` 需 `git rm`。
+- **已推送 Overleaf**（2026-10-13 晚，提交 `9bb9c92`，接在 `0f7c0d0` 之后）：只含论文文件（main.tex、sections、appendix、tools/shared.tex、figures），删除 `TimeVarying.tex`。本地 `master`（跟踪 GitHub）含归档提交 b69dee2（literature、oldversion 等），**不要直接把本地 master 推到 Overleaf**；以后同步沿用：从 `origin/master` 建临时 worktree，`git checkout master -- <论文文件>`，编译通过后提交推送。
 
 ## 1. 第 4 节当前状态（`sections/LowerBoundProof.tex`）
 
@@ -65,6 +65,8 @@
 8. 可选：在 4.4 或推论处加入"plateau 实例给出 $\alpha=\Omega(\epsilon)$ 的必要尺度，且不依赖 $\rho+s$"（与上界计划 $\alpha=\Theta(\epsilon)$ 对应，上界未证，待验证）。
 
 ## 6. 已定的写作判断
+
+- **关键措辞（2026-10-13 定）**：不能写"中心步长不改变复杂度的阶"。实际证明的是两件事：(1) ρ+s 小（ε(ρ+s)≤c_1）时，任何常数中心步长都只能做到 ε^{-4}；(2) ρ+s 足够大（s=c_s/ε，c_s 足够大）时，存在一组合适的中心步长达到 ε^{-3}，即 β=0、α=Θ(ε)：对偶中心固定在零，原始中心按 α=Θ(ε) 移动。没有证明任意中心步长都能达到 ε^{-3}；α 取与精度无关的常数时是否可行未知。正确说法：**能达到的最好的复杂度阶由 ρ+s 决定**；"增长后不需要移动中心"只对对偶中心成立，原始中心仍要移动。摘要、贡献 3、结论第一段都按此写。
 
 - 证明顺序先按 $\alpha$ 分是写作选择，不具必然性；先按 $\beta$ 分同样可行（$\beta=0$ 实例对任意 $\alpha$ 成立）。
 - $\alpha_\epsilon$ 是充分条件：使 plateau 下界达到 $\epsilon^{-4}$，并使旋转实例估计成立；不称"最小可行步长"或"实例失效边界"。

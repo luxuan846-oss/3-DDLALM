@@ -88,7 +88,17 @@
 | 表达 | 出处 |
 |---|---|
 | These results clearly delineate the roles of … | [Li26] §3.2 |
+| An interesting direction for future research is to … | [Li26] §7 Closing Remarks，2026-10-14 对照 v2 原文核对 |
+
+2026-10-14 结论段：沿用上述两种句式，第一句省去修饰词 "clearly"。
+"combined penalty" 沿用下方用户指定术语。
+"connects penalty selection in ALMs with dual regularization in the reduced minimax formulation"
+为本文 Lemma `lem:effective-penalty` 的内容表述，未作为文献中的固定表达引用。
 
 ## 写法不一致处
 
 - step size / stepsize：[Li26] 用 "step sizes"、"step-size conditions"；[Mah22] 两种都用（"step sizes chosen as in"、"stepsize choices"、"Stepsize-Independent"）。本文术语为 "center stepsize"，条件名用 "step-size conditions"。
+
+## 用户指定术语
+
+- 2026-10-14：用户指定将表示参数和的 “effective penalty” 统一替换为 **combined penalty parameter**，后文简称 **combined penalty**。首次出现时写出参数和；既有 LaTeX 标签保留。此用词由用户指定，尚未确认参考文献中的逐字出处。单独描述其他方法的正则化所对应的罚参数时使用 **penalty parameter**。

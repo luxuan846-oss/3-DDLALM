@@ -65,7 +65,13 @@ bib key: `pan2026optimal`
 ### [3] Wu, Gu, Yang (2026)
 *Lower Bounds for Nonconvex-Concave Minimax Optimization.* arXiv:2609.14233. <https://arxiv.org/abs/2609.14233>
 
-待读。要点：确定性 zero-respecting 算法的 ε⁻³ 下界；随机算法的 ε⁻⁶ 下界；初始间隙与对偶域直径如何进入下界。作用：区分 oracle 信息传播型下界与本文的固定递推谱模态型下界，避免混写。
+已读（2026-10-14，arXiv v1 PDF，§1–§2、Thm 4.1）：
+1. 模型：光滑 NC-C minimax，f 联合 L-光滑、对 y 凹，diam(Y) ≤ D_Y，初始间隙 Φ(0)−inf Φ ≤ Δ_Φ 或原始–对偶间隙 G_0（Def 2.1）；维数取并集
+2. 算法类：确定性 / 随机 zero-respecting 一阶算法（Def 2.6），oracle 返回 (f, ∇_x f, ∇_y f)，允许投影到 X、Y；不含任何 prox；初值 (0,0)
+5. 准则：OS，‖∇(Φ+ι_X)_{1/(2L)}(x)‖ ≤ ε（Def 2.3）
+6. 结果：Thm 4.1 确定性 Ω(L²D_YΔ_Φ ε⁻³)，ε ≤ c_1 min{√(LΔ_Φ), LD_Y}；Thm 5.5 随机 Ω(L³D_Y²Δ_Φ ε⁻⁶)；Cor 4.2/5.6 换成 G_0 同样成立；与 Lin–Jin–Jordan 的 Õ(ε⁻³)、SAPD+ 的 O(ε⁻⁶) 匹配
+7. 机制：有界 zero-chain，原始坐标经对偶块（三对角路径矩阵 B_{α,N}）耦合，信息需穿过对偶块才能传到下一个原始坐标；维数随 ε 增长
+8. 作用：§1 把 [Li26]、[Mah22] 归为 "algorithm-specific" 下界，本文属于同一类，但量词覆盖整个参数族。oracle 不含 prox、准则为 OS，与本文结果互不蕴含
 
 ### [4] Zhang, Xu (2026)
 *Matching Multi-Loop Complexities with a Single Loop: Optimal Optimization Stationarity and Best-Known Game Stationarity in Nonconvex–Concave Minimax Optimization.* arXiv:2609.17973. <https://arxiv.org/abs/2609.17973>

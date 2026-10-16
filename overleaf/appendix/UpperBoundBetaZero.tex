@@ -1,0 +1,274 @@
+% !TEX root = ../main.tex
+\section{Proof of Theorem~\ref{thm:upper-beta0}}
+\label{app:upper-beta0}
+
+All references to~\cite{li2026smoothing} in this appendix use the numbering
+of arXiv:2602.14185v2. Let
+\[
+\ell:=\max\Bigl\{L_{\calD,\bx},G_{\calA},\frac1\rho\Bigr\},
+\qquad r:=\frac1\gamma,\qquad \delta:=\frac1s,
+\qquad \mathcal Y:=\{\blmbd\in\RR^m:\|\blmbd\|\le2L_h\},
+\qquad D_{\mathcal Y}:=4L_h,
+\]
+where \(L_{\calD,\bx}\) is defined in~\eqref{eq:x-weak-convexity-modulus}.
+We take \(L_h>0\). If the supplied class constant is zero, we use the
+admissible Lipschitz bound \(L_h=1/16\) throughout this appendix; the
+choice \(c_s=\max\{1,16L_h\}\) below remains \(1\), and the algorithm is
+unchanged. All auxiliary constants are chosen from the fixed parameters
+and class bounds, independently of the instance and its dimensions.
+
+\paragraph{Step 1: reduction to Perturbed Smoothed GDA}
+Since \(\beta=0\) and \(\bmu^0=\zero\), we have \(\bmu^k=\zero\) for all
+\(k\). The potential function becomes
+\[
+\mathcal P_s(\bx,\blmbd;\bz,\zero)
+=\calD_\rho(\bx,\blmbd)+\frac r2\|\bx-\bz\|^2
+-\frac\delta2\|\blmbd\|^2.
+\]
+The correspondence with~\cite[(3.1) and Algorithm~3]{li2026smoothing} is
+\[
+f_{\mathrm{Li}}=\calD_\rho,\quad
+(r_x,r_y^t,c^t,\alpha^t_{\mathrm{Li}},\beta^t_{\mathrm{Li}})
+=(r,\delta,\eta,\tau,\alpha),\quad
+\mathcal X=\RR^n.
+\]
+In particular, both algorithms use the old multiplier in the primal step,
+the new primal iterate in the dual step, and the new primal iterate in the
+center step. By~\eqref{eq:prox-multiplier}, the dual update reads
+\[
+\blmbd^{k+1}
+=\Bigl(1-\frac\tau\rho-\frac\tau s\Bigr)\blmbd^k
++\frac\tau\rho\bq^k,
+\qquad \|\bq^k\|\le L_h.
+\]
+The step-size conditions in Step~3 give
+\(\tau\le1/(11(\ell+1/s))<1/(1/\rho+1/s)\).
+Thus both coefficients are nonnegative and sum to \(1-\tau/s\le1\).
+Induction yields \(\|\blmbd^k\|\le L_h\). Every multiplier lies in the
+interior of \(\mathcal Y\), so the projection onto \(\mathcal Y\) does not
+change the iterates and its normal cone at \(\blmbd^k\) is
+\(\{\zero\}\). The primal projection is the identity. Consequently,
+SPLALM generates exactly the sequence of Perturbed Smoothed GDA applied to
+\(\calD_\rho\) on \(\RR^n\times\mathcal Y\), from zero.
+
+\paragraph{Step 2: assumptions and the unperturbed objective}
+The gradient estimates in Step~2 of Appendix~\ref{app:upper-beta1} imply
+\[
+\begin{aligned}
+\|\nabla_{\bx}\calD_\rho(\bx,\blmbd)
+-\nabla_{\bx}\calD_\rho(\bx',\blmbd')\|
+&\le\ell\bigl(\|\bx-\bx'\|+\|\blmbd-\blmbd'\|\bigr),\\
+\|\nabla_{\blmbd}\calD_\rho(\bx,\blmbd)
+-\nabla_{\blmbd}\calD_\rho(\bx',\blmbd')\|
+&\le\ell\bigl(\|\bx-\bx'\|+\|\blmbd-\blmbd'\|\bigr).
+\end{aligned}
+\]
+Hence Assumption~2.1 of~\cite{li2026smoothing} holds. Moreover,
+\(\calD_\rho(\bx,\cdot)\) is concave and \(\mathcal Y\) is a compact
+convex set containing zero, as required by its Assumption~2.2.
+Taking \(\by=\calA(\bx)\) in~\eqref{eq:reduced-al} gives
+\(\calD_\rho(\bx,\blmbd)\le F(\bx)\). For any
+\(\blmbd\in\partial h(\calA(\bx))\), proximal optimality gives
+\(\by(\bx,\blmbd)=\calA(\bx)\) and equality. Such a multiplier belongs
+to \(\mathcal Y\), since its norm is at most \(L_h\). Therefore
+\[
+\max_{\blmbd\in\mathcal Y}\calD_\rho(\bx,\blmbd)=F(\bx),
+\qquad \inf F>-\infty.
+\]
+The descent argument of~\cite[Section~4.2]{li2026smoothing} uses a lower
+bound on the potential function. Accordingly, its minimum objective value
+can be replaced by the infimum; attainment of \(\inf F\) is not needed.
+The primal subproblems with quadratic regularization attain their minima
+by strong convexity and coercivity.
+
+\paragraph{Step 3: step-size conditions}
+Set \(a_s:=r-\ell-\delta\) and \(b_s:=\ell+\delta\), and define
+\[
+\omega_s:=\frac1{\sqrt\delta}\,
+\frac{a_s+\tau b_s(3r-2b_s)}{\tau a_s^{3/2}}.
+\]
+Under the correspondence in Step~1, Condition~3.2(ii)
+of~\cite{li2026smoothing} reads
+\begin{equation}
+\begin{aligned}
+&r=\Theta(\ell),\quad r>3\ell,\quad a_s>0,\quad \delta=1/s>0,\\
+&\eta=\Theta(1/\ell),\quad 0<\eta<\frac1{r+\ell+\delta},\\
+&\tau=\Theta(1/\ell),\quad
+0<\tau\le\min\Bigl\{\frac1{11b_s},
+\frac{\eta^2a_s^2}{4b_s(1+\eta a_s)^2}\Bigr\},\\
+&\alpha=\Theta(\delta/\ell),\quad
+0<\alpha\le\min\Bigl\{\frac1{36},
+\frac{a_s^2}{384r(r+\ell+\delta)^2},
+\frac1{384r\tau\omega_s^2}\Bigr\}.
+\end{aligned}
+\label{eq:beta0-stepsizes}
+\end{equation}
+The constants in these order relations are independent of \(s\).
+For fixed \(r,\eta,\tau,\ell\) satisfying the first three conditions for
+all sufficiently large \(s\), we have \(\omega_s^2=\Theta(s)\).
+We can therefore choose a fixed, sufficiently small \(\kappa>0\), as a
+function of these fixed quantities, so that
+\begin{equation}
+\alpha:=\frac\kappa{\ell s}
+\label{eq:beta0-alpha}
+\end{equation}
+satisfies the last condition for all sufficiently large \(s\).
+The conditions also give \(\eta<\gamma\) and \(\tau<s\), as required
+by Definition~\ref{def:splalm}.
+
+For example, all conditions hold for
+\[
+\gamma=\frac1{4\ell},\qquad \eta=\frac1{12\ell},\qquad
+\tau=\frac1{800\ell},\qquad
+\alpha=\frac1{2{,}000{,}000\,\ell s},\qquad
+s\ge\max\{1,1/\ell\}.
+\]
+Indeed, \(2\ell\le a_s\le3\ell\) and \(b_s\le2\ell\), and
+\[
+\frac{\eta^2a_s^2}{4b_s(1+\eta a_s)^2}
+\ge\frac1{392\ell}>\tau,\qquad
+\frac{a_s^2}{384r(r+\ell+\delta)^2}\ge\frac1{13824\ell},
+\qquad \omega_s^2\le800000\,\ell s.
+\]
+Thus \(1/(384r\tau\omega_s^2)\ge1/(1536000\,\ell s)>\alpha\),
+and the remaining inequalities follow directly.
+
+\paragraph{Step 4: initial gap for the perturbed objective}
+Define
+\[
+\Phi_s(\bx):=\max_{\blmbd\in\mathcal Y}
+\Bigl\{\calD_\rho(\bx,\blmbd)-\frac1{2s}\|\blmbd\|^2\Bigr\}.
+\]
+The maximization in~\eqref{eq:effective-penalty}, with \(\bmu=\zero\),
+has an optimal multiplier \(s\bq/(\rho+s)\), where
+\(\|\bq\|\le L_h\). This multiplier belongs to \(\mathcal Y\), so
+restricting the maximization to \(\mathcal Y\) does not change its value.
+It follows that
+\begin{equation}
+\Phi_s(\bx)=\calD_{\rho+s}(\bx,\zero),\qquad
+F(\bx)-\frac{L_h^2}{2(\rho+s)}\le\Phi_s(\bx)\le F(\bx).
+\label{eq:beta0-perturbed-objective}
+\end{equation}
+Let
+\[
+\begin{aligned}
+v_0&:=\calD_\rho(\zero,\zero),\qquad
+ d_0:=\min_{\bx}\Bigl\{\calD_\rho(\bx,\zero)
+                         +\frac1{2\gamma}\|\bx\|^2\Bigr\},\\
+p_0&:=\min_{\bx}\Bigl\{\Phi_s(\bx)+\frac1{2\gamma}\|\bx\|^2\Bigr\}.
+\end{aligned}
+\]
+Since \(\mu_\gamma=1/\gamma-L_{\calD,\bx}>0\), the argument in
+Step~4 of Appendix~\ref{app:upper-beta1} gives
+\[
+d_0\ge v_0-\frac{(G_f+G_{\calA}L_h)^2}{2\mu_\gamma},\qquad
+p_0\le F(\zero),\qquad v_0\ge F(\zero)-\frac{L_h^2}{2\rho}.
+\]
+At zero initialization, the initial gap in
+\cite[Definition~3.1(ii)]{li2026smoothing}, with the infimum convention
+explained in Step~2, is
+\(\Delta_{\Psi_2}=v_0-2d_0+2p_0-\inf\Phi_s\). Hence
+\begin{equation}
+\begin{aligned}
+\Delta_{\Psi_2}
+&\le\Delta+\frac{L_h^2}{2\rho}
++\frac{(G_f+G_{\calA}L_h)^2}{\mu_\gamma}
++\frac{L_h^2}{2(\rho+s)}\\
+&\le\bar\Delta:=\Delta+\frac{L_h^2}{\rho}
++\frac{(G_f+G_{\calA}L_h)^2}{\mu_\gamma}.
+\end{aligned}
+\label{eq:beta0-initial-gap}
+\end{equation}
+The bound \(\bar\Delta\) is uniform over the problem class and independent
+of \(s\), the target accuracy, and the dimensions.
+
+\paragraph{Step 5: iteration complexity for game stationarity}
+For \(k\ge0\), set
+\[
+S_{k+1}:=\max\Bigl\{
+\|\nabla_{\bx}\calD_\rho(\bx^{k+1},\blmbd^{k+1})\|,
+\|\nabla_{\blmbd}\calD_\rho(\bx^{k+1},\blmbd^{k+1})\|\Bigr\}.
+\]
+Both normal-cone terms vanish by Step~1, so this is the game-stationarity
+measure for the unperturbed function \(\calD_\rho\) in
+\cite[Theorem~3.3(i)]{li2026smoothing}.
+The descent estimate in its Section~4.2 and estimates (4.19)--(4.23),
+with~\eqref{eq:beta0-alpha}, give a constant
+\(C_*=C_*(\eta\ell,\tau\ell,r/\ell,\kappa)>0\) such that, among the first
+\(K\ge1\) updates, some \(0\le k<K\) satisfies
+\begin{equation}
+S_{k+1}\le C_*\ell\sqrt{\frac{s\bar\Delta}{K}}
++\frac{D_{\mathcal Y}}s.
+\label{eq:beta0-gs-rate}
+\end{equation}
+Here we take \(s\) sufficiently large that \(\ell s\ge1\), so the
+term of order \(\sqrt{\ell\bar\Delta/K}\) is absorbed into the first
+term. We average the descent estimate over \(k=0,\ldots,K-1\);
+a fixed factor in this averaging is included in \(C_*\).
+Thus the index in~\eqref{eq:beta0-gs-rate} refers to an output among the
+first \(K\) updates of Definition~\ref{def:complexity-measure}.
+
+Choose
+\begin{equation}
+c_s:=\max\{1,4D_{\mathcal Y}\}=\max\{1,16L_h\},\qquad
+s:=\frac{c_s}{\epsilon},\qquad
+K:=\max\Bigl\{1,\Bigl\lceil
+16C_*^2\ell^2c_s\bar\Delta\,\epsilon^{-3}
+\Bigr\rceil\Bigr\}.
+\label{eq:beta0-budget}
+\end{equation}
+Then \(D_{\mathcal Y}/s\le\epsilon/4\), and the first term
+in~\eqref{eq:beta0-gs-rate} is at most \(\epsilon/4\).
+Consequently, some \(0\le k<K\) has \(S_{k+1}\le\epsilon/2\).
+
+\paragraph{Step 6: from \(S_{k+1}\) to the KKT residual}
+Write \(\mathbf d_k:=\blmbd^{k+1}-\blmbd^k\). The dual update and
+Step~2 yield
+\[
+\|\mathbf d_k\|\le\tau\Bigl(S_{k+1}
++\frac{\|\mathbf d_k\|}\rho+\frac{L_h}s\Bigr),\qquad
+\|\mathbf d_k\|\le\frac\tau{1-\tau/\rho}
+\Bigl(S_{k+1}+\frac{L_h}s\Bigr).
+\]
+By~\eqref{eq:kkt-residual} and~\eqref{eq:prox-multiplier}, the output
+residual is
+\[
+R_k:=\mathcal R_{\mathrm{KKT}}(\bx^{k+1},\by^{k+1},\bq^k)
+=\max\Bigl\{\|\nabla_{\bx}\calD_\rho(\bx^{k+1},\blmbd^k)\|,
+\|\nabla_{\blmbd}\calD_\rho(\bx^{k+1},\blmbd^k)\|\Bigr\}.
+\]
+Both gradients change by at most \(\ell\|\mathbf d_k\|\) when the
+multiplier changes from \(\blmbd^{k+1}\) to \(\blmbd^k\). Since
+\(\tau\ell\le1/11\) and \(\tau/\rho\le1/11\), we obtain
+\begin{equation}
+R_k\le\Bigl(1+\frac{\tau\ell}{1-\tau/\rho}\Bigr)S_{k+1}
++\frac{\tau\ell}{1-\tau/\rho}\frac{L_h}s
+\le\frac{11}{10}S_{k+1}+\frac{L_h}{10s}.
+\label{eq:beta0-residual-transfer}
+\end{equation}
+For the index selected in Step~5, \(c_s\ge16L_h\) gives
+\[
+R_k\le\frac{11}{20}\epsilon+\frac1{160}\epsilon
+=\frac{89}{160}\epsilon<\epsilon.
+\]
+For all sufficiently small \(\epsilon\in(0,1]\), it follows that
+\[
+T^{\mathrm{KKT}}_\epsilon(\theta(\epsilon),\alpha,0;I)
+\le k+1\le K\le C'\epsilon^{-3},\qquad
+C':=1+16C_*^2\ell^2c_s\bar\Delta.
+\]
+Finally, \(\alpha=\kappa\epsilon/(\ell c_s)\), so
+\(c_\alpha=\kappa/(\ell c_s)>0\). Our fixed choice of \(\kappa\)
+ensures that \(c_\alpha\) depends only on
+\(\rho,\gamma,\eta,\tau,\mathbf C\), and \(C'\) depends in addition
+on \(\Delta\). Neither constant depends on the instance, the dimensions,
+or \(\epsilon\).
+\hfill\(\square\)
+
+% Verification status (2026-10-14): the existence and parameter dependence
+% of C_* in eq:beta0-gs-rate are taken from GPT Pro's conversion of Li26 v2,
+% Section 4.2, (4.19)--(4.23), recorded in
+% notes/gpt-proofs/beta0-upper-check-20261013.md, item 7.
+% That conversion, including its fixed averaging factor, has not been
+% independently verified line by line. Reading the cited statements and
+% estimates does not constitute such a verification.

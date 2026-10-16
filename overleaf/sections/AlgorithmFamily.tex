@@ -1,4 +1,4 @@
-\section{Algorithm Family and Effective Penalty}
+\section{Algorithm Family and Combined Penalty}
 \label{sec:algorithm-framework}
 
 \subsection{Algorithm family and worst-case iteration complexity}
@@ -77,9 +77,9 @@ and the initialization.
 
 \begin{definition}[Worst-case iteration complexity]
 \label{def:complexity-measure}
-Let \(\epsilon>0\) and \(I\in\mathcal I(\mathbf C,\Delta)\), and let
-\((\bx^{k+1},\by^{k+1},\bq^k)\) be the outputs of
-\(\mathrm{SPLALM}_{\theta,\alpha,\beta}\) on \(I\). Define
+Let \(\epsilon>0\) and \(I\in\mathcal I(\mathbf C,\Delta)\).
+For the outputs \((\bx^{k+1},\by^{k+1},\bq^k)\) of
+\(\mathrm{SPLALM}_{\theta,\alpha,\beta}\) on \(I\), define
 \[
 \begin{aligned}
     T^{\mathrm{KKT}}_\epsilon(\theta,\alpha,\beta;I)
@@ -142,7 +142,7 @@ Definition~\ref{def:oracle-model}. Then \(\calC_\theta\subset\mathcal A_{\det}\)
   Theorem~\ref{thm:lower-bound} holds for all \((\rho,s)\) with
   \(\epsilon(\rho+s)\le c_1\). A lower bound on
   \(T_\epsilon(\calC_\theta,\mathcal I)\) therefore cannot be removed by
-  tuning the center stepsizes; it is governed by the effective penalty
+  tuning the center stepsizes; it is governed by the combined penalty
   \(\rho+s\) of Lemma~\ref{lem:effective-penalty}.
 \item (Transfer) Conversely, every lower bound on
   \(T_\epsilon(\mathcal A_{\det},\mathcal I)\) for the same problem class and
@@ -150,7 +150,7 @@ Definition~\ref{def:oracle-model}. Then \(\calC_\theta\subset\mathcal A_{\det}\)
 \end{enumerate}
 \end{remark}
 
-\subsection{Effective penalty and special cases}
+\subsection{Combined penalty and special cases}
 \label{subsec:effective-penalty}
 
 The reduced augmented Lagrangian is a dual proximal smoothing of the saddle
@@ -160,7 +160,7 @@ smoothing is the multiplier, and its strength is the penalty. Adding the dual
 regularizer of~\eqref{eq:potential} keeps this form; it only raises the
 penalty and moves the center.
 
-\begin{lemma}[Effective penalty]
+\begin{lemma}[Combined penalty parameter]
 \label{lem:effective-penalty}
 Suppose that Assumption~\ref{ass:h} holds. For every \(\sigma>0\),
 \begin{equation}
@@ -196,7 +196,7 @@ gives~\eqref{eq:effective-penalty}.
 \end{proof}
 
 Lemma~\ref{lem:effective-penalty} shows that every member of
-\(\calC_\theta\) has the effective penalty \(\rho+s\), whatever the center
+\(\calC_\theta\) has the combined penalty \(\rho+s\), whatever the center
 stepsizes are. The center stepsize \(\beta\) only places the dual center
 between two classical choices, and \(\alpha\) decides whether the primal
 variable is smoothed.
@@ -230,14 +230,15 @@ Table~\ref{tab:special-cases} collects these cases. The identities
 \(\bmu^k=\zero\), \(\bmu^k=\blmbd^k\), and \(\bz^k=\bx^k\) for
 \(\beta=0\), \(\beta=1\), and \(\alpha=1\), respectively, follow by induction
 from the zero initialization. Every entry refers to the cited update structure
-applied to \(\calD_\rho\) with \(\rho>0\); methods acting on \(\calL\) itself
-are compared in Section~\ref{subsec:gda-embedding}.
+applied to \(\calD_\rho\) with \(\rho>0\).
+Section~\ref{subsec:gda-embedding} gives the local gradient descent--ascent
+recursion used in the proof of the lower bound.
 
 \begin{table}[t]
 \centering
 \small
 \caption{Special cases of \(\calC_\theta\). All methods act on
-\(\calD_\rho\) with \(\rho>0\) and have the effective penalty \(\rho+s\).}
+\(\calD_\rho\) with \(\rho>0\) and have the combined penalty \(\rho+s\).}
 \label{tab:special-cases}
 \begin{tabular}{@{}llll@{}}
 \toprule

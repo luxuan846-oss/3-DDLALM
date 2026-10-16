@@ -25,7 +25,7 @@
 | — | Drori, Teboulle, *Performance of first-order methods for smooth convex minimization: a novel approach*, Math. Program. (2014), DOI 10.1007/s10107-013-0653-0 | PEP：把最坏情形写成优化问题 | 极小极大（两个实例分支对抗同一对步长）的思想来源 | 讨论 |
 | — | Taylor, Hendrickx, Glineur, *Exact Worst-Case Performance of First-Order Methods for Composite Convex Optimization*, SIOPT 27 (2017) | 含近端步的一阶方法的精确最坏情形 | PEP 工具；精确最坏情形结果可发 SIOPT 的先例 | 讨论 |
 | — | Zamani, Abbaszadehpeivasti, de Klerk, *The exact worst-case convergence rate of the ADMM*, Math. Program. 208 (2024) | ADMM 的精确最坏情形与紧实例 | "重要算法的精确复杂度"进入 MP-A 的先例 | 讨论 |
-| — | Liu, Lin, Xu, *Lower Complexity Bounds of First-Order Methods for Affinely Constrained Composite Nonconvex Problems*, MOR 51 (2026) | 两种一阶信息模型下的 oracle 下界 | MOR 上"复合非凸 + 下界"的先例；信息模型层面，与我们的算法族下界不同 | 讨论 |
+| — | Liu, Lin, Xu, *Lower Complexity Bounds of First-Order Methods for Affinely Constrained Composite Nonconvex Problems*, MOR 51(2):1659–1682 (2026), DOI 10.1287/moor.2023.0377, arXiv:2502.17770 | 问题 min f_0+g s.t. Ax+b=0，f_0 为 L_f-光滑，g=ḡ(Āx+b̄) 凸 lsc（Problem Class 1）。ORACLE1 给 ∇f_0、Ax、Aᵀz、prox_{ηg}；ORACLE2 给 prox_{ηḡ} 及 Ā、A 的乘积（Algorithm Class 1/2，线性张成）。准则为含可行性残差的 KKT 型 ε-驻点（Def 1）。Thm 1/2：Ω(κ([Ā;A]) L_f Δ_{F_0} ε⁻²)；Class 2 下由 IPG（arXiv:2307.07605）以 Õ(·) 达到，Class 1 的紧性未知。Class 1 包含线性约束下的二次罚与 ALM 方法 | MOR 上"复合非凸 + 下界"的先例。约束为线性、oracle 含 prox，阶为 ε⁻²；我们的族下界 ε⁻⁴ 高于它，说明 ε⁻⁴ 来自算法族的结构，不来自问题本身 | 原文（2026-10-14） |
 | — | Güler 1991/1992；Gu, Yang, SIOPT (2020)，DOI 10.1137/19M1299049；Kim (2021) | 近端点法速率 O(1/k)、加速 O(1/k²)；Gu–Yang 的指标是平方固定点残差 | 早期"中心跟踪"启发式的工具；现已不作为证明前提 | 讨论 |
 | — | Ouyang, Xu (2021) | 双线性鞍点问题下界 | 乘子部分可能的下界工具（未使用） | 讨论 |
 

@@ -1,0 +1,26 @@
+% !TEX root = ../main.tex
+\section{Conclusion}
+\label{sec:conclusion}
+
+In this paper, we studied the iteration complexity of single-loop linearized
+augmented Lagrangian methods with a fixed penalty. For the family
+\(\calC_\theta\), we established a lower bound of \(\Omega(\epsilon^{-4})\)
+that holds for any choice of constant center stepsizes whenever
+\(\epsilon(\rho+s)\le c_1\), and we showed that the choice \(\beta=1\)
+attains this order. With \(\rho\) fixed and \(s=c_s/\epsilon\) for a
+sufficiently large constant \(c_s\), the choice \(\beta=0\) and a suitable
+primal center stepsize \(\alpha=\Theta(\epsilon)\) attains
+\(\mathcal O(\epsilon^{-3})\).
+
+These results delineate the roles of the penalty, dual regularization, and
+center updates within \(\calC_\theta\). The combined penalty \(\rho+s\)
+connects penalty selection in ALMs with dual regularization in the reduced
+minimax formulation. Adjusting the constant center stepsizes cannot
+substitute for the growth of \(\rho+s\) required to attain
+\(\mathcal O(\epsilon^{-3})\). This growth can be realized by reducing the
+dual regularization coefficient \(1/s\) as the target accuracy decreases,
+while keeping the penalty \(\rho\) fixed.
+
+An interesting direction for future research is to extend this analysis to
+smoothed gradient descent--ascent methods for general nonconvex--concave
+minimax problems.

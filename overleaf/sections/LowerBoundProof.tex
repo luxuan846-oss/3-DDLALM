@@ -19,6 +19,8 @@ instances. For each pair, we construct an instance in
 \(\mathrm{SPLALM}_{\theta,\alpha,\beta}\), started from the zero
 initialization prescribed in Definition~\ref{def:splalm}, requires at least
 the stated number of iterations to produce an \(\epsilon\)-KKT output.
+For the outputs of \(\mathrm{SPLALM}_{\theta,\alpha,\beta}\), we write
+\(R_k:=\mathcal R_{\mathrm{KKT}}(\bx^{k+1},\by^{k+1},\bq^k)\) for \(k\ge0\).
 
 We split \([0,1]^2\) into three parts by the threshold
 \[
@@ -39,87 +41,12 @@ Section~\ref{subsec:lb-plateau} is of order \(\Delta\epsilon^{-4}\). This
 threshold ensures the parameter estimates required by the rotating instance
 in Section~\ref{subsec:lb-rotation}.
 
-% The lower bounds of~\cite[Section~5]{li2026smoothing}
-% and~\cite[Appendix~C.1]{mahdavinia2022tight} choose the initialization
-% together with the hard function, along an eigenvector of the iteration
-% matrix. The two papers also cover different sets of parameters.
-% \cite{li2026smoothing} establish tightness for the parameters of their
-% upper bounds, with \(r_y=\Theta(\epsilon/D_{\mathcal Y})\). The proof
-% in~\cite[Appendix~C.1]{mahdavinia2022tight} fixes
-% \(\eta_y=\Theta(1/\ell)\) and considers every \(\eta_x\).
-% Theorem~\ref{thm:lower-bound} fixes the gradient stepsizes \(\eta,\tau\),
-% covers every pair of constant center stepsizes, and keeps the
-% initialization fixed in advance.
-
-% Each instance handles only the pairs assigned to it.
-% Section~\ref{subsec:lb-plateau} treats \(\alpha\le\alpha_\epsilon\) with a
-% plateau instance, on which the primal center moves slowly.
-% Section~\ref{subsec:lb-rotation} treats \(\alpha>\alpha_\epsilon\) and
-% \(\beta>0\) with a rotating instance, on which the certificate stays above
-% \(\epsilon\) for all iterations. Section~\ref{subsec:lb-huber} treats
-% \(\beta=0\) with an instance whose outer function is a Huber function.
-% Section~\ref{subsec:lb-combine} specifies \(\alpha_\epsilon\), \(c_1\), and
-% \(c_2\), and combines the three cases.
-
-% \paragraph{Small \(\alpha\).}
-% Take \(\calA\equiv0\), \(h=|\cdot|\), and let \(f\) be a one-dimensional
-% Huber function with derivative \(-2\epsilon\) on a linear interval
-% and initial objective gap \(\Delta\). Since \(\calA\equiv0\), the multipliers stay at zero, and the
-% center \(z^k\) moves by at most \(2\alpha\gamma\epsilon\) per iteration, so
-% \(x^k\le2\gamma\epsilon(1+\alpha k)\). The iterates therefore stay on the plateau,
-% where \(R_k=2\epsilon\), for \(\Omega\bigl(\Delta/(\gamma\alpha\epsilon^2)\bigr)\)
-% iterations. For \(\alpha\le\alpha_\epsilon\), this is
-% \(\Omega(\Delta\epsilon^{-4})\).
-
-
-% Figure~\ref{fig:plateau-instance} illustrates the constant-gradient interval and
-% its transition to the quadratic region.
-% \begin{figure}[htbp]
-% \centering
-% \includegraphics[width=0.92\linewidth]{figures/plateau_instance.pdf}
-% \caption{The one-dimensional Huber instance, illustrated with
-% \(\Delta=1\) and \(\epsilon=0.1\), where
-% \(x_\star=\Delta/(2\epsilon)+\epsilon\).
-% The shaded interval \([0,x_\star-2\epsilon]\) has derivative
-% \(-2\epsilon\), and \(f(0)=\Delta\).
-% The inset enlarges the quadratic region
-% \([x_\star-2\epsilon,x_\star+2\epsilon]\), where
-% \(f(x)=\tfrac12(x-x_\star)^2\) and \(f(x_\star)=0\).
-% The two linear tails ensure bounded sublevel sets.}
-% \label{fig:plateau-instance}
-% \end{figure}
-
-% \paragraph{Large \(\alpha\).}
-% Take \(h=\|\cdot\|_2\), \(\calA(\bx)=b(\bx-\bx_c)\), and let \(f\) be a
-% quadratic with negative curvature \(-\kappa\) near \(\bx_c\). While the
-% trajectory stays in \(\mathcal R_\rho\), Proposition~\ref{prop:embedding}
-% shows that the update is the linear time-invariant system
-% \(\bw^{k+1}=\mathbb T\bw^k\). We choose \(b\) and \(\kappa\) so that
-% \(\mathbb T\) has an eigenvalue \(\zeta\) with \(|\zeta|=1\). Along its
-% eigenvector \(\bv\), the iterates rotate without decay, and the certificate
-% keeps a fixed positive value. The zero initialization is not parallel to
-% \(\bv\). We write it as \(\bv+\br\), where \(\br\) lies in the invariant
-% subspace of the remaining eigenvalues, all strictly inside the unit circle.
-% The shifts \(\bx_c\) and \(\blmbd_c\) make \(\bv+\br\) correspond to the
-% origin. A bound on the transient \(\mathbb T^k\br\) keeps the trajectory in
-% \(\mathcal R_\rho\) and gives \(R_k\ge\frac76\epsilon\) for all \(k\). The
-% case \(\beta=0\) uses a separate one-dimensional instance with a Huber outer
-% function \(h\).
-
-\subsection{Relation to Smoothed GDA and DS-GDA}
+\subsection{Reduction to a gradient descent--ascent recursion}
 \label{subsec:gda-embedding}
 
-For the
-outputs of \(\mathrm{SPLALM}_{\theta,\alpha,\beta}\) in
-Definition~\ref{def:splalm}, we write
-\(R_k:=\mathcal R_{\mathrm{KKT}}(\bx^{k+1},\by^{k+1},\bq^k)\) for
-\(k\ge0\).
-
-\(\mathrm{SPLALM}_{\theta,\alpha,\beta}\) in Definition~\ref{def:splalm} uses
-\(\prox_{h/\rho}\), so it requires \(\rho>0\).
-Smoothed GDA and DS-GDA contain no such term. They nevertheless generate the
-same iterates as \(\mathrm{SPLALM}_{\theta,\alpha,\beta}\) as long as
-\(\by(\bx,\blmbd)=\zero\). To state this, define
+Where \(\by(\bx,\blmbd)=\zero\), the updates of
+\(\mathrm{SPLALM}_{\theta,\alpha,\beta}\) reduce to gradient
+descent--ascent steps on a smooth saddle function. To state this, define
 \[
 \mathcal R_\rho:=\bigl\{(\bx,\blmbd):\ \blmbd+\rho\calA(\bx)\in\partial h(\zero)\bigr\},
 \qquad
@@ -203,40 +130,11 @@ from~\eqref{eq:kkt-residual}.
 
 Recursion~\eqref{eq:gda-recursion} is the update of
 DS-GDA~\cite{zheng2023universal} for the saddle function \(\Psi_\rho\), with
-the same order of updates; the parameter correspondence for DS-GDA and its
-special cases is listed in Table~\ref{tab:special-cases}.
-
-\begin{remark}
-\label{rem:embedding-scope}
-The following points limit the scope of Propositions~\ref{prop:reduction}
-and~\ref{prop:embedding}.
-\begin{enumerate}[label=(\roman*)]
-\item The projections onto \(X\) and \(Y\) in the cited methods are inactive
-  when the trajectory stays in the interior of \(X\times Y\). For
-  \(h=\|\cdot\|_2\), we have \(\partial h(\zero)=\mathbb B(\zero,1)\) and
-  \(h^*=\iota_{\mathbb B(\zero,1)}\), so \(Y=\mathbb B(\zero,1)\) is the
-  natural dual set.
-\item For a smooth \(\tilde f\), \(\mathrm{SPLALM}_{\theta,\alpha,\beta}\) on the instance
-  \(\bigl(\tilde f-\frac{\rho}{2}\|\calA\|^2,\calA,h\bigr)\) generates
-  \eqref{eq:gda-recursion} with \(\Psi=\tilde f+\langle\cdot,\calA\rangle\)
-  whenever its trajectory stays in \(\mathcal R_\rho\). A hard instance of
-  this form for Smoothed GDA or DS-GDA is therefore a hard instance for
-  \(\mathrm{SPLALM}_{\theta,\alpha,\beta}\) with any \(\rho>0\), provided
-  that \(\tilde f-\frac{\rho}{2}\|\calA\|^2\) satisfies the bounds in
-  Definition~\ref{def:problem-class}.
-\item Outside \(\mathcal R_\rho\), the two recursions differ. The analysis of
-  SPLALM uses the smoothness of \(\calD_\rho(\cdot,\blmbd)\) in~\eqref{eq:reduced-al},
-  which requires \(\rho>0\); it does not apply to GDA-type methods.
-\item The case \(s=\infty\) is reproduced by \(\beta=1\) for every finite
-  \(s\); see Section~\ref{subsec:effective-penalty}. PSGDA with
-  \(r_y=\Theta(\epsilon)\) has \(s=\Theta(\epsilon^{-1})\); whether it
-  satisfies \(\epsilon(\rho+s)\le c_1\) depends on the constants in \(r_y\)
-  and \(c_1\).
-\end{enumerate}
-\todo{State the transfer of Theorem~\ref{thm:lower-bound} to Smoothed GDA and DS-GDA as a corollary.}
-% DS-GDA as a corollary, after the instances in its proof are checked to
-% stay in R_rho for all k < T_epsilon.
-\end{remark}
+the same order of updates, whenever the projections in DS-GDA are inactive.
+Proposition~\ref{prop:embedding} identifies
+\(\mathrm{SPLALM}_{\theta,\alpha,\beta}\) with this recursion only while both
+evaluation points \((\bx^k,\blmbd^k)\) and \((\bx^{k+1},\blmbd^k)\) lie in
+\(\mathcal R_\rho\); outside \(\mathcal R_\rho\), the two recursions differ.
 
 \subsection{Small primal center stepsize $\alpha$}
 \label{subsec:lb-plateau}
