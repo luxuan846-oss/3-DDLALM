@@ -1,0 +1,102 @@
+% !TeX program = xelatex
+\documentclass[11pt,a4paper,fontset=fandol]{ctexart}
+\usepackage[hmargin=2.2cm,top=1.8cm,bottom=2cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs,xltabular}
+\usepackage[table]{xcolor}
+\usepackage{enumitem}
+\usepackage[colorlinks=true,linkcolor=blue!50!black,urlcolor=blue!50!black]{hyperref}
+
+\setlist{nosep,leftmargin=1.4em}
+\renewcommand{\arraystretch}{1.3}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\definecolor{headgray}{gray}{0.90}
+\newcommand{\sect}[1]{\par\medskip\noindent{\large\bfseries #1}\par\smallskip}
+\newcommand{\subsect}[1]{\par\smallskip\noindent{\normalsize\bfseries #1}\par\smallskip}
+
+\pagestyle{plain}
+\begin{document}
+
+\begin{center}
+{\Large\bfseries Retreat Plan}
+\end{center}
+
+% 场合：Boț 组与 Daniilidis 组联合 retreat；报告 20 分钟，提问 5 分钟。题目须在 10 月 29 日前通过表单提交。
+
+\sect{Topic I: ALM}
+Shrink the Dual Regularization, Keep the Penalty: Tight Complexity of Linearized Augmented Lagrangian Methods
+
+% \subsect{Abstract}
+% {\small\sloppy
+% Augmented Lagrangian methods can keep the penalty parameter bounded, but
+% existing $\mathcal{O}(\epsilon^{-3})$ guarantees for single-loop linearized
+% methods on $\min_{\mathbf{x}} f(\mathbf{x})+h(\mathcal{A}(\mathbf{x}))$, with
+% $f,\mathcal{A}$ smooth and $h$ convex and Lipschitz, let the penalty or the dual
+% regularization grow with $1/\epsilon$. We study a family of single-loop
+% gradient descent--ascent methods on the reduced augmented Lagrangian with fixed
+% penalty $\rho$, dual regularization $s$, and moving primal and dual centers;
+% every member has the combined penalty $\rho+s$. Hard instances show that if
+% $\epsilon(\rho+s)$ is at most a constant, every choice of constant center
+% stepsizes needs $\Omega(\epsilon^{-4})$ iterations to reach an
+% $\epsilon$-KKT point, and this order is attained for fixed $\rho$. With $\rho$
+% fixed and $s$ of order $1/\epsilon$, a member of the family attains
+% $\mathcal{O}(\epsilon^{-3})$. Hence the combined penalty must reach order
+% $1/\epsilon$ to improve on $\epsilon^{-4}$, and the dual regularization alone
+% can carry this growth.
+% \par}
+
+\subsect{Target Journal}
+SIAM Journal on Optimization (SIOPT)
+
+% \sect{挑战与应对}
+% \textbf{挑战一：idea 未成形。}
+% 下界证明中 Huber 分支与主定理的衔接、$\beta=0$ 上界中常数 $C_*$ 的引用换算仍在核对。相关工作缺少 Boț--Böhm 2023 与 Böhm--Wright 2021 的比较。风险有两点：当众被指出证明漏洞；问题讲不清楚，听众给不出有效反馈。
+% 应对：只讲定理陈述和一个已核对分支（旋转实例）的构造思想。最后一页列出开放问题，按下表分别请教对应的人。retreat 前补齐上述两篇比较。
+%
+% \smallskip
+% \textbf{挑战二：泄露。}
+% 稿件未公开。组合罚参数恒等式、参数区域下界、“增长由对偶正则承担”三条结论一旦在组内传开，时变中心、对偶外推、KL 收敛等推广可能被他人先做出来。Boț 组在 anchoring 和 Tikhonov 方向有现成工具，做这些推广的成本低。可选方案：
+% \begin{enumerate}[label=\textbf{\Alph*.}]
+%   \item 讲完整结果，retreat 前把稿件挂到 arXiv 确立优先权。前提是先完成核对，时间紧。
+%   \item 讲问题、主结论图和定理陈述，不讲困难实例的构造与上界证明细节；开放问题只给方向。
+%   \item 另选报告题目（通知说明题目可与本人研究无关），SPLALM 只与 Böhm、Boț 私下讨论。
+% \end{enumerate}
+% 建议 B：既能获得反馈，也不暴露下界构造这一技术核心。
+%
+% \sect{请您决定}
+% \begin{enumerate}
+%   \item 报告方案：A、B 或 C。
+%   \item 报告题目：沿用当前标题，或改用新标题。
+%   \item retreat 前后优先联系的人：建议 Böhm 和 Boț。
+% \end{enumerate}
+
+\subsect{听众}
+{\small
+\begin{xltabular}{\linewidth}{@{}L{3.4cm}Y@{}}
+\toprule
+\rowcolor{headgray}
+对象 & Relevance \\
+\midrule
+\endhead
+\href{https://scholar.google.com/citations?user=Q4CtaN4AAAAJ}{\textbf{Axel Böhm}}\newline\footnotesize Postdoc, Univ.\ Vienna &
+\textbf{Focus}: weakly convex composite optimization, variable smoothing, nonconvex-concave minimax\newline\textbf{Link}: variable smoothing 对“光滑函数 $+$ 弱凸函数复合线性算子”给出 $\mathcal{O}(\epsilon^{-3})$ [1]。本文 $\beta=0$ 时，对 $\lambda$ 取最大后的目标是 $f$ 加 $h\circ\mathcal{A}$ 的 Moreau 包络（参数 $1/(\rho+s)$）；$s=\Theta(1/\epsilon)$ 对应光滑参数 $\Theta(\epsilon)$，与 [1] 的设置相同。下界实例的 $\mathcal{A}$ 为仿射映射，落在 [1] 的问题类中。交替近端 GDA [2] 是最接近的同类方法。\newline{\footnotesize [1] A. Böhm and S. J. Wright. Variable smoothing for weakly convex composite functions. J. Optim.\ Theory Appl., 2021.}\newline{\footnotesize [2] R. I. Boț and A. Böhm. Alternating proximal-gradient steps for (stochastic) nonconvex-concave minimax problems. SIAM J. Optim., 2023.} \\
+\href{https://www.mat.univie.ac.at/\%7Erabot/}{\textbf{Radu Ioan Boț}}\newline\footnotesize Professor, Univ.\ Vienna &
+\textbf{Focus}: Tikhonov regularization, anchoring, monotone operator flows\newline\textbf{Link}: flexible anchoring extragradient 由 Tikhonov 正则单调流离散得到，anchor 固定，权重 $\varepsilon^k\to0$ [3]。本文 $\beta=0$ 时，对偶中心保持为零，对偶正则项 $-\frac{1}{2s}\lVert\lambda\rVert^2$ 是以零为 anchor、权重 $1/s$ 固定的 Tikhonov 正则；对 SIOPT 定位的判断\newline{\footnotesize [3] R. I. Boț and E. Chenchene. Extra-gradient method with flexible anchoring: strong convergence and fast residual decay. SIAM J. Optim., to appear; arXiv:2410.14369.} \\
+\href{https://www.mat.univie.ac.at/\%7Ecsercser/index.htm}{\textbf{Ernö Robert Csetnek}}\newline\footnotesize Senior researcher, Univ.\ Vienna; COAP editorial board &
+\textbf{Focus}: fast OGDA, Tikhonov-regularized dynamical systems, strong convergence\newline\textbf{Link}: $\mathcal{C}_\theta$ 只含单步梯度下降--上升更新，对偶步加入外推或 optimistic 修正 [4] 后的能否绕过下界 \newline{\footnotesize [4] R. I. Boț, E. R. Csetnek, and D.-K. Nguyen. Fast optimistic gradient descent ascent (OGDA) method in continuous and discrete time. Found.\ Comput.\ Math., 2025.} \\
+\href{https://ymalitsky.com/}{\textbf{Yura Malitsky}}\newline\footnotesize Assistant Professor, Univ.\ Vienna &
+\textbf{Focus}: primal-dual methods, adaptive stepsizes, variational inequalities\newline\textbf{Link}: 线性约束下 PDHG 可写成纯 primal 方法 [5]；本文的组合罚参数恒等式在 $\mathcal{A}$ 线性时与这一 primal 改写同类；自适应步长能否绕过下界 [6]\newline{\footnotesize [5] Y. Malitsky. The primal-dual hybrid gradient method reduces to a primal method for linearly constrained optimization problems. arXiv:1706.02602, 2017.}\newline{\footnotesize [6] Y. Malitsky and K. Mishchenko. Adaptive proximal gradient method for convex optimization. NeurIPS, 2024.} \\
+\bottomrule
+\end{xltabular}
+}
+
+% 相关性较低，未列入表格：
+% Ziyuan Wang（博士后，Boț 组）：KL 性质的精确模（Wang--Wang, MOR 2022）；非凸 Malitsky--Tam FRB（Wang--Wang, COAP 2022）。KL 序列收敛对任何非凸下降型方法都适用，与本文的复杂度紧性结论无直接关联。
+% David Alexander Hulett（博士后）：连续时间方法、primal-dual 动力系统的 time rescaling；Boț--Chenchene--Csetnek--Hulett, Accelerating diagonal methods for bilevel optimization, Math. Program., 2026。可从连续时间角度分析递增罚参数和正则参数方案。
+% Michael Sedlmayer（博士后）：Boț--Csetnek--Sedlmayer, An accelerated minimax algorithm for convex-concave saddle point problems with nonsmooth coupling function, COAP, 2023。可请教非线性耦合 <lambda, A(x)> 的处理。
+% Rossen Nenov（博士生）：Boț--Nenov--Tao, full splitting for structured DC programs。把 h 推广到 DC 或弱凸情形的线索。
+% Aris Daniilidis 及 VADOR 组（Tapia García、Tri Minh Lê、Armeniakos 等）：slope、descent modulus、KL 去奇异化。检验驻点度量的选择是否自然，以及困难实例在变分分析意义下是否合理。
+% Schindler、Posch、Tuan Minh Le：随机 Heavy Ball、mirror descent 与 Polyak 步长；随机版本可作为远期方向。Renella、Dieterle 的研究方向未查到。
+
+\end{document}
