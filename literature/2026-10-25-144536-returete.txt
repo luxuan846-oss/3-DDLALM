@@ -1,0 +1,1185 @@
+
+❯ <ide_opened_file>The user opened the file /Users/liluxuan/Documents/My_Papers
+  /3_DDLALM/ChatGPT-1016-评议文章-20261025-0600.md in the IDE. This may or may
+  not be related to the current task.</ide_opened_file>
+
+❯ 这个最新的聊天记录 然后还有一个returete
+
+  Read 2 files, listed 2 directories (ctrl+o to expand)
+  ⎿  Loaded overleaf/CLAUDE.md
+
+⏺ 老大，两份材料我都读过了。
+
+  - 聊天记录：ChatGPT-1016-评议文章-20261025-0600.md，记录 10/16 那次 GPT-Pro
+    评议和后续 damping ALM 讨论。最后一条有用的结论是：把 AIDAL、LIPAL 的
+    damping 乘子更新写成对偶正则的形式，有效强度为
+    $\delta=d/t$；在此基础上把下界定位成"哪些参数尺度不可省"。10/25
+    的最后一轮只问了一句"11 指什么"，没有新内容。
+  - retreat：overleaf/notes/retreat/retreat-brief.tex 现在还没进
+    git。里面有标题、目标期刊 SIOPT，以及 Böhm、Boț、Csetnek、Malitsky 四人的听
+    众关联表。摘要、挑战与应对、"请您决定"三节都被注释掉了。按注释，题目要在 10
+    月 29 日前提交。
+
+  你只说了两份材料的名字，没说要我做什么，所以想先确认一下：
+
+  1. 归档：把聊天记录移到 overleaf/notes/conversations/，更新
+     PROJECT_STATUS.md。retreat 的源码和 PDF 纳入 git，编译中间文件不纳入。
+  2. 用聊天结论更新 retreat brief：把 damping ALM
+     这条定位写进去，可以放进摘要，也可以作为面向 ALM 听众的切入点。还要检查表中
+     Boț 一行，它的句子"对 SIOPT 定位的判断"没写完。
+  3. 准备 retreat 报告：按 20 分钟报告、5
+     分钟提问，以聊天里的叙事为主线，写题目、摘要和提纲。
+
+  你要的是哪一项，或者几项一起做？
+
+❯ <ide_opened_file>The user opened the file /Users/liluxuan/Documents/My_Papers
+  /3_DDLALM/overleaf/notes/retreat/retreat-brief.tex in the IDE. This may or
+  may not be related to the current task.</ide_opened_file>
+
+❯ 我的核心目标有两个：
+  1. 怎么抓住2027-2024的nips/icml/aistat/ai顶会 28年冲击人工智能顶会的scope
+  2. 我想和Bot合作， 他给我谈过min f+ h(A(x)) 的单循环PDHG。 但是卡住了，
+  但是他关注渐进收敛性。 他还感兴趣单调算子包容问题。 但是我关注复杂度加速
+  。比如这篇你调研的是和anchor有关
+  比如有没有可能做到-2.5的最优速度，然后分析渐进后帘速度的加速
+  就是你说的动力系统然后我们考虑放到alm 这个绝对是比较火的。
+
+⏺ Web Search("single-loop nonconvex-concave minimax epsilon^{-2.5} complexity")
+  ⎿  Did 1 search in 16s
+
+⏺ Web Search("Boț nonconvex primal-dual f + h(Ax) convergence KL single loop")
+  ⎿  Did 1 search in 22s
+
+⏺ Web Search("nuPI PI controllers Lagrange multipliers constrained optimization
+            ICML 2024")
+  ⎿  Did 1 search in 15s
+
+⏺ Fetch(https://arxiv.org/abs/2609.17973)
+  ⎿  Received 43.5KB (200 OK)
+
+⏺ Fetch(https://arxiv.org/abs/2509.22500)
+  ⎿  Received 42.2KB (200 OK)
+
+⏺ Bash(cd overleaf && ls appendix sections; grep -n -i "s_k\|beta *= *0\|anchor"
+      appendix/*.tex | head -30)
+  ⎿  (No output)
+
+⏺ 结论
+
+  老大，这次检索查到一篇 2026 年 9 月的新文献，它影响到你的两个目标。
+
+  - Zhang–Xu（arXiv:2609.17973，2026-09-16）已经用单循环方法做到
+    $\epsilon^{-2.5}$。 方法是 projected damped extragradient，成分为 dual
+    momentum 加 moving proximal center，适用于
+    nonconvex–concave（NC-C）问题、对偶集合有界的情形，速度针对 game
+    stationarity。同一文对 optimization stationarity 给出
+    $\mathcal{O}(\epsilon^{-3})$ 上界和匹配的 $\Omega(\epsilon^{-3})$
+    下界，下界的算法类为 projected zero-respecting first-order
+    methods。因此，"单循环 ALM 做到 $\epsilon^{-2.5}$"
+    单独作为卖点已被占先。另外，"$\epsilon^{-2.5}$ 是最优速度"
+    这一判断没有依据：$\epsilon^{-2.5}$ 是 best-known，game stationarity
+    下的匹配下界仍然开放。
+  - $\epsilon^{-2.5}$ 可以分解为两个因子：对偶正则强度取
+    $\Theta(\epsilon)$，再加上对 $\sqrt{\kappa}$ 的加速。前一个因子正是你们
+    SIOPT 稿已有的机制。后一个因子靠 momentum 或 extragradient 得到。anchoring
+    的作用在 last-iterate 和渐近性质上，对应 Boț 的方向。
+  - 与 Boț 合作的自然交点是"权重趋于零的 Tikhonov 对偶正则"：Boț
+    负责渐近收敛与连续时间动力系统，你负责复杂度与下界。你们附录中的递增 $s_k$
+    分支已经是这个结构的离散版本。
+  - AI 顶会的切入口是 constrained deep learning 中的乘子更新。 相关工作有
+    νPI（ICML 2024）和 "Dual Optimistic Ascent is ALM in Disguise"（ICLR
+    2026），两者都与你们的算法族直接相连。
+
+  一、$\epsilon^{-2.5}$ 的来源
+
+  对 NC-C 问题加入强度为 $\mu$ 的对偶强凹正则后，问题变为
+  nonconvex–strongly-concave（NC-SC），条件数为
+  $\kappa=L/\mu$。为了让正则引入的误差不超过 $\epsilon$，需要取
+  $\mu\approx\epsilon/D_Y$，其中 $D_Y$ 是对偶集合的直径。NC-SC 的最优复杂度为
+  $\sqrt{\kappa},L\Delta,\epsilon^{-2}$，下界见
+  Zhang–Yang–Guzmán–Kiyavash–He，NeurIPS 2021。代入得
+
+  $$
+  \sqrt{\frac{L D_Y}{\epsilon}}\cdot
+  L\Delta,\epsilon^{-2}=L^{3/2}D_Y^{1/2}\Delta,\epsilon^{-5/2}.
+  $$
+
+  这与 Zhang–Xu 的 game stationarity 界逐项一致。不加速时，复杂度为
+  $\kappa,\epsilon^{-2}=\Theta(\epsilon^{-3})$，对应你们 $s=\Theta(1/\epsilon)$
+  的三次上界。你们的对偶正则项是 $-\frac{1}{2s}\lVert\lambda-\mu\rVert^2$，即
+  $\mu_{\mathrm{reg}}=1/s$，所以下面的对应关系成立：
+
+  ┌──────────────────┬───────────────────────┬──────────────┬───────────────┐
+  │       速度       │     对偶正则强度      │    对偶步    │     文献      │
+  ├──────────────────┼───────────────────────┼──────────────┼───────────────┤
+  │                  │ $\epsilon(\rho+s)\le  │              │ 你们的下界与  │
+  │ $\epsilon^{-4}$  │ c_1$                  │ 单步 GDA     │ $\beta=1$     │
+  │                  │                       │              │ 上界          │
+  ├──────────────────┼───────────────────────┼──────────────┼───────────────┤
+  │                  │ $1/s=\Theta(\epsilon) │              │ 你们的        │
+  │ $\epsilon^{-3}$  │ $                     │ 单步 GDA     │ $\beta=0$     │
+  │                  │                       │              │ 上界          │
+  ├──────────────────┼───────────────────────┼──────────────┼───────────────┤
+  │                  │                       │ dual         │ Zhang–Xu 2026 │
+  │ $\epsilon^{-2.5} │ $\Theta(\epsilon)$    │ momentum 或  │ ；多循环见 Li │
+  │ $                │                       │ extragradien │ n–Jin–Jordan  │
+  │                  │                       │ t            │ COLT 2020     │
+  └──────────────────┴───────────────────────┴──────────────┴───────────────┘
+
+  这张表给出一个未被占先的问题：在 $\mathcal{C}_\theta$ 内（只做单步更新、没有
+  momentum），$s=\Theta(1/\epsilon)$ 时 $\epsilon^{-3}$ 是否紧？ 如果能证明
+  $\mathcal{C}_\theta$ 在所有参数区域都需要 $\Omega(\epsilon^{-3})$，就得到命题
+  "momentum 对达到 $\epsilon^{-2.5}$ 是必要的"。这与你们已有的下界技术连续：你们
+  的困难实例只用仿射映射和多面体外函数。它也正面回答了 νPI 文中 "momentum 修不好
+  GDA" 的经验判断。
+
+  anchoring 本身给不出 $\sqrt{\kappa}$。 在单调包含问题上，Halpern 或 anchoring
+  的增益是把 last-iterate 残差从 $\mathcal{O}(1/\sqrt{k})$ 提到
+  $\mathcal{O}(1/k)$。在强单调问题上，它不改善对 $\kappa$
+  的依赖。所以，对复杂度加速应选 momentum 或 extragradient，anchoring 用于
+  last-iterate 与渐近结论。
+
+  二、与 Boț 合作的题目
+
+  建议题目：$\min_x f(x)+h(\mathcal{A}(x))$ 上带消失 Tikhonov 对偶正则的单循环
+  primal-dual 方法——复杂度与 last-iterate 渐近行为。
+
+  你们附录中 UpperBoundProofs.tex 的递增 $s_k$ 分支已经具备这个结构：
+
+  - 对偶正则 $-\frac{1}{2s_k}\lVert\lambda-\mu^k\rVert^2$ 的权重
+    $1/s_k\downarrow 0$，满足 $\sum_k(1/s_k-1/s_{k+1})=1/c_s$。
+  - anchor $\mu^k$ 以步长 $\beta_k$ 移动，满足 $\sum_k\beta_k/s_k<\infty$。
+
+  这正对应 Boț–Chenchene 的 flexible anchoring，即 anchor
+  可移动、权重趋于零。分工如下：
+
+  ┌────────┬────────────────────────────────────┬───────────────────────────┐
+  │  方向  │               Boț 侧               │          你的侧           │
+  ├────────┼────────────────────────────────────┼───────────────────────────┤
+  │ 连续时 │ Tikhonov 正则 primal-dual 流，权重 │ 由离散化得到步长条件      │
+  │ 间     │  $\varepsilon(t)\to0$              │                           │
+  ├────────┼────────────────────────────────────┼───────────────────────────┤
+  │        │ 在 KL 性质下 $x^k$                 │                           │
+  │ 渐近   │ 的有限长度；$\lambda^k$ 强收敛到极 │ —                         │
+  │        │ 限点处最小范数乘子（推断，待验证） │                           │
+  ├────────┼────────────────────────────────────┼───────────────────────────┤
+  │        │                                    │ 递增 $s_k$ 的             │
+  │ 复杂度 │ —                                  │ $\epsilon^{-3}$ anytime   │
+  │        │                                    │ 界；加 dual extrapolation │
+  │        │                                    │  后的 $\epsilon^{-2.5}$   │
+  ├────────┼────────────────────────────────────┼───────────────────────────┤
+  │ 加速   │ fast OGDA 的 $o(1/k)$ last-iterate │ 判断它在非凸原始变量下能  │
+  │        │  技术                              │ 保留多少                  │
+  └────────┴────────────────────────────────────┴───────────────────────────┘
+
+  最小范数乘子选择是这个题目里最适合 Boț 的命题。 原因有两点：
+
+  - 凸情形下，Tikhonov 正则迭代强收敛到最小范数解，这是 Boț 组的标准结论。
+  - 非凸约束问题的乘子集合在 MFCQ 下有界但不唯一，"迭代选出哪一个乘子"
+    是一个有内容的渐近问题。
+
+  最小验证步骤：在二维实例上数值模拟递增 $s_k$ 分支，观察 $\lambda^k$
+  是否趋于乘子集合的最小范数点。实例取非凸 $f$，约束为 $\lvert a^\top
+  x-b\rvert$，并让乘子集合非单点。模拟一天内可以完成。结果若成立，就是给 Boț
+  的开场材料。
+
+  待你确认：Boț 的单循环 PDHG "卡住" 卡在哪一步？可能的位置有三处：(i)
+  对偶变量无法用原始变量控制，这时你们的对偶正则正好能解决；(ii) 非线性
+  $\mathcal{A}$ 下的 KL 函数构造；(iii) 外推项 $2x^{k+1}-x^k$
+  破坏了下降性。三处对应的切入点不同。
+
+  三、AI 顶会路线（按 2027–2028 理解）
+
+  你写的 "2027-2024" 我按 2027–2028 理解。以下 deadline 按往年时间推断：ICML
+  2027 约 2027 年 1 月底，COLT 2027 约 2 月，NeurIPS 2027 约 5 月，ICLR 2028 约
+  9–10 月，AISTATS 2028 约 10 月。
+
+  ML 社区当前关注的问题：constrained deep learning 中拉格朗日乘子振荡、GDA
+  不稳定。代表工作是 Cooper 库、νPI（Sohrabi et al., ICML 2024），以及
+  Ramirez–Lacoste-Julien（ICLR 2026）：后者证明 dual optimistic ascent 等价于
+  augmented Lagrangian 上的 GDA。这意味着 PI 和 optimistic 乘子更新落在你们
+  SPLALM 族附近。 你们的参数尺度下界因此可以直接给 ML
+  社区一个调参结论：低组合罚参数区域无法突破 $\epsilon^{-4}$，必须让
+  $s\sim1/\epsilon$。前一次 ChatGPT 讨论中的 "移动中心等价于滤波 PI 更新"
+  也指向这里。
+
+  ┌──────────┬──────────────────────────────────────────────────┬───────────┐
+  │ 候选论文 │                       内容                       │ 投稿目标  │
+  ├──────────┼──────────────────────────────────────────────────┼───────────┤
+  │          │ 随机版本：PI 与 optimistic                       │ ICML 2027 │
+  │ C1       │ 乘子更新族的参数尺度下界与匹配上界，加 Cooper    │  或       │
+  │          │ benchmark 实验（公平性约束、稀疏约束）           │ NeurIPS   │
+  │          │                                                  │ 2027      │
+  ├──────────┼──────────────────────────────────────────────────┼───────────┤
+  │          │ $\mathcal{C}_\theta$ 的 $\Omega(\epsilon^{-3})$  │ COLT 2027 │
+  │ C2       │ 下界（"momentum 必要"），或 $\epsilon$-KKT 下    │  或       │
+  │          │ $\Omega(\epsilon^{-2.5})$ 的一般下界             │ NeurIPS   │
+  │          │                                                  │ 2027      │
+  ├──────────┼──────────────────────────────────────────────────┼───────────┤
+  │ B        │ 与 Boț 的 Tikhonov 渐近题目                      │ SIOPT 或  │
+  │          │                                                  │ MP 期刊   │
+  └──────────┴──────────────────────────────────────────────────┴───────────┘
+
+  风险：NeurIPS 和 ICML 禁止与正在审稿的期刊稿重叠。C1 和 C2 必须是 SIOPT
+  稿之外的新定理，所以随机设定或新的下界是必需的区分点。
+
+  四、未来一到两周
+
+  1. 核心任务：读 Zhang–Xu 2609.17973，核对它对当前 SIOPT 稿的影响。
+     需要逐项确认三点：
+     - 它的 $\Omega(\epsilon^{-3})$ 下界所用的 stationarity 与你们的
+       $\epsilon$-KKT 是什么关系；
+     - 它的问题类是否覆盖
+       $\langle\lambda,\mathcal{A}(x)\rangle-h^(\lambda)$。$h^$
+       为有界集合的指示函数时，看起来被覆盖；
+     - 你们的引言和相关工作需要怎样改。
+
+     这件事优先于 retreat，因为听众里的 Böhm 和 Boț 很可能读过这篇。
+  2. 备选：完成第二节的二维数值实验，作为 retreat 后与 Boț 单独讨论的材料。
+
+  要点：$\epsilon^{-2.5}$ 已被 Zhang–Xu
+  用单循环方法做到。你最有区分度的方向有两个：一是证明 momentum
+  的必要性（下界方向，适合 COLT 和 NeurIPS），二是与 Boț 做消失 Tikhonov
+  对偶正则的渐近分析（期刊方向）。两者都直接建立在你现有的结果上。
+
+  Sources:
+  - Zhang & Xu, Matching Multi-Loop Complexities with a Single Loop
+    (arXiv:2609.17973) (https://arxiv.org/pdf/2609.17973)
+  - Ramirez & Lacoste-Julien, Dual Optimistic Ascent (PI Control) is the
+    Augmented Lagrangian Method in Disguise (https://arxiv.org/pdf/2509.22500)
+  - Sohrabi et al., On PI Controllers for Updating Lagrange Multipliers (ICML
+    2024) (https://arxiv.org/abs/2406.04558)
+  - Zhang et al., Single-Loop Smoothed GDA for Nonconvex-Concave Min-Max
+    (https://arxiv.org/pdf/2010.15768)
+  - Xu et al., AGP unified single-loop (arXiv:2006.02032)
+    (https://arxiv.org/pdf/2006.02032)
+  - Yang et al., Faster Single-loop Algorithms for Minimax without Strong
+    Concavity (https://arxiv.org/pdf/2112.05604)
+  - Preconditioned Primal-Dual Gradient Methods for Nonconvex Composite
+    Optimization (https://arxiv.org/pdf/2309.13416)
+  - Completely Parameter-Free Single-Loop Algorithms for NC-C Minimax
+    (https://arxiv.org/pdf/2407.21372)
+  - Single-Loop Accelerated Extra-Gradient Difference Algorithm (OpenReview)
+    (https://openreview.net/forum?id=wIlmx4bHrO)
+
+❯ Rate-improved Inexact Augmented Lagrangian Method for
+  Constrained Nonconvex Optimization 你看这篇文章 就做到了-2.5
+  还有最近做到了Minmax的GS稳定点的-2.5 。
+
+⏺ Web Search("Rate-improved Inexact Augmented Lagrangian Method for Constrained
+            Nonconvex Optimization")
+  ⎿  Did 1 search in 15s
+
+⏺ Fetch(https://arxiv.org/pdf/2007.01284)
+  ⎿  Received 1.1MB (200 OK)
+
+⏺ Bash(mkdir -p /tmp/iALM && cp
+      "/Users/liluxuan/.claude/projects/-Users-liluxuan-Documents-My-Papers-3-DD
+      LALM/fa627f2d-728c-4fdb-830f-f63e8cb9eb4a/tool-results/webfet…)
+  ⎿  (No output)
+  ⎿  Allowed by PermissionRequest hook
+
+⏺ Bash(sed -n 355,400p /tmp/iALM/p.txt; echo ----; sed -n 715,760p
+      /tmp/iALM/p.txt; echo ---; sed -n 790,805p /tmp/iALM/p.txt)
+  ⎿  (No output)
+
+⏺ 结论
+
+  老大，你说得对。$\epsilon^{-2.5}$ 已经在两条线上被做到：ALM 线是
+  Li–Chen–Liu–Lu–Xu（AISTATS 2021），minimax 线是 Zhang–Xu 2026 的单循环 game
+  stationarity（GS）结果。所以 $\epsilon^{-2.5}$ 本身不能作为新贡献。按问题类排
+  开后，仍然开放的是非线性约束（对偶无界）这一格：最好速度停在
+  $\epsilon^{-3}$，没有人知道它能否改进，也没有人证明它是下界。
+  这一格是我建议的新目标。
+
+  我上一条说的"单循环 ALM 做到 $\epsilon^{-2.5}$ 已被占先"范围写宽了。Zhang–Xu
+  要求对偶集合有界，覆盖不到真正的等式约束。
+
+  一、Li et al. 2021 的实际内容
+
+  我读了 arXiv 2007.01284 的正文：
+
+  - 问题：$\min g(x)+h(x)$ s.t. $c(x)=0$。$g$ 与 $c_j$ 光滑且弱凸，$h$ 是 domain
+    紧的凸函数（Assumption 1–2）。
+  - 算法：三层循环。外层是 ALM，罚参数 $\beta_k$ 几何增长；中层是 inexact
+    proximal point（iPPM）；内层是 APG。
+  - 结果（Theorem 2），度量为 $\epsilon$-KKT：
+    - 当 $c(x)=Ax-b$：$\tilde{\mathcal{O}}(\epsilon^{-2.5})$；
+    - 当 $c$ 非线性：$\tilde{\mathcal{O}}(\epsilon^{-3})$。这需要 Assumption 3
+      的正则条件 $v\lVert c(x^k)\rVert\le\mathrm{dist}(-J_c(x^k)^\top
+      c(x^k),\partial
+      h(x^k)/\beta_{k-1})$。作者证明仿射约束配多面体集或球时该条件自动成立。
+  - $\epsilon^{1/2}$ 的增益来源：每个 iPPM 子问题强凸，APG 对条件数的依赖是
+    $\sqrt{\kappa}$。机制与上条分析的"对偶正则 $\Theta(\epsilon)$ 加
+    $\sqrt{\kappa}$ 加速"相同，加速作用的位置换成了原始子问题。
+
+  它发表在 AISTATS，这直接说明 ALM 复杂度属于 AI 顶会的
+  scope，回答了你的第一个目标。
+
+  二、速度地图（$\epsilon$-KKT 或 GS）
+
+  问题类: 仿射约束 + 多面体集
+  对偶: 无界
+  最好上界: $\mathcal{O}(\epsilon^{-2})$
+  方法结构: 单循环 smoothed proximal ALM（Zhang–Luo，SIOPT
+  2020/2022，凭记忆，待核）
+  下界: $\Omega(\epsilon^{-2})$，来自无约束情形
+  ────────────────────────────────────────
+  问题类: 仿射约束 + 球等一般凸集
+  对偶: 无界
+  最好上界: $\tilde{\mathcal{O}}(\epsilon^{-2.5})$
+  方法结构: 三层 iALM（Li et al. 2021）
+  下界: 开放
+  ────────────────────────────────────────
+  问题类: 光滑 NC-C，对偶集有界，含 $\langle\lambda,\mathcal{A}(x)\rangle$ 且
+  $\mathcal{A}$ 非线性
+  对偶: 有界
+  最好上界: GS：$\mathcal{O}(\epsilon^{-2.5})$
+  方法结构: 单循环（Zhang–Xu 2026）
+  下界: optimization stationarity 下 $\Omega(\epsilon^{-3})$；GS 下开放
+  ────────────────────────────────────────
+  问题类: 非线性约束 $c(x)=0$，带正则条件
+  对偶: 无界
+  最好上界: $\tilde{\mathcal{O}}(\epsilon^{-3})$
+  方法结构: 三层 iALM；penalty 方法（Lin–Ma–Xu）
+  下界: 开放
+  ────────────────────────────────────────
+  问题类: 你们的 $\mathcal{C}_\theta$，$h$ Lipschitz
+  对偶: 有界
+  最好上界: 族内：低组合罚参数为 $\Theta(\epsilon^{-4})$；$s\sim1/\epsilon$ 时
+  $\mathcal{O}(\epsilon^{-3})$
+  方法结构: 单循环、单步
+  下界: 族内 $\Omega(\epsilon^{-4})$
+
+  从表中读出三点。
+
+  - 有界对偶与无界对偶之间有 $\epsilon^{1/2}$ 的差距。 $\mathcal{A}$
+    非线性时，对偶有界的情形已到 $\epsilon^{-2.5}$，等式约束仍停在
+    $\epsilon^{-3}$。这个差距可能来自三个原因：乘子尺度需要靠正则条件控制、罚参
+    数几何增长、分析技术本身。目前没有文献把它们区分开。
+  - 对当前 SIOPT 稿的直接影响：你们 $h$ Lipschitz 时对偶有界，所以属于 Zhang–Xu
+    的问题类（前提是 $h^*$ 的 prox 能放进他们的投影步）。如果你们的 prop:kkt-gs
+    能把 GS 转成
+    $\epsilon$-KKT，那么在速度上，一个族外的单循环方法已经优于你们的
+    $\epsilon^{-3}$。SIOPT
+    稿的贡献需要明确落在族内紧性与参数尺度必要性上，引言里要正面引用 Zhang–Xu 和
+    Li et al.。
+  - 仿射情形没有空间：$\epsilon^{-2}$ 已经与下界一致（若 Zhang–Luo
+    的条件核对无误）。
+
+  三、目标调整
+
+  新目标：非线性约束（对偶无界）下，$\epsilon$-KKT 的 $\epsilon^{-3}$ 能否改进？
+  有两个方向。
+
+  - 上界方向：给出单循环方法，达到 $\epsilon^{-2.5}$。可以借 Zhang–Xu 的 dual
+    momentum 加 moving center，再用你们的对偶正则 $1/s\sim\epsilon$
+    把乘子尺度控制住，以替代对偶有界的假设。关键困难在于：对偶无界时，$1/s$
+    正则带来的偏差 $\lVert\lambda^\rVert/s$ 要靠正则条件给出
+    $\lVert\lambda^\rVert$ 的界。
+  - 下界方向：在 Assumption 3 类的正则条件下，证明 $\Omega(\epsilon^{-3})$。你们
+    现有的困难实例使用仿射映射，这一方向需要新的非线性实例。
+
+  两个方向的结果都适合 NeurIPS、ICML 或 COLT。
+
+  和 Boț 的合作仍按上条的方向：消失 Tikhonov 对偶正则，加 last-iterate
+  或最小范数乘子。这一方向的价值在渐近性质上，不受 $\epsilon^{-2.5}$
+  已被做到的影响。
+
+  四、下一步
+
+  1. 精读 Zhang–Xu 2609.17973，确认三点：
+     - 它的 GS 与你们的 $\epsilon$-KKT（prop:kkt-gs）是什么关系；
+     - 对偶非光滑项 $h^*$ 能否纳入它的框架；
+     - 它的 $\Omega(\epsilon^{-3})$ 下界用的是什么实例。
+
+     这一步同时决定 SIOPT 稿的定位和新目标的可行性。
+  2. 核对 Zhang–Luo 的 $\epsilon^{-2}$
+     结论的确切条件，把上表的第一行从"凭记忆"变成有出处的结论。
+
+  要点：$\epsilon^{-2.5}$ 在仿射约束和有界对偶两类问题上都已被做到。仍然开放的是
+  非线性等式约束这一格：它的 $\epsilon^{-3}$
+  能否改进，有界对偶与无界对偶之间的差距是不是本质的。
+
+  Sources:
+  - Li, Chen, Liu, Lu, Xu, Rate-improved Inexact ALM (arXiv:2007.01284)
+    (https://arxiv.org/abs/2007.01284)
+  - PMLR v130 版本（AISTATS 2021）
+    (https://proceedings.mlr.press/v130/li21d.html)
+  - IBM Research 页面 (https://research.ibm.com/publications/rate-improved-inexa
+    ct-augmented-lagrangian-method-for-constrained-nonconvex-optimization)
+  - Zhang & Xu, arXiv:2609.17973 (https://arxiv.org/pdf/2609.17973)
+  - AIDAL, arXiv:2110.11151 (https://arxiv.org/pdf/2110.11151)
+  - Adaptive ALM for Deterministic and Stochastic Nonconvex Optimization,
+    arXiv:2608.27676 (https://arxiv.org/pdf/2608.27676)
+  - First-order methods for problems with O(1) functional constraints,
+    arXiv:2010.02282 (https://arxiv.org/pdf/2010.02282)
+  - Inexact power ALM, arXiv:2410.20153 (https://arxiv.org/pdf/2410.20153)
+  - Proximal ALM with equality and inequality constraints, arXiv:2509.02894
+    (https://arxiv.org/html/2509.02894v1)
+  - Global Solutions to Non-Convex Functional Constrained Problems with Hidden
+    Convexity, arXiv:2511.10626 (https://arxiv.org/pdf/2511.10626)
+❯ 我们现在不是证明了 -4的必要性 和 -3的下界？ 对吧  简单点
+
+⏺ 不完全对。我们证明的是 $\epsilon^{-4}$ 的下界和 $\epsilon^{-3}$
+  的上界，没有证明 $\epsilon^{-3}$ 的下界。
+
+  ┌─────────────────────────────┬───────────┬───────────────────────────────┐
+  │            结论             │   类型    │             范围              │
+  ├─────────────────────────────┼───────────┼───────────────────────────────┤
+  │                             │           │ $\mathcal{C}_\theta$          │
+  │ $\Omega(\epsilon^{-4})$     │ 下界      │ 族，$\epsilon(\rho+s)\le      │
+  │                             │           │ c_1$，所有常数中心步长        │
+  ├─────────────────────────────┼───────────┼───────────────────────────────┤
+  │ $\mathcal{O}(\epsilon^{-4}) │ 上界      │ $\beta=1$，固定 $\rho$        │
+  │ $                           │           │                               │
+  ├─────────────────────────────┼───────────┼───────────────────────────────┤
+  │ $\mathcal{O}(\epsilon^{-3}) │ 上界      │ $\beta=0$，固定 $\rho$，$s=\T │
+  │ $                           │           │ heta(1/\epsilon)$             │
+  ├─────────────────────────────┼───────────┼───────────────────────────────┤
+  │ $\rho+s=\Omega(1/\epsilon)$ │ 必要性推  │ 想比 $\epsilon^{-4}$ 快，组合 │
+  │                             │ 论        │ 罚参数必须达到这个量级        │
+  └─────────────────────────────┴───────────┴───────────────────────────────┘
+
+  由此得到两点：
+
+  - 低参数区域里，$\epsilon^{-4}$ 是紧的：下界和上界匹配。
+  - $s\sim1/\epsilon$ 时，$\epsilon^{-3}$ 只是可达：$\mathcal{C}_\theta$
+    在这个区域能否更快，目前没有证明。
+
+  所以上次提的"$\mathcal{C}_\theta$ 在 $s\sim1/\epsilon$ 时
+  $\Omega(\epsilon^{-3})$"仍是待证的问题。证出来之后，就能说明 momentum 对达到
+  $\epsilon^{-2.5}$ 是必要的。
+
+❯ 下界的话 gpt给证明了
+
+  Searched for 1 pattern, read 1 file, listed 1 directory (ctrl+o to expand)
+
+⏺ Bash(sed -n 200,240p sections/Introduction.tex)
+  ⎿  (No output)
+
+⏺ 对，GPT 给了一个三次下界，但它只管一条参数路径，管不到整个族。
+
+  它证明了什么。 你们稿子里的平台引理（lem:plateau，在 LowerBoundProof.tex
+  (sections/LowerBoundProof.tex)）不需要 $\epsilon(\rho+s)\le c_1$
+  这个条件，所以在 $s=c_s/\epsilon$ 时也能用。把
+  $\alpha=c_\alpha\epsilon$、$\beta=0$ 代进去，得到
+
+  $$
+  T_\epsilon^{\mathrm{KKT}}>\frac{\Delta}{16\gamma c_\alpha}\epsilon^{-3}.
+  $$
+
+  这和 thm:upper-beta0 的上界配起来，说明这条参数路径的复杂度是
+  $\Theta(\epsilon^{-3})$。这个结论对 GS 准则同样成立。再往前推一点：$\alpha\le
+  B\epsilon$ 时，对任意 $\beta$ 都有 $\Omega(\epsilon^{-3})$。
+
+  它没有证明什么。 在 $s=c_s/\epsilon$ 时，对所有 $(\alpha,\beta)$
+  取最优之后整个族仍是 $\Omega(\epsilon^{-3})$，这一点还没证出来。还差
+  $\alpha>B\epsilon$ 这一段。原来的旋转实例要求 $\epsilon(\rho+s)\le
+  c_1$，在这里用不上，需要新的困难实例。GPT 自己也在对话第 1857–1900
+  行说明了这一点。
+
+  ┌─────────────┬─────────────────────────────┬────────────────────────────┐
+  │             │         低参数区域          │      $s=c_s/\epsilon$      │
+  ├─────────────┼─────────────────────────────┼────────────────────────────┤
+  │ 全族下界    │ $\Omega(\epsilon^{-4})$，已 │ 未证，差                   │
+  │             │ 证                          │ $\alpha>B\epsilon$         │
+  ├─────────────┼─────────────────────────────┼────────────────────────────┤
+  │ 单条路径紧  │ —                           │ $\Theta(\epsilon^{-3})$，G │
+  │ 性          │                             │ PT 已证                    │
+  └─────────────┴─────────────────────────────┴────────────────────────────┘
+
+  还有一件事要处理。 正文还没吸收这个结果。Introduction.tex
+  (sections/Introduction.tex) 表格里，SPLALM 在 $s=c_s\epsilon^{-1}$
+  那一行的下界还是 "---"。GPT 的建议是把它写成紧跟 thm:upper-beta0 的一个推论。
+
+  所以，上次说的"momentum 必要"命题要成立，就得补上全族版本，也就是处理
+  $\alpha>B\epsilon$ 这一段。
+
+❯ <ide_opened_file>The user opened the file /Users/liluxuan/Documents/My_Papers
+  /3_DDLALM/overleaf/notes/retreat/retreat-brief.tex in the IDE. This may or
+  may not be related to the current task.</ide_opened_file>
+
+❯ 简单点 我们是否可以通过动力系统的角度 我们的算法 从而离散化得到加速？
+  我不是很懂 我的zotero关于1_BOT_accelerate_problem的手机了很多他的文章
+  还有他的主页 你可以先只看摘要
+
+⏺ Bash(ls ~/Zotero 2>/dev/null | head; mkdir -p /tmp/zot && cp
+      ~/Zotero/zotero.sqlite /tmp/zot/z.sqlite 2>/dev/null && sqlite3
+      /tmp/zot/z.sqlite "select collectionID,…)
+  ⎿  (No output)
+
+⏺ Bash(sqlite3 -separator ' || ' /tmp/zot/z.sqlite "
+      with it as (select itemID from collectionItems where collectionID=180)…)
+  ⎿  (No output)
+  ⎿  Allowed by PermissionRequest hook
+
+⏺ Bash(sqlite3 /tmp/zot/z.sqlite "select collectionID, collectionName,
+      parentCollectionID from collections where parentCollectionID in
+      (182,183,186);"; sqlite3 -separa…)
+  ⎿  (No output)
+  ⎿  Allowed by PermissionRequest hook
+
+❯ 1、
+
+⏺ 可以，但加速只能落在对偶 $\lambda$ 这一侧。$x$ 这一侧是非凸的，Boț
+  的加速工具都要求单调性，用不上。我按 Zotero 里 1_BOT_accelerate_problem
+  合集的摘要整理了一下。
+
+  1. Boț 的套路
+
+  1. 先写一个连续时间的流（ODE）。
+  2. 往流里加两类项之一：
+     - 惯性与修正项，即带 vanishing damping 的二阶流，代表作是 Fast OGDA（FoCM
+       2025）；
+     - Tikhonov 项 $-\varepsilon(t)(\lambda-\text{anchor})$，其中
+       $\varepsilon(t)\to0$，代表作是 Tikhonov monotone flow（arXiv 2025）和
+       flexible anchoring EG（SIOPT 2026）。
+  3. 用 Lyapunov 函数证明 ODE 的速度，再做显式离散，得到 $o(1/k)$ 的
+     last-iterate 残差，并证明迭代强收敛到最小范数解。
+
+  前提：算子必须单调，也就是凸–凹问题。
+
+  2. 我们的算法写成 ODE
+
+  SPLALM 取常数步长时，就是一阶流的显式 Euler 离散：
+
+  $$
+  \dot{x}=-\nabla_x K,\qquad \dot{\lambda}=\nabla_\lambda
+  K-\frac{1}{s}(\lambda-\mu),\qquad \dot{z}=\alpha(x-z),\qquad
+  \dot{\mu}=\beta(\lambda-\mu).
+  $$
+
+  这里 $K$ 是算法所在的函数：带对偶正则 $-\frac{1}{2s}\lVert\lambda-\mu\rVert^2$
+  的 reduced augmented Lagrangian，中心为 $z,\mu$。$\lambda$
+  方程里的最后一项，正是 Boț 的 Tikhonov 项：权重是 $1/s$，anchor 是 $\mu$。
+
+  - 常数 $s$：权重固定，对应你们现在的 $\Theta(\epsilon^{-4})$ 和
+    $\mathcal{O}(\epsilon^{-3})$ 两个结果。
+  - 递增 $s_k$：权重 $1/s_k\to0$，就是 Boț 的 vanishing Tikhonov 流。附录 D、E
+    的分支已经是它的离散版本。
+
+  3. 能加速到哪里
+
+  ┌────────────────────┬──────────┬─────────────────────────────────────────┐
+  │        部分        │ 能否加速 │                  原因                   │
+  ├────────────────────┼──────────┼─────────────────────────────────────────┤
+  │                    │          │ 光滑非凸问题的下界是                    │
+  │ $x$（非凸）        │ 不能     │ $\Omega(\epsilon^{-2})$（Carmon et      │
+  │                    │          │ al.），momentum 不改阶                  │
+  ├────────────────────┼──────────┼─────────────────────────────────────────┤
+  │ $\lambda$（凹，带  │          │ 二阶流或 anchoring 把对 $\kappa$        │
+  │ $1/s$ 正则）       │ 能       │ 的依赖降到 $\sqrt{\kappa}$，整体从      │
+  │                    │          │ $\epsilon^{-3}$ 到 $\epsilon^{-2.5}$    │
+  └────────────────────┴──────────┴─────────────────────────────────────────┘
+
+  复杂度上的增益是 $\epsilon^{-3}\to\epsilon^{-2.5}$，这一步 Zhang–Xu 已经用
+  dual momentum 做到了。 所以用动力系统重新推一遍加速，复杂度上没有新东西。
+
+  4. 动力系统视角能带来的新结果
+
+  新的部分在渐近性质，这正是 Boț 关心的方向：
+
+  1. $\lambda(t)$ 是否强收敛到乘子集合中的最小范数乘子。 Boț 的 Tikhonov
+     流在凸情形证明了这一点。你们的 $x$ 是非凸的，需要用 KL 性质，或者他 bilevel
+     论文里的 Hölderian error bound 来补上。
+  2. 残差衰减的速度与 $1/s(t)$ 衰减快慢之间的权衡。 他的 Tikhonov
+     流论文给出：权重衰减选得合适，残差可以快到 $\mathcal{O}(1/t)$。这对应"$s_k$
+     该增长多快"这个问题，可以和你们的复杂度结果对接。
+  3. 最小范数乘子的选择本身是一个 bilevel 问题，即在乘子集合上最小化
+     $\lVert\lambda\rVert$。这正好接上他 2026 年的两篇 bilevel 论文（diagonal
+     methods 和 regularized EG）。
+
+  分工：Boț 做 $\lambda$ 侧的 Tikhonov 流与离散，你做 $x$
+  侧的非凸复杂度。合起来就是"非凸原始变量加 vanishing Tikhonov 对偶"的单循环
+  ALM。
+
+  要点：动力系统离散化能做出加速，但复杂度只能到
+  $\epsilon^{-2.5}$，这已经有人做了。真正的新东西是递增 $s_k$ 对应的 Tikhonov
+  流上的渐近结论：最小范数乘子，以及残差速度。
+
+  你刚发来的"1、"只有一个序号，后面没有内容，可能没发完，请补上。
+
+❯ 但是我们落脚点是alm  固定法 s哪怕不固定 到-2.5？ 是alm
+
+⏺ 对。目标是：单循环 ALM，罚参数 $\rho$ 固定，$s$
+  允许随精度增长或随迭代递增，再给对偶步加速，做到 $\epsilon^{-2.5}$。
+  这个组合目前没有人做过，新意要靠问题类来保证。
+
+  为什么这条路在机制上可行
+
+  - 你们的 SIOPT 稿已经证明：想比 $\epsilon^{-4}$ 快，$\rho+s$ 需要增长到
+    $1/\epsilon$ 量级。这部分增长可以全部交给 $s$ 承担，$\rho$ 保持固定。
+  - 从 $\epsilon^{-3}$ 到 $\epsilon^{-2.5}$ 的增益，来自对偶步的加速：对
+    $\kappa\sim s$ 的依赖从 $\kappa$ 降到 $\sqrt{\kappa}$。可用的加速工具有 Boț
+    的 anchoring 或 Tikhonov 离散，也可以用 dual momentum。
+
+  两者合起来就是 $\epsilon^{-2.5}$：固定 $\rho$ 加 $s\sim1/\epsilon$ 给出
+  $\epsilon^{-3}$，再乘上 $\epsilon^{1/2}$ 的加速增益。
+
+  和已有工作的区别
+
+  ┌────────────┬───────────────────────────┬───────────────────────────────┐
+  │    工作    │ $\epsilon^{-2.5}$ 的条件  │         与目标的差别          │
+  ├────────────┼───────────────────────────┼───────────────────────────────┤
+  │ Li et al.  │ 三层循环，$\rho$          │ 目标是单循环、$\rho$ 固定     │
+  │ 2021       │ 几何增长，仿射约束        │                               │
+  ├────────────┼───────────────────────────┼───────────────────────────────┤
+  │ Zhang–Xu   │ 单循环 GDA 型             │ 目标是 ALM                    │
+  │ 2026       │ minimax，对偶集合有界     │ 形式，并覆盖对偶无界的情形    │
+  └────────────┴───────────────────────────┴───────────────────────────────┘
+
+  问题类决定新意
+
+  - $h$ Lipschitz（对偶有界）：Zhang–Xu 很可能已经覆盖，ALM
+    版本只是换个形式，新意弱。这一点待核：要看他们的框架能否纳入 $h^*$ 的
+    prox，以及 GS 能否转成 $\epsilon$-KKT。
+  - $h$ 是等式约束的指示函数（对偶无界）：这才是 ALM 不可替代的场景。
+    - 仿射约束：若 Zhang–Luo 的 $\epsilon^{-2}$
+      核对无误，这一格已经被更快的结果占了。
+    - 非线性约束：最好结果是 $\epsilon^{-3}$，来自三层
+      iALM，且罚参数需要增长。固定 $\rho$ 的单循环 ALM 若做到
+      $\epsilon^{-2.5}$，就是严格的改进。
+
+  核心难点：对偶无界时，$1/s$ 正则引入的偏差约为
+  $\lVert\lambda^*\rVert/s$。要在罚参数不增长的前提下控制住
+  $\lVert\lambda^k\rVert$，需要正则条件，例如 Li et al. 的 Assumption 3。
+
+  第一步
+
+  在你们已有的单循环 ALM 上，只把对偶步换成 anchored 或 extrapolated 更新（Boț
+  的 flexible anchoring EG 形式），$\rho$ 保持固定，取
+  $s=c/\epsilon$。先在一个非线性等式约束的小例子上跑数值实验，看迭代次数随
+  $\epsilon$ 的变化是否接近 $\epsilon^{-2.5}$。如果是，再去推证明。
+
+  要点：在非线性等式约束问题上，用单循环、罚参数固定的 ALM 做到
+  $\epsilon^{-2.5}$，是一个有新意的目标。$s$ 负责必要的增长，对偶加速负责
+  $\epsilon^{1/2}$ 的增益。
+
+❯ 不是minmax
+
+⏺ 明白，下面全部用 ALM 的语言来说。问题是
+
+  $$
+  \min_x f(x)+h(\mathcal{A}(x)),
+  $$
+
+  $h$ 为凸函数，包括等式约束的指示函数。度量用 $\epsilon$-KKT。
+
+  修正我上一条的说法
+
+  我上一条说"$x$ 侧非凸，不能加速"，这句错了。光滑非凸问题整体确实不能靠
+  momentum 改进速度，但 proximal ALM 每一步的原始子问题带有中心项
+  $\frac{1}{2\gamma}\lVert x-z\rVert^2$。只要这一项压过 $f$
+  的弱凸性，子问题就是强凸的，可以用 Nesterov 加速。Li et al. 2021 的
+  $\epsilon^{-2.5}$ 正是这样得到的。
+
+  ALM 里 $\epsilon^{-2.5}$ 的来源
+
+  - 组合罚参数 $\rho+s\sim1/\epsilon$：原始子问题的光滑常数为
+    $L\sim1/\epsilon$，条件数为 $\kappa\sim1/\epsilon$。
+  - 不加速：总复杂度是 $\kappa,\epsilon^{-2}=\epsilon^{-3}$，也就是你们
+    $\beta=0$ 时的上界。
+  - 原始子问题用 Nesterov 加速：总复杂度是
+    $\sqrt{\kappa},\epsilon^{-2}=\epsilon^{-2.5}$。
+
+  ALM 文献现状
+
+  ┌─────────────────────┬─────────────────────────────────────┬─────────────┐
+  │        工作         │                速度                 │    结构     │
+  ├─────────────────────┼─────────────────────────────────────┼─────────────┤
+  │ Li et al.           │ 仿射约束 $\tilde{\mathcal{O}}(\epsi │ 三层循环，$ │
+  │ 2021（iALM）        │ lon^{-2.5})$，非线性约束 $\tilde{\m │ \rho$       │
+  │                     │ athcal{O}}(\epsilon^{-3})$          │ 几何增长    │
+  ├─────────────────────┼─────────────────────────────────────┼─────────────┤
+  │ Kong–Melo–Monteiro  │ 线性约束 $\tilde{\mathcal{O}}(\epsi │ 多层循环，d │
+  │ （AIDAL）           │ lon^{-2.5})$                        │ amped       │
+  │                     │                                     │ multiplier  │
+  ├─────────────────────┼─────────────────────────────────────┼─────────────┤
+  │ 你们的 SPLALM       │ $\epsilon^{-4}$ 与 $\epsilon^{-3}$  │ 单循环，$\r │
+  │                     │                                     │ ho$ 固定    │
+  └─────────────────────┴─────────────────────────────────────┴─────────────┘
+
+  空位：单循环、$\rho$ 固定的 ALM 做到 $\epsilon^{-2.5}$。
+
+  你们自己的下界指出了瓶颈
+
+  平台引理给出
+
+  $$
+  T_\epsilon\ge\frac{\Delta}{16\gamma\alpha\epsilon^2}.
+  $$
+
+  原因有两个：$x$ 只能贴着中心 $z$ 走，而中心每步最多前进
+  $2\gamma\alpha\epsilon$。要得到 $\epsilon^{-2.5}$，中心步长必须放大到
+  $\alpha\sim\epsilon^{1/2}$。在 $\mathcal{C}_\theta$ 中，$x$
+  一步梯度跟不上这么快的中心。原始步加上 Nesterov 外推之后，$x$
+  跟踪中心的速度提高到 $\sqrt{\kappa}$ 量级，中心才能用
+  $\alpha\sim\epsilon^{1/2}$ 推进。 这是这个加速在你们框架里的具体机制。
+
+  方案
+
+  - 算法：SPLALM，$\rho$ 固定，$s=c/\epsilon$ 或 $s_k$ 递增。原始步加 Nesterov
+    外推，每轮仍只算一次梯度；中心步长取 $\alpha\sim\epsilon^{1/2}$。
+  - 与 Boț 的接口：带中心的惯性迭代，正是他 Fast KM 和 inertial forward–backward
+    的离散形式。连续时间里是一个二阶流，Lyapunov 分析可以借他的方法。
+  - 第一步：在平台实例上数值验证。加外推、取 $\alpha\sim\epsilon^{1/2}$
+    后，迭代次数是否从 $\epsilon^{-3}$ 降到 $\epsilon^{-2.5}$。
+
+  结论：在 ALM 里，$\epsilon^{-2.5}$ 来自组合罚参数 $\sim1/\epsilon$ 加上原始子
+  问题的加速。你们的平台引理说明瓶颈在中心推进太慢，原始步加外推之后，中心才能以
+  $\alpha\sim\epsilon^{1/2}$ 推进。单循环、$\rho$ 固定的 ALM 做到
+  $\epsilon^{-2.5}$，目前文献里没有。
+
+❯ 要想突破的-4就必须变动罚参数 所以s一定要变，但是我们想和bot合作
+  他的正则项下的
+
+⏺ 对，有一处要分清：$s$ 必须随精度放大，但不一定要在迭代中变化。
+
+  - 下界的要求：$\rho+s\ge c/\epsilon$。所以给定精度 $\epsilon$ 后，取
+    $s=c/\epsilon$、在整次运行中保持常数就够了。你们的 $\beta=0$
+    上界就是这样做的。
+  - 迭代中递增的 $s_k$：好处是 anytime，不需要事先知道 $\epsilon$。你们附录 D、E
+    的分支就是这种做法。
+
+  和 Boț 合作，正好走第二条路，因为 $s_k$ 递增就是他的 Tikhonov 正则：
+
+  $$
+  -\frac{1}{2s_k}\lVert\lambda-\mu^k\rVert^2,\qquad
+  \varepsilon_k:=\frac{1}{s_k}\to0.
+  $$
+
+  对应到他的框架：
+
+  ┌────────────────────────────────────┬────────────────────────────────────┐
+  │              他的框架              │             你们的 ALM             │
+  ├────────────────────────────────────┼────────────────────────────────────┤
+  │ Tikhonov 权重 $\varepsilon(t)\to0$ │ $1/s_k\to0$，即组合罚参数逐步增大  │
+  ├────────────────────────────────────┼────────────────────────────────────┤
+  │ anchor（可移动，flexible           │ 对偶中心 $\mu^k$                   │
+  │ anchoring）                        │                                    │
+  ├────────────────────────────────────┼────────────────────────────────────┤
+  │ 结论 1：强收敛到最小范数解         │ $\lambda^k$                        │
+  │                                    │ 收敛到最小范数乘子（待证）         │
+  ├────────────────────────────────────┼────────────────────────────────────┤
+  │ 结论 2：$\varepsilon(t)$           │ $s_k$ 的增长速度决定 KKT           │
+  │ 选得合适时，残差衰减可达           │ 残差的速度                         │
+  │ $\mathcal{O}(1/t)$                 │                                    │
+  └────────────────────────────────────┴────────────────────────────────────┘
+
+  合作的分工可以这样安排：
+
+  1. 写出 Tikhonov 正则下的 ALM 连续时间流：$x$ 侧是带中心的梯度流，$\lambda$
+     侧是权重为 $1/s(t)$ 的 Tikhonov 流。这部分是 Boț 的强项。
+  2. 由他的 decay 与速度之间的权衡，定出最优的 $s(t)$。离散化后得到 $s_k$
+     的增长规律。目标是 anytime 的 $\epsilon^{-3}$，这一部分你们已经有了。
+  3. 原始步加惯性项，冲 $\epsilon^{-2.5}$。这部分是你的强项。
+
+  合作的着眼点：在 Boț 的框架里，$s_k$ 递增就是 Tikhonov 权重 $1/s_k\to0$。他提
+  供渐近结论（最小范数乘子、残差速度），你提供复杂度结论（$\epsilon^{-3}$ 到
+  $\epsilon^{-2.5}$）。
+
+  你的消息停在"他的正则项下的"，后半句没有发出来。如果想说的和上面不一样，请补完
+  整。
+
+❯ 就是他能实现加速 我们是不是可以实现加速
+
+⏺ 能，但只能加速一部分，上限是 $\epsilon^{-2.5}$。
+
+  Boț 的加速是什么。 对单调问题，普通方法的残差以 $\mathcal{O}(1/\sqrt{k})$
+  衰减。加了 Tikhonov 或 anchoring 之后，残差变成
+  $\mathcal{O}(1/k)$。他的前提是算子单调。
+
+  放到我们的 ALM 里：
+
+  ┌───────────────────────┬──────────────────┬──────────────────────────────┐
+  │         部分          │     是否单调     │       能否套用他的加速       │
+  ├───────────────────────┼──────────────────┼──────────────────────────────┤
+  │ $\lambda$ 侧（固定    │ 单调，带 $1/s$   │ 能                           │
+  │ $x$）                 │ 正则             │                              │
+  ├───────────────────────┼──────────────────┼──────────────────────────────┤
+  │ $x$ 侧                │ 非凸             │ 不能，$\epsilon^{-2}$        │
+  │                       │                  │ 是硬下界                     │
+  └───────────────────────┴──────────────────┴──────────────────────────────┘
+
+  加速能得到多少。 我们的 $\epsilon^{-3}$ 可以拆成
+  $\kappa\cdot\epsilon^{-2}$，其中 $\kappa\sim s\sim1/\epsilon$。这个 $\kappa$
+  来自单调部分跟不上，正是他的加速能改善的地方。把 $\kappa$ 降到
+  $\sqrt{\kappa}$，复杂度就到
+  $\sqrt{\kappa}\cdot\epsilon^{-2}=\epsilon^{-2.5}$。$x$ 侧非凸带来的
+  $\epsilon^{-2}$ 这个因子去不掉，所以 $\epsilon^{-2.5}$ 就是上限。
+
+  合作要解决的技术难点。 他的分析里算子是固定的。在我们的问题里，$x$
+  每一步都在动，所以 $\lambda$ 面对的单调算子也随迭代变化。可以把 $x$
+  的变化看成扰动。他的 JOTA 2018 论文（Inertial Forward–Backward with
+  Perturbations）给出了扰动可和时加速依然成立的条件。这正好是两边的接口：你证明
+  $x$ 带来的扰动足够小，他保证扰动下的加速仍然成立。
+
+  结论：我们能借他的加速，把 $\epsilon^{-3}$ 推到 $\epsilon^{-2.5}$，加速作用在
+  $\lambda$ 这个单调部分上。$x$ 侧非凸，最多到 $\epsilon^{-2.5}$。
+
+❯ 残差衰减是不是和我们的驻点正好差根号？还是什么
+
+⏺ 没有额外的根号差。两边度量的都是残差的范数，量纲一致，可以直接换算。
+
+  换算规则： 残差 $\le C/k^p$ 意味着要达到 $\epsilon$ 精度需要
+  $k\sim\epsilon^{-1/p}$ 次迭代。
+
+  ┌──────────────────────────────┬─────────────────────────┬───────────────┐
+  │             场景             │        残差速度         │  迭代复杂度   │
+  ├──────────────────────────────┼─────────────────────────┼───────────────┤
+  │ 非凸梯度法，$\min_k\lVert\na │ $\mathcal{O}(1/\sqrt{k} │ $\epsilon^{-2 │
+  │ bla f\rVert$                 │ )$                      │ }$            │
+  ├──────────────────────────────┼─────────────────────────┼───────────────┤
+  │ 单调问题，普通 EG 或 GDA 的  │ $\mathcal{O}(1/\sqrt{k} │ $\epsilon^{-2 │
+  │ last iterate                 │ )$                      │ }$            │
+  ├──────────────────────────────┼─────────────────────────┼───────────────┤
+  │ 单调问题，Boț 的             │ $\mathcal{O}(1/k)$ 或   │ $\epsilon^{-1 │
+  │ anchoring、Tikhonov 或 Fast  │ $o(1/k)$                │ }$            │
+  │ KM                           │                         │               │
+  └──────────────────────────────┴─────────────────────────┴───────────────┘
+
+  所以，他的加速在单调问题上把迭代复杂度从 $\epsilon^{-2}$ 降到 $\epsilon^{-1}$
+  ，相当于给复杂度开了一次根号。这个根号来自加速本身，和度量无关。
+
+  读他的论文时要核对三点：
+
+  1. 是否写成平方。 有些结果写成 $\lVert V(x_k)\rVert^2=o(1/k^2)$，它等价于范数
+     $o(1/k)$。
+  2. 残差的种类。 他的论文里出现 operator residual $\lVert
+     V(x)\rVert$、fixed-point residual $\lVert x-Tx\rVert$、tangent residual
+     三种。步长固定时，三者相差常数倍，阶相同。
+  3. 对应我们 KKT 的哪一部分。 他的残差只对应我们 KKT 中的 $\lambda$
+     侧，即可行性与 $\lambda\in\partial h$。$x$ 侧的驻点 $\lVert\nabla
+     f+\nabla\mathcal{A}^\top\lambda\rVert$ 不在他的框架里，仍然受非凸的
+     $\epsilon^{-2}$ 下界限制。
+
+  结论：他的残差和我们的驻点都用范数度量，两者之间没有根号差。他的加速把单调部分
+  的速度从 $1/\sqrt{k}$ 提到 $1/k$，但只作用在 KKT 的对偶部分。
+
+❯ 算子单调 的话  我们如果加上一个primal正则呢 变成minmax的凸凹问题
+
+⏺ 可以。加上 primal 正则以后，固定中心 $z$ 的子问题就是凸凹问题，算子单调，Boț
+  的工具能直接用。 你们的 SPLALM 已经带有这一项：原始中心 $z$ 的 proximal 项
+  $\frac{1}{2\gamma}\lVert x-z\rVert^2$。
+
+  为什么固定 $z$ 后是凸凹的
+
+  设 $f$ 是 $L_f$-weakly convex，$\mathcal{A}$ 的 Jacobian 是
+  $L_A$-Lipschitz，对偶有界 $\lVert\lambda\rVert\le M$（$h$ Lipschitz
+  时成立）。那么对每个 $\lambda$，
+
+  $$
+  f(x)+\langle\lambda,\mathcal{A}(x)\rangle+\frac{1}{2\gamma}\lVert x-z\rVert^2
+  $$
+
+  在 $1/\gamma>L_f+ML_A$ 时关于 $x$ 强凸。augmented 项
+  $\frac{\rho}{2}\lVert\mathcal{A}(x)-y\rVert^2$
+  在有界集上的弱凸模也是常数，同样能被 proximal 项吸收。$\lambda$ 侧有
+  $-\frac{1}{2s}\lVert\lambda-\mu\rVert^2$，是 $1/s$-强凹的。
+
+  所以，固定 $(z,\mu)$ 时，子问题强凸–强凹，算子强单调。 这要求 $\gamma$
+  足够小。你们稿子里 $\gamma$ 的条件是否已经保证这一点，需要对照
+  AlgorithmFamily.tex（待核）。
+
+  结构与加速
+
+  ┌───────────────────┬───────────────────┬────────────────────────────────┐
+  │       层次        │       性质        │             用什么             │
+  ├───────────────────┼───────────────────┼────────────────────────────────┤
+  │ 外层：$z$ 移动    │ 非凸，proximal    │ 你们的中心步 $\alpha$          │
+  │                   │ point             │                                │
+  ├───────────────────┼───────────────────┼────────────────────────────────┤
+  │ 内层：固定 $z$    │ 凸凹，单调        │ Boț 的 anchoring、Tikhonov 或  │
+  │ 的子问题          │                   │ inertial                       │
+  └───────────────────┴───────────────────┴────────────────────────────────┘
+
+  内层条件数的来源：$x$ 侧的强凸模和光滑常数都是常数，因为 $\rho$
+  固定；$\lambda$ 侧的强凹模是 $1/s\sim\epsilon$。
+
+  - 内层不加速：每个子问题约 $\kappa\sim1/\epsilon$ 步，总复杂度
+    $\epsilon^{-3}$。
+  - 内层加速：每个子问题约 $\sqrt{\kappa}\sim\epsilon^{-1/2}$ 步，总复杂度
+    $\epsilon^{-2.5}$。
+
+  Tikhonov 正好对得上：$s_k\to\infty$ 时，$\lambda$ 侧的强单调性
+  $1/s_k\to0$，算子逐渐退化为单调但不强单调。他的 Tikhonov monotone flow
+  研究的正是这种 "强单调性衰减到零" 的情形。
+
+  单循环的难点
+
+  多层循环的做法是每个 $z$ 都把子问题解完。单循环中，$z$
+  每步都移动，所以内层面对的单调算子也随迭代变化。这个变化的大小由 $\lVert
+  z^{k+1}-z^k\rVert\le\alpha\lVert x^k-z^k\rVert$
+  控制。前面的平台引理说明，要达到 $\epsilon^{-2.5}$ 需要
+  $\alpha\sim\epsilon^{1/2}$。于是要证的是：在 $\alpha\sim\epsilon^{1/2}$
+  的移动速度下，Boț 的加速对缓慢变化的算子仍然成立。 他的 JOTA 2018
+  扰动框架可以作为起点。
+
+  还有一个限制：对偶无界的情形（等式约束），弱凸模 $L_f+\lVert\lambda\rVert L_A$
+  会随 $\lambda$ 增大，需要先证明 $\lambda^k$ 有界。仿射约束时
+  $L_A=0$，没有这个问题。
+
+  结论：primal 正则让每个固定中心的子问题变成凸凹问题，Boț
+  的加速可以作用在这个内层上。外层的 $z$ 仍然是非凸的 proximal
+  point。合作要解决的是：中心以 $\alpha\sim\epsilon^{1/2}$
+  移动时，单循环里的加速是否仍然成立。
+❯ /model fable
+  ⎿  Set model to claude-fable-5-1
+
+❯ 虽然是原问题是非凸的 但是我们算法族不是啊 你先看看我们的
+
+  Read 1 file (ctrl+o to expand)
+  ⎿  Interrupted · What should Claude do instead?
+
+❯ 不需要解释 为什么 只需要告诉我们我们讨论这么多
+  对于nips28年的春季顶会类和和bot合作的两篇的大致思路 我要核心的科学问题
+  /booming
+
+⏺ Skill(booming)
+  ⎿  Successfully loaded skill
+
+  Read 2 files, listed 1 directory (ctrl+o to expand)
+
+⏺ Write(~/.claude/booming/whiteboards/20261025-splalm-two-lines.md)
+  ⎿  Wrote 35 lines to
+     ~/.claude/booming/whiteboards/20261025-splalm-two-lines.md
+       1 # Booming 白板：SPLALM 后续两条线（ML 顶会线 / Boț 合作线）
+       3 开始：2026-10-25。来源：用户要求直接给出两条线的核心科学问题，跳
+         过 M1 逐问（显式指令优先）。承接白板 `20261015-splalm.md`。
+       5 ## 1. 议题与交付目标
+       6 - 议题：在 SIOPT 稿之外，两条新线各自的核心科学问题是什么。
+         接出卡），候选 2。
+       8
+      10 - `def:splalm`：$\mathcal P_s=\mathcal D_\rho+\frac1{2\gamma}\lV
+         ert x-z\rVert^2-\frac1{2s}\lVert\lambda-\mu\rVert^2$；族内每步只
+         $ 侧 $1/s$-强凹（`sections/AlgorithmFamily.tex` 25–53 行）。
+     … +55 lines (ctrl+o to expand)
+
+  Read 1 file (ctrl+o to expand)
+  ⎿  Allowed by PermissionRequest hook
+
+⏺ 线 1：ML 顶会（NeurIPS / ICML 2028）
+
+  核心科学问题：对罚参数固定的单循环 ALM，突破 $\epsilon^{-3}$
+  是否必须给原始步加 momentum？
+
+  写到可被反例否定的程度：在 SPLALM 族中，$\rho$ 固定、$s=c_s/\epsilon$，
+
+  - 下界：对所有 $(\alpha,\beta)\in[0,1]^2$，$T_\epsilon\ge
+    c,\epsilon^{-3}$（全族版本，现只有 $\alpha\le B\epsilon$ 段）；
+  - 上界：原始步加 Nesterov 外推、$\alpha\sim\epsilon^{1/2}$，$T_\epsilon\le
+    C\epsilon^{-2.5}$，每轮仍只算一次梯度。
+
+  两条合起来的命题：momentum 对 $\epsilon^{-2.5}$ 既必要又充分。
+
+  ┌───────────────────────────────────┬──────────────────────────────────────┐
+  │               已知                │                 未知                 │
+  ├───────────────────────────────────┼──────────────────────────────────────┤
+  │ 低参数区域                        │ $s=c_s/\epsilon$、$\alpha>B\epsilon$ │
+  │ $\Theta(\epsilon^{-4})$           │  的下界实例                          │
+  ├───────────────────────────────────┼──────────────────────────────────────┤
+  │ 路径                              │ 中心以 $\alpha\sim\epsilon^{1/2}$    │
+  │ $\alpha=c_\alpha\epsilon,\beta=0$ │ 移动时外推的 Lyapunov 分析           │
+  │  为 $\Theta(\epsilon^{-3})$       │                                      │
+  ├───────────────────────────────────┼──────────────────────────────────────┤
+  │ 多层循环 $\epsilon^{-2.5}$（Li et │ 单循环、$\rho$ 固定的                │
+  │  al. 2021）                       │ $\epsilon^{-2.5}$                    │
+  └───────────────────────────────────┴──────────────────────────────────────┘
+
+  ML 落点：νPI 与 dual optimistic ascent
+  都落在这个族附近，结论直接回答"乘子更新该不该加
+  momentum、罚参数要不要增长"。与 SIOPT 稿的区分：两个定理都是新的。
+
+  线 2：与 Boț 合作（期刊）
+
+  核心科学问题：对偶正则权重 $1/s_k\to0$ 的单循环
+  ALM，乘子迭代收敛到哪一个乘子，$1/s_k$ 最快能衰减多快？
+
+  - 对象：$\dot x=-\nabla_x\mathcal P$，$\dot\lambda=\nabla_\lambda\mathcal
+    D_\rho-\frac{1}{s(t)}(\lambda-\mu(t))$，其中 $x$ 非凸、$\lambda$ 侧为
+    Tikhonov 正则单调流，anchor $\mu$ 可动。
+  - 子问题 1（渐近，Boț 侧）：$\lambda^k$
+    是否强收敛到极限点处乘子集合的最小范数乘子；需要 KL 或 Hölderian error bound
+    处理 $x$ 的非凸。
+  - 子问题 2（速度，双方）：$1/s(t)$ 的衰减速度与 KKT
+    残差速度之间的权衡；离散后给出 anytime 的 $s_k$ 增长律与
+    $\epsilon^{-3}$，加惯性后到 $\epsilon^{-2.5}$。
+  - 主难点：$x$ 每步移动使 $\lambda$
+    面对的单调算子随迭代变化，需把中心移动写成可和扰动。
+
+  ┌───────────────────────────────────────────────┬──────────────────────────┐
+  │                     已知                      │           未知           │
+  ├───────────────────────────────────────────────┼──────────────────────────┤
+  │ 凸情形 Tikhonov                               │ 非凸原始变量下的对应结论 │
+  │ 流强收敛到最小范数零点，残差可达 $O(1/t)$     │                          │
+  ├───────────────────────────────────────────────┼──────────────────────────┤
+  │ 附录 $s_k$ 递增分支的 $\epsilon^{-3}$         │ 最优 $s_k$ 增长律        │
+  └───────────────────────────────────────────────┴──────────────────────────┘
+
+  共同的第一步
+
+  平台实例上做数值：原始步加外推、取
+  $\alpha\sim\epsilon^{1/2}$，看迭代次数是否按 $\epsilon^{-2.5}$
+  标度。结果决定线 1 的上界方向是否成立，也给线 2 的惯性部分提供依据。
+
+  白板已写入 ~/.claude/booming/whiteboards/20261025-splalm-two-lines.md，判断日
+  志已追加，预言到期日 2026-12-31。
+
+❯ <ide_opened_file>The user opened the file /Users/liluxuan/Documents/My_Papers
+  /3_DDLALM/overleaf/notes/retreat/retreat-brief.tex in the IDE. This may or
+  may not be related to the current task.</ide_opened_file>
+
+❯ 你写的 "2027-2024" 我按 2027–2028 理解。以下 deadline 按往年时间推断：ICML
+  2027 约 2027 年 1 月底，COLT 2027 约 2 月，NeurIPS 2027 约 5 月，ICLR 2028 约
+  9–10 月，AISTATS 2028 约 10 月 wo我的意思是 参考2024-2027
+  机器虚席会议期刊对于这个scope 的关注视角
+
+⏺ Web Search("NeurIPS 2025 augmented Lagrangian nonconvex constrained
+            optimization single-loop complexity")
+  ⎿  Did 1 search in 25s
+
+⏺ Web Search("ICML 2025 OR ICLR 2026 constrained deep learning Lagrange
+            multipliers Cooper library")
+  ⎿  Did 1 search in 22s
+
+⏺ Web Search("COLT 2025 OR NeurIPS 2025 lower bound nonconvex-concave minimax
+            first-order complexity")
+  ⎿  Did 1 search in 34s
+
+⏺ Web Search("2025 2026 stochastic constrained nonconvex optimization
+            expectation constraints ICML NeurIPS complexity KKT")
+  ⎿  Did 1 search in 25s
+
+⏺ 结论
+
+  2024–2027 年 ML 会议对这个 scope 有四个视角。理论侧已从"给出速度"转向"给出 Θ
+  紧界 + 对任意一阶算法的下界 + 驻点判据之间的分离"；应用侧围绕 constrained deep
+  learning 的乘子更新规则。 你们两条线分别对应这两侧。
+
+  四个视角
+
+  视角: A. 乘子更新规则
+  代表工作（2024–2026）: νPI（ICML 2024）；Dual optimistic ascent = ALM（ICLR
+  2026）；Position: constraints over fixed penalties（NeurIPS 2026）；Cooper
+  库；NeurIPS 2025 Constrained Optimization for ML workshop
+  这一视角奖励什么:
+  单步一阶、实践者在用的更新规则；"罚参数不用调"；给已在用的方法补保证
+  ────────────────────────────────────────
+  视角: B. minimax 复杂度理论
+  代表工作（2024–2026）: Zhang–Xu 2026 单循环 GS $\epsilon^{-2.5}$；Jiajin Li et
+
+  al. 2609.14235：NC-C 的 OS 复杂度
+  $\Theta(\ell^2D_Y\Delta\epsilon^{-3})$，下界对任意确定性一阶算法成立；Wu–Gu–Ya
+  ng
+   2609.14233；随机 NC-C 下界 2610.01662（$\epsilon^{-6}$）；NC-PŁ 下界
+  2608.26799 附 Lean 形式化
+  这一视角奖励什么: Θ 紧界；下界覆盖整个算法类而非某个族；OS 与 GS
+  的分离；随机版本
+  ────────────────────────────────────────
+  视角: C. 约束非凸 / ALM 复杂度
+  代表工作（2024–2026）: Li et al.（AISTATS 2021）；Lu GDPA（ICML
+  2022）；Alacaoglu–Wright 单循环随机 NLP（AISTATS 2024）；Han–Razaviyayn iMEAL
+   robust constraints（NeurIPS 2025）
+  这一视角奖励什么: 单循环、随机、函数约束、正则条件下的 $\epsilon$-KKT；有 ML
+  应用（robust、fairness、safe RL）
+  ────────────────────────────────────────
+  视角: D. 固定罚参数
+  代表工作（2024–2026）: NR-LALM 2608.19847 固定罚参数
+  $\epsilon^{-2}$（Gauss–Newton 原始步）；El Bourkhissi–Necoara 线性化 ALM
+  复杂度 2025
+  这一视角奖励什么: 目前主要在期刊；会议上尚未形成主题
+
+  对两条线的含义
+
+  线 1（ML 会议）落在 A 与 B 的交叉。
+
+  - A 侧给卖点：νPI 和 dual optimistic ascent 已把 PI、optimism、ALM
+    三者接通；"乘子更新要不要加
+    momentum、罚参数要不要增长"是这个社区正在问的问题。
+  - B 侧定标准：2026 年的下界论文已经做到对任意确定性一阶算法成立。族内下界在会
+    议审稿人眼里分量不够，线 1 的下界需要至少覆盖 zero-respecting
+    类，或者明确写成"对 Cooper 中实际使用的更新族"。
+  - B 侧的一个必须先做的核查：Li et al. 2609.14235 证明 OS 判据下
+    $\Omega(\epsilon^{-3})$ 对所有确定性一阶算法成立，且 OS 与 GS
+    有本质分离。你们的 $\epsilon$-KKT 由 prop:kkt-gs 控制 GS，属于 GS 一侧，所以
+    $\epsilon^{-2.5}$ 没有被这条下界封死。但这一点要写进论文并逐项核对，否则审
+    稿人会直接拿这篇下界否掉线 1 的上界目标。
+  - NeurIPS、ICML 近两年对这个方向的接受论文几乎都带随机版本（视角 C）。线 1
+    若只有确定性结果，更适合 COLT。
+
+  线 2（Boț）落在 D，会议上没有竞争，期刊定位正确。
+  渐近结论、最小范数乘子、连续时间模型都是期刊计价的内容。
+
+  对 SIOPT 稿的直接影响
+
+  rem:family-not-oracle 已引用 zhang2026matching 和 pan2026optimal。需要补引 Li
+  et al. 2609.14235 和 Wu–Gu–Yang 2609.14233：前者把 OS 的最优阶定为
+  $\epsilon^{-3}$，它与你们 $s=\Theta(1/\epsilon)$ 的 $\epsilon^{-3}$
+  上界同阶，这说明你们的 $\beta=0$ 路径在 OS
+  判据下已达最优阶。这是一个可以写进引言的正面结论，需要先核对 OS 与你们 KKT
+  判据的关系。
+
+  要点：ML 会议现在的计价标准是对整个算法类的 Θ
+  紧界、驻点判据的区分和随机版本；应用侧围绕 Cooper 系的乘子更新。线 1
+  要按这个标准做，线 2 留在期刊。
+
+  Sources:
+  - Zhang & Xu, arXiv 2609.17973 (https://arxiv.org/pdf/2609.17973)
+  - Li et al., Optimal Deterministic First-Order Oracle Complexity for NC-C,
+    arXiv 2609.14235 (https://arxiv.org/pdf/2609.14235)
+  - Wu, Gu, Yang, Lower Bounds for NC-C Minimax, arXiv 2609.14233
+    (https://arxiv.org/pdf/2609.14233)
+  - Song et al., Lower Bounds for Stochastic VR in NC-C, arXiv 2610.01662
+    (https://arxiv.org/abs/2610.01662)
+  - Tight Lower Bounds for Stochastic NC-SC, arXiv 2609.35206
+    (https://arxiv.org/html/2609.35206)
+  - Lower Bounds for NC-PŁ Minimax, arXiv 2608.26799
+    (https://arxiv.org/pdf/2608.26799)
+  - Li, Tian, Zhang, Jadbabaie, NeurIPS 2021, arXiv 2104.08708
+    (https://arxiv.org/abs/2104.08708)
+  - Han & Razaviyayn, iMEAL, NeurIPS 2025
+    (https://neurips.cc/virtual/2025/123327)
+  - Boero, Hounie, Ribeiro, Augmented Lagrangian for Constrained Learning,
+    NeurIPS 2025 workshop (https://neurips.cc/virtual/2025/123309)
+  - NR-LALM fixed-penalty, arXiv 2608.19847 (https://arxiv.org/pdf/2608.19847)
+  - Alacaoglu & Wright, Complexity of Single Loop Algorithms for NLP with
+    Stochastic Objective and Constraints, AISTATS 2024
+    (https://arxiv.org/pdf/2311.00678)
+  - Single-loop Algorithms for Stochastic Non-convex Optimization with
+    Weakly-Convex Constraints, arXiv 2504.15243
+    (https://arxiv.org/pdf/2504.15243)
+  - Shi, Wang, Wang, Momentum-Based Linearized ALM, Math. OR 2025
+    (https://doi.org/10.1287/moor.2022.0193)
+  - Cooper library, arXiv 2504.01212 (https://arxiv.org/pdf/2504.01212)
+  - Cooper GitHub (https://github.com/cooper-org/cooper)
+  - Position: Adopt Constraints Over Fixed Penalties, arXiv 2505.20628
+    (https://arxiv.org/pdf/2505.20628)
+  - Feasible Learning, arXiv 2501.14912 (https://arxiv.org/pdf/2501.14912)
+  - Juan Ramirez — Constrained Deep Learning (https://juan43ramirez.github.io/)
+  - Stochastic ALM with Second-Order Guarantees, arXiv 2609.27329
+    (https://arxiv.org/pdf/2609.27329)
+  - Liu & Xu, SPIDER-type stochastic subgradient, arXiv 2501.19214
+    (https://arxiv.org/html/2501.19214)
+  - Stoc-iALM, arXiv 2212.09513 (https://arxiv.org/abs/2212.09513)
+  - Fletcher's AL-based stochastic method, Optimization Online 2026 (https://opt
+    imization-online.org/2026/06/a-fletchers-augmented-lagrangian-based-stochast
+    ic-first-order-method-for-nonconvex-equality-constrained-optimization/)
+  - Exact penalty for stochastic equality-constrained, Optimization Online 2025
+    (https://optimization-online.org/wp-content/uploads/2025/11/Fully_Sto_DLA-8.
+    pdf)
+  - Inexact stochastic SQP complexity, arXiv 2604.14351
+    (https://arxiv.org/pdf/2604.14351)
+  - TStoM, J. Sci. Comput. 2025
+    (https://link.springer.com/article/10.1007/s10915-025-02941-x)
+  - Complexity of Convex Majorization Schemes, arXiv 2506.08506
+    (https://arxiv.org/pdf/2506.08506)
+  - Newton-CG ALM second-order, arXiv 2301.03139
+    (https://arxiv.org/pdf/2301.03139)
+  - Stochastic perturbed ALM convex, arXiv 2503.23572
+    (https://arxiv.org/pdf/2503.23572)
+  - Neural Slack Variables for Shape Constraints, arXiv 2606.13803
+    (https://arxiv.org/pdf/2606.13803)
+
+❯ /model sonnet
+  ⎿  Set model to claude-sonnet-5-5
