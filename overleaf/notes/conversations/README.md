@@ -35,3 +35,11 @@ Codex：所选源会话日志合计约 1.31 MB，时间筛选及内容整理后�
 - [初稿评议 prompt](../prompts/gptpro-draft-review-prompt.md)
 - [Booming 白板快照](../progress/booming-whiteboard-20261015-splalm.md)
 - [Skill 来源](../skills/README.md)
+
+## 其他对话记录（10-25 起单独导出）
+
+| 文件 | 内容 |
+|---|---|
+| [ChatGPT-1016-评议文章-20261025-0600.md](ChatGPT-1016-评议文章-20261025-0600.md) | GPT Pro 对 10-16 初稿的评议及后续 damping ALM 讨论，10-25 导出 |
+| [2026-10-25-144536-returete.txt](2026-10-25-144536-returete.txt) | Claude Code 会话导出（10-25），整理上述评议与 retreat 简报 |
+| [antigravity-20261026-tikhonov-retreat.md](antigravity-20261026-tikhonov-retreat.md) | Antigravity 会话导出（10-26），Tikhonov 线与 retreat 讨论 |

@@ -1,6 +1,6 @@
 # GPT Pro 核对结果：β=0 常数参数上界（2026-10-13）
 
-任务说明见 `notes/prompts/gptpro-beta0-upper-check.md`。编号采用 Li26 v2 PDF（arXiv:2602.14185v2）。以下为 GPT Pro 返回内容的整理，推导原样保留。
+任务说明见 `memory/archive/notes/prompts/gptpro-beta0-upper-check.md`。编号采用 Li26 v2 PDF（arXiv:2602.14185v2）。以下为 GPT Pro 返回内容的整理，推导原样保留。
 
 ## 结论
 

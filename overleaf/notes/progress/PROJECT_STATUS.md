@@ -1,6 +1,6 @@
 # SPLALM 项目状态
 
-更新日期：2026-10-16。**本文件是当前进度与待办的唯一入口。** 依据当前本地源码、已有核查记录及 10 月 15–16 日讨论整理。本次更新没有重新核对数学证明，也没有重新编译论文。
+更新日期：第 1–6 节为 2026-10-16 整理，2026-10-26 更新文件位置；第 7 节为 2026-10-26 新增。**本文件是当前进度与待办的唯一入口。** 依据当前本地源码、已有核查记录及讨论整理。第 1–6 节的更新没有重新核对数学证明，也没有重新编译论文。
 
 历史交接、旧任务表、研究主线和白板用于追溯讨论，不作为当前待办。源码说明已经写入什么；核查记录说明已经核对什么；两者分别记录。
 
@@ -67,7 +67,7 @@
 ## 5. 材料使用规则
 
 - 当前定位和任务只在本文件维护。完成任务时更新对应条目，不在文件末尾追加与旧正文冲突的“最新状态”。
-- `SESSION_HANDOFF_*.md`、`ddlalm-task-plan.md`、`ddlalm-research-questions.md`、讨论记录与 Booming 白板为历史资料。里面的旧标题、旧初值、章节号和任务不能自动恢复为当前要求。
+- `SESSION_HANDOFF_*.md`、`ddlalm-task-plan.md`、`ddlalm-research-questions.md`、下界讨论记录、Booming 白板与已完成提示词为历史资料，2026-10-26 移至仓库根目录 `memory/archive/notes/`。旧幻灯片、8 月 V2/RouteB 材料与旧版论文在 `memory/archive/` 的其他子目录。里面的旧标题、旧初值、章节号和任务不能自动恢复为当前要求。
 - `notes/gpt-proofs/` 保存证明来源；`lb-proof-materials.md` 的 Part I 平台分支仍有用途，Part II 与 Part III 的适用关系按文件顶部说明读取。
 - `appendix-a-audit-20261013.md`、`ddlalm-verification-20261001.md` 保存已有核查依据。本次进度整理不新增数学核查结论。
 - `literature.md`、`lower-bound-references.md`、`writing-phrasebook.md` 分别用于文献总表、下界参考和英文表达来源。
@@ -76,4 +76,26 @@
 
 ## 6. 同步范围
 
-本地论文入口为 `main.tex`。GitHub 远端是 `github`（`luxuan846-oss/3-DDLALM`）；`origin` 是 Overleaf，不能混用。用户本次授权把笔记更新提交并推送 GitHub。Overleaf 不属于本次推送范围；远端实时状态应通过 Git 查询，不沿用历史交接中的提交号。
+本地论文入口为 `overleaf/main.tex`；仓库根目录的旧论文副本（10-13 快照）已于 2026-10-26 删除。Overleaf 远端的文件与 `overleaf/` 目录对应（10-26 按文件内容核对）。GitHub 远端是 `github`（`luxuan846-oss/3-DDLALM`）；`origin` 是 Overleaf，不能混用。用户本次授权把笔记更新提交并推送 GitHub。Overleaf 不属于本次推送范围；远端实时状态应通过 Git 查询，不沿用历史交接中的提交号。
+
+## 7. 后续研究线：加速与 Tikhonov（2026-10-25 起）
+
+分工与顺序见 `notes/project/next-lines-plan-20261025.md`；问题表述与 GPT Pro 指令见 `notes/prompts/gptpro-tikhonov-eg-alm-prompt.md`、`notes/prompts/gptpro-acceleration-logic-20261026.md`。下表为 10-26 GPT Pro 第二轮结果经 Gemini 与 Claude 复核后的结论。
+
+| 结论 | 状态 |
+|---|---|
+| 固定 $\rho>0$ 时 $\nabla_{\boldsymbol{\lambda}}\mathcal{D}_\rho(\mathbf{x},\boldsymbol{\lambda})=0$ 当且仅当 $\boldsymbol{\lambda}\in\partial h(\mathcal{A}(\mathbf{x}))$，KKT 关系精确。$\mathcal{D}_\rho$ 的对偶 Hessian 为 $-\rho^{-1}J_{\mathrm{prox}_{h/\rho}}$，曲率介于 $0$ 与 $1/\rho$。GPT 所称"固定 $\rho$ 留下 $1/\rho$ 偏差、选最小范数乘子需 $\rho_k\to\infty$"不成立 | 推导 |
+| 固定 $s$ 时 Tikhonov 项只提供强单调性；算法 A、B 在有界步长下单步收缩因子为 $1-\Theta(1/s)$ | 已证（直接计算） |
+| 不用 momentum，Tikhonov 或 anchoring 不能把中心步长放宽到 $\alpha\sim1/\sqrt{s}$ | 证据充分；针对算法 A、B 的下界待证 |
+| Zhang–Xu（arXiv:2609.17973）的 $\sqrt{s}$ 增益来自对偶动量：带衰减的对偶梯度累加，窗口约 $\sqrt{Ls}$ 步；中心步长取 $\propto1/\sqrt{Ls}$ | 原文 (4.3)、(4.26)；纯对偶模态谱隙已数值核对 |
+| Zhang–Xu Algorithm 1 直接作用于 $\mathcal{D}_\rho$（定义域 $\mathbb{R}^n\times\mathcal{Y}$，$\mathcal{Y}$ 为半径 $2L_h$ 的球），得到单循环、固定 $\rho$ 的 $O(\epsilon^{-5/2})$ $\epsilon$-KKT 复杂度。依据：附录 C Step 1–2 的约化；$\epsilon<L_h/\rho$ 时 $\epsilon$-GS 点位于 $\mathcal{Y}$ 内部 | 推断；初值量 $\bar\Delta_0$ 在 $\mathcal{I}(\mathbf{C},\Delta)$ 上一致有界待核 |
+| Pan–Zheng–Li（arXiv:2609.14235v2）的 GS $\Omega(\epsilon^{-5/2})$ 直接转移到 $\mathcal{I}(\mathbf{C},\Delta)$ | 不成立：$g_3$ 的对偶二次项依赖 $\mathbf{x}$，其 oracle 不含 $\mathrm{prox}_h$ |
+| 算法 B 的 Tikhonov 锚点为 $\boldsymbol{\mu}^k$。$\beta_k\equiv0$ 时选择目标为最小范数乘子；现行 $\beta_k=\theta_\mu/(k+k_0)$ 不可和，锚点跟随 $\boldsymbol{\lambda}^k$，没有选择效应 | 推导 |
+| 纯 Tikhonov、$s_k\asymp k$、$\boldsymbol{\lambda}^\dagger\neq0$ 时 KKT 残差为 $\Theta(1/k)$；$o(1/k)$ 需要惯性项 | 推断；待对照 arXiv:2406.00852、2410.14369 原文 |
+
+对两条线的影响：
+
+- 线 1：$\epsilon^{-5/2}$ 上界本身接近"Zhang–Xu + 附录 C 约化"的推论。新意转向两处：momentum-free 族 $\Theta(\epsilon^{-3})$ 与对偶动量 $\epsilon^{-5/2}$ 的分离（EG 族不加动量时的下界待证）；带 $\mathrm{prox}_h$ oracle 的 $\Omega(\epsilon^{-5/2})$ 下界构造。
+- 线 2：在 $\beta\equiv0$、$s_k\uparrow\infty$ 下提出，目标为局部正则条件下的最小范数乘子与 $O(1/k)$ 残差。Zhang–Xu 的对偶锚点同样固定在 $0$，可作为算法结构的起点。
+
+缺失材料：`ChatGPT-核查算法与下界-20261026-0749.md` 与 `ChatGPT-文献核查与算法加速!-20261026-1052.md` 未入库，待放入 `notes/conversations/`。

@@ -1,6 +1,7 @@
 ## 项目进度入口
-开始处理论文前，先读 `notes/progress/PROJECT_STATUS.md`，当前进度与待办在该文件维护。历史交接、研究主线和白板按需查阅。
-`notes/` 的目录用途：`project/`（研究问题与文献）、`progress/`（当前状态、历史交接与核查记录）、`gpt-proofs/`（证明来源）、`prompts/`（任务说明，先读状态标记）、`conversations/`（原始对话归档）、`skills/`（研究方法副本）。
+开始处理论文前，先读 `notes/progress/PROJECT_STATUS.md`，当前进度与待办在该文件维护。
+`notes/` 的目录用途：`project/`（研究问题与文献）、`progress/`（当前状态与核查记录）、`gpt-proofs/`（证明来源）、`prompts/`（现行任务说明，先读状态标记）、`conversations/`（原始对话归档）、`skills/`（研究方法副本）、`retreat/`（retreat 简报）。
+仓库根目录只有 `overleaf/`（论文与现行笔记）和 `memory/`。`memory/archive/` 保存历史材料（旧交接、旧任务表、白板、已完成提示词、旧幻灯片、旧版论文），按需查阅；`memory/literature/`、`memory/readings/` 保存文献全文与检索数据。
 
 ## 回复方式
 

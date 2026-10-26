@@ -20,7 +20,7 @@
 4. 开场材料：retreat 后单独讨论，带第 1 步数值和 "PDHG 卡住的两个控制量就是移动中心和对偶正则" 这一观察。
 
 ## 待核清单
-- Zhang–Xu arXiv:2609.17973 能否纳入 $h^*$ 的 prox；GS 与 $\epsilon$-KKT 的换算。
+- Zhang–Xu arXiv:2609.17973 能否纳入 $h^*$ 的 prox；GS 与 $\epsilon$-KKT 的换算。10-26 推断可以直接套用，见 PROJECT_STATUS 第 7 节。
 - ICLR 2026 的 $\omega$ 与 $\rho+s$ 的精确对应；其非零初值与我们全零初始化的冲突。
 - Zhang–Luo 仿射约束单循环 $\epsilon^{-2}$ 的确切条件（目前凭记忆）。
 - Boț 单循环 PDHG 具体卡在哪一步（问 Boț）。
