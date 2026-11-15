@@ -2,71 +2,6 @@
 \section{Proof of Theorem~\ref{thm:upper-beta1}}
 \label{app:upper-beta1}
 
-\subsection{Curvature and smoothness of the potential function}
-\label{subsec:curvature-smoothness}
-Let us define the constants
-\begin{equation}
-    L_{\calD,\bx}
-    :=
-    L_f + L_{\calA}L_h + \rho G_{\calA}^{2},
-    \label{eq:x-weak-convexity-modulus}
-\end{equation}
-and 
-\[
-    \mu_\gamma
-    :=
-    \frac{1}{\gamma}-L_{\calD,\bx},
-    \qquad
-    L_x
-    :=
-    L_{\calD,\bx}+\frac{1}{\gamma},
-    \qquad
-    L_\lambda(s)
-    :=
-    \frac{1}{\rho}+\frac{1}{s},
-\] where $L_f$, $L_{\calA}$, $G_{\calA}$, and $L_h$ are the constants of
-Assumptions~\ref{ass:smoothness} and~\ref{ass:h}. 
-
-The following proposition summarizes the curvature and smoothness properties
-of the smoothed perturbed potential function $\mathcal P_s$.
-The proof is deferred to Appendix~\ref{app:curvature-smoothness}.
-
-\begin{proposition}
-\label{prop:curvature-smoothness}
-Suppose that Assumptions~\ref{ass:smoothness} and~\ref{ass:h} hold, and let the smoothing parameter  
-$ 0 < \gamma < \frac{1}{2L_{\calD,\bx}}$. Then, for all $s>0$, $\mathcal P_s$ is
-$\mu_\gamma $-strongly convex in $\bx$ and
-$1/s$-strongly concave in $\blmbd$. Moreover, for all
-$\bx,\bx'\in\RR^n$,
-$\blmbd,\blmbd'\in\RR^m$,
-$\bz\in\RR^n$, and
-$\bmu\in\RR^m$, it holds that 
-\begin{align}
-    &\bigl\|
-    \nabla_{\bx}\mathcal{P}_s(\bx,\blmbd,\bz,\bmu)
-    -
-    \nabla_{\bx}\mathcal{P}_s(\bx',\blmbd',\bz,\bmu)
-    \bigr\|
-    \le
-    L_x\|\bx-\bx'\|
-    +
-    G_{\calA}\|\blmbd-\blmbd'\|,
-    \label{eq:payoff-x-smoothness}
-    \\
-    &\bigl\|
-    \nabla_{\blmbd}\mathcal{P}_s(\bx,\blmbd,\bz,\bmu)
-    -
-    \nabla_{\blmbd}\mathcal{P}_s(\bx',\blmbd',\bz,\bmu)
-    \bigr\|
-    \le
-    G_{\calA}\|\bx-\bx'\|
-    +
-    L_\lambda(s)\|\blmbd-\blmbd'\|
-    \label{eq:payoff-lambda-smoothness}.
-\end{align}
-In particular, $\mathcal P_s$ is $L_x$-smooth in $\bx$ and $L_\lambda(s)$-smooth in $\blmbd$.
-\end{proposition}
-
 \subsection{Proof of the iteration complexity bound}
 
 Throughout this appendix, let
@@ -235,3 +170,72 @@ only on \(L\), \(\gamma\), \(\eta\), \(\tau\), and \(L_h\), hence only on
 \(\Delta\) through \(\hat\Delta\). Neither depends on the instance or on the
 dimensions.
 \hfill\(\square\)
+
+\subsection{Proof of Proposition~\ref{prop:curvature-smoothness}}
+\label{app:curvature-smoothness}
+
+\begin{proof}[Proof of the curvature part of Proposition~\ref{prop:curvature-smoothness}]
+For fixed $\blmbd$, the reduced payoff satisfies
+\[
+    \nabla_{\bx}\mathcal D_\rho(\bx,\blmbd)
+    =
+    \nabla f(\bx)+J_{\calA}(\bx)^\top\bq(\bx,\blmbd),
+\]
+where
+\[
+    \bq(\bx,\blmbd)
+    =
+    \operatorname{prox}_{\rho h^*}
+    \bigl(\blmbd+\rho\calA(\bx)\bigr).
+\]
+
+The nonexpansiveness of the proximal mapping, the bounded Jacobian, and
+the Lipschitz Jacobian imply
+\[
+    \|\bq(\bx,\blmbd)-\bq(\bx',\blmbd)\|
+    \le \rho G_{\calA}\|\bx-\bx'\|.
+\]
+Assumption~\ref{ass:h} gives
+\(\|\bq(\bx,\blmbd)\|\le L_h\).  Therefore
+\[
+    \|\nabla_{\bx}\mathcal D_\rho(\bx,\blmbd)
+    -\nabla_{\bx}\mathcal D_\rho(\bx',\blmbd)\|
+    \le L_{\calD,\bx}\|\bx-\bx'\|.
+\]
+
+Thus $\mathcal D_\rho(\cdot,\blmbd)$ is
+$L_{\calD,\bx}$-weakly convex.  Adding
+$\frac{1}{2\gamma}\|\bx-\bz\|^2$ gives
+$\mu_\gamma$-strong convexity in $\bx$.
+
+For fixed $(\bx,\bz,\bmu)$, $\mathcal D_\rho(\bx,\cdot)$ is concave in
+$\blmbd$ because it is the pointwise infimum of affine functions of
+$\blmbd$.  The term
+$-\frac{1}{2s}\|\blmbd-\bmu\|^2$ is $1/s$-strongly concave.  Hence
+$\mathcal P_s$ is $1/s$-strongly concave in $\blmbd$.
+\end{proof}
+
+\begin{proof}[Proof of the smoothness part of Proposition~\ref{prop:curvature-smoothness}]
+The $\bx$-block bound follows from the Lipschitz estimate for
+$\nabla_{\bx}\mathcal D_\rho$ in the proof of
+Proposition~\ref{prop:curvature-smoothness} and the quadratic term
+$\frac{1}{2\gamma}\|\bx-\bz\|^2$.
+
+For the $\blmbd$-block, the identity
+\[
+    \nabla_{\blmbd}\mathcal P_s(\bx,\blmbd;\bz,\bmu)
+    =
+    \frac{1}{\rho}
+    \bigl(\bq(\bx,\blmbd)-\blmbd\bigr)
+    -\frac{1}{s}(\blmbd-\bmu)
+\]
+and the nonexpansiveness of
+$\operatorname{prox}_{\rho h^*}$ give
+$L_\lambda=1/\rho+1/s$.
+The same estimate, together with
+\[
+    \|\calA(\bx)-\calA(\bx')\|
+    \le G_{\calA}\|\bx-\bx'\|,
+\]
+gives both cross Lipschitz bounds with constant $G_{\calA}$.
+\end{proof}

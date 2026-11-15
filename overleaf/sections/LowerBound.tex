@@ -12,13 +12,13 @@ of Definition~\ref{def:complexity-measure}, with the normalized constants
 
 We now present the iteration complexity of \(\calC_\theta\) under the choice
 \(\beta=1\). We choose this setting for two reasons. First, when
-\(\beta=1\), SPLALM reduces to Smoothed GDA applied to \(\calD_\rho\)
+\(\beta=1\), LRALM reduces to Smoothed GDA applied to \(\calD_\rho\)
 (Table~\ref{tab:special-cases}), whose iteration complexity is known. Second,
 Theorem~\ref{thm:lower-bound} below holds for any arbitrary choice of
 \((\alpha,\beta)\in[0,1]^2\), including \(\beta=1\). Stating the upper bound
 under the same setting yields a direct tightness guarantee.
 
-\begin{theorem}[Iteration complexity of SPLALM with \(\beta=1\)]
+\begin{theorem}[Iteration complexity of LRALM with \(\beta=1\)]
 \label{thm:upper-beta1}
 There exist \(\bar\gamma>0\), depending only on \(\mathbf C\) and \(\rho\),
 and \(\bar\tau>0\), depending only on \(\mathbf C\), \(\rho\), and
@@ -36,23 +36,21 @@ The proof is given in Appendix~\ref{app:upper-beta1}.
 
 \begin{remark}
 \label{rem:upper-beta1}
-(i) When \(\beta=1\), SPLALM reduces to Smoothed GDA applied to
-\(\calD_\rho\). A result analogous to Theorem~\ref{thm:upper-beta1} has been
-obtained in~\cite[Theorem~3.4]{zhang2020smoothed}
-and~\cite[Theorem~B.1]{li2026smoothing}. However, the initial gap there
-depends on the initialization, the dual domain is a given compact set, and
-the stationarity measure is evaluated at \((\bx^{k+1},\blmbd^{k+1})\).
-Theorem~\ref{thm:upper-beta1} bounds the initial gap by the constants of
-\(\mathcal I(\mathbf C,\Delta)\), keeps the multipliers in the interior of a
-ball without any projection, and evaluates the KKT residual at
-\((\bx^{k+1},\blmbd^k)\), the point that SPLALM outputs.
-(ii) The iterates do not depend on \(s\) when \(\beta=1\). Hence the constants
-\(c\) and \(C\) in Theorem~\ref{thm:upper-beta1} can be chosen independently
-of \(s\): the choices for \(s=\tau\) apply to every \(s\ge\tau\).
-The upper bound
-requires only one member of \(\calC_\theta\); for \(\beta=0\), the instance
-in Section~\ref{subsec:lb-huber} shows that no upper bound holds when
-\(\epsilon(\rho+s)\le c_1\).
+(i) Theorem~\ref{thm:upper-beta1} transfers the Smoothed GDA bounds
+of~\cite[Theorem~3.4]{zhang2020smoothed}
+and~\cite[Theorem~B.1]{li2026smoothing} to a uniform KKT guarantee over
+\(\mathcal I(\mathbf C,\Delta)\) for the outputs of LRALM.
+The technical details are given in Appendix~\ref{app:upper-beta1}.
+
+(ii) When \(\beta=1\), the identity \(\bmu^k=\blmbd^k\) gives
+\[
+    -\frac{1}{s}(\blmbd^k-\bmu^k)=\zero.
+\]
+Thus the iterates and outputs are independent of \(s\), and increasing
+\(s\) alone cannot improve their iteration complexity. In contrast,
+Theorem~\ref{thm:upper-beta0} attains an \(O(\epsilon^{-3})\) bound with
+\(\beta=0\), \(s=c_s/\epsilon\), and \(\alpha=c_\alpha\epsilon\),
+under its stated step-size conditions.
 \end{remark}
 
 \begin{theorem}[Lower bound uniform in \(\rho\) and \(s\)]
@@ -64,7 +62,7 @@ following holds. For every \(\epsilon\in(0,c_2)\), every \(\rho>0\) and
 \(s\ge\tau\) with \(\epsilon(\rho+s)\le c_1\), and every
 \((\alpha,\beta)\in[0,1]^2\), there exists an instance
 \(I\in\mathcal I(\mathbf C_0,\Delta)\) on which
-\(\mathrm{SPLALM}_{\theta,\alpha,\beta}\) requires at least
+\(\mathrm{LRALM}_{\theta,\alpha,\beta}\) requires at least
 \[
     \frac{\Delta\,\epsilon^{-4}}{16384\,\gamma\max\{1,4\tau,4\gamma\tau\}}
 \]
@@ -77,7 +75,7 @@ Explicit choices of \(c_1\) and \(c_2\) are given in~\eqref{eq:rot-thresholds}.
 % \todo{State the GS version $T^{\mathrm{GS}}_\epsilon$ after the strict-convex perturbation lemma is proved.}
 % perturbation lemma is proved.
 
-\begin{theorem}[Iteration complexity of SPLALM with \(\beta=0\)]
+\begin{theorem}[Iteration complexity of LRALM with \(\beta=0\)]
 \label{thm:upper-beta0}
 Fix \(\rho,\gamma,\eta,\tau>0\) satisfying the step-size
 conditions~\eqref{eq:beta0-stepsizes} for all sufficiently large \(s\).
@@ -104,7 +102,7 @@ The proof is given in Appendix~\ref{app:upper-beta0}.
 
 \begin{remark}
 \label{rem:upper-beta0}
-(i) When \(\beta=0\), SPLALM reduces to Perturbed Smoothed GDA applied to
+(i) When \(\beta=0\), LRALM reduces to Perturbed Smoothed GDA applied to
 \(\calD_\rho\). A result analogous to Theorem~\ref{thm:upper-beta0} has
 been obtained in~\cite[Theorem~3.3]{li2026smoothing}.
 Theorem~\ref{thm:upper-beta0} bounds the initial gap by the constants of
@@ -121,7 +119,7 @@ dual center remains zero. Whether a primal center stepsize independent of
 \(\epsilon\) attains the same order is outside the scope of this result.
 \end{remark}
 
-\begin{corollary}[Scale of the combined penalty]
+\begin{corollary}[Scale of the effective penalty]
 \label{cor:effective-penalty}
 Fix \(0<\eta\le\gamma\), \(\tau>0\), and \(\Delta>0\), and let \(c_1\)
 be the constant in Theorem~\ref{thm:lower-bound}.
@@ -151,7 +149,7 @@ Thus an \(O(\epsilon^{-3})\) guarantee over
 \(\epsilon\), and is attained with fixed \(\rho\) and
 \(s=c_s/\epsilon\) under the conditions in~(b).
 The constants \(c_1\) and \(c_s\) differ; the conclusion identifies the
-order \(\epsilon^{-1}\) of the required combined penalty.
+order \(\epsilon^{-1}\) of the required effective penalty.
 \end{corollary}
 \begin{proof}
 Part~(a) follows from Theorem~\ref{thm:lower-bound}. Part~(b) follows from

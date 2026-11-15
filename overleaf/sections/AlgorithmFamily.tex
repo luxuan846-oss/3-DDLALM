@@ -1,4 +1,4 @@
-\section{Algorithm Family and Combined Penalty}
+\section{Algorithm Family and Effective Penalty}
 \label{sec:algorithm-framework}
 
 \subsection{Algorithm family and worst-case iteration complexity}
@@ -19,9 +19,9 @@ Its minimizer and the associated multiplier are
     \label{eq:prox-multiplier}
 \end{equation}
 and \(\bq(\bx,\blmbd)\in\partial h(\by(\bx,\blmbd))\).
-We study the smoothed perturbed linearized augmented Lagrangian method
-(SPLALM), which performs alternating gradient descent--ascent steps on the
-smoothed perturbed potential function
+We study the linearized regularized augmented Lagrangian method
+(LRALM), which performs alternating gradient descent--ascent steps on the
+regularized potential function
 \begin{equation}
     \mathcal P_s(\bx,\blmbd;\bz,\bmu)
     :=\calD_\rho(\bx,\blmbd)+\frac{1}{2\gamma}\|\bx-\bz\|^2
@@ -31,12 +31,62 @@ smoothed perturbed potential function
 The proximal term smooths the primal problem, the term
 \(-\frac{1}{2s}\|\blmbd-\bmu\|^2\) perturbs the dual problem, and
 \(\bz\in\RR^n\) and \(\bmu\in\RR^m\) are the primal and dual centers.
+Completing the square in~\eqref{eq:reduced-al} expresses \(\calD_\rho\) via the
+Moreau envelope of \(h\), so \(\calD_\rho\) is continuously differentiable with
+\[
+    \nabla_{\bx}\calD_\rho(\bx,\blmbd)
+    =\nabla f(\bx)+J_{\calA}(\bx)^\top\bq(\bx,\blmbd),
+    \qquad
+    \nabla_{\blmbd}\calD_\rho(\bx,\blmbd)
+    =\calA(\bx)-\by(\bx,\blmbd).
+\]
+Define the curvature and smoothness constants
+\begin{equation}
+    L_{\calD,\bx}
+    :=L_f+L_{\calA}L_h+\rho G_{\calA}^{2},
+    \label{eq:x-weak-convexity-modulus}
+\end{equation}
+and, for \(\gamma,s>0\),
+\[
+    \mu_\gamma:=\frac{1}{\gamma}-L_{\calD,\bx},
+    \qquad
+    L_x:=\frac{1}{\gamma}+L_{\calD,\bx},
+    \qquad
+    L_\lambda:=\frac{1}{\rho}+\frac{1}{s}.
+\]
 
-\begin{definition}[SPLALM]
+\begin{proposition}[Curvature and smoothness of \(\mathcal P_s\)]
+\label{prop:curvature-smoothness}
+Suppose that Assumptions~\ref{ass:smoothness} and~\ref{ass:h} hold, and let
+\(\gamma>0\) satisfy \(\gamma L_{\calD,\bx}<1/2\). Then, for every \(s>0\) and
+\((\bz,\bmu)\in\RR^n\times\RR^m\), \(\mathcal P_s(\cdot,\cdot;\bz,\bmu)\) is
+\(\mu_\gamma\)-strongly convex in \(\bx\) and \(s^{-1}\)-strongly concave in
+\(\blmbd\). Moreover, for all \(\bx,\bx'\in\RR^n\) and
+\(\blmbd,\blmbd'\in\RR^m\),
+\begin{align}
+    \bigl\|
+    \nabla_{\bx}\mathcal{P}_s(\bx,\blmbd;\bz,\bmu)
+    -\nabla_{\bx}\mathcal{P}_s(\bx',\blmbd';\bz,\bmu)
+    \bigr\|
+    &\le L_x\|\bx-\bx'\|+G_{\calA}\|\blmbd-\blmbd'\|,
+    \label{eq:payoff-x-smoothness}\\
+    \bigl\|
+    \nabla_{\blmbd}\mathcal{P}_s(\bx,\blmbd;\bz,\bmu)
+    -\nabla_{\blmbd}\mathcal{P}_s(\bx',\blmbd';\bz,\bmu)
+    \bigr\|
+    &\le G_{\calA}\|\bx-\bx'\|+L_\lambda\|\blmbd-\blmbd'\|.
+    \label{eq:payoff-lambda-smoothness}
+\end{align}
+In particular, \(\mathcal P_s(\cdot,\cdot;\bz,\bmu)\) is \(L_x\)-smooth in
+\(\bx\) and \(L_\lambda\)-smooth in \(\blmbd\).
+\end{proposition}
+The proof is given in Appendix~\ref{app:curvature-smoothness}.
+
+\begin{definition}[LRALM]
 \label{def:splalm}
 Let \(\theta=(\rho,s,\gamma,\eta,\tau)\) satisfy \(\rho>0\),
 \(0<\eta\le\gamma<\infty\), and \(0<\tau\le s<\infty\), and let
-\((\alpha,\beta)\in[0,1]^2\). The method \(\mathrm{SPLALM}_{\theta,\alpha,\beta}\)
+\((\alpha,\beta)\in[0,1]^2\). The method \(\mathrm{LRALM}_{\theta,\alpha,\beta}\)
 starts from \((\bx^0,\blmbd^0,\bz^0,\bmu^0)=\zero\) and, for \(k\ge0\), sets
 \begin{equation}
 \begin{aligned}
@@ -58,10 +108,10 @@ their outputs use \(K+1\) calls to \(\mathcal O_{f,\calA}\) and \(2K\) calls to
 and oracle complexity agree up to a factor of three, apart from one initial
 first-order oracle call.
 
-\begin{definition}[SPLALM family]
+\begin{definition}[LRALM family]
 \label{def:algorithm-family}
 For \(\theta\) as in Definition~\ref{def:splalm},
-\(\calC_\theta:=\{\mathrm{SPLALM}_{\theta,\alpha,\beta}:(\alpha,\beta)\in[0,1]^2\}\).
+\(\calC_\theta:=\{\mathrm{LRALM}_{\theta,\alpha,\beta}:(\alpha,\beta)\in[0,1]^2\}\).
 \end{definition}
 
 \begin{remark}[Initialization]
@@ -79,7 +129,7 @@ and the initialization.
 \label{def:complexity-measure}
 Let \(\epsilon>0\) and \(I\in\mathcal I(\mathbf C,\Delta)\).
 For the outputs \((\bx^{k+1},\by^{k+1},\bq^k)\) of
-\(\mathrm{SPLALM}_{\theta,\alpha,\beta}\) on \(I\), define
+\(\mathrm{LRALM}_{\theta,\alpha,\beta}\) on \(I\), define
 \[
 \begin{aligned}
     T^{\mathrm{KKT}}_\epsilon(\theta,\alpha,\beta;I)
@@ -142,7 +192,7 @@ Definition~\ref{def:oracle-model}. Then \(\calC_\theta\subset\mathcal A_{\det}\)
   Theorem~\ref{thm:lower-bound} holds for all \((\rho,s)\) with
   \(\epsilon(\rho+s)\le c_1\). A lower bound on
   \(T_\epsilon(\calC_\theta,\mathcal I)\) therefore cannot be removed by
-  tuning the center stepsizes; it is governed by the combined penalty
+  tuning the center stepsizes; it is governed by the effective penalty
   \(\rho+s\) of Lemma~\ref{lem:effective-penalty}.
 \item (Transfer) Conversely, every lower bound on
   \(T_\epsilon(\mathcal A_{\det},\mathcal I)\) for the same problem class and
@@ -150,7 +200,7 @@ Definition~\ref{def:oracle-model}. Then \(\calC_\theta\subset\mathcal A_{\det}\)
 \end{enumerate}
 \end{remark}
 
-\subsection{Combined penalty and special cases}
+\subsection{Effective penalty and special cases}
 \label{subsec:effective-penalty}
 
 The reduced augmented Lagrangian is a dual proximal smoothing of the saddle
@@ -160,7 +210,7 @@ smoothing is the multiplier, and its strength is the penalty. Adding the dual
 regularizer of~\eqref{eq:potential} keeps this form; it only raises the
 penalty and moves the center.
 
-\begin{lemma}[Combined penalty parameter]
+\begin{lemma}[Effective penalty parameter]
 \label{lem:effective-penalty}
 Suppose that Assumption~\ref{ass:h} holds. For every \(\sigma>0\),
 \begin{equation}
@@ -196,7 +246,7 @@ gives~\eqref{eq:effective-penalty}.
 \end{proof}
 
 Lemma~\ref{lem:effective-penalty} shows that every member of
-\(\calC_\theta\) has the combined penalty \(\rho+s\), whatever the center
+\(\calC_\theta\) has the effective penalty \(\rho+s\), whatever the center
 stepsizes are. The center stepsize \(\beta\) only places the dual center
 between two classical choices, and \(\alpha\) decides whether the primal
 variable is smoothed.
@@ -238,21 +288,22 @@ recursion used in the proof of the lower bound.
 \centering
 \small
 \caption{Special cases of \(\calC_\theta\). All methods act on
-\(\calD_\rho\) with \(\rho>0\) and have the combined penalty \(\rho+s\).}
+\(\calD_\rho\) with \(\rho>0\) and have the effective penalty \(\rho+s\).}
 \label{tab:special-cases}
-\begin{tabular}{@{}llll@{}}
+\renewcommand{\arraystretch}{1.1}
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{@{}cccc@{}}
 \toprule
-\(\beta\) & Dual center & \(\alpha=1\) & \(0<\alpha<1\) \\
+Method & \(\alpha\) & \(\beta\) & Dual regularization \\
 \midrule
-\(0\) & \(\zero\)
-  & perturbed GDA~\cite{lu2020hybrid,xu2023unified}
-  & perturbed smoothed GDA~\cite{li2026smoothing} \\
-\((0,1)\) & \(\sum_{j=1}^{k}\beta(1-\beta)^{k-j}\blmbd^j\)
-  & ---
-  & DS-GDA~\cite{zheng2023universal}, \(r_1=1/\gamma\), \(r_2=1/s\) \\
-\(1\) & \(\blmbd^k\)
-  & linearized ALM (\(\tau=\rho\))
-  & smoothed GDA~\cite{zhang2020smoothed} \\
+\makecell{Linearized ALM (\(\tau=\rho\))\\ \cite{luSingleLoopGradientDescent2022}}
+  & \(1\) & \(1\) & \(-\frac{1}{2s}\|\blmbd-\blmbd^k\|^2\) \\
+\makecell{Smoothed GDA\\ \cite{zhang2020smoothed}}
+  & \((0,1)\) & \(1\) & \(-\frac{1}{2s}\|\blmbd-\blmbd^k\|^2\) \\
+\makecell{DS-GDA\\ \cite{zheng2023universal}}
+  & \((0,1)\) & \((0,1)\) & \(-\frac{1}{2s}\|\blmbd-\bmu^k\|^2\) \\
+\makecell{Perturbed smoothed GDA\\ \cite{li2026smoothing}}
+  & \((0,1)\) & \(0\) & \(-\frac{1}{2s}\|\blmbd\|^2\) \\
 \bottomrule
 \end{tabular}
 \end{table}

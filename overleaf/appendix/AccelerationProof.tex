@@ -1,0 +1,636 @@
+% !TEX root = ../main.tex
+\section{Proofs for Section~\ref{sec:acceleration}}
+\label{app:acceleration}
+
+\subsection{Proof of Lemma~\ref{lem:b2-prime-residual-decomposition}}
+\label{app:b2-prime-residual-decomposition}
+
+\begin{proof}[Proof of Lemma~\ref{lem:b2-prime-residual-decomposition}]
+By~\eqref{eq:prox-multiplier}, \(\by^{k+1}\) minimizes
+\(\by\mapsto h(\by)+\langle\bar{\blmbd}^k,\calA(\bx^{k+1})-\by\rangle
++\frac{\rho}{2}\|\calA(\bx^{k+1})-\by\|^2\), whose first-order optimality
+condition gives \(\bq^k=\bar{\blmbd}^k+\rho[\calA(\bx^{k+1})-\by^{k+1}]\in\partial h(\by^{k+1})\).
+
+For the primal residual, the primal step in Algorithm~\ref{alg:b2-prime} and~\eqref{eq:potential} yield
+\[
+    \frac{\bx^k-\bx^{k+1}}{\eta}
+    =\nabla_{\bx}\mathcal P_s(\bx^k,\bar{\blmbd}^k;\bz^k,\zero)
+    =\nabla_{\bx}\calD_\rho(\bx^k,\bar{\blmbd}^k)+\frac{1}{\gamma}(\bx^k-\bz^k).
+\]
+Since \(\nabla_{\bx}\calD_\rho(\bx^{k+1},\bar{\blmbd}^k)
+=\nabla f(\bx^{k+1})+J_{\calA}(\bx^{k+1})^\top\bq^k\), rearranging gives
+\[
+    \nabla f(\bx^{k+1})+J_{\calA}(\bx^{k+1})^\top\bq^k
+    =\bigl[\nabla_{\bx}\calD_\rho(\bx^{k+1},\bar{\blmbd}^k)
+    -\nabla_{\bx}\calD_\rho(\bx^k,\bar{\blmbd}^k)\bigr]
+    +\Bigl(\frac{1}{\eta}-\frac{1}{\gamma}\Bigr)(\bx^k-\bx^{k+1})
+    -\frac{1}{\gamma}(\bx^{k+1}-\bz^k).
+\]
+By~\eqref{eq:prox-multiplier}, \(\bq(\bx,\blmbd)=\prox_{\rho h^*}(\blmbd+\rho\calA(\bx))\)
+is bounded by \(L_h\) and \(\rho G_{\calA}\)-Lipschitz in \(\bx\) under
+Assumptions~\ref{ass:smoothness} and~\ref{ass:h}, so
+\(\nabla_{\bx}\calD_\rho(\cdot,\bar{\blmbd}^k)\) is
+\(L_{\calD,\bx}\)-Lipschitz with \(L_{\calD,\bx}=L_f+L_{\calA}L_h+\rho G_{\calA}^2\).
+Taking norms and applying the triangle inequality yields the first bound.
+
+For the dual residual, the dual step in Algorithm~\ref{alg:b2-prime} and~\eqref{eq:potential} give
+\[
+    \frac{\blmbd^{k+1}-\bar{\blmbd}^k}{\tau}
+    =\nabla_{\blmbd}\mathcal P_s(\bx^{k+1},\bar{\blmbd}^k;\bz^k,\zero)
+    =\calA(\bx^{k+1})-\by^{k+1}-\frac{1}{s}\bar{\blmbd}^k.
+\]
+Rearranging for \(\calA(\bx^{k+1})-\by^{k+1}\) and applying the triangle inequality
+gives the second bound.
+\end{proof}
+
+\subsection{Proof of Lemma~\ref{lem:b2-prime-multiplier-bounds}}
+\label{app:b2-prime-multiplier-bounds}
+
+The proof uses the following bound on a scalar second-order recursion.
+
+\begin{lemma}
+\label{lem:scalar-recursion}
+Let \(t,\omega\in(0,1)\), and let \(c_{-1}=0\), \(c_0=1\),
+\(c_{j+1}=(1-t)(1+\omega)c_j-(1-t)\omega c_{j-1}\) for \(j\ge0\). Then
+\[
+    \sum_{j\ge0}\lvert c_j\rvert
+    \le\max\left\{\frac4t,\frac{2\sqrt2}{t^{3/2}}\right\}.
+\]
+\end{lemma}
+
+\begin{proof}
+The discriminant of \(\zeta^2-(1-t)(1+\omega)\zeta+(1-t)\omega\) has the
+sign of \((1-\omega)^2-t(1+\omega)^2\). If it is nonnegative, both roots
+lie in \([0,1)\), so \(c_j\ge0\) and \(\sum_jc_j=1/t\), the reciprocal of
+the polynomial at \(1\). Otherwise the roots are \(Re^{\pm\mathrm i\phi}\)
+with \(R^2=(1-t)\omega\), and \(c_j=R^j\sin((j+1)\phi)/\sin\phi\).
+If \(1-\omega>\sqrt t\), then \(1-R\ge(1-R^2)/2\ge(1-\omega)/2>\sqrt t/2\),
+and \(\lvert c_j\rvert\le(j+1)R^j\) gives
+\(\sum_j\lvert c_j\rvert\le(1-R)^{-2}<4/t\).
+If \(1-\omega\le\sqrt t\), then
+\(\sin^2\phi=[t(1+\omega)^2-(1-\omega)^2]/(4\omega)\ge t/2\) and
+\(1-R\ge1-\sqrt{1-t}\ge t/2\), so
+\(\sum_j\lvert c_j\rvert\le((1-R)\sin\phi)^{-1}\le2\sqrt2\,t^{-3/2}\).
+\end{proof}
+
+\begin{proof}[Proof of Lemma~\ref{lem:b2-prime-multiplier-bounds}]
+By~\eqref{eq:prox-multiplier}, the dual step reads
+\(\blmbd^{k+1}=(1-\tau L_\lambda)\bar{\blmbd}^k+\frac{\tau}{\rho}\bq^k\).
+Substituting \(\bar{\blmbd}^k=(1+\omega)\blmbd^k-\omega\blmbd^{k-1}\) and
+unrolling from \(\blmbd^{-1}=\blmbd^0=\zero\) yields
+\(\blmbd^k=\frac{\tau}{\rho}\sum_{i=0}^{k-1}c_{k-1-i}\bq^i\), where
+\(\{c_j\}\) is the sequence of Lemma~\ref{lem:scalar-recursion} with
+\(t=\tau L_\lambda\). Since \(\tau/s\le\tau L_\lambda\le\frac12\), we have
+\(\omega\in(0,1)\). Using \(\|\bq^i\|\le L_h\),
+\(\tau/\rho=\tau L_\lambda\,s/(\rho+s)\), and
+Lemma~\ref{lem:scalar-recursion}, we obtain
+\[
+    \|\blmbd^k\|
+    \le\frac{s}{\rho+s}
+    \max\left\{4,\frac{2\sqrt2}{\sqrt{\tau L_\lambda}}\right\}L_h
+    \le\max\left\{4,\sqrt{\frac{8\rho}{\tau}}\right\}L_h
+    =C_\lambda L_h,
+\]
+because \(\tau L_\lambda\ge\tau/\rho\). Finally,
+\(\|\bar{\blmbd}^k\|\le(1+\omega)\|\blmbd^k\|+\omega\|\blmbd^{k-1}\|
+\le3C_\lambda L_h\).
+\end{proof}
+
+\subsection{Proof of Lemma~\ref{lem:b2-prime-potential-descent}}
+\label{app:b2-prime-potential-descent}
+
+Throughout this subsection, \(s>0\) is fixed and
+\(\gamma L_{\calD,\bx}<\frac12\), so that
+Proposition~\ref{prop:curvature-smoothness} applies. We first collect the
+properties of the value functions in~\eqref{eq:dual-value}
+and~\eqref{eq:saddle-value} at a fixed center, and then their dependence on
+the center.
+
+\begin{lemma}
+\label{lem:b2-prime-fixed-center-values}
+Suppose that Assumptions~\ref{ass:smoothness} and~\ref{ass:h} hold. Then, for
+every \(\bz\in\RR^n\), the following statements hold.
+\begin{enumerate}[label=(\roman*)]
+\item For all \(\blmbd,\blmbd'\in\RR^m\),
+\[
+    \|\bx_s(\blmbd;\bz)-\bx_s(\blmbd';\bz)\|
+    \le\frac{G_{\calA}}{\mu_\gamma}\|\blmbd-\blmbd'\| .
+\]
+\item For all \(\bx\in\RR^n\) and \(\blmbd\in\RR^m\),
+\[
+    \frac{\mu_\gamma}{2}\|\bx-\bx_s(\blmbd;\bz)\|^2
+    \le\mathcal P_s(\bx,\blmbd;\bz,\zero)-d_s(\blmbd;\bz)
+    \le\frac{L_x}{2}\|\bx-\bx_s(\blmbd;\bz)\|^2 .
+\]
+\item For every \(\blmbd\in\RR^m\),
+\[
+    p_s(\bz)-d_s(\blmbd;\bz)
+    \ge\frac{1}{2s}\|\blmbd-\blmbd_s^\star(\bz)\|^2
+    +\frac{\mu_\gamma}{2}\|\bx_s(\blmbd;\bz)-\bx_s^\star(\bz)\|^2 .
+\]
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+(i) Let \(\bx=\bx_s(\blmbd;\bz)\) and \(\bx'=\bx_s(\blmbd';\bz)\). Both
+points are stationary for their respective payoffs, so the
+\(\mu_\gamma\)-strong monotonicity of
+\(\nabla_{\bx}\mathcal P_s(\cdot,\blmbd;\bz,\zero)\)
+and~\eqref{eq:payoff-x-smoothness} give
+\[
+    \mu_\gamma\|\bx-\bx'\|^2
+    \le\bigl\langle\nabla_{\bx}\mathcal P_s(\bx',\blmbd';\bz,\zero)
+    -\nabla_{\bx}\mathcal P_s(\bx',\blmbd;\bz,\zero),\bx-\bx'\bigr\rangle
+    \le G_{\calA}\|\blmbd-\blmbd'\|\,\|\bx-\bx'\| .
+\]
+
+(ii) The function \(\mathcal P_s(\cdot,\blmbd;\bz,\zero)\) is
+\(\mu_\gamma\)-strongly convex and \(L_x\)-smooth, and its minimum value
+\(d_s(\blmbd;\bz)\) is attained at \(\bx_s(\blmbd;\bz)\).
+
+(iii) Write \((\bx^\star,\blmbd^\star)\) for the saddle point at \(\bz\), so
+that \(p_s(\bz)=\mathcal P_s(\bx^\star,\blmbd^\star;\bz,\zero)\) and
+\(\blmbd^\star\) maximizes the \(s^{-1}\)-strongly concave function
+\(\mathcal P_s(\bx^\star,\cdot;\bz,\zero)\). Splitting
+\[
+    p_s(\bz)-d_s(\blmbd;\bz)
+    =\bigl[\mathcal P_s(\bx^\star,\blmbd^\star;\bz,\zero)
+    -\mathcal P_s(\bx^\star,\blmbd;\bz,\zero)\bigr]
+    +\bigl[\mathcal P_s(\bx^\star,\blmbd;\bz,\zero)-d_s(\blmbd;\bz)\bigr],
+\]
+we bound the first bracket below by strong concavity in \(\blmbd\) and the
+second by~(ii).
+\end{proof}
+
+\begin{lemma}
+\label{lem:b2-prime-center-dependence}
+Suppose that Assumptions~\ref{ass:smoothness} and~\ref{ass:h} hold. Let
+\(\bz,\bz'\in\RR^n\) and \(\blmbd\in\RR^m\). Then
+\begin{align*}
+    p_s(\bz')-p_s(\bz)
+    &\le\frac1\gamma\bigl\langle\bz-\bx_s^\star(\bz),\bz'-\bz\bigr\rangle
+    +\frac{1}{2\gamma}\|\bz'-\bz\|^2,\\
+    d_s(\blmbd;\bz')-d_s(\blmbd;\bz)
+    &\ge\frac1\gamma\bigl\langle\bz-\bx_s(\blmbd;\bz'),\bz'-\bz\bigr\rangle
+    +\frac{1}{2\gamma}\|\bz'-\bz\|^2 ,
+\end{align*}
+and
+\[
+    \max\bigl\{\|\bx_s(\blmbd;\bz')-\bx_s(\blmbd;\bz)\|,\,
+    \|\bx_s^\star(\bz')-\bx_s^\star(\bz)\|\bigr\}
+    \le\frac{\|\bz'-\bz\|}{\gamma\mu_\gamma},
+    \qquad
+    \|\blmbd_s^\star(\bz')-\blmbd_s^\star(\bz)\|
+    \le\frac{\sqrt{s}\,\|\bz'-\bz\|}{2\gamma\sqrt{\mu_\gamma}} .
+\]
+\end{lemma}
+
+\begin{proof}
+The center enters \(\mathcal P_s\) only through
+\(\frac{1}{2\gamma}\|\bx-\bz\|^2\), and for every \(\bx\in\RR^n\),
+\[
+    \frac{1}{2\gamma}\|\bx-\bz'\|^2-\frac{1}{2\gamma}\|\bx-\bz\|^2
+    =\frac{1}{\gamma}\langle\bz-\bx,\bz'-\bz\rangle
+    +\frac{1}{2\gamma}\|\bz'-\bz\|^2 .
+\]
+By~\eqref{eq:minimax-equality} and~\eqref{eq:effective-penalty}, \(p_s(\bz)\)
+is the minimum of \(\calD_{\rho+s}(\cdot,\zero)+\frac{1}{2\gamma}\|\cdot-\bz\|^2\),
+attained at \(\bx_s^\star(\bz)\). Evaluating the objective for \(\bz'\) at
+\(\bx=\bx_s^\star(\bz)\) gives the first inequality; evaluating the objective of
+\(d_s(\blmbd;\bz)\) at \(\bx=\bx_s(\blmbd;\bz')\) gives the second.
+
+For the sensitivity bounds, let \((\bx,\blmbd^\star)\) and
+\((\bx',\blmbd^{\star\prime})\) be the saddle points at \(\bz\) and \(\bz'\),
+and write \(\mathcal P:=\mathcal P_s(\cdot,\cdot;\bz,\zero)\). Since
+\(\nabla_{\bx}\mathcal P(\bx',\blmbd^{\star\prime})=(\bz'-\bz)/\gamma\) and
+\(\nabla_{\blmbd}\mathcal P(\bx',\blmbd^{\star\prime})=\zero\), the
+\(\mu_\gamma\)-strong convexity of \(\mathcal P\) in \(\bx\) and its
+\(s^{-1}\)-strong concavity in \(\blmbd\) yield
+\[
+\begin{aligned}
+    \mathcal P(\bx',\blmbd^\star)-\mathcal P(\bx,\blmbd^\star)
+    &\ge\frac{\mu_\gamma}{2}\|\bx'-\bx\|^2,&
+    \mathcal P(\bx,\blmbd^{\star\prime})-\mathcal P(\bx',\blmbd^{\star\prime})
+    &\ge\frac{1}{\gamma}\langle\bz'-\bz,\bx-\bx'\rangle
+    +\frac{\mu_\gamma}{2}\|\bx'-\bx\|^2,\\
+    \mathcal P(\bx,\blmbd^\star)-\mathcal P(\bx,\blmbd^{\star\prime})
+    &\ge\frac{1}{2s}\|\blmbd^{\star\prime}-\blmbd^\star\|^2,&
+    \mathcal P(\bx',\blmbd^{\star\prime})-\mathcal P(\bx',\blmbd^\star)
+    &\ge\frac{1}{2s}\|\blmbd^{\star\prime}-\blmbd^\star\|^2 .
+\end{aligned}
+\]
+Adding these four inequalities cancels the function values and gives
+\[
+    \mu_\gamma\|\bx'-\bx\|^2+\frac1s\|\blmbd^{\star\prime}-\blmbd^\star\|^2
+    \le\frac1\gamma\langle\bz'-\bz,\bx'-\bx\rangle
+    \le\frac1\gamma\|\bz'-\bz\|\,\|\bx'-\bx\| .
+\]
+Dropping the second term on the left bounds \(\|\bx'-\bx\|\). Maximizing the
+right-hand side minus \(\mu_\gamma\|\bx'-\bx\|^2\) over \(\|\bx'-\bx\|\ge0\)
+gives \(\frac1s\|\blmbd^{\star\prime}-\blmbd^\star\|^2
+\le\|\bz'-\bz\|^2/(4\gamma^2\mu_\gamma)\), which bounds
+\(\|\blmbd^{\star\prime}-\blmbd^\star\|\). Applying the first two inequalities
+above to \(\mathcal P_s(\cdot,\blmbd;\bz,\zero)\) alone gives the Lipschitz
+bound for \(\bx_s(\blmbd;\cdot)\).
+\end{proof}
+
+Recall the inner subproblem error \(\mathcal E_k(\bz)\) and the Lyapunov
+sequence \(\{\mathcal W_k\}_{k\ge0}\) defined in
+Section~\ref{sec:acceleration}, and write
+\(\mathcal E_k:=\mathcal E_k(\bz^k)\). All four terms of
+\(\mathcal E_k(\bz)\) are nonnegative, and the
+first two form the estimate-sequence Lyapunov function of Nesterov's
+accelerated method for maximizing the \(s^{-1}\)-strongly concave function
+\(d_s(\cdot;\bz)\)~\cite{nesterov2018lectures,wilson2021lyapunov}. The next
+lemma establishes contraction of \(\mathcal E\) over one iteration at a fixed
+center.
+
+\begin{lemma}
+\label{lem:b2-prime-fixed-center-contraction}
+Suppose that Assumptions~\ref{ass:smoothness} and~\ref{ass:h}
+and~\eqref{eq:b2-prime-stepsizes} hold. Then, for every \(k\ge0\),
+\[
+    \mathcal E_{k+1}(\bz^k)
+    \le\Bigl(1-\frac{1}{\sqrt{\kappa}}\Bigr)\mathcal E_k
+    -\frac{1}{64\gamma}\|\bx^{k+1}-\bx^k\|^2
+    -\frac{1}{8\tau}\|\blmbd^{k+1}-\bar{\blmbd}^k\|^2
+    -\frac{\mu_\gamma}{2\sqrt{\kappa}}\|\bx^{k+1}-\bx_s^\star(\bz^k)\|^2 .
+\]
+\end{lemma}
+
+\begin{proof}
+Fix \(k\ge0\) and suppress \(\bz^k\), writing
+\(\mathcal P:=\mathcal P_s(\cdot,\cdot;\bz^k,\zero)\), \(d:=d_s(\cdot;\bz^k)\),
+\(p:=p_s(\bz^k)\), \(\bx_s(\cdot):=\bx_s(\cdot;\bz^k)\), and
+\((\bx^\star,\blmbd^\star):=\bigl(\bx_s^\star(\bz^k),\blmbd_s^\star(\bz^k)\bigr)\).
+Under~\eqref{eq:b2-prime-stepsizes}, \(\tau L_\lambda\le\frac12\),
+\(\kappa=s/\tau\ge4\), \(\gamma\mu_\gamma=1-\gamma L_{\calD,\bx}\ge\frac{9}{10}\),
+and \(\gamma L_x=1+\gamma L_{\calD,\bx}\le\frac{11}{10}\).
+
+Let \(\phi(\blmbd):=\mathcal P(\bx^{k+1},\blmbd)\), which is
+\(s^{-1}\)-strongly concave and \(L_\lambda\)-smooth, with
+\(\blmbd^{k+1}=\bar{\blmbd}^k+\tau\nabla\phi(\bar{\blmbd}^k)\). From
+\(\omega=(\sqrt{\kappa}-1)/(\sqrt{\kappa}+1)\) and the definition of \(\bw^k\),
+we have \((\sqrt{\kappa}+1)\bar{\blmbd}^k=\sqrt{\kappa}\blmbd^k+\bw^k\), so
+\[
+    \tilde{\bw}^k:=\blmbd^k+\sqrt{\kappa}(\bar{\blmbd}^k-\blmbd^k)
+    =\Bigl(1-\frac{1}{\sqrt{\kappa}}\Bigr)\bw^k
+    +\frac{1}{\sqrt{\kappa}}\bar{\blmbd}^k .
+\]
+Since \(\bw^{k+1}=\tilde{\bw}^k+\sqrt{\kappa}(\blmbd^{k+1}-\bar{\blmbd}^k)\)
+and \(\kappa/s=1/\tau\), expanding \(\|\bw^{k+1}-\blmbd^\star\|^2\) and using
+the convexity of \(\|\cdot-\blmbd^\star\|^2\) on \(\tilde{\bw}^k\) give
+\[
+\begin{aligned}
+    \frac{1}{2s}\|\bw^{k+1}-\blmbd^\star\|^2
+    &\le\Bigl(1-\frac{1}{\sqrt{\kappa}}\Bigr)
+    \frac{1}{2s}\|\bw^k-\blmbd^\star\|^2
+    +\frac{1}{2s\sqrt{\kappa}}\|\bar{\blmbd}^k-\blmbd^\star\|^2\\
+    &\quad+\frac{1}{\tau\sqrt{\kappa}}
+    \bigl\langle\blmbd^{k+1}-\bar{\blmbd}^k,\tilde{\bw}^k-\blmbd^\star\bigr\rangle
+    +\frac{1}{2\tau}\|\blmbd^{k+1}-\bar{\blmbd}^k\|^2 .
+\end{aligned}
+\]
+Rewriting \(\tilde{\bw}^k-\blmbd^\star
+=(\sqrt{\kappa}-1)(\bar{\blmbd}^k-\blmbd^k)+(\bar{\blmbd}^k-\blmbd^\star)\)
+and \(\blmbd^{k+1}-\bar{\blmbd}^k=\tau\nabla\phi(\bar{\blmbd}^k)\), and
+applying concavity of \(\phi\) toward \(\blmbd^k\), \(s^{-1}\)-strong concavity
+toward \(\blmbd^\star\), and \(L_\lambda\)-smoothness from \(\bar{\blmbd}^k\) to
+\(\blmbd^{k+1}\), namely
+\[
+\begin{aligned}
+    \bigl\langle\nabla\phi(\bar{\blmbd}^k),\bar{\blmbd}^k-\blmbd^k\bigr\rangle
+    &\le\phi(\bar{\blmbd}^k)-\phi(\blmbd^k),\\
+    \bigl\langle\nabla\phi(\bar{\blmbd}^k),\bar{\blmbd}^k-\blmbd^\star\bigr\rangle
+    &\le\phi(\bar{\blmbd}^k)-\phi(\blmbd^\star)
+    -\frac{1}{2s}\|\bar{\blmbd}^k-\blmbd^\star\|^2,\\
+    \phi(\bar{\blmbd}^k)
+    &\le\phi(\blmbd^{k+1})
+    -\Bigl(\frac{1}{\tau}-\frac{L_\lambda}{2}\Bigr)
+    \|\blmbd^{k+1}-\bar{\blmbd}^k\|^2,
+\end{aligned}
+\]
+we add \(p-d(\blmbd^{k+1})-(1-\kappa^{-1/2})[p-d(\blmbd^k)]\) to obtain
+\begin{equation}
+\label{eq:b2-prime-dual-nesterov}
+\begin{aligned}
+    &p-d(\blmbd^{k+1})+\frac{1}{2s}\|\bw^{k+1}-\blmbd^\star\|^2
+    -\Bigl(1-\frac{1}{\sqrt{\kappa}}\Bigr)\Bigl[p-d(\blmbd^k)
+    +\frac{1}{2s}\|\bw^k-\blmbd^\star\|^2\Bigr]\\
+    &\le-\frac{1-\tau L_\lambda}{2\tau}\|\blmbd^{k+1}-\bar{\blmbd}^k\|^2
+    +\bigl[\mathcal P(\bx^{k+1},\blmbd^{k+1})-d(\blmbd^{k+1})\bigr]
+    -\Bigl(1-\frac{1}{\sqrt{\kappa}}\Bigr)
+    \bigl[\mathcal P(\bx^{k+1},\blmbd^k)-d(\blmbd^k)\bigr]\\
+    &\quad-\frac{1}{\sqrt{\kappa}}\bigl[\mathcal P(\bx^{k+1},\blmbd^\star)-p\bigr].
+\end{aligned}
+\end{equation}
+
+Next, the primal update is a gradient step with stepsize
+\(\gamma=2/(\mu_\gamma+L_x)\) on the \(\mu_\gamma\)-strongly convex,
+\(L_x\)-smooth function \(\mathcal P(\cdot,\bar{\blmbd}^k)\), whose minimizer
+is \(\bx_s(\bar{\blmbd}^k)\). Standard gradient-descent contraction~\cite{nesterov2018lectures}
+and \(L_x\)-smoothness give
+\[
+    \|\bx^{k+1}-\bx_s(\bar{\blmbd}^k)\|
+    \le\frac{L_x-\mu_\gamma}{L_x+\mu_\gamma}\|\bx^k-\bx_s(\bar{\blmbd}^k)\|
+    =\gamma L_{\calD,\bx}\|\bx^k-\bx_s(\bar{\blmbd}^k)\|,
+    \qquad
+    \|\bx^{k+1}-\bx^k\|\le\gamma L_x\|\bx^k-\bx_s(\bar{\blmbd}^k)\|.
+\]
+By Lemma~\ref{lem:b2-prime-fixed-center-values}(i),
+\[
+    \|\bx^k-\bx_s(\bar{\blmbd}^k)\|
+    \le\|\bx^k-\bx_s(\bar{\blmbd}^{k-1})\|
+    +\frac{G_{\calA}}{\mu_\gamma}\|\blmbd^k-\bar{\blmbd}^{k-1}\|
+    +\|\bx_s(\blmbd^k)-\bx_s(\bar{\blmbd}^k)\|.
+\]
+Setting
+\(S_k:=\|\bx^k-\bx_s(\bar{\blmbd}^{k-1})\|^2
++\frac{G_{\calA}^2}{\mu_\gamma^2}\|\blmbd^k-\bar{\blmbd}^{k-1}\|^2
++\|\bx_s(\bar{\blmbd}^k)-\bx_s(\blmbd^k)\|^2\), Cauchy--Schwarz and
+\(\gamma L_{\calD,\bx}\le\frac{1}{10}\) imply
+\begin{equation}
+\label{eq:b2-prime-tracking}
+    \|\bx^{k+1}-\bx_s(\bar{\blmbd}^k)\|^2
+    \le3(\gamma L_{\calD,\bx})^2S_k\le\frac{3}{100}S_k,
+    \qquad
+    \|\bx^{k+1}-\bx^k\|^2
+    \le3(\gamma L_x)^2S_k\le\frac{363}{100}S_k .
+\end{equation}
+Moreover, Lemma~\ref{lem:b2-prime-fixed-center-values}(i)--(ii) and the
+optimality of \(\bx^\star\) for \(\mathcal P(\cdot,\blmbd^\star)\) bound the
+three brackets on the right-hand side of~\eqref{eq:b2-prime-dual-nesterov}:
+\[
+\begin{aligned}
+    \mathcal P(\bx^{k+1},\blmbd^{k+1})-d(\blmbd^{k+1})
+    &\le L_x\|\bx^{k+1}-\bx_s(\bar{\blmbd}^k)\|^2
+    +\frac{L_xG_{\calA}^2}{\mu_\gamma^2}\|\blmbd^{k+1}-\bar{\blmbd}^k\|^2,\\
+    \mathcal P(\bx^{k+1},\blmbd^k)-d(\blmbd^k)
+    &\ge\frac{\mu_\gamma}{4}\|\bx_s(\bar{\blmbd}^k)-\bx_s(\blmbd^k)\|^2
+    -\frac{\mu_\gamma}{2}\|\bx^{k+1}-\bx_s(\bar{\blmbd}^k)\|^2,\\
+    \mathcal P(\bx^{k+1},\blmbd^\star)-p
+    &\ge\frac{\mu_\gamma}{2}\|\bx^{k+1}-\bx^\star\|^2 .
+\end{aligned}
+\]
+
+Substituting these three bounds into~\eqref{eq:b2-prime-dual-nesterov}, adding
+the last two terms of
+\(\mathcal E_{k+1}(\bz^k)-(1-\kappa^{-1/2})\mathcal E_k\), and using
+\(1-\kappa^{-1/2}\ge\frac12\), we obtain
+\[
+\begin{aligned}
+    \mathcal E_{k+1}(\bz^k)-\Bigl(1-\frac{1}{\sqrt{\kappa}}\Bigr)\mathcal E_k
+    \le{}&-\left[\frac{1-\tau L_\lambda}{2\tau}
+    -\frac{G_{\calA}^2}{\mu_\gamma^2}
+    \Bigl(L_x+\frac{\mu_\gamma}{4}\Bigr)\right]
+    \|\blmbd^{k+1}-\bar{\blmbd}^k\|^2\\
+    &+\Bigl(L_x+\frac{3\mu_\gamma}{4}\Bigr)
+    \|\bx^{k+1}-\bx_s(\bar{\blmbd}^k)\|^2
+    -\frac{\mu_\gamma}{8}S_k
+    -\frac{\mu_\gamma}{2\sqrt{\kappa}}\|\bx^{k+1}-\bx^\star\|^2 .
+\end{aligned}
+\]
+By~\eqref{eq:b2-prime-tracking}, \(\gamma\mu_\gamma\in[\frac{9}{10},1]\), and
+\(\gamma L_x\le\frac{11}{10}\),
+\[
+    \frac{\mu_\gamma}{8}S_k
+    -\Bigl(L_x+\frac{3\mu_\gamma}{4}\Bigr)\|\bx^{k+1}-\bx_s(\bar{\blmbd}^k)\|^2
+    \ge\Bigl(\frac{9}{80}-\frac{3}{100}\cdot\frac{37}{20}\Bigr)\frac{S_k}{\gamma}
+    =\frac{57}{1000\gamma}S_k
+    \ge\frac{1}{64\gamma}\|\bx^{k+1}-\bx^k\|^2,
+\]
+since \(\frac{57}{1000}\cdot\frac{100}{363}=\frac{19}{1210}>\frac{1}{64}\).
+Finally, \(\tau L_\lambda\le\frac12\) and \(14\gamma\tau G_{\calA}^2\le1\) give
+\(\frac{1-\tau L_\lambda}{2\tau}\ge\frac{1}{4\tau}\) and
+\(\frac{G_{\calA}^2}{\mu_\gamma^2}(L_x+\frac{\mu_\gamma}{4})
+\le\frac{100}{81}\cdot\frac{27}{20}\gamma G_{\calA}^2
+=\frac53\gamma G_{\calA}^2\le\frac{1}{8\tau}\), which yields the coefficient
+\(-\frac{1}{8\tau}\).
+\end{proof}
+
+We next analyze the effect of moving the center \(\bz^k\to\bz^{k+1}\) on the
+outer value function \(p_s\) and on the inner error \(\mathcal E\).
+
+\begin{lemma}
+\label{lem:b2-prime-z-step-p}
+Suppose that Assumptions~\ref{ass:smoothness} and~\ref{ass:h} hold, and let
+\(0\le\alpha\le1\). Then, for every \(k\ge0\),
+\[
+    p_s(\bz^{k+1})-p_s(\bz^k)
+    \le-\frac{\alpha(1-\alpha)}{2\gamma}\|\bx^{k+1}-\bz^k\|^2
+    +\frac{\alpha}{2\gamma}\|\bx^{k+1}-\bx_s^\star(\bz^k)\|^2 .
+\]
+\end{lemma}
+
+\begin{proof}
+Applying the first inequality of Lemma~\ref{lem:b2-prime-center-dependence}
+with \(\bz=\bz^k\) and \(\bz'=\bz^{k+1}\), and substituting
+\(\bz^{k+1}-\bz^k=\alpha(\bx^{k+1}-\bz^k)\) together with
+\(\bz^k-\bx_s^\star(\bz^k)
+=(\bx^{k+1}-\bx_s^\star(\bz^k))-(\bx^{k+1}-\bz^k)\), we obtain
+\[
+    p_s(\bz^{k+1})-p_s(\bz^k)
+    \le-\frac{\alpha(2-\alpha)}{2\gamma}\|\bx^{k+1}-\bz^k\|^2
+    +\frac{\alpha}{\gamma}\bigl\langle\bx^{k+1}-\bx_s^\star(\bz^k),
+    \bx^{k+1}-\bz^k\bigr\rangle .
+\]
+Bounding the inner product by
+\(\frac12\|\bx^{k+1}-\bx_s^\star(\bz^k)\|^2+\frac12\|\bx^{k+1}-\bz^k\|^2\)
+gives the claim.
+\end{proof}
+
+\begin{lemma}
+\label{lem:b2-prime-center-error}
+Suppose that Assumptions~\ref{ass:smoothness} and~\ref{ass:h} hold. Then, for
+every \(j\ge0\) and all \(\bz,\bz'\in\RR^n\),
+\[
+    \mathcal E_j(\bz')-\mathcal E_j(\bz)
+    \le\frac{1}{\gamma}\sqrt{\frac{7}{2\mu_\gamma}}
+    \sqrt{\mathcal E_j(\bz)}\,\|\bz'-\bz\|
+    +\frac{11}{8\gamma^2\mu_\gamma}\|\bz'-\bz\|^2 .
+\]
+\end{lemma}
+
+\begin{proof}
+The fourth term of \(\mathcal E_j(\bz)\) is independent of \(\bz\), and the
+first three terms are nonnegative and sum to at most \(\mathcal E_j(\bz)\). We
+bound the increment of each of these three terms from \(\bz\) to \(\bz'\).
+
+For the value gap \(p_s-d_s(\blmbd^j;\cdot)\), subtracting the second
+inequality of Lemma~\ref{lem:b2-prime-center-dependence} from the first cancels
+\(\frac{1}{2\gamma}\|\bz'-\bz\|^2\); using the Lipschitz bound on
+\(\bx_s(\blmbd^j;\cdot)\) in Lemma~\ref{lem:b2-prime-center-dependence} and
+Lemma~\ref{lem:b2-prime-fixed-center-values}(iii) then gives
+\[
+\begin{aligned}
+    \bigl[p_s(\bz')-d_s(\blmbd^j;\bz')\bigr]
+    -\bigl[p_s(\bz)-d_s(\blmbd^j;\bz)\bigr]
+    &\le\frac{1}{\gamma}\bigl\langle
+    \bx_s(\blmbd^j;\bz')-\bx_s^\star(\bz),\bz'-\bz\bigr\rangle\\
+    &\le\frac{1}{\gamma}\|\bx_s(\blmbd^j;\bz)-\bx_s^\star(\bz)\|\,\|\bz'-\bz\|
+    +\frac{1}{\gamma^2\mu_\gamma}\|\bz'-\bz\|^2\\
+    &\le\frac{\sqrt2}{\gamma\sqrt{\mu_\gamma}}
+    \sqrt{p_s(\bz)-d_s(\blmbd^j;\bz)}\,\|\bz'-\bz\|
+    +\frac{1}{\gamma^2\mu_\gamma}\|\bz'-\bz\|^2 .
+\end{aligned}
+\]
+For the dual estimate-sequence term, expanding the square and applying the
+sensitivity bound on \(\blmbd_s^\star\) in
+Lemma~\ref{lem:b2-prime-center-dependence} yield
+\[
+\begin{aligned}
+    \frac{1}{2s}\|\bw^j-\blmbd_s^\star(\bz')\|^2
+    -\frac{1}{2s}\|\bw^j-\blmbd_s^\star(\bz)\|^2
+    &\le\frac{1}{s}\|\bw^j-\blmbd_s^\star(\bz)\|\,
+    \frac{\sqrt{s}\,\|\bz'-\bz\|}{2\gamma\sqrt{\mu_\gamma}}
+    +\frac{1}{8\gamma^2\mu_\gamma}\|\bz'-\bz\|^2\\
+    &=\frac{1}{\gamma\sqrt{2\mu_\gamma}}
+    \sqrt{\frac{1}{2s}\|\bw^j-\blmbd_s^\star(\bz)\|^2}\,\|\bz'-\bz\|
+    +\frac{1}{8\gamma^2\mu_\gamma}\|\bz'-\bz\|^2 ,
+\end{aligned}
+\]
+where the factors of \(\sqrt{s}\) cancel. Likewise, for the primal tracking
+term, the Lipschitz bound on \(\bx_s(\bar{\blmbd}^{j-1};\cdot)\) in
+Lemma~\ref{lem:b2-prime-center-dependence} gives
+\[
+    \frac{\mu_\gamma}{4}\|\bx^j-\bx_s(\bar{\blmbd}^{j-1};\bz')\|^2
+    -\frac{\mu_\gamma}{4}\|\bx^j-\bx_s(\bar{\blmbd}^{j-1};\bz)\|^2
+    \le\frac{1}{\gamma\sqrt{\mu_\gamma}}
+    \sqrt{\frac{\mu_\gamma}{4}\|\bx^j-\bx_s(\bar{\blmbd}^{j-1};\bz)\|^2}\,
+    \|\bz'-\bz\|
+    +\frac{1}{4\gamma^2\mu_\gamma}\|\bz'-\bz\|^2 .
+\]
+Summing these three estimates and applying Cauchy--Schwarz with weights
+\((\sqrt2,1/\sqrt2,1)\), whose squares sum to \(7/2\), while the quadratic
+coefficients sum to \(1+\frac18+\frac14=\frac{11}{8}\), completes the proof.
+\end{proof}
+
+\begin{proof}[Proof of Lemma~\ref{lem:b2-prime-potential-descent}]
+Since \(\mathcal W_k=p_s(\bz^k)+\frac12\mathcal E_k\), its one-step
+increment decomposes as
+\[
+    \mathcal W_{k+1}-\mathcal W_k
+    =\bigl[p_s(\bz^{k+1})-p_s(\bz^k)\bigr]
+    +\frac12\bigl[\mathcal E_{k+1}(\bz^k)-\mathcal E_k\bigr]
+    +\frac12\bigl[\mathcal E_{k+1}(\bz^{k+1})-\mathcal E_{k+1}(\bz^k)\bigr].
+\]
+Applying Lemma~\ref{lem:b2-prime-center-error} with \(j=k+1\), \(\bz=\bz^k\),
+and \(\bz'=\bz^{k+1}\), so that \(\|\bz^{k+1}-\bz^k\|=\alpha\|\bx^{k+1}-\bz^k\|\),
+and using Young's inequality
+\(ab\le\frac{1}{2\sqrt{\kappa}}a^2+\frac{\sqrt{\kappa}}{2}b^2\) on the linear
+term give
+\[
+    \mathcal E_{k+1}
+    \le\Bigl(1+\frac{1}{2\sqrt{\kappa}}\Bigr)\mathcal E_{k+1}(\bz^k)
+    +\frac{14\sqrt{\kappa}+11}{8\gamma^2\mu_\gamma}
+    \alpha^2\|\bx^{k+1}-\bz^k\|^2 .
+\]
+Since \((1+\frac{1}{2\sqrt{\kappa}})(1-\frac{1}{\sqrt{\kappa}})
+\le1-\frac{1}{2\sqrt{\kappa}}\) and \(1+\frac{1}{2\sqrt{\kappa}}\ge1\),
+substituting Lemma~\ref{lem:b2-prime-fixed-center-contraction} yields
+\[
+    \mathcal E_{k+1}-\mathcal E_k
+    \le-\frac{1}{2\sqrt{\kappa}}\mathcal E_k
+    -\frac{1}{64\gamma}\|\bx^{k+1}-\bx^k\|^2
+    -\frac{1}{8\tau}\|\blmbd^{k+1}-\bar{\blmbd}^k\|^2
+    -\frac{\mu_\gamma}{2\sqrt{\kappa}}\|\bx^{k+1}-\bx_s^\star(\bz^k)\|^2
+    +\frac{14\sqrt{\kappa}+11}{8\gamma^2\mu_\gamma}
+    \alpha^2\|\bx^{k+1}-\bz^k\|^2 .
+\]
+Adding half of this bound to Lemma~\ref{lem:b2-prime-z-step-p} and dropping
+\(-\frac{1}{4\sqrt{\kappa}}\mathcal E_k\le0\), we obtain
+\[
+\begin{aligned}
+    \mathcal W_{k+1}-\mathcal W_k
+    \le{}&-\frac{1}{128\gamma}\|\bx^{k+1}-\bx^k\|^2
+    -\frac{1}{16\tau}\|\blmbd^{k+1}-\bar{\blmbd}^k\|^2
+    +\Bigl(\frac{\alpha}{2\gamma}-\frac{\mu_\gamma}{4\sqrt{\kappa}}\Bigr)
+    \|\bx^{k+1}-\bx_s^\star(\bz^k)\|^2\\
+    &-\frac{\alpha}{\gamma}
+    \Bigl(\frac{1-\alpha}{2}
+    -\frac{14\sqrt{\kappa}+11}{16\gamma\mu_\gamma}\alpha\Bigr)
+    \|\bx^{k+1}-\bz^k\|^2 .
+\end{aligned}
+\]
+Under~\eqref{eq:b2-prime-stepsizes}, \(\kappa\ge4\),
+\(0<\alpha\le\frac{1}{6\sqrt{\kappa}}\le\frac{1}{12}\), and
+\(\gamma\mu_\gamma\ge\frac{9}{10}\). Hence
+\(\frac{\alpha}{2\gamma}\le\frac{1}{12\gamma\sqrt{\kappa}}
+\le\frac{\mu_\gamma}{4\sqrt{\kappa}}\), so the third term is nonpositive.
+Moreover, \((14\sqrt{\kappa}+11)\alpha\le\frac{14}{6}+\frac{11}{12}=\frac{13}{4}\),
+whence
+\[
+    \frac{1-\alpha}{2}-\frac{14\sqrt{\kappa}+11}{16\gamma\mu_\gamma}\alpha
+    \ge\frac{11}{24}-\frac{13}{4}\cdot\frac{5}{72}
+    =\frac{67}{288}\ge\frac16 ,
+\]
+which completes the proof.
+\end{proof}
+
+\subsection{Proof of Lemma~\ref{lem:b2-prime-initial-gap}}
+\label{app:b2-prime-initial-gap}
+
+\begin{proof}[Proof of Lemma~\ref{lem:b2-prime-initial-gap}]
+For any \(\sigma>0\) and \(\bx\in\RR^n\), \eqref{eq:reduced-al} gives
+\(\calD_\sigma(\bx,\zero)=f(\bx)+\min_{\by\in\RR^m}\{h(\by)
++\frac{\sigma}{2}\|\calA(\bx)-\by\|^2\}\). Evaluating at \(\by=\calA(\bx)\)
+gives \(\calD_\sigma(\bx,\zero)\le F(\bx)\), while the \(L_h\)-Lipschitz
+continuity of \(h\) gives \(h(\by)\ge h(\calA(\bx))-L_h\|\calA(\bx)-\by\|\) and
+hence \(\calD_\sigma(\bx,\zero)\ge F(\bx)-\frac{L_h^2}{2\sigma}\).
+By~\eqref{eq:minimax-equality} and~\eqref{eq:effective-penalty} with
+\(\bmu=\zero\),
+\[
+    p_s(\bz)
+    =\min_{\bx\in\RR^n}\Bigl\{\calD_{\rho+s}(\bx,\zero)
+    +\frac{1}{2\gamma}\|\bx-\bz\|^2\Bigr\},
+\]
+so taking \(\sigma=\rho+s\) yields
+\(\inf F-\frac{L_h^2}{2(\rho+s)}\le p_s(\bz)\le F(\bz)\) for all
+\(\bz\in\RR^n\). Since \(\mathcal E_K\ge0\),
+\[
+    \mathcal W_K=p_s(\bz^K)+\frac12\mathcal E_K
+    \ge p_s(\bz^K)
+    \ge\inf_{\bx\in\RR^n}F(\bx)-\frac{L_h^2}{2(\rho+s)} .
+\]
+
+At the initialization \(\bx^0=\bz^0=\zero\) and
+\(\blmbd^{-1}=\blmbd^0=\zero\), we have \(\bar{\blmbd}^{-1}=\bw^0=\zero\), and
+therefore
+\[
+    \mathcal W_0=p_s(\zero)+\frac12\Bigl[
+    p_s(\zero)-d_s(\zero;\zero)
+    +\frac{1}{2s}\|\blmbd_s^\star(\zero)\|^2
+    +\frac{\mu_\gamma}{4}\|\bx_s(\zero;\zero)\|^2\Bigr].
+\]
+Write \(G_0:=G_f+G_{\calA}L_h\). Since \(\|\bq(\zero,\zero)\|\le L_h\),
+Assumption~\ref{ass:smoothness} gives
+\(\|\nabla_{\bx}\calD_\rho(\zero,\zero)\|\le G_0\). The function
+\(\mathcal P_s(\cdot,\zero;\zero,\zero)
+=\calD_\rho(\cdot,\zero)+\frac{1}{2\gamma}\|\cdot\|^2\) is
+\(\mu_\gamma\)-strongly convex with minimizer \(\bx_s(\zero;\zero)\) and
+gradient \(\nabla_{\bx}\calD_\rho(\zero,\zero)\) at \(\zero\); hence
+\(\mu_\gamma\|\bx_s(\zero;\zero)\|\le G_0\) and, using
+\(\calD_\rho(\zero,\zero)\ge F(\zero)-\frac{L_h^2}{2\rho}\),
+\[
+    d_s(\zero;\zero)
+    \ge\calD_\rho(\zero,\zero)
+    +\min_{\bx\in\RR^n}\Bigl\{\langle\nabla_{\bx}\calD_\rho(\zero,\zero),\bx\rangle
+    +\frac{\mu_\gamma}{2}\|\bx\|^2\Bigr\}
+    \ge F(\zero)-\frac{L_h^2}{2\rho}-\frac{G_0^2}{2\mu_\gamma} .
+\]
+Finally, the dual optimality condition
+\(\nabla_{\blmbd}\mathcal P_s(\bx_s^\star(\zero),\blmbd_s^\star(\zero);\zero,\zero)=\zero\)
+and~\eqref{eq:prox-multiplier} give
+\(\blmbd_s^\star(\zero)=\frac{s}{\rho+s}\bq(\bx_s^\star(\zero),\blmbd_s^\star(\zero))\),
+so \(\|\blmbd_s^\star(\zero)\|\le\frac{s}{\rho+s}L_h\) and
+\(\frac{1}{2s}\|\blmbd_s^\star(\zero)\|^2\le\frac{L_h^2}{2(\rho+s)}\).
+Combining these bounds with \(p_s(\zero)\le F(\zero)\),
+\(F(\zero)-\inf F\le\Delta\), and \(\rho+s>\rho\) gives
+\[
+    \mathcal W_0-\mathcal W_K
+    \le\Delta+\frac{L_h^2}{4\rho}+\frac{3L_h^2}{4(\rho+s)}
+    +\frac{3G_0^2}{8\mu_\gamma}
+    \le\Delta+\frac{L_h^2}{\rho}+\frac{(G_f+G_{\calA}L_h)^2}{2\mu_\gamma}
+    =\Delta_{\mathcal W}.
+\]
+\end{proof}

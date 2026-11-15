@@ -43,3 +43,6 @@ Codex：所选源会话日志合计约 1.31 MB，时间筛选及内容整理后�
 | [ChatGPT-1016-评议文章-20261025-0600.md](ChatGPT-1016-评议文章-20261025-0600.md) | GPT Pro 对 10-16 初稿的评议及后续 damping ALM 讨论，10-25 导出 |
 | [2026-10-25-144536-returete.txt](2026-10-25-144536-returete.txt) | Claude Code 会话导出（10-25），整理上述评议与 retreat 简报 |
 | [antigravity-20261026-tikhonov-retreat.md](antigravity-20261026-tikhonov-retreat.md) | Antigravity 会话导出（10-26），Tikhonov 线与 retreat 讨论 |
+| [2026-11-02-233308-pgpt-gpt.txt](2026-11-02-233308-pgpt-gpt.txt) | Claude Code 会话转录（10-26 至 11-02），GPT Pro 核验、加速线与路线 A/B 讨论 |
+| [antigravity-20261102-acceleration-discussion.md](antigravity-20261102-acceleration-discussion.md) | Antigravity 会话导出（11-02），关于 $\epsilon^{-2.5}$ 加速机理、动量 vs 锚定、Zhang–Xu 对比与统一框架讨论 |
+| [claude-20261108-20261113/](claude-20261108-20261113/README.md) | Claude Code 会话整理（11-08 至 11-13），Fast LRALM 的算法、势函数与证明重构；分叉会话已去重，按 01–09 顺读 |

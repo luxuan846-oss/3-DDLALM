@@ -1,0 +1,1285 @@
+% !TEX root = ../main.tex
+% Insert this file as an appendix section.
+% Status labels requested for this proof audit: "Proved" means "已证".
+% Every asserted step below is proved; no unproved step is used.
+
+\section{A large-center-stepsize lower bound}
+\label{app:q3-large-alpha}
+
+This appendix proves only the large primal-center stepsize branch for
+\(s=c_s/\epsilon\). We use the initialization, update order, output,
+problem class, and first hitting time of
+Definitions~\ref{def:splalm}, \ref{def:problem-class}, and
+\ref{def:complexity-measure}. The instance has the radial form of
+Example~\ref{ex:rotation}, but its frequency and amplitude are chosen
+differently. Neither the hypothesis \(\epsilon(\rho+s)\le c_1\) nor
+\(\beta>0\) is imposed. In particular, the strict spectral-radius
+conclusion of Lemma~\ref{lem:rot-spectral} is not invoked.
+
+We identify \(\RR^2\) with \(\mathbb C\), as in the preliminaries.
+Thus each complex coordinate below represents a real two-dimensional
+block, its modulus is its Euclidean norm, and
+\(\langle p,q\rangle=\operatorname{Re}(\overline p q)\).
+All matrices acting on the four complex coordinates have real entries.
+
+\subsection{Fixed constants and the statement}
+\label{subsec:q3-large-constants}
+
+\paragraph{Status: proved.}
+Fix
+\[
+\rho>0,\qquad 0<\eta\le\gamma,\qquad
+\tau>0,\qquad c_s>0,\qquad \Delta>0,
+\qquad \chi:=\frac{\eta}{\gamma}\in(0,1].
+\]
+Choose the following explicit positive constants:
+\begin{equation}
+\begin{aligned}
+\omega&:=\min\left\{
+  \frac{\chi}{512},\,
+  \frac{\sqrt{\eta\tau}}{2},\,
+  \sqrt{\frac{\eta}{4(1+\rho/\tau)}}\right\},
+&\delta&:=\frac{\omega^2}{64},\\
+C_\lambda&:=\frac{400}{\chi^2},
+&A_0&:=\min\left\{
+  \frac14,\,\frac{\Delta}{4},\,
+  \frac{1}{8(1+C_\lambda)+5\rho}\right\},\\
+c_{\rm r}&:=\frac34 A_0\omega
+  \min\left\{\frac{1}{\sqrt{\eta\tau}},\frac{1}{2\tau}\right\},
+&B&:=\max\left\{1,\frac{\tau}{c_s\delta},\frac{2}{c_{\rm r}}\right\},\\
+\epsilon_0&:=\min\left\{1,\frac{c_s}{2\tau},\frac{1}{2B}\right\}.
+\end{aligned}
+\label{eq:q3-large-fixed-constants}
+\end{equation}
+These constants depend only on
+\((\rho,\gamma,\eta,\tau,c_s,\Delta)\). They do not depend on
+\(\epsilon,\alpha,\beta\), or the instance dimensions.
+The constant \(\delta\) here bounds \(d/\alpha\); it is not the
+symbol \(\delta=1/s\) used in Appendix~\ref{app:upper-beta0}.
+
+\begin{theorem}[Large primal-center stepsizes at \(s=c_s/\epsilon\)]
+\label{thm:q3-large-alpha}
+\textbf{Status: proved.}
+Let the constants be given by~\eqref{eq:q3-large-fixed-constants}.
+For every
+\[
+0<\epsilon<\epsilon_0,\qquad
+\alpha\in(B\epsilon,1],\qquad \beta\in[0,1],\qquad
+s:=\frac{c_s}{\epsilon},
+\]
+there exists an instance
+\(I\in\mathcal I(\mathbf C_0,\Delta)\), with
+\(\mathbf C_0=(1,1,0,1,1)\) and \(n=m=2\), such that SPLALM
+started from zero satisfies
+\[
+R_k\ge c_{\rm r}\alpha>\epsilon
+\qquad\text{for every }k\ge0.
+\]
+Consequently,
+\[
+T^{\mathrm{KKT}}_\epsilon(\theta(\epsilon),\alpha,\beta;I)
+=+\infty,
+\qquad
+\theta(\epsilon)=(\rho,c_s/\epsilon,\gamma,\eta,\tau).
+\]
+\end{theorem}
+
+The proof is completed in Step~5 below. Throughout the construction let
+\[
+d:=\frac{\tau}{s}=\frac{\tau\epsilon}{c_s}.
+\]
+The choice of \(B\) and the strict inequality \(\alpha>B\epsilon\)
+give
+\begin{equation}
+0<d<\delta\alpha,\qquad 0<\alpha\le1,
+\qquad d<\frac12,
+\qquad 0<\omega\le\frac{\chi}{512}\le\frac1{512}.
+\label{eq:q3-large-domain}
+\end{equation}
+In particular, \(s>\tau\), as required by Definition~\ref{def:splalm}.
+
+\subsection{Parameters of the linear recursion}
+\label{subsec:q3-large-parameters}
+
+Set
+\begin{equation}
+\begin{aligned}
+\nu&:=\omega^2\alpha^2,
+&\zeta&:=1-\frac{\nu}{2}
+       +\mathrm{i}\sqrt{\nu-\frac{\nu^2}{4}},
+&u&:=\zeta-1,\\
+V&:=\beta+d(1-\beta),
+&E&:=\alpha^2+(1-\alpha)\nu,
+&W&:=1+\frac{\chi\alpha(1-\alpha)}{E},\\
+D&:=\alpha W,
+&H&:=V^2+(1-V)\nu,
+&\Upsilon&:=\beta V+(1-V)\nu,\\
+b^2&:=\frac{\nu WH}{\eta\tau\Upsilon},
+&\xi&:=\frac{\nu W(V-\beta)}{\Upsilon},
+&a&:=\frac{\nu(W-1)}{\eta\alpha}+\frac{\xi}{\eta},\\
+\kappa&:=\rho b^2+a,
+&\vartheta&:=(1-V)\xi,
+&U&:=\alpha+\chi(1-\alpha),
+\end{aligned}
+\label{eq:q3-large-parameters}
+\end{equation}
+where \(b\) denotes the positive square root. The symbol
+\(\Upsilon\) is the denominator denoted by \(J\) in the proposed
+construction. The radial curvature \(\kappa\) has the same meaning
+as in Example~\ref{ex:rotation}; it is unrelated to the coefficient
+called \(\kappa\) in~\eqref{eq:beta0-alpha}.
+
+\begin{lemma}[Uniform parameter bounds]
+\label{lem:q3-large-parameters}
+\textbf{Status: proved.}
+All quantities in~\eqref{eq:q3-large-parameters} are well-defined,
+including when \(\beta=0\). They satisfy
+\begin{equation}
+\begin{gathered}
+|\zeta|=1,\qquad |u|=\sqrt{\nu}=\omega\alpha,
+\qquad u^2+\nu u+\nu=0,\\
+\frac{\chi}{2}\le D\le1,\qquad D\ge\alpha,
+\qquad 0\le\xi\le2\delta D,
+\qquad 0\le\vartheta\le\delta D,\\
+\frac{\omega^2\alpha^2}{\eta\tau}
+\le b^2\le\frac{2\omega^2}{\eta\tau}\le\frac12,
+\qquad 0\le\eta a\le2\omega^2,
+\qquad 0<\kappa\le\frac12.
+\end{gathered}
+\label{eq:q3-large-parameter-bounds}
+\end{equation}
+For every \(t\in[0,1]\),
+\begin{equation}
+|u+t|^2=t^2+(1-t)\nu\ge\frac{\nu}{4}.
+\label{eq:q3-large-denominator-bound}
+\end{equation}
+Finally,
+\begin{equation}
+\begin{aligned}
+\eta a&=\frac{\nu(W-1)}{\alpha}+\xi,
+&\eta\tau b^2&=\nu W+V\xi,\\
+U-D&=\frac{(1-\alpha)\nu(W-1)}{\alpha},
+&\beta\eta\tau b^2&=\nu(WV-\vartheta).
+\end{aligned}
+\label{eq:q3-large-algebra-identities}
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+By~\eqref{eq:q3-large-domain}, \(0<\nu<1\) and \(0<V\le1\).
+If \(\beta>0\), then \(\Upsilon\ge\beta V>0\).
+If \(\beta=0\), then
+\(V=d<1\) and \(\Upsilon=(1-d)\nu>0\).
+Also \(E>0\) and \(H>0\). This proves that the definitions are valid.
+The definition of \(\zeta\) gives its modulus, \(|u|^2=\nu\), and
+\(u^2+\nu u+\nu=0\). Since
+\(\operatorname{Re}(u)=-\nu/2\),
+\[
+|u+t|^2=t^2+(1-t)\nu
+=(t-\nu/2)^2+\nu(1-\nu/4)
+\ge\frac34\nu\ge\frac14\nu.
+\]
+This proves~\eqref{eq:q3-large-denominator-bound}.
+
+Substitution of \(\nu=\omega^2\alpha^2\) gives
+\[
+D=\alpha+
+\frac{\chi(1-\alpha)}{1+(1-\alpha)\omega^2}.
+\]
+It follows that
+\[
+D\ge\alpha,\qquad
+\frac{U}{1+\omega^2}\le D\le U\le1,
+\qquad U\ge\chi.
+\]
+Since \(\omega\le1\), these inequalities imply \(D\ge\chi/2\).
+
+For \(\beta<1\), use
+\(V-\beta=d(1-\beta)\),
+\(1-V=(1-d)(1-\beta)\), and
+\(\Upsilon\ge(1-V)\nu\) to obtain
+\[
+\frac{\xi}{W}
+=\frac{\nu(V-\beta)}{\Upsilon}
+\le\frac{d}{1-d}\le2d,
+\]
+\[
+\vartheta
+=\frac{\nu W(V-\beta)(1-V)}{\Upsilon}
+\le W(V-\beta)\le Wd\le\delta D.
+\]
+Thus \(\xi\le2dW\le2\delta D\).
+When \(\beta=1\), both \(\xi\) and \(\vartheta\) are zero, so the
+same bounds hold.
+
+The identity \(H-\Upsilon=V(V-\beta)\) gives
+\[
+\eta\tau b^2
+=\frac{\nu WH}{\Upsilon}
+=\nu W+V\xi.
+\]
+Since \(H\ge\Upsilon\) and \(W\ge1\),
+\[
+b^2\ge\frac{\nu}{\eta\tau}.
+\]
+For the upper bound, use \(\nu W=\omega^2\alpha D\),
+\(V\le1\), and \(D\le1\):
+\[
+\eta\tau b^2
+\le\omega^2\alpha D+2\delta D
+\le\omega^2+2\delta\le2\omega^2.
+\]
+Moreover,
+\[
+\eta a
+=\omega^2\alpha(W-1)+\xi
+=\omega^2(D-\alpha)+\xi
+\le\omega^2D+2\delta D\le2\omega^2.
+\]
+The choices of \(\omega\) in~\eqref{eq:q3-large-fixed-constants}
+therefore imply
+\[
+b^2\le\frac{2\omega^2}{\eta\tau}\le\frac12,
+\qquad
+0<\kappa=\rho b^2+a
+\le\frac{2\omega^2}{\eta}\left(1+\frac{\rho}{\tau}\right)
+\le\frac12.
+\]
+Strict positivity of \(\kappa\) follows from \(\rho>0\) and \(b>0\).
+
+The first identity in~\eqref{eq:q3-large-algebra-identities} is the
+definition of \(a\); the second was proved above. For the third,
+\[
+U-D
+=\chi(1-\alpha)\left(1-\frac{\alpha^2}{E}\right)
+=\frac{\chi(1-\alpha)^2\nu}{E}
+=\frac{(1-\alpha)\nu(W-1)}{\alpha}.
+\]
+For the last identity, the definition of \(\xi\) gives
+\(\xi[\beta V+(1-V)\nu]=\nu W(V-\beta)\). Hence
+\[
+\begin{aligned}
+\beta(\nu W+V\xi)-\nu(WV-\vartheta)
+&=-\nu W(V-\beta)+\xi[\beta V+(1-V)\nu]\\
+&=0.
+\end{aligned}
+\]
+\end{proof}
+
+\subsection{Step 1: explicit zero-initialization decomposition}
+\label{subsec:q3-large-decomposition}
+
+Define
+\begin{equation}
+\begin{aligned}
+L&:=\frac{\tau b\zeta(u+\beta)}{u(u+V)},
+&X&:=\frac{A_0}{\max\{1,|L|\}},
+&\Lambda&:=LX,\\
+Z&:=\frac{\alpha\zeta}{u+\alpha}X,
+&M&:=\frac{\beta\zeta}{u+\beta}\Lambda,
+&\bv&:=(X,\Lambda,Z,M)^{\mathsf{T}}.
+\end{aligned}
+\label{eq:q3-large-eigenvector}
+\end{equation}
+Thus \(X>0\), \(L\ne0\), and
+\(\max\{X,|\Lambda|\}=A_0\).
+Set
+\begin{equation}
+\begin{aligned}
+r_x&:=-\frac{
+ (W-1)\dfrac{u}{u+\alpha}
+ +\xi\dfrac{\zeta}{u+V}}{W+\xi}\,X,\\
+\Omega_x&:=\xi\left((1-\alpha)r_x
+                  +(V-\alpha)\frac{\zeta}{u+V}X\right),\\
+r_\lambda&:=\frac{\chi(X-Z)+(\eta a+D)r_x-\Omega_x}{\eta b},\\
+r_z&:=r_x+X-Z,
+\qquad r_\mu:=r_\lambda+\Lambda-M,\\
+x_c&:=-(X+r_x),
+\qquad\lambda_c:=-(\Lambda+r_\lambda),\\
+\br&:=(r_x,r_\lambda,r_z,r_\mu)^{\mathsf{T}},
+\qquad
+\bw_c:=(x_c,\lambda_c,x_c,\lambda_c)^{\mathsf{T}}.
+\end{aligned}
+\label{eq:q3-large-initial-shift}
+\end{equation}
+All denominators are nonzero by Lemma~\ref{lem:q3-large-parameters}.
+The real matrix of the shifted four-step recursion is
+\begin{equation}
+\mathbb{T}:=\begin{pmatrix}
+1+\eta a-\chi & -\eta b & \chi & 0\\
+\tau b(1+\eta a-\chi) & 1-d-\eta\tau b^2 & \tau b\chi & d\\
+\alpha(1+\eta a-\chi) & -\alpha\eta b & 1-\alpha+\alpha\chi & 0\\
+\beta\tau b(1+\eta a-\chi) & \beta(1-d-\eta\tau b^2)
+  & \beta\tau b\chi & 1-\beta+\beta d
+\end{pmatrix}.
+\label{eq:q3-large-matrix}
+\end{equation}
+Introduce
+\begin{equation}
+Q(t):=(t-1+D)(t-1+V)-\vartheta(t-1+\alpha).
+\label{eq:q3-large-Q}
+\end{equation}
+
+\begin{lemma}[Spectral identities and the prescribed initialization]
+\label{lem:q3-large-decomposition}
+\textbf{Status: proved.}
+For every parameter choice above, including \(\beta=0\),
+\begin{equation}
+\mathbb{T}\bv=\zeta\bv,
+\qquad Q(\mathbb{T})\br=0,
+\qquad \bv+\br=-\bw_c.
+\label{eq:q3-large-decomposition-identities}
+\end{equation}
+Consequently, the candidate sequence
+\begin{equation}
+\widetilde{\bw}^{\,k}:=
+\bw_c+\zeta^k\bv+\mathbb{T}^k\br
+\label{eq:q3-large-candidate}
+\end{equation}
+satisfies \(\widetilde{\bw}^{\,0}=0\) and
+\[
+\widetilde{\bw}^{\,k+1}-\bw_c
+=\mathbb{T}(\widetilde{\bw}^{\,k}-\bw_c).
+\]
+The subspace \(\ker Q(\mathbb{T})\) is invariant under \(\mathbb{T}\).
+No assertion of strict stability at \(\beta=0\) is made here.
+\end{lemma}
+
+\begin{proof}
+We first prove the characteristic factorization. In
+\((1+t)I-\mathbb{T}\), replace the third row by the third row minus
+\(\alpha\) times the first row, and the fourth row by the fourth row
+minus \(\beta\) times the original second row. Then replace the second
+row by the second row minus \(\tau b\) times the first row.
+These determinant-preserving operations give the matrix
+\[
+\begin{pmatrix}
+t-\eta a+\chi&\eta b&-\chi&0\\
+-\tau b(1+t)&t+d&0&-d\\
+-\alpha(1+t)&0&t+\alpha&0\\
+0&-\beta(1+t)&0&t+\beta
+\end{pmatrix}.
+\]
+For a spectral variable \(1+t\), elimination of the two center
+coordinates therefore gives
+\[
+z=\frac{\alpha(1+t)}{t+\alpha}x,
+\qquad
+\mu=\frac{\beta(1+t)}{t+\beta}\lambda.
+\]
+Substitution into the primal and dual rows produces the two equations
+\[
+\bigl[t(t+U)-\eta a(t+\alpha)\bigr]x
+       +\eta b(t+\alpha)\lambda=0,
+\]
+\[
+t(t+V)\lambda-\tau b(1+t)(t+\beta)x=0.
+\]
+The center block has determinant \((t+\alpha)(t+\beta)\),
+which cancels the denominators introduced in these two equations.
+Thus, initially away from these denominators and then as a polynomial
+identity,
+\begin{equation}
+\begin{aligned}
+P(t):=\det((1+t)I-\mathbb{T})
+={}&t^2(t+U)(t+V)-\eta a\,t(t+\alpha)(t+V)\\
+&+\eta\tau b^2(t+1)(t+\alpha)(t+\beta).
+\end{aligned}
+\label{eq:q3-large-characteristic-unfactored}
+\end{equation}
+Write
+\[
+A:=\frac{\nu(W-1)}{\alpha},\qquad
+C:=D+V-\vartheta,\qquad N:=DV-\alpha\vartheta.
+\]
+Then~\eqref{eq:q3-large-algebra-identities} reads
+\[
+\eta a=A+\xi,\quad
+\eta\tau b^2=\nu W+V\xi,\quad
+U=D+(1-\alpha)A,\quad
+\alpha A=\nu(W-1),\quad
+\beta\eta\tau b^2=\nu(WV-\vartheta).
+\]
+The coefficient of \(t^3\) in \(P\) is
+\[
+U+V-\eta a+\eta\tau b^2
+=D+V-\vartheta-\alpha A+\nu W=C+\nu.
+\]
+The coefficient of \(t^2\) is
+\[
+\begin{aligned}
+UV-\eta a(\alpha+V)+\eta\tau b^2(1+\alpha+\beta)
+&=N+\nu(V+1)+\nu W(\alpha+\beta-V)+\beta V\xi\\
+&=N+\nu(V+1)+\nu D-\nu\vartheta\\
+&=N+\nu C+\nu.
+\end{aligned}
+\]
+Here the second equality uses
+\(\nu W(\beta-V)+\beta V\xi=-\nu\vartheta\), which follows
+from the last identity in~\eqref{eq:q3-large-algebra-identities}.
+The coefficient of \(t\) is
+\[
+\begin{aligned}
+-\eta a\alpha V+\eta\tau b^2(\alpha+\beta+\alpha\beta)
+&=-\nu V(W-1)+\nu D
+   +(1+\alpha)\nu(WV-\vartheta)\\
+&=\nu(C+N).
+\end{aligned}
+\]
+The constant coefficient is
+\(\alpha\beta\eta\tau b^2=\nu N\), and the leading coefficient
+is one. Hence
+\begin{equation}
+P(t)=(t^2+\nu t+\nu)
+       \bigl((t+D)(t+V)-\vartheta(t+\alpha)\bigr).
+\label{eq:q3-large-characteristic-factorization}
+\end{equation}
+
+Next, \(u^2+\nu u+\nu=0\) implies \(P(u)=0\).
+Divide~\eqref{eq:q3-large-characteristic-unfactored}, evaluated at
+\(u\), by \(u(u+V)(u+\alpha)\). The result is
+\[
+\frac{u(u+U)}{u+\alpha}-\eta a
+ +\frac{\eta\tau b^2\zeta(u+\beta)}{u(u+V)}=0.
+\]
+Since
+\(X-Z=(1-\alpha)uX/(u+\alpha)\) and
+\(\Lambda/X=\tau b\zeta(u+\beta)/(u(u+V))\), this equation gives
+\[
+uX=\eta aX-\eta b\Lambda-\chi(X-Z).
+\]
+This is precisely the first row of \(\mathbb{T}\bv=\zeta\bv\).
+The definition of \(\Lambda\) gives
+\[
+u(u+V)\Lambda=\tau b\zeta(u+\beta)X.
+\]
+Together with
+\(\Lambda-M=(1-\beta)u\Lambda/(u+\beta)\), it implies
+\[
+u\Lambda=\tau b\zeta X-d(\Lambda-M),
+\]
+which verifies the dual row after the primal row.
+The identities
+\[
+(u+\alpha)Z=\alpha\zeta X,
+\qquad (u+\beta)M=\beta\zeta\Lambda
+\]
+verify the two center rows. Thus \(\mathbb{T}\bv=\zeta\bv\).
+
+We now prove the annihilator identity without assuming stability.
+For this algebraic argument only, allow \(\nu\) to vary independently
+in \((0,4)\), with the other formulas unchanged and with arbitrary
+\(X>0\). Initially assume
+\[
+0<\alpha,\beta,d<1,\qquad V\ne\alpha,
+\]
+and that the roots \(t_1,t_2\) of \(Q\) are distinct.
+Here
+\[
+Q(1)=N=\frac{D\beta H}{\Upsilon}>0,
+\]
+\[
+Q(1-\alpha)=\alpha(W-1)(V-\alpha)\ne0,
+\qquad Q(1-V)=\vartheta(V-\alpha)\ne0.
+\]
+Therefore none of the following eigenvector denominators vanishes:
+\[
+\mathbf{e}(t):=
+\left(
+1,\frac{\tau bt(t-1+\beta)}{(t-1)(t-1+V)},
+\frac{\alpha t}{t-1+\alpha},
+\frac{\tau b\beta t^2}{(t-1)(t-1+V)}
+\right)^{\mathsf{T}}.
+\]
+The elimination equations above, and the factorization of \(P\), give
+\(\mathbb{T}\mathbf{e}(t_j)=t_j\mathbf{e}(t_j)\).
+For coefficients \(c_1,c_2\), requiring
+\(\bv+\sum_jc_j\mathbf{e}(t_j)\) to have equal first and third
+coordinates, and equal second and fourth coordinates, yields
+\begin{equation}
+\sum_{j=1}^2c_j\frac{t_j-1}{t_j-1+\alpha}
+=-\frac{u}{u+\alpha}X,
+\qquad
+\sum_{j=1}^2c_j\frac{t_j}{t_j-1+V}
+=-\frac{\zeta}{u+V}X.
+\label{eq:q3-large-synchronization-system}
+\end{equation}
+Indeed, the first coordinate difference in \(\mathbf{e}(t)\) is
+\((1-\alpha)(t-1)/(t-1+\alpha)\); the second coordinate
+difference is \((1-\beta)\tau bt/(t-1+V)\). Dividing by the
+nonzero factors \(1-\alpha\) and \((1-\beta)\tau b\),
+respectively, gives~\eqref{eq:q3-large-synchronization-system}.
+
+Let \(v_j=t_j-1\). These numbers satisfy
+\(v_j^2+Cv_j+N=0\). At any such root,
+\[
+\frac{v_j}{v_j+\alpha}
+=\frac{N+\alpha v_j}{\alpha^2-C\alpha+N},
+\qquad
+\frac{v_j+1}{v_j+V}
+=\frac{N-C+V-(1-V)v_j}{V^2-CV+N}.
+\]
+These identities follow by multiplying by their denominators and
+replacing \(v_j^2\) by \(-Cv_j-N\).
+The two constant denominators are
+\[
+A_\alpha:=\alpha^2-C\alpha+N
+=\alpha(W-1)(V-\alpha),
+\]
+\[
+A_V:=V^2-CV+N=\vartheta(V-\alpha).
+\]
+With \(S_0=c_1+c_2\) and \(S_1=c_1v_1+c_2v_2\),
+the synchronization system becomes
+\begin{equation}
+\begin{pmatrix}
+N&\alpha\\ N-C+V&-(1-V)
+\end{pmatrix}
+\begin{pmatrix}S_0\\ S_1\end{pmatrix}
+=-X\begin{pmatrix}
+A_\alpha u/(u+\alpha)\\ A_V\zeta/(u+V)
+\end{pmatrix}.
+\label{eq:q3-large-two-by-two-system}
+\end{equation}
+Its determinant is
+\[
+-N(1-V)-\alpha(N-C+V)
+=(\alpha-V)\bigl[D(1-V)+\alpha\vartheta\bigr]
+=\alpha(1-V)(\alpha-V)(W+\xi)\ne0.
+\]
+Cramer's rule for the first component gives
+\[
+S_0
+=-\frac{(W-1)u/(u+\alpha)+\xi\zeta/(u+V)}{W+\xi}X
+=r_x.
+\]
+The first equation in~\eqref{eq:q3-large-two-by-two-system}
+then gives
+\[
+S_1=-(WV-\vartheta)r_x
+       -(W-1)(V-\alpha)\frac{u}{u+\alpha}X.
+\]
+Using
+\[
+(W-1)\frac{u}{u+\alpha}X
+=-(W+\xi)r_x-\xi\frac{\zeta}{u+V}X,
+\]
+we obtain
+\[
+\begin{aligned}
+S_1
+&=\bigl[-WV+\vartheta+(V-\alpha)(W+\xi)\bigr]r_x
+  +\xi(V-\alpha)\frac{\zeta}{u+V}X\\
+&=-Dr_x+\Omega_x.
+\end{aligned}
+\]
+The coefficients themselves exist explicitly:
+\[
+c_1=\frac{S_1-v_2S_0}{v_1-v_2},
+\qquad
+c_2=\frac{v_1S_0-S_1}{v_1-v_2}.
+\]
+For \(\br':=c_1\mathbf{e}(t_1)+c_2\mathbf{e}(t_2)\),
+its first coordinate is \(r_x\), and its synchronization equations
+give \(r'_z=r_x+X-Z\) and
+\(r'_\mu=r'_\lambda+\Lambda-M\).
+The first row of \(\mathbb{T}-I\) gives
+\[
+S_1=\eta ar_x-\eta br'_\lambda+\chi(X-Z).
+\]
+Consequently
+\[
+r'_\lambda
+=\frac{\chi(X-Z)+(\eta a+D)r_x-\Omega_x}{\eta b}
+=r_\lambda.
+\]
+All four coordinates of \(\br'\) therefore equal those of \(\br\).
+Since each \(t_j\) is a root of \(Q\),
+\(Q(\mathbb{T})\br=0\) in this nondegenerate case.
+
+For completeness, the continuation to excluded parameter values is
+purely algebraic. On
+\[
+0<\alpha\le1,\quad 0\le\beta\le1,\quad 0<d<1,
+\quad 0<\nu<4,
+\]
+all entries of \(Q(\mathbb{T})\br\) are continuous: \(b>0\),
+\(W+\xi>0\), \(\Upsilon>0\), and the complex denominators
+\(u\), \(u+\alpha\), \(u+\beta\), and \(u+V\) do not vanish.
+The nondegenerate parameters used above are dense. To see this, first
+choose interior \((\alpha,\beta,d)\) with \(V\ne\alpha\) and
+\(V\ne U\), which is possible arbitrarily close to any target since
+\(V=\beta+d(1-\beta)\) varies strictly with \(\beta\) when \(d<1\).
+For these fixed interior parameters, the discriminant
+\(C^2-4N\) is a rational function of \(\nu\) and tends to
+\((U-V)^2>0\) as \(\nu\downarrow0\). Its numerator is therefore
+not the zero polynomial, and its zeros are isolated. Perturbing \(\nu\)
+arbitrarily little avoids them. Taking limits proves the annihilator
+identity at repeated roots, \(V=\alpha\), \(\alpha=1\),
+\(\beta=1\), and \(\beta=0\). One then specializes back to
+\(\nu=\omega^2\alpha^2\). This continuation concerns only an
+identity, not strict stability.
+
+Finally, the definitions give, coordinate by coordinate,
+\[
+\bv+\br
+=(X+r_x,\Lambda+r_\lambda,X+r_x,\Lambda+r_\lambda)^{\mathsf{T}}
+=-\bw_c.
+\]
+The candidate initialization and recurrence now follow from
+\(\mathbb{T}\bv=\zeta\bv\). The kernel is invariant because
+\(Q(\mathbb{T})\mathbb{T}=\mathbb{T}Q(\mathbb{T})\).
+\end{proof}
+
+\subsection{Step 2: uniform bounds for the remainder}
+\label{subsec:q3-large-remainder}
+
+\begin{lemma}[A uniformly bounded second-order kernel]
+\label{lem:q3-large-kernel}
+\textbf{Status: proved.}
+Write \(Q(t)=t^2-St+P_0\), so that
+\[
+S=2-D-V+\vartheta,
+\qquad P_0=(1-D)(1-V)+\vartheta(1-\alpha).
+\]
+Both roots \(t_1,t_2\) lie in the closed unit disk. Define
+\[
+G_{-1}:=0,
+\qquad G_j:=\sum_{i=0}^jt_1^{\,j-i}t_2^{\,i},\quad j\ge0,
+\]
+with the same finite sum used when the roots coincide. Then
+\begin{equation}
+\sup_{j\ge0}|G_j|\le\frac4D.
+\label{eq:q3-large-kernel-bound}
+\end{equation}
+Every sequence satisfying \(y_{k+2}=Sy_{k+1}-P_0y_k\) has
+\begin{equation}
+y_k=G_{k-1}y_1-P_0G_{k-2}y_0,\qquad k\ge1.
+\label{eq:q3-large-recurrence-solution}
+\end{equation}
+These statements include \(\beta=0\).
+\end{lemma}
+
+\begin{proof}
+Let \(h_0=(1-\delta)D\). The parameter bounds give
+\[
+S\ge0,\qquad
+0\le P_0\le1-D+\vartheta\le1-h_0<1,
+\]
+\[
+Q(1)=DV-\alpha\vartheta
+=\frac{D\beta H}{\Upsilon}\ge0.
+\]
+If the roots are real, their nonnegative sum and product imply that
+both are nonnegative. If one exceeded one and the other were less
+than one, \(Q(1)\) would be negative. If both were at least one and
+one exceeded one, their product would exceed one. Thus both roots
+belong to \([0,1]\). Order them as \(t_1\ge t_2\). Then
+\[
+t_2\le\sqrt{P_0}\le\sqrt{1-h_0},
+\qquad
+|G_j|\le\sum_{i=0}^jt_2^i
+\le\frac{1}{1-\sqrt{1-h_0}}
+\le\frac{2}{h_0}\le\frac4D.
+\]
+Here \(1-\sqrt{1-h_0}=h_0/(1+\sqrt{1-h_0})\ge h_0/2\),
+and \(\delta\le1/2\).
+If the roots are nonreal, they are conjugate and have common modulus
+\(q=\sqrt{P_0}\le\sqrt{1-h_0}<1\). Hence
+\[
+|G_j|\le(j+1)q^j
+\le\sum_{i=0}^jq^i
+\le\frac{1}{1-\sqrt{1-h_0}}\le\frac4D.
+\]
+This proves the kernel bound, including repeated real roots.
+The kernel satisfies \(G_0=1\), \(G_1=S\), and
+\(G_{j+1}=SG_j-P_0G_{j-1}\).
+Thus the right-hand side of~\eqref{eq:q3-large-recurrence-solution}
+has initial values \(y_1\), \(Sy_1-P_0y_0\), and satisfies the
+same recurrence. Induction proves the formula.
+\end{proof}
+
+\begin{lemma}[Remainder bounds independent of \(s\)]
+\label{lem:q3-large-remainder}
+\textbf{Status: proved.}
+Write
+\[
+(p_k,\ell_k,z_k^{\rm r},m_k)^{\mathsf{T}}:=\mathbb{T}^k\br.
+\]
+Then, for every \(k\ge0\),
+\begin{equation}
+\begin{aligned}
+|p_k|&\le\frac{36\omega}{\chi}X<\frac X8,
+&|z_k^{\rm r}|&\le\frac{36\omega}{\chi}X,\\
+|\ell_k|&\le C_\lambda|\Lambda|,
+&|m_k|&\le(1+C_\lambda)|\Lambda|.
+\end{aligned}
+\label{eq:q3-large-remainder-bounds}
+\end{equation}
+In particular, \(\mathbb{T}^k\br\) is uniformly bounded also when
+\(\beta=0\). None of the constants in these bounds grows with \(s\).
+\end{lemma}
+
+\begin{proof}
+From the formula for \(r_x\), the inequalities
+\(|u+\alpha|\ge\alpha\),
+\(\xi/W\le2d\), and
+\(|u+V|\ge\sqrt{\nu}/2\) give
+\[
+\begin{aligned}
+\frac{|r_x|}{X}
+&\le\frac{W-1}{W+\xi}\frac{|u|}{|u+\alpha|}
+   +\frac{\xi}{W+\xi}\frac{1}{|u+V|}\\
+&\le\omega+\frac{4d}{\sqrt{\nu}}
+\le\omega+\frac{4\delta}{\omega}
+=\frac{17}{16}\omega\le2\omega.
+\end{aligned}
+\]
+The estimates \(\xi\le2\delta D\),
+\(|V-\alpha|\le V+\alpha\),
+\(V/|u+V|\le1\), and
+\(\alpha/|u+V|\le2/\omega\) imply
+\[
+\begin{aligned}
+\frac{|\Omega_x|}{DX}
+&\le2\delta\left(2\omega+1+\frac{2}{\omega}\right)\\
+&=4\delta\omega+2\delta+\frac{4\delta}{\omega}
+=\frac{\omega^3}{16}+\frac{\omega^2}{32}+\frac{\omega}{16}
+\le\frac{5\omega}{32}\le\omega.
+\end{aligned}
+\]
+By the first row of \(\mathbb{T}\) and the definition of
+\(r_\lambda\),
+\[
+p_0=r_x,
+\qquad p_1=(1-D)r_x+\Omega_x.
+\]
+The identity \(Q(\mathbb{T})\br=0\) shows that \(p_k\)
+satisfies the recurrence in Lemma~\ref{lem:q3-large-kernel}.
+For \(k\ge1\), its solution formula therefore yields
+\[
+\begin{aligned}
+|p_k|
+&\le\frac4D\bigl(|p_1|+P_0|p_0|\bigr)\\
+&\le\frac4D\bigl(2|r_x|+|\Omega_x|\bigr)\\
+&\le\left(\frac{16\omega}{D}+4\omega\right)X
+\le\frac{36\omega}{\chi}X.
+\end{aligned}
+\]
+The bound also holds for \(k=0\).
+Because \(\omega\le\chi/512\),
+\(36\omega/\chi\le36/512<1/8\).
+
+The center identity gives
+\[
+X-Z=\frac{(1-\alpha)u}{u+\alpha}X,
+\qquad |X-Z|\le\omega X.
+\]
+Consequently \(|r_z|\le3\omega X\).
+The third row of the recursion is
+\[
+z_{k+1}^{\rm r}=(1-\alpha)z_k^{\rm r}+\alpha p_{k+1}.
+\]
+Since \(0<\alpha\le1\), induction bounds \(|z_k^{\rm r}|\)
+by \(\max\{|r_z|,\sup_j|p_j|\}\), which is at most
+\(36\omega X/\chi\).
+
+To estimate the multiplier without a factor proportional to \(s\),
+use the primal row itself:
+\[
+\eta b\ell_k=(1+\eta a-\chi)p_k+\chi z_k^{\rm r}-p_{k+1}.
+\]
+Its first coefficient is nonnegative because \(\chi\le1\) and
+\(a\ge0\). Since \(\eta a\le2\omega^2\le2\),
+\begin{equation}
+\eta b|\ell_k|
+\le(2+\eta a)\frac{36\omega}{\chi}X
+\le\frac{144\omega}{\chi}X.
+\label{eq:q3-large-dual-from-primal}
+\end{equation}
+Let \(E_\beta:=|u+\beta|^2=\beta^2+(1-\beta)\nu\).
+Using \(\operatorname{Re}(u)=-\nu/2\), we have
+\[
+\operatorname{Re}\bigl((u+V)\overline{(u+\beta)}\bigr)
+=\Upsilon+\frac{\nu}{2}(V-\beta)
+\ge\Upsilon.
+\]
+The modulus of this product is \(\sqrt{HE_\beta}\), so
+\(\sqrt{HE_\beta}\ge\Upsilon\). The definition of \(\Lambda\)
+then implies
+\begin{equation}
+\begin{aligned}
+\eta b|\Lambda|
+&=\frac{\eta\tau b^2\sqrt{E_\beta}}{\sqrt{\nu H}}X\\
+&=\frac{\sqrt{\nu}W\sqrt{HE_\beta}}{\Upsilon}X
+\ge\sqrt{\nu}WX=\omega DX.
+\end{aligned}
+\label{eq:q3-large-dual-amplitude-lower}
+\end{equation}
+Combining~\eqref{eq:q3-large-dual-from-primal}
+and~\eqref{eq:q3-large-dual-amplitude-lower} gives
+\[
+|\ell_k|
+\le\frac{144}{\chi D}|\Lambda|
+\le\frac{288}{\chi^2}|\Lambda|
+\le C_\lambda|\Lambda|.
+\]
+
+Finally,
+\[
+\Lambda-M=\frac{(1-\beta)u}{u+\beta}\Lambda.
+\]
+Since \(E_\beta\ge(1-\beta)\nu\),
+\[
+|\Lambda-M|^2
+=\frac{(1-\beta)^2\nu}{E_\beta}|\Lambda|^2
+\le(1-\beta)|\Lambda|^2\le|\Lambda|^2.
+\]
+Thus \(|r_\mu|\le(1+C_\lambda)|\Lambda|\).
+The fourth row reads
+\[
+m_{k+1}=(1-\beta)m_k+\beta\ell_{k+1}.
+\]
+Induction gives the asserted bound for \(m_k\), including
+\(\beta=0\), when \(m_k=r_\mu\) for every \(k\).
+\end{proof}
+
+\subsection{Step 3: membership in the normalized problem class}
+\label{subsec:q3-large-instance}
+
+Set \(R_*:=5X/4\), and define the instance by
+\begin{equation}
+\calA(x):=b(x-x_c),\qquad
+h(y):=\|y\|_2,\qquad
+f(x):=\psi(\|x-x_c\|)-b\langle\lambda_c,x-x_c\rangle,
+\label{eq:q3-large-instance}
+\end{equation}
+where
+\begin{equation}
+\psi(r):=
+\begin{cases}
+-\dfrac{\kappa}{2}r^2,&0\le r\le R_*,\\[3pt]
+\dfrac{\kappa}{2}(r-2R_*)^2-\kappa R_*^2,
+   &R_*\le r\le3R_*,\\[3pt]
+\kappa R_*(r-3R_*)-\dfrac{\kappa}{2}R_*^2,
+   &r\ge3R_*.
+\end{cases}
+\label{eq:q3-large-radial-extension}
+\end{equation}
+
+\begin{lemma}[Uniform global constants and the initial gap]
+\label{lem:q3-large-instance}
+\textbf{Status: proved.}
+The instance in~\eqref{eq:q3-large-instance} belongs to
+\(\mathcal I(\mathbf C_0,\Delta)\). More explicitly, it satisfies
+\[
+L_f\le\frac12,\qquad G_f\le\frac9{32}<1,
+\qquad L_{\calA}=0,\qquad G_{\calA}=b\le1,
+\qquad L_h=1,
+\]
+and \(F(0)-\inf F\le\Delta\).
+\end{lemma}
+
+\begin{proof}
+By the remainder bounds at \(k=0\),
+\[
+|x_c|\le X+|r_x|\le\frac98X<R_*,
+\]
+\[
+|\lambda_c|\le|\Lambda|+|r_\lambda|
+\le(1+C_\lambda)A_0\le\frac18.
+\]
+The last inequality follows from
+\(A_0\le[8(1+C_\lambda)+5\rho]^{-1}\).
+Also \(R_*\le5A_0/4\).
+
+The values and first derivatives of \(\psi\) agree at both junctions.
+At \(R_*\) the two values equal \(-\kappa R_*^2/2\), and both
+first derivatives equal \(-\kappa R_*\). At \(3R_*\) both values
+again equal \(-\kappa R_*^2/2\), and both first derivatives equal
+\(\kappa R_*\). On the three open pieces,
+\[
+\psi'(r)=
+\begin{cases}
+-\kappa r,&r<R_*,\\
+\kappa(r-2R_*),&R_*<r<3R_*,\\
+\kappa R_*,&r>3R_*,
+\end{cases}
+\qquad
+\psi''(r)\in\{-\kappa,\kappa,0\}.
+\]
+In particular, \(|\psi'(r)|\le\kappa R_*\).
+For \(r>0\), the radial and tangential Hessian eigenvalues of
+\(\psi(\|x-x_c\|)\) are \(\psi''(r)\) and \(\psi'(r)/r\).
+The latter equals \(-\kappa\) in the first piece, belongs to
+\([-\kappa,\kappa/3]\) in the middle piece, and belongs to
+\([0,\kappa/3]\) in the last piece. Near the origin of these radial
+coordinates, the function is the quadratic
+\(-\kappa\|x-x_c\|^2/2\).
+Its gradient is therefore continuous everywhere. Integrating its
+piecewise bounded Hessian along a line segment proves that this gradient
+is globally \(\kappa\)-Lipschitz. The added linear term does not change
+this Lipschitz constant. Hence \(L_f\le\kappa\le1/2\).
+Furthermore,
+\[
+\|\nabla f(x)\|
+\le\kappa R_*+b|\lambda_c|
+\le\frac58A_0+\frac18
+\le\frac9{32}.
+\]
+The affine map has constant Jacobian \(bI_2\), so
+\(L_{\calA}=0\) and \(G_{\calA}=b\le1\).
+The Euclidean norm is convex, and the reverse triangle inequality
+shows that its Lipschitz constant is one.
+
+The radial extension satisfies \(\psi(r)\ge-\kappa R_*^2\).
+Writing \(r=\|x-x_c\|\), the objective satisfies
+\[
+F(x)=\psi(r)-b\langle\lambda_c,x-x_c\rangle+br
+\ge-\kappa R_*^2+b(1-|\lambda_c|)r
+\ge-\kappa R_*^2.
+\]
+At zero, \(|x_c|<R_*\), so \(\psi(|x_c|)\le0\). Therefore
+\[
+F(0)\le b(1+|\lambda_c|)|x_c|
+\le\frac98 bR_*\le\frac{45}{32}A_0.
+\]
+It follows that
+\[
+\begin{aligned}
+F(0)-\inf F
+&\le\frac{45}{32}A_0+\kappa R_*^2\\
+&\le\frac{45}{32}A_0+\frac{25}{32}A_0^2\\
+&\le\frac{205}{128}A_0
+<2A_0\le\frac{\Delta}{2}\le\Delta.
+\end{aligned}
+\]
+This verifies every constant in \(\mathbf C_0\) and the gap budget.
+\end{proof}
+
+\subsection{Step 4: both proximal outputs and the actual trajectory}
+\label{subsec:q3-large-realization}
+
+\begin{lemma}[The candidate sequence is the actual algorithm sequence]
+\label{lem:q3-large-realization}
+\textbf{Status: proved.}
+For the instance above, the actual SPLALM iterates are
+\[
+\bw^k=\bw_c+\zeta^k\bv+\mathbb{T}^k\br,
+\qquad k\ge0.
+\]
+For every \(k\ge0\), both proximal evaluations, at
+\((x^k,\lambda^k)\) and \((x^{k+1},\lambda^k)\), return zero.
+Moreover,
+\begin{equation}
+\frac34X\le|x^k-x_c|\le\frac54X=R_*.
+\label{eq:q3-large-annulus}
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+First consider only the candidate sequence
+\(\widetilde{\bw}^{\,k}\) in~\eqref{eq:q3-large-candidate}.
+Its first coordinate satisfies
+\[
+\widetilde x^{\,k}-x_c=\zeta^kX+p_k.
+\]
+Since \(|\zeta|=1\) and \(|p_k|<X/8\),
+\[
+\frac78X\le|\widetilde x^{\,k}-x_c|\le\frac98X.
+\]
+These bounds imply the weaker annulus in
+\eqref{eq:q3-large-annulus} for every candidate point.
+Its multiplier satisfies
+\[
+|\widetilde\lambda^{\,k}|
+\le|\lambda_c|+|\Lambda|+|\ell_k|
+\le2(1+C_\lambda)A_0.
+\]
+Consequently, for both \(j=k\) and \(j=k+1\),
+\begin{equation}
+\begin{aligned}
+|\widetilde\lambda^{\,k}+\rho\calA(\widetilde x^{\,j})|
+&\le2(1+C_\lambda)A_0+\frac54\rho bX\\
+&\le\left[2(1+C_\lambda)+\frac54\rho\right]A_0
+\le\frac14<1.
+\end{aligned}
+\label{eq:q3-large-prox-interior}
+\end{equation}
+The final inequality uses the definition of \(A_0\), whose third
+upper bound is the reciprocal of four times the bracket.
+
+For \(h(y)=\|y\|_2\),
+\(\partial h(0)=\{q:\|q\|_2\le1\}\).
+The optimality condition for the strongly convex proximal problem is
+\[
+y=\prox_{h/\rho}(\calA(x)+\lambda/\rho)
+\quad\Longleftrightarrow\quad
+\lambda+\rho(\calA(x)-y)\in\partial h(y).
+\]
+Thus \(|\lambda+\rho\calA(x)|\le1\) makes its unique minimizer
+\(y=0\). Equation~\eqref{eq:q3-large-prox-interior} proves this
+for both candidate evaluations, at every iteration.
+
+On the candidate trajectory, all primal points lie in the quadratic
+piece. With \(p=x-x_c\) and \(\ell=\lambda-\lambda_c\),
+the reduced function is exactly
+\[
+\calD_\rho(x,\lambda)
+=-\frac{\kappa-\rho b^2}{2}|p|^2+b\langle\ell,p\rangle
+=-\frac a2|p|^2+b\langle\ell,p\rangle.
+\]
+Here \(h(0)=0\). Its gradients at the relevant evaluation points are
+\[
+\nabla_x\calD_\rho=-ap+b\ell,
+\qquad \nabla_\lambda\calD_\rho=bp.
+\]
+After shifting both centers by \((x_c,\lambda_c)\), the actual four
+updates consequently read
+\[
+\begin{aligned}
+p^+&=(1+\eta a-\chi)p-\eta b\ell+\chi z,\\
+\ell^+&=\ell+\tau bp^+-d(\ell-m),\\
+z^+&=(1-\alpha)z+\alpha p^+,\\
+m^+&=(1-\beta)m+\beta\ell^+.
+\end{aligned}
+\]
+These are precisely the rows of~\eqref{eq:q3-large-matrix}.
+The candidate sequence satisfies this recurrence and starts from zero
+by Lemma~\ref{lem:q3-large-decomposition}. It also satisfies every
+proximal and quadratic-region condition just verified.
+Therefore, at iteration zero its four updates equal the actual updates.
+If the two sequences agree through iteration \(k\), the unique primal
+update and the unique proximal output at the new primal point agree,
+and then the dual and center updates agree as well. Induction proves
+identity of the two sequences for all \(k\).
+\end{proof}
+
+\subsection{Step 5: a residual lower bound at every iteration}
+\label{subsec:q3-large-residual}
+
+\begin{lemma}[Uniform residual lower bound]
+\label{lem:q3-large-residual}
+\textbf{Status: proved.}
+For every \(k\ge0\), the actual post-primal output satisfies
+\[
+R_k\ge\frac34 bX\ge c_{\rm r}\alpha.
+\]
+\end{lemma}
+
+\begin{proof}
+The previous lemma gives \(y^{k+1}=0\), and hence
+\[
+q^k=\lambda^k+\rho\calA(x^{k+1})\in\partial h(0).
+\]
+The prescribed KKT residual is therefore
+\[
+R_k=\max\left\{
+\left|-a(x^{k+1}-x_c)+b(\lambda^k-\lambda_c)\right|,
+\ b|x^{k+1}-x_c|\right\}.
+\]
+Using only its feasibility component and the annulus gives
+\(R_k\ge3bX/4\).
+
+It remains to lower-bound the normalized amplitude \(bX\).
+The parameter bounds give
+\[
+b\ge\frac{\sqrt{\nu}}{\sqrt{\eta\tau}}
+=\frac{\omega\alpha}{\sqrt{\eta\tau}}.
+\]
+Also, since \(|u+V|=\sqrt H\) and
+\(|u+\beta|=\sqrt{E_\beta}\),
+\[
+\sqrt{E_\beta}=|u+\beta|
+\le|u+V|+(V-\beta)\le\sqrt H+d.
+\]
+By \(\sqrt H\ge\sqrt\nu/2\) and \(d\le\delta\alpha\),
+\[
+\frac{d}{\sqrt H}
+\le\frac{2\delta}{\omega}=\frac{\omega}{32}\le1.
+\]
+Consequently \(\sqrt{E_\beta}\le2\sqrt H\).
+The definition of \(L\) now yields
+\[
+\frac{b}{|L|}
+=\frac{\sqrt\nu\sqrt H}{\tau\sqrt{E_\beta}}
+\ge\frac{\omega\alpha}{2\tau}.
+\]
+Since \(L\ne0\) and \(X=A_0/\max\{1,|L|\}\),
+\[
+\begin{aligned}
+bX
+&=A_0\min\left\{b,\frac{b}{|L|}\right\}\\
+&\ge A_0\omega\alpha
+\min\left\{\frac{1}{\sqrt{\eta\tau}},\frac{1}{2\tau}\right\}.
+\end{aligned}
+\]
+Multiplication by \(3/4\) gives the asserted constant
+\(c_{\rm r}\) in~\eqref{eq:q3-large-fixed-constants}.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:q3-large-alpha}]
+The conditions \(0<\epsilon<\epsilon_0\) and
+\(\alpha>B\epsilon\) imply~\eqref{eq:q3-large-domain}.
+Lemmas~\ref{lem:q3-large-parameters}--\ref{lem:q3-large-decomposition}
+therefore define the instance parameters and its zero-initialized
+candidate trajectory. Lemma~\ref{lem:q3-large-instance} places the
+instance in \(\mathcal I(\mathbf C_0,\Delta)\), and
+Lemma~\ref{lem:q3-large-realization} proves that this is the actual
+algorithm trajectory. By Lemma~\ref{lem:q3-large-residual} and
+\(B\ge2/c_{\rm r}\),
+\[
+R_k\ge c_{\rm r}\alpha
+>c_{\rm r}B\epsilon\ge2\epsilon>\epsilon
+\qquad\text{for every }k\ge0.
+\]
+No output satisfies the tolerance. Definition~\ref{def:complexity-measure}
+therefore gives \(T^{\mathrm{KKT}}_\epsilon=+\infty\).
+\end{proof}
+
+\subsection{Step 6: separation from the proved upper-bound path}
+\label{subsec:q3-large-upper-separation}
+
+\begin{proposition}[Nonoverlap with Theorem~\ref{thm:upper-beta0}]
+\label{prop:q3-large-upper-separation}
+\textbf{Status: proved.}
+Whenever the fixed parameters also satisfy the hypotheses of
+Theorem~\ref{thm:upper-beta0}, its prescribed stepsize
+\[
+\alpha_{\rm ub}=\frac{\kappa_{\rm ub}}{\ell s},\qquad\beta=0,
+\]
+where \(\kappa_{\rm ub}\) denotes the coefficient in
+\eqref{eq:beta0-alpha}, satisfies
+\[
+\alpha_{\rm ub}<\frac{d}{384}<B\epsilon
+\]
+for all sufficiently small \(\epsilon\) at the same
+\(s=c_s/\epsilon\). Thus the two conclusions have disjoint
+parameter ranges.
+\end{proposition}
+
+\begin{proof}
+Use the upper-bound appendix's notation, with subscripts here to avoid
+confusing it with the present instance parameters:
+\[
+r_{\rm ub}:=\gamma^{-1},\qquad
+b_s^{\rm ub}:=\ell+s^{-1},\qquad
+ a_s^{\rm ub}:=r_{\rm ub}-b_s^{\rm ub}>0.
+\]
+The quantity in~\eqref{eq:beta0-stepsizes} is
+\[
+(\omega_s^{\rm ub})^2
+=s\frac{[a_s^{\rm ub}
+ +\tau b_s^{\rm ub}(3r_{\rm ub}-2b_s^{\rm ub})]^2}
+ {\tau^2(a_s^{\rm ub})^3}.
+\]
+Since \(b_s^{\rm ub}<r_{\rm ub}\),
+\(3r_{\rm ub}-2b_s^{\rm ub}>0\); hence
+\[
+(\omega_s^{\rm ub})^2\ge\frac{s}{\tau^2a_s^{\rm ub}}.
+\]
+The third upper bound on \(\alpha\) in
+\eqref{eq:beta0-stepsizes} consequently gives
+\[
+\alpha_{\rm ub}
+\le\frac{1}{384r_{\rm ub}\tau(\omega_s^{\rm ub})^2}
+\le\frac{\tau a_s^{\rm ub}}{384r_{\rm ub}s}
+<\frac{\tau}{384s}=\frac{d}{384}.
+\]
+On the other hand, our threshold satisfies
+\[
+B\epsilon\ge\frac{\tau\epsilon}{c_s\delta}
+=\frac{d}{\delta}>\frac{d}{384},
+\]
+because \(0<\delta<1\).
+This proves, in particular, the requested strict inequality
+\[
+B\epsilon>\frac{\kappa_{\rm ub}}{\ell s}.
+\]
+No extra dependence of \(B\) on an unspecified upper-bound coefficient
+is needed.
+\end{proof}
+
+\subsection{The difference between \(\beta=0\) and \(\beta>0\)}
+\label{subsec:q3-large-beta-endpoint}
+
+\paragraph{Status: proved.}
+The construction, all six steps, and their constants are uniform over
+\(\beta\in[0,1]\). Their spectral interpretations differ as follows.
+
+For \(\beta>0\),
+\[
+Q(1)=\frac{D\beta H}{\Upsilon}>0.
+\]
+The root argument in Lemma~\ref{lem:q3-large-kernel} then puts both
+roots strictly inside the unit disk: real roots lie in \([0,1]\),
+and the displayed strict inequality excludes one; nonreal roots have
+modulus \(\sqrt{P_0}<1\).
+Each component of \(\mathbb{T}^k\br\) satisfies the scalar
+second-order recurrence. For distinct roots, its solution is a linear
+combination of their powers. For a repeated root \(t\), the solution
+has the form \((c_0+c_1k)t^k\), with the zero-root case interpreted
+directly from the recurrence. These expressions tend to zero.
+Thus the remainder decays for each fixed \(\beta>0\), although no
+uniform decay rate as \(\beta\downarrow0\) is needed or asserted.
+
+For \(\beta=0\), the parameter formulas instead give exactly
+\[
+V=d,\qquad \Upsilon=(1-d)\nu,
+\qquad \xi=\frac{Wd}{1-d},\qquad \vartheta=Wd.
+\]
+Therefore
+\begin{equation}
+Q(t)=(t-1)(t-r_0),
+\qquad r_0:=1-D+d(W-1).
+\label{eq:q3-large-beta-zero-factorization}
+\end{equation}
+Because \(W\ge1\), \(D\le1\), and \(Wd\le\delta D\),
+\[
+0\le1-D\le r_0
+\le1-(1-\delta)D<1,
+\qquad
+1-r_0\ge(1-\delta)D\ge\frac{\chi}{4}.
+\]
+The unit root is simple. There is no Jordan growth at that root on
+\(\ker Q(\mathbb{T})\), because the two factors in
+\eqref{eq:q3-large-beta-zero-factorization} are distinct.
+More explicitly, define
+\[
+\br^{(1)}:=\frac{(\mathbb{T}-r_0I)\br}{1-r_0},
+\qquad
+\br^{(0)}:=\frac{(I-\mathbb{T})\br}{1-r_0}.
+\]
+The annihilator identity proves directly that
+\[
+\br=\br^{(1)}+\br^{(0)},\qquad
+\mathbb{T}\br^{(1)}=\br^{(1)},\qquad
+\mathbb{T}\br^{(0)}=r_0\br^{(0)}.
+\]
+Consequently,
+\begin{equation}
+\mathbb{T}^k\br=\br^{(1)}+r_0^k\br^{(0)},\qquad k\ge0.
+\label{eq:q3-large-beta-zero-remainder}
+\end{equation}
+The denominator \(1-r_0\) is bounded below by \(\chi/4\).
+Independently of this decomposition, Lemma~\ref{lem:q3-large-remainder}
+already provides the stated componentwise uniform bounds, so no
+summation of a nondecaying remainder is used.
+
+In this endpoint case \(M=0\), and the fourth row of \(\mathbb{T}\)
+is the identity on the fourth coordinate. Moreover,
+\[
+r_\mu=r_\lambda+\Lambda=-\lambda_c.
+\]
+Thus the actual dual center is exactly
+\[
+\mu^k=\lambda_c+\zeta^kM+(\mathbb{T}^k\br)_\mu
+=\lambda_c+r_\mu=0\qquad(k\ge0),
+\]
+as required by the algorithm with \(\beta=0\) and zero initialization.
+The persistent component in~\eqref{eq:q3-large-beta-zero-remainder}
+need not vanish; its primal component is nevertheless bounded together
+with the entire remainder by \(X/8\). It therefore cannot cancel the
+unit-modulus rotational component of primal amplitude \(X\).
+This is the precise replacement for the strict-stability argument used
+in the original \(\beta>0\) rotation branch.

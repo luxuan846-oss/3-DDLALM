@@ -131,7 +131,7 @@ improves the bound to $\mathcal O(\epsilon^{-2})$~\cite{zhang2020single}.
 The second technique is dual regularization, which subtracts
 $\frac{1}{2s}\|\blmbd-\bmu\|^2$ from the dual objective and makes it strongly
 concave. In our reduced augmented-Lagrangian formulation, this regularization
-has the following combined penalty interpretation:
+has the following effective penalty interpretation:
 \begin{equation}\label{eq:intro-effective-penalty}
   \max_{\blmbd}\mathcal P_s(\bx,\blmbd;\bz,\bmu)
   =\calD_{\rho+s}(\bx,\bmu)
@@ -139,7 +139,7 @@ has the following combined penalty interpretation:
 \end{equation}
 where $\mathcal P_s$ is defined in~\eqref{eq:potential} and
 $\calD_{\rho+s}$ is the reduced augmented Lagrangian~\eqref{eq:reduced-al}
-with the combined penalty parameter $\rho+s$; see Lemma~\ref{lem:effective-penalty}.
+with the effective penalty parameter $\rho+s$; see Lemma~\ref{lem:effective-penalty}.
 A zero center $\bmu=\mathbf 0$ recovers a quadratic penalty with
 coefficient $\rho+s$, which can leave a nonzero feasibility residual
 when $s$ is fixed. Updating $\bmu$ instead provides a multiplier-update
@@ -186,11 +186,11 @@ to shrink. This leads to the following question.
   carried by the penalty parameter?}
 \end{quote}
 In this paper, we provide a precise characterization addressing (Q). We study
-SPLALM, a family of single-loop linearized ALMs that perform one gradient
+LRALM, a family of single-loop linearized ALMs that perform one gradient
 descent--ascent step per iteration on $\calD_\rho$ with a fixed penalty
 $\rho$, a dual regularization with parameter $s$, and moving primal and dual
 centers (Definition~\ref{def:splalm}). Every member of the family has the
-combined penalty $\rho+s$ (Lemma~\ref{lem:effective-penalty}). We answer the
+effective penalty $\rho+s$ (Lemma~\ref{lem:effective-penalty}). We answer the
 first part of (Q) affirmatively and the second part negatively. If
 $\rho+s\le c_1/\epsilon$, no choice of constant center stepsizes improves on
 $\Omega(\epsilon^{-4})$ (Theorem~\ref{thm:lower-bound}). If $\rho$ is fixed
@@ -199,7 +199,7 @@ $\mathcal O(\epsilon^{-3})$ (Theorem~\ref{thm:upper-beta0}). Hence some
 parameter must grow, and the dual regularization alone can carry this growth.
 The lower bound is new. The upper bounds adapt the analyses of Smoothed GDA
 and Perturbed Smoothed GDA, both members of the family, thus demonstrating the
-tightness of the lower bound and of the critical order of the combined
+tightness of the lower bound and of the critical order of the effective
 penalty. Table~\ref{tab:known-results} compares these results with known
 guarantees. Our contribution can be summarized as follows: 
 \begin{table*}[tp]
@@ -224,16 +224,16 @@ Method & Parameter scale & Upper bound & Lower bound \\
  & $\mathcal O(\epsilon^{-3})$ & --- \\[3pt]
 \midrule
 \rowcolor{gray!15}
-\makecell[l]{\textbf{SPLALM family}\\Theorems~\ref{thm:upper-beta1} and~\ref{thm:lower-bound}}
+\makecell[l]{\textbf{LRALM family}\\Theorems~\ref{thm:upper-beta1} and~\ref{thm:lower-bound}}
  & \makecell{$\rho=\Theta(1)$,\\$\rho+s\le c_1\epsilon^{-1}$}
  & $\mathcal O(\epsilon^{-4})$ & $\Omega(\epsilon^{-4})$ \\[3pt]
-\makecell[l]{\textbf{SPLALM family}\\Theorem~\ref{thm:upper-beta0}}
+\makecell[l]{\textbf{LRALM family}\\Theorem~\ref{thm:upper-beta0}}
  & \makecell{$\rho=\Theta(1)$,\\$s=c_s\epsilon^{-1}$}
  & $\mathcal O(\epsilon^{-3})$ & --- \\[3pt]
 \bottomrule
 \end{tabular}
 \caption{Complexity guarantees for representative single-loop methods.
-For SPLALM, the bounds concern the family complexity in
+For LRALM, the bounds concern the family complexity in
 Definition~\ref{def:complexity-measure} over
 $\mathcal I(\mathbf C_0,\Delta)$, under the conditions of the cited theorems.
 In the last row, $c_s$ is chosen as in Theorem~\ref{thm:upper-beta0}.
@@ -245,10 +245,10 @@ lower bounds are algorithm-specific. ``---'' denotes an unreported bound.}
 \begin{enumerate}
     \item \textbf{A lower bound independent of the center stepsizes.}
     We construct hard instances on which
-    SPLALM, for every choice of constant center stepsizes
+    LRALM, for every choice of constant center stepsizes
     $(\alpha,\beta)\in[0,1]^2$, requires $\Omega(\epsilon^{-4})$ iterations
     whenever $\epsilon(\rho+s)\le c_1$ (Theorem~\ref{thm:lower-bound}).
-    Moving the centers therefore cannot compensate for a combined penalty
+    Moving the centers therefore cannot compensate for an effective penalty
     $\rho+s=o(\epsilon^{-1})$.
     % TODO: GS version. A strictly convex perturbation of the outer function
     % would convert this bound into a lower bound of the same order for game
@@ -256,14 +256,14 @@ lower bounds are algorithm-specific. ``---'' denotes an unreported bound.}
     % only after the perturbation lemma is proved.
 
     \item \textbf{Tightness for a fixed penalty.}
-    For $\beta=1$, SPLALM reduces to Smoothed GDA applied to $\calD_\rho$ and
+    For $\beta=1$, LRALM reduces to Smoothed GDA applied to $\calD_\rho$ and
     attains $\mathcal O(\epsilon^{-4})$ uniformly over
     $\mathcal I(\mathbf C,\Delta)$ (Theorem~\ref{thm:upper-beta1}). Hence the
     lower bound is tight when $\rho$ is fixed and $\epsilon(\rho+s)\le c_1$,
     for sufficiently small $\gamma$, $\eta$, and $\tau$.
 
-    \item \textbf{The critical scale of the combined penalty.}
-    For $\beta=0$, $\rho$ fixed, and $s=c_s/\epsilon$, SPLALM reduces to
+    \item \textbf{The critical scale of the effective penalty.}
+    For $\beta=0$, $\rho$ fixed, and $s=c_s/\epsilon$, LRALM reduces to
     Perturbed Smoothed GDA applied to $\calD_\rho$ and attains
     $\mathcal O(\epsilon^{-3})$ (Theorem~\ref{thm:upper-beta0}). Together with
     the lower bound, $\epsilon^{-1}$ is the critical order of $\rho+s$, and
@@ -275,13 +275,13 @@ lower bounds are algorithm-specific. ``---'' denotes an unreported bound.}
 % concluding section: (i) the complexity gain of primal smoothing under a
 % fixed s and a moving dual center; (ii) structural conditions on
 % (f,h,A) that yield a center--primal error bound and faster rates under a
-% fixed combined penalty.
+% fixed effective penalty.
 
 \paragraph{Organization}
 Section~\ref{sec:preliminaries} introduces the problem class and the KKT and
 game-stationarity criteria. Section~\ref{sec:algorithm-framework} introduces
-the SPLALM family and the complexity measure, and shows that every member
-of the family has the combined penalty
+the LRALM family and the complexity measure, and shows that every member
+of the family has the effective penalty
 $\rho+s$. Section~\ref{sec:lower-bound} states the main results, and
 Section~\ref{sec:lb-proof} proves the lower bound.
 Section~\ref{sec:conclusion} discusses open questions.

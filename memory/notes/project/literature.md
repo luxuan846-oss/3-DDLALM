@@ -42,7 +42,7 @@
 | `sahin2019inexact` | Sahin et al., NeurIPS 2019 | 非线性约束的不精确 ALM，罚参数递增，一致正则性条件 | Q3 正则性条件的对照 | 讨论 |
 | `elbourkhissi2025linearized`、`elbourkhissi2025perturbed`（与 `berahas2025linearized` 重复，key 名有误） | El Bourkhissi, Necoara（, Patrinos）, 线性化（扰动）ALM，arXiv:2503.01056 等 | 非线性约束的线性化 / 扰动 ALM 复杂度 | 固定罚线性化 ALM 的相关工作，正文 Related Work 需对比 | 未核对 |
 | `hu2026fixed` | Hu, Deng, *Fixed-Penalty Manifold Augmented Lagrangian Methods*（PKU workshop 2026 幻灯片，项目文件 memory/readings/jiang_hu.pdf） | 紧流形、线性 A；固定 ρ，有效罚 ρ+1/μ_k 仍增长；最后一页开放问题：moving-center 正则单环能否 O(ε^{-3})，"still unclear" | Q1 的直接动机来源；范围不同（紧流形、线性 A），不能宣称解决其开放问题 | 原文 |
-| — | arXiv:2607.08954, *Nonconvex Composite Functional Constraints via First-Order Augmented Lagrangian Methods under Local Regularity* | 局部正则性下的一阶 ALM | 待读 | 未读 |
+| — | Zhu, Li, arXiv:2607.08954, *Nonconvex Composite Functional Constraints via First-Order Augmented Lagrangian Methods under Local Regularity* | min h0(c0(x)) s.t. hi(ci(x))≤0，X 紧；每步解 prox-linear 子问题；ρ 固定且充分大，对偶正则 r_y=Θ(K^{-1/3})，KKT 残差 O(K^{-1/3})；局部乘子正则、可行初值、对偶截断；无下界 | 与 Theorem 3 同类（固定 ρ、对偶正则承担增长），子问题与假设不同；引言需引用并区分，见 `progress/lit-check-retreat-20261104.md` 第 3 节 | 摘要与 Algorithm 1、Theorem 4.1 |
 | — | arXiv:2502.19764, *Inexact Moreau Envelope Lagrangian Method for Non-Convex Constrained Optimization under Local Error Bound Conditions on Constraint Functions* | 局部误差界下的 Moreau 包络 Lagrangian 法 | 待读（网页限流，未读到） | 未读 |
 
 ## C. Minimax 与扰动 / 光滑方法（引言表格中的对照）

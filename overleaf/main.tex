@@ -2,14 +2,14 @@
 \ifdefined\XeTeXversion
   \providecommand{\headerps@out}[1]{}
 \else\ifdefined\directlua
-  \providecommand{\headerps@out}[1]{}
+  \providecommand{\headerps@out}[1]{} 
 \fi\fi
 \makeatother
 \documentclass[review,onefignum,onetabnum,nohypdvips]{siamart220329}
 \input{tools/shared}
-% \headers{Shrink the Dual Regularization, Keep the Penalty}{L. Li, K. Deng, C. Cui, and J. Hu}
-\headers{Shrink the Dual Regularization, Keep the Penalty}{}
-\title{{Shrink the Dual Regularization, Keep the Penalty: Tight Complexity of Linearized Augmented Lagrangian Methods}}
+% \headers{LRALM: Tight Complexity and Acceleration}{L. Li, K. Deng, C. Cui, and J. Hu}
+\headers{LRALM: Tight Complexity and Acceleration}{}
+\title{{LRALM: Tight Complexity and Acceleration of Linearized Regularized Augmented Lagrangian Methods}}
 % \author{
 % Luxuan Li\thanks{School of Mathematical Sciences, Beihang University,
 % Beijing 100191, China}
@@ -40,13 +40,13 @@ necessary, and whether it must be carried by the penalty. We study a family of
 methods that perform one gradient descent--ascent step per iteration on the
 reduced augmented Lagrangian with a fixed penalty $\rho$, a dual
 regularization with parameter $s$, and moving primal and dual centers. Every
-member of this family has the combined penalty $\rho+s$. By constructing hard
+member of this family has the effective penalty $\rho+s$. By constructing hard
 instances, we show that if $\epsilon(\rho+s)$ is at most a constant, then
 every choice of constant center stepsizes requires $\Omega(\epsilon^{-4})$
 iterations, and for fixed $\rho$ this order is attained within the family. In contrast, with
 $\rho$ fixed and $s$ of order $1/\epsilon$, a member of the family finds an
 $\epsilon$-KKT point in $\mathcal O(\epsilon^{-3})$ iterations. Hence the
-combined penalty must reach the order $1/\epsilon$ to improve on
+effective penalty must reach the order $1/\epsilon$ to improve on
 $\epsilon^{-4}$, and this growth can be carried by the dual regularization
 alone while the penalty stays fixed.
 \end{abstract}
@@ -65,16 +65,16 @@ complexity, lower bound, dual regularization, gradient descent--ascent
 \input{sections/AlgorithmFamily}
 \input{sections/LowerBound}
 \input{sections/LowerBoundProof}
+\input{sections/Acceleration}
 \input{sections/Conclusion}
 
 \bibliographystyle{tools/siamplain}
 \bibliography{tools/refer}
 
 \appendix
-\input{appendix/LowerBoundRotation}
-\input{appendix/UpperBoundBetaOne}
-\input{appendix/UpperBoundBetaZero}
-\input{sections/UpperBound}
-\input{appendix/UpperBoundProofs}
+% \input{appendix/LowerBoundRotation}
+% \input{appendix/UpperBoundBetaOne}
+% \input{appendix/UpperBoundBetaZero}
+\input{appendix/AccelerationProof}
 
 \end{document}
