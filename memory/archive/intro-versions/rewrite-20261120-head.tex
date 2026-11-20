@@ -1,0 +1,94 @@
+\subsection{Related Work}
+
+A standard way to handle the composition $h\circ\calA$ in
+Problem~\eqref{prob:main} is to introduce the auxiliary variable
+$\by=\calA(\bx)$ and solve the equality-constrained problem
+\begin{equation}\label{prob:split}
+  \min_{\bx,\by}\; f(\bx)+h(\by)\quad\text{s.t.}\quad \calA(\bx)=\by.
+\end{equation}
+Most methods for~\eqref{prob:split} are double-loop: prox-linear
+methods~\cite{Drusvyatskiy2019}, quadratic penalty
+methods~\cite{kong2019complexity,lin2022complexity}, and inexact or proximal
+augmented Lagrangian methods (ALMs)~\cite{sahin2019inexact,li2021rate,xie2021proximal}
+solve a subproblem approximately at every outer iteration, and their
+performance depends on the inner solver and its termination criterion.
+Single-loop methods avoid this overhead by taking one explicit gradient or
+proximal step per variable at each iteration. Without additional regularity
+assumptions, however, existing single-loop methods for
+Problem~\eqref{prob:main} attain $\mathcal O(\epsilon^{-3})$ complexity only by
+scaling a parameter with $\epsilon$: Moreau-envelope
+smoothing~\cite{bohm2021variable} takes the smoothing parameter of order
+$\epsilon$, and single-loop penalty and linearized ALM/ADMM
+schemes~\cite{hajinezhad2019perturbed,luSingleLoopGradientDescent2022,hallak2023adaptive,alacaoglu2024complexity,sun2024dual_descent_alm_admm,elbourkhissi2025perturbed,shi2025momentum}
+take the penalty or dual perturbation parameter of order $\epsilon^{-1}$. In
+both cases the smoothness constant of the primal problem grows as
+$\epsilon^{-1}$, and the primal stepsize shrinks to $\Theta(\epsilon)$.
+Fixed-penalty methods with $\mathcal O(\epsilon^{-2})$ complexity require a
+polyhedral error bound for affine constraints~\cite{zhang2022global} or a
+uniform LICQ for smooth nonlinear
+constraints~\cite{elbourkhissi2025linearized,liu2026fixed}; we assume neither
+condition for Problem~\eqref{prob:main}.
+
+Eliminating $\by$ from the Lagrangian of~\eqref{prob:split} gives the
+nonconvex--linear minimax problem
+\begin{equation}\label{eq:ncl}
+  \min_{\bx\in\RR^n}\max_{\bq\in\RR^m}\;
+  \calL(\bx,\bq) = \Phi(\bx,\bq)-h^*(\bq), \qquad
+  \Phi(\bx,\bq):=f(\bx)+\langle\bq,\calA(\bx)\rangle,
+\end{equation}
+whose game-stationary (GS) points coincide with the KKT points
+of~\eqref{prob:split}. For a fixed penalty $\rho>0$, eliminating $\by$ from the
+augmented Lagrangian instead gives a smooth nonconvex--concave (NC--C) minimax
+problem, and a single-loop linearized ALM is a gradient descent--ascent (GDA)
+method on it (Section~\ref{subsec:reduced-al}). For smooth NC--C minimax
+problems, two-timescale GDA requires $\mathcal O(\epsilon^{-6})$
+iterations~\cite{lin2020gradient}. Primal smoothing (Smoothed
+GDA~\cite{zhang2020smoothed}) and dual perturbation (Perturbed
+GDA~\cite{lu2020hybrid,xu2023unified}) each reduce this to
+$\mathcal O(\epsilon^{-4})$, and Perturbed Smoothed GDA, which combines the two,
+attains $\mathcal O(\epsilon^{-3})$ with a dual regularization parameter of
+order $\epsilon^{-1}$~\cite{li2026smoothing}. Li et al.~\cite{li2026smoothing}
+also prove matching lower bounds of $\Omega(\epsilon^{-4})$ and
+$\Omega(\epsilon^{-3})$ for these two algorithms. Single-loop methods designed
+for the nonconvex--linear structure likewise attain
+$\mathcal O(\epsilon^{-3})$ with an $\epsilon$-dependent dual
+regularization~\cite{pan2021efficient,he2024approximation,xu2026rada}.
+
+\paragraph{Our contributions}
+In every $\mathcal O(\epsilon^{-3})$ guarantee above, either the penalty
+parameter or the dual regularization parameter is of order $\epsilon^{-1}$.
+For ALMs, this growth matters: a fixed penalty is the main advantage of ALMs
+over penalty methods, because it keeps the primal smoothness constant bounded
+as $\epsilon\to0$. Existing lower bounds do not settle whether the growth is
+necessary. The bounds in~\cite{mahdavinia2022tight,li2026smoothing} hold for
+individual algorithms under prescribed parameters, and the problem-class
+bounds for smooth nonconvex or affinely constrained
+problems~\cite{carmon2020lower,liu2026lower} do not address the choice of the
+penalty. This raises the following question:
+\begin{quote}
+  \textbf{(Q1)}
+  \emph{Without additional regularity assumptions, must a single-loop
+  linearized ALM let some parameter grow with $1/\epsilon$ to attain
+  $\mathcal O(\epsilon^{-3})$ complexity? If so, must the penalty parameter
+  carry this growth?}
+\end{quote}
+
+In this paper, we provide a precise characterization addressing
+\textbf{(Q1)}. We introduce LRALM, a family $\calC_\theta$ of single-loop
+linearized ALMs with a penalty $\rho$, a dual regularization parameter $s$, and
+primal and dual centers updated with constant center stepsizes
+(Section~\ref{sec:algorithm-framework}). The family contains Smoothed GDA and
+Perturbed Smoothed GDA, and every member has the effective penalty $\rho+s$
+(Lemma~\ref{lem:effective-penalty}). We first show that if
+$\rho+s\le c_1/\epsilon$, every member of $\calC_\theta$ requires
+$\Omega(\epsilon^{-4})$ iterations to find an $\epsilon$-KKT point
+(Theorem~\ref{thm:lower-bound}), and that a member of $\calC_\theta$ attains
+this bound (Theorem~\ref{thm:upper-beta1}). We further show that a fixed $\rho$
+with $s=\Theta(\epsilon^{-1})$ attains $\mathcal O(\epsilon^{-3})$
+(Theorem~\ref{thm:upper-beta0}), and that every member of $\calC_\theta$ with
+these parameters requires $\Omega(\epsilon^{-3})$ iterations
+(Theorem~\ref{thm:lower-bound-fixed-rho}). Hence the answer to the first part
+of \textbf{(Q1)} is positive and the answer to the second part is negative:
+some parameter must grow as $1/\epsilon$, and the dual regularization
+parameter can carry this growth while $\rho$ stays fixed.
+

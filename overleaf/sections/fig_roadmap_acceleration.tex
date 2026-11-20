@@ -1,0 +1,149 @@
+% Mechanism & proof roadmap of the complexity analysis of Fast LRALM.
+% Uses \ref so numbers follow the manuscript.
+\begin{tikzpicture}[
+  font=\footnotesize,
+  >=Latex,
+  stage/.style={
+    draw=black!65, rounded corners=2.5pt, line width=0.6pt,
+    align=left, inner sep=5pt, fill=black!2
+  },
+  innerbranch/.style={
+    draw=blue!55!black, rounded corners=2.5pt, line width=0.75pt,
+    align=left, inner sep=4.5pt, fill=blue!3
+  },
+  errbranch/.style={
+    draw=red!55!black, rounded corners=2.5pt, line width=0.65pt,
+    align=left, inner sep=4.5pt, fill=red!2
+  },
+  balbox/.style={
+    draw=orange!65!black, rounded corners=2.5pt, line width=0.7pt,
+    align=left, inner sep=5pt, fill=orange!4
+  },
+  payoff/.style={
+    draw=blue!55!black, rounded corners=2.5pt, line width=0.7pt,
+    align=left, inner sep=5pt, fill=blue!3
+  },
+  arr/.style={->, line width=0.75pt, black!75}
+]
+
+% ==================== STAGE 1: TARGET & REDUCTION ====================
+\node[stage, text width=13.6cm] (S1) {%
+  {\centering\textbf{1.\ Target \& Reduction:}
+    \quad Goal $\mathcal R_{\mathrm{KKT}}(\bx^{k+1},\by^{k+1},\bq^k)\le\epsilon$
+    \quad {\scriptsize(Lemmas~\ref{lem:b2-prime-residual-decomposition}--\ref{lem:b2-prime-multiplier-bounds})}\par}\vspace{3.5pt}
+  \begin{minipage}[t]{5.55cm}\raggedright
+    \textbf{Regularization bias} {\scriptsize(Lem.~\ref{lem:b2-prime-multiplier-bounds})}:\\
+    $\|\bar{\blmbd}^k\|=\mathcal O(1)\;\Rightarrow\;\frac1s\|\bar{\blmbd}^k\|\le\frac\epsilon2$\\
+    by taking $s=\Theta(\epsilon^{-1})$.
+  \end{minipage}\hfill
+  {\color{black!35}\vrule width 0.5pt}\hfill
+  \begin{minipage}[t]{7.55cm}\raggedright
+    \textbf{Remaining task} {\scriptsize(Lem.~\ref{lem:b2-prime-residual-decomposition})}:\\
+    drive down the 3 step increments
+    $\|\bx^{k+1}-\bx^k\|$, $\|\blmbd^{k+1}-\bar{\blmbd}^k\|$, $\|\bx^{k+1}-\bz^k\|$
+    via one-step descent of $\mathcal W_k = p_s(\bz^k)+\tfrac12\mathcal E_k(\bz^k)$.
+  \end{minipage}};
+
+% ==================== STAGE 2: SINGLE-LOOP FORK ====================
+\node[innerbranch, anchor=north] (B2)
+  at ([yshift=-11mm]S1.south) {%
+  \begin{minipage}[t][4.0cm][t]{4.2cm}\raggedright
+    {\centering\textbf{\color{blue!55!black}Inner Accelerated Step}\par}
+    {\centering\scriptsize\color{black!75}\textit{Fixed $\bz^k$: dual Nesterov ($\omega$) + primal GD} (Lem.~\ref{lem:b2-prime-fixed-center-contraction})\par}\vspace{4pt}
+    {\color{blue!60!black}\textbf{$(-)$ Saddle tracking:}}\\
+    $-\Theta(\kappa^{-1/2})\|\bx^{k+1}-\bx_s^\star(\bz^k)\|^2$\\[3.5pt]
+    {\color{blue!60!black}\textbf{$(-)$ Fast contraction:}}\\
+    $-\Theta(\kappa^{-1/2})\mathcal E_k$\\[3.5pt]
+    {\color{blue!60!black}\textbf{$(-)$ Inner increments:}}\\
+    $-\Theta(1)\|\bx^{k+1}-\bx^k\|^2$\\
+    $-\Theta(1)\|\blmbd^{k+1}-\bar{\blmbd}^k\|^2$
+  \end{minipage}};
+
+\node[errbranch, anchor=north west] (B1)
+  at ([yshift=-11mm]S1.south west) {%
+  \begin{minipage}[t][4.0cm][t]{4.2cm}\raggedright
+    {\centering\textbf{\color{red!60!black}Outer Inexact Step}\par}
+    {\centering\scriptsize\color{black!75}\textit{$\bx^{k+1}$ replaces exact $\bx_s^\star(\bz^k)$} (Lem.~\ref{lem:b2-prime-z-step-p})\par}\vspace{4pt}
+    {\color{blue!60!black}\textbf{$(-)$ Outer descent:}}\\
+    $-\Theta(\alpha)\|\bx^{k+1}-\bz^k\|^2$\\[6pt]
+    {\color{red!65!black}\textbf{$(+)$ Error 1 (inexactness):}}\\
+    $+\Theta(\alpha)\|\bx^{k+1}-\bx_s^\star(\bz^k)\|^2$\\[6pt]
+    {\scriptsize\color{black!70}from approximating $\nabla p_s(\bz^k)$ with $\bx^{k+1}$ instead of $\bx_s^\star(\bz^k)$}
+  \end{minipage}};
+
+\node[errbranch, anchor=north east] (B3)
+  at ([yshift=-11mm]S1.south east) {%
+  \begin{minipage}[t][4.0cm][t]{4.2cm}\raggedright
+    {\centering\textbf{\color{red!60!black}Moving-Center Drift}\par}
+    {\centering\scriptsize\color{black!75}\textit{$\bz^k\!\to\!\bz^{k+1}$ shifts $(\bx_s^\star,\blmbd_s^\star)$} (Lem.~\ref{lem:b2-prime-center-error})\par}\vspace{4pt}
+    {\color{red!65!black}\textbf{$(+)$ Error 2 (center drift):}}\\
+    $+\mathcal O\bigl(\alpha\sqrt{\mathcal E_{k+1}(\bz^k)}\,\|\bx^{k+1}\!-\!\bz^k\|\bigr)$\\
+    $+\mathcal O\bigl(\alpha^2\|\bx^{k+1}-\bz^k\|^2\bigr)$\\[4.5pt]
+    {\scriptsize\color{black!75}\textbf{Young's inequality} ($\times\kappa^{1/2}$):}\\
+    {\color{red!65!black}$+\Theta(\kappa^{-1/2})\mathcal E_{k+1}(\bz^k)$}\\
+    {\color{red!65!black}$+\Theta(\alpha^2\sqrt{\kappa})\|\bx^{k+1}-\bz^k\|^2$}
+  \end{minipage}};
+
+% ==================== STAGE 3: ERROR-CONTRACTION BALANCING ====================
+\node[balbox, text width=13.6cm, anchor=north] (S3)
+  at ([yshift=-7mm]B2.south) {%
+  {\centering\textbf{3.\ Error--Contraction Balancing via Dual Acceleration \& Slow Center}\par}\vspace{3.5pt}
+  \begin{minipage}[t]{5.55cm}\raggedright
+    \textbf{Cancel Error 1 (inexactness):}\\[2pt]
+    {\color{red!65!black}$+\Theta(\alpha)\|\bx^{k+1}-\bx_s^\star(\bz^k)\|^2$}\\[1.5pt]
+    $\!\leftarrow\!$ {\color{blue!60!black}$-\Theta(\kappa^{-1/2})\|\bx^{k+1}\!-\!\bx_s^\star(\bz^k)\|^2$} {\scriptsize(Inner)}\\[3pt]
+    $\Longrightarrow\;$ requires $\alpha \lesssim \kappa^{-1/2}$
+  \end{minipage}\hfill
+  {\color{orange!45!black}\vrule width 0.5pt}\hfill
+  \begin{minipage}[t]{7.6cm}\raggedright
+    \textbf{Absorb Error 2 (moving-center drift):}\\[2pt]
+    {\color{red!65!black}$+\Theta(\kappa^{-1/2})\mathcal E_{k+1}(\bz^k)$}
+    $\leftarrow$ {\color{blue!60!black}$-\Theta(\kappa^{-1/2})\mathcal E_k$} {\scriptsize(Inner)}\\[1.5pt]
+    {\color{red!65!black}$+\Theta(\alpha^2\sqrt{\kappa})\|\bx^{k+1}\!-\!\bz^k\|^2$}
+    $\!\leftarrow\!$ {\color{blue!60!black}$-\Theta(\alpha)\|\bx^{k+1}\!-\!\bz^k\|^2$} {\scriptsize(Outer)}\\[3pt]
+    $\Longrightarrow\;$ requires $\alpha^2\sqrt{\kappa}\lesssim\alpha
+    \;\Longleftrightarrow\; \alpha \lesssim \kappa^{-1/2}$
+  \end{minipage}\vspace{5pt}
+  {\centering\textbf{\color{orange!65!black}Both balances meet at the slow-center stepsize
+    $\alpha=\frac{c_\alpha}{\sqrt{\kappa}}=\Theta(\kappa^{-1/2})$ ($0<c_\alpha\le\frac16$)}
+    {\scriptsize(Eq.~\eqref{eq:b2-prime-stepsizes})}\par}};
+
+% ==================== STAGE 4: DESCENT & COMPLEXITY PAYOFF ====================
+\node[payoff, text width=13.6cm, anchor=north] (S4)
+  at ([yshift=-7mm]S3.south) {%
+  {\centering\textbf{4.\ Sufficient Descent \& $\mathcal O(\epsilon^{-5/2})$ Payoff}
+    \quad {\scriptsize(Lemma~\ref{lem:b2-prime-potential-descent} $\to$ Theorem~\ref{thm:b2-prime-complexity})}\par}\vspace{3pt}
+  {\centering
+    $\mathcal W_{k+1}-\mathcal W_k
+    \le -\Theta(1)\|\bx^{k+1}-\bx^k\|^2
+        -\Theta(1)\|\blmbd^{k+1}-\bar{\blmbd}^k\|^2
+        -\Theta(\alpha)\|\bx^{k+1}-\bz^k\|^2,
+    \qquad \mathcal W_0-\mathcal W_K\le\Delta_{\mathcal W}$\par}\vspace{3pt}
+  {\centering
+    Telescope with $s=\Theta(\epsilon^{-1}),\;\kappa=s/\tau=\Theta(\epsilon^{-1}),\;\alpha=\Theta(\kappa^{-1/2})$:\quad
+    $K=\mathcal O(\alpha^{-1}\epsilon^{-2})
+    =\mathcal O(\sqrt{\kappa}\,\epsilon^{-2})
+    =\mathcal O(\epsilon^{-5/2})$\par}\vspace{2pt}
+  {\centering\scriptsize\color{black!70}
+    (Contrast without dual extrapolation: contraction rate $\kappa^{-1}$ forces $\alpha=\Theta(\kappa^{-1})$, yielding $\mathcal O(\epsilon^{-3})$.)\par}};
+
+% ==================== ARROWS ====================
+% Stage 1 -> Stage 2 fork
+\coordinate (Fsplit) at ([yshift=-5.5mm]S1.south);
+\draw[line width=0.75pt, black!75] (S1.south) -- (Fsplit);
+\draw[arr] (Fsplit) -| (B1.north);
+\draw[arr] (Fsplit) -- (B2.north);
+\draw[arr] (Fsplit) -| (B3.north);
+\node[fill=white, inner sep=2pt, font=\scriptsize\bfseries, text=black!85]
+  at (Fsplit) {2.\ Single-loop fork (one step per level)};
+
+% Stage 2 -> Stage 3
+\draw[arr, red!60!black] (B1.south) -- (B1.south |- S3.north);
+\draw[arr, blue!55!black] (B2.south) -- (S3.north);
+\draw[arr, red!60!black] (B3.south) -- (B3.south |- S3.north);
+
+% Stage 3 -> Stage 4
+\draw[arr] (S3.south) -- node[right=3pt, font=\scriptsize, text=black!80]
+  {all positive errors cancelled (Lem.~\ref{lem:b2-prime-potential-descent})} (S4.north);
+
+\end{tikzpicture}

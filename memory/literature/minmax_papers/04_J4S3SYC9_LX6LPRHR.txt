@@ -1,0 +1,833 @@
+          Complexity Lower Bounds for
+Nonconvex-Strongly-Concave Min-Max Optimization
+
+
+                       Haochuan Li                                   Yi Tian
+                    Department of EECS                         Department of EECS
+                           MIT                                        MIT
+                   Cambridge, MA 02139                        Cambridge, MA 02139
+                    haochuan@mit.edu                            yitian@mit.edu
+
+                     Jingzhao Zhang                              Ali Jadbabaie
+                    Department of EECS                         Department of CEE
+                           MIT                                        MIT
+                   Cambridge, MA 02139                        Cambridge, MA 02139
+                    jzhzhang@mit.edu                           jadbabai@mit.edu
+
+
+
+                                              Abstract
+         We provide a first-order oracle complexity lower bound for finding stationary
+         points of min-max optimization problems where the objective function is smooth,
+         nonconvex in the minimization variable, and strongly
+                                                         √      concave   in the maximization
+         variable. We establish a lower bound of Ω κ−2 for deterministic oracles,
+                                                                 
+         where  defines the level of approximate stationarity and κ is the condition number.
+         Our lower bound matches the best existing upper bound in the  and κ dependence
+         up to
+            √ logarithmic factors.    For stochastic oracles, we provide a lower bound of
+         Ω κ−2 + κ1/3 −4 . It suggests that there is a gap between the best existing
+                                
+
+         upper bound O(κ3 −4 ) and our lower bound in the condition number dependence.
+
+
+1   Introduction
+In this paper, we study the oracle complexity lower bound of the following min-max optimization
+problem:
+                                        min max f (x; y),                                   (1)
+                                          x∈X y∈Y
+               m              n
+where X ⊂ R and Y ⊂ R are nonempty closed convex sets. Such a problem arises in a wide
+range of applications, e.g., two-player zero-sum games [38], Generative Adversarial Networks [17],
+robust optimization [4], including defending adversarial attacks [18, 29].
+The research in min-max problems (1) has a long history. If f is linear in both x and y, the problem is
+known as bilinear min-max optimization, for which von Neumann’s min-max theorem [38] guarantees
+the existence of a saddle point, a point (x∗ , y ∗ ) that satisfies strong duality (i.e. min-max equals
+max-min). Later, Sion [44] generalized the statement to convex-concave functions under certain
+regularity conditions, which led to the theory of KKT conditions. Aside from studying the existence
+of strong duality, Nemirovski [33], Nesterov [36] proposed algorithms that can find approximate
+saddle points for convex-concave objectives with an O(1/) convergence rate. The rate was proven
+to be worst-case optimal even for min-max problems with a bilinear cross-term [41].
+Going beyond the assumption of convex-concavity poses a big challenge. In general nonconvex-
+nonconcave min-max optimization problems, a saddle-point may not exist [22]. Defining a notion of
+min-max points that is simultaneously nontrivial and tractable is still an open question. If one uses the
+
+35th Conference on Neural Information Processing Systems (NeurIPS 2021).
+standard definition of saddle points as in the strong duality problems, then determining its existence
+is known to be NP-hard [9], and finding an approximate local saddle point is PPAD-complete [9].
+Alternatively, a relaxed definition of min-max point known as Stackelberg equilibrium is guaranteed
+to exist [22], yet only local asymptotic convergence is known [22, 47].
+Due to the lack of a well-formulated suboptimality measure for general nonconvex-nonconcave
+problems, recent research has considered problems with special structures. For example, Lin et al.
+[26, 27] studied nonconvex-concave problems, Yang et al. [50] studied problems satisfying the
+Polyak-Lojasiewicz inequality, Diakonikolas et al. [11] studied problems with weak Minty variational
+inequality solutions, Mangoubi and Vishnoi [30] considered an algorithm specific equilibrium.
+Our work focuses on the analysis of gradient oracle complexity in the nonconvex-strongly-concave
+min-max setting. In the standard convex-concave setup, Lin et al. [27] designed a set of algorithms
+that achieve near-optimal gradient complexity for all the three variants of convex-concave min-max
+optimization. However, in the nonconvex-concave setting, it is unclear whether their algorithm is
+optimal given that no matching lower bound exists. In this work, our main contribution is as follows:
+
+       • We construct an explicit
+                             √ example on which no first-order zero-respecting algorithm can
+         achieve less than Ω( κ−2 ) oracle complexity for smooth nonconvex-strongly-concave
+                                   √
+         problems, matching the Õ( κ−2 ) complexity in [27].
+       • We further extend
+                        √ our results to the stochastic(-oracle) setting, achieving the complexity
+         lower bound Ω( κ−2 + κ1/3 −4 ). Compared against the results in [26], our result suggests
+         that the dependency on the condition number may not be optimal.
+
+1.1   Related work
+
+Upper bounds. Since standard gradient descent-ascent diverges for even the simplest case of
+bilinear zero-sum games, researchers proposed different variations to achieve convergence in the
+convex-concave setting, with possibly additional structures. One of the variations is known as extra-
+gradient method [24, 46, 33, 7, 49], which takes two gradient steps per iteration. Another line studies
+the optimistic gradient method [43, 8, 15, 31, 20]. Mokhtari et al. [32] proposed a unified analysis
+through the lens of proximal update. Some works [1, 27] focused on accelerating the known rates in
+terms of the conditional number dependence. Golowich et al. [16] studied last iterate convergence.
+Lee et al. [25], Daskalakis et al. [10], Wei et al. [48] studied two-player zero-sum stochastic games.
+Convergence under the nonconvex-concave setup is less studied. Rafique et al. [42] studied a proximal
+version of gradient methods. Lin et al. [26] studied gradient descent ascent with different time scales.
+Thekumparampil et al. [45] proposed an implicit algorithm for the nonconvex-concave setting. Many
+other works also studied different variations of convergence [39, 23, 28, 40].
+
+Lower bounds. Our work follows the complexity framework introduced by Nemirovski in the
+1980s. The most classical lower bounds are due to Nemirovski and Nesterov, and are discussed in
+their textbooks [35, 37]. Recently, much progress was made [13, 5, 6, 3] by extending the original
+analysis to the nonconvex setting. Our work builds upon these results. Another line of works studies
+lower bounds for quadratic problems in min-max setting and utilizes a different framework sometimes
+known as Stationary Canonical Linear Iterative (SCLI) [2, 41, 51, 21]. It exploits the closed-form
+updates for linear dynamics and studies convergence properties via the transition matrices.
+Concurrently, Zhang et al. [52] and Han et al. [19] provided lower complexity bounds similar to
+ours in the deterministic nonconvex-strongly-concave setting. Their constructions are similar to each
+other but different from ours. Their constructions can be roughly viewed as a simple addition
+                                                                                            √ of the
+quadratic instance in [41] and a nonconvex component as in [6]. Informally speaking, their κ factor
+comes from the rate in√[41]. However, our construction is mainly inspired by the chain-like instance
+in [5]. To√obtain the κ factor, we insert quadratic sub-chains into it to increase its length by a
+factor of κ. One possible advantage of our construction is that the minimization and maximization
+variables are weakly coupled so that we may have more freedom to modify the component functions
+to extend our results to other settings such as the nonconvex-concave function class. Zhang et al. [52]
+and Han et al. [19] also provided novel analyses with extensions to the upper and lower bounds in the
+finite-sum setting, whereas we further extend our results to the stochastic setting.
+
+
+                                                   2
+2     Preliminaries
+Before introducing our main results, we describe the problem setup and algorithm complexity in
+this section. First, we introduce the notation. Next, we define the function class and algorithm class.
+Finally, we provide the formal definition of optimality measure and gradient complexity.
+
+Notation. We use bold lower-case letters to denote vectors and use xi to denote the i-th coordinate
+of vector x. Let supp(x) := {i : xi 6= 0} denote the support of x. Let kxk2 and kxk∞ denote its
+`2 and `∞ norm respectively. For a matrix A, we use Ai,j to denote its (i, j)-th entry and A> its
+transpose. We use kAk2 to denote its spectral norm and det(A) its determinant. We use calligraphic
+upper-case letters to denote sets, as in X and Y. For a nonempty closed convex set X ∈ Rd , let
+PX denote the Euclidean projection onto X . We also use a semi-comma besides commas to split
+minimization and maximization variables of a function. For example, when we write f (x, z; y), it
+means x and z are the variables to minimize and y is the variable to maximize. Finally, we use the
+standard O(·) and Ω(·) notation, with Õ(·) and Ω̃(·) further hiding log factors.
+
+2.1   Function class
+
+Our analysis focuses on the class of smooth nonconvex-strongly-concave functions defined below.
+Definition 1. Given L ≥ µ > 0 and ∆ > 0, we use F(L, µ, ∆) to denote the set of all functions
+f : X × Y → R for some nonempty closed convex sets X ⊂ Rm and Y ⊂ Rn where m, n ∈ N,
+which satisfies the following assumptions:
+       1. f is L-smooth, that is, for every x1 , x2 ∈ X and y1 , y2 ∈ Y,
+                         k∇f (x1 ; y1 ) − ∇f (x2 ; y2 )k2 ≤ L k(x1 , y1 ) − (x2 , y2 )k2 ;
+
+       2. For any fixed x ∈ X , f is µ-strongly concave in y, that is, for any y1 , y2 ∈ Y,
+                                                                           1              2
+                     f (x; y1 ) ≤ f (x; y2 ) + ∇y f (x; y2 ) · (y1 − y2 ) − µ ky1 − y2 k2 ;
+                                                                           2
+       3. fm (0) − minx∈X fm (x) ≤ ∆, where fm (x) := maxy∈Y f (x; y).
+For any fixed y ∈ Y, f is potentially nonconvex in x. Note that F(L, µ, ∆) includes functions with
+domain on Rm × Rn for all m, n ∈ N, following the framework of dimension-free convergence
+guarantees [34, 37]. In Section 5, we will construct a hard instance with domain dimensions m, n
+both growing inversely in the required accuracy .
+
+2.2   Algorithm class
+
+In this section, we describe the algorithms of interest for the min-max problems with the function
+class defined above. In particular, we restrict our analysis to first-order algorithms that optimize
+objectives using first-order oracles defined below.
+Definition 2 (Deterministic first-order oracle). The deterministic first-order oracle of a differentiable
+function f : X → R is a mapping O : x 7→ (f (x), ∇f (x)) for x ∈ X .
+Definition 3 (Stochastic first-order oracle). A stochastic first-order oracle with bounded variance σ 2
+of a differentiable function f : X → R is a mapping O : xh7→ (f (x), g(x, ξ)) fori x ∈ X , where ξ is
+                                                                                   2
+a random variable satisfying E[g(x, ξ)] = ∇f (x) and E kg(x, ξ) − ∇f (x)k2 ≤ σ 2 .
+
+We say O is a first-order oracle if it is a deterministic or stochastic first-order oracle.
+Furthermore, we consider first-order algorithms satisfying the zero-respecting assumption. Formally,
+we define first-order algorithms as follows.
+Definition 4 (First-order algorithm). A first-order (zero-respecting) algorithm is one that for any
+function f : X → R and its associated first-order oracle Of : x 7→ (f (x), g), the (t + 1)-th iterate
+xt+1 satisfies                                                                   
+                                                 [                               
+                  xt+1 ∈ PX (v) : supp(v) ⊂              supp(xi ) ∪ supp(g i )
+                                                                                
+                                                                                    .
+                                                                                 
+                                                    0≤i≤t
+
+
+
+                                                     3
+Definition 4 extends the standard zero-respecting algorithms [5, 3] to the constrained setting. It
+covers most existing first-order methods used in the literature including (projected) stochastic gradient
+descent, adaptive methods, and more importantly, the algorithms used in [26, 27] which achieve
+the upper bounds for nonconvex-strongly-concave min-max optimization in the deterministic and
+stochastic settings, respectively. There is a standard reduction from a lower bound for zero-respecting
+algorithms to that for arbitrary deterministic algorithms with deterministic or even stochastic first-
+order oracles [5, 3]. We defer this extension to future work.
+
+2.3   Optimality via approximate stationarity
+
+We measure the progress of solving the nonconvex-strongly-concave problem via the gradient norm
+of the maximized function with respect to the minimization variable x. Following [14], we define the
+notion of -stationary points in presence of constraints as follows.
+Definition 5. Let X be a nonempty closed convex set. A point x ∈ X is said to be an -stationary
+point of an L-smooth function f : X → R if
+                                L kPX [x − (1/L)∇f (x)] − xk2 ≤ .
+
+Note that the algorithm studied in [26] also assumes bounded domain and used the same notion
+of stationarity. This definition of stationary points reduces to k∇f (x)k2 ≤  when X = Rd for
+some d ∈ N. For any f ∈ F(L, µ, ∆), Definition 5 applies to fm as it is Lm -smooth, where
+Lm ≤ (κ + 1)L by [26, Lemma 4.3].
+Our goal of solving the nonconvex-strongly-concave min-max optimization problem is to find an
+-stationary
+   √         point of fm . We show that no deterministic first-order algorithm can achieve less than
+Ω( κ−2 ) gradient complexity for smooth nonconvex-strongly-concave problems, matching the
+   √
+Õ( κ−2 ) complexity in [27]. We further extend our result to the stochastic setting, achieving a
+                            √
+complexity lower bound Ω( κ−2 + κ1/3 −4 ).
+
+3     Main results
+In this section, we present our main results on the minimum number of gradient oracle calls required
+to find an -stationary point. The results for deterministic and stochastic settings are presented in the
+following two subsections respectively.
+
+3.1   Lower bound on first-order oracle complexity in the deterministic setting
+
+Nonconvex-strongly-concave min-max optimization subsumes nonconvex optimization, the lower
+bound Ω(L∆/2 ) in nonconvex optimization [5] also holds for nonconvex-strongly-concave min-max
+                                                    √                            √
+optimization. However, compared with the Õ(L∆ κ/2 ) upper bound [27], a κ factor is missing.
+Our main result below fills this gap, showing that the known rate by [26] is optimal up to log factors.
+Theorem 1. For any µ, L, ∆,  > 0 such that κ = L/µ ≥ 1, there exists a function instance
+f : Rm × Rn → R in F(L, µ, ∆) for some m, n ∈ N with its deterministic first-order oracle
+such that for any first-order algorithm, we have k∇fm (xt )k2 > , where fm (x) := maxy f (x, y),
+whenever                                              √
+                                               c0 L∆ κ
+                                           t≤           ,
+                                                   2
+where c0 is a numerical constant.
+
+Similar to the lower bound in [5], our lower bound applies to dimension-free optimization in nature.
+That is, for a given , we construct a hard instance with dimension d = O(1/2 ), which can be very
+large if  is small. The discussion on the proof is deferred until Section 5.
+
+3.2   Lower bound in the stochastic setting
+                                                                                    
+In the stochastic setting, Arjevani et al. [3] provided a lower bound of Ω L∆σ 2 /4 for smooth
+nonconvex optimization which is a special case of nonconvex-strongly-concave min-max optimization.
+Our analysis improves this bound by a factor of κ1/3 in Theorem 2.
+
+
+                                                   4
+Theorem 2. For any µ, L, ∆, , σ > 0 such that κ = L/µ ≥ 1, there exists a function instance
+f : X × Y → R in F(L, µ, ∆) and a stochastic first-order oracle O for f with variance σ 2 such
+that for any first-order algorithm, we have E [Lm kPX [xt − (1/Lm )∇fm (xt )] − xt k2 ] > , where
+fm (x) := maxy f (x, y), whenever              √
+                                                  κ κ1/3 σ 2
+                                                              
+                                     t ≤ c0 L∆      +
+                                                 2      4
+where Lm is the smoothness parameter of fm and c0 is a numerical constant.
+
+Lin et al. [26] provided an upper bound of O κ3 −4 . Therefore, there is a gap between our lower
+                                                   
+bound and their upper bound in terms of the dependency on κ.
+In summary, our proposed lower bounds improve the known ones by a multiplicative dependence on
+the condition number. Before proceeding to discuss the concrete techniques, we first summarize the
+general framework for establishing lower bounds in the next section.
+
+4   Framework for proving lower bound
+In this section, we provide an outline for the proof of the lower bound in [37] and [5], which lay the
+foundation for our construction of the hard instance. Both works utilize the notion of zero-chains [5],
+which instantiates a class of hard functions for optimization. We first define a zero-chain and then
+discuss how it is used to establish complexity lower bounds.
+Definition 6 (Zero-chain). We say a function f : X → R, where X ⊂ Rd , is a (first-order) zero-chain
+if for every 1 ≤ i ≤ d,
+           supp(x) := {i : xi 6= 0} ⊂ {1, . . . , i − 1} =⇒ supp(∇f (x)) ⊂ {1, . . . , i}.
+
+Suppose the domain X ⊂ Rd satisfies supp(PX (x)) = supp(x) for all x ∈ Rd , i.e., projecting x
+onto X does not change its support. For example, this requirement holds when X is a hypercube or
+the whole space Rd . If we run a first-order algorithm on a zero-chain initialized at x0 = 0 (which we
+assume to hold without loss of generality) with a deterministic first-order oracle, then at each iteration,
+at most one new coordinate of x becomes nonzero (“discovered”). Therefore, supp(xt ) ⊂ {1, . . . , t}.
+Then we obtain a lower complexity bound of T supposing we can show a good solution exists only if
+at least T coordinates are discovered.
+Therefore, the key to proving a lower bound of first-order algorithms with a deterministic oracle is to
+find a function f such that:
+
+      1. it is a zero-chain that belongs to the function class we are interested in; and that
+      2. we cannot obtain an -optimal solution if the t-th coordinate of x is zero for every t ≥ T .
+
+This is actually a general strategy for proving lower bounds of first-order methods, used in the lower
+bound construction both by Carmon et al. [5] for smooth nonconvex optimization and by us here for
+nonconvex-strongly-concave min-max optimization.
+In the stochastic setting, we utilize the generalized notion known as the probability-p zero-chain [3]
+to prove a lower bound.
+Definition 7 (Probability-p zero-chain). A function f : X → R with a stochastic first-order oracle
+O : x 7→ (f (x), g(x, ξ)) is a probability-p zero-chain if
+                                               
+                                                     P (supp(g(x, ξ)) 6⊂ {1, . . . , i − 1}) ≤ p,
+       supp(x) ⊂ {1, . . . , i − 1}     =⇒
+                                                     P (supp(g(x, ξ)) ⊂ {1, . . . , i}) = 1.
+
+For a probability-p zero-chain, at each iteration, a new coordinate is discovered with probability at
+most p if supp(PX (x)) = supp(x) for all x. Therefore, it takes at least 1/p steps in expectation to
+discover a new coordinate. Formally, the following lemma states that it takes O(T /p) iterations to
+reach the end of a probability-p zero-chain with length T .
+Lemma 3 ([3, Lemma 1]). Let f : X → R, where X ∈ RT satisfying supp(PX (x)) = supp(x) for
+all x ∈ RT , be a probability-p zero-chain with a stochastic first-order oracle. For any first-order
+algorithm, we have with probability at least 1 − δ, xtT = 0 for all t ≤ T −log(1/δ)
+                                                                            2p      .
+
+
+                                                    5
+Therefore, the gradient complexity is enlarged by a factor of 1/p compared with the deterministic
+setting. To obtain a lower bound in the stochastic setting, we first find a zero-chain f satisfying the
+two requirements in the general strategy we presented above. Then we construct a stochastic first-
+order oracle which discovers the next coordinate with probability p so that we obtain a probability-p
+zero-chain. Note that we can not choose an arbitrarily small p since we need to ensure the variance of
+the stochastic oracle is bounded.
+For the ease of exposition of our construction, we now briefly review the lower bound construction for
+smooth strongly-convex minimization by Nesterov [37] and that for smooth nonconvex optimization
+by Carmon et al. [5]. As we shall see in the next section, the hard functions in these two cases are the
+building blocks of our construction.
+
+4.1   Smooth strongly-convex minimization
+
+Nesterov [37] constructed the following hard instance for smooth, strongly-convex functions:
+                                                     ∞
+                                                                      !
+                 sc        µ(κ − 1)             2
+                                                    X
+                                                                    2     µ    2
+                f (x) :=               (x1 − 1) +       (xi − xi+1 ) + kxk2 .                              (2)
+                               8                    i=1
+                                                                          2
+                                                                  2
+Equivalently, f sc (x) = µ(κ−1)
+                            8   (x> Asc x − 2x1 + 1) + µ2 kxk2 for the tri-diagonal matrix Asc given
+by
+                                          2 −1
+                                                                 
+                                       −1 2 −1                   
+                                Asc :=                   ..      .                              (3)
+                                                                 
+                                             −1 2           .    
+                                                    ..    .. ..
+                                                       .     .  .
+It is straightforward to verify that Asc is positive semi-definite and kAsc k2 ≤ 4. Hence, f sc is
+L-smooth and µ-strongly-convex for L := µκ. Importantly, if supp(x) ⊂ {1, . . . , i − 1}, we can
+verify:
+                      supp (∇f sc (x)) = supp (Asc x) ∪ supp (x) ∪ {1} ⊂ {1, . . . , i},
+where we use the fact that supp (Asc x) ⊂ {1, . . . , i} because Asc is a tri-diagonal matrix. Hence,
+by Definition 6, f sc is a zero-chain. Based on the general strategy above, it suffices to lower bound
+f sc (x) − f sc (x∗ ) when fewer√than T coordinates are non-zero. Note that the minimizer x∗ of f sc is
+given by x∗i = q i where q = √κ−1     κ+1
+                                          . Then with fewer than T gradient oracles, for every t ≥ T , the
+t-th coordinate of x is still zero. Therefore,
+                                                             ∞
+                                        µ            2    µX ∗ 2        µ                 2
+                f sc (x) − f sc (x∗ ) ≥ kx − x∗ k2 ≥            (xi ) ≥ q 2T x0 − x∗ 2 .
+                                        2                 2             2
+                                                            i=T
+                                           sc       sc  ∗
+                                                                                                    √
+Hence, to find a solution satisfying f (x) − f (x ) ≤ , we need gradient complexity T ≥ e        Ω( κ).
+
+4.2   Smooth nonconvex minimization
+
+Another key component in our proof is to lower bound the complexity of nonconvex functions. Part
+of our construction is derived from Carmon et al. [5] who constructed the following unscaled function
+f¯nc : RT → R:
+                                            T
+                                            X
+               f¯nc (x) := −Ψ(1)Φ(x1 ) +          [Ψ(−xi−1 )Φ(−xi ) − Ψ(xi−1 )Φ(xi )] ,                    (4)
+                                            i=2
+where the component functions are
+                 (
+                    0                        x ≤ 1/2                           √
+                                                                                        Z x
+                                                                                                 1 2
+         Ψ(x) :=                                            and       Φ(x) :=       e         e− 2 t dt.
+                                      
+                                  1
+                    exp 1 − (2x−1)  2         x > 1/2                                    −∞
+
+The above function also has the zero-chain property defined in 6. Following the general strategy
+discussed in the previous subsection, by appropriately rescaling f¯nc so that it meets the requirement
+                                                                                             
+of the function class of interest, Carmon et al. [5] derived a lower bound of Tnc := Ω 1/2 gradient
+oracles. More details can be found in Appendix A.
+
+
+                                                    6
+               (a)                (b)                         (c)                                         (d)
+                     𝑥0 ≡ 1             𝑥0 ≡ 1       𝑧1 ≡ 1             (1) (1)       (1)
+                                                                                                 𝑧1 ≡ 1
+                                                                       𝑦1 𝑦2         𝑦𝑛
+                     𝑥1                 𝑥1              𝑥1                                          𝑥1
+
+                     𝑥2                 𝑥2              𝑧2                                          𝑧2
+                                                                        (2)    (2)       (2)
+                                                                       𝑦1     𝑦2     𝑦𝑛
+                                                        𝑥2                                          𝑥2
+
+                                                        𝑧3                                          𝑧3
+                     𝑥𝑇                 𝑥𝑇
+
+
+
+
+                                                        𝑥𝑇                                          𝑥𝑇
+
+
+Figure 1: Chains (a, b, c, d) correspond to f sc , f¯nc , f¯nc-sc , f¯m
+                                                                      nc-sc
+                                                                            , respectively. Arrows in different
+colors represent different types of connections between two variables. For example, a blue arrow
+from u to v corresponds to a term with (u − v)2 in the function. A red arrow corresponds to
+Ψ(−u)Φ(−v) − Ψ(u)Φ(v). Green and bold blue arrows are quadratic connections that need to be
+carefully designed. The effective length of a bold blue arrow is n and that of all other arrows is 1.
+
+5     Our construction
+The hard examples discussed in the previous section show that one can easily construct an additive
+lower bound by making the objective as the sum of two functions f sc and f¯nc . However, if we would
+like to improve the lower bound by a multiplicative factor in the condition number, it is far from
+obvious how one should compose f sc with f¯nc . We describe our approach in the subsections below.
+
+5.1   Construction of the hard instance in the deterministic setting
+
+Before discussing the details of our construction to prove Theorem 1, we first highlight the main
+difficulty and our approach at a high level to provide insight and intuition. First, we need to pinpoint
+the main difficulty.
+
+The main difficulty. Given the aforementioned lower bound strategy, we need to find a zero-chain
+f¯nc-sc ∈ F(L, µ, ∆) as our hard instance. A natural way to construct f¯nc-sc is to combine the ideas
+from the hard instances in [37] and [5]. The main challenge is how to find a good way of combination
+such that the two components do not interfere with each other’s essential properties and that their
+strengths can be exploited multiplicatively to contribute to the lower bound.
+
+ The key idea. The novel combination structure we propose is illustrated in Figure 1. The body
+of the chain is like f¯nc (4), which contains the minimization variables x, z. Then we insert T − 1
+f sc -style (2) sub-chains with length n, which contain the maximization variable y, into the main
+chain in the way shown in Figure 1(c). Figure 1(d) shows the function f¯m  nc-sc
+                                                                                 (·) := max     ¯nc-sc (·; y)
+                                                                                             √y f
+obtained by maximizing y. Note that √ the effective length of chain (d) is O(nT ) =      O( κT ), for the
+largest allowed choice of n = O( κ). Therefore, supposing√we can show √        that f¯mnc-sc
+                                                                                         shares similar
+properties to f¯nc used in [5], we obtain a lower bound of Ω ( κTnc ) = Ω κ/2 .
+However, the requirement that f¯m
+                                nc-sc
+                                      behaves similarly to f¯nc poses another challenge as it basically
+means that the red arrows in chain (d) dominate the bold blue ones, although their numbers are
+roughly equal. To overcome this challenge, we carefully design the green  √ arrows directly and the
+bold blue arrows indirectly. We also need to restrict n such that n = O( κ).
+
+Construction of the hard instance. The formal expression of f¯nc-sc : (RT × RT −1 ) × Rn(T −1) →
+R is given by
+                                                 T
+                                                 X
+         f¯nc-sc (x, z; ȳ) = −Ψ(1)Φ(x1 ) +            [Ψ(−zi )Φ(−xi ) − Ψ(zi )Φ(xi )]
+                                                 i=2
+                                                     T
+                                                     X −1                                T
+                                                                                         X −1
+                                                              h(xi , zi+1 ; ȳ (i) ) +
+                                                                                                 2          2
+                                                                                                                 
+                                                 +                                               c1 xi + c2 zi+1   ,   (5)
+                                                     i=1                                 i=1
+
+
+
+                                                              7
+where x, z are the minimization variables and ȳ = [ȳ (1) , . . . , ȳ (T −1) ], where each ȳ (i) ∈ Rn , is the
+maximization variable. The last term of (5) indirectly affects the bold blue arrows in Figure 1(d),
+where c1 and c2 are some parameters (not necessarily nonnegative) we choose later to obtain a much
+simpler expression to analyze. The function h : (R × R) × Rn → R is defined as
+                               n−1                                       r                     
+                             1X                2      1           2         C            1
+             h(x, z; y) := −       (yi − yi+1 ) − 2 kyk2 +                         xy1 − zyn
+                             2 i=1                  2n                       n           2
+                                                      r
+                             1       1                       C >
+                         = − y>          In + A y +              b y,                                         (6)
+                             2       n 2                     n x,z
+where C > 0 is a large enough numerical constant specified later and bx,z := xe1 − 12 zen .
+              q                                                                 q
+                   >
+Here the term C  b
+                n x,z y characterizes the green arrows in   Figure 1, where the   C
+                                                                                  n factor ensures
+hm (x, z) := maxy∈R h(x, z; y) has an O(1) dependence on n as shown in Lemma 4. The matrix
+                    n
+
+A ∈ Rn×n is defined as
+                                       1 −1
+                                                                
+                                   −1 2 −1                      
+                                                ..    ..        
+                             A := 
+                                   
+                                           −1       .     .      ,
+                                                                 
+                                                                                               (7)
+                                                ..              
+                                                   .   2 −1
+                                                                 
+                                                      −1 1
+which is the finite version of (3) in [37]’s instance except that its (1, 1)-th and (n, n)-th entries are 1.
+This change is necessary in our example. Note that for fixed scalar variables x and z, h(x, z; ·) is
+ 1
+n2 -strongly-concave. Also,   f¯nc-sc is Ω(1)-smooth (Lemma 9). Therefore, κ = Ω(n2 ), implying we
+                         √
+should choose n = O( κ). We can compute
+                                                                            −1
+                                                       C >        1
+                    hm (x, z) := maxn h(x, z; y) =       b           In + A       bx,z .                (8)
+                                   y∈R                 2n x,z n2
+The following lemma shows that hm actually has a much simpler expression.
+Lemma 4. Suppose n ≥ 10, we have
+                                                                      
+                                            a1 2 1               a1
+                           hm (x, z) = C       x − a2 xz + z 2 ,                                   (9)
+                                             2       2           8
+where a1 , a2 > 0 are "almost" numerical constants. That is to say, although a1 , a2 depends on n, we
+have 0 < d1 ≤ a1 ≤ f1 and 0 < d2 ≤ a2 ≤ f2 and d1 , d2 , f1 , f2 are numerical constants.
+Choosing c1 = C(a2 − a1 )/2, c2 = C(a2 − a1 )/8 and C = 12/a2 , we obtain
+ f¯nc-sc (x, z) := max f¯nc-sc (x, z; ȳ)
+      m
+                     ȳ∈Rn(T −1)
+                                       T                                             T −1                2
+                                       X                                             X            1
+                  = − Ψ(1)Φ(x1 ) +           [Ψ(−zi )Φ(−xi ) − Ψ(zi )Φ(xi )] + 6              xi − zi+1        .
+                                       i=2                                           i=1
+                                                                                                  2
+
+We show in the appendix that f¯mnc-sc
+                                      shares similar properties to f¯nc . Then we can prove Theorem 1
+                           ¯nc-sc
+by appropriately rescaling fm in the same way as done in [5]. The detailed proof is deferred in
+Appendix C.
+
+5.2       Construction of the hard instance in the stochastic setting
+
+We start this section by discussing why the techniques in [3] do not directly apply to our construction
+in the deterministic setting. The following lemma from [3] shows how to construct a probability-p
+zero-chain by constructing a stochastic first-order oracle over a given zero-chain.
+Lemma 5 ([3, Lemma 3]). Let f : X → R be a zero-chain on X ⊂ RT . For x ∈ X , let
+i∗ (x) := inf{i ∈ [T ] : xi = 0} be the next coordinate to discover. For p ∈ (0, 1], define
+                                             ξ
+                                               p ∇i f (x)   if i = i∗ (x)
+                              [g(x, ξ)]i :=
+                                               ∇i f (x)    otherwise,
+
+
+                                                       8
+where ξ ∼ Bernoulli(p). Suppose k∇f (x)k∞ ≤ G for all x ∈ X . Then O : x 7→ (f (x, g(x, ξ)) is
+a stochastic first-order oracle with bounded variance σ 2 ≤ G2 (1 − p)/p. Also, f equipped with O is
+a probability-p zero-chain.
+
+Therefore, a tempting way to obtain our hard instance in the stochastic setting is to construct a
+probability-p zero-chain as in Lemma 5 directly over f¯nc-sc . However, as suggested by Lemma 5, to
+ensure the variance of the oracle is bounded, we require ∇f¯nc-sc (x, z; ȳ) ∞ ≤ G for some bounded
+G < ∞. Actually we need G = O(1) to obtain a nontrivial lower bound. However, f¯nc-sc has an
+unconstrained quadratic component whose gradient is unbounded over the whole space. Therefore,
+we have to restrict its domain to be a bounded hypercube. However, it turns out to be impossible to
+find any hypercube such that ∇f¯nc-sc (x, z; ȳ) ∞ ≤ O(1) without losing the properties of f¯m       nc-sc
+                                                                                                           .
+To overcome this difficulty, we need to carefully modify the quadratic components in f  ¯nc-sc
+                                                                                               , i.e., the
+blue and green arrows in Figure 1(c).
+                                d
+Formally, define the hypercube CR ⊂ Rd as
+                                      d
+                                     CR = {x ∈ Rd | kxk∞ ≤ R}.
+                                                                             n(T −1)
+Our hard instance in the stochastic setting, f¯nc-sc-sg : (CR
+                                                            T
+                                                              1
+                                                                   T −1
+                                                                × CR 1
+                                                                        ) × CnR2     → R, where R1 and
+R2 are postive numerical constants to be set later, is given by
+                                             T
+                                             X
+    f¯nc-sc-sg (x, z; ȳ) = −Ψ(1)Φ(x1 ) +          [Ψ(−zi )Φ(−xi ) − Ψ(zi )Φ(xi )]
+                                             i=2
+                                                 T
+                                                 X −1                                 T
+                                                                                      X −1
+                                                        hsg (xi , zi+1 ; ȳ (i) ) +
+                                                                                              2          2
+                                                                                                              
+                                             +                                                c1 xi + c2 zi+1   ,   (10)
+                                                 i=1                                  i=1
+
+where
+                                                                          
+                                           C   1     1
+                        hsg (x, z; y) :=      − y>      In + A   y + b >
+                                                                       x,z y   .                                    (11)
+                                           n   2     n2
+Here C, c1 , c2 , bx,z are the same as those in (5).
+By verifying that ∇f¯nc-sc-sg (x, z; ȳ) ∞ ≤ O(1) (Lemma 11.iv), we are able to construct a
+probability-p zero-chain as in Lemma 5 over the rescaled version of f¯nc-sc . According to Lemma 5, to
+ensure the variance of the rescaled stochastic oracle is bounded by σ 2 , p has to be at least Ω(2 /σ 2 ).
+Then we obtain a lower bound for the stochastic setting of
+                                                      1/3 
+                                          nTnc            κ
+                                      Ω           =Ω            .
+                                           p               4
+                                                    √
+Note that the deterministic lower bound is Ω( 2κ ) which is a special case of the stochastic setting.
+Therefore we derive a lower bound of
+                                 √                      √
+                                     κ κ1/3 σ 2               κ κ1/3
+                                                                      
+                        Ω max          ,             = Ω         +         .
+                                    2     4                2      4
+Detailed analyses are deferred to Appendix D.
+
+6   Conclusion and discussion
+In this paper, we proved lower bounds on both the deterministic and the stochastic oracle complexities
+of nonconvex-strongly-concave min-max optimization for first-order zero-respecting algorithms. Our
+lower bound in the deterministic setting matches the existing upper bound [27] up to log factors.
+However, there is still a gap between our lower bound and the upper bound in [26] in the stochastic
+setting. How to close this gap is an open question. Apart from this, several other questions are worth
+consideration.
+First, one immediate next step is to check if the proposed lower bounds hold for arbitrary, potentially
+randomized algorithms. We believe that the results are likely to hold but may introduce unexpected
+
+
+                                                          9
+complications. Second, so far we have focused on nonconvex-strongly-concave min-max optimization.
+However, it remains open what the tight lower bound is in the more general nonconvex-concave
+min-max optimization. Moreover, what about nonconvex-nonconcave min-max optimization? To
+answer this question, a good measure of the suboptimality is a prerequisite. Last but not least, we
+only consider first-order oracles. It is also interesting to obtain a lower bound for functions with
+higher-order smoothness and oracles.
+
+7   Funding transparency statement
+Funding in direct support of this work: ONR grant N00014-20-1-2394, MIT-IBM Watson grant, NSF
+BIGDATA grant 1741341, and IIIS young scholar fellowship.
+
+References
+ [1] Mohammad Alkousa, Darina Dvinskikh, Fedor Stonyakin, Alexander Gasnikov, and Dmitry
+     Kovalev. Accelerated methods for composite non-bilinear saddle point problem. arXiv preprint
+     arXiv:1906.03620, 2019.
+
+ [2] Yossi Arjevani and Ohad Shamir. On the iteration complexity of oblivious first-order optimiza-
+     tion algorithms. In International Conference on Machine Learning, pages 908–916. PMLR,
+     2016.
+
+ [3] Yossi Arjevani, Yair Carmon, John C Duchi, Dylan J Foster, Nathan Srebro, and Blake Wood-
+     worth. Lower bounds for non-convex stochastic optimization. arXiv preprint arXiv:1912.02365,
+     2019.
+
+ [4] Aharon Ben-Tal, Laurent El Ghaoui, and Arkadi Nemirovski. Robust optimization. Princeton
+     university press, 2009.
+
+ [5] Yair Carmon, John C Duchi, Oliver Hinder, and Aaron Sidford. Lower bounds for finding
+     stationary points i. Mathematical Programming, pages 1–50, 2019.
+
+ [6] Yair Carmon, John C Duchi, Oliver Hinder, and Aaron Sidford. Lower bounds for finding
+     stationary points ii: first-order methods. Mathematical Programming, 185(1-2), 2021.
+
+ [7] Antonin Chambolle and Thomas Pock. A first-order primal-dual algorithm for convex problems
+     with applications to imaging. Journal of mathematical imaging and vision, 40(1):120–145,
+     2011.
+
+ [8] Constantinos Daskalakis, Andrew Ilyas, Vasilis Syrgkanis, and Haoyang Zeng. Training gans
+     with optimism. arXiv preprint arXiv:1711.00141, 2017.
+
+ [9] Constantinos Daskalakis, Stratis Skoulakis, and Manolis Zampetakis. The complexity of
+     constrained min-max optimization. arXiv preprint arXiv:2009.09623, 2020.
+
+[10] Constantinos Daskalakis, Dylan J Foster, and Noah Golowich. Independent policy gradient
+     methods for competitive reinforcement learning. arXiv preprint arXiv:2101.04233, 2021.
+
+[11] Jelena Diakonikolas, Constantinos Daskalakis, and Michael Jordan. Efficient methods for
+     structured nonconvex-nonconcave min-max optimization. In International Conference on
+     Artificial Intelligence and Statistics, pages 2746–2754. PMLR, 2021.
+
+[12] M. El-Mikkawy. On the inverse of a general tridiagonal matrix. Appl. Math. Comput., 150:
+     669–679, 2004.
+
+[13] Cong Fang, Chris Junchi Li, Zhouchen Lin, and Tong Zhang. Spider: Near-optimal non-convex
+     optimization via stochastic path integrated differential estimator, 2018.
+
+[14] Saeed Ghadimi, Guanghui Lan, and Hongchao Zhang. Mini-batch stochastic approximation
+     methods for nonconvex stochastic composite optimization, 2013.
+
+
+                                                10
+[15] Gauthier Gidel, Hugo Berard, Gaëtan Vignoud, Pascal Vincent, and Simon Lacoste-Julien.
+     A variational inequality perspective on generative adversarial networks. arXiv preprint
+     arXiv:1802.10551, 2018.
+[16] Noah Golowich, Sarath Pattathil, Constantinos Daskalakis, and Asuman Ozdaglar. Last iterate
+     is slower than averaged iterate in smooth convex-concave saddle point problems. In Conference
+     on Learning Theory, pages 1758–1784. PMLR, 2020.
+[17] Ian J Goodfellow, Jean Pouget-Abadie, Mehdi Mirza, Bing Xu, David Warde-Farley, Sherjil
+     Ozair, Aaron Courville, and Yoshua Bengio. Generative adversarial networks. arXiv preprint
+     arXiv:1406.2661, 2014.
+[18] Ian J Goodfellow, Jonathon Shlens, and Christian Szegedy. Explaining and harnessing adversar-
+     ial examples. arXiv preprint arXiv:1412.6572, 2014.
+[19] Yuze Han, Guangzeng Xie, and Zhihua Zhang. Lower complexity bounds of finite-sum
+     optimization problems: The results and construction. ArXiv, abs/2103.08280, 2021.
+[20] Yu-Guan Hsieh, Franck Iutzeler, Jérôme Malick, and Panayotis Mertikopoulos. On the con-
+     vergence of single-call stochastic extra-gradient methods. arXiv preprint arXiv:1908.08465,
+     2019.
+[21] Adam Ibrahim, Waıss Azizian, Gauthier Gidel, and Ioannis Mitliagkas. Linear lower bounds
+     and conditioning of differentiable games. In International Conference on Machine Learning,
+     pages 4583–4593. PMLR, 2020.
+[22] Chi Jin, Praneeth Netrapalli, and Michael Jordan. What is local optimality in nonconvex-
+     nonconcave minimax optimization? In International Conference on Machine Learning, pages
+     4880–4889. PMLR, 2020.
+[23] Weiwei Kong and Renato DC Monteiro. An accelerated inexact proximal point method for
+     solving nonconvex-concave min-max problems. arXiv preprint arXiv:1905.13433, 2019.
+[24] Galina M Korpelevich. The extragradient method for finding saddle points and other problems.
+     Matecon, 12:747–756, 1976.
+[25] Chung-Wei Lee, Haipeng Luo, Chen-Yu Wei, and Mengxiao Zhang. Linear last-iterate conver-
+     gence for matrix games and stochastic games. arXiv preprint arXiv:2006.09517, 2020.
+[26] Tianyi Lin, Chi Jin, and Michael Jordan. On gradient descent ascent for nonconvex-concave
+     minimax problems. In International Conference on Machine Learning, pages 6083–6093.
+     PMLR, 2020.
+[27] Tianyi Lin, Chi Jin, and Michael. I. Jordan. Near-optimal algorithms for minimax optimization,
+     2020.
+[28] Songtao Lu, Ioannis Tsaknakis, Mingyi Hong, and Yongxin Chen. Hybrid block successive
+     approximation for one-sided non-convex min-max problems: algorithms and applications. IEEE
+     Transactions on Signal Processing, 68:3676–3691, 2020.
+[29] Aleksander Madry, Aleksandar Makelov, Ludwig Schmidt, Dimitris Tsipras, and Adrian Vladu.
+     Towards deep learning models resistant to adversarial attacks. arXiv preprint arXiv:1706.06083,
+     2017.
+[30] Oren Mangoubi and Nisheeth K. Vishnoi. Greedy adversarial equilibrium: An efficient alterna-
+     tive to nonconvex-nonconcave min-max optimization, 2020.
+[31] Panayotis Mertikopoulos, Bruno Lecouat, Houssam Zenati, Chuan-Sheng Foo, Vijay Chan-
+     drasekhar, and Georgios Piliouras. Optimistic mirror descent in saddle-point problems: Going
+     the extra (gradient) mile. arXiv preprint arXiv:1807.02629, 2018.
+[32] Aryan Mokhtari, Asuman E Ozdaglar, and Sarath Pattathil. Convergence rate of o(1/k) for
+     optimistic gradient and extragradient methods in smooth convex-concave saddle point problems.
+     SIAM Journal on Optimization, 30(4):3230–3251, 2020.
+
+
+                                                11
+[33] Arkadi Nemirovski. Prox-method with rate of convergence o (1/t) for variational inequali-
+     ties with lipschitz continuous monotone operators and smooth convex-concave saddle point
+     problems. SIAM Journal on Optimization, 15(1):229–251, 2004.
+[34] Arkadi. S. Nemirovski and David. B. Yudin. Problem Complexity and Method Efficiency in
+     Optimization. Wiley, 1983.
+[35] A. S. Nemirovsky. Information-based complexity of linear operator equations. J. Complex., 8:
+     153–175, 1992.
+[36] Yu Nesterov. Smooth minimization of non-smooth functions. Mathematical programming, 103
+     (1):127–152, 2005.
+[37] Yurii Nesterov. Lectures on convex optimization, volume 137. Springer, 2018.
+[38] J. v. Neumann. Zur theorie der gesellschaftsspiele. Mathematische annalen, 100(1):295–320,
+     1928.
+[39] Maher Nouiehed, Maziar Sanjabi, Tianjian Huang, Jason D Lee, and Meisam Razaviyayn.
+     Solving a class of non-convex min-max games using iterative first order methods. arXiv preprint
+     arXiv:1902.08297, 2019.
+[40] Dmitrii M Ostrovskii, Andrew Lowy, and Meisam Razaviyayn. Efficient search of first-
+     order nash equilibria in nonconvex-concave smooth min-max problems. arXiv preprint
+     arXiv:2002.07919, 2020.
+[41] Yuyuan Ouyang and Yangyang Xu. Lower complexity bounds of first-order methods for
+     convex-concave bilinear saddle-point problems. Mathematical Programming, pages 1–35,
+     2019.
+[42] Hassan Rafique, Mingrui Liu, Qihang Lin, and Tianbao Yang. Non-convex min-max op-
+     timization: Provable algorithms and applications in machine learning. arXiv preprint
+     arXiv:1810.02060, 2018.
+[43] Alexander Rakhlin and Karthik Sridharan. Optimization, learning, and games with predictable
+     sequences. arXiv preprint arXiv:1311.1869, 2013.
+[44] Maurice Sion. On general minimax theorems. Pacific Journal of mathematics, 8(1):171–176,
+     1958.
+[45] Kiran Koshy Thekumparampil, Prateek Jain, Praneeth Netrapalli, and Sewoong Oh. Efficient
+     algorithms for smooth minimax optimization. arXiv preprint arXiv:1907.01543, 2019.
+[46] Paul Tseng. On linear convergence of iterative methods for the variational inequality problem.
+     Journal of Computational and Applied Mathematics, 60(1-2):237–252, 1995.
+[47] Yuanhao Wang, Guodong Zhang, and Jimmy Ba. On solving minimax optimization locally: A
+     follow-the-ridge approach. arXiv preprint arXiv:1910.07512, 2019.
+[48] Chen-Yu Wei, Chung-Wei Lee, Mengxiao Zhang, and Haipeng Luo. Last-iterate convergence of
+     decentralized optimistic gradient descent/ascent in infinite-horizon competitive markov games.
+     arXiv preprint arXiv:2102.04540, 2021.
+[49] Abhay Yadav, Sohil Shah, Zheng Xu, David Jacobs, and Tom Goldstein. Stabilizing adversarial
+     nets with prediction methods. arXiv preprint arXiv:1705.07364, 2017.
+[50] Junchi Yang, Negar Kiyavash, and Niao He. Global convergence and variance-reduced optimiza-
+     tion for a class of nonconvex-nonconcave minimax problems. arXiv preprint arXiv:2002.09621,
+     2020.
+[51] Junyu Zhang, Mingyi Hong, and Shuzhong Zhang. On lower iteration complexity bounds for
+     the saddle point problems, 2020.
+[52] Siqi Zhang, Junchi Yang, Cristóbal Guzmán, Negar Kiyavash, and Niao He. The complexity of
+     nonconvex-strongly-concave minimax optimization. arXiv preprint arXiv:2103.15888, 2021.
+
+
+                                                12
+Checklist
+    1. For all authors...
+        (a) Do the main claims made in the abstract and introduction accurately reflect the paper’s
+            contributions and scope? [Yes]
+        (b) Did you describe the limitations of your work? [Yes] See Section 6
+        (c) Did you discuss any potential negative societal impacts of your work? [No] This work
+            is of theoretical nature. The main contribution is to provide theoretical complexity
+            lower bounds. There are no negative societal impacts from this work, and as a result
+            we did not discuss it.
+        (d) Have you read the ethics review guidelines and ensured that your paper conforms to
+            them? [Yes]
+    2. If you are including theoretical results...
+        (a) Did you state the full set of assumptions of all theoretical results? [Yes] See Section 2
+        (b) Did you include complete proofs of all theoretical results? [Yes] See Section 5 and
+            Appendix
+    3. If you ran experiments...
+        (a) Did you include the code, data, and instructions needed to reproduce the main experi-
+            mental results (either in the supplemental material or as a URL)? [N/A]
+        (b) Did you specify all the training details (e.g., data splits, hyperparameters, how they
+            were chosen)? [N/A]
+        (c) Did you report error bars (e.g., with respect to the random seed after running experi-
+            ments multiple times)? [N/A]
+        (d) Did you include the total amount of compute and the type of resources used (e.g., type
+            of GPUs, internal cluster, or cloud provider)? [N/A]
+    4. If you are using existing assets (e.g., code, data, models) or curating/releasing new assets...
+        (a) If your work uses existing assets, did you cite the creators? [N/A]
+        (b) Did you mention the license of the assets? [N/A]
+        (c) Did you include any new assets either in the supplemental material or as a URL? [N/A]
+
+        (d) Did you discuss whether and how consent was obtained from people whose data you’re
+            using/curating? [N/A]
+        (e) Did you discuss whether the data you are using/curating contains personally identifiable
+            information or offensive content? [N/A]
+    5. If you used crowdsourcing or conducted research with human subjects...
+        (a) Did you include the full text of instructions given to participants and screenshots, if
+            applicable? [N/A]
+        (b) Did you describe any potential participant risks, with links to Institutional Review
+            Board (IRB) approvals, if applicable? [N/A]
+        (c) Did you include the estimated hourly wage paid to participants and the total amount
+            spent on participant compensation? [N/A]
+
+
+
+
+                                                13
+

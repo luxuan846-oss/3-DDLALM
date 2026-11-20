@@ -1,0 +1,931 @@
+                                                    Accelerated Proximal Alternating
+                                            Gradient-Descent-Ascent for Nonconvex Minimax
+                                                           Machine Learning
+                                                          Ziyi Chen                                 Shaocong Ma                                    Yi Zhou
+                                             Electrical & Computer Engineering          Electrical & Computer Engineering           Electrical & Computer Engineering
+                                                      University of Utah                         University of Utah                          University of Utah
+                                                      Salt Lake City, US                         Salt Lake City, US                          Salt Lake City, US
+                                                     u1276972@utah.edu                             s.ma@utah.edu                              yi.zhou@utah.edu
+
+
+
+
+arXiv:2112.11663v7 [cs.LG] 19 May 2022
+                                            Abstract—Alternating gradient-descent-ascent (AltGDA) is an       variants of GDA have been proposed for strongly-convex-
+                                         optimization algorithm that has been widely used for model           strongly-concave [45] and nonconvex-strongly-concave [17]
+                                         training in various machine learning applications, which aims        minimax optimization. There are other accelerated GDA-type
+                                         to solve a nonconvex minimax optimization problem. However,
+                                         the existing studies show that it suffers from a high computation    algorithms that achieve a near-optimal complexity [22], [46],
+                                         complexity in nonconvex minimax optimization. In this paper,         but they involve complex nested-loop structures and require
+                                         we develop a single-loop and fast AltGDA-type algorithm that         function smoothing with many fine-tuned hyper-parameters,
+                                         leverages proximal gradient updates and momentum acceleration        which are not used in practical minimax machine learning.
+                                         to solve regularized nonconvex minimax optimization problems.           Another important variant of GDA that has been widely
+                                         By leveraging the momentum acceleration technique, we prove
+                                         that the algorithm converges to a critical point in nonconvex        used in practical training of minimax machine learning is the
+                                         minimax optimization and achieves a computation complexity in        alternating-GDA (AltGDA) algorithm, which updates the two
+                                                           11
+                                         the order of O(κ 6 −2 ), where  is the desired level of accuracy   variables x and y alternatively via xt+1 = xt − ηx ∇1 f (xt , yt ),
+                                         and κ is the problem’s condition number. Such a computation          yt+1 = yt + ηy ∇2 f (xt+1 , yt ). Compared with the update of
+                                         complexity improves the state-of-the-art complexities of single-     GDA, the y-update of AltGDA uses the fresh xt+1 instead
+                                         loop GDA and AltGDA algorithms (see the summary of compari-
+                                                                                                              of the previous xt , and it is shown to converge faster than
+                                         son in Table I). We demonstrate the effectiveness of our algorithm
+                                         via an experiment on adversarial deep learning.                      the standard GDA algorithm [2], [4], [12], [42]. Despite
+                                            Index Terms—Minimiax optimization, alternating gradient           the popularity of the AltGDA algorithm, it is shown to
+                                         descent ascent, proximal gradient, momentum, complexity.             suffer from a high computation complexity in nonconvex
+                                                                                                              minimax optimization. Therefore, this study aims to improve
+                                                               I. I NTRODUCTION                               the complexity of AltGDA by leveraging momentum accel-
+                                            Minimax optimization is an emerging and important opti-           eration techniques. In particular, in the existing literature,
+                                         mization framework that covers a variety of modern machine           the convergence of momentum accelerated AltGDA is only
+                                         learning applications. Some popular application examples in-         established for convex-concave minimax problems [43] and
+                                         clude generative adversarial networks (GANs) [13], adversarial       bilinear minimax problems [12], and it has not been explored in
+                                         machine learning [37], game theory [10], reinforcement learn-        nonconvex minimax optimization that covers modern machine
+                                         ing [34], etc. A standard minimax optimization problem is writ-      learning applications. Therefore, this study aims to fill in this
+                                         ten as minx∈Rm maxy∈Y f (x, y), where f is a differentiable          gap by developing a single-loop proximal-AltGDA algorithm
+                                         bivariate function. A basic algorithm for solving the above          with momentum acceleration for solving a class of regularized
+                                         minimax optimization problem is the gradient-descent-ascent          nonconvex minimax problems, and analyze its convergence
+                                         (GDA), which simultaneously performs gradient descent update         and computation complexity.
+                                         and gradient ascent update on the variables x and y, respectively,
+                                         i.e., xt+1 = xt − ηx ∇1 f (xt , yt ), yt+1 = yt + ηy ∇2 f (xt , yt ). A. Our Contribution
+                                         Here, ∇1 and ∇2 denote the gradient operator with regard to             We are interested in a class of regularized nonconvex-
+                                         the first and the second variable, respectively. The convergence strongly-concave minimax optimization problems, where the
+                                         rate of GDA has been studied under various types of geometries regularizers are convex functions that can be possibly non-
+                                         of the minimax problem, including strongly-convex-strongly- smooth. To solve this class of minimax problems, we propose
+                                         concave geometry [9], nonconvex-(strongly)-concave geometry a single-loop proximal-AltGDA with momentum algorithm
+                                         [23] and Lojasiewicz-type geometry [5]. Recently, by leverag- (referred to as proximal-AltGDAm). The algorithm takes single-
+                                         ing the popular momentum technique [3], [11], [20], [21], [28], loop updates that consist of a proximal gradient descent update
+                                         [38] for accelerating gradient-based algorithms, accelerated with the heavy-ball momentum, and a proximal gradient ascent
+update with the Nesterov’s momentum. Our algorithm extends negative momentum. [22], [39] developed nested-loop AltGDA
+the applicability of the conventional momentum acceleration algorithms with Nesterov’s Accelerated Gradient Descent that
+schemes (heavy-ball and Nesterov’s momentum) for nonconvex achieve improved complexities. For convex-concave problems,
+minimization to nonconvex minimax optimization.                  [7] analyzed stable points of both GDA and optimistic GDA
+   We study the convergence property of Proximal-AltGDAm. that apply negative momentum for acceleration. Moreover,
+Specifically, under standard smoothness assumptions on the for nonconvex-(strongly)-concave problems, [40] developed a
+objective function and by viewing the accelerated alternating single-loop GDA with momentum and Hessian preconditioning
+GDA updates as inexact accelerated gradient updates, we and studied its convergence to a local minimax point. [17]
+develop an analysis to show that every limit point of the developed a mirror descent ascent algorithm with momentum
+parameter sequences generated by the algorithm is a critical which includes GDAm as a special case. [30] studied nested-
+point of the nonconvex regularized minimax problem. Moreover, loop GDA where multiple gradient ascent steps are performed,
+to achieve an -accurate critical point, the overall computation and they also studied the momentum-accelerated version.
+complexity (i.e., number of gradient and proximal mapping Similarly, [16], [34] developed GDA with momentum scheme
+                                     11
+evaluations) is of the order O κ 6 −2 , where κ > 1 is and STORM variance reduction, and a similar version of this
+the condition number of the problem. Thanks to momentum algorithm is extended to minimax optimization on Riemann
+acceleration and a tight analysis in our technical proof, such manifold [15]. [14] developed a single-loop Primal-Dual
+a computation complexity is lower than that of the existing Stochastic Momentum algorithm with ADAM-type methods.
+single-loop GDA-type algorithms. See Table I for a summary
+                                                                      II. P ROBLEM F ORMULATION AND P RELIMINARIES
+of comparison of the computation complexities and Appendix
+E for their derivation.                                             In this section, we introduce the problem formulation and
+                                                                 technical assumptions. We consider the following class of
+                             Table I                             regularized minimax optimization problems.
+C OMPARISON OF COMPUTATION COMPLEXITY ( NUMBER OF GRADIENT AND
+  PROXIMAL MAPPINGS EVALUATIONS ) OF THE EXISTING SINGLE - LOOP                   min max f (x, y) + g(x) − h(y),                (P)
+GDA- TYPE ALGORITHMS IN NONCONVEX - STRONGLY- CONCAVE MINIMAX                    x∈Rm y∈Y
+   OPTIMIZATION , WHERE κ ≥ 1 IS THE PROBLEM CONDITION NUMBER .
+                                                                   where f : Rm × Y → R is differentiable and nonconvex-
+                                                                   strongly-concave, g, h are possibly non-smooth convex regular-
+                        Alternating   Momentum       Computation   izers, and Y is a bounded set with diameter R. In particular,
+                          update      acceleration    complexity   define the envelope function Φ(x) := maxy∈Y f (x, y) − h(y),
+   (Chen, et.al) [5]        ×              ×          O(κ6 −2 )
+                                                                   then the problem (P) can be rewritten as the minimization
+  (Huang, et.al) [17]       ×              X          O(κ3 −2 )
+                                                                   problem minx∈Rm Φ(x) + g(x).
+   (Lin, et.al) [23]        ×              ×          O(κ2 −2 )
+    (Xu, et.al) [42]        X              ×          O(κ5 −2 )      Throughout the paper, we adopt the following assumptions
+ (Boţ and Böhm) [4]        X              ×          O(κ2 −2 )   on the problem (P). These are standard assumptions that have
+     This work              X              X
+                                                         11
+                                                     O(κ 6 −2 )   been considered in the existing literature [5], [23].
+                                                                   Assumption 1. The minimax problem (P) satisfies:
+B. Other Related Work                                              1) Function f (·, ·) is L-smooth and function f (x, ·) is µ-
+                                                                      strongly concave for all x;
+GDA-type algorithms: [27] studied a slight variant of GDA
+                                                                   2) Function (Φ + g)(x) is bounded below and has compact
+by replacing gradients with subgradients for convex-concave
+                                                                      sub-level sets;
+non-smooth minimax optimization. [42] studied AltGDA which
+                                                                   3) Function g, h are proper and convex.
+applies `2 regularizer to the local objective function of
+GDA followed by projection onto the constraint sets and               In particular, item 3 of the above assumption allows the
+obtained its convergence rate under nonconvex-concave and          regularizers g, h to be any convex function that can be
+convex-nonconcave geometry. [26] also studied two variants         possibly non-smooth. Next, consider the mapping y ∗ (x) =
+of GDA, Extra-gradient and Optimistic GDA, and obtained            arg maxy∈Y f (x, y) − h(y), which is uniquely defined due to
+linear convergence rate under bilinear geometry and strongly-      the strong concavity of f (x, ·). The following proposition is
+convex-strongly-concave geometry. [6], [18] studied GDA in         proved in [5], [23] that characterizes the Lipschitz continuity
+continuous time dynamics using differential equations. [1]         of the mapping y ∗ (x) and the smoothness of the function Φ(x).
+analyzed a second-order variant of the GDA algorithm.              Throughout the paper, we denote κ = L/µ > 1 as the condition
+   Many other studies have developed stochastic GDA-type           number, and denote ∇1 f (x, y), ∇2 f (x, y) as the gradients with
+algorithms. [23], [44] analyzed stochastic GDA and stochastic      respect to the first and the second input variables, respectively.
+AltGDA respectively. Variance reduction techniques have been
+                                                                   Proposition 1 ([5], [23]). Let Assumption 1 hold. Then, the
+applied to stochastic minimax optimization, including SVRG-
+                                                                   mapping y ∗ (x) is κ-Lipschitz continuous and the function Φ(x)
+based [8], [44], SARAH/SPIDER-based [25], [41], STORM
+                                                                   is L(1 + κ)-smooth with ∇Φ(x) = ∇1 f (x, y ∗ (x)).
+[34] and its gradient free version [16].
+GDA-type algorithms with momentum: For strongly-convex-              Lastly, recall that the minimax problem (P) is equivalent to
+strongly-concave problems, [45] studied accelerated GDA with       the minimization problem minx∈Rm Φ(x) + g(x). Therefore,
+the optimization goal of the minimax problem (P) is to find a      To explain, the first step is an extrapolation step that applies
+critical point x∗ of the nonconvex function Φ(x) + g(x) that       the momentum term β(xt − xt−1 ) (with momentum coefficient
+satisfies the optimality condition 0 ∈ ∂(Φ + g)(x∗ ), where ∂      β > 0), and the second proximal gradient step updates the
+denotes the subdifferential operator.                              extrapolation point x   et using the original gradient ∇1 f (xt , yt ).
+                                                                   In conventional gradient-based optimization, gradient descent
+  III. P ROXIMAL A LTERNATING GDA WITH M OMENTUM                   with such a heavy-ball momentum is guaranteed to find a
+   In this section, we propose a single-loop proximal alternating- critical point of smooth nonconvex functions [31], [32].
+GDA with momentum (proximal-AltGDAm) algorithm to solve               On the other hand, as the proximal gradient ascent step of
+the regularized minimax problem (P).                               proximal-AltGDA         maximizes a composite strongly-concave
+   We first recall the update rules of the basic proximal          function,  we   are   motivated   to apply the popular Nesterov’s
+alternating-GDA (proximal-AltGDA) algorithm [4] for solving        momentum      scheme     [29],  which   was originally designed for
+the problem (P). Specifically, proximal-AltGDA alternates          accelerating   strongly-concave      (convex) optimization. Specifi-
+between the following two proximal-gradient updates (a.k.a.        cally, we  propose    the  following   proximal gradient ascent with
+forward-backward splitting updates [24]).                          Nesterov’s   momentum        update   for maximizing      the strongly-
+   (Proximal-AltGDA):                                              concave   part  of  the  problem   (P).
+           (                                                         (Nesterov’s momentum):
+             xt+1 = proxηx g xt − ηx ∇1 f (xt , yt ) ,                        (
+                                                                                  yet = yt + γ(yt − yt−1 ),
+              yt+1 = proxηy h yt + ηy ∇2 f (xt+1 , yt ) .                                                                             (1)
+                                                                                yt+1 = proxηy h yet + ηy ∇2 f (xt+1 , yet ) .
+To elaborate, the first update is a proximal gradient descent
+                                                                   To elaborate, the first step is a regular extrapolation step that
+update that aims to minimize the nonconvex function f (x, yt )+
+                                                                   involves momentum, which is the same as the first step of
+g(x) from the current point xt , and the second update is a
+                                                                   the heavy-ball scheme. The only difference from the heavy-
+proximal gradient ascent update that aims to maximize the
+                                                                   ball scheme is that the starting point of the second proximal
+strongly-concave function f (xt+1 , y) − h(y) from the current
+                                                                   gradient step changes from yt to its extrapolated point yet .
+point yt . More specifically, the two proximal gradient mappings
+                                                                      We refer to the above algorithm design as proximal-AltGDA
+are formally defined as
+                                                                   with momentum (proximal-AltGDAm), and the algorithm
+                                                                   updates are formally presented in Algorithm 1. It can be seen
+                                   
+   proxηx g xt − ηx ∇1 f (xt , yt )
+                n          1                                 o     that proximal-AltGDAm is a simple algorithm that has a single
+    := argmin g(u) +           ku − xt + ηx ∇1 f (xt , yt )k2 ,    loop structure, and adopts alternating updates with momentum
+         u∈Rm             2ηx
+                                                                  acceleration. More importantly, it involves only standard hyper-
+   proxηy h yt + ηy ∇2 f (xt+1 , yt )                              parameters such as the learning rates and momentum parameters
+                n          1                                  2
+                                                                o
+                                                                   and therefore is easy to implement in practice. Such a practical
+    := argmin h(v) +           kv − yt − ηy ∇2 f (xt+1 , yt )k .
+          v∈Y             2ηy                                      algorithm is much simper than the other accelerated GDA-
+                                                                   type algorithms that involve complex nested-loop structure and
+   Compared with the standard (proximal) GDA algorithm [5],
+                                                                   require fine-tuned function smoothing [22], [46].
+[23], the proximal ascent step of proximal-AltGDA evaluates
+the gradient at the freshest point xt+1 instead of xt . Such an Algorithm 1 Proximal Alternating GDA with Momentum
+alternative update is widely used in practice and usually leads (proximal-AltGDAm)
+to better convergence properties [2], [4], [12], [42].
+                                                                   Input: Initialization x−1 = x0 , y−1 = y0 , learning rates ηx , ηy ,
+   Next, we introduce momentum schemes to accelerate the
+                                                                   momentum parameters β, γ.
+convergence of proximal-AltGDA. As the two proximal
+                                                                   for t = 0, 1, 2, . . . , T − 1 do
+gradient steps of proximal-AltGDA are used to solve two
+different types of optimization problems, namely, the nonconvex                      et = xt + β(xt − xt−1 ),
+                                                                                     x
+problem f (x, yt ) + g(x) and the strongly-concave problem                                                                   
+f (xt+1 , y) − h(y), we consider applying different momen-                       xt+1 = proxηx g x    et − ηx ∇1 f (xt , yt ) ,
+tum schemes to accelerate these proximal gradient updates.                           yet = yt + γ(yt − yt−1 ),
+                                                                                                                                
+Specifically, the proximal gradient descent step minimizes                       yt+1 = proxηy h yet + ηy ∇2 f (xt+1 , yet ) .
+a composite nonconvex function, and we apply the heavy-
+ball momentum scheme [33] that was originally designed for end
+accelerating nonconvex optimization. Therefore, we propose the Output: xT , yT .
+following proximal gradient descent with heavy-ball momentum
+update for minimizing the nonconvex part of the problem (P).
+                                                                    IV. C ONVERGENCE AND C OMPUTATION C OMPLEXITY OF
+   (Heavy-ball momentum):
+             (                                                                            P ROXIMAL -A LT GDA M
+                 et = xt + β(xt − xt−1 ),
+                 x                                                    Although the proposed proximal-AltGDAm algorithm applies
+                                                        
+               xt+1 = proxηx g x et − ηx ∇1 f (xt , yt ) .         the popular heavy-ball momentum and Nesterov’s momentum
+to the GDA updates in a straightforward way, its convergence understood as inexact accelerated gradient updates applied
+analysis cannot directly follow from the existing studies of to the function f (xt+1 , ·) at time t. In particular, under
+momentum accelerated gradient descent algorithms. To explain the smoothness condition in Assumption 1, the inexactness
+more specifically, notice that in the x-proximal gradient update is bounded as kek+1 k ≤ Lkxk+1 − xt+1 k. Consequently,
+of Algorithm 1, it involves the partial gradient ∇1 f (xt , yt ), we can leverage the existing convergence result of inexact
+which corresponds to the gradient of the time-varying function accelerated gradient algorithm [36] to bound the optimality
+f (·, yt ) (since yt changes over time t). Similarly, the y-proximal gap kyt − y ∗ (xt )k2 as follows.
+gradient update involves the gradient of another time-varying
+                                                                     Proposition 3. Let Assumption 1 hold. Choose  √ learning rate
+function f (xt+1 , ·). Therefore, both momentum accelerated
+                                                                     ηy  =  1
+                                                                               and   momentum     parameter  γ =   √κ−1 . Then, the
+proximal gradient updates are actually applied to time-varying              L                                       κ+1
+functions due to the nature of GDA updates. In this sense, the parameter sequences {xt , yt } generated by proximal-AltGDAm
+existing analysis of momentum accelerated gradient descent satisfy, for all t = 0, 1, 2, ...
+algorithms cannot be directly applied to analyze this algorithm.                                2Rκ
+   To analyze the convergence of Algorithm 1, we first study            kyt+1 −y ∗ (xt+1 )k2 ≤ √ (1 − κ−0.5 )t+1
+                                                                                                   L
+the x-proximal gradient update with heavy-ball momentum and                                 t
+                                                                                         2 X
+obtain the following characterization of per-iteration progress                       6κ
+                                                                                    +√        (1 − κ−0.5 )t+1−j/2 kxj+1 − xj k. (4)
+on the objective function value.                                                        L j=1
+Proposition 2. Let Assumption 1 hold. Then, the parameter
+                                                                      Intuitively, in the above bound, the first term on the right
+sequences {xt , yt }t generated by proximal-AltGDAm satisfy,
+                                                                   hand side corresponds to the normal accelerated convergence
+for all t = 0, 1, 2, ...,
+                                                                   rate, and the other term is induced by the inexactness ek . As
+   Φ(xt+1 ) + g(xt+1 )                                             both terms are scaled by the accelerated convergence factor
+                            1 − β        11
+                                                                  (1 − κ−0.5 ), we expect that the above bound converges fast and
+      ≤ Φ(xt ) + g(xt ) −            − 2Lκ 6 kxt+1 − xt k2         further facilitates the convergence of eq. (2). Next, substituting
+                                  2ηx
+              β                 2     L      ∗             2
+                                                                   eq. (4) into eq. (2) and telescoping, we obtain the following
+         +       kxt − xt−1 k +        11 ky (xt ) − yt k .       (2)
+                                                                   asymptotic stability properties of proximal-AltGDAm.
+            2ηx                      4κ 6
+   The above proposition tracks the per-iteration optimiza- Corollary 1. Under the conditions of Proposition 3 and
+                                                                                               11
+tion progress made by the x-proximal gradient update with stepsize ηx ≤ 1/(16Lκ 6 ), the sequences {xt , yt }t generated
+heavy-ball momentum. To elaborate, the increment terms by proximal-AltGDAm satisfy
+kxt+1 − xt k2 , kxt − xt−1 k2 are induced by the heavy-ball
+                                                                                                                           t
+momentum scheme. Moreover, since the x-update uses the                        kxt+1 − xt k, kyt − y ∗ (xt )k, kyt+1 − yt k → 0.
+partial gradient ∇1 f (xt , yt ) to approximate the exact gradient
+∇Φ(xt ) = ∇1 f (xt , y ∗ (xt )), it naturally induces a tracking         Remark 1. In [5], the proximal-GDA algorithm (without
+                     ∗      2
+error term kyt − y (xt )k that tracks the optimization gap of         alternating update and momentum) uses a small learning rate
+                                                                                 −2 −3
+the y-update. Hence, we need to further bound this tracking           ηx  ≤ O(L     κ ) to establish convergence. As a comparison,
+error term by analyzing the y-proximal gradient update with           proximal-AltGDAm      allows to choose a much larger learning
+                                                                                       −1 − 11
+Nesterov’s momentum, which we explore next.                           rate ηx  ≤  O(L     κ   6 ) to guarantee a faster convergence
+
+   As explained earlier, the momentum accelerated y-updates (proved later), thanks to the momentum acceleration schemes.
+in proximal-AltGDAm are applied to a time-varying strongly-              Therefore, if we can show that {xt }t converges to a desired
+concave function f (xt+1 , ·). Hence, the tracking error term critical point x∗ , then the above stability properties of proximal-
+kyt − y ∗ (xt )k2 cannot be directly bounded using the standard AltGDAm implies that {yt }t converges to the corresponding
+convergence result of Nesterov’s accelerated proximal gradient best response point y ∗ (x∗ ).
+algorithm [28]. Instead, we can view these y-updates as inexact          To further characterize the global convergence property of
+accelerated proximal gradient updates. To elaborate, note that proximal-AltGDAm, we define the following proximal gradient
+in the t-th iteration, the y-proximal gradient update is applied mapping associated with the objective function Φ(x) + g(x).
+to the function f (xt+1 , ·). Then, we can rewrite the y-updates
+in all the previous iterations k = 0, 1, ..., t − 1 as follows.                           1                               
+                                                                                G(x) :=      x − proxηx g x − ηx ∇Φ(x) .          (5)
+                                                                                         ηx
+   yk+1 = proxηy h yek + ηy ∇2 f (xt+1 , yek )
+                 + ηy [∇2 f (xk+1 , yek ) − ∇2 f (xt+1 , yek )] . (3) The proximal gradient mapping is a standard metric for
+                                                                
+                       |                  {z                  }       evaluating the optimality of nonconvex composite optimization
+                                        ek+1
+                                                                      problems [28]. It can be shown that x is a critical point of
+That is, we can view all the previous y-updates as applied to (Φ + g)(x) if and only if G(x) = 0, and it reduces to the
+the fixed function f (xt+1 , ·) with an inexactness ek+1 involved normal gradient when there is no regularizer g. Hence, our
+in the computation of the partial gradient ∇2 f (xt+1 , yek ). convergence criterion is to find a near-critical point x that
+In summary, the y-updates of proximal-AltGDAm can be satisfies kG(x)k ≤  for some pre-determined accuracy  > 0.
+  Next, by leveraging Proposition 2 and Proposition 3, we              followed by two fully connected layers. Specifically, each
+obtain the following global convergence result of proximal-            convolution block contains a convolution layer, a max-pooling
+AltGDAm and characterize its computational complexity (num-            layer with stride step 2, and a ReLU activation layer. The
+ber of gradient and proximal mapping evaluations).                     convolution layers in the two blocks have 1, 10 input channels
+                                                                       and 10, 20 output channels, respectively, and both of them
+Theorem 1 (Global convergence). Under the conditions of
+                                            11                         have kernel size 5, stride step 1 and no padding. The two fully
+Proposition 3 and stepsize ηx ≤ 1/(16Lκ 6 ), the sequence
+                                                                       connected layers have input dimensions 320, 50 and output
+{xt }t generated by proximal-AltGDAm is bounded and has
+                                                                       dimensions 50, 10, respectively.
+a compact set of limit points. Also, every such limit point is
+                                                                          We implement all three algorithms using full gradients with
+a critical point of (Φ + g)(x). Moreover, the total number
+                                                                       the whole training set of 60k images. We choose the same
+of iterations T required to achieve min0≤t≤T kG(xt )k ≤ 
+             11                                                        learning rates ηx = ηy = 10−3 for all algorithms. For proximal-
+is T = O κ 6 −2 , which is also the order of the required
+                   
+                                                                       AltGDAm, we choose momentum β = 0.25 and γ = 0.75. For
+computational complexity.
+                                                                       APDA, we choose the fine-tuned η = 2ηx . As the function Φ(x)
+   To elaborate, the first statement of Theorem 1 shows that the       cannot be exactly evaluated, we run 100 steps of stochastic
+sequence generated by proximal-AltGDAm converges to critical           gradient ascent updates with learning rate 0.1 to maximize
+points of the minimax problem. The second statement proves             f (xt , y) − h(y) and obtain an approximated y ∗ (xt ), which is
+that the computation complexity of proximal-AltGDAm          for       used to estimate Φ(x) + g(x).
+                                                   11
+finding a near-critical point is of the orderO κ 6 −2 , which
+                                                        
+
+strictly improves the complexity O κ2 −2 of both GDA [23]
+and proximal-AltGDA [4] in nonconvex-strongly concave min-
+imax optimization. We note that the improvement is substantial
+when the problem condition number κ = L/µ is large, while
+the dependence on −2 is generally unimprovable in nonconvex
+optimization. In addition, thanks to the momentum acceleration
+                                                             11
+schemes, our choice of learning rate ηx = O(L−1 κ− 6 )
+is more flexible than that ηx = O(L−1 κ−2 ) adopted by
+these GDA-type algorithms. These improvements are not only
+attributed to momentum acceleration, but also to the elaborate
+selection of the coefficients in the proof that aims to minimize
+                                                                       Figure 1. Left: comparison of Φ(x) + g(x) of all four algorithms. Right:
+the dependence of the complexity on κ.                                 comparison of the corresponding accuracy on the test dataset.
+
+                      V. E XPERIMENTS                                     Figure 1 (Left) compares the estimated objective function
+  In this section, we compare the performance of proximal-             value achieved by all the three algorithms. It can be seen that
+AltGDAm with that of other GDA-type algorithms via numeri-             proximal-AltGDAm achieves the fastest convergence among
+cal experiments. Specifically, we compare proximal-AltGDAm             these algorithms and is significantly faster than the proximal-
+with the standard proximal-GDA/AltGDA algorithm [5] and                GDA and the proximal-AltGDA. This demonstrates the effec-
+the single-loop accelerated AltGDA algorithm (APDA) [47].              tiveness of our simple momentum scheme. Figure 1 (Right)
+All these algorithms have a single-loop structure.                     further demonstrates the advantage of proximal-AltGDAm in
+  We consider solving the following regularized Wasserstein            the test accuracy. It can be seen that the robust model trained
+robustness model (WRM) [37] using the MNIST dataset [19].              by proximal-AltGDAm achieves a much higher test accuracy.
+                       n
+                    1 Xh                                      i                               VI. C ONCLUSION
+                                                            2
+       min max            `(h θ (ξ i ), yi ) − λkξ i − x i k              We develop a single-loop and fast AltGDA algorithm
+                i=1 n
+         θ {ξi }n
+                      i=1
+                                    n
+                                                                       that leverages proximal gradient updates and momentum
+                                    X                λ2                acceleration to solve general regularized nonconvex-strongly-
+                             − λ1         kξi k1 +      kθk2 ,   (6)
+                                    i=1
+                                                     2                 concave minimax optimization problems. By viewing the GDA
+                                                                       updates of the algorithm as inexact accelerated gradient updates,
+where n = 60k is the number of training samples, θ is                  we prove that the algorithm converges to a -critical point with
+the model parameter, (xi , yi ) corresponds to the i-th data                                               11
+                                                                       a computational complexity O(κ 6 −2 ), which substantially
+sample and label, respectively, and ξi is the adversarial sample       improves the state-of-the-art result. In the future work, it is
+corresponding to xi . We choose the cross-entropy loss function        interesting to develop a stochastic variant of this algorithm to
+`. We add an `1 regularization to impose sparsity on the               further improve the sample complexity.
+adversarial examples, and add an `22 regularization to prevent
+divergence of the model parameters.                                                        ACKNOWLEDGMENT
+   We set λ = 1.0 that suffices to make the maximization                 The work of Ziyi Chen, Shaocong Ma and Yi Zhou was
+part be strongly-concave, and set λ1 = λ2 = 10−4 . We use a            supported in part by U.S. National Science Foundation under
+convolution network that consists of two convolution blocks            the Grants CCF-2106216 and DMS-2134223.
+                               R EFERENCES                                           [24] P.-L. Lions and B. Mercier. Splitting algorithms for the sum of two
+                                                                                          nonlinear operators. SIAM Journal on Numerical Analysis, 16(6):964–979,
+ [1] L. Adolphs, H. Daneshmand, A. Lucchi, and T. Hofmann. Local                          1979.
+     saddle point optimization: A curvature exploitation approach. In                [25] L. Luo, H. Ye, Z. Huang, and T. Zhang. Stochastic recursive gradient
+     Proc. International Conference on Artificial Intelligence and Statistics             descent ascent for stochastic nonconvex-strongly-concave minimax
+     (AISTATS), pages 486–495, 2019.                                                      problems. In Proc. Advances in Neural Information Processing Systems
+ [2] J. P. Bailey, G. Gidel, and G. Piliouras. Finite regret and cycles with fixed        (NeurIPS), volume 33, 2020.
+     step-size via alternating gradient descent-ascent. In Proc. Conference on       [26] A. Mokhtari, A. Ozdaglar, and S. Pattathil. A unified analysis of extra-
+     Learning Theory (COLT), pages 391–407, 2020.                                         gradient and optimistic gradient methods for saddle point problems:
+ [3] A. Beck and M. Teboulle. A fast iterative shrinkage-thresholding                     Proximal point approach. In Proc. International Conference on Artificial
+     algorithm for linear inverse problems. SIAM Journal on Imaging Sciences,             Intelligence and Statistics (AISTATS), pages 1497–1507, 2020.
+     2(1):183–202, Mar. 2009.                                                        [27] A. Nedić and A. Ozdaglar. Subgradient methods for saddle-point
+ [4] R. I. Boţ and A. Böhm. Alternating proximal-gradient steps for                      problems. Journal of optimization theory and applications, 142(1):205–
+     (stochastic) nonconvex-concave minimax problems. ArXiv:2007.13605,                   228, 2009.
+     2020.                                                                           [28] Y. Nesterov. Introductory Lectures on Convex Optimization: A Basic
+ [5] Z. Chen, Y. Zhou, T. Xu, and Y. Liang. Proximal gradient descent-                    Course. Springer, 2014.
+     ascent: Variable convergence under kł geometry. In Proc. International          [29] Y. E. Nesterov. A method for solving the convex programming problem
+     Conference on Learning Representations (ICLR), 2021.                                 with convergence rate o (1/kˆ 2). In Dokl. akad. nauk Sssr, volume 269,
+ [6] A. Cherukuri, B. Gharesifard, and J. Cortes. Saddle-point dynamics:                  pages 543–547, 1983.
+     conditions for asymptotic stability of saddle points. SIAM Journal on           [30] M. Nouiehed, M. Sanjabi, T. Huang, J. D. Lee, and M. Razaviyayn.
+     Control and Optimization, 55(1):486–511, 2017.                                       Solving a class of non-convex min-max games using iterative first order
+ [7] C. Daskalakis and I. Panageas. The limit points of (optimistic)                      methods. In Proc. Advances in Neural Information Processing Systems
+     gradient descent in min-max optimization. In Proc. Advances in Neural                (NeurIPS), pages 14934–14942, 2019.
+     Information Processing Systems (NeurIPS), pages 9236–9246, 2018.                [31] P. Ochs. Local convergence of the heavy-ball method and iPiano for non-
+ [8] S. S. Du and W. Hu. Linear convergence of the primal-dual gradient                   convex optimization. Journal of Optimization Theory and Applications,
+     method for convex-concave saddle point problems without strong                       177(1):153–180, Apr 2018.
+     convexity. In Proc. International Conference on Artificial Intelligence         [32] P. Ochs, Y. Chen, T. Brox, and T. Pock. iPiano: Inertial proximal
+     and Statistics (AISTATS), pages 196–205, 2019.                                       algorithm for nonconvex optimization. SIAM Journal on Imaging
+ [9] A. Fallah, A. Ozdaglar, and S. Pattathil. An optimal multistage stochastic           Sciences, 7(2):1388–1419, 2014.
+     gradient method for minimax problems. In 2020 59th IEEE Conference              [33] B. Polyak. Some methods of speeding up the convergence of iteration
+     on Decision and Control (CDC), pages 3573–3579. IEEE, 2020.                          methods. USSR Computational Mathematics and Mathematical Physics,
+[10] M. A. M. Ferreira, M. Andrade, M. C. P. Matos, J. A. Filipe, and M. P.               4(5):1–17, 1964.
+     Coelho. Minimax theorem and nash equilibrium. International Journal             [34] S. Qiu, Z. Yang, X. Wei, J. Ye, and Z. Wang. Single-timescale
+     of Latest Trends in Finance & Economic Sciences, 2012.                               stochastic nonconvex-concave optimization for smooth nonlinear td
+[11] S. Ghadimi and G. Lan. Accelerated gradient methods for nonconvex                    learning. ArXiv:2008.10103, 2020.
+     nonlinear and stochastic programming. Mathematical Programming,                 [35] R. T. Rockafellar. Convex analysis. Number 28. Princeton university
+     156(1-2):59–99, Mar. 2016.                                                           press, 1970.
+[12] G. Gidel, R. A. Hemmat, M. Pezeshki, R. Le Priol, G. Huang, S. Lacoste-         [36] M. Schmidt, N. Le Roux, and F. Bach. Convergence rates of inexact
+     Julien, and I. Mitliagkas. Negative momentum for improved game                       proximal-gradient methods for convex optimization. In Proc. Advances
+     dynamics. In Proc. International Conference on Artificial Intelligence               in Neural Information Processing Systems (NeurIPS), 2011.
+     and Statistics (AISTATS), pages 1802–1811, 2019.                                [37] A. Sinha, H. Namkoong, and J. C. Duchi. Certifying some distributional
+[13] I. Goodfellow, J. Pouget-Abadie, M. Mirza, B. Xu, D. Warde-Farley,                   robustness with principled adversarial training. In Proc. International
+     S. Ozair, A. Courville, and Y. Bengio. Generative adversarial nets. In               Conference on Learning Representations (ICLR), 2018.
+     Proc. Advances in Neural Information Processing Systems (NeurIPS),              [38] P. Tseng. Approximation accuracy, gradient methods, and error bound for
+     pages 2672–2680, 2014.                                                               structured convex optimization. Mathematical Programming, 125(2):263–
+[14] Z. Guo, Y. Xu, W. Yin, R. Jin, and T. Yang. On stochastic moving-average             295, Oct 2010.
+     estimators for non-convex optimization. ArXiv:2104.14840, 2021.                 [39] Y. Wang and J. Li. Improved algorithms for convex-concave minimax
+[15] F. Huang, S. Gao, and H. Huang. Gradient descent ascent for min-max                  optimization. In Proc. Advances in Neural Information Processing
+     problems on riemannian manifolds. ArXiv:2010.06097, 2020.                            Systems (NeurIPS), 2020.
+[16] F. Huang, S. Gao, J. Pei, and H. Huang. Accelerated zeroth-order                [40] Y. Wang, G. Zhang, and J. Ba. On solving minimax optimization locally:
+     and first-order momentum methods from mini to minimax optimization.                  A follow-the-ridge approach. In Proc. International Conference on
+     ArXiv:2008.08170, 2020.                                                              Learning Representations (ICLR), 2019.
+[17] F. Huang, X. Wu, and H. Huang. Efficient mirror descent ascent methods          [41] T. Xu, Z. Wang, Y. Liang, and H. V. Poor. Enhanced first and
+     for nonsmooth minimax problems. In Proc. International Conference on                 zeroth order variance reduced algorithms for min-max optimization.
+     Neural Information Processing Systems (Neurips), volume 34, 2021.                    ArXiv:2006.09361, 2020.
+[18] C. Jin, P. Netrapalli, and M. I. Jordan. What is local optimality in            [42] Z. Xu, H. Zhang, Y. Xu, and G. Lan. A unified single-loop alternating gra-
+     nonconvex-nonconcave minimax optimization? In Proc. International                    dient projection algorithm for nonconvex-concave and convex-nonconcave
+     Conference on Machine Learning (ICML), pages 4880–4889, 2020.                        minimax problems. ArXiv:2006.02032, 2020.
+[19] Y. Lecun, L. Bottou, Y. Bengio, and P. Haffner. Gradient-based learning         [43] A. Yadav, S. Shah, Z. Xu, D. Jacobs, and T. Goldstein. Stabilizing
+     applied to document recognition. In Proceedings of the IEEE, pages                   adversarial nets with prediction methods. In Proc. International
+     2278–2324, 1998.                                                                     Conference on Learning Representations (ICLR), 2018.
+[20] H. Li and Z. Lin. Accelerated proximal gradient methods for nonconvex           [44] J. Yang, N. Kiyavash, and N. He. Global convergence and variance
+     programming. In Proc. International Conference on Neural Information                 reduction for a class of nonconvex-nonconcave minimax problems. In
+     Processing Systems (Neurips), pages 379–387, 2015.                                   Proc. Advances in Neural Information Processing Systems (NeurIPS),
+[21] Q. Li, Y. Zhou, Y. Liang, and P. K. Varshney. Convergence analysis                   2020.
+     of proximal gradient with momentum for nonconvex optimization. In               [45] G. Zhang and Y. Wang. On the suboptimality of negative momentum
+     Proc. International Conference on Machine Learning (ICML), volume 70,                for minimax optimization. ArXiv:2008.07459, 2020.
+     pages 2111–2119, Aug 2017.                                                      [46] S. Zhang, J. Yang, C. Guzmán, N. Kiyavash, and N. He. The complexity
+[22] T. Lin, C. Jin, and M. I. Jordan. Near-optimal algorithms for minimax                of nonconvex-strongly-concave minimax optimization. ArXiv:2103.15888,
+     optimization. In Proc. Annual Conference on Learning Theory (COLT),                  2021.
+     pages 2738–2779, 2020.                                                          [47] Y. Zhu, D. Liu, and Q. Tran-Dinh. A New Primal-Dual Algorithm
+[23] T. Lin, C. Jin, and M. I. Jordan. On gradient descent ascent for nonconvex-          for a Class of Nonlinear Compositional Convex Optimization Problems.
+     concave minimax problems. In Proc. International Conference on                       ArXiv:2006.09263, June 2020.
+     Machine Learning (ICML), pages 6083–6093, 2020.
+                                                           A PPENDIX A
+                                                     P ROOF OF P ROPOSITION 2
+Proposition 2. Let Assumption 1 hold. Then, the parameter sequences {xt , yt }t generated by proximal-AltGDAm satisfy, for
+all t = 0, 1, 2, ...,
+                                      Φ(xt+1 ) + g(xt+1 )
+                                                               1 − β        11
+                                                                                
+                                         ≤ Φ(xt ) + g(xt ) −            − 2Lκ 6 kxt+1 − xt k2
+                                                               2ηx
+                                              β              2     L     ∗            2
+                                           +     kxt − xt−1 k +     11 ky (xt ) − yt k .                                           (2)
+                                             2ηx                  4κ 6
+Proof. Consider the t-th iteration of PGDAm. As the function Φ is L(1 + κ)-smooth (from Proposition 1), we obtain that
+                                                                           L(1 + κ)
+                               Φ(xt+1 ) ≤ Φ(xt ) + hxt+1 − xt , ∇Φ(xt )i +          kxt+1 − xt k2 .                                (7)
+                                                                              2
+On the other hand, by the definition of the proximal gradient step of xt , we have that
+                                1                                                1
+                 g(xt+1 ) +                et + ηx ∇1 f (xt , yt )k2 ≤ g(xt ) +
+                                   kxt+1 − x                                              et + ηx ∇1 f (xt , yt )k2 ,
+                                                                                    kxt − x
+                               2ηx                                              2ηx
+which further simplifies to
+                                1
+         g(xt+1 ) ≤ g(xt ) +             et k2 + hxt − x
+                                   kxt − x             et , ∇1 f (xt , yt )i
+                               2ηx
+                          1
+                    −       kxt+1 − x et k2 − hxt+1 − x et , ∇1 f (xt , yt )i
+                        2ηx
+                  (i)          β2                      1
+                  = g(xt ) +      kxt − xt−1 k2 −         kxt+1 − xt − β(xt − xt−1 )k2
+                              2ηx                     2ηx
+                      + hxt − xt+1 , ∇1 f (xt , yt )i
+                               β2                      1                      β2
+                  = g(xt ) +      kxt − xt−1 k2 −         kxt+1 − xt k2 −         kxt − xt−1 k2
+                              2ηx                     2ηx                     2ηx
+                         β
+                      + hxt+1 − xt , xt − xt−1 i + hxt − xt+1 , ∇1 f (xt , yt )i
+                        ηx
+                               1                       β                       β
+                  ≤ g(xt ) −      kxt+1 − xt k2 +         kxt+1 − xt k2 +         kxt − xt−1 k2 + hxt − xt+1 , ∇1 f (xt , yt )i,   (8)
+                              2ηx                     2ηx                     2ηx
+where (i) uses the fact that xt − x
+                                  et = β(xt−1 − xt ).
+  Adding up eq. (7) and eq. (8) yields that
+            Φ(xt+1 ) + g(xt+1 )
+                                   1       L(1 + κ)                        β                    β
+            ≤ Φ(xt ) + g(xt ) −          −                kxt+1 − xt k2 +       kxt+1 − xt k2 +       kxt − xt−1 k2
+                                  2ηx             2                         2ηx                 2ηx
+                + hxt+1 − xt , ∇Φ(xt ) − ∇1 f (xt , yt )i
+                                  1        L(1 + κ)                        β                    β
+            ≤ Φ(xt ) + g(xt ) −         −                 kxt+1 − xt k2 +       kxt+1 − xt k2 +       kxt − xt−1 k2
+                                  2ηx             2                         2ηx                 2ηx
+                + kxt+1 − xt kk∇Φ(xt ) − ∇1 f (xt , yt )k
+                                  1        L(1 + κ)                        β                    β
+            ≤ Φ(xt ) + g(xt ) −         −                 kxt+1 − xt k2 +       kxt+1 − xt k2 +       kxt − xt−1 k2
+                                  2ηx             2                         2ηx                 2ηx
+                + kxt+1 − xt kk∇1 f (xt , y ∗ (xt )) − ∇1 f (xt , yt )k
+                                  1                                   β                  β
+            ≤ Φ(xt ) + g(xt ) −         − Lκ kxt+1 − xt k2 +              kxt+1 − xt k2 +     kxt − xt−1 k2
+                                  2ηx                                 2ηx                 2ηx
+                + Lkxt+1 − xt kky ∗ (xt ) − yt k
+            (i)                  1 − β                   11
+                                                                                β                     L      ∗
+            ≤ Φ(xt ) + g(xt ) −            − Lκ − Lκ 6 kxt+1 − xt k2 +              kxt − xt−1 k2 +      11 ky (xt ) − yt k
+                                                                                                                            2
+                                     2ηx                                        2ηx                   4κ 6
+                                 1 − β              11
+                                                                           β                    L      ∗
+            ≤ Φ(xt ) + g(xt ) −            − 2Lκ 6 kxt+1 − xt k2 +             kxt − xt−1 k2 +                       2
+                                                                                                   11 ky (xt ) − yt k .            (9)
+                                    2ηx                                    2ηx                 4κ 6
+                                                     2      2
+where (i) uses AM-GM inequality that ab ≤ Ca   b
+                                           2 + 2C for any a, b, C ≥ 0. This proves eq. (2)
+
+
+
+                                                               A PPENDIX B
+                                                         P ROOF OF P ROPOSITION 3
+                                                                                                             √
+Proposition 3. Let Assumption 1 hold. Choose learning rate ηy = L1 and momentum parameter γ = √κ−1
+                                                                                               κ+1
+                                                                                                   . Then, the parameter
+sequences {xt , yt } generated by proximal-AltGDAm satisfy, for all t = 0, 1, 2, ...
+                                                             2Rκ
+                                      kyt+1 −y ∗ (xt+1 )k2 ≤ √ (1 − κ−0.5 )t+1
+                                                                L
+                                                       2 Xt
+                                                    6κ
+                                                  +√        (1 − κ−0.5 )t+1−j/2 kxj+1 − xj k.                                          (4)
+                                                      L j=1
+
+Proof. We rewrite the inner accelerated gradient ascent√steps in Algorithm 1 as the inexact-proximal gradient method (3). Then,
+based on Theorem 4 of [36], using ηy = L1 and γ = √κ−1  κ+1
+                                                            , this method has the following convergence rate.
+
+                f (xt+1 , yt+1 ) − f (xt+1 , y ∗ (xt+1 ))
+                                                                                       r t+1
+                                     q                                                 2X                         
+                 ≤ (1 − κ−0.5 )t+1                                                            kei k(1 − κ−0.5 )−i/2 .
+                                                                                    
+                                         2 f (xt+1 , yt+1 ) − f (xt+1 , y ∗ (xt+1 )) +                                                (10)
+                                                                                        µ i=1
+
+The above convergence rate can be simplified as follows.
+       µ
+         kyt+1 − y ∗ (xt+1 )k2
+       2
+        (i)
+        ≤ f (xt+1 , yt+1 ) − f (xt+1 , y ∗ (xt+1 ))
+                                                                             r t+1
+                           q                                                      2X                            
+                −0.5 t+1
+                                                                                          kei k(1 − κ−0.5 )−i/2
+                                                                         
+        ≤ (1 − κ      )                                        ∗
+                               2 f (xt+1 , yt+1 ) − f (xt+1 , y (xt+1 )) +
+                                                                                   µ i=1
+                                                           r t+1
+        (ii)                p                                 2X
+         ≤ (1 − κ−0.5 )t+1 Lkyt+1 − y ∗ (xt+1 )k2 +                  k∇2 f (xi , yei−1 ) − ∇2 f (xt+1 , yei−1 )k(1 − κ−0.5 )t+1−i/2
+                                                              µ i=1
+                                       r t+1                           t
+        (iii) √                             2X                        X
+         ≤ R L(1 − κ−0.5 )t+1 +                  (1 − κ−0.5 )t+1−i/2      Lkxj+1 − xj k
+                                           µ i=1                      j=i
+                                               t    j
+             √
+                                       r
+                                           2 XX
+        = R L(1 − κ−0.5 )t+1 + L                      (1 − κ−0.5 )t+1−i/2 kxj+1 − xj k
+                                           µ j=1 i=1
+                                    t
+           √                  √    X                     (1 − κ−0.5 )−j/2 − 1
+        = R L(1 − κ−0.5 )t+1 + 2Lκ     (1 − κ−0.5 )t+0.5                      kxj+1 − xj k
+                                   j=1
+                                                         (1 − κ−0.5 )−0.5 − 1
+                                    t
+           √                  √    X   (1 − κ−0.5 )t+1−j/2
+        ≤ R L(1 − κ−0.5 )t+1 + 2Lκ                         kxj+1 − xj k
+                                   j=1
+                                       1 − (1 − κ−0.5 )0.5
+                                     t
+           √
+        (iv)                     √ X
+        ≤ R L(1 − κ−0.5 )t+1 + 2κ 2L   (1 − κ−0.5 )t+1−j/2 kxj+1 − xj k,
+                                               j=1
+
+where (i) and (ii) use ∇2 f (xt+1 , y ∗ (xt+1 )) = 0 and Assumption 1.1 that f (x, ·) is L-smooth and µ-strongly concave, (iii)
+uses the fact that Y is bounded with diameter R and Assumption 1.1 that f is L-smooth, and (iv) uses 1−(1−κ1−0.5 )0.5 =
+1+(1−κ−0.5 )0.5
+    κ−0.5       ≤ 2κ0.5 . Multiplying the above inequality with 2/µ proves Proposition 3.
+                                                              A PPENDIX C
+                                                         P ROOF OF C OROLLARY 1
+                                                                                              11
+Corollary 1. Under the conditions of Proposition 3 and stepsize ηx ≤ 1/(16Lκ 6 ), the sequences {xt , yt }t generated by
+proximal-AltGDAm satisfy
+                                                                                          t
+                                           kxt+1 − xt k, kyt − y ∗ (xt )k, kyt+1 − yt k → 0.
+Proof. Telescoping eq. (4) over t = 0, 1, . . . , T − 1 yields that
+                           T
+                           X −1
+                                  kyt+1 − y ∗ (xt+1 )k2
+                            t=0
+                                  T −1                      T −1 t
+                              2Rκ X                     6κ2 X X
+                            ≤ √       (1 − κ−0.5 )t+1 + √           (1 − κ−0.5 )t+1−j/2 kxj+1 − xj k
+                                L t=0                     L t=0 j=1
+                                            T −1 T −1
+                                2Rκ1.5  6κ2 X X
+                            ≤    √     +√             (1 − κ−0.5 )t+1−j/2 kxj+1 − xj k
+                                   L      L j=1 t=j
+                                                    T −1
+                                2Rκ1.5   6κ2.5 X
+                            ≤    √     + √       (1 − κ−0.5 )j/2 kxj+1 − xj k
+                                   L       L j=1
+                                                    T −1
+                             2Rκ1.5   3κ2.5 X  1                     7√
+                                                                                       
+                            ≤ √     + √         7√  (1 − κ−0.5 )j + κ 6 Lkxj+1 − xj k2
+                                L       L j=1 κ 6 L
+                                           11        T −1
+                                2Rκ1.5   3κ 6     11
+                                                     X
+                            ≤    √     +      + 3κ 3      kxj+1 − xj k2 .                                                  (11)
+                                   L      L          j=1
+
+Then, telescoping eq. (2) over t = 0, 1, . . . , T − 1 yields that
+           Φ(xT ) + g(xT ) − Φ(x0 ) − g(x0 )
+               1 − β             TX−1                      T −1                       T −1
+                              11                         β X                       L X ∗
+           ≤−          − 2Lκ 6          kxt+1 − xt k2 +           kxt − xt−1 k2 +    11      ky (xt ) − yt k2
+                  2ηx               t=0
+                                                        2η x t=0                  4κ 6
+                                                                                        t=0
+                                  TX−1                                     11        T −1
+            (i) 1 − 2β       11                          L  2 2Rκ1.5    3κ 6     11
+                                                                                      X                  
+            ≤−          − 2Lκ 6         kxt+1 − xt k2 +    11  R + √    +      + 3κ 3      kxj+1 − xj k2
+                   2ηx              t=0                 4κ 6          L    L          j=1
+               1 − 2β             T −1                     2
+                                                                 √
+                             11
+                                  X                    LR      R L
+            ≤−          − 3Lκ 6         kxt+1 − xt k2 +    11 +    1 +1                                                    (12)
+                  2ηx              t=0                  4κ 6    2κ 3
+where (i) uses x−1 = x0 , ky ∗ (x0 ) − y0 k ≤ R and eq. (11). When ηx ≤      1             1
+                                                                                11 and β ≤ 4 , rearranging the above inequality
+                                                                          16Lκ 6
+yields that
+                       T −1                                                                     √
+                    11
+                       X
+                                        2
+                                                                                   LR2       R L
+                 Lκ 6       kxt+1 − xt k ≤ Φ(x0 ) + g(x0 ) − infm Φ(x) + g(x) +         11 +      1  + 1 < +∞             (13)
+                       t=0
+                                                              x∈R                    4κ 6      2κ 3
+                                                      P∞                                             t
+   Letting T → ∞ in the above inequality yields that t=0 kxt+1 − xt k2 < +∞, so kxt+1 − xt k → 0. Then, letting T → ∞
+                                                                  11
+                        P∞                               1.5            11     ∞                                           t
+in eq. (11) yields that t=0 kyt+1 − y ∗ (xt+1 )k2 ≤ 2Rκ      + 3κL6 + 3κ 3                     2                   ∗
+                                                                           P
+                                                                               j=1 kxj+1 − xj k < +∞, so kyt − y (xt )k → 0.
+                                                      √
+                                                        L
+                                  t
+  The last term kyt+1 − yt k → 0 can be proved as follows.
+                           kyt+1 − yt k ≤ kyt+1 − y ∗ (xt+1 )k + ky ∗ (xt ) − yt k + ky ∗ (xt+1 ) − y ∗ (xt )k
+                                            (i)
+                                                                                                          t
+                                            ≤ kyt+1 − y ∗ (xt+1 )k + kyt − y ∗ (xt )k + κkxt+1 − xt k → 0,
+where (i) uses the fact that y ∗ is κ-Lipschitz.
+                                                          A PPENDIX D
+                                                    P ROOF OF T HEOREM 1
+                                                                                                      11
+Theorem 1 (Global convergence). Under the conditions of Proposition 3 and stepsize ηx ≤ 1/(16Lκ 6 ), the sequence {xt }t
+generated by proximal-AltGDAm is bounded and has a compact set of limit points. Also, every such limit point is a critical
+                                                                                                                    11
+point of (Φ + g)(x). Moreover, the total number of iterations T required to achieve min0≤t≤T kG(xt )k ≤  is T = O κ 6 −2 ,
+                                                                                                                          
+
+which is also the order of the required computational complexity.
+                                                                                                              11
+Proof. We first prove the existence of the limit points of {xt }. Note that in eq. (12), 1−2β
+                                                                                          2ηx − 2Lκ
+                                                                                                    6 ≥ 0 since η
+                                                                                                                  x ≤
+                                                                                                                          1
+                                                                                                                              11
+                                                                                                                        16Lκ 6
+and β ≤ 14 as specified in Proposition 3. Hence, for all T ≥ 0,
+                                                                                        √
+                                                                            LR2        R L
+                                      Φ(xT ) + g(xT ) ≤ Φ(x0 ) + g(x0 ) +     11   +      1   + 1 < +∞,
+                                                                            4κ 6       2κ 3
+which implies that {Φ(xt ) + g(xt )}t is upper bounded. Hence, based on Assumption 1.2, the sequence {xt }t is bounded and
+thus has a compact set of limit points.
+
+  Next, we prove that every limit point x of {xt }t is a critical point of (Φ + g)(x), i.e., 0 ∈ ∂(Φ + g)(x). By the optimality
+condition of the proximal gradient update of xt+1 we have
+                                               1                                  
+                             0 ∈ ∂g(xt+1 ) +      xt+1 − x et + ηx ∇1 f (xt , yt )
+                                              ηx
+                                               1                                                 
+                               = ∂g(xt+1 ) +      xt+1 − xt − β(xt − xt−1 ) + ηx ∇1 f (xt , yt ) ,
+                                              ηx
+which implies that − η1x xt+1 − xt − β(xt − xt−1 ) + ηx ∇1 f (xt , yt ) ∈ ∂g(xt+1 ) and thus by convexity of g we have
+                                                                       
+
+                                                        1                                               >
+                     g(x) ≥ g(xt(j)+1 ) −                 xt+1 − xt − β(xt − xt−1 ) + ηx ∇1 f (xt , yt ) (x − xt(j)+1 ); ∀x ∈ Rm .                               (14)
+                                                       ηx
+             j                                               t                           t
+As xt(j) → x∗ and kyt(j) − y ∗ (xt(j) )k → 0, we have yt(j) → y ∗ (x∗ ) due to continuity of y ∗ (·). Also note that the convex
+function g is continuous (See Corollary 10.1.1 of [35]). Hence, letting j → ∞ in eq. (14) yields that
+                              g(x) ≥ g(x∗ ) − ∇1 f (x∗ , y ∗ (x∗ )> (x − x∗ ) = g(x∗ ) − ∇Φ(x∗ )> (x − x∗ ); ∀x ∈ Rm ,                                           (15)
+                                                   ∗             ∗                            ∗                       ∗
+which further implies that −∇Φ(x ) ∈ ∂g(x ) ⇒ 0 ∈ ∂(Φ + g)(x ). Hence, x in a critical point of (Φ + g)(x).
+
+  Finally, we derive the non-asymptotic computational complexity to obtain min0≤t≤T kG(xt )k ≤ . Note that
+                         1                                        
+          kG(xt+1 )k =       xt+1 − proxηx g xt+1 − ηx ∇Φ(xt+1 )
+                        ηx
+                     (i) 1
+                                    et + ηx ∇1 f (xt , yt ) − ∇f1 xt+1 , y ∗ (xt+1 )
+                                                                                   
+                     ≤       xt+1 − x
+                        ηx
+                         1
+                     ≤       xt+1 − xt − β(xt − xt−1 ) + Lkxt+1 − xt k + Lky ∗ (xt+1 ) − y ∗ (xt )k + Lky ∗ (xt ) − yt k
+                        ηx
+                    (ii) 1                               β
+                     ≤       + L + Lκ kxt+1 − xt k + kxt − xt−1 k + Lky ∗ (xt ) − yt k,
+                          ηx                               ηx
+                                et − ηx ∇1 f (xt , yt ) , ∇Φ(x) = ∇f1 x, y ∗ (x) (from Proposition 1) and the non-expansiveness
+                                                                                
+where (i) uses xt+1 ∈ proxηx g x
+of proximal mapping, (ii) uses the property that y ∗ is κ-Lipschitz continuous in Proposition 1. Hence,
+      (T − 1) min kG(xt )k2
+                   0≤t≤T
+      ≤ (T − 1)              min         kG(xt+1 )k2
+                        1≤t≤T −1
+            T
+            X −1
+      ≤            kG(xt+1 )k2
+            t=1
+            T −1 h
+            X           1                   2                          3β 2                          ∗
+                                                                                                                       i
+      ≤             3         + L + Lκ            kxt+1 − xt k2 +             kx t − x t−1 k2
+                                                                                              + 3L2
+                                                                                                    ky   (xt ) − yt k2
+
+             t=1
+                        ηx                                                ηx2
+      (i)                         T −1                                        T −1                                  T −1
+                        11                                               11
+                                  X                                           X                                     X
+      ≤ 3(18Lκ )        6     2                          2
+                                         kxt+1 − xt k + 27L κ        2   3                        2
+                                                                                     kxt+1 − xt k + 3L          2
+                                                                                                                           ky ∗ (xt ) − yt k2
+                                t=0                                           t=0                                   t=0
+      (ii)                    T −1               2Rκ1.5      11         T −1
+                         11
+                              X                             3κ 6      11
+                                                                         X                 
+       ≤ 999L2 κ 3                   kxt+1 − xt k2 + 3L2
+                                                   √     +       + 3κ 3       kxj+1 − xj k2 + 3L2 ky ∗ (x0 ) − y0 k2 ,
+                     t=0
+                                                     L       L           j=1
+                    11                                                       √
+      (iii) 1008L2 κ 3                                           LR2       R L                              11
+       ≤         11      Φ(x 0 ) + g(x 0 ) −  infm
+                                                   Φ(x)  + g(x)  +   11  +      1 + 1 + 6RL1.5 κ1.5 + 9Lκ 6 + 3L2 R2
+              Lκ 6                           x∈R                   4κ 6      2κ 3
+              11
+      = O(κ 6 ).
+where (i) uses β ≤ 14 and the maximum possible stepsize ηx =                                          1
+                                                                                                          11   , (ii) uses eq. (11), and (iii) uses eq. (13) and the
+                                                                                              16Lκ 6                                                        11
+fact that Y is boundedqwith diameter R. Based on the above inequality, when the number of iterations T ≥ O(κ 6 −2 ),
+                                            11
+min0≤t≤T kG(xt )k ≤ O(κ 6 )/(T − 1) ≤ . Since each iteration has O(1) number of gradient and proximal mapping
+                                                              11
+evaluations, the order of computational complexity is also O(κ 6 −2 ).
+                                                      A PPENDIX E
+                                 D ERIVIATION OF COMPUTATIONAL COMPLEXITIES IN TABLE I
+  In this section, we will derive some computational complexities in Table I that are not directly shown in their corresponding
+papers. Note that all these GDA-type algorithms in Table I are single-loop. Hence, the computational complexity (the number
+of gradient evaluations) has the order of O(T ) where T is the number of iterations.
+  First, the papers in Table I use different convergence measures for computational complexity. Specifically, [5], [17] and our
+work show computational complexity to achieve      kG(x)k ≤  where the proximal gradient mapping G is defined in (5). [4], [23]
+use the measure
+                 min t dist Φ(x t ) + ∂g(x t ), 0 ≤  where Φ(x) := maxy∈Y f (x, y) − h(y), ∂g denotes the partial gradient of g
+and dist A, 0 denotes the distance between 0 and any set A. [42] has no regularizers g, h and uses the convergence measure
+mint k∇f (xt , yt )k ≤  when y ∈ Rd is unconstrained, which does not necessarily yield the desired approximate critical point
+of Φ.
+A. Derivation of complexity in [5]
+   In [5], Proposition 2 states that the Lyapunov function H(zt ) := Φ(xt )+g(xt )+(1 − 4κ1 2 )kyt −y ∗ (xt )k2 where zt := (xt , yt )
+are generated by GDA decreases at the following rate.
+                                                                  1
+                       H(zt+1 ) ≤ H(zt ) − 2kxt+1 − xt k2 − 2 kyt+1 − y ∗ (xt+1 )k2 + kyt − y ∗ (xt )k2 .
+                                                                                                                
+                                                                                                                               (16)
+                                                                 4κ
+   Note that for GDA, the gradient mapping (5) has the following norm bound
+                                          1                                        
+                         kG(xt+1 )k =         xt+1 − proxηx g xt+1 − ηx ∇Φ(xt+1 )
+                                         ηx
+                                      (i) 1
+                                              xt+1 − xt + ηx ∇1 f (xt , yt ) − ∇f1 xt+1 , y ∗ (xt+1 )
+                                                                                                    
+                                      ≤
+                                         ηx
+                                         1       
+                                      ≤       + L kxt+1 − xt k + Lky ∗ (xt+1 ) − y ∗ (xt )k + Lky ∗ (xt ) − yt k
+                                           ηx
+                                     (ii) 1            
+                                      ≤       + L + Lκ kxt+1 − xt k + Lky ∗ (xt ) − yt k
+                                           ηx
+where (i) uses the GDA update rule xt+1 ∈ proxηx g xt −ηx ∇1 f (xt , yt ) , the expression ∇Φ(x) = ∇f1 x, y ∗ (x) in Proposition
+                                                                                                                  
+
+1 and the non-expansiveness of proximal mapping, (ii) uses the property that y ∗ is κ-Lipschitz continuous Proposition 1. Hence,
+we obtain the following convergence rate.
+                                                          T −1
+                                                       1 X
+                                 min kG(xt )k2 ≤             kG(xt+1 )k2
+                               0≤t≤T                   T t=0
+                                        T −1              2
+                                      1 Xh  1                                                    i
+                                ≤            2    + L + Lκ kxt+1 − xt k2 + 2L2 ky ∗ (xt ) − yt k2
+                                      T t=0    ηx
+                                (i)     T −1
+                                      1 Xh                                               i
+                                ≤           O(κ6 )kxt+1 − xt k2 + 2L2 ky ∗ (xt ) − yt k2
+                                      T t=0
+                                             T −1
+                                      O(κ6 ) X                    1                       
+                                ≤                 2kxt+1 − xt k2 + 2 kyt+1 − y ∗ (xt+1 )k2
+                                       T     t=0
+                                                                  4κ
+                                (ii) O(κ6 ) T
+                                            X −1
+                                                                      
+                                ≤                    H(zt ) − H(zt+1 )
+                                         T     t=0
+                                  O(κ6 )                
+                                ≤        H(z0 ) − H(zT )                                                                         (17)
+                                   T
+                                                       1         −3
+where (i) uses the maximum possible stepsize ηx = κ3 (L+3)2 = O(κ   ) in [5]. Therefore, To let min0≤t≤T kG(xt )k ≤ , the
+                                                6 −2
+computational complexity has the order T = O(κ  ).
+B. Derivation of complexity in [17]
+  The mirror descent ascent algorithm (Algorithm 1) in [17] updates the variables x and y simultaneously using proximal mirror
+descent and momentum accelerated mirror ascent steps respectively. Specifically, using the Bregman functions ψt (x) := 21 kxk2
+and φt (y) := 12 kyk2 which are both ρ = 1-strongly convex, this algorithm becomes proximal GDA with momentum on y
+variable.
+  Substituting ρ = 1 into Theorem 2 that provides convergence rate under deterministic minimax optimization (i.e., there are
+no stochastic samples in the objective function), we obtain the following hyperparameter choices η = O(1), L = Lf (1 + κ) =
+                                           −1 µ/Lf µ/Lf
+O(Lf κ) 1 , λ = O(L−1                                         = O min(L−1     κ−1 , κ−3 , L−2 κ−1 ) = O(κ−3 ) (Without loss of
+                                                                                               
+                     f ), γ = O min L         , κ2 , L2
+                                                        f
+                                                                            f              f
+generality, we assume µ ≤ 1 which implies that κ = Lf /µ ≥ Lf ). Then the convergence rate (25) becomes
+                                                            q                     !
+                                             T
+                                          1X                   Fe(x1 ) − F ∗ + ∆1
+                       min kG(xt )k ≤           kGt k ≤ O           √
+                      1≤t≤T               T t=1                        T γρ
+                                              q
+                                                Φ(x1 ) + g(x1 ) − inf x Φ(x) + g(x) + ky1 − y ∗ (x1 )k
+                                                                                                      !
+                                      (i)
+                                      =O                                √
+                                                                          T κ−3
+                                                                                                                           (18)
+
+where (i) uses the notations in [17] that Gt = G(xt ), Fe(x) = Φ(x) + g(x), ∆1 = ky1 − y ∗ (x1 )k andthe above hyperparameter
+choices. Hence, to achieve min1≤t≤T kGt k ≤ , the required computation complexity is T ≥ O κ3 −2 Φ(x1 ) + g(x1 ) −
+                                       
+inf x (Φ(x) + g(x)) + ky1 − y ∗ (x1 )k2 . In Table I, we only keep the dependence of T () on  ≈ 0 and κ  1, which yields
+O κ3 −2 .
+          
+
+C. Derivation of complexity in [42]
+   [42] aims to solve the following minimax optimization
+                                                              min max f (x, y).
+                                                              x∈X y∈Y
+
+where X and Y are nonempty closed convex sets and Y is also compact. The following AltGDA algorithm with projection
+mappings PX and PY is analyzed for nonconvex-strongly concave geometry where f is L-smooth2 and f (·, y) is µ-strongly
+concave for any y ∈ Y.
+                                       (
+                                         xk+1 = PX xk − η −1 ∇x f (xk , yk )
+                                                                            
+                                                                                                                 (19)
+                                         yk+1 = PY yk + ρ∇y f (xk+1 , yk )
+  Using the largest possible stepsizes η −1 = O(L−1 κ−3 ), ρ = O(µL−2 ) = O(L−1 κ−1 ) that satisfies eq. (3.18), the following
+key variables in Theorem 3.1 can be computed as follows.
+                                                d1 =O(L−1 κ−5 )
+                                          F1 − F =f (x1 , y1 ) −       min     f (x, y) + O(Lκ3 σy2 )
+                                                                    x∈X ,y∈Y
+
+where σy is the diameter of the compact set Y. Hence the number of iterations     (also the order of the computation complexity)
+required to achieve k∇x f (xk , yk )k ≤ , ρ1 yk − PY yk + ρ∇y f (xk , yk ) ≤  (note that this does not necessarily yields
+                                                                             
+
+approximate critical point of Φ(x) := maxy∈Y f (x, y)) is
+                                     F − F                                                        
+                                        1                −2   5                                3 2
+                           T () = O             = O       Lκ  f 1 −   min    f (x, y) + 32Lκ   σ y    .
+                                        d 1 2                        x∈X ,y∈Y
+
+In Table I, we only keep the dependence of T () on  ≈ 0 and κ  1, which yields O κ5 −2 .
+                                                                                                  
+
+
+
+
+  1 L in [17] has the same meaning as our L, the Lipschitz parameter of ∇f .
+      f
+  2 In Assumption 2.1 of [42], let all the Lipschitz smooth parameters L = L = L
+                                                                        x   y   12 = L21 := L for simplicity.
+

@@ -7,6 +7,10 @@
 
 - [Li26] Li, Nagarajan, Pan, Zhang, *Smoothing Meets Perturbation*, arXiv:2602.14185v2（PDF，2026-10-13 读 §2、§3.2、App. B）
 - [Mah22] Mahdavinia, Deng, Li, Mahdavi, *Tight Analysis of Extra-gradient and Optimistic Gradient Methods*, arXiv:2210.09382（PDF，2026-10-13 读 §4、§5）
+- [DH25] arXiv:2510.18218，用户指定的本人写作风格参照（PDF，2026-11-17 读 App. D，pp. 40–44）。证明行文优先按此文
+- [LZS25] Li, Zhu, So, *Nonsmooth nonconvex–nonconcave minimax optimization: Primal–dual balancing and iteration complexity analysis*, Math. Program. 214:591–641 (2025)（Zotero `EXFIU3P8`，2026-11-19 读 §4、§5、App. A–B；行号指 `zotero_md/minmax/root/11_EXFIU3P8_Q8PGXF4W.md`）
+- [PZL26] Pan, Zheng, Li, *Optimal Deterministic First-Order Oracle Complexity for Nonconvex-Concave Minimax Optimization*, arXiv:2609.14235v2（Zotero `BGBUCRWE`，2026-11-19 读 §1、§3、§6、§9；行号指 `zotero_md/minmax/Smooth_NC-SC/05_BGBUCRWE_CD4FXTQ6.md`）
+- [Li26] 补读 2026-11-19：§3–§5、Remarks、App. A（行号指 `zotero_md/minmax/Smooth_NC-SC/07_8MZKMW3B_ND299347.md`）
 
 ## 引言与贡献
 
@@ -83,6 +87,50 @@
 | (4) is a linear time-invariant system, and due to the simplicity of quadratic form, we are able to track the dynamic of primal and dual variables. By iterating this linear system and analyzing the eigenvalues of the transition matrix, we are able to lower bound the gradient at final iterations. | [Mah22] §5 |
 | The general proof idea is to consider the following quadratic … function | [Mah22] §5 |
 
+## 证明行文（用户本人风格）
+
+几乎不用 "Fix …"（全文附录仅 Lemma A.1 一处 "Fix t ∈ (−1, 1)"）；量词放在引理陈述里（"for any T ≥ 1"）。每句「依据 + 动词 + 显示公式或结论编号」，证明以 "which completes the proof" 或 "yields (X) and completes the proof" 收尾。
+
+| 表达 | 出处 |
+|---|---|
+| By (4.10) and (B.10), [display] | [DH25] Lemma D.3 证明 |
+| By (4.3), we have …, so … | [DH25] Lemma D.2 证明 |
+| The parameter condition gives … | [DH25] Lemma D.2 证明 |
+| Under (5.12), …, so we have … | [DH25] Lemma D.5 证明 |
+| From Lemma D.4 and Lemma D.2, we obtain [display] | [DH25] Lemma D.5 证明 |
+| Using (B.9) and …, we obtain [display] | [DH25] Lemma D.3 证明 |
+| Combining the two relations yields [display] | [DH25] Lemma D.2 证明 |
+| …, where the first inequality follows from …, and the last inequality follows from … | [DH25] Lemma D.4 证明 |
+| Multiplying (D.10) by …, adding it to (D.9), and applying …, yields … | [DH25] Lemma D.5 证明 |
+| Finally, summing up (D.11) from k = 1 to T and dividing by T, together with …, yields (D.8) and completes the proof. | [DH25] Lemma D.5 证明 |
+| Then, substituting (D.13), (C.16), and (C.17) into (B.5) yields (D.12) and completes the proof. | [DH25] Lemma D.6 证明 |
+| By the definition of …, we have … Then, substituting (D.8) from Lemma D.5 into the above inequality yields [display] | [DH25] D.2 |
+| With the conditions on T in (5.17), this gives … Then, the oracle complexity is …, which completes the proof. | [DH25] D.3 |
+| We next show that … / We now establish … / We derive …（引理前的引导句） | [DH25] App. D |
+| Recalling the equivalent relation: [display] Then, applying (C.1) to …, with …, yields | [DH25] Lemma C.2、D.1 证明 |
+| Since the four increment terms are nonnegative, (C.10) gives … Similarly, from (5.6), we obtain … which yields that … | [DH25] C.2 |
+| Substituting this inequality into (C.18), summing over k = 1, …, T, and dividing by T, we obtain | [DH25] C.2 |
+| Squaring this inequality and using (a+b+c)² ≤ 3(a²+b²+c²) proves …, which is the claimed result. | [DH25] Lemma B.1 证明 |
+| … which is exactly (5.7), thereby completing the proof. | [DH25] C.1 |
+| By substituting the Lyapunov function coefficients (5.5) into (D.3) and taking full expectation, we obtain (5.14). | [DH25] D.1 |
+
+## 复杂度一节的组织（用户本人风格）
+
+| 表达或结构 | 出处 |
+|---|---|
+| 节首段：说明难点 → 构造 Lyapunov 函数 → 分解一步变化（带 underbrace 的 (5.2)）→ 指向路线图 Figure B.1 | [DH25] §5 开头 |
+| We first set the parameters of Algorithm 4.1 as [display (5.3)] where … are constants independent of T. | [DH25] §5.1 |
+| We then introduce the following Lyapunov function and sequence to establish … : | [DH25] §5.1 |
+| The construction yields the following … property of {Ψ(Q^k)}. | [DH25] §5.1 |
+| 引理带括号标题：Lemma 5.1 (Approximate sufficient descent of Ψm)、Lemma 5.2 (Convergence rate of …)、Theorem 5.1 (Oracle complexity of …) | [DH25] §5 |
+| Under Assumptions 2.1 and 5.1 and the parameter conditions (5.3), for all k ≥ 1, | [DH25] Lemma 5.1 |
+| Under the conditions of Lemma 5.1, for any T ≥ 1, [display] where L_Δ := … are constants independent of T | [DH25] Lemma 5.2 |
+| The proof is provided in Section C.1. / with the proof provided in Section D.1 | [DH25] §5 |
+| We now present the convergence rate of Algorithm 4.1 under the parameter conditions (5.3), which guides the selection of … | [DH25] §5.1 |
+| Under Assumptions …, let {x^k, B^k, Λ^k} be the iterate sequence from Algorithm 4.1 with the parameters satisfying (5.3) and (5.9). Then, … satisfies (5.1) with T ≥ … where … are given in Lemma 5.2. Consequently, the total number of SFO calls is of order O(ε^{-4}). | [DH25] Thm 5.1 |
+| 结构：下降引理 → 收敛速率引理（for any T ≥ 1）→ 复杂度定理（T 的条件 + Consequently …）；三者的证明都在附录 | [DH25] §5 |
+| 新颖性不用 "first"：The results in Theorems 5.1 and 5.2 establish … bounds for the proposed …, in a setting where existing work has largely focused on … | [DH25] Remark 5.1(i) |
+
 ## 收尾段
 
 | 表达 | 出处 |
@@ -102,3 +150,81 @@
 ## 用户指定术语
 
 - 2026-10-14：用户指定将表示参数和的 “effective penalty” 统一替换为 **combined penalty parameter**，后文简称 **combined penalty**。首次出现时写出参数和；既有 LaTeX 标签保留。此用词由用户指定，尚未确认参考文献中的逐字出处。单独描述其他方法的正则化所对应的罚参数时使用 **penalty parameter**。
+
+## Li 组三篇的写法（2026-11-19 补充）
+
+三篇共性：所有结果带括号标题；分析节先给路线图再给引理；每个引理前一句说明用途；每个不等式用 where 从句逐步注明依据；不用 clearly / obviously。
+
+### 分析节的组织
+
+| 表达或结构 | 出处 |
+|---|---|
+| We start by presenting the key ideas in the analysis. | [LZS25] L754 |
+| Step 1: Construct a Lyapunov function that possesses the sufficient decrease property. / Step 2: Establish a primal error bound (i.e., Proposition 2) to quantify the primal descent. | [LZS25] L755、L798 |
+| After establishing … (which completes Step 2), we proceed to … | [LZS25] L1238–1240 |
+| Our framework contains the following two key components: (i) The construction of a Lyapunov function … (ii) Derive a primal-dual balancing inequality … | [Li26] L940–943 |
+| The proof has three steps: maintaining …, showing that …, and using … | [PZL26] L4764–4766 |
+| We first establish …, then … （节首一句路线图） | [PZL26] L459–460、L4477 |
+| To keep the presentation streamlined, we defer the proof details of technical lemmas to the appendix. | [Li26] L4004 |
+| The proof of Proposition 1, which is based on the primal descent, dual ascent, and proximal descent properties, is given in Appendix B. | [LZS25] L845–846 |
+
+### 动机与设计
+
+| 表达 | 出处 |
+|---|---|
+| Since …, we need to control …. Our approach is to …. This allows … | [PZL26] L1890–1893 |
+| The nonsmoothness in our problem setting poses a key challenge to algorithm design. To overcome this challenge, we … | [LZS25] L629–631 |
+| In particular, when …, the primal update (4.1) reduces to … | [LZS25] L649–650 |
+| Our smoothed PLDA algorithm is formally presented in Algorithm 1. | [LZS25] L653 |
+| This update rule leads to the following … algorithm. | [Li26] L526–527 |
+| The upper bound on ry controls the regularization bias, while the lower bound controls the cost of each FOAM call. （参数角色句） | [PZL26] L2295–2300 |
+
+### Lyapunov 函数与引理之间的过渡
+
+| 表达 | 出处 |
+|---|---|
+| Our proof is based on the following Lyapunov function at each iteration t: | [Li26] L1022 |
+| Each term in the potential function Φr is tightly connected to the algorithmic updates. Specifically, the updates for … can be viewed as a descent step on …, an approximate ascent step on …, and an approximate descent step on …, respectively. | [LZS25] L780–784 |
+| The crux of our proof lies in establishing the descent of this Lyapunov function. In the following lemma, we give a basic descent estimate … | [Li26] L1043–1044 |
+| In Lemma 4.1, the bound includes a positive term …, which measures …. For the Lyapunov function to decrease, this term needs to be controlled. We leverage … | [Li26] L1317–1320 |
+| With Lemmas 4.1 and 4.2, we now outline the main idea of the proof of Theorem 3.1. | [Li26] L1331 |
+| To establish the main theorem, we first develop the following lemma, which establishes a connection between … | [LZS25] L1479–1480 |
+| With the help of Propositions 1, 2, 3, and Lemma 1, we are now ready to develop the main theorem | [LZS25] L1591–1592 |
+| This estimate allows us to track the solver error together with the progress of the outer iterations. （引理后一句说明用途） | [PZL26] L2091 |
+
+### 结果陈述
+
+| 表达 | 出处 |
+|---|---|
+| Condition 3.1 (Step-size conditions for Perturbed GDA). … The step sizes … are chosen such that, for all t, we have | [Li26] L571–572 |
+| Lemma 4.1 (Basic descent estimate). Suppose Condition 3.1 holds, and let … be the sequence generated by …. Then, for any t ≥ 0, we have | [Li26] L1046–1047 |
+| Suppose that Assumption 2 holds. Then, for any y ∈ Y and z ∈ Rn, we have | [LZS25] L1247–1248 |
+| Under the setting of Proposition 1, for any integer K > 0, there exists an index k ∈ {1, 2, …, K} such that the following hold: | [LZS25] L1595–1596 |
+
+### 证明行文
+
+| 表达 | 出处 |
+|---|---|
+| Proof For ease of notation, we define … | [LZS25] L955 |
+| Proof By Definition 1, we only have to quantify … | [LZS25] L1520 |
+| where the second inequality is due to …, the third is due to …, and the fourth follows from … | [LZS25] L1536–1537 |
+| Next, as … is L-Lipschitz continuous …, we have / At last, based on the update …, we get | [LZS25] L3235、L3242 |
+| This, together with (5.9), yields | [LZS25] L1413 |
+| Now we focus on the dual ascent part. / Next, we turn to the primal part. | [Li26] L1176、L1537 |
+| Because the decrease in Φt has been quantified, we study the other three terms | [Li26] L1186 |
+| Combining these estimates with (88) yields / It remains to bound … | [PZL26] L5131、L7070 |
+| By summing up (B.1), (B.2), and (B.3), we obtain the desired result. / The proof is complete. / This completes the proof. | [LZS25] L3253、L3165；[Li26] L1313 |
+| Our proof builds upon the argument in (…). In particular, we extend their analysis from … to … | [Li26] L4012–4013 |
+| The proof of Theorem 3.6 follows the same steps as the proof of Theorem 3.5, and is therefore omitted. | [Li26] L2277 |
+
+### Remark 与解读
+
+| 表达 | 出处 |
+|---|---|
+| Remark 3.3. (i) When ryt = 0 for all t, Perturbed Smoothed GDA reduces to Smoothed GDA. | [Li26] L770 |
+| (i) A result analogous to Theorem 3.1 (i) has been obtained in (…). However, our proof relies on a different analytical framework | [Li26] L732 |
+| For simplicity and to focus on our main contributions, we assume … | [LZS25] L668–674 |
+| In other words, … （定理后的概念性复述） | [Li26] L736–738 |
+| the overall iteration complexity … is determined by the slower of the primal and dual updates | [LZS25] L2133–2135 |
+
+用词统计：[LZS25] 用 "crucial" 8 次、"Recall that" 9 次、"The proof is complete" 8 次；[PZL26] 不用 "Note that / Recall / Therefore"，用 "Thus" 40 次、"Consequently" 20 次；三篇均不用 "clearly / obviously"。

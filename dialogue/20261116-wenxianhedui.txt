@@ -1,0 +1,1127 @@
+
+❯ <ide_opened_file>The user opened the file /Users/liluxuan/Documents/My_Papers
+  /3_DDLALM/dialogue/2026-11-16-164515-26-claude-20261116-1315md.txt in the
+  IDE. This may or may not be related to the current task.</ide_opened_file>
+
+❯ 未完成的事项
+  对乘子做操作的文献调研没有结果。对话在派出后台调研后结束。「前人都保留移动的
+  对偶中心」这一判断目前没有依据。
+  Shi–Wang–Wang（MOR 2025）是最大风险。它的动量加在哪个变量上、是否单循环、阶是
+  多少，都没有核对。这直接影响「单循环 ALM 加速尚未实现」的说法。
+  $\Delta_{\mathcal{W}}$ 是否随 $s$ 增长没有核对，要再看 Lemma
+  initial-gap。这一项决定 $\mathcal{O}(\epsilon^{-5/2})$ 是否成立。
+  GDA 的 $\mathcal{O}(\epsilon^{-6})$ 一句待修改。Lin–Jin–Jordan 的 Theorem 4.9
+  陈述的是 OS 度量，换成 GS 要靠 Proposition 4.13。164515
+  那份给出了改写建议，但在句子中途截断，是否已写入稿件我没有核对。
+  需要你去看一下
+
+  Listed 1 directory (ctrl+o to expand)
+
+⏺ Bash(cd overleaf && sed -n 60,95p sections/Introduction.tex && echo ---- &&
+      sed -n 180,260p sections/Acceleration.tex && echo ---- && grep -n
+      "GDA\|lin2020\|\^{-6}"…)
+  ⎿  (No output)
+
+⏺ Bash(sed -n 108,122p sections/Introduction.tex; echo ----; grep -n
+      "mu_\\\\gamma\|mu_{\\\\gamma}" sections/Acceleration.tex
+      appendix/AccelerationProof.tex | cut -c1-…)
+  ⎿  (No output)
+
+⏺ Bash(cd .. ; ls memory/literature memory/readings 2>/dev/null | head -60; grep
+      -rli "shi2025momentum\|Momentum-Based Linearized" --include=*.md
+      --include=*.txt --inc…)
+  ⎿  (No output)
+
+⏺ Bash(sed -n 74,84p overleaf/sections/Acceleration.tex; grep -n
+      "L_{\\\\calD,\\\\bx}\s*:\?=" overleaf/sections/*.tex | cut -c1-200 | head
+      -5; echo ----; sed -n 3706,3…)
+  ⎿  (No output)
+
+  Listed 1 directory (ctrl+o to expand)
+
+⏺ Bash(sed -n 18,32p overleaf/sections/LRALMFamily.tex; cd /tmp/lit/dual; ls |
+      grep -v "\.pdf$" | tr '\n' ' '; echo; cat err.txt; ls -la *.md out*
+      report* result* 2>/d…)
+  ⎿  (No output)
+
+⏺ Bash(cd /tmp/lit/dual; wc -c out.txt prompt.txt shi_wang_wang_mlalm.txt; head
+      -c 1500 out.txt; echo; echo ==== ; head -60 shi_wang_wang_mlalm.txt | cut
+      -c1-220)
+  ⎿  Error: Exit code 1
+            0 out.txt
+         2975 prompt.txt
+       122705 shi_wang_wang_mlalm.txt
+       125680 total
+
+     (eval):1: === not found
+
+⏺ Bash(cd /tmp/lit/dual; sed -n 1,45p shi_wang_wang_mlalm.txt | cut -c1-240;
+      echo "#####"; grep -n -i "algorithm 1\|single-loop\|single loop\|oracle
+      complexity\|moment…)
+  ⎿  (No output)
+
+⏺ Bash(cd /tmp/lit/dual; sed -n 505,575p shi_wang_wang_mlalm.txt | cut -c1-260;
+      echo "####"; sed -n 286,298p shi_wang_wang_mlalm.txt | cut -c1-400; sed -n
+      3286,3296p s…)
+  ⎿  (No output)
+
+⏺ Bash(cd /tmp/lit/dual; sed -n 3196,3230p shi_wang_wang_mlalm.txt | cut -c1-300
+      | grep -v "^\s*$" | head -40)
+  ⎿  (No output)
+
+⏺ Bash(cd /tmp/lit/dual; cat prompt.txt | head -40 | cut -c1-300; for f in
+      *.txt; do case $f in out.txt|err.txt|prompt.txt|shi*) continue;; esac;
+      echo "== $f | $(grep…)
+  ⎿  (No output)
+
+⏺ 前三项已有结果，GDA 那句还没写进稿件；后台调研的 out.txt 为空，但 25
+  篇全文已在 /tmp/lit/dual，我正逐篇核对乘子更新公式。 · summary
+
+⏺ Bash(cd /tmp/lit/dual; show(){ echo "======== $1"; grep -n -i -E "$2" "$1" |
+      cut -c1-230 | head -${3:-14}; };
+      show hajinezhad_hong_pprox_pda.txt "perturb.*dual|dual…)
+  ⎿  (No output)
+
+⏺ Bash(cd /tmp/lit/dual; sed -n 66,100p hajinezhad_hong_pprox_pda.txt | grep -v
+      '^\s*$' | cut -c1-240 | head -30; echo "######## PPALA"; sed -n 20,34p
+      moon_ppala_2024.…)
+  ⎿  (No output)
+
+⏺ Bash(cd /tmp/lit/dual; sed -n 239,245p moon_ppala_2024.txt | cut -c1-260; sed
+      -n 400,405p moon_ppala_2024.txt | cut -c1-200;
+      show(){ echo "======== $1"; grep -n -i -…)
+  ⎿  (No output)
+
+⏺ Bash(cd /tmp/lit/dual; show(){ echo "======== $1"; grep -n -i -E "$2" "$1" |
+      cut -c1-250 | head -${3:-10}; }
+      show he_yuan_2010.txt "λ̃k\+1|λk\+1 *=|tk\+1" 8…)
+  ⎿  (No output)
+
+⏺ Bash(cd /tmp/lit/dual; sed -n 1,37p xu_2609_17973.txt | cut -c1-330; sed -n
+      95,135p xu_2609_17973.txt | cut -c1-330; grep -n "2609.17973\|Matching
+      Multi-Loop\|2609.2…)
+  ⎿  (No output)
+
+⏺ Bash(cd /Users/liluxuan/Documents/My_Papers/3_DDLALM; sed -n 1589,1591p
+      overleaf/tools/refer.bib; sed -n 157,161p PROJECT_STATUS.md | cut -c1-700;
+      K=$(sed -n 1585,15…)
+  ⎿  (No output)
+
+⏺ Bash(cd /Users/liluxuan/Documents/My_Papers/3_DDLALM; sed -n 146,156p
+      overleaf/sections/LRALMFamily.tex; cd /tmp/lit/dual; grep -n -E
+      "\(4\.3\)|Algorithm 1|momentum"…)  ⎿  (No output)
+
+⏺ Bash(cd /tmp/lit/dual; sed -n 496,549p xu_2609_17973.txt | grep -v '^\s*$' |
+      cut -c1-260 | head -45; echo "== Ke"; sed -n 12,22p ke_2609_25752.txt |
+      cut -c1-260; gre…)
+  ⎿  (No output)
+
+⏺ Bash(cd /tmp/lit/dual; sed -n 470,495p xu_2609_17973.txt | grep -v '^\s*$' |
+      cut -c1-240 | head -16)
+  ⎿  (No output)
+
+⏺ 老大，四项都核对完了：$\Delta_{\mathcal{W}}$ 与 $s$ 无关；Shi–Wang–Wang
+  不影响现稿；GDA 一句尚未写入稿件；「前人都保留移动的对偶中心」不成立，Zhang–Xu
+  （arXiv:2609.17973）已用零中心加对偶动量在单循环下得到
+  $\mathcal{O}(\epsilon^{-5/2})$。
+
+  结论
+
+  1. $\Delta_{\mathcal{W}}$：与 $s$ 无关，$\mathcal{O}(\epsilon^{-5/2})$
+     的阶不受这一项影响。
+  2. Shi–Wang–Wang：风险解除，现稿引用它的那句话与原文一致。
+  3. GDA 一句：Introduction.tex:118 (overleaf/sections/Introduction.tex#L118)
+     仍是原句，待您决定是否替换。
+  4. 对偶中心的判断：需要改写。Fast LRALM 相对前人的区别应落在 Nesterov 外推和带
+     $\mathrm{prox}_h$ 的 ALM 设定上，零中心已有先例。
+
+  依据
+
+  $\Delta_{\mathcal{W}}$
+
+  我按 AccelerationProof.tex:573 (overleaf/appendix/AccelerationProof.tex#L573)
+  的证明手算了一遍，得到
+
+  $$
+  \mathcal{W}_0-\mathcal{W}K\le\Delta+\frac{L_h^2}{4\rho}+\frac{3L_h^2}{4(\rho+s
+  )}+\frac{3G_0^2}{8\mu\gamma}
+  $$
+
+  其中 $G_0=G_f+G_{\mathcal{A}}L_h$。含 $s$ 的项随 $s$ 增大而减小，由
+  $\rho+s\gt\rho$
+  放大后消去。$\mu_\gamma=1/\gamma-L_{\mathcal{D},\mathbf{x}}$，而
+  $L_{\mathcal{D},\mathbf{x}}=L_f+L_{\mathcal{A}}L_h+\rho G_{\mathcal{A}}^2$
+  只含固定的 $\rho$。
+
+  Shi–Wang–Wang
+
+  我读的是 arXiv 版（2024-07-17），MOR 终稿未比对。
+
+  - 动量的位置：式 (4) 是原始变量随机梯度估计的 recursive
+    momentum，作用是降低方差。
+  - 乘子更新：式 (6) 是经典对偶上升 $\lambda^{t+1}=\lambda^t+\rho_t
+    c(x^{t+1})$，要求 $\rho_t\in(0,\beta_t)$，没有外推。
+  - 循环与阶：单循环；随机设定下
+    $\mathcal{O}(\epsilon^{-4})$，初始点近似可行时为
+    $\mathcal{O}(\epsilon^{-3})$；$\epsilon$-KKT 结论需要约束规范（Assumption
+    5）。
+  - 罚参数：复杂度结论取 $\beta_t=\beta_0T^{1/4}$，依赖精度。
+
+  对乘子做操作的文献
+
+  后台调研当时被中断，输出为空；25 篇全文已下载在
+  /tmp/lit/dual。我直接读了下列各篇的算法框和摘要，Xu 2017 一项除外。
+
+  文献: Hajinezhad–Hong
+  对乘子的操作: $\lambda^{r+1}=(1-\rho\gamma)\lambda^r+\rho(Ax^{r+1}-b)$
+  对偶中心: 零中心
+  循环与阶: 单循环，线性约束；阶未核对
+  ────────────────────────────────────────
+  文献: Kong–Monteiro 2024
+  对乘子的操作: $p^k=(1-\theta)p^{k-1}+\chi c_k(Ax^k-d)$
+  对偶中心: 零中心
+  循环与阶: 线性约束，$\mathcal{O}(\epsilon^{-3})$
+  ────────────────────────────────────────
+  文献: PPALA
+  对乘子的操作: $\mu^{k+1}=\mu^k+\sigma_k(\lambda^k-\mu^k)$，$\lambda^{k+1}=\mu^
+  {k+1}+\rho(g(x^{k+1})+u^{k+1})$
+  对偶中心: 移动
+  循环与阶: 单循环，$\tilde{\mathcal{O}}(\epsilon^{-2})$
+  ────────────────────────────────────────
+  文献: Zhang–Luo
+  对乘子的操作: $y^{t+1}=y^t+\alpha(Ax^t-b)$
+  对偶中心: 无对偶正则
+  循环与阶: 单循环，线性约束，$\mathcal{O}(\epsilon^{-2})$
+  ────────────────────────────────────────
+  文献: Le–Papadimitriou
+  对乘子的操作: 乘子先缩放再上升；惯性项加在原始变量上
+  对偶中心: 零中心
+  循环与阶: 只有收敛性
+  ────────────────────────────────────────
+  文献: He–Yuan 2010
+  对乘子的操作: 对乘子做 Nesterov 外推
+  对偶中心: 无
+  循环与阶: 凸、线性约束、子问题精确解，$\mathcal{O}(1/k^2)$
+  ────────────────────────────────────────
+  文献: Zhang–Xu 2026
+  对乘子的操作: 对偶动量：带衰减的对偶梯度累加
+  对偶中心: 零中心，正则项为 $-\frac{\tau}{2}\lVert y\rVert^2$
+  循环与阶: 单循环，GS $\mathcal{O}(\epsilon^{-5/2})$
+
+  - PPALA 的 $\tilde{\mathcal{O}}(\epsilon^{-2})$ 依赖 Assumption
+    7：直接假设乘子迭代序列落在紧集内，并假设 $\mathrm{dom}(r)$
+    紧。它与本文的问题类不可比。
+  - Xu 2017 的全文我只看了检索到的行：它自己的乘子更新是普通上升步，但加速版是否
+    外推乘子没有读到。
+  - Ke 等（arXiv:2609.25752） 的 $\mathcal{O}(\epsilon^{-5/2})$
+    含内层求解，是多层循环。
+
+  对现稿的影响
+
+  - 现稿没有写「首个单循环加速 ALM」，贡献条目只说改进了 LRALM 族的
+    $\Theta(\epsilon^{-3})$；LRALMFamily.tex:152
+    (overleaf/sections/LRALMFamily.tex#L152) 已引 Zhang–Xu 的 GS 界。
+  - Zhang–Xu 的设定是光滑 NC–C、对偶域有界并做投影，更新是 extragradient
+    加对偶动量。PROJECT_STATUS.md 第 160 行已记：它能否直接作用于
+    $\mathcal{D}_\rho$ 得到固定 $\rho$ 的 $\mathcal{O}(\epsilon^{-5/2})$
+    还是推断。这一项现在是「加速」贡献的最大风险。
+
+  GDA 一句
+
+  Lin–Jin–Jordan 的 Theorem 4.9 陈述的是 Moreau 包络平稳性（OS），转成 GS 要用
+  Proposition
+  4.13；这一段我沿用上次对话的核对，没有重读原文。上次建议的替换句是完整的：
+
+  ▎ two-timescale GDA finds an $\epsilon$-stationary point of the Moreau
+  ▎ envelope of $\Phi$ in $\mathcal{O}(\epsilon^{-6})$ iterations, which yields
+  ▎ an $\mathcal{O}(\epsilon)$-game-stationary pair with
+  ▎ $\mathcal{O}(\epsilon^{-2})$ additional gradient evaluations.
+
+  您确认后我再写入稿件。这四项核对已结束，后续修改建议新开对话。
+
+❯ 调研部分 你需要继续调研让carbon/argon去看 hy去核对 再让codex或者claude
+  opus/fable 5.5 审查
+
+⏺ Bash(cd /Users/liluxuan/Documents/My_Papers/3_DDLALM; grep -n -i
+      "carbon\|argon\|hydrogen" dialogue/2026-11-16-164436*.txt | cut -c1-220 |
+      head -40; grep -rn -i "car…)
+  ⎿  (No output)
+
+⏺ Bash(cd /Users/liluxuan/Documents/My_Papers/3_DDLALM; sed -n 1213,1250p
+      dialogue/2026-11-16-164436*.txt | cut -c1-260; grep -n "agy \|codex
+      exec\|codex \|x1api\|--mo…)
+  ⎿  (No output)
+
+⏺ Bash(cd /Users/liluxuan/Documents/My_Papers/3_DDLALM; sed -n 852,862p
+      dialogue/2026-11-16-164436*.txt | cut -c1-300; sed -n 1930,1936p
+      dialogue/2026-11-16-164436*.tx…)
+  ⎿  (No output)
+
+⏺ Bash(agy --help 2>&1 | grep -i -E
+      "settings|sandbox|print|add-dir|allow|workspace|model|-p\b|yolo|approval"
+      | cut -c1-200 | head -24; cd /Users/liluxuan/Documents/My…)
+  ⎿  (No output)
+
+⏺ Bash(grep -n -A8 "globalPermissionGrants" ~/.gemini/config/config.json
+      2>/dev/null | cut -c1-160 | head -16; mkdir -p /tmp/lit/dual/run && cd
+      /tmp/lit/dual/run && ca…)
+  ⎿  (No output)
+
+⏺ Bash(cd /tmp/lit/dual &&
+      S='{"permissions":{"allow":["read_file(/private/tmp/**)","read_file(/tmp/*
+      *)","read_file(/Users/liluxuan/.gemini/antigravity/brain/**)","com…)
+  ⎿  Running in the background (↓ to manage)
+
+⏺ Bash(cd /tmp/lit/dual &&
+      S='{"permissions":{"allow":["read_file(/private/tmp/**)","read_file(/tmp/*
+      *)","read_file(/Users/liluxuan/.gemini/antigravity/brain/**)","com…)
+  ⎿  Running in the background (↓ to manage)
+
+⏺ 老大，阅读层已派出，两个任务在后台运行；返回后我交给 Hydrogen 核对，再送 Codex
+  审查。
+
+  分工（按您这次的安排）
+
+  1. 阅读：Argon high 读 8
+     篇核心文献（Shi–Wang–Wang、Hajinezhad–Hong、Kong–Monteiro
+     2024、PPALA、Zhang–Luo 两篇、Xu 2017、He–Yuan 2010）；Carbon high 读 12
+     篇惯性与动量类文献（含 Zhang–Xu、Ke 等），并从 Deng 的 ALM
+     综述中列出所有「对乘子做加速」的引用。
+  2. 核对：Hydrogen xhigh 对照同一份全文，逐条判定「原文支持 / 不支持 /
+     找不到」。
+  3. 审查：Codex（x1api）审最终要写进论文的断言；Codex 不可用时改用 Claude Opus
+     5.5。
+
+  两点说明
+
+  - 全文已在本地
+    /tmp/lit/dual，阅读层只读本地文件，不联网，以避开上次的授权拦截。
+  - 每篇要求给出乘子更新的原式、对偶中心固定还是移动、动量作用在哪个变量上、参数
+    是否依赖
+    $\epsilon$，以及复杂度和所需的非标准假设，每条附定理或公式编号和原文引句。
+
+❯ 一定不能只读摘要 必须读全文
+
+  Wrote 1 memory (ctrl+o to expand)
+
+⏺ Bash(cd ~/.claude/projects/-Users-liluxuan-Documents-My-Papers-3-DDLALM/memory
+      && echo "- [Literature: read full
+      text](feedback-literature-read-full-text.md) — surve…)
+  ⎿  (No output)
+
+⏺ Bash(pkill -f "gemini-4-argon-high --sandbox" ; pkill -f "gemini-4-carbon-high
+      --sandbox"; sleep 2; pgrep -fl "agy -p" | cut -c1-80 | head -3; echo
+      done)
+  ⎿  (No output)
+
+⏺ Background command "Run Gemini 4 Argon (high) as reader on the eight core
+papers" failed with exit code 144
+
+⏺ Background command "Run Gemini 4 Carbon (high) as reader on the inertial and
+momentum papers" failed with exit code 144
+
+⏺ Bash(cd /tmp/lit/dual/run && { sed -n 1,7p pB.txt; echo "End with a 3-line
+      answer: among these papers, which apply momentum/extrapolation to the
+      multiplier for a NON…)
+  ⎿  (No output)
+
+⏺ Bash(/tmp/lit/dual/run/launch.sh A gemini-4-argon-high)
+  ⎿  Running in the background (↓ to manage)
+
+⏺ Bash(/tmp/lit/dual/run/launch.sh B1 gemini-4-carbon-high)
+  ⎿  Running in the background (↓ to manage)
+
+⏺ Bash(/tmp/lit/dual/run/launch.sh B2 gemini-4-carbon-high)
+  ⎿  Running in the background (↓ to manage)
+⏺ 老大，已按「必须读全文」重新派发：我终止了刚才的两个阅读任务，把要求写进提示词
+  后分三批重跑，现在都在后台运行。
+
+  提示词里新增的硬性要求
+
+  1. 每个文件从第一行读到最后一行，长文件分段连续读完；先报告文件总行数并确认已
+     读完。
+  2. 每条事实必须引用正文位置（算法框、编号公式、假设、引理或定理），附 .txt
+     文件行号和该行的原文引句。
+  3. 只有摘要或引言支持的事实，必须标注 ABSTRACT ONLY。
+
+  三批任务
+
+  - Argon high：8 篇核心文献。
+  - Carbon high：Zhang–Xu、Ke 等 6 篇。
+  - Carbon high：其余 6 篇 ADMM 与 ALM 文献，加 Deng
+    综述中「对乘子做加速」的引用清单。
+
+  返回后的检查
+
+  我先按行号抽查引句是否来自正文，标注 ABSTRACT ONLY
+  或行号对不上的那篇重跑；通过后交 Hydrogen xhigh 核对，同样要求读全文，再送
+  Codex 审查。
+
+  我上一条回复中的那张表，是我自己读算法框和摘要得到的，没有读完各篇全文，在三层
+  结果返回前只算初步结论。这条要求已记入项目记忆，以后的文献任务照此执行。
+
+⏺ Background command "Relaunch Argon (high) reader on the eight core papers with
+full-text requirement" completed (exit code 0)
+
+⏺ Bash(cd /tmp/lit/dual/run; wc -c outA.txt errA.txt; tail -3 errA.txt | cut
+      -c1-200; cat outA.txt | cut -c1-900)
+  ⎿  (No output)
+
+⏺ Bash(cd /tmp/lit/dual; p(){ echo "-- $1 L$2"; sed -n "$2p" $1 | grep -v
+      '^\s*$' | cut -c1-170 | head -${3:-4}; }; p hajinezhad_hong_pprox_pda.txt
+      1555,1570 8; p kong…)
+  ⎿  (No output)
+
+⏺ 老大，Argon 的 8 篇已返回，我抽查的 6 处行号与原文一致；Carbon
+  的两批还在运行，返回后一并交 Hydrogen 核对。
+
+  Argon 一层读取的结果（尚未经 Hydrogen 核对）
+
+  每篇都报告了文件总行数并声明读完全部行，事实都引用正文的算法、公式、定理和行号
+  。
+
+  ┌────────┬──────────────────────────┬──────┬─────────────────────────────┐
+  │  文献  │       对乘子的操作       │ 对偶 │          循环与阶           │
+  │        │                          │ 中心 │                             │
+  ├────────┼──────────────────────────┼──────┼─────────────────────────────┤
+  │ Shi–Wa │                          │ 无对 │ 单循环，随机，$\mathcal{O}( │
+  │ ng–Wan │ 截断的对偶上升，式 (6)   │ 偶正 │ \epsilon^{-4})$；初始近似可 │
+  │ g      │                          │ 则   │ 行时 $\mathcal{O}(\epsilon^ │
+  │        │                          │      │ {-3})$                      │
+  ├────────┼──────────────────────────┼──────┼─────────────────────────────┤
+  │ Hajine │ $\lambda^{r+1}=(1-\rho\g │ 固定 │ 单循环，线性约束，$\mathcal │
+  │ zhad–H │ amma)\lambda^r+\rho(Ax^{ │ 在   │ {O}(\epsilon^{-4})$         │
+  │ ong    │ r+1}-b)$                 │ $0$  │                             │
+  ├────────┼──────────────────────────┼──────┼─────────────────────────────┤
+  │ Kong–M │ $p^k=(1-\theta)p^{k-1}+\ │ 固定 │ 线性约束，$\mathcal{O}(\eps │
+  │ onteir │ chi c(Ax^k-d)$           │ 在   │ ilon^{-3})$，罚参数         │
+  │ o 2024 │                          │ $0$  │ $c=\Omega(\epsilon^{-1})$   │
+  ├────────┼──────────────────────────┼──────┼─────────────────────────────┤
+  │        │ 辅助乘子                 │      │ 单循环，$\tilde{\mathcal{O} │
+  │ PPALA  │ $\mu^{k+1}=\mu^k+\sigma_ │ 移动 │ }(\epsilon^{-2})$，假设乘子 │
+  │        │ k(\lambda^k-\mu^k)$      │      │ 序列有界                    │
+  ├────────┼──────────────────────────┼──────┼─────────────────────────────┤
+  │ Zhang– │ $y^{t+1}=y^t+\alpha(Ax^t │ 无对 │ 单循环，线性约束，$\mathcal │
+  │ Luo    │ -b)$                     │ 偶正 │ {O}(\epsilon^{-2})$，依赖对 │
+  │ 三篇   │                          │ 则   │ 偶误差界                    │
+  ├────────┼──────────────────────────┼──────┼─────────────────────────────┤
+  │ Xu     │ 普通对偶上升；外推只作用 │ 无   │ 凸，$\mathcal{O}(1/t^2)$    │
+  │ 2017   │ 于原始变量               │      │                             │
+  ├────────┼──────────────────────────┼──────┼─────────────────────────────┤
+  │ He–Yua │ 对乘子做 Nesterov        │ 无   │ 凸，子问题精确求解，$\mathc │
+  │ n 2010 │ 外推，式 (3.4b)          │      │ al{O}(1/k^2)$               │
+  └────────┴──────────────────────────┴──────┴─────────────────────────────┘
+
+  与我上一轮判断的差别
+
+  - Hajinezhad–Hong 的阶是 $\mathcal{O}(\epsilon^{-4})$，它要求初始可行和紧可行
+    集；我上一轮这一格标的是「未核对」。
+  - Xu 2017 的两个加速版都不外推乘子，这补上了我上一轮没读到的那一项。
+  - 8 篇中对乘子做动量或外推的只有 He–Yuan，设定是凸问题；保留移动对偶中心的只有
+    PPALA。因此「前人都保留移动的对偶中心」不成立这一判断，在这 8
+    篇范围内得到支持。
+
+⏺ Background command "Relaunch Carbon (high) reader on Zhang–Xu, Ke and four
+momentum papers" completed (exit code 0)
+
+⏺ Bash(cd /tmp/lit/dual/run; wc -c outB1.txt errB1.txt outB2.txt; cat outB1.txt
+      | cut -c1-1000)
+  ⎿  (No output)
+
+⏺ Bash(cd /tmp/lit/dual; sed -n 552,571p arXiv1907_12945.txt | grep -v '^\s*$' |
+      cut -c1-200; sed -n 1,6p arXiv1907_12945.txt | cut -c1-160; sed -n
+      1262,1270p xu_2609_…)
+  ⎿  (No output)
+
+⏺ 老大，Carbon 第一批（6
+  篇）已返回，抽查的两处行号与原文一致；它带回一条新信息。第二批（其余 6 篇和
+  Deng 综述）还在运行，返回后三批一起交 Hydrogen 核对。
+
+  新信息
+
+  arXiv:1907.12945（Inertial nonconvex alternating minimizations for the image
+  deblurring）对乘子做 heavy-ball 外推：Algorithm 1 取
+  $\hat{p}^k=p^k+\alpha(p^k-p^{k-1})$，再令
+  $p^{k+1}=\hat{p}^k-\delta(Tu^{k+1}-v^{k+1})$。它是单循环的非凸
+  ADMM，约束是线性的，每步要解一个线性方程组，全文只有渐近收敛和 KŁ
+  收敛，没有复杂度。因此「非凸问题中没有人对乘子做外推」这种说法不能用；可以说的
+  是，这类外推此前没有复杂度结果。
+
+  Carbon 一层读取的结果（尚未经 Hydrogen 核对）
+
+  文献: Zhang–Xu 2609.17973
+  对乘子的操作: 带衰减的对偶动量 $v_t$、$\bar{v}_t$，Algorithm 1 第 4、5、8–10
+  行
+  对偶中心: 固定在 $0$，正则项 $-\frac{\tau}{2}\lVert y\rVert^2$
+  循环与阶: 单循环；GS $\mathcal{O}(\epsilon^{-5/2})$，OS
+    $\mathcal{O}(\epsilon^{-3})$；$\tau$ 依赖 $\epsilon$；要求 $Y$ 紧
+  ────────────────────────────────────────
+  文献: Ke 等 2609.25752
+  对乘子的操作: 外推只作用于内层子求解器的中心
+  对偶中心: 外层固定在 $y^0$，内层移动
+  循环与阶: 多层循环，$\mathcal{O}(\epsilon^{-5/2})$
+  ────────────────────────────────────────
+  文献: Le–Papadimitriou
+  对乘子的操作: $\omega^{k+1}=\tau_1\omega^k+\tau_2\beta(h(x^{k+1})+By^{k+1})$；
+  惯性只加在原始块上
+  对偶中心: 固定在 $0$
+  循环与阶: 单循环，无复杂度
+  ────────────────────────────────────────
+  文献: arXiv:1907.12945
+  对乘子的操作: heavy-ball 外推乘子
+  对偶中心: 无对偶正则
+  循环与阶: 单循环，无复杂度
+  ────────────────────────────────────────
+  文献: arXiv:2604.13272
+  对乘子的操作: 普通对偶上升；Polyak 动量加在原始梯度估计上
+  对偶中心: 无
+  循环与阶: 单循环，随机，$\mathcal{O}(\epsilon^{-4})$
+  ────────────────────────────────────────
+  文献: arXiv:2212.09513
+  对乘子的操作: 截断步长的对偶上升；STORM 动量在内层原始估计上
+  对偶中心: 无
+  循环与阶: 双层循环，$\mathcal{O}(\epsilon^{-5})$
+
+  目前的判断
+
+  在已读的 14 篇中，单循环、对乘子加动量并得到优于 $\epsilon^{-3}$ 的阶的只有
+  Zhang–Xu，它的设定是光滑 NC–C、对偶域紧并做投影，对偶中心固定在 $0$。这与
+  PROJECT_STATUS.md 已记的风险一致：Fast LRALM 相对它的区别在于 Nesterov
+  外推、对偶域无界和带 $\mathrm{prox}_h$ 的 ALM 设定。
+
+⏺ Background command "Relaunch Carbon (high) reader on the remaining ADMM and
+ALM papers and the survey" completed (exit code 0)
+
+⏺ Bash(cd /tmp/lit/dual/run; wc -c outB2.txt errB2.txt; cat outB2.txt | cut
+      -c1-950)
+  ⎿  (No output)
+
+⏺ Bash(cd /tmp/lit/dual/run && cat > vhead.txt <<'EOF'
+      You are the VERIFIER. Below are numbered facts extracted by another reader
+      from papers whose full texts are loca…)
+  ⎿  (No output)
+
+⏺ Bash(/tmp/lit/dual/run/vlaunch.sh A)
+  ⎿  Running in the background (↓ to manage)
+
+⏺ Bash(/tmp/lit/dual/run/vlaunch.sh B1)
+  ⎿  Running in the background (↓ to manage)
+
+⏺ Bash(/tmp/lit/dual/run/vlaunch.sh B2)
+  ⎿  Running in the background (↓ to manage)
+
+⏺ 老大，阅读层三批已全部返回，共 20 篇文献加 1 篇综述；三份事实清单已交 Hydrogen
+  xhigh 逐条核对，同样要求读完全文，正在后台运行。
+
+  Carbon 第二批的结果（尚未经 Hydrogen 核对）
+
+  文献: Zeng 等 2023，加速随机 ADMM
+  对乘子的操作: 普通对偶上升
+  动量或外推的位置: Katyusha 动量在原始变量上
+  循环与阶: 嵌套，$T=\mathcal{O}(\epsilon^{-2})$
+  ────────────────────────────────────────
+  文献: MEAL（Zeng 等 2021）
+  对乘子的操作: 普通对偶上升
+  动量或外推的位置: 无；原始 prox 中心做松弛
+  循环与阶: 子问题有闭式解时为单循环，$\mathcal{O}(\epsilon^{-2})$
+  ────────────────────────────────────────
+  文献: Boț–Nguyen 2018
+  对乘子的操作: $y^{k+1}=y^k+\rho r(Ax^{k+1}-z^{k+1})$，$\rho\in(0,2)$
+  动量或外推的位置: 无
+  循环与阶: 单循环，只有 KŁ 速率
+  ────────────────────────────────────────
+  文献: Boț–Csetnek–Nguyen 2018
+  对乘子的操作: $u_{n+1}=u_n+\sigma\beta(Ax_{n+1}-z_{n+1})$，$\sigma\in(0,1]$
+  动量或外推的位置: 无
+  循环与阶: 单循环，只有 KŁ 速率
+  ────────────────────────────────────────
+  文献: Prox-PDA（Hong 2016）
+  对乘子的操作: 普通对偶上升
+  动量或外推的位置: 无
+  循环与阶: 单循环，线性约束，$\mathcal{O}(\epsilon^{-2})$
+  ────────────────────────────────────────
+  文献: Kong–Melo–Monteiro 2020
+  对乘子的操作: 周期性对偶上升
+  动量或外推的位置: 外推在内层 ACG 的原始变量上
+  循环与阶: 嵌套，$\tilde{\mathcal{O}}(\epsilon^{-5/2})$
+
+  Deng 综述中「对乘子加速」的引用共 8 篇（Güler 1992、He–Yuan 2010、Kang 等
+  2013、Ke–Ma 2017、Nedelcu 等 2014、Chambolle–Pock 2011 与 2016、Zhu 等
+  2023），综述把它们都放在凸问题的章节里。
+
+  三批合起来的初步结论
+
+  - 非凸问题中对乘子做动量或外推的有两篇：Zhang–Xu（单循环，GS
+    $\mathcal{O}(\epsilon^{-5/2})$，对偶域紧）和 arXiv:1907.12945（heavy-ball
+    外推，无复杂度）。
+  - 保留移动对偶中心的只有
+    PPALA；Hajinezhad–Hong、Kong–Monteiro、Le–Papadimitriou 和 Zhang–Xu
+    的对偶阻尼或正则中心都固定在 $0$。
+
+  后续
+
+  Hydrogen 返回后，我整理出准备写进论文的断言，送 Codex 审查。这 20 篇是上次确定
+  的清单；清单外是否还有同类工作，目前靠综述的引用清单覆盖，没有另做联网检索。
+
+⏺ Background command "Run Hydrogen (xhigh) to verify Carbon's facts on Zhang–Xu,
+Ke and the momentum papers" completed (exit code 0)
+
+⏺ Bash(cd /tmp/lit/dual/run; wc -c verB1.txt verrB1.txt; grep -c "SUPPORTED"
+      verB1.txt; grep -n -E "NOT SUPPORTED|PARTLY|NOT FOUND|MISSED|missed"
+      verB1.txt | cut -c1-9…)
+  ⎿  (No output)
+
+⏺ 老大，Hydrogen 对 Carbon 第一批的核对已返回：6 篇共 42
+  条事实，无一条被判为「原文不支持」，9
+  条被判为「部分支持」，都属于遗漏条件或表述不精确；另两批核对仍在运行。
+
+  对本文判断有影响的核对结果
+
+  - Zhang–Xu：乘子上的衰减动量、对偶正则中心固定在 $0$、单循环、GS
+    $\mathcal{O}(\epsilon^{-5/2})$，Hydrogen
+    全部判为原文支持。它补充了两点限定：含 $\Delta_\phi$ 的阶是带 warm-up 的
+    Algorithm 2 在 $\epsilon\downarrow0$ 时的主项，Algorithm 2 需要输入
+    $\Delta_\phi$ 或它的上界；不带 warm-up 的 Algorithm 1 的常数是
+    $\bar{\Delta}_0$。
+  - arXiv:1907.12945：对乘子做 heavy-ball 外推、单循环、只有渐近和 KŁ
+    收敛，七条全部判为原文支持。
+  - Ke 等：内层子求解器的外推同时作用于原始和对偶两个分量，Carbon
+    写成只作用于对偶分量，已更正。它是多层循环这一点不变。
+
+  不影响本文判断的更正
+
+  - arXiv:2212.09513：Carbon 写的 $\beta_{K-1}=\Theta(\epsilon^{-1})$
+    原文没有陈述，Hydrogen 按式 (8) 推得
+    $\Theta(\epsilon^{-2})$，并指出原文证明里这一处与
+    $\mathcal{O}(\epsilon^{-5})$
+    的推导不一致。这篇是双层循环，乘子上没有动量，本文不引用这个量。
+  - Le–Papadimitriou 等篇的更正是假设列得不全。
+
+  Hydrogen 没有报告阅读层遗漏的乘子操作。
+
+⏺ Background command "Run Hydrogen (xhigh) to verify Argon's facts on the eight
+core papers" completed (exit code 0)
+
+⏺ Bash(cd /tmp/lit/dual/run; wc -c verA.txt verrA.txt; grep -c "SUPPORTED"
+      verA.txt; grep -n -i -E "NOT SUPPORTED|PARTLY|NOT FOUND|missed" verA.txt |
+      cut -c1-700 | hea…)
+  ⎿  (No output)
+
+⏺ 老大，Hydrogen 对 Argon 那 8 篇的核对已返回：56 条事实中 53 条判为原文支持，3
+  条判为部分支持，没有「原文不支持」。最后一批核对（6 篇加综述）仍在运行。
+
+  3 条部分支持
+
+  - Shi–Wang–Wang 的复杂度条件：$\mathcal{O}(\epsilon^{-3})$
+    除初始点近似可行外，还要求初始梯度估计误差为
+    $\mathcal{O}(T^{-1/3})$，即第一步取 $T^{1/3}$ 个样本；结论需要 Assumption
+    1–5 全部成立。平稳性定义用的是期望意义下的平方残差。
+  - PPALA 的步长公式：Argon 引的 $\sigma_k$ 属于 Algorithm 2；Algorithm 1 用的是
+    $\sigma_k=\min{\sigma_0,\rho\delta_k/(\lVert\lambda_k-\mu_k\rVert^2+1)}$。
+    对偶中心 $\mu_k$ 每步移动这一点不变。
+  - PPALA 的复杂度条件：$\tilde{\mathcal{O}}(\epsilon^{-2})$
+    是对随机抽取的迭代点在期望意义下成立，并且还需要 KKT 点存在和 $\nabla f$
+    Lipschitz 两条假设。
+
+  核心判断的核对情况
+
+  以下各条 Hydrogen 均判为原文支持：
+
+  - Shi–Wang–Wang 的动量在原始梯度估计上，乘子是截断的对偶上升。
+  - Hajinezhad–Hong 和 Kong–Monteiro 的阻尼中心固定在 $0$。
+  - Zhang–Luo 三篇是普通对偶上升。
+  - Xu 2017 的两个加速版都不外推乘子。
+  - He–Yuan 对乘子做 Nesterov 外推，设定是凸问题且子问题精确求解。
+
+  Hydrogen 列出的「遗漏」是各篇里的辅助乘子（如 Shi–Wang–Wang 用于输出的
+  $\tilde{\lambda}^t$、Hajinezhad–Hong
+  第二个算法的时变阻尼系数）和附带的收敛结论，其中没有动量或外推类操作。
+
+⏺ Background command "Run Hydrogen (xhigh) to verify Carbon's facts on the
+remaining papers and the survey" completed (exit code 0)
+⏺ Bash(cd /tmp/lit/dual/run; wc -c verB2.txt verrB2.txt; grep -c "SUPPORTED"
+      verB2.txt; grep -n -i -E "NOT SUPPORTED|PARTLY|NOT FOUND|missed" verB2.txt
+      | cut -c1-520 |…)
+  ⎿  (No output)
+
+⏺ Bash(cd /tmp/lit/dual/run; sed -n 61,72p verB2.txt | cut -c1-2200)
+  ⎿  (No output)
+
+⏺ Bash(cd /tmp/lit/dual; grep -n -A3 -E "^\[(167|151|137|200|160)\]"
+      deng_alm_survey_2025.txt | cut -c1-200; sed -n 3827,3850p
+      deng_alm_survey_2025.txt | grep -v '^\s*…)
+  ⎿  (No output)
+
+⏺ Bash(codex --version 2>&1 | head -1; codex exec --help 2>&1 | grep -E
+      "^\s+(-p|--profile|-s|--sandbox|-C|--cd|--skip-git|-o|--output-last-messag
+      e|-m|--model|--add-di…)
+  ⎿  (No output)
+
+⏺ Bash(cd /tmp/lit/dual/run && cat > review.txt <<'EOF'
+      You are an adversarial reviewer for a theory paper on single-loop
+      linearized augmented Lagrangian methods (ALM)…)
+  ⎿  Running in the background (↓ to manage)
+
+⏺ 老大，核对层三批已全部返回，共 140 条事实，无一条被判为「原文不支持」；我已把
+  8 条准备用于论文的断言送 Codex（x1api，只读模式）审查，正在后台运行。
+
+  最后一批核对的结果
+
+  6 篇文献加综述，11 条判为部分支持，其余为原文支持。更正内容是假设列得不全，或
+  Carbon 把出现在引言里的问题式标成了摘要。Hydrogen 确认：这 6
+  篇的动量和外推都作用在原始变量上，乘子更新是经典、周期性或带常数松弛的对偶上升
+  ；综述里对乘子加速的 8 篇引用都属于凸问题。
+
+  综述里两条与本文相邻的线索
+
+  我查了综述 Table 2 中阶为 $\mathcal{O}(\epsilon^{-2.5})$
+  的两篇非凸工作：Melo–Monteiro–Wang 2023 和 Li 等
+  2021。两篇都是内层调用加速求解器的非精确 ALM，不是单循环的乘子动量。这两篇的全
+  文不在本次清单里，我只看了综述对它们的描述。
+
+  送审的 8 条断言
+
+  1. Shi–Wang–Wang
+     的动量位置、乘子更新、参数依赖和阶，以及现稿引用它的那句话是否成立。
+  2. 20 篇中对非凸问题的乘子做动量或外推的只有 Zhang–Xu 和 arXiv:1907.12945。
+  3. Zhang–Xu 的设定：单循环、对偶域紧、对偶正则中心固定在 $0$、GS
+     $\mathcal{O}(\epsilon^{-5/2})$。
+  4. arXiv:1907.12945 只有渐近收敛。
+  5. 「前人都保留移动的对偶中心」不成立。
+  6. He–Yuan 与 Xu 2017 在凸情形下的做法。
+  7. 综述中的乘子加速都属于凸问题。
+  8. 一句拟用的定位句，并要求 Codex 判断：Zhang–Xu 的结果作用于约化增广
+     Lagrangian、对偶变量限制在半径 $2L_h$ 的球上时，是否已经推出本文的
+     $\mathcal{O}(\epsilon^{-5/2})$。
+
+  我要求 Codex
+  自己读全文取证，把阅读层和核对层的输出只当线索，并列出它所知的清单外同类工作。
+
+⏺ Background command "Send the eight audit claims to Codex (x1api profile,
+read-only) for adversarial review" completed (exit code 0)
+
+⏺ Bash(cd /tmp/lit/dual/run; wc -c review_out.txt; cat review_out.txt | cut
+      -c1-1500)
+  ⎿  (No output)
+
+⏺ Bash(cd /tmp/lit/dual/run; wc -c review_log.txt; head -c 1500 review_log.txt;
+      echo; echo ....; tail -c 1500 review_log.txt)
+  ⎿  (No output)
+
+⏺ Bash(cd /tmp/lit/dual/run && timeout 3400 codex exec -s read-only
+      --skip-git-repo-check -C /tmp/lit/dual --add-dir
+      /Users/liluxuan/Documents/My_Papers/3_DDLALM/overl…)
+  ⎿  Running in the background (↓ to manage)
+
+⏺ 老大，Codex 第一次没有运行：--profile x1api
+  被它的配置检查拒绝了；我已去掉该参数，用默认配置重新送审，正在后台运行。
+
+  失败原因
+
+  Codex 0.164.0 报错：~/.codex/config.toml 里的 [profiles.x1api]
+  是旧写法，新版要求把这段设置移到 ~/.codex/x1api.config.toml，否则不接受
+  --profile x1api。我没有修改您的配置文件。
+
+  这次运行用的模型
+
+  配置文件顶层写的是 openai/gpt-6.1-terra，推理强度
+  high；实际用了哪个模型，等日志返回后我按日志头部的记录报告。如果它没有走 x1api
+  对应的 gpt-5.6-terra 加
+  xhigh，而您要求必须用那一档，需要您按报错提示迁移配置，或者我改用 Claude Opus
+  5.5 审查。
+
+❯ 你现在修改一下配置文件 无需备份 确保不出错
+
+⏺ Bash(cd ~/.codex; ls *.toml; wc -l config.toml; grep -n -E
+      "^\s*profile\s*=|^\[profiles\.|^\[" config.toml | grep -n -B1 -A1
+      "profiles" | cut -c1-120; echo ---; sed…)
+  ⎿  (No output)
+
+⏺ Bash(cd ~/.codex; for f in manypapers.config.toml opencodex.config.toml; do
+      echo "== $f ($(wc -l < $f) lines)"; sed -E
+      's/((key|token|secret|bearer)[^=]*=).*/\1 <red…)
+  ⎿  (No output)
+
+⏺ Bash(sed -n 88,104p ~/.zshrc | sed -E 's/(sk-[A-Za-z0-9_-]+)/<redacted>/g' |
+      cut -c1-200)
+  ⎿  (No output)
+
+⏺ Bash(cd ~/.codex && python3 - <<'EOF'
+      import re,io…)
+  ⎿  (No output)
+
+❯ 实际上 审查用astra呀 astra的high或者medium
+
+⏺ Bash(cd ~/.codex; grep -o -h -i '"[^"]*astra[^"]*"' models-zcode-yxai.json
+      opencodex-catalog.json config.toml 2>/dev/null | sort | uniq -c | head
+      -12; head -8 /tmp/l…)
+  ⎿  (No output)
+
+⏺ Bash(pkill -f "codex exec -s read-only" ; sleep 1; cd /tmp; t(){ echo "###
+      $*"; timeout 120 codex exec "$@" -s read-only --skip-git-repo-check "Reply
+      with the single…)
+  ⎿  (No output)
+  ⎿  (timeout 4m 40s)
+
+⏺ Background command "Rerun the Codex review with the default configuration
+instead of the profile flag" failed with exit code 144
+
+⏺ Bash(cd /tmp/lit/dual/run && rm -f review_out.txt && timeout 3400 codex exec
+      -m x1api/gpt-6-astra -c model_reasoning_effort=high -s read-only
+      --skip-git-repo-check -…)
+  ⎿  Running in the background (↓ to manage)
+
+⏺ 老大，配置已修好，审查已改用 Astra high 重新送出，正在后台运行。
+
+  配置修改
+
+  - 我把 ~/.codex/config.toml 里的 [profiles.x1api] 整段移到了新文件
+    ~/.codex/x1api.config.toml，五个键原样保留，其余内容没有动。
+  - 测试结果：codex exec -p x1api 现在能正常加载，日志显示
+    gpt-5.6-terra、provider openai、xhigh。
+  - 新 TOML 文件我没有做语法校验（本机 Python 缺 tomli），依据是 Codex
+    实际加载成功。
+
+  两个需要您知道的情况
+
+  - x1api 这个 profile 目前用不了：它走的是 openai 这个
+    provider，返回「已达用量上限，11 月 20 日 8:13
+    后恢复」。这是账户额度问题，与配置写法无关。
+  - [profiles.fast] 还是旧写法：以后用 -p fast
+    会遇到同样的报错。您没有要求，我没有动它。
+
+  审查这一轮
+
+  - 模型是 x1api/gpt-6-astra，推理强度 high，经 manypapers 这个 provider
+    调用；一句话测试已返回正常。
+  - 上一次用默认配置的运行没有产出：它停在等待标准输入，我已终止；这次把标准输入
+    重定向为空。
+  - 送审内容不变：8 条断言，要求它自己读全文取证，只读模式。
+❯ 那就不用了 让opus或者fable5.2审查吧
+
+⏺ Bash(pkill -f "codex exec -m x1api/gpt-6-astra"; sleep 1; pgrep -f "codex
+      exec" | wc -l; ls -la /tmp/lit/dual/run/review_out.txt 2>&1 | cut -c1-80)
+  ⎿  (No output)
+
+⏺ Agent(Adversarial review of literature claims) Opus 5.5
+  ⎿  Backgrounded agent (↓ to manage · ctrl+o to expand)
+
+⏺ Background command "Run the adversarial review with GPT-6 Astra at high
+reasoning effort, read-only" failed with exit code 144
+
+⏺ 老大，Astra 那次审查已终止，没有留下输出；审查现在交给 Claude Opus
+  5.5，在后台运行。
+
+  这次审查的设置
+
+  - 审查者是一个全新的 Opus
+    代理，没有继承本次对话的上下文，因此不受我已有判断的影响。
+  - 送审内容还是那 8 条断言。要求不变：只读，不修改任何文件；每条断言所依赖的论
+    文必须读全文，结论附文件行号和正文引句；阅读层与核对层的输出只当线索，它要自
+    己对照原文，并报告与它们不一致的地方。
+  - 重点放在四条上：非凸问题中谁对乘子做了动量或外推、Zhang–Xu
+    的设定、「移动对偶中心」的判断，以及拟用的定位句。
+  - 对定位句另加了一项手推任务：Zhang–Xu 的定理作用于约化增广
+    Lagrangian、对偶变量限制在球上时，是否已经推出本文的
+    $\mathcal{O}(\epsilon^{-5/2})$。它要逐条列出 Zhang–Xu
+    的假设在本文设定下是否成立，并给出不等式。
+
+  返回后我向您报告审查结论，以及它与前两层不一致的地方。
+
+› Message from general-purpose
+  ## C1. NEEDS QUALIFIER
+  Correct parts: eq. (4) is a recursive-momentum estimator of the primal
+  gradient (shi_wang_wang L516 "+ (1 − αt−1 )(dt−1 −"). Update (6) is plain or
+  truncated dual ascent (L547–550 "ρt max{− λti/βt , ci (xt+1 )}"). The method
+  is single-loop (L558 "for t = 1, 2, . . . do").
+
+  What needs fixing: the parameters β_t = β0 T^{1/4} and ρ_t = ρ/T belong to
+  Theorem 4 only, which gives O(ε^{-4}) (L3193–3199, L3228). The O(ε^{-3})
+  result, Corollary 1, uses β_t = β0 T^{1/3}, η_t ∝ T^{-1/3} and α_t ∝ T^{-2/3}.
+  It also requires "∥cE (x1 )∥2 + ∥[cI (x1 )]+ ∥2 = O(T −1/3 ) and Eξ1 [∥ε1 ∥2
+  ] = O(T −1/3 )" (L3249–3267). The ε-KKT versions (Thm 5, Cor 2, L3459) also
+  need Assumption 5. Theorem 1 uses β_t = β0 t^ι (L1913).
+
+  Corrected wording: "...horizon-dependent β_t = β0 T^{1/4}, ρ_t = ρ/T give
+  O(ε^{-4}); with β_t = β0 T^{1/3} and near-feasible, low-error initialization,
+  O(ε^{-3})." The manuscript sentence at Intro L76–77 is **supported**.
+
+  ## C2. NEEDS QUALIFIER
+  The claim holds for the outer multiplier iterate:
+  - **Zhang–Xu:** damped momentum on the dual gradient, xu_2609 L540 "vt+1 = αvt
+  + (1 − α)γ[∇y G(xt+1 , yt+1 ; zt ) − nt+1 ]".
+  - **1907.12945:** inertial step on p, L557–569 "pk+1 = pbk − δ(T uk+1 − v k+1
+  )".
+
+  Missed case: Ke–Mei–Zhang (ke_2609_25752) is a nested NC–C method. Its SCSC
+  subsolver applies Nesterov-type extrapolation to the joint primal–dual centre,
+  so the dual component is extrapolated too: L377 "ck+1 = ũk+1 + k/(k+3)(ũk+1 −
+  ũk )", with ũ_y = y^{k+1}.
+
+  Le–Papadimitriou is primal-only (L14 "inertial technique to the update of
+  primal variables").
+
+  The paper count is also off. There are 24 non-survey files: arXiv2609_12937 is
+  an off-topic robotics paper, and the two zhang_luo_2022 files are versions of
+  one paper. bot_csetnek_2014 and arXiv2006_09263 (both convex) were covered by
+  no reader.
+
+  Corrected wording: "...the only methods extrapolating the outer multiplier
+  iterate of a nonconvex problem are Zhang–Xu and 1907.12945; Ke et al.
+  extrapolate the dual part of an inner prox-centre in a nested method."
+
+  ## C3. NEEDS QUALIFIER
+  Confirmed:
+  - Single-loop (L506).
+  - Compact convex Y and L-smooth f (L180–186).
+  - G = f + (λ/2)‖x−z‖² − (τ/2)‖y‖² (L474–492).
+  - τ = min{L, ε/(2D_Y)} (L1022).
+  - GS complexity O(L^{3/2}D_Y^{1/2}Δ ε^{-5/2}) (Rem 4.4 L1040; Cor 4.4 L1267).
+  - Projections only, no prox of h.
+
+  Qualifiers:
+  1. The "momentum" is an exponential average of dual gradients inside a
+  projected extragradient step (two gradient calls per iteration, L630). It is
+  not Nesterov extrapolation of the iterate.
+  2. The centre 0 holds "After a translation of the dual coordinates" (L181).
+  3. The primal centre step is accuracy-dependent: β = h√(2Lμ_y)/4096 ∝ √ε (eq.
+  4.3).
+
+  ## C4. CORRECT
+  - Inertial step: L557–559 "(b uk , vbk , pbk ) = (uk , v k , pk ) +α(uk − uk−1
+  , ...)".
+  - Linear constraint Tu − v = 0, ℓq-type nonconvex term.
+  - One linear solve per iteration (L566 "(K ∗ K + δT ∗ T )−1").
+  - Only cluster-point and KŁ convergence (Thm 1–2, L647–671); no rate appears
+  anywhere in the text.
+
+  ## C5. CORRECT
+  Methods centred at 0:
+  - **Hajinezhad–Hong:** L84 "= (1 − ργ)λ + ρ(Axr+1 − b)".
+  - **Kong–Monteiro:** L182 "pk = (1 − θ)pk−1 + χck(Axk − d)".
+  - **Le–Papadimitriou:** L512 "ω k+1 = τ1 ω k + τ2 β(...)", which damps only
+  when τ1 < 1 and leaves a "(1−τ1)/(τ2β)‖ω*‖-approximate" bias (L1292).
+  - **Zhang–Xu:** "−(τ/2)‖y‖²".
+
+  Moving centre:
+  - **PPALA:** L774 "µk+1 = µk + σk (λk − µk )". PPALA also assumes the iterates
+  stay "in a convex compact subset Λ" (L239–241).
+  - **Ke:** fixed y⁰ in the outer loop (L714 "∥y − y 0 ∥2") but moving inner
+  centres.
+
+  ## C6. CORRECT
+  - **He–Yuan:** convex, exact Argmin subproblems (L25–30, L451). Extrapolated
+  λ^{k+1} (L478–495).
+  - **Xu 2017:** Alg 1 interpolates the primal only (L143–150). Both algorithms
+  use plain λ updates (L120, L265).
+
+  ## C7. CORRECT
+  - §6.3: "In convex problems, the ALM can be viewed as a gradient ascent method
+  on the dual problem" (L4085).
+  - §6.7 works with "the convex composite problem (2.14)" (L4657) and convex
+  basis pursuit (L6450).
+  - The only nonconvex momentum mention, [200] (L4001), is the primal momentum
+  of Shi–Wang–Wang.
+
+  ## C8. OVERSTATED (one clause is misleading)
+  - **He–Yuan clause:** supported.
+  - **1907.12945 clause:** supported.
+  - **Zhang–Xu clause:** literally supported, but it implies the composite
+  problem is out of their reach. The derivation below shows it is not.
+  - **"Fixed penalty":** contradicts the manuscript itself. Intro L141–143 says
+  a zero centre "recovers a quadratic penalty with coefficient ρ+s", and Fast
+  LRALM sets s = c_s/ε. The effective penalty is therefore Θ(ε^{-1}), the same
+  feature Intro L92–93 criticises in NC–L methods.
+  - **"Unbounded multiplier domain":** this is not a problem-class difference,
+  because every KKT multiplier lies in ∂h ⊂ B(0, L_h).
+
+  ### Does Zhang–Xu imply the O(ε^{-5/2}) ε-KKT result?
+  Apply their method to min_x max_{λ∈Y} D_ρ(x,λ) with X = ℝⁿ and Y = B(0,R), R =
+  2L_h. By Preliminaries L118–138:
+
+  $$
+  D_\rho(x,\lambda)=f(x)+e_\rho\big(A(x)+\lambda/\rho\big)-\frac{\lVert\lambda\r
+  Vert^2}{2\rho},
+  $$
+
+  with q = ∇e_ρ, which is ρ-Lipschitz and satisfies ‖q‖ ≤ L_h.
+
+  1. **Smoothness.** Using that prox and I − prox are 1-Lipschitz:
+
+  $$
+  \lVert\Delta\nabla_x D\rVert\le(L_f+L_AL_h+\rho G_A^2)\lVert\Delta
+  x\rVert+G_A\lVert\Delta\lambda\rVert
+  $$
+
+  $$
+  \lVert\Delta\nabla_\lambda D\rVert\le G_A\lVert\Delta
+  x\rVert+\rho^{-1}\lVert\Delta\lambda\rVert
+  $$
+
+  So Assumption 2.1(i) holds with L = L_f + L_A L_h + ρG_A² + G_A + 1/ρ, which
+  is independent of ε.
+
+  2. **Concavity.** D_ρ(x,·) is an infimum of affine functions, so it is concave
+  and μ = 0.
+
+  3. **Value function.** D_ρ(x,λ) ≤ L_ρ(x, A(x), λ) = F(x). For g ∈ ∂h(A(x)),
+  with ‖g‖ ≤ L_h ≤ R, the subgradient inequality gives D_ρ(x,g) = F(x). Hence φ
+  = F, φ_inf = inf F > −∞, and Δ_φ ≤ Δ at x₀ = 0.
+
+  4. **GS implies KKT.**
+     - If ‖λ‖ < R, then R(x,λ) ≤ ε gives ‖∇f + J^⊤q‖ ≤ ε and ‖A(x) − y(x,λ)‖ ≤
+  ε. So (x, y(x,λ), q(x,λ)) is ε-KKT.
+     - If ‖λ‖ = R, let g = (q − λ)/ρ. Then ⟨g,λ⟩ ≤ (L_h R − R²)/ρ < 0, which
+  gives dist(g, N_Y(λ)) = ‖g‖ ≥ L_h/ρ. So no boundary pair is ε-GS once ε <
+  L_h/ρ.
+
+  5. **Constants.**
+     - D_Y = 2R = 4L_h.
+     - τ = ε/(8L_h), i.e. s = 8L_h/ε. ZX's λ = 2L plays the role of 1/γ.
+     - Initial gradients are bounded by class constants: ‖∇_λD(0,0)‖ ≤ L_h/ρ and
+  ‖∇_xD(0,0)‖ ≤ G_f + G_A L_h. So Δ̄₀ and the warm-up term in (4.38) depend only
+  on C, Δ, ρ.
+     - Bound: O(L^{3/2} L_h^{1/2} Δ ε^{-5/2}) iterations plus an additive
+  O(ε^{-1/2} log(1/ε)) warm-up term.
+     - Each gradient of D_ρ costs one O_{f,A} call and one prox call, and
+  projection onto the ball is explicit.
+
+  **Status: settled by this derivation, conditional on the correctness of ZX's
+  Cor 4.4, which I did not re-prove.** ZX's G(x,y;z) coincides with the
+  manuscript's P_s(·,·;z,0).
+
+  Ke et al. reach the same conclusion via q = h* by a second route. Their
+  Assumption 1 (L25–35) holds: dom h* ⊂ B(0, L_h), the coupling f + ⟨y, A(x)⟩ is
+  smooth, and prox of h* follows from prox of h. Their Def. 1 (L168–170) is
+  exactly ε-KKT. Thm 5 (L825–844) gives O(ε^{-5/2}) with a nested method; it
+  additionally needs min F to be attained.
+
+  ## (a) Unsupported or misleading manuscript sentences
+  1. **LRALMFamily L150–154** ("When h is the support function of a compact
+  convex set ... Zhang–Xu ... attained"): this understates their reach. By the
+  derivation, ZX covers every instance in I(C,Δ) through D_ρ.
+  2. **Intro L319–327 / Acceleration L3–9:** these present O(ε^{-5/2}) without
+  noting it is already implied (ZX single-loop; Ke nested).
+  3. **Intro L94–97** ("remains open ... every penalty-type parameter
+  independent of the target accuracy"): Fast LRALM does not resolve this, since
+  s = c_s/ε. This conflicts with any "fixed penalty" positioning.
+  4. **Intro L76–77:** supported (see C1).
+
+  ## (b) Outside the corpus (all from memory, unverified)
+  I know of no single-loop method with multiplier momentum and complexity better
+  than ε^{-3} for nonconvex problems other than Zhang–Xu. Near misses:
+  - **Hamedani–Aybat APD:** dual-gradient momentum, convex–concave only.
+  - **SAPD+ (Zhang–Aybat–Gürbüzbalaban, NeurIPS 2022):** NC–C, multi-loop.
+  - **Chao–Zhang–Jian inertial proximal ADMM (nonconvex):** KŁ convergence only.
+
+  ## Disagreements with the reader and verifier outputs
+  - outB1 says Ke extrapolates "c_y only"; the extrapolation is on the joint
+  centre (verB1 agrees).
+  - The readers' answer of "only B1 and B4" misses Ke.
+  - outA A1 omits Corollary 1's T^{1/3} schedule and initial-error condition
+  (verA flags this).
+  - outB1 B1 calls ZX's centre "fixed at 0" without the translation caveat.
+  - No lead noticed the ZX-via-D_ρ or Ke-via-h* implication.
+
+  ## Issues to fix before C8 goes in, ranked
+  1. Zhang–Xu applied to D_ρ on B(0, 2L_h) already gives O(ε^{-5/2}) ε-KKT for
+  the whole class. Claim novelty only for the algorithm and analysis: plain GDA
+  with Nesterov extrapolation, no projection, no extragradient. Revise
+  LRALMFamily L150–154 accordingly.
+  2. Cite Ke et al. as a nested O(ε^{-5/2}) method for the composite problem via
+  h*.
+  3. Replace "fixed penalty" with "fixed ρ and s = c_s/ε (effective penalty ρ+s
+  = Θ(ε^{-1}))".
+  4. Drop "unbounded multiplier domain" as a distinction, or state that
+  restricting to the ball is lossless.
+  5. Describe ZX precisely: damped dual-gradient momentum in projected
+  extragradient, using the same regularizer, τ ∝ ε and centre step ∝ √ε.
+  6. Broaden the convex clause: Bot–Csetnek 2014 (inertial ADMM extrapolating y,
+  L369) and survey refs [112, 130, 133, 170]. Note that He–Yuan use exact
+  subproblems.
+  7. Specify 1907.12945 as an inertial nonconvex ADMM for TV-ℓq deblurring with
+  KŁ-only convergence.
+  8. Flag that ZX is an unrefereed Sept 2026 preprint whose proofs were not
+  checked here.
+
+⏺ 老大，三层流程已全部结束。Opus 审查认定 8 条断言中 4 条成立、3 条需加限定、1
+  条夸大；最重要的结论是：Zhang–Xu 的定理作用于 $\mathcal{D}_\rho$
+  已能推出整个问题类上的 $\mathcal{O}(\epsilon^{-5/2})$ $\epsilon$-KKT
+  复杂度，前提是 Zhang–Xu 的 Corollary 4.4 本身正确。
+
+  结论
+
+  1. Fast LRALM 的新意只能落在算法和分析上：普通的梯度下降–上升步加 Nesterov
+     外推，不用投影，不用 extragradient。复杂度的阶不能作为新结果陈述。
+  2. 我上一轮拟的定位句有两处要删：「fixed penalty」和「unbounded multiplier
+     domain」。
+  3. 「前人都保留移动的对偶中心」不成立，这一条三层一致。
+
+  依据
+
+  Zhang–Xu 的蕴含关系
+
+  Opus 手推了约化过程，取 $X=\mathbb{R}^n$，$Y$ 为半径 $2L_h$ 的球：
+
+  - 光滑性：$\mathcal{D}\rho$ 关于 $(\mathbf{x},\boldsymbol{\lambda})$
+    联合光滑，常数为 $L_f+L{\mathcal{A}}L_h+\rho
+    G_{\mathcal{A}}^2+G_{\mathcal{A}}+1/\rho$，与 $\epsilon$ 无关。
+  - 值函数：$\max_{\boldsymbol{\lambda}\in Y}\mathcal{D}_\rho(\mathbf{x},\boldsy
+    mbol{\lambda})=F(\mathbf{x})$，所以初始间隙不超过 $\Delta$。
+  - GS 推出 KKT：$\epsilon\lt L_h/\rho$ 时球面上没有 $\epsilon$-GS 点，球内的
+    $\epsilon$-GS 点给出 $\epsilon$-KKT 点。球面这一步我复算过，成立。
+  - 初值量：$\lVert\nabla_{\boldsymbol{\lambda}}\mathcal{D}\rho(\mathbf{0},\math
+    bf{0})\rVert\le L_h/\rho$，$\lVert\nabla{\mathbf{x}}\mathcal{D}\rho(\mathbf{
+    0},\mathbf{0})\rVert\le G_f+G{\mathcal{A}}L_h$，在问题类上一致有界。
+
+  PROJECT_STATUS.md 第 160 行把这一条记为「推断，初值量待核」；Opus
+  的推导补上了初值量这一步。Zhang–Xu 的正则函数与本文的
+  $\mathcal{P}_s(\cdot,\cdot;\mathbf{z},\mathbf{0})$ 相同。Opus 没有复核
+  Zhang–Xu 的证明，该文是 2026 年 9 月的未审稿预印本。
+
+  Opus 还指出 Ke 等的多层循环方法经 $h^*$ 也覆盖本文的问题类，阶同为
+  $\mathcal{O}(\epsilon^{-5/2})$，另需 $\min F$ 可达。
+
+  定位句的两处问题
+
+  - 「fixed penalty」：Fast LRALM 取 $s=c_s/\epsilon$，effective penalty
+    $\rho+s$ 是 $\Theta(\epsilon^{-1})$。Introduction.tex:94-97
+    (overleaf/sections/Introduction.tex#L94-L97)
+    提出的「所有罚类参数都与精度无关」的问题，Fast LRALM
+    没有解决。准确写法是「fixed $\rho$ and $s=c_s/\epsilon$」。
+  - 「unbounded multiplier domain」：KKT 乘子都在半径 $L_h$
+    的球内，限制到球上不损失解，这一点不构成问题类上的区别。
+
+  需加限定的三条
+
+  - Shi–Wang–Wang：$\beta_t=\beta_0T^{1/4}$ 只对应 $\mathcal{O}(\epsilon^{-4})$
+    的定理；$\mathcal{O}(\epsilon^{-3})$ 用的是
+    $\beta_t=\beta_0T^{1/3}$。现稿引用它的那句话成立。
+  - 谁对乘子做了外推：外层乘子迭代上只有 Zhang–Xu 和 arXiv:1907.12945；Ke
+    等在内层子求解器里也外推了对偶分量。
+  - Zhang–Xu 的描述：它的动量是 projected extragradient
+    步里对偶梯度的指数平均，每步两次梯度调用，不是对迭代点的 Nesterov
+    外推；原始中心步长正比于 $\sqrt{\epsilon}$。
+
+  稿件中需要修改的句子
+
+  1. LRALMFamily.tex:150-154 (overleaf/sections/LRALMFamily.tex#L150-L154) 把
+     Zhang–Xu 的适用范围限定在「$h$ 是紧凸集的支撑函数」，低估了它的覆盖面。
+  2. Introduction.tex:319-327 (overleaf/sections/Introduction.tex#L319-L327) 和
+     Acceleration.tex:3-9 (overleaf/sections/Acceleration.tex#L3-L9) 陈述
+     $\mathcal{O}(\epsilon^{-5/2})$ 时没有交代它已被 Zhang–Xu（单循环）和 Ke
+     等（多层循环）蕴含。
+
+  覆盖范围的缺口
+
+  - Opus 指出 Boț–Csetnek 2014 和 arXiv:2006.09263
+    两篇凸情形的文献没有进入阅读层。前者是外推乘子的惯性 ADMM，Opus 称见于其第
+    369 行，这一处未经核对层。
+  - 清单外的同类工作，Opus 凭记忆没有找到单循环、乘子动量、阶优于
+    $\epsilon^{-3}$ 的其他方法；这一条未联网核实。
+
+  以上修改我都没有写入稿件和 PROJECT_STATUS.md，等您决定。三层的原始输出在
+  /tmp/lit/dual/run/，该目录是临时目录，需要长期保留请告诉我存放位置。本任务已完
+  成，后续改稿建议新开对话。
+
+⏺ Agent "Adversarial review of literature claims" finished · 8m 0s

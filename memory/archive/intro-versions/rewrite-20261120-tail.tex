@@ -1,0 +1,39 @@
+
+The rate $\Theta(\epsilon^{-3})$ is therefore a barrier for $\calC_\theta$.
+Faster rates are known in related settings. For smooth NC--C minimax problems,
+the optimal deterministic first-order complexity of finding an $\epsilon$-GS
+point is $\Theta(\epsilon^{-5/2})$~\cite{pan2026optimal}, in line with the
+nonconvex--strongly-concave lower bound with condition number
+$\Theta(\epsilon^{-1})$~\cite{zhang2021complexity,li2021complexity}. This rate
+is attained by multi-loop methods~\cite{pan2026optimal} and by a single-loop
+projected extragradient method with dual gradient
+averaging~\cite{zhang2026matching}. For composite minimax and constrained
+problems, the methods with rates of order $\epsilon^{-5/2}$ are multi-loop:
+nested proximal-point or anchored
+schemes~\cite{kong2021accelerated,ke2026efficient}, and inexact ALM and
+penalty methods with accelerated inner
+solvers~\cite{li2021rate,lin2022complexity,kong2023iteration}. This leads to
+our second question:
+\begin{quote}
+  \textbf{(Q2)}
+  \emph{Can a single-loop linearized ALM with a fixed penalty parameter break
+  the $\Theta(\epsilon^{-3})$ barrier of $\calC_\theta$ and attain
+  $\mathcal O(\epsilon^{-5/2})$ complexity for Problem~\eqref{prob:main}?}
+\end{quote}
+
+To answer \textbf{(Q2)}, we introduce Fast LRALM (Algorithm~\ref{alg:b2-prime}
+in Section~\ref{sec:acceleration}). Our analysis of \textbf{(Q1)} shows that,
+with $\rho$ fixed and $s=\Theta(\epsilon^{-1})$, fixing the dual center at zero
+does not change the complexity order; the regularized dual objective then has a
+fixed center and is strongly concave. Fast LRALM adds Nesterov extrapolation to
+the dual step and keeps one explicit primal--dual update per iteration. We
+prove that Fast LRALM finds an $\epsilon$-KKT point of
+Problem~\eqref{prob:main} in $\mathcal O(\epsilon^{-5/2})$ iterations with a
+fixed $\rho$ (Theorem~\ref{thm:b2-prime-complexity}), which answers
+\textbf{(Q2)} affirmatively and matches the rate of the multi-loop methods
+above. Because the extrapolated dual step is not projected, the analysis must
+bound the multipliers uniformly and control the dual tracking error under a
+moving primal center; Section~\ref{sec:acceleration} does both with a single
+Lyapunov function. Table~\ref{tab:known-results} compares our guarantees and
+parameter scales with representative methods.
+

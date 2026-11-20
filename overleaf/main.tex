@@ -1,80 +1,171 @@
+% ======================================================================
+% Output format switch:  arxiv | mp | siopt
+%   Edit the default below, or compile from the command line with
+%   pdflatex "\def\paperformat{mp}\input{main}"
+% ======================================================================
+\ifdefined\paperformat\else\def\paperformat{arxiv}\fi
+\newif\ifshowlinenumbers
+
+\def\fmtARXIV{arxiv}\def\fmtMP{mp}\def\fmtSIOPT{siopt}
+\newif\ifarxiv \newif\ifmp \newif\ifsiopt
+\ifx\paperformat\fmtARXIV \arxivtrue
+\else\ifx\paperformat\fmtMP \mptrue
+\else\ifx\paperformat\fmtSIOPT \siopttrue
+\else \errmessage{Unknown \string\paperformat: use arxiv, mp, or siopt}
+\fi\fi\fi
+
+\showlinenumberstrue  % set to \showlinenumbersfalse to hide line numbers
+
 \makeatletter
 \ifdefined\XeTeXversion
   \providecommand{\headerps@out}[1]{}
 \else\ifdefined\directlua
-  \providecommand{\headerps@out}[1]{} 
+  \providecommand{\headerps@out}[1]{}
 \fi\fi
 \makeatother
-\documentclass[review,onefignum,onetabnum,nohypdvips]{siamart220329}
+
+% ---------------------------- class ----------------------------------
+\ifsiopt
+  % SIAM macros for SIOPT (25-page limit in this typeset format)
+  \documentclass[review,onefignum,onetabnum,nohypdvips]{siamart220329}
+\fi
+\ifmp 
+  % Springer svjour3, the template linked from the Math. Program.
+  % submission guidelines (LaTeX_DL_468198_240419.zip)
+  \RequirePackage{fix-cm}
+  \documentclass[smallextended,envcountsect]{svjour3}
+  \smartqed
+  \journalname{Mathematical Programming}
+\fi
+\ifarxiv 
+  \documentclass[11pt]{article}
+  \PassOptionsToPackage{dvipsnames}{xcolor}
+  \usepackage[numbers,sort&compress]{natbib}
+  \usepackage{amsthm}
+\fi
+
 \input{tools/shared}
-% \headers{LRALM: Tight Complexity and Acceleration}{L. Li, K. Deng, C. Cui, and J. Hu}
-\headers{LRALM: Tight Complexity and Acceleration}{}
-\title{{LRALM: Tight Complexity and Acceleration of Linearized Regularized Augmented Lagrangian Methods}}
-% \author{
-% Luxuan Li\thanks{School of Mathematical Sciences, Beihang University,
-% Beijing 100191, China}
-% \and Kangkang Deng\thanks{Department of Mathematics, National University of Defense Technology,
-% Changsha 410073, China.
-% Corresponding author. Email: \texttt{freedeng1208@gmail.com}.
-% }
-% \and Chunfeng Cui\thanks{School of Mathematical Sciences and State Key Laboratory of Virtual Reality Technology and Systems,
-% Beihang University, Beijing 100191, China.}
-% \and Jiang Hu\thanks{Yau Mathematical Sciences Center, Tsinghua University,
-% Beijing 100084, China}
-% }
+
+% Page margins and visual setup for the arXiv template (matching 2608.26799 / 2609.14235).
+% The journal classes keep their native text block and styling.
+\ifarxiv
+  \usepackage[margin=1in]{geometry}
+  \usepackage{mathpazo}
+  \linespread{1.05}
+  \usepackage[scaled]{helvet}
+  \usepackage{courier}
+  \normalfont
+  \ifshowlinenumbers\else\allowdisplaybreaks[4]\fi
+  \setlength{\emergencystretch}{3em}
+  \renewcommand{\qedsymbol}{$\blacksquare$}
+  \hypersetup{
+    colorlinks=true,
+    citecolor=MidnightBlue,
+    linkcolor=red!80!black,
+    urlcolor=MidnightBlue,
+    hypertexnames=false
+  }
+\fi
+
+% Line numbers across all formats (arxiv / mp / siopt)
+\makeatletter
+\ifshowlinenumbers
+  \@ifpackageloaded{lineno}{}{\usepackage[mathlines]{lineno}}
+  \AtBeginDocument{\linenumbers}
+\else
+  \@ifpackageloaded{lineno}{\AtBeginDocument{\nolinenumbers}}{}
+\fi
+\makeatother
+
+% ----------------------------- front matter ---------------------------
+\newcommand{\papertitle}{Accelerated Linearized Augmented Lagrangian
+Method with a Fixed Penalty for Nonconvex Composite Optimization}
+\newcommand{\paperkeywords}{augmented Lagrangian method, nonconvex composite
+optimization, iteration complexity, lower bound, dual regularization,
+gradient descent--ascent}
+\newcommand{\papermsc}{65K05, 90C26, 90C30, 90C46, 90C60}
+\newcommand{\paperabstract}{%
+We study single-loop linearized augmented Lagrangian methods (ALMs) for the
+nonconvex composite problem. Existing single-loop guarantees reach $\mathcal O(\epsilon^{-3})$ iteration complexity only by
+taking a large penalty $\rho=\Theta(\epsilon^{-1})$, which inflates the primal
+smoothness modulus and shrinks the stepsize. To keep $\rho$ fixed, we analyze a
+family of linearized regularized ALMs (LRALM) parameterized by $\rho$, a dual
+regularization parameter $s$, and moving primal and dual centers; here the
+primal smoothness depends only on $\rho$, whereas $\rho+s$ acts as an effective
+penalty. Combining upper bounds with hard-instance lower bounds for finding an
+$\epsilon$-KKT point, we obtain a sharp dichotomy within LRALM: the tight
+complexity is $\Theta(\epsilon^{-4})$ whenever $\rho+s$ stays below a constant
+multiple of $\epsilon^{-1}$, and improves to $\Theta(\epsilon^{-3})$ when
+$\rho=\Theta(1)$ and $s=\Theta(\epsilon^{-1})$. Stepping outside LRALM, we
+propose Fast LRALM, which adds Nesterov extrapolation to the dual update and
+attains $\mathcal O(\epsilon^{-5/2})$ complexity with a fixed penalty, matching
+the best known multi-loop rate without inner solvers or dual projections.
+}
+
+\ifsiopt
+  \headers{Fixed-Penalty ALMs for Nonconvex Composite Optimization}{}
+  \title{{\papertitle}}
+  % \author{...}
+\fi
+\ifmp
+  \title{\papertitle}
+  \titlerunning{Fixed-penalty ALMs for nonconvex composite optimization}
+  \authorrunning{L. Li et al.}
+  % \author{Luxuan Li \and Kangkang Deng \and Chunfeng Cui \and Jiang Hu}
+  % \institute{...}
+  \author{}
+  \institute{}
+  \date{Received: date / Accepted: date}
+\fi
+\ifarxiv
+  \title{\papertitle}
+  % \author{...}
+  \author{}
+  \date{}
+\fi
 
 \begin{document}
 
 \maketitle
 
-\begin{abstract}
-A classical advantage of augmented Lagrangian methods over penalty methods is
-that the penalty parameter can stay bounded. For single-loop linearized
-augmented Lagrangian methods applied to the nonconvex composite problem
-$\min_{\bx} f(\bx)+h(\calA(\bx))$, where $f$ and $\calA$ are smooth and $h$ is
-convex and Lipschitz, this advantage has not been reflected in complexity
-guarantees: in existing single-loop methods that find an $\epsilon$-KKT point
-in $\mathcal O(\epsilon^{-3})$ iterations, the penalty or the dual
-regularization grows with $1/\epsilon$. We ask whether such growth is
-necessary, and whether it must be carried by the penalty. We study a family of
-methods that perform one gradient descent--ascent step per iteration on the
-reduced augmented Lagrangian with a fixed penalty $\rho$, a dual
-regularization with parameter $s$, and moving primal and dual centers. Every
-member of this family has the effective penalty $\rho+s$. By constructing hard
-instances, we show that if $\epsilon(\rho+s)$ is at most a constant, then
-every choice of constant center stepsizes requires $\Omega(\epsilon^{-4})$
-iterations, and for fixed $\rho$ this order is attained within the family. In contrast, with
-$\rho$ fixed and $s$ of order $1/\epsilon$, a member of the family finds an
-$\epsilon$-KKT point in $\mathcal O(\epsilon^{-3})$ iterations. Hence the
-effective penalty must reach the order $1/\epsilon$ to improve on
-$\epsilon^{-4}$, and this growth can be carried by the dual regularization
-alone while the penalty stays fixed.
-\end{abstract}
+\ifsiopt
+  \begin{abstract}\paperabstract\end{abstract}
+  \begin{keywords}\paperkeywords\end{keywords}
+  \begin{AMS}\papermsc\end{AMS}
+\fi
+\ifmp
+  \begin{abstract}\paperabstract
+  \keywords{\paperkeywords}
+  \subclass{\papermsc}
+  \end{abstract}
+\fi
+\ifarxiv
+  \begin{abstract}\paperabstract\end{abstract}
+  \noindent\textbf{Key words.} \paperkeywords
 
-\begin{keywords}
-augmented Lagrangian method, nonconvex composite optimization, iteration
-complexity, lower bound, dual regularization, gradient descent--ascent
-\end{keywords}
-
-\begin{AMS}
-65K05, 90C26, 90C30, 90C46, 90C60
-\end{AMS}
+  \medskip
+  \noindent\textbf{AMS subject classifications.} \papermsc
+\fi
 
 \input{sections/Introduction}
 \input{sections/Preliminaries}
-\input{sections/AlgorithmFamily}
-\input{sections/LowerBound}
-\input{sections/LowerBoundProof}
+\input{sections/LRALMFamily}
 \input{sections/Acceleration}
+\input{sections/Experiments}
 \input{sections/Conclusion}
 
-\bibliographystyle{tools/siamplain}
+\ifmp
+  \bibliographystyle{tools/spmpsci}
+\else\ifarxiv
+  \bibliographystyle{abbrvnat}
+\else
+  \bibliographystyle{tools/siamplain}
+\fi\fi
 \bibliography{tools/refer}
 
 \appendix
-% \input{appendix/LowerBoundRotation}
-% \input{appendix/UpperBoundBetaOne}
-% \input{appendix/UpperBoundBetaZero}
-\input{appendix/AccelerationProof}
+\input{appendix/ValueFunctions}
+% \input{appendix/LowerBoundConstructions}
+% \input{appendix/UpperBounds}
 
 \end{document}

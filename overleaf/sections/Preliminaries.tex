@@ -1,19 +1,21 @@
 \section{Preliminaries}
 \label{sec:preliminaries}
-% \subsection{Notation}
-% \label{sec:notation}
-\textbf{Notation.} We use $\langle\cdot,\cdot\rangle$ and $\|\cdot\|$ for the
-Euclidean inner product and norm; for a matrix, $\|\cdot\|$ is the spectral
-norm. For $\calA=(A_1,\ldots,A_m)^\top$, the Jacobian
-$J_{\calA}(\bx)\in\RR^{m\times n}$ has $i$th row $\nabla A_i(\bx)^\top$. For a
-nonempty closed convex set $C$, $\dist(\bu,C):=\min_{\bv\in C}\|\bu-\bv\|$, and
-$\Pi_C(\bu)$ is the Euclidean projection of $\bu$ onto $C$. When convenient, we
-identify $\RR^2$ with $\mathbb C$, so that $\|p\|=|p|$ and
-$\langle p,q\rangle=\operatorname{Re}(\bar pq)$.
-% Throughout the paper, $\partial h$ denotes the limiting
-% subdifferential of $h$.
 
-For a proper closed convex function \(h:\RR^m\to\RR\cup\{+\infty\}\), its
+\subsection{Notation}
+\label{sec:notation}
+We use $\langle\cdot,\cdot\rangle$ and $\|\cdot\|$ for the Euclidean inner
+product and norm; for a matrix, $\|\cdot\|$ denotes the spectral norm. For
+$\calA=(A_1,\ldots,A_m)^\top$, the Jacobian $J_{\calA}(\bx)\in\RR^{m\times n}$
+has $i$th row $\nabla A_i(\bx)^\top$. For a nonempty closed convex set $C$,
+$\dist(\bu,C):=\min_{\bv\in C}\|\bu-\bv\|$, and $\Pi_C(\bu)$ is the Euclidean
+projection of $\bu$ onto $C$. When convenient, we identify $\RR^2$ with
+$\mathbb C$, so that $\|p\|=|p|$ and
+$\langle p,q\rangle=\operatorname{Re}(\bar pq)$. Standard asymptotic notation
+$\mathcal O(\cdot)$, $\Omega(\cdot)$, and $\Theta(\cdot)$ hides universal
+positive constants independent of the accuracy $\epsilon$ and the dimensions
+$n,m$.
+
+For a proper closed convex function $h\colon\RR^m\to\RR\cup\{+\infty\}$, its
 subdifferential, convex conjugate, and proximal mapping are
 \[
     \partial h(\by):=\{\bv:\ h(\bw)\ge h(\by)+\langle\bv,\bw-\by\rangle
@@ -29,28 +31,12 @@ subdifferential, convex conjugate, and proximal mapping are
     \label{eq:prox-definition}
 \end{equation}
 see~\cite{rockafellar1970convex}. We write
-\(\dom\partial h^*:=\{\bq:\partial h^*(\bq)\neq\varnothing\}\).
-
+$\dom\partial h^*:=\{\bq:\partial h^*(\bq)\neq\varnothing\}$.
 
 \subsection{Assumptions}
 \label{sec:assumptions}
-We impose the following assumptions.
-% \begin{assumption}[Uniform Jacobian regularity]
-% \label{ass:strong-licq}
-% There exists a constant $\nu>0$ such that
-% \[
-%     \sigma_{\min}\bigl(J_{\calA}(\bx)\bigr)\ge \nu,
-%     \qquad
-%     \forall \bx\in\calS.
-% \]
-% Equivalently,
-% \[
-%     \|J_{\calA}(\bx)^\top \by\|
-%     \ge
-%     \nu \|\by\|,
-%     \qquad \forall \bx\in\calS,\ \forall \by\in\RR^m.
-% \]
-% \end{assumption}
+Throughout the paper, we impose the following assumptions on
+Problem~\eqref{prob:main}.
 \begin{assumption}[Smooth components]
 \label{ass:smoothness}
 There exist constants $L_f,G_f,L_{\calA},G_{\calA}\ge0$ such that, for
@@ -78,97 +64,49 @@ The function $h:\RR^m\to\RR$ is convex and $L_h$-Lipschitz:
 
 \subsection{Problem class, stationarity, and oracle}
 \label{subsec:setup}
-To study~(Q), we introduce the following problem class.
+To study~\textbf{(Q1)} and~\textbf{(Q2)} in a dimension-free complexity
+framework~\cite{carmon2020lower}, we introduce the following problem class.
 \begin{definition}[Problem class]
 \label{def:problem-class}
 Let \(\Delta>0\) and
-\(\mathbf C=(L_f,G_f,L_{\calA},G_{\calA},L_h)\in\RR^5_{\ge0}\). 
+\(\mathbf C=(L_f,G_f,L_{\calA},G_{\calA},L_h)\in\RR^5_{\ge0}\).
 We denote by \(\mathcal I(\mathbf C,\Delta)\) the set of all triples
 \((f,\calA,h)\), over all dimensions \(n,m\in\NN\), such that
 Assumptions~\ref{ass:smoothness} and~\ref{ass:h} hold with the constants
-in \(\mathbf C\) and 
+in \(\mathbf C\) and
 \(
     F(\zero)-\inf_{\bx\in\RR^n}F(\bx)\le\Delta .
 \)
 \end{definition}
 The constants \(\mathbf C\) and \(\Delta\) do not depend on the target
-accuracy or on \(n,m\), and the gap condition implies \(\inf F>-\infty\).
-% The gap condition implies 
-% \(\inf F>-\infty\). Assumption~\ref{ass:level-boundedness} is not part of
-% \(\mathcal I(\mathbf C,\Delta)\); it is imposed separately in the complexity
-% results that require it. 
+accuracy \(\epsilon\) or on \(n,m\), and the initial-gap condition implies
+\(\inf_{\bx\in\RR^n} F(\bx)>-\infty\).
 
-{We use the following stationarity measure for Problem~\eqref{prob:main}.} 
+We use the following approximate KKT stationarity measure for
+Problem~\eqref{prob:main}.
 \begin{definition}[\(\epsilon\)-KKT point]
 \label{def:eps-kkt}
-Given \(\epsilon>0\). A triple \((\bx,\by,\bq)\) with
+Given \(\epsilon>0\), a triple \((\bx,\by,\bq)\) with
 \(\bq\in\partial h(\by)\) is an \(\epsilon\)-KKT point of
-\eqref{prob:main} if
+Problem~\eqref{prob:main} if
 \begin{equation}
     \mathcal{R}_{\mathrm{KKT}}(\bx,\by,\bq)
     :=
     \max\Bigl\{
         \bigl\|\nabla f(\bx)+J_{\calA}(\bx)^\top\bq\bigr\|,\;
         \|\calA(\bx)-\by\|
-    \Bigr\} \leq \epsilon
+    \Bigr\} \leq \epsilon .
     \label{eq:kkt-residual}
 \end{equation}
 \end{definition}
+When \(\epsilon=0\), \eqref{eq:kkt-residual} reduces to \(\by=\calA(\bx)\) and
+\(\zero\in\nabla f(\bx)+J_{\calA}(\bx)^\top\partial h(\calA(\bx))\), which is
+the exact first-order KKT condition of~\eqref{prob:split} and of
+Problem~\eqref{prob:main}. Under Assumption~\ref{ass:h},
+\(\mathcal R_{\mathrm{KKT}}\) also aligns with the game-stationarity residual
+of the minimax reformulation~\eqref{eq:ncl}~\cite{zhang2026matching}.
 
-We next relate Definition~\ref{def:eps-kkt} to game stationarity (GS) for the
-minimax reformulation~Problem~\eqref{eq:ncl} of Problem~\eqref{prob:main}. We use the
-following GS definition from \cite[Definition~3.1(b)]{li2025nonsmooth} and
-\cite[(2.10)--(2.11)]{zhang2026matching}.
-\begin{definition}[\(\epsilon\)-GS point]
-\label{def:eps-gs}
-Let \(\epsilon>0\). A pair \((\bx,\bq)\in\RR^n\times\dom\partial h^*\) is an
-\(\epsilon\)-game stationary point (\(\epsilon\)-GS) of~Problem~\eqref{eq:ncl} if
-\[
-    \calG(\bx,\bq)
-    :=
-    \max\Bigl\{
-        \bigl\|\nabla f(\bx)+J_{\calA}(\bx)^\top\bq\bigr\|,\;
-        \dist\bigl(\calA(\bx),\partial h^*(\bq)\bigr)
-    \Bigr\}
-    \le\epsilon .
-\]
-\end{definition}
-We now relate $\epsilon$-KKT points of Problem~\eqref{prob:main}
-to $\epsilon$-GS points of its Fenchel saddle reformulation~Problem~\eqref{eq:ncl}. 
-\begin{proposition}[KKT points of Problem~\eqref{prob:main} and GS points of~Problem~\eqref{eq:ncl}]
-\label{prop:kkt-gs}
-Suppose that Assumption~\ref{ass:h} holds, and let
-\((\bx,\bq)\in\RR^n\times\dom\partial h^*\). Then the following measurement relationship holds: 
-\[
-    \calG(\bx,\bq)
-    =
-    \min_{\by\in\partial h^*(\bq)}
-    \mathcal{R}_{\mathrm{KKT}}(\bx,\by,\bq),
-\]
-with minimum attained at
-\(\hat\by=\Pi_{\partial h^*(\bq)}\bigl(\calA(\bx)\bigr)\). Consequently, for
-every \(\epsilon>0\):
-\begin{enumerate}[label=(\alph*)]
-\item if \((\bx,\by,\bq)\) is an \(\epsilon\)-KKT point
-  of~Problem~\eqref{prob:main}, then \((\bx,\bq)\) is an \(\epsilon\)-GS point
-  of~Problem~\eqref{eq:ncl};
-\item if \((\bx,\bq)\) is an \(\epsilon\)-GS point of~Problem~\eqref{eq:ncl}, then
-  \((\bx,\hat\by,\bq)\) is an \(\epsilon\)-KKT point of~Problem~\eqref{prob:main}.
-\end{enumerate}
-\end{proposition}
-
-\begin{proof}
-Since \(h\) is proper, closed, and convex,
-\(\bq\in\partial h(\by)\) if and only if \(\by\in\partial h^*(\bq)\)
-\cite[Theorem~23.5]{rockafellar1970convex}. The first term of
-\(\mathcal{R}_{\mathrm{KKT}}\) does not depend on \(\by\). The set
-\(\partial h^*(\bq)\) is nonempty, closed, and convex, so
-\(\min_{\by\in\partial h^*(\bq)}\|\calA(\bx)-\by\|
-=\dist(\calA(\bx),\partial h^*(\bq))\), attained at \(\hat\by\).
-Statements~(a) and~(b) follow.
-\end{proof}
-
-We next introduce the following deterministic first-order oracle model.
+We next specify the deterministic first-order oracle model.
 \begin{definition}[Oracle model]
 \label{def:oracle-model}
 We assume access to a deterministic first-order oracle
@@ -188,4 +126,91 @@ Each call to either oracle counts as one oracle evaluation. In particular,
 the cost of solving the proximal subproblem is represented by one exact
 proximal-oracle call.
 \end{definition}
+\subsection{Reduced augmented Lagrangian and regularized potential}
+\label{subsec:reduced-al} 
 
+For \(\rho>0\), the augmented Lagrangian of~\eqref{prob:split} is
+\[
+    \calL_\rho(\bx,\by,\blmbd)
+    :=f(\bx)+h(\by)+\langle\blmbd,\calA(\bx)-\by\rangle
+    +\frac{\rho}{2}\|\calA(\bx)-\by\|^2,
+\]
+and the reduced augmented Lagrangian~\cite{rockafellar1976augmented} is
+\begin{equation}
+    \calD_\rho(\bx,\blmbd)
+    :=\min_{\by\in\RR^m}\calL_\rho(\bx,\by,\blmbd).
+    \label{eq:reduced-al}
+\end{equation}
+Its minimizer and the associated multiplier are
+\begin{equation}
+    \by(\bx,\blmbd):=\prox_{h/\rho}\Bigl(\calA(\bx)+\frac{\blmbd}{\rho}\Bigr),
+    \qquad
+    \bq(\bx,\blmbd):=\blmbd+\rho\bigl[\calA(\bx)-\by(\bx,\blmbd)\bigr],
+    \label{eq:prox-multiplier}
+\end{equation}
+and \(\bq(\bx,\blmbd)\in\partial h(\by(\bx,\blmbd))\).
+Completing the square in~\eqref{eq:reduced-al} expresses \(\calD_\rho\) via the
+Moreau envelope of \(h\), so \(\calD_\rho\) is continuously differentiable with
+\begin{equation}
+    \nabla_{\bx}\calD_\rho(\bx,\blmbd)
+    =\nabla f(\bx)+J_{\calA}(\bx)^\top\bq(\bx,\blmbd),
+    \qquad
+    \nabla_{\blmbd}\calD_\rho(\bx,\blmbd)
+    =\calA(\bx)-\by(\bx,\blmbd).
+    \label{eq:reduced-al-gradient}
+\end{equation}
+
+Combining primal proximal regularization with dual quadratic
+perturbation~\cite{zhang2020smoothed,li2026smoothing}, we define the
+regularized potential function
+\begin{equation}
+    \mathcal P_s(\bx,\blmbd;\bz,\bmu)
+    :=\calD_\rho(\bx,\blmbd)+\frac{1}{2\gamma}\|\bx-\bz\|^2
+    -\frac{1}{2s}\|\blmbd-\bmu\|^2,
+    \label{eq:potential}
+\end{equation}
+where \(\gamma,s>0\) are regularization parameters and \(\bz\in\RR^n\),
+\(\bmu\in\RR^m\) are the primal and dual centers. Define the curvature and
+smoothness constants
+\begin{equation}
+    L_{\calD,\bx}
+    :=L_f+L_{\calA}L_h+\rho G_{\calA}^{2},
+    \label{eq:x-weak-convexity-modulus}
+\end{equation}
+and, for \(\gamma,s>0\),
+\[
+    \mu_\gamma:=\frac{1}{\gamma}-L_{\calD,\bx},
+    \qquad
+    L_x:=\frac{1}{\gamma}+L_{\calD,\bx},
+    \qquad
+    L_\lambda:=\frac{1}{\rho}+\frac{1}{s}.
+\]
+The following proposition summarizes the curvature and block-Lipschitz
+smoothness of \(\mathcal P_s\) used in Sections~\ref{sec:algorithm-framework}
+and~\ref{sec:acceleration}. The proof is given in Appendix~\ref{app:curvature-smoothness}.
+
+\begin{proposition}[Curvature and smoothness of \(\mathcal P_s\)]
+\label{prop:curvature-smoothness}
+Suppose that Assumptions~\ref{ass:smoothness} and~\ref{ass:h} hold, and let
+\(\gamma>0\) satisfy \(\gamma L_{\calD,\bx}<1/2\). Then, for every \(s>0\) and
+\((\bz,\bmu)\in\RR^n\times\RR^m\), \(\mathcal P_s(\cdot,\cdot;\bz,\bmu)\) is
+\(\mu_\gamma\)-strongly convex in \(\bx\) and \(s^{-1}\)-strongly concave in
+\(\blmbd\). Moreover, for all \(\bx,\bx'\in\RR^n\) and
+\(\blmbd,\blmbd'\in\RR^m\),
+\begin{align}
+    \bigl\|
+    \nabla_{\bx}\mathcal{P}_s(\bx,\blmbd;\bz,\bmu)
+    -\nabla_{\bx}\mathcal{P}_s(\bx',\blmbd';\bz,\bmu)
+    \bigr\|
+    &\le L_x\|\bx-\bx'\|+G_{\calA}\|\blmbd-\blmbd'\|,
+    \label{eq:payoff-x-smoothness}\\
+    \bigl\|
+    \nabla_{\blmbd}\mathcal{P}_s(\bx,\blmbd;\bz,\bmu)
+    -\nabla_{\blmbd}\mathcal{P}_s(\bx',\blmbd';\bz,\bmu)
+    \bigr\|
+    &\le G_{\calA}\|\bx-\bx'\|+L_\lambda\|\blmbd-\blmbd'\|.
+    \label{eq:payoff-lambda-smoothness}
+\end{align}
+In particular, \(\mathcal P_s(\cdot,\cdot;\bz,\bmu)\) is \(L_x\)-smooth in
+\(\bx\) and \(L_\lambda\)-smooth in \(\blmbd\).
+\end{proposition}

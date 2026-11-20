@@ -1,0 +1,2547 @@
+Proceedings of Machine Learning Research vol 125:1–42, 2020              33rd Annual Conference on Learning Theory
+
+
+
+
+               Near-Optimal Algorithms for Minimax Optimization
+
+Tianyi Lin                                                                    DARREN LIN @ BERKELEY. EDU
+University of California, Berkeley
+Chi Jin                                                                               CHIJ @ PRINCETON . EDU
+Princeton University
+Michael. I. Jordan                                                             JORDAN @ CS . BERKELEY. EDU
+University of California, Berkeley
+
+
+Editors: Jacob Abernethy and Shivani Agarwal
+
+
+                                                        Abstract
+     This paper resolves a longstanding open question pertaining to the design of near-optimal first-order
+     algorithms for smooth and strongly-convex-strongly-concave minimax problems. Current state-of-
+     the-art first-order algorithms find an approximate Nash equilibrium using Õ(κx +κy ) (Tseng, 1995)
+                     √     √
+     or Õ(min{κx κy , κx κy }) (Alkousa et al., 2019) gradient evaluations, where κx and κy are the
+     condition numbers for the strong-convexity and strong-concavity assumptions. A gap still remains
+                                                                   √
+     between these results and the best existing lower bound Ω̃( κx κy ) (Ibrahim et al., 2019; Zhang
+                                                                    √
+     et al., 2019). This paper presents the first algorithm with Õ( κx κy ) gradient complexity, match-
+     ing the lower bound up to logarithmic factors. Our algorithm is designed based on an accelerated
+     proximal point method and an accelerated solver for minimax proximal steps. It can be easily ex-
+     tended to the settings of strongly-convex-concave, convex-concave, nonconvex-strongly-concave,
+     and nonconvex-concave functions. This paper also presents algorithms that match or outperform
+     all existing methods in these settings in terms of gradient complexity, up to logarithmic factors.
+
+
+1. Introduction
+Let Rm and Rn be finite-dimensional Euclidean spaces and let the function f : Rm × Rn → R be
+smooth. Let X and Y are two nonempty closed convex sets in Rm and Rn . Our problem of interest
+is the following minimax optimization problem:
+                                                   min max f (x, y).                                        (1.1)
+                                                   x∈X y∈Y
+
+The theoretical study of solutions of problem (1.1) has been an focus of several decades of research
+in mathematics, statistics, economics and computer science (Basar and Olsder, 1999; Nisan et al.,
+2007; Von Neumann and Morgenstern, 2007; Facchinei and Pang, 2007; Berger, 2013). Recently,
+this line of research has become increasingly relevant to algorithmic machine learning, with ap-
+plications including robustness in adversarial learning (Goodfellow et al., 2014; Sinha et al., 2018),
+prediction and regression problems (Cesa-Bianchi and Lugosi, 2006; Xu et al., 2009) and distributed
+computing (Shamma, 2008; Mateos et al., 2010). Moreover, real-world machine-learning sys-
+tems are increasingly embedded in multi-agent systems or matching markets and subject to game-
+theoretic constraints (Jordan, 2018).
+    Most existing work on minimax optimization focuses on the convex-concave setting, where the
+function f (·, y) is convex for each y ∈ Rn and the function f (x, ·) is concave for each x ∈ Rm .
+
+c 2020 T. Lin, C. Jin & M.I. Jordan.
+                     N EAR -O PTIMAL A LGORITHMS FOR M INIMAX O PTIMIZATION
+
+
+
+
+The best known convergence rate in a general convex-concave setting is O(1/) in terms of duality
+gap, which can be achieved by Nemirovski’s mirror-prox algorithm (Nemirovski, 2004) (a special
+case of which is the extragradient algorithm (Korpelevich, 1976)), Nesterov’s dual extrapolation
+algorithm (Nesterov, 2007) or Tseng’s accelerated proximal gradient algorithm (Tseng, 2008). This
+rate is known to be optimal for the class of smooth convex-concave problems (Ouyang and Xu,
+2019). Furthermore, optimal algorithms are known for special instances of convex-concave setting;
+e.g., for the affinely constrained smooth convex problem (Ouyang et al., 2015) and problems with a
+composite bilinear objective function, f (x, y) = g(x) + x> Ay − h(y) (Chen et al., 2014).
+    Very recently, the lower complexity bound of first-order algorithms have been established for
+solving general strongly-convex-strongly-concave and strongly-convex-concave minimax optimiza-
+tion problems (Ouyang and Xu, 2019; Ibrahim et al., 2019; Zhang et al., 2019). For the strongly-
+convex-strongly-concave setting, in which κx , κy > 0 are the condition numbers for f (·, y) and
+                                                   √
+f (x, ·), respectively, the complexity bound is Ω̃( κx κy ) while the best known upper bounds are
+                                                                                     √       √
+Õ(κx +κy ) (Tseng, 1995; Gidel et al., 2019; Mokhtari et al., 2019b) and Õ(min{κx κy , κy κx })
+(Alkousa et al., 2019). For thepstrongly-convex-concave setting in which κx > 0 and κy = 0, the
+lower complexity bound is Ω̃( κx /) while the best known upper bound
+                                                                    p      is O(κx /) (Thekumpara-
+mpil et al., 2019). The existing algorithms that obtain a rate of O( κx /) in this context are only
+for special case of strongly-convex-linear, where x and y are connected only through a bilinear
+term x> Ay or f (x, ·) is linear for each x ∈ Rm (see, e.g., Nesterov, 2005; Chambolle and Pock,
+2016; Juditsky and Nemirovski, 2011; Hamedani and Aybat, 2018). Thus, a gap remains between
+the lower complexity bound and the upper complexity bound for existing algorithms in both the
+strongly-convex-strongly-concave setting and the strongly-convex-concave setting. Accordingly,
+we have the following open problem:
+    Can we design first-order algorithms that achieve the lower bounds in these settings?
+This paper presents an affirmative answer by resolving the above open problem up to logarith-
+mic factors. More specifically, our contribution is as follows. We propose the first near-optimal
+algorithms for solving the strongly-convex-strongly-concave and strongly-convex-concave mini-
+max optimization problems. In the former setting, our algorithm achieves a gradient complexity of
+    √
+Õ( κx κy ) which matches the lower complexity bound (Ibrahim et al., 2019; Zhang et al., 2019) up
+                                                                                                  p
+to logarithmic factors. In the latter setting, our algorithm attains a gradient complexity of Õ( κx /)
+which again matches the lower complexity bound (Ouyang and Xu, 2019) up to logarithmic factors.
+In addition, our algorithm extends to the general convex-concave setting, achieving a gradient com-
+plexity of Õ(−1 ), which matches the lower bound of Ouyang and Xu (2019) as well as the best
+existing upper bounds (Nemirovski, 2004; Nesterov, 2007; Tseng, 2008) up to logarithmic factors.
+     Our second contribution is a class of accelerated algorithms for the smooth nonconvex-strongly-
+concave and nonconvex-concave minimax optimization problems. In the former setting, our algo-
+                                                       √
+rithm achieves a gradient complexity bound of Õ( κy −2 ) which improves the best known bound
+Õ(κ2y −2 ) (Jin et al., 2019; Rafique et al., 2018; Lin et al., 2019; Lu et al., 2019). In the latter set-
+ting, our algorithms specialize to a range of different notions of optimality. In particular, expressing
+our results in terms of stationarity of f , our algorithm achieves a gradient complexity bound of
+Õ(−2.5 ), which improves the best known bound Õ(−3.5 ) (Nouiehed et al., 2019). In terms of
+stationarity of the function Φ(·) := maxy∈Y f (·, y), our algorithm achieves a gradient complexity
+bound of Õ(−3 ) which matches the current state-of-the-art results (Thekumparampil et al., 2019;
+Kong and Monteiro, 2019).
+
+                                                     2
+                      N EAR -O PTIMAL A LGORITHMS FOR M INIMAX O PTIMIZATION
+
+
+
+
+Table 1: Comparison of gradient complexities to find an -saddle point (Definition 4) in the convex-
+         concave setting. This table highlights only the dependency on error tolerance  and the
+         strong-convexity and strong-concavity condition numbers, κx , κy .
+
+           Settings                          References                   Gradient Complexity
+                                            Tseng (1995)
+                                    Nesterov and Scrimali (2006)
+                                                                                Õ(κx + κy )
+                                          Gidel et al. (2019)
+ Strongly-Convex-Strongly-             Mokhtari et al. (2019b)
+          Concave                                                                 √        √
+                                        Alkousa et al. (2019)           Õ(min{κx κy , κy κx })
+                                                                                  √
+                                       This paper (Theorem 9)                  Õ( κx κy )
+                                                                                  √
+                                  Lower bound (Ibrahim et al., 2019)           Ω̃( κx κy )
+                                                                                  √
+                                  Lower bound (Zhang et al., 2019)             Ω̃( κx κy )
+                                   Juditsky and Nemirovski (2011)
+  Strongly-Convex-Linear
+                                                                                     p
+                                     Hamedani and Aybat (2018)                  O(    κx /)
+         (special case of
+    strongly-convex-concave)                 Zhao (2019)
+                                                                                       √
+                                    Thekumparampil et al. (2019)                Õ(κx / )
+ Strongly-Convex-Concave                                                           p
+                                      This paper (Corollary 10)                 Õ( κx /)
+                                                                                   p
+                                 Lower bound (Ouyang and Xu, 2019)              Ω̃( κx /)
+                                         Nemirovski (2004)
+                                           Nesterov (2007)                        O(−1 )
+      Convex-Concave
+                                            Tseng (2008)
+                                      This paper (Corollary 11)                   Õ(−1 )
+                                 Lower bound (Ouyang and Xu, 2019)                Ω(−1 )
+
+
+    We provide a head-to-head comparison between our results and existing results in the literature
+in Table 1 for convex-concave settings, and Table 2 for nonconvex-concave settings.
+
+2. Preliminaries
+In this section, we clarify the notation used in this paper, review some background and provide
+formal definitions for the class of functions and optimality measure considered in this paper.
+Notation. We use bold lower-case letters to denote vectors, as in x, y, z and calligraphic upper
+case letters to denote sets, as in X and Y. For a differentiable function f (·) : Rn → R, we le4t
+∇f (z) denote the gradient of f at z. For a function f (·, ·) : Rm × Rn → R of two variables,
+
+                                                 3
+                      N EAR -O PTIMAL A LGORITHMS FOR M INIMAX O PTIMIZATION
+
+
+
+
+Table 2: Comparison of gradient complexities to find an -stationary point of f (Definition 5) or -
+         stationary point of Φ(·) := maxy∈Y f (·, y) (Definition 14, 18) in the nonconvex-concave
+         settings. This table only highlights the dependence on tolerance  and the condition num-
+         ber κy .
+
+                Settings                         References                Gradient Complexity
+                                               Jin et al. (2019)
+                                            Rafique et al. (2018)
+    Nonconvex-Strongly-Concave                                                   Õ(κ2y −2 )
+           (stationarity of f or               Lin et al. (2019)
+            stationarity of Φ)
+                                               Lu et al. (2019)
+                                                                                    √
+                                       This paper (Theorem 12 & 20)              Õ( κy −2 )
+                                               Lu et al. (2019)                    Õ(−4 )
+         Nonconvex-Concave
+            (stationarity of f )           Nouiehed et al. (2019)                 Õ(−3.5 )
+                                           Ostrovskii et al. (2020)               Õ(−2.5 )
+                                          This paper (Corollary 13)               Õ(−2.5 )
+                                               Jin et al. (2019)
+                                            Rafique et al. (2018)                  Õ(−6 )
+
+         Nonconvex-Concave                     Lin et al. (2019)
+            (stationarity of Φ)
+                                       Thekumparampil et al. (2019)
+                                                                                   Õ(−3 )
+                                                 Zhao (2020)
+                                          This paper (Corollary 21)                Õ(−3 )
+
+
+∇x f (x, y) (or ∇y f (x, y)) to denote the partial gradient of f with respect to the first variable (or
+the second variable) at point (x, y). We also use ∇f (x, y) to denote the full gradient at (x, y) where
+∇f (x, y) = (∇x f (x, y), ∇y f (x, y)). For a vector x, we denote kxk as its `2 -norm. For constraint
+sets X and Y, we let Dx and Dy denote their diameters, where Dx = maxx,x0 ∈X kx − x0 k and
+Dy = maxy,y0 ∈Y ky − y0 k. We use the notation PX and PY to denote projections onto the sets X
+and Y. Finally, we use the notation O(·), Ω(·) to hide only absolute constants which do not depend
+on any problem parameter, and notation Õ(), Ω̃() to hide only absolute constants and log factors.
+
+2.1. Minimax optimization
+We are interested in the `-smooth minimax optimization problems in the form (1.1). The regularity
+conditions that we consider for the function f are as follows.
+
+Definition 1 A function f is L-Lipschitz if for ∀z, z0 ∈ Rn , that |f (z) − f (z0 )| ≤ Lkz − z0 k.
+
+Definition 2 A function f is `-smooth if for ∀z, z0 ∈ Rn , that k∇f (z) − ∇f (z0 )k ≤ `kz − z0 k.
+
+                                                   4
+                     N EAR -O PTIMAL A LGORITHMS FOR M INIMAX O PTIMIZATION
+
+
+
+
+Definition 3 A differentiable function φ : Rd → R is µ-strongly-convex if for any x0 , x ∈ Rd :
+                         φ(x0 ) ≥ φ(x) + (x0 − x)> ∇φ(x) + (µ/2)kx0 − xk2
+Furthermore, φ is µ-strongly-concave if −φ is µ-strongly-convex. If we set µ = 0, then we recover
+the definitions of convexity and concavity for a continuous differentiable function.
+
+Convex-concave setting: we assume that f (·, y) is convex for each y ∈ Y and f (x, ·) is concave
+for each x ∈ X . Here X and Y are both convex and bounded. Under these conditions, the Sion’s
+minimax theorem (Sion, 1958) guarantees that
+                                 max min f (x, y) = min max f (x, y).                                (2.1)
+                                 y∈Y x∈X                 x∈X y∈Y
+
+Furthermore, there exists at least one saddle point (or Nash equilibrium) (x? , y? ) ∈ X × Y such
+that the following equality holds true:
+                             min f (x, y? ) = f (x? , y? ) = max f (x? , y).                         (2.2)
+                             x∈X                                 y∈Y
+
+Therefore, for any point (x̂, ŷ) ∈ X × Y, the duality gap maxy∈Y f (x̂, y) − minx∈X f (x, ŷ) forms
+the basis for a standard optimality criterion. Formally, we define
+Definition 4 A point (x̂, ŷ) ∈ X × Y is an -saddle point of a convex-concave function f (·, ·) if
+maxy∈Y f (x̂, y) − minx∈X f (x, ŷ) ≤ . If  = 0, then (x̂, ŷ) is a saddle point.
+    In the case when f (·, y) is strongly convex for each y ∈ Y and f (x, ·) is strongly concave for
+each x ∈ X , we refer µx and µy to the strongly-convex or strongly-concave module. If f is further
+`-smooth, we denote κx = `/µx and κy = `/µy as the condition numbers of f (·, y) and f (x, ·).
+Nonconvex-concave setting: we only assume that f (x, ·) is concave for each x ∈ Rm . The
+function f (·, y) can be possibly nonconvex for some y ∈ Y. Here X is convex but possibly un-
+bounded while Y is convex and bounded. In general, finding a global Nash equilibrium of f is
+intractable since in the special case where Y has only a single element, this problem reduces to a
+nonconvex optimization problem in which finding a global minimum is already NP-hard (Murty
+and Kabadi, 1987). Similar to the literature in nonconvex constrained optimization, we opt to find
+local surrogates—stationary points—whose gradient mappings are zero. Formally, we define our
+optimality criterion as follows.
+Definition 5 A point (x̂, ŷ) ∈ X × Y is an -stationary point of an `-smooth function f (·, ·) if
+         `kPX [x̂ − (1/`)∇x f (x̂, ŷ)] − x̂k ≤ ,       `kPY [ŷ + (1/`)∇y f (x̂, ŷ)] − ŷk ≤ .
+If  = 0, then (x̂, ŷ) is a stationary point.
+In the absence of constraints, Definition 5 reduces to the standard condition k∇x f (x̂, ŷ)k ≤ 
+and k∇y f (x̂, ŷ)k ≤  for unconstrained problems. Intuitively, the norms of the vector PY [ŷ +
+(1/`)∇y f (x̂, ŷ)] − ŷ represent the distance to the point (x̂, ŷ) when performing one step of pro-
+jected gradient ascent on y starting from that point. The vector also refers to gradient mapping at
+(x̂, ŷ); see Nesterov (2013) for the details.
+     We note that this notion of stationarity of f (Definition 5) is closely related to an optimality
+notion in terms of stationary points of the function Φ(·) := maxy∈Y f (·, y) for nonconvex-concave
+functions. We refer readers to Appendix B.1 for more discussion.
+
+                                                     5
+                    N EAR -O PTIMAL A LGORITHMS FOR M INIMAX O PTIMIZATION
+
+
+
+
+Algorithm 1 AGD(g, X , x0 , `, µ, )
+ 1: Input: initial point x0 ∈ X , smoothness `, strongly-convex module
+                                                                  √
+                                                                        µ and tolerance  > 0.
+                                                                    κ−1
+ 2: Initialize: set t ← 0, x̃0 ← x0 , η ← 1/`, κ ← `/µ and θ ← √κ+1 .
+ 3: repeat
+ 4:   t←t+1
+ 5:   xt ← PX [x̃t−1 − η∇g(x̃t−1 )].
+ 6:   x̃t ← xt + θ(xt − xt−1 ).
+                                              
+ 7: until kxt − PX (xt − η∇g(xt ))k2 ≤ 2κ2 (`−µ)    is satisfied.
+ 8: Output: PX (xt − η∇g(xt )).
+
+
+
+2.2. Nesterov’s accelerated gradient descent
+Nesterov’s Accelerated Gradient Descent (AGD) dates back to Nesterov’s seminal paper (Nesterov,
+1983) where it is shown to be optimal among all the first-order algorithms for smooth and convex
+functions (Nesterov, 2018). We present a version of AGD in Algorithm 1 which is frequently used
+to minimize an `-smooth and µ-strongly convex function g over a convex set X . The key steps of
+the AGD algorithm are Line 5-6, where Lines 5 performs a projected gradient descent step, while
+Line 6 performs a momentum step, which “overshoots” the iterate in the direction of momentum
+(xt −xt−1 ). Line 7 is the stopping condition to ensure that the output achieves the desired optimality.
+    The following theorem provides an upper bound on the gradient complexity of AGD; i.e., the
+total number of gradient evaluations to find an -optimal point in terms of function value.
+Theorem 6 Assume that g is `-smooth and µ-strongly convex, the output x̂ = AGD(g, x0 , `, µ, )
+satisfies g(x̂) ≤ minx∈X g(x) +  and the total number of gradient evaluations is bounded by
+                                            3
+                                   √          κ `kx0 − x? k2
+                                                            
+                               O     κ log                      ,
+                                                    
+where κ = `/µ is the condition number, and x? ∈ X is the unique global minimum of g.
+Compared with the classical result for Gradient Descent (GD), which requires Õ(κ) gradient evalu-
+                                                                √
+ations in the same setting, AGD improves over GD by a factor of κ. AGD will be used as a basic
+component for acceleration in this paper.
+
+3. Algorithm Components
+In this section, we present two main algorithm components. Both of them are crucial for our final
+algorithms to achieve near-optimal convergence rates.
+
+3.1. Inexact Accelerated Proximal Point Algorithm
+Our first component is the Accelerated Proximal Point Algorithm (APPA, Algorithm 2) for minimiz-
+ing a function g(·). Comparing APPA with classical AGD (Algorithm 1), we note that both of them
+have momentum steps which yield acceleration. The major difference is in Line 4 of Algorithm 2,
+where APPA solves a proximal subproblem
+
+                                xt ← argmin g(x) + `kx − x̃t−1 k2 .                               (3.1)
+                                        x∈X
+
+
+                                                   6
+                   N EAR -O PTIMAL A LGORITHMS FOR M INIMAX O PTIMIZATION
+
+
+
+
+Algorithm 2 I NEXACT-APPA(g, x0 , `, µ, , T )
+ 1: Input: initial point x0 ∈ X , proximal parameter `, strongly-convex module µ, tolerance  > 0
+    and the maximum iteration number T > 0.                  √
+                                                            2√κ−1
+ 2: Initialize: set x̃0 ← x0 , κ ← µ` , δ ← (10κ)
+                                               
+                                                  2 and θ ← 2 κ+1 .
+
+ 3: for t = 1, · · · , T do
+ 4:   find xt so that g(xt ) + `kxt − x̃t−1 k2 ≤ minx∈X {g(x) + `kx − x̃t−1 k2 } + δ.
+ 5:   x̃t ← xt + θ(xt − xt−1 ).
+ 6: end for
+ 7: Output: xT .
+
+
+
+instead of performing a gradient-descent step as in AGD (Line 5 in Algorithm 1). We refer to the
+parameter ` in (3.1) as the proximal parameter.
+    We present an inexact version in Algorithm 2 where we tolerate a small error δ in terms of the
+function value in solving the proximal subproblem (3.1). That is, the solution xt satisfies
+
+                   g(xt ) + `kxt − x̃t−1 k2 ≤ min{g(x) + `kx − x̃t−1 k2 } + δ.
+                                               x∈X
+
+A theoretical guarantee for the inexact APPA algorithm is presented in the following theorem, which
+claims that as long as δ is sufficiently small, the algorithm
+                                                        p finds an -optimal point of any µ-strongly-
+convex function g with proximal parameter ` in Õ( `/µ) iterations.
+Theorem 7 Assume that g is µ-strongly convex,  ∈ (0, 1) and ` > µ. There exists T > 0 such that
+the output x̂ = I NEXACT-APPA(g, x0 , `, µ, , T ) satisfies g(x̂) ≤ minx∈X g(x) +  and T > 0
+satisfies the following inequality,
+                              √       g(x0 ) − g(x? ) + (µ/4)kx0 − x? k2
+                                                                        
+                       T ≥ c κ log                                         ,
+                                                        
+where κ = `/µ is an effective condition number, x? ∈ X is the unique global minimum of g, and
+c > 0 is an absolute constant.
+Comparing with Theorem 6, the most important difference here is that Theorem 7 does not require
+the function g to have any smoothness property. In fact, ` is only a proximal parameter in proximal
+subproblem (3.1), which does not necessarily relate to the smoothness of g. On the flip side, the
+proximal subproblem (3.1) can not be easily solved in general. Theorem 7 guarantees the iteration
+complexity of Algorithm 1 while the complexity for solving these proximal steps is not discussed.
+    We conclude that APPA has a unique advantage over AGD in settings where g does not have
+a smoothness property but the proximal step (3.1) is easy to solve. These settings include LASSO
+(Beck and Teboulle, 2009), as well as minimax optimization problems (as we show in later sections).
+
+
+3.2. Accelerated Solver for Minimax Proximal Steps
+In minimax optimization problems of the form (1.1), we are interested in solving the following
+proximal subproblem as follows,
+
+               xt+1 ← argmin Φ(x) + `kx − x̃k2 ,       where Φ(x) := max f (x, y),              (3.2)
+                         x∈X                                            y∈Y
+
+
+                                                 7
+                   N EAR -O PTIMAL A LGORITHMS FOR M INIMAX O PTIMIZATION
+
+
+
+
+Algorithm 3 M AXIMIN -AG2(g, x0 , y0 , `, µx , µy , )
+ 1: Input: initial point x0 , y0 , smoothness `, strongly convex module µx , µy and tolerance  > 0.
+                                                                          √
+                                                                         4 κx κy −1
+ 2: Initialize: t ← 0, x̃0 ← x0 , η ← 2κ1 ` , κx ← µ` , κy ← µ` , θ ← 4√κ κ +1 , ˜ ← (10κ  κ )7 .
+                                            x          x         y           x y             x y
+ 3: repeat
+ 4:   t ← t + 1.
+ 5:   x̃t−1 ← AGD(g(·, ỹt−1 ), x0 , `, µx , ˜).
+ 6:   yt ← PY [ỹt−1 + η∇y g(x̃t−1 , ỹt−1 )].
+ 7:   ỹt ← yt + θ(yt − yt−1 ).
+ 8:   xt ← AGD(g(·, yt ), x0 , `, µx , ˜).
+ 9: until kyt − PY (yt + η∇y g(xt , yt ))k2 ≤ (10κ κ )4 ` is satisfied.
+                                                      x y
+10: Output: PX (xt − (1/2κy `)∇x g(xt , yt )).
+
+
+
+which is equivalent to solving the following minimax problem:
+
+                            min max g̃(x, y) := f (x, y) + `kx − x̃k2 .                         (3.3)
+                            x∈X y∈Y
+
+For a generic strongly-convex-strongly-concave function g(·, ·), solving a minimax problem is
+equivalent to solving a maximin problem, due to Sion’s minimax theorem:
+
+                               min max g(x, y) = max min g(x, y).
+                               x∈X y∈Y               y∈Y x∈X
+
+A straightforward way of solving the maximin problem is to use a double-loop algorithm which
+solves the maximization and minimization problems on two different time scales. Specifically, the
+inner loop performs AGD on function g(·, y) to solve the inner minimization; i.e., to compute
+Ψ(y) := minx∈X g(x, y) for each y, and the outer loop performs Accelerated Gradient Ascent
+(AGA) on the function Ψ(·) to solve the outer maximization. Since the algorithm aims to solve a
+maximin problem we use AGA-AGD, and we name the algorithm M AXIMIN -AG2. See Algorithm
+3 for the formal version of this algorithm. We also incorporate Lines 8-9 to check termination
+conditions, which ensures that the output achieves the desired optimality. The theoretical guarantee
+for Algorithm 3 is given in the following theorem.
+
+Theorem 8 Assume that g(·, ·) is `-smooth, g(·, y) is µx -strongly convex for each y ∈ Y and
+g(x, ·) is µy -strongly concave for each x ∈ X . Then x̂ = M AXIMIN -AG2(g, x0 , y0 , `, µx , µy , )
+satisfies that maxy∈Y g(x̂, y) ≤ minx∈X maxy∈Y g(x, y) +  and the total number of gradient
+evaluations is bounded by
+                                                                       !!
+                                             (κ   + κ  )`( D̃ 2 + D2 )
+                                 √              x    y        x    y
+                          O κx κy · log2                                  ,
+                                                         
+
+where κx = `/µx and κy = `/µy are condition numbers, D̃x = kx0 − x?g (y0 )k is the initial
+distance where x?g (y0 ) = argminx∈X g(x, y0 ) and Dy > 0 is the diameter of the constraint set Y.
+                                                                    √
+Theorem 8 claims that Algorithm 3 finds an -optimal point in Õ(κx κy ) iterations for strongly-
+                                                                               √
+convex-strongly-concave functions. This rate does not match the lower bound Ω̃( κx κy ) (Ibrahim
+
+
+                                                 8
+                   N EAR -O PTIMAL A LGORITHMS FOR M INIMAX O PTIMIZATION
+
+
+
+                                                                     √
+et al., 2019; Zhang et al., 2019). At a high level, it takes AGD Õ( κx ) steps to solve the inner
+minimization problem and compute Ψ(y) := minx∈X g(x, y). Despite the fact that the function
+g is `-smooth, function Ψ is only guaranteed to be (κx `)-smooth in the worst case, which makes
+                                                               √
+the condition number of Ψ be κx κy . Thus, AGA requires Õ( κx κy ) iterations in the outer loop to
+                                                                            √
+solve the maximization of Ψ, which gives a total gradient complexity Õ(κx κy ).
+    The key observation here is that although Algorithm 3 is slow for general strongly-convex-
+strongly-concave functions, the functions g̃ of the form (3.3) in the proximal steps have a crucial
+property that κx = O(1) if the proximal parameter ` is chosen to be the smoothness parameter of
+function f . Therefore, when f (x, ·) is strongly concave, by Theorem 8, it only takes Algorithm 3
+   √
+Õ( κy ) gradient evaluations to solve the proximal subproblem (3.3), which is very efficient. We
+will see the consequences of this fact in the following section.
+
+4. Accelerating Convex-Concave Optimization
+In this section, we present our main results for accelerating convex-concave optimization. We
+first present our new near-optimal algorithm and its theoretical guarantee for optimizing strongly-
+convex-strongly-concave functions. Then, we use simple reduction arguments to obtain results for
+strongly-convex-concave and convex-concave functions.
+
+4.1. Strongly-convex-strongly-concave setting
+With the algorithm components from Section 3 in hand, we are now ready to state our near-optimal
+algorithm. Algorithm 4 is a simple combination of Algorithm 2 and Algorithm 3. Its outer loop
+performs an inexact APPA to minimize the function Φ(·) := maxy∈Y f (·, y), while the inner loop
+uses Maximin-AG2 to solve the proximal subproblem (3.2), which is equivalent to solving (3.3).
+At the end, after finding a near-optimal xT , Algorithm 4 performs another AGD on the function
+−f (xT , ·) to find a near-optimal yT . The theoretical guarantee for the algorithm is given in the
+following theorem.
+
+Theorem 9 Assume that f is `-smooth and µx -strongly-convex-µy -strongly-concave. Then there
+exists T > 0 such that the output (x̂, ŷ) = M INIMAX -APPA(f, x0 , y0 , `, µx , µy , , T ) is an -
+saddle point, and the total number of gradient evaluations is bounded by
+                                                                     !!
+                              √           3
+                                             (κx + κy )`(Dx2 + Dy2 )
+                          O     κx κy log                                ,
+                                                        
+
+where κx = `/µx and κy = `/µy are condition numbers.
+                                                               √
+Theorem 9 asserts that Algorithm 4 finds -saddle points in Õ( κx κy ) gradient evaluations, match-
+ing the lower bound (Ibrahim et al., 2019; Zhang et al., 2019), up to logarithmic factors. At a high
+level, despite the function Φ having undesirable smoothness properties, APPA minimizes Φ in the
+                      √
+outer loop using Õ( κx ) iterations according to Theorem 7, regardless of the smoothness of Φ.
+According to the discussion in Section 3.2, Maximin-AG2 solves the proximal step in the inner
+                √
+loop using Õ( κy ) gradient evaluations, since the condition number of gt (·, y) for any y ∈ Y is
+                                                  √
+O(1). This gives the total gradient complexity Õ( κx κy ).
+
+
+
+                                                 9
+                    N EAR -O PTIMAL A LGORITHMS FOR M INIMAX O PTIMIZATION
+
+
+
+
+Algorithm 4 M INIMAX -APPA(f, x0 , y0 , `, µx , µy , , T )
+ 1: Input: initial point x0 , y0 , proximity `,
+                                              √
+                                                strongly-convex parameter µ, tolerance δ, iteration T .
+                                             2 κx −1
+ 2: Initialize: x̃0 ← x0 , κx ← µ , θ ← 2 κ +1 , δ ← (10κ  κ )4 and ˜ ← 102 κ κ .
+                                     `        √
+                                      x          x             x y                x y
+ 3: for t = 1, · · · , T do
+ 4:    denote gt (·, ·) where gt (x, y) := f (x, y) + `kx − x̃t−1 k2 .
+ 5:    xt ← M AXIMIN -AG2(gt , x0 , y0 , 3`, 2`, µy , δ)
+ 6:    x̃t ← xt + θ(xt − xt−1 ).
+ 7: end for
+ 8: ỹ ← AGD(−f (xT , ·), y0 , `, µy , ˜).
+ 9: yT ← PY (ỹ + (1/2κx `)∇y f (xT , ỹ)).
+10: Output: (xT , yT ).
+
+
+
+4.2. Strongly-convex-concave setting
+Our result in the strongly-convex-strongly-concave setting readily implies a near-optimal result in
+the strongly-convex-concave setting. Consider the following auxiliary function for an arbitrary
+y0 ∈ Y which is defined by
+
+                            f,y (x, y) := f (x, y) − (/4Dy2 )ky − y0 k2 .                         (4.1)
+
+By construction, it is clear that the difference between f and f,y is small in terms of function value:
+
+                                 max       |f (x, y) − f,y (x, y)| ≤ /4.
+                              (x,y)∈X ×Y
+
+This implies, according to Definition 4, that any (/2)-saddle point of function f,y is also a -saddle
+point of function f , and thus it is sufficient to only solve the problem minx∈X maxx∈Y f,y (x, y).
+Finally, when f is a µx -strongly-convex-concave function, f,y becomes µx -strongly-convex-/(2Dy2 )-
+strongly-concave, which can be fed into Algorithm 4 to obtain the following result.
+
+Corollary 10 Assume that f is `-smooth and µx -strongly-convex-concave. Then there exists T > 0
+such that the output (x̂, ŷ) = M INIMAX -APPA(f,y , x0 , y0 , `, µx , /(4Dy2 ), /2, T ) is an -saddle
+point, and the total number of gradient evaluations is bounded by
+                                                                      !!
+                                                           2 + D2 )
+                                   r
+                                     κx `          κ x `(D x       y
+                               O          Dy log3
+                                                          
+
+where κx = `/µx is the condition number, and f,y is defined as in (4.1).
+
+4.3. Convex-concave setting
+Similar to the previous subsection, when f is only convex-concave, we can construct following
+strongly-convex-strongly-concave function f :
+
+                  f (x, y) = f (x, y) + (/8Dx2 )kx − x0 k2 − (/8Dy2 )ky − y0 k2 ,                (4.2)
+
+which can be fed into Algorithm 4 to obtain the following result.
+
+
+                                                   10
+                    N EAR -O PTIMAL A LGORITHMS FOR M INIMAX O PTIMIZATION
+
+
+
+
+Corollary 11 Assume function f is `-smooth and convex-concave, then there exists T > 0, where
+the output (x̂, ŷ) = M INIMAX -APPA(f , x0 , y0 , `, /(4Dx2 ), /(4Dy2 ), /2, T ) will be an -saddle
+point, and the total number of gradient evaluations is bounded by
+                                                                   !!
+                                                    `(D  2 + D2 )
+                                   `Dx Dy                x      y
+                               O            log3                       ,
+                                                          
+
+where f is defined as in (4.2).
+
+5. Accelerating Nonconvex-Concave Optimization
+In this section, we present methods for accelerating nonconvex-concave optimization. Similar to
+Section 4, we first present our algorithm and its theoretical guarantee for optimizing nonconvex-
+strongly-concave functions. We then use a simple reduction argument to obtain results for nonconvex-
+concave functions. This section present results using the stationarity of the function f (Definition
+5) as an optimality measure. Please see Appendix B for additional results using the stationarity of
+the function Φ(·) := maxy∈Y f (·, y) as the optimality measure (Definition 14 and 18).
+
+5.1. Nonconvex-strongly-concave setting
+Our algorithm for nonconvex-strongly-concave optimization is described in Algorithm 5. Similar to
+Algorithm 4, we still use our accelerated solver Maximin-AG2 for the same proximal subproblem
+in the inner loop. The only minor difference is that, in the outer loop, Algorithm 5 only uses
+the Proximal Point Algorithm (PPA) on function Φ(·) := maxy∈Y f (·, y) without acceleration (or
+momentum steps). This is due to fact that gradient descent is already optimal among all first-order
+algorithm for finding stationary points of smooth nonconvex functions (Carmon et al., 2019a). The
+standard acceleration technique will not help for smooth nonconvex functions. We presents the
+theoretical guarantees for Algorithm 5 in the following theorem.
+
+Theorem 12 Assume that f is `-smooth and f (x, ·) is µy -strongly-concave for all x. Then there
+exists T > 0 such that the output (x̂, ŷ) = M INIMAX -PPA(f, x0 , y0 , `, µy , , T ) is an -stationary
+point of f with probability at least 2/3, and the total number of gradient evaluations is bounded by
+                                                                        !!
+                                                     κ   `( D̃ 2 + D2 )
+                                 `∆Φ √                 y       x    y
+                            O          · κy log2                           ,
+                                   2                          
+
+where κy = `/µy is the condition number, ∆Φ = Φ(x0 ) − minx∈Rm Φ(x) is the initial function
+value gap and D̃x = kx0 − x?g1 (y0 )k is the initial distance where x?g (y0 ) = argminx∈X g(x, y0 ).
+
+Theorem 12 claims that Algorithm 5 will find an -stationary point, with at least constant probability,
+      √                                                                                   √
+in Õ( κy /2 ) gradient evaluations. Similar to Theorem 9, the inner loop takes Õ( κy ) gradient
+evaluations to solve the proximal step since the condition number of gt (·, y) is O(1) for any y ∈ Y.
+In the outer loop, regardless of the smoothness of Φ(·), PPA with proximal parameter ` is capable of
+                                                                                              √
+finding the stationary point in Õ(1/2 ) iterations. In total, the gradient complexity is Õ( κy /2 ).
+
+
+
+
+                                                   11
+                    N EAR -O PTIMAL A LGORITHMS FOR M INIMAX O PTIMIZATION
+
+
+
+
+Algorithm 5 M INIMAX -PPA(g, x0 , y0 , `, µy , , T )
+ 1: Input: initial point x0 , y0 , proximity `, strongly-convex parameter µ, tolerance δ, iteration T .
+                              2
+ 2: Initialize: set δ ← (10κ )4 ` · ( `D )2 .
+                              y           y
+ 3: for t = 1, · · · , T do
+ 4:   denote gt (·, ·) where gt (x, y) := f (x, y) + `kx − xt−1 k2 .
+ 5:   xt ← M AXIMIN -AG2(gt , x0 , y0 , 3`, `, µ, δ).
+ 6: end for
+ 7: sample s uniformly from {1, 2, · · · , T }.
+ 8: ys ← AGD(−f (xs , ·), y0 , `, µ, δ).
+ 9: Output: (xs , ys ).
+
+
+5.2. Nonconvex-concave setting
+Our result in the nonconvex-strongly-concave setting readily implies a fast result in the nonconvex-
+concave setting. Consider the following auxiliary function for an arbitrary y0 ∈ Y:
+                              f˜ (x, y) = f (x, y) − (/4Dy )ky − y0 k2 .                        (5.1)
+By construction, it is clear that the gradient of f and f˜ are close in the sense
+                                max       k∇f (x, y) − ∇f˜ (x, y)k ≤ /4.
+                            (x,y)∈Rm ×Y
+
+This implies that any (/2)-stationary point of f˜ is also a -stationary point of f , and thus it is
+sufficient to solve the problem minx∈X maxx∈Y f˜ (x, y). Finally, the function f˜ (x, ·) is always
+/(2Dy )-strongly-concave, which can be fed into Algorithm 5 to obtain the following result.
+Corollary 13 Assume that f is `-smooth and f (x, ·) is concave for all x. Then there exists T > 0
+such that the output (x̂, ŷ) = M INIMAX -PPA(f˜ , x0 , y0 , `, /(2Dy ), /2, T ) is an -stationary
+point of f with probability at least 2/3, and the total number of gradient evaluations is bounded by
+                                                                      !!
+                                                             2 + D2 )
+                                         r
+                                 `∆Φ       `Dy          `(D̃ x    y
+                            O          ·        log2                     ,
+                                   2                         
+
+where Dy > 0, ∆Φ = Φ(x0 ) − minx∈Rm Φ(x) is the initial function value gap and D̃x = kx0 −
+x?g1 (y0 )k is the initial distance where x?g (y0 ) = argminx∈X g(x, y0 ).
+
+6. Conclusions
+This paper has provided the first set of near-optimal algorithms for strongly-convex-(strongly)-
+concave minimax optimization problems and the state-of-the-art algorithms for nonconvex-(strongly)-
+concave minimax optimization problems. For the former class of problems, our algorithms match
+the lower complexity bound for first-order algorithms (Ouyang and Xu, 2019; Ibrahim et al., 2019;
+Zhang et al., 2019) up to logarithmic factors. For the latter class of problems, our algorithms
+achieve the best known upper bound. In the future research, one important direction is to inves-
+tigate the lower complexity bound of first-order algorithms for nonconvex-(strongly)-concave min-
+imax problems. Despite several striking results on lower complexity bounds for nonconvex smooth
+problems (Carmon et al., 2019a,b), this problem remains challenging as solving it requires a new
+construction of “chain-style” functions and resisting oracles.
+
+                                                   12
+                   N EAR -O PTIMAL A LGORITHMS FOR M INIMAX O PTIMIZATION
+
+
+
+
+Acknowledgments
+The authors acknowledge Guangzeng Xie for helpful comments on the proof of Theorem 6, 8 and 9.
+This work was supported in part by the Mathematical Data Science program of the Office of Naval
+Research under grant number N00014-18-1-2764.
+
+References
+J. Abernethy, K. A. Lai, and A. Wibisono. Last-iterate convergence rates for min-max optimization.
+   ArXiv Preprint: 1906.02027, 2019.
+
+M. Alkousa, D. Dvinskikh, F. Stonyakin, and A. Gasnikov. Accelerated methods for composite
+ non-bilinear saddle point problem. ArXiv Preprint: 1906.03620, 2019.
+
+A. Auslender and M. Teboulle. Interior projection-like methods for monotone variational inequali-
+  ties. Mathematical programming, 104(1):39–68, 2005.
+
+W. Azizian, D. Scieur, I. Mitliagkas, S. Lacoste-Julien, and G. Gidel. Accelerating smooth games
+  by manipulating spectral shapes. ArXiv Preprint: 2001.00602, 2020.
+
+T. Basar and G. J. Olsder. Dynamic Noncooperative Game Theory, volume 23. SIAM, 1999.
+
+A. Beck and M. Teboulle. A fast iterative shrinkage-thresholding algorithm for linear inverse prob-
+  lems. SIAM Journal on Imaging Science, 2(1):183–202, 2009.
+
+J. O. Berger. Statistical Decision Theory and Bayesian Analysis. Springer Science & Business
+   Media, 2013.
+
+G. W. Brown. Iterative solution of games by fictitious play. Activity Analysis of Production and
+  Allocation, 13(1):374–376, 1951.
+
+Y. Carmon, J. C. Duchi, O. Hinder, and A. Sidford. Lower bounds for finding stationary points i.
+   Mathematical Programming, Jun 2019a. ISSN 1436-4646. doi: 10.1007/s10107-019-01406-y.
+   URL https://doi.org/10.1007/s10107-019-01406-y.
+
+Y. Carmon, J. C. Duchi, O. Hinder, and A. Sidford. Lower bounds for finding stationary points ii:
+   first-order methods. Mathematical Programming, Sep 2019b. ISSN 1436-4646. doi: 10.1007/
+   s10107-019-01431-x. URL https://doi.org/10.1007/s10107-019-01431-x.
+
+N. Cesa-Bianchi and G. Lugosi. Prediction, Learning, and Games. Cambridge University Press,
+  2006.
+
+A. Chambolle and T. Pock. A first-order primal-dual algorithm for convex problems with applica-
+  tions to imaging. Journal of Mathematical Imaging and Vision, 40(1):120–145, 2011.
+
+A. Chambolle and T. Pock. On the ergodic convergence rates of a first-order primal–dual algorithm.
+  Mathematical Programming, 159(1-2):253–287, 2016.
+
+T. Chavdarova, G. Gidel, F. Fleuret, and S. Lacoste-Julien. Reducing noise in GAN training with
+   variance reduced extragradient. ArXiv Preprint: 1904.08598, 2019.
+
+
+                                                13
+                    N EAR -O PTIMAL A LGORITHMS FOR M INIMAX O PTIMIZATION
+
+
+
+
+Y. Chen, G. Lan, and Y. Ouyang. Optimal primal-dual methods for a class of saddle point problems.
+   SIAM Journal on Optimization, 24(4):1779–1814, 2014.
+Y. Chen, G. Lan, and Y. Ouyang. Accelerated schemes for a class of variational inequalities. Math-
+   ematical Programming, 165(1):113–149, 2017.
+G. B. Dantzig. Linear Programming and Extensions. Princeton University Press, 1998.
+C. Daskalakis, A. Ilyas, V. Syrgkanis, and H. Zeng. Training GANs with optimism. In ICLR, 2018.
+D. Davis and D. Drusvyatskiy. Stochastic model-based minimization of weakly convex functions.
+  SIAM Journal on Optimization, 29(1):207–239, 2019.
+E. Esser, X. Zhang, and T. F. Chan. A general framework for a class of first order primal-dual
+  algorithms for convex optimization in imaging science. SIAM Journal on Imaging Sciences, 3
+  (4):1015–1046, 2010.
+F. Facchinei and J-S. Pang. Finite-dimensional Variational Inequalities and Complementarity Prob-
+   lems. Springer Science & Business Media, 2007.
+G. Gidel, H. Berard, G. Vignoud, P. Vincent, and S. Lacoste-Julien. A variational inequality per-
+  spective on generative adversarial networks. In ICLR, 2019.
+T. Goldstein, B. O’Donoghue, S. Setzer, and R. Baraniuk. Fast alternating direction optimization
+   methods. SIAM Journal on Imaging Sciences, 7(3):1588–1623, 2014.
+I. Goodfellow, J. Pouget-Abadie, M. Mirza, B. Xu, D. Warde-Farley, S. Ozair, A. Courville, and
+   Y. Bengio. Generative adversarial nets. In NeurIPS, pages 2672–2680, 2014.
+P. Grnarova, K. Y. Levy, A. Lucchi, T. Hofmann, and A. Krause. An online learning approach to
+   generative adversarial networks. In ICLR, 2018.
+E. Y. Hamedani and N. S. Aybat. A primal-dual algorithm for general convex-concave saddle point
+   problems. ArXiv Preprint: 1803.01401, 2018.
+Y. He and R. D. C. Monteiro. An accelerated hpe-type algorithm for a class of composite convex-
+   concave saddle-point problems. SIAM Journal on Optimization, 26(1):29–56, 2016.
+Y-G. Hsieh, F. Iutzeler, J. Malick, and P. Mertikopoulos. On the convergence of single-call stochastic
+  extra-gradient methods. In NeurIPS, pages 6936–6946, 2019.
+A. Ibrahim, W. Azizian, G. Gidel, and I. Mitliagkas. Lower bounds and conditioning of differen-
+  tiable games. ArXiv Preprint: 1906.07300, 2019.
+C. Jin, P. Netrapalli, and M. I. Jordan. Minmax optimization: Stable limit points of gradient descent
+  ascent are locally optimal. ArXiv Preprint: 1902.00618, 2019.
+M. I. Jordan. Artificial intelligence–the revolution hasnt happened yet. Medium. Vgl. Ders.(2018):
+ Perspectives and Challenges. Presentation SysML, 2018.
+A. Juditsky and A. Nemirovski. First order methods for nonsmooth convex large-scale optimization,
+  ii: utilizing problems structure. Optimization for Machine Learning, 30(9):149–183, 2011.
+
+                                                 14
+                   N EAR -O PTIMAL A LGORITHMS FOR M INIMAX O PTIMIZATION
+
+
+
+
+O. Kolossoski and R. D. C. Monteiro. An accelerated non-euclidean hybrid proximal extragradient-
+  type algorithm for convex-concave saddle-point problems. Optimization Methods and Software,
+  32(6):1244–1272, 2017.
+
+W. Kong and R. D. C. Monteiro. An accelerated inexact proximal point method for solving
+  nonconvex-concave min-max problems. ArXiv Preprint: 1905.13433, 2019.
+
+G. M. Korpelevich. The extragradient method for finding saddle points and other problems. Mate-
+  con, 12:747–756, 1976.
+
+G. Lan and R. D. C. Monteiro. Iteration-complexity of first-order augmented lagrangian methods
+  for convex programming. Mathematical Programming, 155(1-2):511–547, 2016.
+
+T. Liang and J. Stokes. Interaction matters: A note on non-asymptotic local convergence of gener-
+   ative adversarial networks. In AISTATS, pages 907–915, 2019.
+
+T. Lin, C. Jin, and M. I. Jordan. On gradient descent ascent for nonconvex-concave minimax prob-
+   lems. ArXiv Preprint: 1906.00331, 2019.
+
+S. Lu, I. Tsaknakis, M. Hong, and Y. Chen. Hybrid block successive approximation for one-sided
+   non-convex min-max problems: algorithms and applications. ArXiv Preprint: 1902.08294, 2019.
+
+Y. Malitsky. Projected reflected gradient methods for monotone variational inequalities. SIAM
+  Journal on Optimization, 25(1):502–520, 2015.
+
+G. Mateos, J. A. Bazerque, and G. B. Giannakis. Distributed sparse linear regression. IEEE Trans-
+  actions on Signal Processing, 58(10):5262–5276, 2010.
+
+P. Mertikopoulos, B. Lecouat, H. Zenati, C-S. Foo, V. Chandrasekhar, and G. Piliouras. Optimistic
+   mirror descent in saddle-point problems: Going the extra(-gradient) mile. In ICLR, 2019.
+
+K. Mishchenko, D. Kovalev, E. Shulgin, P. Richtárik, and Y. Malitsky. Revisiting stochastic extra-
+  gradient. ArXiv Preprint: 1905.11373, 2019.
+
+A. Mokhtari, A. Ozdaglar, and S. Pattathil. Proximal point approximations achieving a convergence
+  rate of o(1/k) for smooth convex-concave saddle point problems: Optimistic gradient and extra-
+  gradient methods. ArXiv Preprint: 1906.01115, 2019a.
+
+A. Mokhtari, A. Ozdaglar, and S. Pattathil. A unified analysis of extra-gradient and optimistic gra-
+  dient methods for saddle point problems: Proximal point approach. ArXiv Preprint: 1901.08511,
+  2019b.
+
+R. D. C. Monteiro and B. F. Svaiter. On the complexity of the hybrid proximal extragradient method
+  for the iterates and the ergodic mean. SIAM Journal on Optimization, 20(6):2755–2787, 2010.
+
+R. D. C. Monteiro and B. F. Svaiter. Complexity of variants of tseng’s modified fb splitting and kor-
+  pelevich’s methods for hemivariational inequalities with applications to saddle-point and convex
+  optimization problems. SIAM Journal on Optimization, 21(4):1688–1720, 2011.
+
+K. G. Murty and S. N. Kabadi. Some np-complete problems in quadratic and nonlinear program-
+  ming. Mathematical Programming: Series A and B, 39(2):117–129, 1987.
+
+                                                 15
+                   N EAR -O PTIMAL A LGORITHMS FOR M INIMAX O PTIMIZATION
+
+
+
+
+H. Namkoong and J. C. Duchi. Stochastic gradient methods for distributionally robust optimization
+  with f-divergences. In NIPS, pages 2208–2216, 2016.
+
+A. Nedić and A. Ozdaglar. Subgradient methods for saddle-point problems. Journal of Optimization
+  Theory and Applications, 142(1):205–228, 2009.
+
+A. Nemirovski. Prox-method with rate of convergence o (1/t) for variational inequalities with lips-
+  chitz continuous monotone operators and smooth convex-concave saddle point problems. SIAM
+  Journal on Optimization, 15(1):229–251, 2004.
+
+Y. Nesterov. Smooth minimization of non-smooth functions. Mathematical programming, 103(1):
+   127–152, 2005.
+
+Y. Nesterov. Dual extrapolation and its applications to solving variational inequalities and related
+   problems. Mathematical Programming, 109(2-3):319–344, 2007.
+
+Y. Nesterov. Gradient methods for minimizing composite functions. Mathematical Programming,
+   140(1):125–161, 2013.
+
+Y. Nesterov. Lectures on Convex Optimization, volume 137. Springer, 2018.
+
+Y. Nesterov and L. Scrimali. Solving strongly monotone variational and quasi-variational inequali-
+   ties. Available at SSRN 970903, 2006.
+
+Y. E. Nesterov. A method for solving the convex programming problem with convergence rate
+  o(1/k 2 ). In Dokl. Akad. Nauk Sssr, volume 269, pages 543–547, 1983.
+
+N. Nisan, T. Roughgarden, E. Tardos, and V. V. Vazirani. Algorithmic Game Theory. Cambridge
+  University Press, 2007.
+
+M. Nouiehed, M. Sanjabi, T. Huang, J. D. Lee, and M. Razaviyayn. Solving a class of non-convex
+ min-max games using iterative first order methods. In NeurIPS, pages 14905–14916, 2019.
+
+D. M. Ostrovskii, A. Lowy, and M. Razaviyayn. Efficient search of first-order nash equilibria in
+  nonconvex-concave smooth min-max problems. ArXiv Preprint: 2002.07919, 2020.
+
+Y. Ouyang and Y. Xu. Lower complexity bounds of first-order methods for convex-concave bilinear
+   saddle-point problems. Mathematical Programming, Aug 2019. ISSN 1436-4646. doi: 10.1007/
+   s10107-019-01420-0. URL https://doi.org/10.1007/s10107-019-01420-0.
+
+Y. Ouyang, Y. Chen, G. Lan, and E. Pasiliao Jr. An accelerated linearized alternating direction
+  method of multipliers. SIAM Journal on Imaging Sciences, 8(1):644–681, 2015.
+
+H. Rafique, M. Liu, Q. Lin, and T. Yang. Non-convex min-max optimization: Provable algorithms
+  and applications in machine learning. ArXiv Preprint: 1810.02060, 2018.
+
+A. Rakhlin and K. Sridharan. Online learning with predictable sequences. In COLT, pages 993–
+  1019, 2013a.
+
+S. Rakhlin and K. Sridharan. Optimization, learning, and games with predictable sequences. In
+   NIPS, pages 3066–3074, 2013b.
+
+                                                16
+                   N EAR -O PTIMAL A LGORITHMS FOR M INIMAX O PTIMIZATION
+
+
+
+
+R. T. Rockafellar. Convex Analysis, volume 28. Princeton University Press, 1970.
+
+M. Sanjabi, M. Razaviyayn, and J. D. Lee. Solving non-convex non-concave min-max games under
+ polyak-lojasiewicz condition. ArXiv Preprint: 1812.02878, 2018.
+
+J. Shamma. Cooperative Control of Distributed Multi-agent Systems. John Wiley & Sons, 2008.
+
+A. Sinha, H. Namkoong, and J. Duchi. Certifiable distributional robustness with principled adver-
+  sarial training. In ICLR, 2018.
+
+M. Sion. On general minimax theorems. Pacific Journal of Mathematics, 8(1):171–176, 1958.
+
+K. K. Thekumparampil, P. Jain, P. Netrapalli, and S. Oh. Efficient algorithms for smooth minimax
+  optimization. In NeurIPS, pages 12659–12670, 2019.
+
+P. Tseng. On linear convergence of iterative methods for the variational inequality problem. Journal
+   of Computational and Applied Mathematics, 60(1-2):237–252, 1995.
+
+P. Tseng. On accelerated proximal gradient methods for convex-concave optimization. submitted
+   to SIAM Journal on Optimization, 2:3, 2008.
+
+J. Von Neumann and O. Morgenstern. Theory of Games and Economic Behavior (Commemorative
+   Edition). Princeton University Press, 2007.
+
+Z. Xie and J. Shi. Accelerated primal dual method for a class of saddle point problem with strongly
+   convex component. ArXiv Preprint: 1906.07691, 2019.
+
+H. Xu, C. Caramanis, and S. Mannor. Robustness and regularization of support vector machines.
+  Journal of Machine Learning Research, 10(Jul):1485–1510, 2009.
+
+Y. Xu. Iteration complexity of inexact augmented lagrangian methods for constrained convex
+  programming. Mathematical Programming, Aug 2019. ISSN 1436-4646. doi: 10.1007/
+  s10107-019-01425-9. URL https://doi.org/10.1007/s10107-019-01425-9.
+
+Y. Xu and S. Zhang. Accelerated primal-dual proximal block coordinate updating methods for
+  constrained convex optimization. Computational Optimization and Applications, 70(1):91–128,
+  2018.
+
+A. Yadav, S. Shah, Z. Xu, D. Jacobs, and T. Goldstein. Stabilizing adversarial nets with prediction
+  methods. In ICLR, 2018.
+
+J. Zhang, M. Hong, and S. Zhang. On lower iteration complexity bounds for the saddle point
+   problems. ArXiv Preprint: 1912.07481, 2019.
+
+R. Zhao. Optimal algorithms for stochastic three-composite convex-concave saddle point problems.
+  ArXiv Preprint: 1903.01687, 2019.
+
+R. Zhao. A primal dual smoothing framework for max-structured nonconvex optimization. ArXiv
+  Preprint: 2003.04375, 2020.
+
+
+
+                                                17
+                   N EAR -O PTIMAL A LGORITHMS FOR M INIMAX O PTIMIZATION
+
+
+
+
+Appendix A. Related work
+To the best of our knowledge, the earliest algorithmic schemes for solving the bilinear minimax
+problem, minx∈∆m maxy∈∆n x> Ay, date back to Brown’s fictitious play (Brown, 1951) and Dantzig’s
+simplex method (Dantzig, 1998). This problem can also be solved by Korpelevich’s extragradient
+(EG) algorithm (Korpelevich, 1976), which can be shown to be linearly convergent when A is square
+and full rank (Tseng, 1995). There are also several recent papers studying the convergence of EG
+and its variants; see Chambolle and Pock (2011); Malitsky (2015); Yadav et al. (2018) for reflected
+gradient descent ascent, Daskalakis et al. (2018); Mokhtari et al. (2019b,a) for optimistic gradient
+descent ascent (OGDA) and Rakhlin and Sridharan (2013a,b); Mertikopoulos et al. (2019); Chav-
+darova et al. (2019); Hsieh et al. (2019); Mishchenko et al. (2019) for other variants. In the bilinear
+setting, Daskalakis et al. (2018) established the convergence of the optimistic gradient descent as-
+cent (OGDA) method to a neighborhood of the solution; Liang and Stokes (2019) proved the linear
+convergence of the OGDA algorithm using a dynamical system approach. Very recently, Mokhtari
+et al. (2019b) have proposed a unified framework for achieving the sharpest convergence rates of
+both EG and OGDA algorithms.
+     For the convex-concave minimax problem, Nemirovski (2004) proved that his mirror-prox al-
+gorithm returns an -saddle point within the gradient complexity of O(−1 ) when X and Y are
+bounded. This algorithm was subsequently generalized by Auslender and Teboulle (2005) to a class
+of distance-generating functions, and the complexity result was extended to unbounded sets and
+composite objectives (Monteiro and Svaiter, 2010, 2011) using the hybrid proximal extragradient
+algorithm with different error criteria. Nesterov (2007) developed a dual extrapolation algorithm
+which possesses the same complexity bound as in Nemirovski (2004). Tseng (2008) presented a
+unified treatment of these algorithms and a refined convergence analysis with same complexity
+result. Nedić and Ozdaglar (2009) analyzed the (sub)gradient descent ascent algorithm for convex-
+concave saddle point problems when the (sub)gradients are bounded over the constraint sets. Aber-
+nethy et al. (2019) presented a Hamiltonian gradient descent algorithm with last-iterate convergence
+under a “sufficiently bilinear” condition.
+     Several papers have studied special cases in the convex-concave setting. For the special case
+when the objective function is a composite bilinear form, f (x, y) = g(x) + x> Ay − h(y), Cham-
+bolle and Pock (2011) introduced a primal-dual algorithm that converges to a saddle point with the
+rate of O(1/) when the convex functions g and h are smooth. Nesterov (2005) proposed a smooth-
+ing technique and proved that the resulting algorithm achieves an improved rate with better depen-
+dence on Lipschitz constant of ∇g when h is the convex and smooth function and X , Y are both
+bounded. He and Monteiro (2016) and Kolossoski and Monteiro (2017) proved that such result also
+hold when X , Y are unbounded or the space is non-Euclidean. Chen et al. (2014, 2017) generalized
+Nesterov’s technique to develop optimal algorithms for solving a class of stochastic saddle point
+problems and stochastic monotone variational inequalities. For a class of certain purely bilinear
+games where g and h are zero functions, Azizian et al. (2020) demonstrated that linear convergence
+is possible for several algorithms and their new algorithm achieved the tight bound. The second case
+is the so-called affinely constrained smooth convex problem, i.e., minx∈X g(x), s.t. Ax = u. Esser
+et al. (2010) proposed a O(−1 ) primal-dual algorithm while Lan and Monteiro (2016) provided
+a first-order augmented Lagrangian method with the same O(−1 ) rate. By exploiting the struc-
+ture, Ouyang et al. (2015) proposed a near-optimal algorithm in this setting.
+
+
+
+
+                                                18
+                    N EAR -O PTIMAL A LGORITHMS FOR M INIMAX O PTIMIZATION
+
+
+
+
+     For the strongly convex-concave minimax problem, Tseng (1995) and Nesterov and Scrimali
+(2006) proved that their algorithms find an -saddle point with a gradient complexity of Õ(κx + κy )
+using a variational inequality. Using a different approach, Gidel et al. (2019) and Mokhtari et al.
+(2019b) derived the same complexity results for the OGDA algorithm. Very recently, Alkousa
+et al. (2019) proposed an accelerated gradient sliding algorithm with a gradient complexity of
+              √       √
+Õ(min{κx κy , κy κx }) while Ibrahim et al. (2019); Zhang et al. (2019) established a lower
+                          √
+complexity bound of Ω̃( κx κy ) among all the first-order algorithms in this setting.
+     For strongly-convex-concave
+                        p           minimax problems, the best known general lower bound for first-
+order algorithm is O( κx /), as shown by Ouyang and Xu (2019). Several papers have studied
+strongly-convex-concave minimax problem with additional structures. This includex optimizing
+a strongly convex function with linear constraints (Goldstein et al., 2014; Xu and Zhang, 2018;
+Xu, 2019), the case when x and y are connected only through a bilinear term x> Ay (Nesterov,
+2005; Chambolle and Pock, 2016; Xie and Shi, 2019) and the case when f (x, ·) is linear for each
+x ∈ Rm (Juditsky and Nemirovski, 2011; Hamedani and Aybat, 2018; Zhao, 2019). The algorithms
+developed in these works were all guaranteed to return an -saddle point with a gradient p complexity
+           √
+of Õ(1/ ) and some of them even achieve a near-optimal gradient complexity of Õ( κx /) (Nes-
+terov, 2005; Chambolle and Pock, 2016). However, the best known upper complexity bound for
+                                                                √
+general strongly-convex-concave minimax problems is O(κx / ) which was shown using the dual
+implicit accelerated gradient algorithm (Thekumparampil et al., 2019).
+     For nonconvex-concave minimax problems, a line of recent work (Jin et al., 2019; Rafique
+et al., 2018; Lin et al., 2019) has studied various algorithms and proved that they can find an
+approximate stationary point of Φ(·) := maxy∈Y f (·, y). In a deterministic setting, all of these
+algorithms guarantee a rate of Õ(κ2y −2 ) and Õ(−6 ) when f (x, ·) is strongly concave and con-
+cave respectively. Thekumparampil et al. (2019) consider the same setting as ours and proposed
+a proximal dual implicit accelerated gradient algorithm and proved that it finds an approximate
+stationary point of Φ(·) with the total gradient complexity of Õ(−3 ). Kong and Monteiro (2019)
+consider a general nonconvex minimax optimization model: minx h(x) + ρ(x), where h is a “sim-
+ple” proper, lower semi-continuous and convex function and ρ(x) = maxy∈Y f (x, y) with f sat-
+isfying that −f (x, ·) is proper, convex, and lower semi-continuous. They propose to smooth ρ to
+ρξ (x) = maxy∈Y f (x, y) − (1/2ξ)ky − y0 k2 and apply an accelerated inexact proximal point
+method to solve the smoothed problem minx h(x) + ρξ (x). The resulting AIPP-S algorithm at-
+tains the iteration complexity of O(−3 ) using a slightly different but equivalent notion of sta-
+tionarity but requires the exact gradient of ρξ at each iteration. This amounts to assuming that
+maxy∈Y f (x, y) − (1/2ξ)ky − y0 k2 can be solved exactly, which is restrictive due to the poten-
+tially complicated structure of f (x, ·) or Y. If f is further assumed to be smooth, Zhao (2020)
+developed a variant of AIPP-S algorithm which only requires an inexact gradient of ρξ at each it-
+eration and attains the total gradient complexity of Õ(−3 ). On the other hand, the stationarity of
+f (·, ·) is proposed for quantifying the efficiency in nonconvex-concave minimax optimization (Lu
+et al., 2019; Nouiehed et al., 2019; Kong and Monteiro, 2019; Ostrovskii et al., 2020). Using this
+notion of stationarity, Kong and Monteiro (2019) attains the rate of O(−2.5 ) but requires the exact
+gradient of ρξ at each iteration. Without this assumption, the current state-of-the-art rate is Õ(−2.5 )
+achieved by our Algorithm 5 and the algorithm proposed by a concurrent work (Ostrovskii et al.,
+2020). Both algorithms are based on constructing an auxiliary function f,y and applying an accel-
+erated solver for minimax proximal steps. Finally, several other algorithms have been developed
+
+
+
+                                                   19
+                    N EAR -O PTIMAL A LGORITHMS FOR M INIMAX O PTIMIZATION
+
+
+
+
+either for specific nonconvex-concave minimax problems or in stochastic setting; see Namkoong
+and Duchi (2016); Sinha et al. (2018); Sanjabi et al. (2018); Grnarova et al. (2018) for the details.
+
+Appendix B. Additional Results for Nonconvex-Concave Optimization
+In this section, we present our results for nonconvex-concave optimization using stationary of
+Φ(·) := maxy∈Y f (·, y) (Definition 14 and Definition 18) as the optimality measure.
+
+B.1. Optimality notion based on Moreau envelope
+We present another optimality notion based on Moreau envelope for nonconvex-concave setting in
+which f (·, y) is not necessarily convex for each y ∈ Y but f (x, ·) is concave for each x ∈ X .
+For simplicity, we let X = Rm and Y be convex and bounded. In general, finding a global saddle
+point of f is intractable since solving the special case with a singleton Y globally is already NP-
+hard (Murty and Kabadi, 1987) as mentioned in the main text.
+    One approach, inspired by nonconvex optimization, is to equivalently reformulate problem (1.1)
+as the following nonconvex minimization problem:
+                                                                
+                                   minm Φ(x) := max f (x, y) ,                                 (B.1)
+                                  x∈R                  y∈Y
+
+and define an optimality notion for the local surrogate of global optimum of Φ. In robust learning,
+x is the classifier while y is the adversarial noise. Practitioners are often only interested in finding
+a robust classifier x instead of an adversarial response y to each data point. Such a stationary point
+x precisely corresponds to a robust classifier that is stationary to the robust classification error.
+    If f (x, ·) is further assumed to be strongly concave for each x ∈ Rm , then Φ is smooth and a
+standard optimality notion is the stationary point.
+Definition 14 We call x̂ an -stationary point of a smooth function Φ if k∇Φ(x̂)k ≤ . If  = 0,
+then x̂ is called a stationary point.
+In contrast, when f (x, ·) is merely concave for each x ∈ X , Φ is not necessarily smooth and even
+not differentiable. A weaker sufficient condition for the purpose of our paper is the weak convexity.
+
+
+Definition 15 A function Φ : Rd → R is L-weakly convex if Φ(·) + (L/2) k·k2 is convex.
+First, a function Φ is `-weakly convex if it is `-smooth. Second, the subdifferential of a `-weakly
+convex function Φ can be uniquely determined by the subdifferential of Φ(·) + (`/2)k · k2 . This
+implies that the optimality notion can be defined by a point x ∈ Rm with at least one small sub-
+gradient: minξ∈∂Φ(x) kξk ≤ . Unfortunately, this notion can be restrictive if Φ is nonsmooth.
+Considering a one-dimensional function Φ(·) = | · |, a point x must be 0 if it satisfies the optimality
+notion with  ∈ [0, 1). This means that finding a sufficiently accurate solution under such optimality
+notion is as difficult as solving the minimization exactly. Another popular optimality notion is based
+on the Moreau envelope of Φ when Φ is weakly convex (Davis and Drusvyatskiy, 2019).
+Definition 16 A function Φλ is the Moreau envelope of Φ with λ > 0 if for ∀x ∈ Rm , that
+
+                            Φλ (x) = minm Φ(w) + (1/2λ)kw − xk2 .
+                                        w∈R
+
+
+                                                  20
+                    N EAR -O PTIMAL A LGORITHMS FOR M INIMAX O PTIMIZATION
+
+
+
+
+Lemma 17 (Properties of Moreau envelopes) If the function Φ(·) is `-weakly convex, its Moreau
+envelope Φ1/2` (·) is 4`-smooth with the gradient ∇Φ1/2` (·) = 2`(· − proxΦ/2` (·)) in which a point
+proxΦ/2` (·) = argminw∈Rm {Φ(w) + `kw − ·k2 } is defined.
+
+Thus, an -stationary point of an `-weakly convex function Φ can be alternatively defined as a point
+x̂ satisfying that the gradient norm of Moreau envelope k∇Φ1/2` (x̂)k is small.
+
+Definition 18 We call x̂ an -stationary point of a `-weakly convex function Φ if ∇Φ1/2` (x̂) ≤
+. If  = 0, then x̂ is called a stationary point.
+
+Lemma 19 (Properties of -stationary point) If x̂ is an -stationary point of a `-weakly convex
+function Φ, then there exists x̄ ∈ Rm such that minξ∈∂Φ(x̄) kξk ≤  and kx̂ − x̄k ≤ /2`.
+
+Lemma 19 shows that an -stationary point defined by the Moreau envelope can be interpreted as
+the relaxation for a point with at least one small subgradient. In particular, if x̂ is an -stationary
+point of a `-weakly convex function Φ, then it is close to a point which has small subgradient.
+
+B.2. Nonconvex-strongly-concave setting
+In the setting of nonconvex-strongly-concave function, we still use Algorithm 5. Similar to Theorem
+12, we can obtain a guarantee, which finds a point x̂ satisfying k∇Φ(x̂)k ≤  in the same number
+of iterations as in Theorem 12.
+
+Theorem 20 Assume that f is `-smooth and f (x, ·) is µy -strongly-concave for all x. Then there ex-
+ists T > 0 such that the output (x̂, ŷ) = M INIMAX -PPA(f, x0 , y0 , `, µy , , T ) satisfies k∇Φ(x̂)k ≤
+ with probability at least 2/3, and the total number of gradient evaluations is bounded by
+                                                                       !!
+                                  `∆Φ √           2
+                                                     κy `(D̃x2 + Dy2 )
+                             O           · κy log
+                                    2                       
+
+where κy = `/µy is the condition number, ∆Φ = Φ(x0 ) − minx∈Rm Φ(x) is the initial function
+value gap and D̃x = kx0 − x?g1 (y0 )k is the initial distance where x?g (y0 ) = argminx∈X g(x, y0 ).
+
+B.3. Nonconvex-concave setting
+We can similarly reduce the problem of optimizing a nonconvex-concave function to the problem
+of optimizing a nonconvex-strongly-concave function. The only caveat is that, in order to achieve
+the near-optimal point using Definition 18 as optimality measure, we can only add a O(2 ) term as
+follows:
+                          f¯ (x, y) = f (x, y) − (2 /200`Dy2 )ky − y0 k2 .                 (B.2)
+Now f¯ (x, ·) is only 2 /(100`Dy2 )-concave, by feeding it to Algorithm 5 and through a slightly
+more complicated reduction argument, we can only obtain gradient complexity bound of Õ(−3 )
+instead of Õ(−2.5 ) as in Corollary 13. Formally, we have
+
+
+
+
+                                                   21
+                    N EAR -O PTIMAL A LGORITHMS FOR M INIMAX O PTIMIZATION
+
+
+
+
+Corollary 21 Assume that f is `-smooth, and f (x, ·) is concave for all x. Then there exists
+T > 0 such that the output (x̂, ŷ) = M INIMAX -PPA(f¯ , x0 , y0 , `, 2 /(100`Dy2 ), /10, T ) satis-
+fies k∇Φ1/2` (x̂)k ≤  with probability at least 2/3, and the total number of gradient evaluations is
+bounded by                                                         !!
+                                                          2 + D2 )
+                                   `2 D y ∆ Φ        `(D̃ x     y
+                              O               log2
+                                       3                   
+
+where Dy > 0, ∆Φ = Φ(x0 ) − minx∈Rm Φ(x) is the initial function value gap and D̃x = kx0 −
+x?g1 (y0 )k is the initial distance where x?g (y0 ) = argminx∈X g(x, y0 ).
+
+Appendix C. Proofs for Algorithm Components
+In this section, we present proofs for our algorithm components.
+
+C.1. Proof of Theorem 6
+We divide the proof into three parts. In the first part, we show that the output x̂ satisfies g(x̂) ≤
+minx∈X g(x)+. In the second part, we derive the sufficient condition for guaranteeing the stopping
+criteria in Algorithm 1. In the third part, we derive the gradient complexity of the algorithm using
+the condition derived in the second part.
+Part I. Let x̃t = PX (xt − (1/`)∇g(xt )) be defined as the point achieved by one-step projected
+gradient descent from xt . Since g is `-smooth and µ-strongly convex, it is straightforward to derive
+from Nesterov (2018, Corollary 2.3.2) that
+                                               `              µ
+     g(x) ≥ g(x̃t ) + `(xt − x̃t )> (x − xt ) + kxt − x̃t k2 + kx − xt k2 ,       for all x ∈ X .
+                                               2              2
+Using the Young’s inequality, we have (xt − x̃t )> (x − xt ) ≥ −(1/2)(kxt − x̃t k2 + kx − xt k2 ).
+Putting these pieces together with x = x? yields that
+                                                                
+                                                    ?        `−µ
+                  g(x̃t ) − min g(x) = g(x̃t ) − g(x ) ≤           kxt − x? k2 .
+                            x∈X                                2
+
+Without loss of generality, we assume ` > µ. Indeed, if ` = µ, then one-step projected gradient de-
+scent from any points in X guarantees that g(x̃t )−minx∈X g(x) = 0. Since x̂ = x̃t in Algorithm 1,
+it suffices to show that the following statement holds true,
+                                            r                                 r
+                                                                      ?           2
+       kxt − PX (xt − (1/`)∇g(xt ))k ≤            2
+                                                             =⇒ kxt − x k ≤            .     (C.1)
+                                              2κ (` − µ)                         `−µ
+
+Let x̃t = PX (xt − (1/`)∇g(xt )) be defined as the point achieved by one-step projected gradient
+descent from xt , the `-smoothness of g implies
+
+                                     kx̃t − x? k ≤ kxk − x? k.                                      (C.2)
+
+Using the definition of x̃t and x? , we have
+
+             (x? − x̃t )> (`(x̃t − xt ) + ∇g(xt )) ≥ 0,       (x̃t − x? )> ∇g(x? ) ≥ 0.
+
+                                                  22
+                    N EAR -O PTIMAL A LGORITHMS FOR M INIMAX O PTIMIZATION
+
+
+
+
+Summing up the above two inequalities and rearranging yields that
+
+  (x? − xt )> (∇g(xt ) − ∇g(x? )) ≥ `(x? − x̃t )> (xt − x̃t ) + (x̃t − xt )> (∇g(xt ) − ∇g(x? )).
+
+Since g is `-smooth and µ-strongly convex, we have
+                                                                     (C.2)
+   −µkxt − x? k2 ≥ −`kxt − x̃t k (kx? − x̃t k + kx? − xt k)          ≥       −2`kxt − x̃t kkxt − x? k.
+
+Therefore, we conclude that
+                                                                                           r
+                                                                                   (C.1)        2
+                ?
+        kxt − x k ≤ 2κkxt − x̃t k = 2κkxt − PX (xt − (1/`)∇g(xt ))k                 ≤              .
+                                                                                               `−µ
+Part II. We first show that
+                       r                                           r
+            ?        1                                                  
+     kxt − x k ≤                =⇒ kxt − PX (xt − (1/`)∇g(xt ))k ≤     2
+                                                                                .
+                    3κ 2(` − µ)                                      2κ (` − µ)
+
+By the definition of x? , we have x? = PX (x? − (1/`)∇g(x? )). This equation together with the
+triangle inequality and the nonexpansiveness of PX yields that kxt − PX (xt − (1/`)∇g(xt ))k ≤
+3kxt − x? k which implies thepdesired result. Then we derive a sufficient condition for guaranteeing
+             ?
+that kxt − x k ≤ (1/(3κ)) /(2(` − µ)). Since g is µ-strongly convex and xt ∈ X , Nesterov
+(2018, Theorem 2.1.5) together with the fact that (xt − x? )> ∇g(x? ) ≥ 0 implies that
+                                                                   
+                                     ? 2      2
+                             kxt − x k ≤          g(xt ) − min g(x) .
+                                              µ            x∈X
+
+Putting these pieces together yields the desired sufficient condition as follows,
+                                                              
+                                    g(xt ) − min g(x) ≤          .                                     (C.3)
+                                             x∈X            36κ3
+Part III. We proceed to derive the gradient complexity of the algorithm using the condition in
+Eq. (C.3). Since Algorithm 1 is exactly Nesterov’s accelerated gradient descent, standard arguments
+based on estimate sequence (Nesterov, 2018) implies
+
+                                     1 t                       µkx? − x0 k2
+                                                                         
+            g(xt ) − min g(x) ≤ 1 − √      g(x0 ) − min g(x) +                .
+                     x∈X              κ             x∈X             2
+
+Therefore, the gradient complexity of Algorithm 1 to guarantee Eq. (C.3) is bounded by
+                                               3
+                                      √        κ `kx0 − x? k2
+                                                              
+                             O 1 + κ log                           .
+                                                       
+
+This completes the proof.
+
+
+
+
+                                                   23
+                      N EAR -O PTIMAL A LGORITHMS FOR M INIMAX O PTIMIZATION
+
+
+
+
+C.2. Proof of Theorem 7
+Letting x̂ = I NEXACT-APPA(g, x0 , `, µ, , T ). Since x̂ = xT , it suffices for us to estimate an
+lower bound for the maximum number of iterations T such that g(xT ) ≤ minx∈X g(x) + . The
+following technical lemma is crucial to the subsequent analysis.
+
+Lemma 22 For any x ∈ X and {(xt , x̃t )}t≥0 generated by Algorithm 2, we have
+
+                                                                           µkx − xt k2
+     g(x) ≥ g(xt ) − 2`(x − x̃t−1 )> (xt − x̃t−1 ) + 2`kxt − x̃t−1 k2 +                − 7κδ.    (C.4)
+                                                                               4
+Proof. Using the definition of xt in Algorithm 2, we have
+
+                  g(xt ) + `kxt − x̃t−1 k2 ≤ min g(x) + `kx − x̃t−1 k2 + δ.
+                                                   
+                                                  x∈X
+
+Defining x?t = argminx∈X {g(x) + `kx − x̃t−1 k2 } and using µ-strongly convexity of g, we have
+the following for any x ∈ X :
+                                                                    µ
+            g(x) ≥ g(x?t ) + `kx?t − x̃t−1 k2 − `kx − x̃t−1 k2 + ` +    kx − x?t k2 .
+                                                                     2
+Equivalently, we have
+                                                                 µ
+         g(x) ≥ g(xt ) + `kxt − x̃t−1 k2 − `kx − x̃t−1 k2 + ` +      kx − x?t k2 − δ
+                                                                  2
+                                                                        µ
+              ≥ g(xt ) − 2`(x − xt )> (xt − x̃t−1 ) − `kx − xt k2 + ` +     kx − x?t k2 − δ.
+                                                                        2
+On the other hand, we have
+        µ                        µkx − xt k2                                µ
+    `+      kx−x?t k2 −`kx−xt k2 =             +(2`+µ)(x−xt )> (xt −x?t )+ ` +    kxt −x?t k2
+         2                             2                                       2
+Using Young’s inequality yields
+
+                                                 µkx − xt k2
+                    (x − xt )> (xt − x?t ) ≥ −               − (1 + 2κ)kxt − x?t k2 .
+                                                  4(2` + µ)
+Putting these pieces together yields that
+
+                                                   µkx − xt k2
+    g(x) ≥ g(xt ) − 2`(x − xt )> (xt − x̃t−1 ) +               − (2` + µ)(1 + 2κ)kxt − x?t k2 − δ.
+                                                       4
+Furthermore, we have
+
+                 (x − xt )> (xt − x̃t−1 ) = (x − x̃t−1 )> (xt − x̃t−1 ) − kxt − x̃t−1 k2 ,
+
+and
+                                                                                
+                     2                                                                         2δ
+ kxt − x?t k2                                       2                          2
+                                                          
+                 ≤           g(xt ) + `kxt − x̃t−1 k − min g(x) + `kx − x̃t−1 k    ≤                .
+                   µ + 2`                                x∈X                                 µ + 2`
+
+Putting these pieces together with κ ≥ 1 yields the desired inequality.                             
+
+                                                    24
+                    N EAR -O PTIMAL A LGORITHMS FOR M INIMAX O PTIMIZATION
+
+
+
+
+The remaining proof is based on Lemma 22. Indeed, we have
+                       
+                    1                    1                   
+              1− √        g(xt−1 ) + √ g(x? ) + 14κ3/2 δ
+                   2 κ                 2 κ
+                                                                                           µkxt−1 − xt k2
+                                                                                                              
+  Eq. (C.4)         1                                  >                               2
+     ≥        1− √           g(xt ) − 2`(xt−1 − x̃t−1 ) (xt − x̃t−1 ) + 2`kxt − x̃t−1 k +                 − 7κδ
+                   2 κ                                                                            4
+                                                                                   µkx? − xt k2
+                                                                                                     
+               1                     ?        >                                2
+            + √       g(xt ) − 2`(x − x̃t−1 ) (xt − x̃t−1 ) + 2`kxt − x̃t−1 k +                  − 7κδ + 7κδ
+              2 κ                                                                        4
+                                                             >
+                                                 x?                                                 µkx? − xt k2
+                                     
+                                   1
+     =      g(xt ) − 2`     1− √         xt−1 + √ − x̃t−1        (xt − x̃t−1 ) + 2`kxt − x̃t−1 k2 +     √        .
+                                2 κ             2 κ                                                    8 κ
+Equivalently, we have
+                                                                                             >
+                                                                                     x?
+                                                                     
+                             1                                       1
+g(xt ) − g(x? ) ≤      1− √        (g(xt−1 ) − g(x? )) + 2`    1− √         xt−1 + √ − x̃t−1    (xt − x̃t−1 )
+                            2 κ                                     2 κ            2 κ
+                                           µkx? − xt k2
+                    −2`kxt − x̃t−1 k2 −          √       + 7κδ.                                        (C.5)
+                                               8 κ
+                      √                                      √
+Consider x̃t = xt + 22√κ−1
+                        κ+1
+                            (xt − xt−1 ), we let wt = x̃t + 2 κ(x̃t − xt ) and obtain that
+                √          √           √           √                                       √
+                                                                               
+                                                                             1                   4κ − 1
+wt = (1 + 2 κ)x̃t − 2 κxt = 2 κxt − (2 κ − 1)xt−1 = 1 − √                         wt−1 + 2 κxt − √ x̃t−1
+                                                                           2 κ                    2 κ
+                                 √
+                   
+                 1                                   x̃t−1
+      =    1− √        wt−1 + 2 κ (xt − x̃t−1 ) + √ .
+                2 κ                                  2 κ
+This implies that
+                                                             2
+                                              √
+                        
+        ? 2          1            x̃t−1
+kwt − x k =     1− √       wt−1 + √ − x? + 2 κ (xt − x̃t−1 )                    (C.6)
+                    2 κ           2 κ
+                                  2                                   >
+                                        √
+                                                
+           1           x̃t−1    ?                1            x̃t−1 ?
+  =     1− √    wt−1 + √ − x        +4 κ     1− √     wt−1 + √ − x       (xt − x̃t−1 )
+          2 κ          2 κ                      2 κ           2 κ
+      +4κkxt − x̃t−1 k2 .
+                       √
+Since wt−1 = x̃t−1 + 2 κ(x̃t−1 − xt−1 ), we have
+                         1        x̃t−1 √           √
+                    (1 − √ )wt−1 + √ = 2 κx̃t−1 − (2 κ − 1)xt−1 .                             (C.7)
+                        2 κ       2 κ
+Using the Young’s inequality, we have
+                                           2
+                  1              x̃t−1     ?
+            1−   √     wt−1 +      √   −x                                                 (C.8)
+                2 κ              2 κ
+                   2                                             √     
+                1                  5                ? 2      1       8 κ−5
+     ≤     1− √          1+ √             kwt−1 − x k +           1+          kx̃t−1 − x? k2
+              2 κ             8 κ−5                         4κ            5
+                                                           2kx̃t−1 − x? k2
+                                    
+                1                1
+     ≤     1− √        1+ √              kwt−1 − x? k2 +          √
+              2 κ            8 κ−5                              5 κ
+                                         2kx̃t−1 − x? k2
+                   
+                1
+     ≤     1− √       kwt−1 − x? k2 +           √        .
+              6 κ                              5 κ
+
+                                                25
+                     N EAR -O PTIMAL A LGORITHMS FOR M INIMAX O PTIMIZATION
+
+
+
+
+Using the Young’s inequality again, we have
+
+                                                5kx? − xt k2
+                           kx̃t−1 − x? k2 ≤                  + 5kx̃t−1 − xt k2 .             (C.9)
+                                                     4
+Putting Eq. (C.6)-Eq. (C.9) together with κ ≥ 1, we have
+
+                                                          kx? − xt k2
+                                      
+                                   1
+                 ? 2
+         kwt − x k ≤          1− √       kwt−1 − x? k2 +      √       + 6κkxt − x̃t−1 k2 (C.10)
+                                  6 κ                        2 κ
+                                                               x? >
+                                                                 
+                                                  1
+                           +8κ x̃t−1 − 1 − √           xt−1 − √        (xt − x̃t−1 ) .
+                                                2 κ           2 κ
+Combining Eq. (C.5) and Eq. (C.10) yields that
+
+                 µkwt − x? k2                                                      µkwt−1 − x? k2
+                                                                             
+            ?                                1                  ?            1
+g(xt ) − g(x ) +                ≤     1− √       (g(xt−1 ) − g(x )) + 1 − √                       + 7κδ
+                      4                    2 κ                             6 κ            4
+                                                                       µkwt−1 − x? k2
+                                                                                   
+                                             1
+                                ≤     1− √         g(xt−1 ) − g(x? ) +                  + 7κδ.
+                                           6 κ                              4
+Repeating the above inequality yields that
+                                                   T 
+                 µkwT − x? k2                                           µkx0 − x? k2
+                                                                                    
+             ?                                  1
+g(xT ) − g(x ) +              ≤             1−  √                  ?
+                                                       g(x0 ) − g(x ) +                + 42κ3/2 δ.
+                      4                        6 κ                           4
+Therefore, we conclude that
+                                 T 
+                                                      µkx0 − x? k2
+                                                                  
+                              1                  ?
+                       ?
+         g(xT ) − g(x ) ≤ 1 − √      g(x0 ) − g(x ) +                + 42κ3/2 δ.
+                             6 κ                           4
+
+Since the tolerance δ ≤ κ−3/2 /84, we conclude that the iteration complexity of Algorithm 2 to
+guarantee that g(xT ) − minx∈X g(x) ≤  if there exists an absolute constant c > 0 such that
+
+                           √        g(x0 ) − g(x? ) + (µ/4)kx0 − x? k2
+                                                                        
+                      T ≥ c κ log                                          .
+                                                       
+This completes the proof.
+
+C.3. Proof of Theorem 8
+Before presenting the main proof, we define the following important functions:
+
+                  Φg (·) = maxy∈Y g(·, y),                yg? (·) = argmaxy∈Y g(·, y),
+                  Ψg (·) = minx∈X g(x, ·),                x?g (·) = argminx∈X g(x, ·).
+
+All the above functions are well defined since g(·, ·) is strongly convex-concave. We provide their
+complete characterization in the following structural lemma.
+
+Lemma 23 Under the assumptions imposed in Theorem 8, we have
+
+(a) A function yg? (·) is κy -Lipschitz.
+
+                                                     26
+                     N EAR -O PTIMAL A LGORITHMS FOR M INIMAX O PTIMIZATION
+
+
+
+
+(b) A function Φg (·) is 2κy `-smooth and µx -strongly convex with ∇Φg (·) = ∇x g(·, yg? (·)).
+(c) A function x?g (·) is κx -Lipschitz.
+(d) A function Ψg (·) is 2κx `-smooth and µy -strongly concave with ∇Ψg (·) = ∇y g(x?g (·), ·).
+where κx = `/µx and κy = `/µy are condition numbers.
+Now we are ready to prove Theorem 8. We divide the proof into three parts. In the first part, we
+show that the output x̂ = M AXIMIN -AG2(g, x0 , y0 , `, µx , µy , ) satisfies
+
+                                 max g(x̂, y) ≤ min max g(x, y) +                               (C.11)
+                                 y∈Y             x∈X y∈Y
+
+In the second part, we get the sufficient condition for guaranteeing the stopping criteria in Algo-
+rithm 3. In the third part, we estimate an upper bound for the gradient complexity of the algorithm
+using the condition derived in the second part. For the ease of presentation, we denote (x?g , yg? ) as
+the unique solution to the minimax optimization minx∈X maxy∈Y g(x, y).
+Part I. By the definition of Φg , the inequality in Eq. (C.11) can be rewritten as follows,
+
+                                       Φg (x̂) ≤ min Φg (x) + .
+                                                 x∈X
+
+Since x̂ = PX (xT − (1/2κy `)∇x g(xT , yT )), we have
+
+     0 ≤ (x − x̂)> (2κy `(x̂ − xT ) + ∇x g(xT , yT ))
+         = (x − x̂)> (2κy `(x̂ − xT ) + ∇Φg (xT )) + (x − x̂)> (∇x g(xT , yT ) − ∇Φg (xT )).
+
+Since ∇Φg (xT ) = ∇x g(xT , yg? (xT )), we have k∇x g(xT , yT ) − ∇Φg (xT )k ≤ `kyT − yg? (xT )k.
+Using the Young’s inequality, we have
+                                            κy `kx̂ − xT k2 κy `kx − xT k2
+(x − x̂)> (∇x g(xT , yT ) − ∇Φg (xT )) ≤                   +               + µy kyT − yg? (xT )k2 .
+                                                    2              2
+Since Φg is 2κy `-smooth and µx -strongly convex, we have
+
+    (x − x̂)> (2κy `(x̂ − xT ) + ∇Φg (xT )) ≤ 2κy `(x − xT )> (x̂ − xT ) + Φg (x) − Φg (x̂)
+                                                          µx kx − xT k2
+                                       −κy `kx̂ − xT k2 −               .
+                                                                2
+Using the Young’s inequality, we have (x−xT )> (x̂−xT ) ≤ kx−xT k2 +(1/4)kx̂−xT k2 . Putting
+these pieces together yields with x = x?g yields that
+
+                 Φg (x̂) − min Φg (x) ≤ 3κy `kxT − x?g k2 + µy kyT − yg? (xT )k2 .               (C.12)
+                           x∈X
+
+In what follows, we prove that Φg (x̂) ≤ minx∈X Φg (x) +  if the following stopping conditions
+hold true,
+                                                                     
+                               g(xT , yT ) − g(x?g (yT ), yT ) ≤            ,           (C.13)
+                                                                 648κ3x κ3y
+                                                                    1         
+                                                                          r
+                 kyT − PY (yT + (1/2κx `)∇y g(xT , yT ))k ≤                     .       (C.14)
+                                                                 24κ2x κy κy `
+
+
+                                                  27
+                    N EAR -O PTIMAL A LGORITHMS FOR M INIMAX O PTIMIZATION
+
+
+
+
+Indeed, we observe that kxT − x?g k ≤ kxT − x?g (yT )k + kx?g (yT ) − x?g (yg? )k + kx?g (yg? ) − x?g k.
+By definition, we have x?g (yg? ) = x?g . Also, x?g (·) is κx -Lipschitz. Therefore, we have
+
+                         kxT − x?g k ≤ kxT − x?g (yT )k + κx kyT − yg? k.                              (C.15)
+
+By the similar argument, we have
+
+ kyT − yg? (xT )k ≤ kyT − yg? k + κy kxT − x?g k ≤ κy kxT − x?g (yT )k + κx κy kyT − yg? k. (C.16)
+
+First, we bound the term kxT − x?g (yT )k. Since g(·, yT ) is µx -strongly convex, we have
+                              s
+                                  2(g(xT , yT ) − g(x? (yT ), yT ))      1                    
+                                                                                         r
+         kxT − x?g (yT )k ≤                                         ≤                                  (C.17)
+                                                 µx                   18κx κy                κy `
+
+It remains to bound the term kyT − yg? k. Indeed, we have ∇Ψg (yT ) = ∇y g(x?g (yT ), yT ) and
+
+kyT − PY (yT + (1/2κx `)∇Ψg (yT ))k ≤ kyT − PY (yT + (1/2κx `)∇y g(xT , yT ))k
+                                +kPY (yT + (1/2κx `)∇y g(xT , yT )) − PY (yT + (1/2κx `)∇Ψg (yT ))k.
+
+Since PY is nonexpansive and ∇y g is `-Lipschitz, we have
+
+                                                                                         kxT − x?g (yT )k
+   kPY (yT + (1/2κx `)∇y g(xT , yT )) − PY (yT + (1/2κx `)∇Ψg (yT ))k ≤                                   .
+                                                                                              2κx
+Putting these pieces together with Eq. (C.14) and Eq. (C.17) yields that
+                                                             1                       
+                                                                                r
+                    kyT − PY (yT + (1/2κx `)∇Ψg (yT ))k ≤                                .             (C.18)
+                                                          18κ2x κy                  κy `
+
+Since yg? = argmaxy∈Y Ψg (y) and ỹT = PY (yT + (1/2κx `)∇Ψg (yT )) is achieved by one-step
+projected gradient ascent from yT , we derive from the 2κx `-smoothness of Ψg , we have
+
+                                     kỹT − yg? k ≤ kyT − yg? k.                                       (C.19)
+
+Using the definition of ỹT and yg? , we have
+
+      (yg? − ỹT )> (ỹT − yT − (1/2κx `)∇Ψg (yT )) ≥ 0,              (yg? − ỹT )> ∇Ψg (yg? ) ≥ 0.
+
+Summing up the above two inequalities and rearranging yields that
+
+(yg? −yT )> (∇Ψg (yg? )−∇Ψg (yT )) ≥ 2κx `(yg? −ỹT )> (yT −ỹT )+(ỹT −yT )> (∇Ψg (yg? )−∇Ψg (yT )).
+
+Since Ψg is 2κx `-smooth and µy -strongly concave, we have
+                                                                          (C.19)
+−µy kyg? −yT k2 ≥ −2κx `kỹT −yT k kyg? − ỹT k + kyg? − yT k                      −4κx `kỹT −yT kkyg? −yT k.
+                                                                      
+                                                                            ≥
+
+This implies that
+                                                             (C.18)    1         
+                                                                            r
+                       kyg? − yT k   ≤ 4κx κy kyT − ỹT k     ≤                      .                 (C.20)
+                                                                      4κx       κy `
+
+                                                  28
+                   N EAR -O PTIMAL A LGORITHMS FOR M INIMAX O PTIMIZATION
+
+
+
+
+Plugging Eq. (C.17) and Eq. (C.20) into Eq. (C.15) yields that
+
+                                                         κx ,κy ≥1 1
+                                                 r
+                                        1       1                       
+                                                                      r
+                  kxT − x?g k ≤               +                ≤           .
+                                     18κx κy 4         κy `         2 κy `
+
+Plugging Eq. (C.17) and Eq. (C.20) into Eq. (C.16) yields that
+                                                                         r
+                                                            κx ,κy ≥1 1 κy 
+                                                   r
+                         ?                1     κy
+                 kyT − yg (xT )k ≤            +                  ≤            .
+                                        18κx     4       κy `          2   `
+
+Putting these pieces together Eq. (C.12) yields the desired result.
+                                                            p
+Part II. We first show that kyT − yg? k ≤ (1/216κ2x κy ) /κy ` and Eq. (C.13) are sufficient to
+guarantee Eq. (C.14). Indeed, we have yg? = PY (yg? + (1/2κx `)∇Ψg (yg? )). This together with the
+triangle inequality and the nonexpansiveness of PY yields
+                                                                    k∇y g(xT , yT ) − ∇Ψg (yg? )k
+  kyT − PY (yT + (1/2κx `)∇y g(xT , yT ))k ≤ 2kyT − yg? k +                                       .
+                                                                                2κx `
+Furthermore, ∇Ψg (yT ) = ∇y g(x? (yT ), yT ) and
+
+k∇y g(xT , yT ) − ∇Ψg (yg? )k ≤ k∇y g(xT , yT ) − ∇y g(x?g (yT ), yT )k + k∇Ψg (yT ) − ∇Ψg (yg? )k.
+
+Since g is `-smooth and Ψg is 2κx `-smooth, we have
+
+              k∇y g(xT , yT ) − ∇Ψg (yg? )k ≤ `kxT − x?g (yT )k + 2κx `kyT − yg? k.
+
+Also, Eq. (C.13) guarantees that Eq. (C.17) holds true. Then we have
+                                                                               1            
+                                                                                       r
+          kyT − PY (yT + (1/2κx `)∇y g(xT , yT ))k ≤ 3kyT − yg? k +                             .
+                                                                            36κ2x κy       κy `
+                                                                   p
+The above inequality together with kyT − yg? k ≤ (1/216κ2x κy ) /κy ` guarantees Eq. (C.14).
+                                                                                   p
+Next we derive a sufficient condition for guaranteeing kyT − yg? k ≤ (1/216κ2x κy ) /κy `. Since
+Ψg is µy -strongly concave, Nesterov (2018, Theorem 2.1.5) implies that
+                                                                     
+                                   ? 2      2
+                         kyT − yg k ≤           max Ψg (y) − Ψg (yT ) .
+                                           µy y∈Y
+Putting these pieces together yields the desired condition as follows,
+                                                               
+                              max Ψg (y) − Ψg (yT ) ≤                   .                           (C.21)
+                              y∈Y                          93312κ4x κ4y
+
+Part III. We proceed to estimate an upper bound for the gradient complexity of Algorithm 3 using
+Eq. (C.21). Note that ˜ ≤ /(4477676(κx κy )11/2 ) and we provide a key technical lemma which is
+crucial to the subsequent analysis.
+Lemma 24 For any y ∈ Y and {(yt , ỹt )}t≥0 generated by Algorithm 3, we have
+
+                                                      κx `kyt − ỹt−1 k2 µy ky − ỹt−1 k2
+Ψg (y) ≤ 2κx `(y− ỹt−1 )> (yt − ỹt−1 )+Ψg (yt )−                      −                 +3κx κy ˜.
+                                                              2                 4
+
+                                                 29
+                      N EAR -O PTIMAL A LGORITHMS FOR M INIMAX O PTIMIZATION
+
+
+
+
+Proof. For any y ∈ Y, the update formula yt ← PY (ỹt−1 + (1/2κx `)∇y g(x̃t−1 , ỹt−1 )) implies
+that
+0 ≤ (y − yt )> (2κx `(yt − ỹt−1 ) − ∇y g(x̃t−1 , ỹt−1 ))
+    = (y − yt )> (2κx `(yt − ỹt−1 ) − ∇Ψg (ỹt−1 )) + (y − yt )> (∇Ψg (ỹt−1 ) − ∇y g(x̃t−1 , ỹt−1 )).
+Since ∇Ψg (ỹt−1 ) = ∇y g(x?g (ỹt−1 ), ỹt−1 ), we have
+                     k∇Ψg (ỹt−1 ) − ∇y g(x̃t−1 , ỹt−1 )k ≤ `kx?g (ỹt−1 ) − x̃t−1 k.
+Since g(·, ỹt−1 ) is µx -strongly convex, we have
+                                      s                                                       s
+                                         2(g(x̃     , ỹ     ) − g(x ? (ỹ     ), ỹ     ))
+                                                t−1      t−1         g     t−1       t−1        2˜
+                                                                                                 
+            kx?g (ỹt−1 ) − x̃t−1 k ≤                                                       ≤      .
+                                                                µx                              µx
+Using Young’s inequality, we have
+                                                κx `kyt − ỹt−1 k2 µy ky − ỹt−1 k2
+(y − yt )> (∇Ψg (ỹt−1 ) − ∇y g(x̃t−1 , ỹt−1 )) ≤                +                 + 3κx κy ˜.
+                                                        2                 4
+Since Ψg is 2κx `-smooth and µy -strongly concave, we have
+(y − yt )> (2κx `(yt − ỹt−1 ) − ∇Ψg (ỹt−1 )) ≤ 2κx `(y − ỹt−1 )> (yt − ỹt−1 ) + Ψg (yt ) − Ψg (y)
+                                                                µy ky − ỹt−1 k2
+                                          −κx `kyt − ỹt−1 k2 −                  .
+                                                                       2
+Putting these pieces together yields the desired inequality.                                    
+
+The remaining proof is based on the modification of Nesterov’s techniques (Nesterov, 2018, Sec-
+tion 2.2.5). Indeed, we define the estimate sequence as follows,
+                           µy ky − y0 k2
+      Γ0 (y) = Ψg (y0 ) −                ,
+                                 2
+                                                                               κx `kyt+1 − ỹt k2
+                          
+                   1                                       >
+    Γt+1 (y) =  √           Ψ  (y
+                             g t+1  ) +  2κ x `(y −  ỹ t )  (y t+1 − ỹ t ) −
+               4 κx κy                                                                 2
+                 µy ky − ỹt k 2                                           
+                                                                     1
+               −                 − 12(κx κy )3/2 ˜ + 1 − √                    Γt (y) for all t ≥ 0.
+                        4                                         4 κx κy
+We apply the inductive argument to prove,
+                                  max Γt (y) ≤ Ψg (yt )         for all t ≥ 0.                         (C.22)
+                                 y∈Rn
+
+Eq. (C.22) holds trivially when t = 0. In what follows, we show that Eq. (C.22) holds true when t =
+T if Eq. (C.22) holds true for all t ≤ T −1. Let vt = argmaxy∈Rn Γt (y) and Γ?t = maxy∈Rn Γt (y),
+we have the canonical form Γt (y) = Γ?t − (µy /4)ky − vt k2 . The following recursive rules hold for
+vt and Γ?t :
+                           
+                       1                 ỹt      √
+vt+1 =        1− √             vt + √          + κx κy (yt+1 − ỹt ),
+                  4 κx κy              4 κx κy
+                                                                            ` rκ                
+ ?                     1         ?        1    
+                                                                        3/2              x     κx `
+Γt+1 =        1− √             Γt + √            Ψg (yt+1 ) − 12(κx κy ) ˜ −               −         kyt+1 − ỹt k2
+                  4 κx κy              4 κx κy                                      8 κy        4
+                                              µy kỹt − vt k2
+                                                                                           
+                  1                  1                                          >
+             − √          1− √                                − 2κx `(vt − ỹt ) (yt+1 − ỹt ) .
+               4 κx κy          4 κx κy              4
+
+                                                      30
+                    N EAR -O PTIMAL A LGORITHMS FOR M INIMAX O PTIMIZATION
+
+
+
+
+It follows from the recursive rule for Γt and its canonical form that
+                                                                                                 
+                             1        µy (y − vt )       1                            µy (y − ỹt )
+ ∇Γt+1 (y) = − 1 − √                               + √           2κx `(yt+1 − ỹt ) −                 .
+                         4 κx κy           2          4 κx κy                              2
+
+The recursive rule for vt can be achieved by solving ∇Γt+1 (vt+1 ) = 0. Then we have
+
+    Γ?t+1 = Γt+1 (vt+1 )
+                                              µy kvt+1 − vt k2
+                                        
+              1                      1                                1      
+  =   1− √             Γ?t − 1 − √                              + √            Ψg (yt+1 ) − 12(κx κy )3/2 ˜
+           4 κx κy               4 κx κy             4             4 κx κy
+       κx `kyt+1 − ỹt k2                                                    µy kvt+1 − ỹt k2
+                                                                                             
+                                1
+    −                       + √          2κx `(vt+1 − ỹt )> (yt+1 − ỹt ) −                     .
+               2              4 κx κy                                                4
+
+Then we conclude the recursive rule for Γ?t by plugging the recursive rule for vk into the above
+equality. By the induction, Eq. (C.22) holds true when t = T − 1 which implies
+                        
+ ?                  1                         1                                 
+ΓT ≤       1− √             Ψg (yT −1 ) + √           Ψg (yT ) − 12(κx κy )3/2 ˜
+                4 κx κy                   4 κx κy
+                                                                                   µy kỹT −1 − vT −1 k2
+             r                                                           
+               ` κx κx `                      2        1              1
+          −           −         kyT − ỹT −1 k − √             1− √
+              8 κy        4                        4 κx κy         4 κx κy                   2
+                                                 
+          −2κx `(vT −1 − ỹT −1 )> (yT − ỹT −1 ) .
+
+Applying Lemma 24 with t = T and y = yT −1 further implies that
+
+                                                                             κx `kyT − ỹT −1 k2
+       Ψg (yT −1 ) ≤ 2κx `(yT −1 − ỹT −1 )> (yT − ỹT −1 ) + Ψ(yT ) −
+                                                                                     2
+                             µy kyT −1 − ỹT −1 k2
+                         −                         + 3κx κy ˜.
+                                      2
+Putting these pieces together yields that
+                                                                                                     
+ ?                             1                           >                      1
+ΓT ≤ Ψg (yT ) + 1 − √                   2κx `(yT − ỹT −1 ) (yT −1 − ỹT −1 ) + √      (vT −1 − ỹT −1 ) .
+                           4 κx κy                                             4 κx κy
+                                           √
+                                          4 κ κ −1
+Using the update formula ỹt = yt + 4√κxx κyy +1 (yt − yt−1 ) and the recursive rule for vt with the
+inductive argument, it is straightforward that (yt − ỹt ) + 4√κ1x κy (vt − ỹt ) = 0 for all t ≥ 0. This
+implies that Γ?T ≤ Ψg (yT ). Therefore, we conclude that Eq. (C.22) holds true for all t ≥ 0.
+    On the other hand, Lemma 24 and the update formula for Γt implies that
+
+                       1                                                         1
+                                                                                          
+                                                   3/2
+     Γt+1 (y) ≥ √               Ψg (y) − 12(κx κy ) ˜ − 3κx κy ˜ + 1 − √                   Γt (y).
+                   4 κx κy                                                       4 κx κy
+
+Since κx , κy ≥ 1, we have
+                                                   
+                                               1
+               Ψg (y) − Γt+1 (y) ≤        1− √        (Ψg (y) − Γt (y)) + 6κx κy ˜.
+                                            4 κx κy
+
+                                                     31
+                    N EAR -O PTIMAL A LGORITHMS FOR M INIMAX O PTIMIZATION
+
+
+
+
+Repeating the above inequality yields that
+                                        T
+                                    1
+            Ψg (y) − ΓT (y) ≤ 1 − √         (Ψg (y) − Γ0 (y)) + 24(κx κy )3/2 ˜.
+                                 4 κx κy
+
+Therefore, we conclude that
+                                                        T
+                                                             (2κx ` + µ̄)Dy2
+                                       
+                                                1
+          max Ψg (y) − Ψg (yT ) ≤          1− √                              + 24(κx κy )3/2 ˜.
+          y∈Y                                4 κx κy                2
+
+Since the tolerance ˜ ≤ 4477676(κ κ )11/2 , we conclude that the iteration complexity Algorithm 3 to
+                                   x y
+                                          √
+guarantee Eq. (C.21) is bounded by O( κx κy log(`Dy2 /)).
+    Now it suffices to establish the gradient complexity of the two AGD subroutines at each iteration.
+In particular, we use the gradient complexity of the AGD subroutine to guarantee that g(x̂) ≤
+minX g(x) +  is bounded by
+                                                   3
+                                         √         κ `kx0 − x? k2
+                                                                   
+                                O 1 + κ log                              ,
+                                                          
+
+where κ is the condition number of g and x? is the global optimum of g over X . Since Y is a convex
+and bounded set, {yt }t≥0 is a bounded sequence. Hence {ỹt }t≥0 is also a bounded sequence. Since
+x?g (·) is κx -Lipschitz (cf. Lemma 23), the sequences {x?g (ỹt )}t≥0 and {x?g (yt )}t≥0 are bounded.
+Thus, we have
+
+                kx0 − x?g (yt )k2 = kx0 − x?g (ỹt )k2 = O(kx0 − x?g (y0 )k2 + κ2x Dy2 ).
+
+Putting these pieces together yields that the gradient complexity of every AGD subroutines at each
+                           √
+iteration is bounded by O( κx log((κ3x `(kx0 − x?g (y0 )k2 + κ2x Dy2 )/˜   )). Therefore, the gradient
+complexity of Algorithm 3 to guarantee Eq. (C.21) is bounded by
+                                                                          !!
+                                               (κ   + κ   )`( D̃ 2 + D2 )
+                                √                 x     y        x    y
+                         O κx κy · log2                                       ,
+                                                            
+
+where κx = `/µx and κy = `/µy are condition numbers, D̃x = kx0 − x?g (y0 )k is the initial
+distance where x?g (y0 ) = argminx∈X g(x, y0 ) and Dy > 0 is the diameter of the constraint set Y.
+
+Appendix D. Proofs for Convex-Concave Settings
+In this section, we present proofs for all results in Section 4.
+
+D.1. Proof of Theorem 9
+We first show that there exists T > 0 such that (x̂, ŷ) = M INIMAX -APPA(f, x0 , y0 , `, µx , µy , , T )
+is an -saddle point. Then we estimate the total number of gradient evaluations required to output
+an -approximate saddle point.
+
+
+
+
+                                                   32
+                    N EAR -O PTIMAL A LGORITHMS FOR M INIMAX O PTIMIZATION
+
+
+
+
+   First, we note that M INIMAX -APPA in Algorithm 4 can be interpreted as an inexact accelerated
+proximal point algorithm I NEXACT-APPA with the inner loop solver M AXIMIN -AG2 and AGD.
+Using Theorem 6 and Theorem 7, the point (x̂, ŷ) satisfies
+                                                   T 
+                                                                           µx kx? − x0 k2
+                                                                                         
+                                             1                               ?                 3/2
+max f (x̂, y)−min max f (x, y) ≤         1− √             Φ(x0 ) − Φ(x ) +                 +42κx δ.
+y∈Y            x∈X y∈Y                     6 κx                                  4
+
+and ŷ ← PY (ỹ + (1/2κx `)∇y f (x̂, ỹ)) where ỹ ∈ Y satisfies that
+
+                                   max f (x̂, y) − f (x̂, ỹ) ≤ ˜.
+                                    y∈Y
+
+We let Φ(·) = maxy∈Y f (·, y) and note that Φ is µx -strongly convex function. Since f is µx -
+strongly-convex-µy -strongly-concave, the Nash equilibrium (x? , y? ) is unique and x? = argminx∈X Φ(x).
+Therefore, we have
+                                                                            
+                                    2
+                    kx̂ − x? k2 ≤        max f (x̂, y) − min max f (x, y) .
+                                   µx y∈Y                x∈X y∈Y
+
+Since f (x̂, ·) is µy -strongly concave, Nesterov (2018, Theorem 2.1.5) implies that
+                                                                        
+                               ?    2      2                                 2˜
+                                                                              
+                       kỹ − y (x̂)k ≤         max f (x̂, y) − f (x̂, ỹ) ≤     .
+                                          µy y∈Y                            µy
+
+Since y? (·) = argmaxy∈Y f (·, y) is κy -Lipschitz (cf. Lemma 23), ky? − y? (x̂)k2 = ky? (x? ) −
+y? (x̂)k2 ≤ κ2y kx̂ − x? k2 . Thus, we have
+
+                                                                      4˜
+                                                                       
+                               kỹ − y? k2 ≤ 2κ2y kx̂ − x? k2 +          .
+                                                                      µy
+
+Let Ψ(·) = minx∈X f (x, ·). By the definition of ŷ, the following inequality holds true for any
+y ∈ Y,
+
+          0 ≤ (y − ŷ)> (2κx `(ŷ − ỹ) − ∇y f (x̂, ỹ))
+              = (y − ŷ)> (2κx `(ŷ − ỹ) − ∇Ψ(ỹ)) + (y − ŷ)> (∇Ψ(ỹ) − ∇y f (x̂, ỹ)).
+
+Since ∇Ψ(ỹ) = ∇y f (x? (ỹ), ỹ), we have k∇Ψ(ỹ) − ∇y f (x̂, ỹ)k ≤ `kx? (ỹ) − x̂k. Using the
+Young’s inequality, we have
+
+                                             κx `kŷ − ỹk2 κx `ky − ỹk2
+      (y − ŷ)> (∇Ψ(ỹ) − ∇y f (x̂, ỹ)) ≤                 +              + µx kx? (ỹ) − x̂k2 .
+                                                   2              2
+Since Ψ is µy -strongly concave and 2κx `-smooth, we have
+
+         (y − ŷ)> (2κx `(ŷ − ỹ) − ∇Ψ(ỹ)) ≤ 2κx `(y − ỹ)> (ŷ − ỹ) + Ψ(ŷ) − Ψ(y)
+                                                          µx ky − ỹk2
+                                        −κx `kŷ − ỹk2 −              .
+                                                               2
+
+
+
+
+                                                  33
+                    N EAR -O PTIMAL A LGORITHMS FOR M INIMAX O PTIMIZATION
+
+
+
+
+Using the Young’s inequality, we have (y − ỹ)> (ŷ − ỹ) ≤ ky − ỹk2 + (1/4)kŷ − ỹk2 . Putting
+these pieces together with y = y? yields that
+
+  min max f (x, y) − min f (x, ŷ) = Ψ(y? ) − Ψ(ŷ) ≤ 3κx `kỹ − y? k2 + µx kx? (ỹ) − x̂k2
+  x∈X y∈Y               x∈X
+
+                 ≤ 3κx `kỹ − y? k2 + 2µx kx? (ỹ) − x? (y? )k2 + 2µx kx? − x̂k2
+                 ≤ 5κx `kỹ − y? k2 + 2µx kx? − x̂k2 .
+
+Therefore, we conclude that
+                                                                                                        
+ max f (x̂, y) − min f (x, ŷ) ≤      20κx κy ˜ + (20κ2x κ2y + 5)       max f (x̂, y) − min max f (x, y) .
+ y∈Y             x∈X                                                     y∈Y              x∈X y∈Y
+
+                                                7/2
+Note that ˜ ≤ /80κx κy and δ ≤ /4200κx κ2y . This together with the above inequality implies
+that
+                                                           T 
+                                                                                  µx kx? − x0 k2
+                                                                                                
+                              3                       1
+max f (x̂, y)−min f (x, ŷ) ≤    +(20κ2x κ2y +5) 1 − √          Φ(x0 ) − Φ(x? ) +                  .
+ y∈Y           x∈X             4                    6 κx                                  4
+
+To this end, there exists an absolute constant c > 0 such that maxy∈Y f (x̂, y)−minx∈X f (x, ŷ) ≤ 
+                                                √
+if the maximum number of iterations T ≥ c κx log(κ2x κ2y `kx? − x0 k2 /). This implies that the
+total number of iterations is bounded by
+                                                                     !!
+                                     √          κ2x κ2y `kx? − x0 k2
+                                O      κx log                           .
+                                                           
+
+Furthermore, we call the solver M AXIMIN -AG2 at each iteration. Using Theorem 8 and δ =
+/(10κx κy )4 , the number of gradient evaluations at each iteration is bounded by
+                                         7/2
+                                                               !                         !!
+                         √             κx κ3y `(D̃x2 + Dy2 )              κ4x κ4y `Dy2
+                    O        κy log                                log                        .
+                                                                               
+
+Recalling D = max{Dx , Dy } < +∞, we conclude that the total number of gradient evaluations is
+bounded by                                           2 
+                                √           3 κx κy `D
+                             O    κx κy log                  .
+                                                  
+This completes the proof.
+
+D.2. Proof of Corollary 10
+We first show that (x̂, ŷ) = M INIMAX -APPA(f,y , x0 , y0 , `, µx , /(4Dy2 ), /2, T ) is an -saddle
+point. Then we estimate the number of gradient evaluations to output an -saddle point using Theo-
+rem 9. By the definition of f , the output (x̂, ŷ) satisfies
+
+                                 ky − y0 k2                       kŷ − y0 k2
+                                                                               
+                                                                                         
+            max f (x̂, y) −             2
+                                                 − min f (x, ŷ) −         2
+                                                                                     ≤ .
+            y∈Y                      4Dy            x∈X                 4Dy              2
+
+
+                                                      34
+                     N EAR -O PTIMAL A LGORITHMS FOR M INIMAX O PTIMIZATION
+
+
+
+
+Since the function f (x, ·) is concave for each x ∈ X , we have
+
+                                        ky − y0 k2
+                                                   
+                                                                            
+                    max f (x̂, y) −                    ≥ max f (xT +1 , y) − .
+                    y∈Y                     4Dy2          y∈Y               4
+
+On the other hand, we have
+                                     kŷ − y0 k2
+                                                 
+                                                                     
+                     min f (x, ŷ) −        2
+                                                    ≤ min f (x, ŷ) + .
+                     x∈X                 4Dy          x∈X            4
+
+Putting these pieces together yields that maxy∈Y f (x̂, y) − minx∈X f (x, ŷ) ≤ .
+    Furthermore, letting κy = 2`Dy2 / in the gradient complexity bound presented in Theorem 9,
+we conclude that the total number of gradient evaluations is bounded by
+                                      r                     2
+                                                               !
+                                         κx `        3 κx `D
+                                 O            Dy log              .
+                                                          
+
+This completes the proof.
+
+D.3. Proof of Corollary 11
+We first show that (x̂, ŷ) = M INIMAX -APPA(f , x0 , y0 , `, /(4Dx2 ), /(4Dy2 ), /2, T ) is an -
+saddle point. Then we estimate the number of gradient evaluations to output an -saddle point using
+Theorem 9. By the definition of f , the output (x̂, ŷ) satisfies
+
+                  kx̂ − x0 k2 ky − y0 k2                         kx − x0 k2 kŷ − y0 k2
+                                                                                               
+                                                                                                       
+max f (x̂, y) +               −                  −min f (x, ŷ) +                −                   ≤ .
+y∈Y                   8Dx2             8Dy2         x∈X                8Dx2             8Dy2           2
+
+Since the function f (x, ·) is concave for each x ∈ X , we have
+
+                                  kx̂ − x0 k2 ky − y0 k2
+                                                            
+                                                                                 
+              max f (x̂, y) +            2
+                                               −        2
+                                                                ≥ max f (x̂, y) − .
+              y∈Y                     8Dx           8Dy           y∈Y            4
+
+On the other hand,
+                                     kx − x0 k2 kŷ − y0 k2
+                                                               
+                                                                                     
+              min        f (x, ŷ) +            −                   ≤ min f (x, ŷ) + .
+              x∈X                       8Dx2         8Dy2             x∈X            4
+
+Putting these pieces together yields that maxy∈Y f (x̂, y) − minx∈X f (x, ŷ) ≤ .
+    Furthermore, letting κx = 4`Dx2 / and κy = 2`Dy2 / in the gradient complexity bound pre-
+sented in Theorem 9, we conclude that the total number of gradient evaluations is bounded by
+                                                     2 
+                                         `Dx Dy     3 `D
+                                    O           log            .
+                                                        
+This completes the proof.
+
+Appendix E. Proofs for Nonconvex-Concave Settings
+In this section, we present proofs for all results in Section 5 and Section B
+
+                                                  35
+                    N EAR -O PTIMAL A LGORITHMS FOR M INIMAX O PTIMIZATION
+
+
+
+
+E.1. Proof of Theorem 12
+Using the definition of gt , we have
+                                                                                           
+                                               2                                        2
+           max f (xt+1 , y) + `kxt+1 − xt k ≤ min max f (x, y) + `kx − xt k                     + δ.
+           y∈Y                                       x∈X        y∈Y
+
+This implies that
+
+           Φ(xt+1 ) + `kxt+1 − xt k2 ≤ min Φ(x) + `kx − xt k2 + δ ≤ Φ(xt ) + δ.
+                                          
+                                              x∈X
+
+Equivalently, we have
+                                                Φ(xt ) − Φ(xt+1 ) + δ
+                             kxt+1 − xt k2 ≤                          .                        (E.1)
+                                                           `
+Note that the function Φ(·) + `k · −xt k2 is `-strongly convex and its minimizer x∗t is well defined
+and unique (Davis and Drusvyatskiy, 2019). Since the function Φ(·) + `k · −xt k2 is `-strongly
+convex, we derive from Nesterov (2018, Theorem 2.1.5) that
+                                                                                 
+                     2                                                                   2δ
+ kxt+1 − x∗t k2 ≤        Φ(xt+1 ) + `kxt+1 − xt k2 − minm Φ(x) + `kx − xt k2
+                                                             
+                                                                                      ≤      . (E.2)
+                     `                                 x∈R                                `
+Since Φ is differentiable, we have
+                                               ∇Φ(x∗t ) + 2`(x∗t − xt )
+                                                                         
+                         x∗t − PX        x∗t −                                = 0.
+                                                            `
+Therefore, we have
+                                                                                 k∇Φ(x∗t ) − ∇Φ(xt+1 )k
+                            
+                   ∇Φ(xt+1 )
+ xt+1 − PX xt+1 −                          ≤ 2kxt+1 − x∗t k + 2kxt − x∗t k +                            .
+                      `                                                                     `
+
+Since Φ(·) is 2κy `-smooth, we have k∇Φ(xt+1 ) − ∇Φ(x∗t )k ≤ 2κy `kxt+1 − x∗t k. Putting these
+pieces together yields that
+                                      
+                             ∇Φ(xt+1 )
+         xt+1 − PX xt+1 −                   ≤ (2κy + 2)kxt+1 − x∗t k + 2kxt − x∗t k (E.3)
+                                  `
+                                                    κy ≥1
+                                                     ≤      6κy kxt+1 − x∗t k + 2kxt+1 − xt k.
+
+Putting Eq. (E.1), Eq. (E.2) and Eq. (E.3) together with the Cauchy-Schwarz inequality yields
+
+   (` kxt+1 − PX (xt+1 − (1/`)∇Φ(xt+1 ))k)2 ≤ 72κ2y `2 kxt+1 − x∗t k2 + 8`2 kxt+1 − xt k2
+                                                       ≤ 8` (Φ(xt ) − Φ(xt+1 ) + δ) + 144κ2y `δ.
+
+Summing up the above inequality over t = 0, 1, . . . , T − 1 and dividing it by T yields that
+   T −1
+                                                       !
+1 X                                                               8`(Φ(x0 ) − Φ(xT ))
+       (` kxt+1 − PX (xt+1 − (1/`)∇Φ(xt+1 ))k)2             ≤                           + 8`δ + 144κ2y `δ
+T                                                                           T
+     t=0
+                                                                 κy ≥1   8`(Φ(x0 ) − Φ(xT ))
+                                                                  ≤                          + 152κ2y `δ.
+                                                                                  T
+
+                                                     36
+                    N EAR -O PTIMAL A LGORITHMS FOR M INIMAX O PTIMIZATION
+
+
+
+
+Since x̂ = xs is uniformly chosen from {xs }1≤s≤T and δ ≤ 2 /(10κy )4 `, we have
+                                                      T −1
+                                                                                                       !
+                                                 1    X
+E (` kx̂ − PX (x̂ − (1/`)∇Φ(x̂))k)2 =                       (` kxt+1 − PX (xt+1 − (1/`)∇Φ(xt+1 ))k)2
+                                  
+                                                 T
+                                                      t=0
+                                                 8`(Φ(x0 ) − Φ(xT ))               8`∆Φ 2
+                                             ≤                       + 152κ2y `δ ≤     + .
+                                                          T                          T  8
+Using the Markov inequality, we conclude that there exists T > c`∆Φ −2 , where the output x̂ will
+satisfy ` kx̂ − PX (x̂ − (1/`)∇Φ(x̂))k ≤ /2 with probability at least 2/3. Since ŷ is obtained by
+running AGD on −f (x̂, ·) to optimal with tolerance δ ≤ 2 /(10κy )4 `, and f (x̂, ·) is µy -concave
+function, we know that δ-optimality guarantees:
+
+                             `kPY [ŷ + (1/`)∇y f (x̂, ŷ)] − ŷk ≤ ,
+                                                                     
+                                                 kŷ − y? (x̂)k ≤      .
+                                                                    2`
+Putting these pieces together yields that
+
+` kx̂ − PX (x̂ − (1/`)∇x f (x̂, ŷ))k ≤ ` kx̂ − PX (x̂ − (1/`)∇Φ(x̂))k + k∇Φ(x̂) − ∇x f (x̂, ŷ)k
+                                        ≤ ` kx̂ − PX (x̂ − (1/`)∇Φ(x̂))k + `kŷ − y? (x̂)k
+                                        ≤ .
+
+This implies that (x̂, ŷ) is an -stationary point. Furthermore, we call the solver M AXIMIN -AG2 at
+each iteration. Using Theorem 8 and δ ≤ 2 /(10κy )4 `, the number of gradient evaluations at each
+iteration is bounded by
+                                                               !                !!
+                              √           κ5y `2 (D̃x2 + Dy2 )       κ4y `2 Dy2
+                         O      κy log                           log               .
+                                                   2                    2
+
+Therefore, we conclude that the total number of gradient evaluations is bounded by
+                                                                     !!
+                                                  κ   `( D̃ 2 + D2 )
+                               `∆Φ √                y       x    y
+                          O           · κy log2                         .
+                                 2                         
+
+This completes the proof.
+
+E.2. Proof of Corollary 13
+Recall that the function f˜ is defined by
+
+                                                         ky − y0 k   2
+                                 f˜ (x, y) = f (x, y) −            .
+                                                            4Dy
+
+This implies that the following statement holds for all (x, y) ∈ X × Y that
+
+                                  ∇x f (x, y) − ∇x f˜ (x, y) = 0,
+                                                                
+                                k∇y f (x, y) − ∇y f˜ (x, y)k ≤   .
+                                                                2
+
+                                                     37
+                      N EAR -O PTIMAL A LGORITHMS FOR M INIMAX O PTIMIZATION
+
+
+
+
+Since (x̂, ŷ) = M INIMAX -PPA(f˜ , x0 , y0 , `, /(2Dy ), /2, T ), we have
+                                                                         
+                              `kPX [x̂ − (1/`)∇x f˜ (x̂, ŷ)] − x̂k ≤     ,
+                                                                         2
+                                                                         
+                              `kPY [ŷ + (1/`)∇y f˜ (x̂, ŷ)] − ŷk ≤     .
+                                                                         2
+Putting these pieces together yields that
+                                       
+`kPX [x̂ − (1/`)∇x f (x̂, ŷ)] − x̂k ≤   ≤ ,
+                                       2
+`kPY [ŷ + (1/`)∇y f (x̂, ŷ)] − ŷk ≤ `kPY [ŷ + (1/`)∇y f˜ (x̂, ŷ)] − ŷk + k∇y f (x, y) − ∇y f˜ (x, y)k
+                                       ≤ .
+
+Therefore, we conclude that (x̂, ŷ) is an -stationary point of f . Furthermore, letting κy = 2`Dy /
+in the gradient complexity bound presented in Theorem 12, we conclude that the total number of
+gradient evaluations is bounded by
+                                                                       !!
+                                                              2 + D2 )
+                                          r
+                                `∆Φ         `Dy          `(D̃ x      y
+                           O            ·         log2                     .
+                                  2                           
+
+This completes the proof.
+
+E.3. Proof of Theorem 20
+Using the same argument as in Theorem 12, we have
+                                                  Φ(xt ) − Φ(xt+1 ) + δ
+                               kxt+1 − xt k2 ≤                          .                         (E.4)
+                                                            `
+and
+                                                                                     
+                    2                                                                         2δ
+ kxt+1 − x∗t k2                                     2                             2
+                                                               
+                  ≤         Φ(xt+1 ) + `kxt+1 − xt k − minm Φ(x) + `kx − xt k             ≤      . (E.5)
+                    `                                    x∈R                                   `
+
+Since Φ is differentiable, we have ∇Φ(x∗t ) + 2`(x∗t − xt ) = 0 which implies k∇Φ(x∗t )k = 2`kx∗t −
+xt k. Since Φ(·) is 2κy `-smooth, we have k∇Φ(xt+1 ) − ∇Φ(x∗t )k ≤ 2κy `kxt+1 − x∗t k. Putting
+these pieces together yields that
+
+k∇Φ(xt+1 )k       ≤     2κy `kxt+1 − x∗t k + 2`kx∗t − xt k ≤ (2κy ` + 2`)kxt+1 − x∗t k + 2`kxt+1 − xt k
+                κy ≥1
+                  ≤     4κy `kxt+1 − x∗t k + 2`kxt+1 − xt k.                                               (E.6)
+
+Putting Eq. (E.4), Eq. (E.5) and Eq. (E.6) together with the Cauchy-Schwarz inequality yields
+
+k∇Φ(xt+1 )k2 ≤ 32κ2y `2 kxt+1 −x∗t k2 +8`2 kxt+1 −xt k2 ≤ 8` (Φ(xt ) − Φ(xt+1 ) + δ)+64κ2y `δ.
+
+Summing up the above inequality over t = 0, 1, . . . , T − 1 and dividing it by T yields that
+   T −1
+                    !
+1 X                        8`(Φ(x0 ) − Φ(xT ))                      κy ≥1 8`(Φ(x ) − Φ(x ))
+                                                                                  0         T
+        k∇Φ(xt+1 )k2 ≤                             +8`δ+64κ2y `δ ≤                            +72κ2y `δ.
+T                                    T                                              T
+      t=0
+
+
+                                                   38
+                    N EAR -O PTIMAL A LGORITHMS FOR M INIMAX O PTIMIZATION
+
+
+
+
+Since x̂ = xs is uniformly chosen from {xs }1≤s≤T and δ ≤ 2 /144κ2y `, we have
+                          T −1
+                                                !
+              1           X                              8`(Φ(x0 ) − Φ(xT ))              8`∆Φ 2
+E k∇Φ(x̂)k2 =                    k∇Φ(xt+1 )k2                                + 72κ2y `δ ≤
+          
+                                                    ≤                                         + .
+              T                                                   T                         T  2
+                          t=0
+
+Using the Markov inequality, we conclude that there exists T > c`∆Φ −2 , where the output x̂ will
+satisfy k∇Φ(x̂)k ≤  with probability at least 2/3. Furthermore, we call the solver M AXIMIN -AG2
+at each iteration. Using Theorem 8 and δ ≤ 2 /144κ2y `, the number of gradient evaluations at each
+iteration is bounded by
+                                                          !                !!
+                           √         κ3y `2 (D̃x2 + Dy2 )       κ2y `2 Dy2
+                       O     κy log                         log               .
+                                              2                    2
+
+Therefore, we conclude that the total number of gradient evaluations is bounded by
+                                                                    !!
+                               `∆Φ √           2
+                                                  κy `(D̃x2 + Dy2 )
+                          O           · κy log                         .
+                                 2                       
+
+This completes the proof.
+
+E.4. Proof of Corollary 21
+Recall that the function f¯ is defined by
+                                                               2
+                                                           ky − y0 k      2
+                                  f¯ (x, y) = f (x, y) −             .
+                                                            200`Dy2
+
+This implies that the following statement holds for all (x, y) ∈ X × Y that
+
+                                 ∇x f (x, y) − ∇x f¯ (x, y) = 0,
+                                                                        2
+                             k∇y f (x, y) − ∇y f¯ (x, y)k ≤                 .
+                                                                      100`Dy
+
+Using Theorem 20 and letting y? (·) = argminy∈Y f¯ (·, y), we have
+                                                                                 
+                                                        k∇x f¯ (x̂, y? (x̂))]k ≤ ,
+                                                                                10
+                     `kPY [y? (x̂) + (1/`)∇y f¯ (x̂, y? (x̂))] − y? (x̂)k = 0.
+
+Putting these pieces together yields that
+                                                                                      
+                                                    k∇x f (x̂, y? (x̂))k ≤             ,
+                                                                                     10
+                                                                                        2
+                   `kPY [y? (x̂) + (1/`)∇y f (x̂, y? (x̂))] − y? (x̂)k ≤                .
+                                                                                     50`Dy
+
+Now let x? (x̂) = argminx∈Rm Φ1/2` (x) := Φ(x) + `kx − x̂k2 , we have
+
+                                    k∇Φ1/2` (x̂)k2 = 4`2 kx̂ − x? k2
+
+                                                    39
+                      N EAR -O PTIMAL A LGORITHMS FOR M INIMAX O PTIMIZATION
+
+
+
+
+Since Φ(·) + `k · −x̂k2 is `/2-strongly-convex, we have
+                                                                                                      `kx̂ − x∗ (x̂)k2
+max f (x̂, y)−max f (x∗ (x̂), y)−`kx∗ (x̂)−x̂k2 = Φ(x̂)−Φ(x∗ (x̂))−`kx∗ (x̂)−x̂k2 ≥                                    .
+y∈Y             y∈Y                                                                                          4
+Since (x̂, y? (x̂)) satisfies k∇x f (x̂, y? (x̂))k ≤ /10 and kPY (y? (x̂) + (1/`)∇y f (x̂, y? (x̂))) −
+y? (x̂)k ≤ 2 /(50`Dy ), we have
+       max f (x̂, y) − max f (x∗ (x̂), y) − `kx∗ (x̂) − x̂k2
+       y∈Y               y∈Y
+
+  = max f (x̂, y) − f (x̂, y? (x̂)) + f (x̂, y? (x̂)) − max f (x∗ (x̂), y) − `kx∗ (x̂) − x̂k2
+       y∈Y                                                 y∈Y
+
+  ≤    max f (x̂, y) − f (x̂, y (x̂)) + f (x̂, y (x̂)) − f (x∗ (x̂), y? (x̂)) − `kx∗ (x̂) − x̂k2
+                               ?                 ?
+       y∈Y
+                                                                                                            `kx̂ − x∗ (x̂)k2
+  ≤ `Dy kPY (y? (x̂) + (1/`)∇y f (x̂, y? (x̂))) − y? (x̂)k + kx̂ − x∗ (x̂)kk∇x f (x̂, y? (x̂))k −
+                                                                                                                   4
+        2   k∇x f (x̂, y? (x̂))k2    2
+  ≤        +                        ≤     .
+       50`             `              16`
+Putting these pieces together yields that k∇Φ1/2` (x̂)k ≤ . Furthermore, letting κy = 100`2 Dy2 /2
+in the gradient complexity bound presented in Theorem 20, we conclude that the total number of
+gradient evaluations is bounded by
+                                                                  !!
+                                                         2 + D2 )
+                                   `2 D y ∆ Φ       `(D̃ x     y
+                              O               log2                   .
+                                       3                  
+This completes the proof.
+
+Appendix F. Proof of Technical Lemmas
+In this section, we provide complete proofs for the lemmas in the paper.
+
+F.1. Proof of Lemma 17
+We provide a proof for an expanded version of Lemma 17.
+Lemma 25 If Φ is `-weakly convex, we have
+(a) Φ1/2` (x) and proxΦ/2` (x) = argmin Φ(w) + `kw − xk2 are well defined for any x ∈ Rm .
+(b) Φ(proxΦ/2` (x)) ≤ Φ(x) for any x ∈ Rm .
+(c) Φ1/2` is 4`-smooth with ∇Φ1/2` (x) = 2`(x − proxΦ/2` (x)).
+
+Proof. Since Φ is `-weakly convex, Φ(·) + (`/2) k· − xk2 is convex for any x ∈ Rm . This implies
+that Φ(·) + ` k· − xk2 is (`/2)-strongly convex and Φ1/2` (x) and proxΦ/2` (x) are well defined. For
+any x ∈ Rm , the definition of proxΦ/2` (x) implies that
+                          Φ(proxΦ/2` (x)) ≤ Φ1/2` (proxΦ/2` (x)) ≤ Φ(x).
+Using Davis and Drusvyatskiy (2019, Lemma 2.2), Φ1/2` is differentiable with ∇Φ1/2` (x) =
+2`(x − proxΦ/2` (x)). Since proxΦ/2` is 1-Lipschitz, we k∇Φ1/2` (x) − ∇Φ1/2` (x0 )k ≤ 4`kx − x0 k.
+Therefore, the function Φ1/2` is 4`-smooth.                                                    
+
+                                                      40
+                     N EAR -O PTIMAL A LGORITHMS FOR M INIMAX O PTIMIZATION
+
+
+
+
+F.2. Proof of Lemma 19
+Denote x̂ := proxΦ/2` (x), part (c) in Lemma 17 implies
+
+                                                     k∇Φ1/2` (x)k
+                                      kx̂ − xk =                  .
+                                                         2`
+Furthermore, we have 2`(x − x̂) ∈ ∂Φ(x̂). Putting these pieces together yields the desired result.
+
+F.3. Proof of Lemma 23
+Part (a): Let x, x0 ∈ Rm , the points yg∗ (x) and yg∗ (x0 ) satisfy that
+
+                           (y − yg∗ (x))> ∇y g(x, yg∗ (x)) ≤ 0,          ∀y ∈ Y,                           (F.1)
+                         (y − yg∗ (x0 ))> ∇y g(x0 , yg∗ (x0 )) ≤ 0,      ∀y ∈ Y.                           (F.2)
+
+Summing up Eq. (F.1) with y = yg∗ (x0 ) and Eq. (F.2) with y = yg∗ (x) yields
+
+                   (yg∗ (x0 ) − yg∗ (x))> (∇y g(x, yg∗ (x)) − ∇y g(x0 , yg∗ (x0 ))) ≤ 0.
+
+Since g(x, ·) is µy -strongly concave, we have
+
+     (yg∗ (x0 ) − yg∗ (x))> (∇y g(x, yg∗ (x0 )) − ∇y g(x, yg∗ (x))) + µy kyg∗ (x0 ) − yg∗ (x)k2 ≤ 0.
+
+Summing up the above two inequalities yields that
+
+     (yg∗ (x0 ) − yg∗ (x))> (∇y g(x, yg∗ (x0 )) − ∇y g(x0 , yg∗ (x0 ))) + µy kyg∗ (x0 ) − yg∗ (x)k2 ≤ 0.
+
+Since ∇y g is `-Lipschitz, we have
+
+                       µy kyg∗ (x0 ) − yg∗ (x)k2 ≤ `kyg∗ (x0 ) − yg∗ (x)kkx0 − xk.
+
+Therefore, we conclude that the function yg∗ (·) is κy -Lipschitz.
+Part (b): Since the function yg∗ (·) is unique, Danskin’s theorem (Rockafellar, 1970) implies that
+Φg is differentiable and ∇Φg (·) = ∇x g(·, yg∗ (·)). Let x, x0 ∈ Rm , we have
+
+k∇Φg (x) − ∇Φg (x0 )k       =     k∇x g(x, yg∗ (x)) − ∇x g(x0 , yg∗ (x0 ))k ≤ `kx − x0 k + `kyg∗ (x) − yg∗ (x0 )k
+                           κ̄≥1
+                            ≤     κy `kx − x0 k + `kyg∗ (x) − yg∗ (x0 )k.
+
+Since yg∗ (·) is κy -Lipschitz, the function Φg is 2κy `-smooth. Furthermore, let x, x0 ∈ Rm , we have
+
+Φg (x0 ) − Φg (x) − (x0 − x)> ∇Φg (x) = g(x0 , yg∗ (x0 )) − g(x, yg∗ (x)) − (x0 − x)> ∇x g(x, yg∗ (x))
+                                            ≥ g(x0 , yg∗ (x)) − g(x, yg∗ (x)) − (x0 − x)> ∇x g(x, yg∗ (x)).
+
+Since g(·, y) is µx -strongly convex for each y ∈ Y, we have
+
+                                                                      µx kx0 − xk2
+                      Φg (x0 ) − Φg (x) − (x0 − x)> ∇Φg (x) ≥                      .
+                                                                            2
+Therefore, the function Φg is µx -strongly convex.
+
+                                                     41
+                     N EAR -O PTIMAL A LGORITHMS FOR M INIMAX O PTIMIZATION
+
+
+
+
+Part (c): Let y, y0 ∈ Rn , the points x∗g (y) and x∗g (y0 ) satisfy that
+
+                           (x − x∗g (y))> ∇x g(x∗g (y), y) ≥ 0,           ∀x ∈ X ,                         (F.3)
+                         (x − x∗g (y0 ))> ∇x g(x∗g (y0 ), y0 )   ≥ 0,     ∀x ∈ X .                         (F.4)
+
+Summing up Eq. (F.3) with x = x∗g (y0 ) and Eq. (F.4) with x = x∗g (y) yields
+
+                   (x∗g (y0 ) − x∗g (y))> (∇x g(x∗g (y), y) − ∇x g(x∗g (y0 ), y0 )) ≥ 0.
+
+Since g(·, y) is µx -strongly convex, we have
+
+     (x∗g (y0 ) − x∗g (y))> (∇x g(x∗g (y0 ), y0 ) − ∇x g(x∗g (y), y0 )) − µx kx∗g (y0 ) − x∗g (y)k2 ≥ 0.
+
+Summing up the above two inequalities yields that
+
+     (x∗g (y0 ) − x∗g (y))> (∇x g(x∗g (y), y) − ∇x g(x∗g (y), y0 )) − µx kx∗g (y0 ) − x∗g (y)k2 ≥ 0.
+
+Since ∇x g is `-smooth, we have
+
+                       µx kx∗g (y0 ) − x∗g (y)k2 ≤ `kx∗g (y0 ) − x∗g (y)kky0 − yk.
+
+Therefore, we conclude that the function x∗g is κx -Lipschitz.
+Part (d): Since the function x∗g (·) is unique, Danskin’s theorem (Rockafellar, 1970) implies that
+Ψg is differentiable and ∇Ψg (·) = ∇y g(x∗g (·), ·). Let y, y0 ∈ Rn , we have
+
+k∇Ψg (y)−∇Ψg (y0 )k = k∇y g(x∗g (y), y)−∇y g(x∗g (y0 ), y)k ≤ `kx∗g (y)−x∗g (y0 )k+`ky−y0 k.
+
+Since x∗g (·) is κx -Lipschitz, the function Ψg is 2κx `-smooth. Furthermore, let y, y0 ∈ Rn , we have
+
+Ψg (y) − Ψg (y0 ) − (y − y0 )> ∇Ψg (y) = g(x∗g (y), y) − g(x∗g (y0 ), y0 ) − (y − y0 )> ∇y g(x∗g (y), y)
+                                             ≥ g(x∗g (y), y) − g(x∗g (y), y0 ) − (y − y0 )> ∇y g(x∗g (y), y).
+
+Since g(x, ·) is µy -strongly concave for each x ∈ X , we have
+
+                                                                        µy ky0 − yk2
+                      Ψg (y) − Ψg (y0 ) − (y − y0 )> ∇Ψg (y) ≥                       .
+                                                                              2
+Therefore, the function Ψg is µy -strongly concave.
+
+
+
+
+                                                      42
+

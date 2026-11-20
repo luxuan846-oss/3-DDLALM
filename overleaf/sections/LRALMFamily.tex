@@ -1,0 +1,740 @@
+\section{Tight Complexity of the LRALM Family}
+\label{sec:algorithm-framework}
+
+\subsection{Algorithm family and worst-case iteration complexity}
+\label{subsec:algorithm-family}
+
+Let \(\mathcal P_s\) be the regularized potential function
+in~\eqref{eq:potential}. We study the linearized regularized augmented
+Lagrangian method (LRALM), which performs alternating gradient
+descent--ascent steps on \(\mathcal P_s\) with moving primal and dual
+centers \(\bz\) and \(\bmu\).
+
+\begin{definition}[LRALM]
+\label{def:splalm}
+Let \(\theta=(\rho,s,\gamma,\eta,\tau)\) satisfy \(\rho>0\),
+\(0<\eta\le\gamma<\infty\), and \(0<\tau\le s<\infty\), and let
+\((\alpha,\beta)\in[0,1]^2\). The method \(\mathrm{LRALM}_{\theta,\alpha,\beta}\)
+starts from \((\bx^0,\blmbd^0,\bz^0,\bmu^0)=\zero\) and, for \(k\ge0\), sets
+\begin{equation}
+\begin{aligned}
+    \bx^{k+1}&=\bx^k-\eta\,\nabla_{\bx}\mathcal P_s(\bx^k,\blmbd^k;\bz^k,\bmu^k),\\
+    \blmbd^{k+1}&=\blmbd^k+\tau\,\nabla_{\blmbd}\mathcal P_s(\bx^{k+1},\blmbd^k;\bz^k,\bmu^k),\\
+    \bz^{k+1}&=\bz^k+\alpha(\bx^{k+1}-\bz^k),\\
+    \bmu^{k+1}&=\bmu^k+\beta(\blmbd^{k+1}-\bmu^k).
+\end{aligned}
+    \label{eq:splalm-updates}
+\end{equation}
+At iteration \(k\), it outputs
+\((\bx^{k+1},\by^{k+1},\bq^k)
+:=(\bx^{k+1},\by(\bx^{k+1},\blmbd^k),\bq(\bx^{k+1},\blmbd^k))\).
+\end{definition}
+
+With first-order information cached between iterations, \(K\) iterations and
+their outputs use \(K+1\) calls to \(\mathcal O_{f,\calA}\) and \(2K\) calls to
+\(\mathcal O_h\). Thus the total oracle count is \(3K+1\), and iteration
+and oracle complexity agree up to a factor of three, apart from one initial
+first-order oracle call.
+
+\begin{definition}[LRALM family]
+\label{def:algorithm-family}
+For \(\theta\) as in Definition~\ref{def:splalm},
+\(\calC_\theta:=\{\mathrm{LRALM}_{\theta,\alpha,\beta}:(\alpha,\beta)\in[0,1]^2\}\).
+\end{definition}
+
+\begin{remark}[Initialization]
+\label{rem:lb-initialization}
+Every method in \(\calC_\theta\) starts from zero on every instance.
+Theorem~\ref{thm:lower-bound} constructs a hard instance for each
+\((\theta,\alpha,\beta,\epsilon)\) while keeping this initialization fixed.
+Thus, the lower bound holds for the prescribed starting point.
+The constructions in~\cite[Section~5.1.1]{li2026smoothing}
+and~\cite[Appendix~C.1]{mahdavinia2022tight} choose both the hard function
+and the initialization.
+\end{remark}
+
+\begin{definition}[Worst-case iteration complexity]
+\label{def:complexity-measure}
+Let \(\epsilon>0\) and \(I\in\mathcal I(\mathbf C,\Delta)\).
+For the outputs \((\bx^{k+1},\by^{k+1},\bq^k)\) of
+\(\mathrm{LRALM}_{\theta,\alpha,\beta}\) on \(I\), define
+\[
+    T_\epsilon(\theta,\alpha,\beta;I)
+    :=\inf\Bigl\{K\ge1:\ \min_{0\le k<K}
+        \mathcal R_{\mathrm{KKT}}(\bx^{k+1},\by^{k+1},\bq^k)\le\epsilon\Bigr\},
+\]
+with \(\inf\varnothing=+\infty\). The
+worst-case iteration complexity of \(\calC_\theta\) over
+\(\mathcal I(\mathbf C,\Delta)\) is
+\[
+    T_\epsilon\bigl(\calC_\theta,\mathcal I(\mathbf C,\Delta)\bigr)
+    :=\inf_{(\alpha,\beta)\in[0,1]^2}\
+    \sup_{I\in\mathcal I(\mathbf C,\Delta)}\
+    T_\epsilon(\theta,\alpha,\beta;I).
+\]
+\end{definition}
+
+The infimum precedes the supremum, so \((\alpha,\beta)\) may depend on
+\(\epsilon\), \(\theta\), and \((\mathbf C,\Delta)\), but not on the instance.
+At least one of the first \(K\) outputs meets the tolerance if and only if
+\(K\ge T_\epsilon\); hence the definition covers every rule that
+returns one of these outputs, including the best-so-far rule.
+
+\begin{remark}[Family complexity and oracle complexity]
+\label{rem:family-not-oracle}
+Let \(\mathcal A_{\det}\) be the class of deterministic methods whose iterates
+are arbitrary maps of all previous responses of \(\mathcal O_{f,\calA}\) and
+\(\mathcal O_h\), defined as in~\cite[Section~2.2]{carmon2020lower}
+and~\cite[Definition~2.5]{pan2026optimal} with the oracles of
+Definition~\ref{def:oracle-model}. Then \(\calC_\theta\subset\mathcal A_{\det}\), and
+\[
+    T_\epsilon(\mathcal A_{\det},\mathcal I)
+    =\inf_{A\in\mathcal A_{\det}}\sup_{I\in\mathcal I}T_\epsilon(A;I)
+    \le\inf_{(\alpha,\beta)\in[0,1]^2}\sup_{I\in\mathcal I}
+    T_\epsilon(\theta,\alpha,\beta;I)
+    =T_\epsilon(\calC_\theta,\mathcal I).
+\]
+\begin{enumerate}[label=(\roman*)]
+\item (Scope) A lower bound on \(T_\epsilon(\calC_\theta,\mathcal I)\) does not
+  bound \(T_\epsilon(\mathcal A_{\det},\mathcal I)\); methods outside
+  \(\calC_\theta\) may be faster. When \(h\) is the support function of a
+  compact convex set, \eqref{eq:ncl} is a smooth nonconvex--concave problem,
+  and the \(O(\epsilon^{-5/2})\) GS bound of~\cite{zhang2026matching} and the
+  \(O(\epsilon^{-3})\) OS bound of~\cite{pan2026optimal} are attained by
+  methods outside \(\calC_\theta\).
+\item (Uniformity) The infimum ranges over all \((\alpha,\beta)\in[0,1]^2\),
+  including the endpoint cases in Table~\ref{tab:special-cases}, and
+  Theorem~\ref{thm:lower-bound} holds for all \((\rho,s)\) with
+  \(\epsilon(\rho+s)\le c_1\). A lower bound on
+  \(T_\epsilon(\calC_\theta,\mathcal I)\) therefore cannot be removed by
+  tuning the center stepsizes; it is governed by the effective penalty
+  \(\rho+s\) of Lemma~\ref{lem:effective-penalty}.
+\item (Transfer) Conversely, every lower bound on
+  \(T_\epsilon(\mathcal A_{\det},\mathcal I)\) for the same problem class and
+  measure also holds for \(\calC_\theta\).
+\end{enumerate}
+\end{remark}
+
+\subsection{Effective penalty and special cases}
+\label{subsec:effective-penalty}
+
+The reduced augmented Lagrangian is a dual proximal smoothing of the saddle
+function \(\calL\) in~\eqref{eq:ncl}~\cite{rockafellar1976augmented}. The center of this
+smoothing is the multiplier, and its strength is the penalty. Adding the dual
+regularizer of~\eqref{eq:potential} keeps this form; it only raises the
+penalty and moves the center.
+
+\begin{lemma}[Effective penalty parameter]
+\label{lem:effective-penalty}
+Suppose that Assumption~\ref{ass:h} holds. For every \(\sigma>0\),
+\begin{equation}
+    \calD_\sigma(\bx,\blmbd)
+    =\max_{\bq\in\RR^m}\Bigl\{\calL(\bx,\bq)-\frac{1}{2\sigma}\|\bq-\blmbd\|^2\Bigr\},
+    \label{eq:dual-smoothing}
+\end{equation}
+and consequently
+\begin{equation}
+    \max_{\blmbd\in\RR^m}\mathcal P_s(\bx,\blmbd;\bz,\bmu)
+    =\calD_{\rho+s}(\bx,\bmu)+\frac{1}{2\gamma}\|\bx-\bz\|^2 .
+    \label{eq:effective-penalty}
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Write \(\bu=\calA(\bx)\) and \(h(\by)=\max_{\bq}\{\langle\bq,\by\rangle-h^*(\bq)\}\).
+Since \(\dom h^*\) lies in a ball by Assumption~\ref{ass:h}, Sion's minimax
+theorem allows the minimum over \(\by\) and the maximum over \(\bq\) in
+\(\min_{\by}\max_{\bq}\{\langle\bq-\blmbd,\by\rangle-h^*(\bq)
++\frac{\sigma}{2}\|\bu-\by\|^2\}\) to be interchanged. The inner minimizer is
+\(\by=\bu-(\bq-\blmbd)/\sigma\), which gives~\eqref{eq:dual-smoothing}.
+Applying~\eqref{eq:dual-smoothing} with \(\sigma=\rho\) and exchanging the two
+maximizations,
+\[
+    \max_{\blmbd}\mathcal P_s
+    =\max_{\bq}\Bigl\{\calL(\bx,\bq)-\min_{\blmbd}\Bigl[\frac{\|\bq-\blmbd\|^2}{2\rho}
+    +\frac{\|\blmbd-\bmu\|^2}{2s}\Bigr]\Bigr\}+\frac{\|\bx-\bz\|^2}{2\gamma},
+\]
+and the inner minimum equals \(\|\bq-\bmu\|^2/(2(\rho+s))\).
+Then~\eqref{eq:dual-smoothing} with \(\sigma=\rho+s\)
+gives~\eqref{eq:effective-penalty}.
+\end{proof}
+
+Lemma~\ref{lem:effective-penalty} shows that every member of
+\(\calC_\theta\) has the effective penalty \(\rho+s\), whatever the center
+stepsizes are. The center stepsize \(\beta\) only places the dual center
+between two classical choices, and \(\alpha\) decides whether the primal
+variable is smoothed.
+
+\emph{Zero center} (\(\beta=0\)). Then \(\bmu^k=\zero\), and
+\(\calD_{\rho+s}(\bx,\zero)=f(\bx)+\min_{\by}\{h(\by)
++\frac{\rho+s}{2}\|\calA(\bx)-\by\|^2\}\) is the quadratic penalty function
+with parameter \(\rho+s\). The dual step carries the perturbation
+\(-\blmbd^k/s\), as in perturbed GDA~\cite{lu2020hybrid,xu2023unified} and
+perturbed smoothed GDA~\cite{li2026smoothing}.
+
+\emph{Current multiplier as center} (\(\beta=1\)). Then
+\(\bmu^k=\blmbd^k\), the gradient of the dual regularizer vanishes at every
+dual step, and
+\[
+    \blmbd^{k+1}=\Bigl(1-\frac{\tau}{\rho}\Bigr)\blmbd^k+\frac{\tau}{\rho}\,\bq^k,
+    \qquad
+    \bq^k=\prox_{\rho h^*}\bigl(\blmbd^k+\rho\calA(\bx^{k+1})\bigr).
+\]
+For \(\tau=\rho\), this is the multiplier update of the augmented Lagrangian
+method~\cite{hestenes1969multiplier,powell1969method,rockafellar1973multiplier},
+that is, a proximal ascent step on \(\calL(\bx^{k+1},\cdot)\)
+by~\eqref{eq:dual-smoothing}. The iterates do not depend on \(s\), so this
+choice also reproduces the case without dual regularizer, \(s=\infty\).
+
+\emph{Moving center} (\(0<\beta<1\)). The dual center is an exponentially
+weighted average of past multipliers, and the method has the structure of doubly smoothed
+GDA~\cite{zheng2023universal}.
+
+Table~\ref{tab:special-cases} collects these cases. The identities
+\(\bmu^k=\zero\), \(\bmu^k=\blmbd^k\), and \(\bz^k=\bx^k\) for
+\(\beta=0\), \(\beta=1\), and \(\alpha=1\), respectively, follow by induction
+from the zero initialization. Every entry refers to the cited update structure
+applied to \(\calD_\rho\) with \(\rho>0\).
+Section~\ref{subsec:gda-embedding} gives the local gradient descent--ascent
+recursion used in the proof of the lower bound.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Special cases of \(\calC_\theta\). All methods act on
+\(\calD_\rho\) with \(\rho>0\) and have the effective penalty \(\rho+s\).}
+\label{tab:special-cases}
+\renewcommand{\arraystretch}{1.1}
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{@{}cccc@{}}
+\toprule
+Method & \(\alpha\) & \(\beta\) & Dual regularization \\
+\midrule
+\makecell{Linearized ALM (\(\tau=\rho\))\\ \cite{luSingleLoopGradientDescent2022}}
+  & \(1\) & \(1\) & \(-\frac{1}{2s}\|\blmbd-\blmbd^k\|^2\) \\
+\makecell{Smoothed GDA\\ \cite{zhang2020smoothed}}
+  & \((0,1)\) & \(1\) & \(-\frac{1}{2s}\|\blmbd-\blmbd^k\|^2\) \\
+\makecell{DS-GDA\\ \cite{zheng2023universal}}
+  & \((0,1)\) & \((0,1)\) & \(-\frac{1}{2s}\|\blmbd-\bmu^k\|^2\) \\
+\makecell{Perturbed smoothed GDA\\ \cite{li2026smoothing}}
+  & \((0,1)\) & \(0\) & \(-\frac{1}{2s}\|\blmbd\|^2\) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Tight lower and upper bounds}
+\label{sec:lower-bound}
+
+We use the problem class of Definition~\ref{def:problem-class}, the family
+\(\calC_\theta\) of Definition~\ref{def:algorithm-family}, and the complexity
+of Definition~\ref{def:complexity-measure}, with the normalized constants
+\(\mathbf C_0:=(1,1,0,1,1)\). Since \(L_{\calA}=0\), every instance in
+\(\mathcal I(\mathbf C_0,\Delta)\) has an affine inner mapping.
+
+We now present the iteration complexity of \(\calC_\theta\) under the choice
+\(\beta=1\). We choose this setting for two reasons. First, when
+\(\beta=1\), LRALM reduces to Smoothed GDA applied to \(\calD_\rho\)
+(Table~\ref{tab:special-cases}), whose iteration complexity is known. Second,
+Theorem~\ref{thm:lower-bound} below holds for any arbitrary choice of
+\((\alpha,\beta)\in[0,1]^2\), including \(\beta=1\). Stating the upper bound
+under the same setting yields a direct tightness guarantee.
+
+\begin{theorem}[Iteration complexity of LRALM with \(\beta=1\)]
+\label{thm:upper-beta1}
+There exist \(\bar\gamma>0\), depending only on \(\mathbf C\) and \(\rho\),
+and \(\bar\tau>0\), depending only on \(\mathbf C\), \(\rho\), and
+\(\eta/\gamma\), such that the following holds. Let \(\gamma\le\bar\gamma\),
+\(\eta\le\gamma/2\), \(\tau\le\bar\tau\), and \(s\ge\tau\). Then there exist
+\(c>0\), depending only on \(\theta\) and \(\mathbf C\), and \(C>0\),
+depending only on \(\theta\), \(\mathbf C\), and \(\Delta\), such that, given
+any \(\epsilon\in(0,1]\) and \(\alpha:=c\,\epsilon^2\),
+\[
+T_\epsilon(\theta,\alpha,1;I)\le C\,\epsilon^{-4}
+\qquad\text{for all } I\in\mathcal I(\mathbf C,\Delta).
+\]
+\end{theorem}
+The proof is given in Appendix~\ref{app:upper-beta1}.
+
+\begin{remark}
+\label{rem:upper-beta1}
+(i) Theorem~\ref{thm:upper-beta1} transfers the Smoothed GDA bounds
+of~\cite[Theorem~3.4]{zhang2020smoothed}
+and~\cite[Theorem~B.1]{li2026smoothing} to a uniform KKT guarantee over
+\(\mathcal I(\mathbf C,\Delta)\) for the outputs of LRALM.
+The technical details are given in Appendix~\ref{app:upper-beta1}.
+
+(ii) When \(\beta=1\), the identity \(\bmu^k=\blmbd^k\) gives
+\[
+    -\frac{1}{s}(\blmbd^k-\bmu^k)=\zero.
+\]
+Thus the iterates and outputs are independent of \(s\), and increasing
+\(s\) alone cannot improve their iteration complexity. In contrast,
+Theorem~\ref{thm:upper-beta0} attains an \(O(\epsilon^{-3})\) bound with
+\(\beta=0\), \(s=c_s/\epsilon\), and \(\alpha=c_\alpha\epsilon\),
+under its stated step-size conditions.
+\end{remark}
+
+\begin{theorem}[Lower bound uniform in \(\rho\) and \(s\)]
+\label{thm:lower-bound}
+Fix \(0<\eta\le\gamma\), \(\tau>0\), and \(\Delta>0\). There exist constants
+\(c_1=c_1(\gamma,\eta,\tau)>0\) and \(c_2=c_2(\gamma,\tau,\Delta)>0\),
+independent of \(\rho\), \(s\), \(\alpha\), and \(\beta\), such that the
+following holds. For every \(\epsilon\in(0,c_2)\), every \(\rho>0\) and
+\(s\ge\tau\) with \(\epsilon(\rho+s)\le c_1\), and every
+\((\alpha,\beta)\in[0,1]^2\), there exists an instance
+\(I\in\mathcal I(\mathbf C_0,\Delta)\) on which
+\(\mathrm{LRALM}_{\theta,\alpha,\beta}\) requires at least
+\[
+    \frac{\Delta\,\epsilon^{-4}}{16384\,\gamma\max\{1,4\tau,4\gamma\tau\}}
+\]
+iterations before one of its outputs is an \(\epsilon\)-KKT point.
+Equivalently, 
+\[T_\epsilon(\calC_\theta,\mathcal I(\mathbf C_0,\Delta))
+\ge\Delta\epsilon^{-4}/(16384\,\gamma\max\{1,4\tau,4\gamma\tau\})\].
+\end{theorem}
+Explicit choices of \(c_1\) and \(c_2\) are given in~\eqref{eq:rot-thresholds}.
+% \todo{State the GS version $T^{\mathrm{GS}}_\epsilon$ after the strict-convex perturbation lemma is proved.}
+% perturbation lemma is proved.
+
+\begin{theorem}[Iteration complexity of LRALM with \(\beta=0\)]
+\label{thm:upper-beta0}
+Fix \(\rho,\gamma,\eta,\tau>0\) satisfying the step-size
+conditions~\eqref{eq:beta0-stepsizes} for all sufficiently large \(s\).
+There exist constants \(c_s>0\) and \(c_\alpha>0\), depending only on
+\(\rho,\gamma,\eta,\tau\) and \(\mathbf C\), and \(C'>0\), depending in
+addition on \(\Delta\), such that the following holds. Given any
+sufficiently small \(\epsilon>0\), let
+\[
+s:=\frac{c_s}{\epsilon},\qquad
+\alpha:=c_\alpha\epsilon,\qquad \beta:=0,\qquad
+\theta(\epsilon):=(\rho,s,\gamma,\eta,\tau).
+\]
+Then
+\[
+T_\epsilon(\theta(\epsilon),\alpha,0;I)
+\le C'\epsilon^{-3}
+\qquad\text{for all }I\in\mathcal I(\mathbf C,\Delta).
+\]
+All parameters remain constant within each run. The coefficient \(c_s\)
+is chosen sufficiently large, and \(c_\alpha\) sufficiently small, as
+specified in Appendix~\ref{app:upper-beta0}.
+\end{theorem}
+The proof is given in Appendix~\ref{app:upper-beta0}.
+
+\begin{remark}
+\label{rem:upper-beta0}
+(i) When \(\beta=0\), LRALM reduces to Perturbed Smoothed GDA applied to
+\(\calD_\rho\). A result analogous to Theorem~\ref{thm:upper-beta0} has
+been obtained in~\cite[Theorem~3.3]{li2026smoothing}.
+Theorem~\ref{thm:upper-beta0} bounds the initial gap by the constants of
+\(\mathcal I(\mathbf C,\Delta)\), keeps the multipliers in the interior of
+a ball without any projection, and evaluates the KKT residual at
+\((\bx^{k+1},\blmbd^k)\). The change in the evaluation point contributes
+an additional term \(L_h/(10s)\) in~\eqref{eq:beta0-residual-transfer}.
+(ii) The coefficient \(c_s\) must be sufficiently large. For fixed \(\rho\),
+the choice \(s=c/\epsilon\) with \(0<c<c_1\) satisfies
+\(\epsilon(\rho+s)\le c_1\) for all sufficiently small \(\epsilon\), and
+Theorem~\ref{thm:lower-bound} applies.
+(iii) The primal center stepsize is \(\alpha=\Theta(\epsilon)\), while the
+dual center remains zero. Whether a primal center stepsize independent of
+\(\epsilon\) attains the same order is outside the scope of this result.
+\end{remark}
+
+When \(\rho\) is fixed and \(s=c_s/\epsilon\), the effective penalty
+\(\rho+s\) exceeds \(c_1/\epsilon\) for large \(c_s\), and
+Theorem~\ref{thm:lower-bound} no longer applies. The next theorem shows
+that the order \(\epsilon^{-3}\) of Theorem~\ref{thm:upper-beta0} cannot be
+improved within the family in this regime.
+
+\begin{theorem}[Lower bound at \(s=c_s/\epsilon\)]
+\label{thm:lower-bound-fixed-rho}
+Fix \(\rho>0\), \(0<\eta\le\gamma\), \(\tau>0\), \(c_s>0\), and
+\(\Delta>0\). There exist constants \(B\ge1\) and \(\epsilon_0\in(0,1]\),
+depending only on \((\rho,\gamma,\eta,\tau,c_s,\Delta)\), such that, for
+every \(\epsilon\in(0,\epsilon_0)\) and
+\(\theta(\epsilon):=(\rho,c_s/\epsilon,\gamma,\eta,\tau)\),
+\[
+    T_\epsilon
+    \bigl(\calC_{\theta(\epsilon)},\mathcal I(\mathbf C_0,\Delta)\bigr)
+    \ge\frac{\Delta\,\epsilon^{-3}}{16\gamma B}.
+\]
+\end{theorem}
+The proof is given in Section~\ref{subsec:lb-fixed-rho-proof}.
+
+\begin{corollary}[Scale of the effective penalty]
+\label{cor:effective-penalty}
+Fix \(0<\eta\le\gamma\), \(\tau>0\), and \(\Delta>0\), and let \(c_1\)
+be the constant in Theorem~\ref{thm:lower-bound}.
+\begin{enumerate}[label=(\alph*)]
+\item Let \(\rho=\rho(\epsilon)>0\) and \(s=s(\epsilon)\ge\tau\) satisfy
+\(\rho+s\le c_1/\epsilon\) for all sufficiently small \(\epsilon\).
+Then
+\[
+T_\epsilon
+\bigl(\calC_{\theta(\epsilon)},\mathcal I(\mathbf C_0,\Delta)\bigr)
+=\Omega(\epsilon^{-4}).
+\]
+\item Fix \(\rho>0\) and let \(\rho,\gamma,\eta,\tau\) satisfy the
+conditions of Theorem~\ref{thm:upper-beta0} for the class constants
+\(\mathbf C_0\). For \(s=c_s/\epsilon\) with the sufficiently large
+coefficient specified there, the choice \(\beta=0\) and
+\(\alpha=c_\alpha\epsilon\) gives
+\[
+T_\epsilon
+\bigl(\calC_{\theta(\epsilon)},\mathcal I(\mathbf C_0,\Delta)\bigr)
+=\Theta(\epsilon^{-3}).
+\]
+\end{enumerate}
+Thus an \(O(\epsilon^{-3})\) guarantee over
+\(\mathcal I(\mathbf C_0,\Delta)\) requires
+\(\rho(\epsilon)+s(\epsilon)>c_1/\epsilon\) for all sufficiently small
+\(\epsilon\), and is attained with fixed \(\rho\) and
+\(s=c_s/\epsilon\) under the conditions in~(b).
+The constants \(c_1\) and \(c_s\) differ; the conclusion identifies the
+order \(\epsilon^{-1}\) of the required effective penalty.
+\end{corollary}
+\begin{proof}
+Part~(a) follows from Theorem~\ref{thm:lower-bound}. In part~(b), the upper bound follows from
+Theorem~\ref{thm:upper-beta0}, since the infimum in
+Definition~\ref{def:complexity-measure} includes
+\((\alpha,\beta)=(c_\alpha\epsilon,0)\), and the lower bound follows from
+Theorem~\ref{thm:lower-bound-fixed-rho}. If
+\(\rho(\epsilon)+s(\epsilon)\le c_1/\epsilon\) along a sequence of
+accuracies tending to zero, the lower bound in
+Theorem~\ref{thm:lower-bound} precludes an \(O(\epsilon^{-3})\) guarantee
+along that sequence. This proves the necessary condition.
+\end{proof}
+
+\subsection{Proofs of the lower bounds}
+\label{sec:lb-proof}
+
+In Section~\ref{sec:lower-bound}, we established a lower bound on the iteration
+complexity of the LRALM family that holds for every choice of constant center
+stepsizes. In this subsection, we prove Theorems~\ref{thm:lower-bound}
+and~\ref{thm:lower-bound-fixed-rho} by constructing hard instances.
+The constructions are given in Appendix~\ref{app:lower-bound}.
+
+Fix \(\epsilon\) and \(\theta\) satisfying the conditions of
+Theorem~\ref{thm:lower-bound}. The lower bound has the quantified form
+\[
+\forall\,(\alpha,\beta)\in[0,1]^2,\quad
+\exists\,I\in\mathcal I(\mathbf C_0,\Delta):\quad
+T_\epsilon(\theta,\alpha,\beta;I)
+\geq \Omega(\Delta\epsilon^{-4}).
+\]
+Thus, different choices of \((\alpha,\beta)\) may require different hard
+instances. For each pair, we construct an instance in
+\(\mathcal I(\mathbf C_0,\Delta)\) on which
+\(\mathrm{LRALM}_{\theta,\alpha,\beta}\), started from the zero
+initialization prescribed in Definition~\ref{def:splalm}, requires at least
+the stated number of iterations to produce an \(\epsilon\)-KKT output.
+For the outputs of \(\mathrm{LRALM}_{\theta,\alpha,\beta}\), we write
+\(R_k:=\mathcal R_{\mathrm{KKT}}(\bx^{k+1},\by^{k+1},\bq^k)\) for \(k\ge0\).
+
+We split \([0,1]^2\) into three parts by the threshold
+\[
+\alpha_\epsilon:=1024\max\{1,4\tau,4\gamma\tau\}\,\epsilon^2,
+\]
+namely
+\[
+\begin{aligned}
+[0,1]^2
+={}&\bigl\{(\alpha,\beta)\in[0,1]^2:\alpha\le\alpha_\epsilon\bigr\}\\
+&\cup\bigl\{(\alpha,\beta)\in[0,1]^2:\alpha>\alpha_\epsilon,\ \beta>0\bigr\}\\
+&\cup\bigl\{(\alpha,\beta)\in[0,1]^2:\alpha>\alpha_\epsilon,\ \beta=0\bigr\},
+\end{aligned}
+\]
+and use a separate hard instance for each part. For
+\(\alpha\le\alpha_\epsilon\), the bound obtained in
+Appendix~\ref{subsec:lb-plateau} is of order \(\Delta\epsilon^{-4}\). This
+threshold ensures the parameter estimates required by the rotating instance
+in Appendix~\ref{subsec:lb-rotation}.
+
+\subsubsection{Hard instances}
+\label{subsec:hard-instances}
+
+We now give one hard instance for each part of the split. For
+\(\alpha\le\alpha_\epsilon\), we use the following one-dimensional instance
+with a long constant-gradient interval.
+
+\begin{example}
+\label{ex:plateau}
+Let \(0<\epsilon\le\min\{1/2,\sqrt{\Delta}/2\}\) and
+\(x_\star:=\Delta/(2\epsilon)+\epsilon\). Define \(\calA\equiv0\),
+\(h(y)=|y|\), and \(f:\RR\to\RR\) by
+\[
+f(x)=
+\begin{cases}
+2\epsilon(x_\star-x)-2\epsilon^2, & x<x_\star-2\epsilon,\\[4pt]
+\dfrac12(x-x_\star)^2, & |x-x_\star|\le2\epsilon,\\[4pt]
+2\epsilon(x-x_\star)-2\epsilon^2, & x>x_\star+2\epsilon.
+\end{cases}
+\]
+Then \(f\) is \(1\)-smooth with \(\|\nabla f\|\le2\epsilon\le1\), \(\calA\) satisfies
+\(L_{\calA}=G_{\calA}=0\), and \(h\) is convex and \(1\)-Lipschitz. Since
+\(\epsilon\le\sqrt{\Delta}/2\), we have \(x_\star\ge2\epsilon\), thus \(f(0)=2\epsilon x_\star-2\epsilon^2=\Delta\). Moreover, \(\inf f=f(x_\star)=0\). Hence
+\((f,\calA,h)\in\mathcal I(\mathbf C_0,\Delta)\).
+\end{example}
+
+\begin{remark}
+\label{rem:plateau}
+The construction ensures that \(\inf f=0\) and \(f(0)=\Delta\), so the
+initial objective gap is exactly \(\Delta\). This allows us to make the
+dependence of the iteration lower bound on \(\Delta\) explicit.
+\end{remark}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.62\textwidth]{figures/plateau_instance.pdf}
+\caption{The hard instance of Example~\ref{ex:plateau}.}
+\label{fig:plateau-instance}
+\end{figure}
+
+For \(\alpha>\alpha_\epsilon\) and \(\beta>0\), we use a rotating instance.
+Motivated by the quadratic hard instances in~\cite[Example~5.1]{li2026smoothing}
+and~\cite[Appendix~C.1]{mahdavinia2022tight}, we construct the following instance.
+
+\begin{example}
+\label{ex:rotation}
+Let \(b,c_\kappa,X>0\) and \(x_c,\lambda_c\in\mathbb C\) be given in
+Appendix~\ref{app:lb-rotation-params}, and set \(R_*:=\frac54X\). Define
+\(\calA(x)=b(x-x_c)\), \(h(y)=\|y\|_2\), and
+\[
+f(x)=\psi\bigl(\|x-x_c\|\bigr)-b\langle\lambda_c,x-x_c\rangle,
+\qquad
+\psi(r)=
+\begin{cases}
+-\dfrac{c_\kappa}{2}r^2, & 0\le r\le R_*,\\[4pt]
+\dfrac{c_\kappa}{2}(r-2R_*)^2-c_\kappa R_*^2, & R_*\le r\le3R_*,\\[4pt]
+c_\kappa R_*(r-3R_*)-\dfrac{c_\kappa}{2}R_*^2, & r\ge3R_*.
+\end{cases}
+\]
+\end{example}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.58\textwidth]{figures/rotation_instance.pdf}
+\caption{\(\mathrm{LRALM}_{\theta,\alpha,\beta}\) on the hard instance of
+Example~\ref{ex:rotation}: (a)~primal iterates; (b)~scaled KKT residual.}
+\label{fig:rotation-instance}
+\end{figure}
+
+For \(\alpha>\alpha_\epsilon\) and \(\beta=0\), the instance below keeps the
+objective of Example~\ref{ex:plateau} and changes the inner mapping and the
+outer function.
+
+\begin{example}
+\label{ex:huber}
+Let \(\epsilon\) satisfy the condition in Example~\ref{ex:plateau}, and let
+\(f\) be the function defined there. Set
+\[
+q_h:=2s+1,
+\qquad
+a_0:=\frac{4\epsilon(\rho+3s+1)}{q_h}.
+\]
+Define \(\calA\equiv a_0\) and \(h:\RR\to\RR\) by
+\[
+h(y)=
+\begin{cases}
+\dfrac{q_h}{2}y^2, & |y|\le q_h^{-1},\\[4pt]
+|y|-\dfrac{1}{2q_h}, & |y|>q_h^{-1}.
+\end{cases}
+\]
+Then \(h\) is convex and \(1\)-Lipschitz, and \(\calA\) satisfies
+\(L_{\calA}=G_{\calA}=0\). Since \(F=f+h(a_0)\) differs from \(f\) by a
+constant, Remark~\ref{rem:plateau} gives
+\(F(0)-\inf F=f(0)-\inf f=\Delta\). Together with the properties of \(f\)
+established in Example~\ref{ex:plateau}, this gives
+\((f,\calA,h)\in\mathcal I(\mathbf C_0,\Delta)\).
+\end{example}
+
+The analyses of Examples~\ref{ex:plateau}, \ref{ex:rotation},
+and~\ref{ex:huber} are given in Appendices~\ref{subsec:lb-plateau},
+\ref{subsec:lb-rotation}, and~\ref{subsec:lb-huber}, respectively.
+
+\subsubsection{Reduction to a gradient descent--ascent recursion}
+\label{subsec:gda-embedding}
+
+Where \(\by(\bx,\blmbd)=\zero\), the updates of
+\(\mathrm{LRALM}_{\theta,\alpha,\beta}\) reduce to gradient
+descent--ascent steps on a smooth saddle function. To state this, define
+\[
+\mathcal R_\rho:=\bigl\{(\bx,\blmbd):\ \blmbd+\rho\calA(\bx)\in\partial h(\zero)\bigr\},
+\qquad
+\Psi_\rho(\bx,\blmbd):=f(\bx)+\frac{\rho}{2}\|\calA(\bx)\|^2+\langle\blmbd,\calA(\bx)\rangle .
+\]
+
+\begin{proposition}[Reduction on \(\mathcal R_\rho\)]
+\label{prop:reduction}
+Let \(\rho>0\) and \((\bx,\blmbd)\in\mathcal R_\rho\). Then
+\(\by(\bx,\blmbd)=\zero\), \(\bq(\bx,\blmbd)=\blmbd+\rho\calA(\bx)\), and
+\[
+\nabla f(\bx)+J_{\calA}(\bx)^\top\bq(\bx,\blmbd)=\nabla_{\bx}\Psi_\rho(\bx,\blmbd),
+\qquad
+\calA(\bx)-\by(\bx,\blmbd)=\nabla_{\blmbd}\Psi_\rho(\bx,\blmbd).
+\]
+Moreover,
+\(\calD_\rho(\bx,\blmbd)=\Psi_\rho(\bx,\blmbd)+h(\zero)\).
+\end{proposition}
+
+\begin{proof}
+Set \(\bv:=\calA(\bx)+\blmbd/\rho\). By~\eqref{eq:prox-multiplier}, \(\by(\bx,\blmbd)\)
+is the unique minimizer of \(h(\by)+\frac{\rho}{2}\|\by-\bv\|^2\), and
+\(\by\) is this minimizer if and only if \(\rho(\bv-\by)\in\partial h(\by)\).
+For \(\by=\zero\) the inclusion reads
+\(\blmbd+\rho\calA(\bx)\in\partial h(\zero)\), which holds because
+\((\bx,\blmbd)\in\mathcal R_\rho\). Hence \(\by(\bx,\blmbd)=\zero\) and
+\(\bq(\bx,\blmbd)=\blmbd+\rho\calA(\bx)\). Since
+\(\nabla_{\bx}\bigl(\frac{\rho}{2}\|\calA(\bx)\|^2\bigr)=\rho J_{\calA}(\bx)^\top\calA(\bx)\),
+\[
+\nabla f(\bx)+J_{\calA}(\bx)^\top\bigl(\blmbd+\rho\calA(\bx)\bigr)
+=\nabla_{\bx}\Psi_\rho(\bx,\blmbd),
+\]
+and \(\calA(\bx)-\zero=\nabla_{\blmbd}\Psi_\rho(\bx,\blmbd)\).
+Finally, completing the square in~\eqref{eq:reduced-al} gives
+\(\calD_\rho(\bx,\blmbd)=f(\bx)+\min_{\by}\{h(\by)+\frac{\rho}{2}\|\by-\bv\|^2\}
+-\frac{1}{2\rho}\|\blmbd\|^2\), and the minimum equals
+\(h(\zero)+\frac{\rho}{2}\|\bv\|^2\) because its minimizer is \(\zero\). Hence
+\[
+\calD_\rho(\bx,\blmbd)
+=f(\bx)+h(\zero)+\frac{\rho}{2}\|\calA(\bx)\|^2+\langle\blmbd,\calA(\bx)\rangle
++\frac{1}{2\rho}\|\blmbd\|^2-\frac{1}{2\rho}\|\blmbd\|^2
+=\Psi_\rho(\bx,\blmbd)+h(\zero).
+\]
+\end{proof}
+
+For \(\theta=(\rho,s,\gamma,\eta,\tau)\) and \((\alpha,\beta)\in[0,1]^2\), consider
+the recursion
+\begin{equation}\label{eq:gda-recursion}
+\begin{aligned}
+\bx^{k+1}&=\bx^k-\eta\Bigl[\nabla_{\bx}\Psi_\rho(\bx^k,\blmbd^k)
+  +\frac{1}{\gamma}(\bx^k-\bz^k)\Bigr],\\
+\blmbd^{k+1}&=\blmbd^k+\tau\Bigl[\nabla_{\blmbd}\Psi_\rho(\bx^{k+1},\blmbd^k)
+  -\frac{1}{s}(\blmbd^k-\bmu^k)\Bigr],\\
+\bz^{k+1}&=\bz^k+\alpha(\bx^{k+1}-\bz^k),\qquad
+\bmu^{k+1}=\bmu^k+\beta(\blmbd^{k+1}-\bmu^k).
+\end{aligned}
+\end{equation}
+
+\begin{proposition}[Embedding]
+\label{prop:embedding}
+Let \(\rho>0\), and let the sequence
+\(\{(\bx^k,\blmbd^k,\bz^k,\bmu^k)\}_{k\ge0}\) be generated by
+\(\mathrm{LRALM}_{\theta,\alpha,\beta}\). Suppose that for some \(K\ge1\),
+\((\bx^k,\blmbd^k)\in\mathcal R_\rho\) and
+\((\bx^{k+1},\blmbd^k)\in\mathcal R_\rho\) for all \(0\le k<K\).
+Then \eqref{eq:gda-recursion} holds for \(0\le k<K\), and
+\[
+R_k=\max\bigl\{\|\nabla_{\bx}\Psi_\rho(\bx^{k+1},\blmbd^k)\|,\;
+\|\nabla_{\blmbd}\Psi_\rho(\bx^{k+1},\blmbd^k)\|\bigr\},
+\qquad 0\le k<K.
+\]
+\end{proposition}
+
+\begin{proof}
+Apply Proposition~\ref{prop:reduction} at \((\bx^k,\blmbd^k)\) in the
+\(\bx\)-update of~\eqref{eq:splalm-updates}, and at \((\bx^{k+1},\blmbd^k)\) in
+the \(\blmbd\)-update. The same point gives \(\by^{k+1}=\zero\) and
+\(\bq^k=\blmbd^k+\rho\calA(\bx^{k+1})\), so the formula for \(R_k\) follows
+from~\eqref{eq:kkt-residual}.
+\end{proof}
+
+Recursion~\eqref{eq:gda-recursion} is the update of
+DS-GDA~\cite{zheng2023universal} for the saddle function \(\Psi_\rho\), with
+the same order of updates, whenever the projections in DS-GDA are inactive.
+Proposition~\ref{prop:embedding} identifies
+\(\mathrm{LRALM}_{\theta,\alpha,\beta}\) with this recursion only while both
+evaluation points \((\bx^k,\blmbd^k)\) and \((\bx^{k+1},\blmbd^k)\) lie in
+\(\mathcal R_\rho\); outside \(\mathcal R_\rho\), the two recursions differ.
+
+\subsubsection{Proof of Theorem~\ref{thm:lower-bound}}
+\label{subsec:lb-combine}
+
+We now combine the three instances. Let \(c_1\) and \(c_2\) be given
+by~\eqref{eq:rot-thresholds}. The constant \(c_1\) depends only on
+\((\gamma,\eta,\tau)\), and \(c_2\) depends only on \((\gamma,\tau,\Delta)\),
+as required in Theorem~\ref{thm:lower-bound}.
+
+\begin{proof}[Proof of Theorem~\ref{thm:lower-bound}]
+Fix \(\epsilon\in(0,c_2)\), \(\rho>0\), and \(s\ge\tau\) with
+\(\epsilon(\rho+s)\le c_1\), and fix \((\alpha,\beta)\in[0,1]^2\). The
+definition of \(c_2\) gives \(\epsilon\le\frac1{64}\le\frac12\),
+\(\epsilon\le\sqrt\Delta/2\), and
+\(\epsilon^2\le\Delta/(64\gamma)\le\Delta/(16\gamma)\). Hence the conditions
+of Example~\ref{ex:plateau}, Lemma~\ref{lem:plateau}, and
+Example~\ref{ex:huber} on \(\epsilon\) hold. We treat the three parts of the
+partition of \([0,1]^2\) separately.
+
+\emph{Case 1: \(\alpha\le\alpha_\epsilon\).} Let \(I\) be the instance of
+Example~\ref{ex:plateau}, which belongs to \(\mathcal I(\mathbf C_0,\Delta)\).
+If \(\alpha=0\), Lemma~\ref{lem:plateau}~(iii) gives
+\(T_\epsilon(\theta,\alpha,\beta;I)=+\infty\). If
+\(0<\alpha\le\alpha_\epsilon\), Lemma~\ref{lem:plateau}~(iii) and the
+definition of \(\alpha_\epsilon\) give
+\[
+T_\epsilon(\theta,\alpha,\beta;I)
+>\frac{\Delta}{16\gamma\alpha\epsilon^2}
+\ge\frac{\Delta}{16\gamma\alpha_\epsilon\epsilon^2}
+=\frac{\Delta\,\epsilon^{-4}}{16384\,\gamma\max\{1,4\tau,4\gamma\tau\}}.
+\]
+Both bounds hold for every \(\beta\in[0,1]\).
+
+\emph{Case 2: \(\alpha>\alpha_\epsilon\) and \(\beta>0\).} The conditions of
+Lemma~\ref{lem:rot-estimates} hold. Let \(I\) be the instance of
+Example~\ref{ex:rotation}. By Lemma~\ref{lem:rot-estimates}~(i),
+\(I\in\mathcal I(\mathbf C_0,\Delta)\), and Lemma~\ref{lem:rot-trajectory}
+gives \(T_\epsilon(\theta,\alpha,\beta;I)=+\infty\).
+
+\emph{Case 3: \(\alpha>\alpha_\epsilon\) and \(\beta=0\).} The conditions of
+Lemma~\ref{lem:huber} hold. Let \(I\) be the instance of
+Example~\ref{ex:huber}, which belongs to \(\mathcal I(\mathbf C_0,\Delta)\).
+Lemma~\ref{lem:huber}~(ii) gives
+\(T_\epsilon(\theta,\alpha,0;I)=+\infty\).
+
+The three cases cover \([0,1]^2\). Hence, for every
+\((\alpha,\beta)\in[0,1]^2\), some \(I\in\mathcal I(\mathbf C_0,\Delta)\)
+satisfies
+\[
+T_\epsilon(\theta,\alpha,\beta;I)
+\ge\frac{\Delta\,\epsilon^{-4}}{16384\,\gamma\max\{1,4\tau,4\gamma\tau\}}.
+\]
+Taking the supremum over \(I\) and then the infimum over \((\alpha,\beta)\)
+in Definition~\ref{def:complexity-measure} gives the bound on
+\(T_\epsilon(\calC_\theta,\mathcal I(\mathbf C_0,\Delta))\).
+\end{proof}
+
+In Cases~2 and~3, the method never produces an \(\epsilon\)-KKT output.
+The finite bound comes only from Case~1, and it determines the order
+\(\epsilon^{-4}\) in Theorem~\ref{thm:lower-bound}.
+
+\subsubsection{Proof of Theorem~\ref{thm:lower-bound-fixed-rho}}
+\label{subsec:lb-fixed-rho-proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:lower-bound-fixed-rho}]
+Let \(B\) and \(\epsilon_{\rm r}\) be the constants
+in~\eqref{eq:radial-fixed-constants}, and set
+\(\epsilon_0:=\min\{\epsilon_{\rm r},\sqrt{\Delta}/2,\sqrt{\Delta/(16\gamma)}\}\).
+Fix \(\epsilon\in(0,\epsilon_0)\) and \((\alpha,\beta)\in[0,1]^2\), and
+write \(\theta=\theta(\epsilon)\).
+
+\emph{Case 1: \(\alpha\le B\epsilon\).} Since \(\epsilon_{\rm r}\le1/2\),
+\(\epsilon\) satisfies the conditions of Example~\ref{ex:plateau} and
+Lemma~\ref{lem:plateau}. Let \(I\) be the instance of
+Example~\ref{ex:plateau}. If \(\alpha=0\),
+Lemma~\ref{lem:plateau}~(iii) gives
+\(T_\epsilon(\theta,\alpha,\beta;I)=+\infty\). If
+\(0<\alpha\le B\epsilon\), it gives
+\[
+    T_\epsilon(\theta,\alpha,\beta;I)
+    >\frac{\Delta}{16\gamma\alpha\epsilon^2}
+    \ge\frac{\Delta\,\epsilon^{-3}}{16\gamma B}.
+\]
+
+\emph{Case 2: \(\alpha>B\epsilon\).} Lemma~\ref{lem:radial} gives an
+instance \(I\in\mathcal I(\mathbf C_0,\Delta)\) with
+\(T_\epsilon(\theta,\alpha,\beta;I)=+\infty\).
+
+The two cases cover \([0,1]^2\). Taking the supremum over \(I\) and then
+the infimum over \((\alpha,\beta)\) in
+Definition~\ref{def:complexity-measure} gives the bound.
+\end{proof}

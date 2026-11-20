@@ -14,7 +14,7 @@
 \usepackage{url}            % URL typesetting
 \usepackage{nicefrac}       % Compact fraction symbols
 \usepackage{xspace}         % Smart spacing for macros
-\usepackage{geometry}       % Page layout
+% geometry is loaded only for the arXiv format (see main.tex)
 
 % Mathematical packages
 \usepackage{amsmath}        % Core math support
@@ -47,7 +47,7 @@
 \@ifpackageloaded{cleveref}{}{\usepackage{cleveref}}
 \makeatother
 
-\geometry{left=3.0cm,right=3.0cm}
+
 
 % Ensure hyperref settings are robust
 \hypersetup{
@@ -256,3 +256,9 @@
 
 % Add a serial/Oxford comma by default.
 \newcommand{\creflastconjunction}{, and~}
+
+% Framed step headings in the analysis framework (Section 4.2).
+\usepackage[most]{tcolorbox}
+\newtcolorbox{stepbox}{enhanced, colback=gray!6, colframe=gray!55,
+  boxrule=0.6pt, arc=2pt, left=6pt, right=6pt, top=4pt, bottom=4pt,
+  before skip=8pt, after skip=6pt}

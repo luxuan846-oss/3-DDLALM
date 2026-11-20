@@ -1,26 +1,19 @@
 % !TEX root = ../main.tex
 \section{Conclusion}
 \label{sec:conclusion}
-
-In this paper, we studied the iteration complexity of single-loop linearized
-augmented Lagrangian methods with a fixed penalty. For the family
-\(\calC_\theta\), we established a lower bound of \(\Omega(\epsilon^{-4})\)
-that holds for any choice of constant center stepsizes whenever
-\(\epsilon(\rho+s)\le c_1\), and we showed that the choice \(\beta=1\)
-attains this order. With \(\rho\) fixed and \(s=c_s/\epsilon\) for a
-sufficiently large constant \(c_s\), the choice \(\beta=0\) and a suitable
-primal center stepsize \(\alpha=\Theta(\epsilon)\) attains
-\(\mathcal O(\epsilon^{-3})\).
-
-These results delineate the roles of the penalty, dual regularization, and
-center updates within \(\calC_\theta\). The effective penalty \(\rho+s\)
-connects penalty selection in ALMs with dual regularization in the reduced
-minimax formulation. Adjusting the constant center stepsizes cannot
-substitute for the growth of \(\rho+s\) required to attain
-\(\mathcal O(\epsilon^{-3})\). This growth can be realized by reducing the
-dual regularization coefficient \(1/s\) as the target accuracy decreases,
-while keeping the penalty \(\rho\) fixed.
-
-An interesting direction for future research is to extend this analysis to
-smoothed gradient descent--ascent methods for general nonconvex--concave
-minimax problems.
+This paper studies LRALM, a single-loop linearized regularized augmented
+Lagrangian framework for the structured nonsmooth nonconvex composite
+problem~\eqref{prob:main}. Within the constant-stepsize family \(\calC_\theta\),
+we establish tight worst-case complexity bounds for finding an
+\(\epsilon\)-KKT point, obtaining \(\Theta(\epsilon^{-4})\) whenever
+\(\rho+s\le c_1/\epsilon\) and \(\Theta(\epsilon^{-3})\) for fixed \(\rho\) and
+\(s=c_s/\epsilon\) with sufficiently large \(c_s\). Our analysis shows that the
+complexity order of \(\calC_\theta\) is governed by the effective penalty
+\(\rho+s\) uniformly across all constant center stepsizes, so the dual
+regularization alone can carry the required \(1/\epsilon\) growth while keeping
+the penalty \(\rho\) fixed. Fixing the dual center at zero, we further develop a novel algorithm 
+Fast LRALM with one Nesterov extrapolation step on the dual variable and
+establish its \(\mathcal O(\epsilon^{-5/2})\) iteration complexity. To the best of our knowledge, Fast LRALM is the first single-loop
+linearized ALM that finds an \(\epsilon\)-KKT point of
+Problem~\eqref{prob:main} in \(\mathcal O(\epsilon^{-5/2})\) iterations
+with a fixed penalty parameter. 

@@ -44,6 +44,32 @@
 
 ## 4. 当前待办
 
+### 与老师讨论：Fast LRALM 加速（2026-11-17 确定的工作内容）
+
+每次讨论只谈一块。本次只谈加速，下界、arXiv、署名不在本次议程中。材料由下面四部分组成。
+
+**1. 加速的本质（一段话）。** 固定 $\rho$ 后，$\mathcal{D}_\rho$ 关于 $\boldsymbol\lambda$ 是光滑凹函数，梯度 Lipschitz 常数只依赖 $\rho$。按 Lin–Jin–Jordan（COLT 2020）的归约，加以 $\mathbf{0}$ 为中心、系数 $1/s$ 的对偶正则，问题变成 NC-SC。乘子在半径 $L_h$ 的球内，正则偏差为 $\mathcal{O}(L_h/s)$，取 $s=\Theta(\epsilon^{-1})$，对偶条件数 $\kappa=\Theta(\epsilon^{-1})$。NC-SC 下界 $\Omega(\sqrt{\kappa}\,\epsilon^{-2})$（Zhang 等 UAI 2021；Li 等 NeurIPS 2021）代入得 $\epsilon^{-5/2}$。不加速时对 $\kappa$ 一次依赖，$\kappa\,\epsilon^{-2}=\epsilon^{-3}$，即 LRALM 族的 $\Theta(\epsilon^{-3})$。加速就是把 $\kappa$ 降为 $\sqrt{\kappa}$；对偶目标在全空间光滑强凹，无需投影，Nesterov 外推直接加在乘子步上。
+- 待核：`thm:upper-beta0` 只写了常数 $C'$，对 $\kappa$ 的一次依赖需从附录证明中提取。
+
+**2. 讨论提纲。**
+- Related work 中加速的做法：IAIPAL、iALM 多循环，加速在内层（APG 解强凸子问题），带对数因子；本文单循环，加速在外层乘子步。
+- 分析难点（算法简单，分析不简单）：(i) 乘子有界性，不投影时外推乘子需另证有界（`lem:b2-prime-multiplier-bounds`，用 $h$ 的 Lipschitz 性）；(ii) Lyapunov 函数构造，外推后单步不单调，收缩的是估计序列 $\mathbf{w}^k$，误差放大 $\sqrt{\kappa}$ 倍，需 $\alpha\le 1/(6\sqrt{\kappa})$，势函数加原始跟踪项与增量项。
+- 与别人的区别：ALM 方面，核查过的 20 篇内无非凸 ALM 乘子外推的复杂度结果；minimax 方面绕不开，Zhang–Xu 已在 $\mathcal{D}_\rho$ 上（对偶球半径 $2L_h$）给出 Problem (P) 的单循环 $\mathcal{O}(\epsilon^{-5/2})$。请老师确认定位：贡献放在问题一的族下界，加速部分只主张算法与分析更简单（梯度步加外推，无投影，无 extragradient）。
+
+**3. 汇报文献。**
+
+| Method | arXiv | 结论 | 备注 |
+|---|---|---|---|
+| Zhang–Yang–Guzmán–Kiyavash–He, UAI 2021 | 2103.15888 | NC-SC 下界 $\Omega(\sqrt{\kappa}L\Delta\,\epsilon^{-2})$；加速框架反复解 SC-SC 子问题，上下界差对数因子 | 下界中 $\sqrt{\kappa}$ 的来源 |
+| Li–Tian–Zhang–Jadbabaie, NeurIPS 2021 | 2104.08708 | 同一下界，确定性 oracle；指出 Lin–Jin–Jordan 上界在 $\epsilon$、$\kappa$ 上最优（差对数因子） | 与上一篇并列引用 |
+| Lin–Jin–Jordan, COLT 2020 | 2002.02417 | SC-SC 上 $\tilde{\mathcal{O}}(\sqrt{\kappa_x\kappa_y})$；推广到 NC-SC、NC-C（Minimax-PPA） | 加 $\Theta(\epsilon)$ 对偶正则，NC-C 变为 $\kappa=\Theta(\epsilon^{-1})$ 的 NC-SC，得 $\tilde{\mathcal{O}}(\epsilon^{-5/2})$ |
+| Kong–Melo–Monteiro, SIOPT 2023 (IAIPAL) | 2008.00562 | 线性约束非凸复合问题，经典 AL；内层 ACG，共 $\mathcal{O}(\epsilon^{-5/2}\log^2\epsilon^{-1})$ | 加速 ALM |
+| Li–Chen–Liu–Lu–Xu, AISTATS 2021 (iALM) | 2007.01284 | 仿射等式约束 $\tilde{\mathcal{O}}(\epsilon^{-5/2})$，非凸约束 $\tilde{\mathcal{O}}(\epsilon^{-3})$，$\epsilon$-KKT，需正则性条件 | 加速 ALM |
+
+另加：Kong–Monteiro 2024（单循环，乘子阻尼中心在 $\mathbf{0}$，罚参数 $\Omega(\epsilon^{-1})$，$\mathcal{O}(\epsilon^{-3})$，最接近 $\beta=0$ 成员）；Zhang–Xu（arXiv:2609.17973，最大风险，必须汇报）；Ke–Mei–Zhang（arXiv:2609.25752，经 $h^*$ 多层循环在本文问题类上达到 $\mathcal{O}(\epsilon^{-5/2})$）。
+
+**4. 投稿与实验。** 期刊建议 SIOPT，备选 Math Programming。实验提议（待用户确认实例后再写代码）：robust phase retrieval，$\min_{\mathbf{x}} \frac{1}{m}\sum_i \lvert\langle\mathbf{a}_i,\mathbf{x}\rangle^2-b_i\rvert$，$n=50$、$m=200$；方法为 LRALM（$\beta=1$）、LRALM（$\beta=0$，$s=c_s/\epsilon$）、Fast LRALM；记录达到 $\epsilon$-KKT 的迭代数，对数坐标拟合斜率，预期 $-4$、$-3$、$-5/2$；$\epsilon^{-4}$ 一条只取 $\epsilon\in[0.03,0.3]$。
+
 ### 优先完成
 
 1. **β=0 上界引用换算。** 对照 Li26 v2 §4.2 (4.19)–(4.23)，核对 `eq:beta0-gs-rate` 中 $C_*$ 的存在性、参数依赖、精度一致性和平均常数。证明材料见 `notes/gpt-proofs/beta0-upper-check-20261013.md`。写入完成不代表核查完成。

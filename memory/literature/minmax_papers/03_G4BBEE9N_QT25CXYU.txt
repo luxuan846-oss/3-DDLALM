@@ -1,0 +1,894 @@
+     The Complexity of Nonconvex-Strongly-Concave Minimax Optimization
+
+
+      Siqi Zhang1           Junchi Yang1                Cristóbal Guzmán2           Negar Kiyavash3             Niao He4
+
+                                     1
+                                      University of Illinois at Urbana-Champaign (UIUC)
+                            2
+                                University of Twente & Pontificia Universidad Católica de Chile
+                                      3
+                                        École polytechnique fédérale de Lausanne (EPFL)
+                                                          4
+                                                            ETH Zürich
+
+
+
+                        Abstract                                  when f is µ-strongly concave in y and perhaps noncon-
+                                                                  vex in x, i.e., f is nonconvex-strongly-concave (NC-SC).
+                                                                  Such problems arise ubiquitously in machine learning, e.g.,
+    This paper studies the complexity for finding ap-             GANs with regularization [Lei et al., 2020], Wasserstein
+    proximate stationary points of nonconvex-strongly-            robust models [Sinha et al., 2018], robust learning over
+    concave (NC-SC) smooth minimax problems, in                   multiple domains [Qian et al., 2019], and off-policy re-
+    both general and averaged smooth finite-sum set-              inforcement learning [Dai et al., 2017, 2018, Huang and
+    tings. We establish
+                  √      nontrivial lower√complexity              Jiang, 2020]. Since the problem is nonconvex in general,
+    bounds of Ω( κ∆L−2 ) and Ω(n + nκ∆L−2 )                     a natural goal is to find an approximate stationary point
+    for the two settings, respectively, where κ is                x̄, such that k∇Φ(x̄)k ≤ , for a given accuracy , where
+    the condition number, L is the smoothness con-                Φ(x) , maxy f (x, y) is the primal function. This goal is
+    stant, and ∆ is the initial gap. Our result reveals           meaningful for the aforementioned applications, e.g., in
+    substantial gaps between these limits and best-               adversarial models the primal function quantifies the worst-
+    known upper bounds in the literature. To close                case loss for the learner, with respect to adversary’s actions.
+    these gaps, we introduce a generic acceleration
+    scheme that deploys existing gradient-based meth-             There exists a number of algorithms for solving NC-
+    ods to solve a sequence of crafted strongly-convex-           SC problems in the general setting, including GDmax
+    strongly-concave subproblems. In the general set-             [Nouiehed et al., 2019], GDA [Lin et al., 2020a], alternat-
+    ting, the complexity of our proposed algorithm                ing GDA [Yang et al., 2020a, Boţ and Böhm, 2020, Xu
+    nearly matches the lower bound; in particular, it re-         et al., 2020], Minimax-PPA [Lin et al., 2020b]. Specif-
+    moves an additional poly-logarithmic dependence               ically, GDA and its alternating variant both achieve the
+    on accuracy present in previous works. In the av-             complexity of O(κ2 ∆L−2 ) [Lin et al., 2020a, Yang et al.,
+    eraged smooth finite-sum setting, our proposed                2020a], where κ , L   µ is the condition number and ∆ ,
+    algorithm improves over previous algorithms by                Φ(x0 ) − inf x Φ(x) is the initial function gap. Recently,
+    providing a nearly-tight dependence on the condi-             [Lin et√al., 2020b] provided the best-known complexity
+    tion number.                                                  of O κ∆L−2 · log2 ( κL    ) achieved by Minimax-PPA,
+                                                                  which improves the dependence on the condition number
+                                                                  but suffers from an extra poly-logarithmic factor in 1 .
+1   INTRODUCTION
+                                                                  In the finite-sum setting, several algorithms have been
+                                                                  proposed recently, e.g., PGSMD [Rafique et al., 2018],
+In this paper, we consider general minimax problems of the
+                                                                  SGDmax [Jin et al., 2020], Stochastic GDA [Lin et al.,
+form (n, d1 , d2 ∈ N+ ):
+                                                                  2020a], SREDAs [Luo et al., 2020]. In particular, [Lin et al.,
+                    min max f (x, y),                       (1)   2020a] proved that Stochastic GDA attains the complexity
+                    x∈Rd1 y∈Rd2
+                                                                  of O(κ3 −4 ). [Luo et al., 2020] recently showed the state-
+as well as their finite-sum counterpart:                          of-the-art result achieved by                    n ≥ κ2 , the
+                                                                                               √ SREDA: when
+                                                                  complexity is Õ n log κ + nκ2 ∆L−2 , which is sharper
+                                                                                                             
+                                         n
+                                     1X
+           min max f (x, y) ,              fi (x, y),       (2)   than the batch Minimax-PPA    algorithm;  when n ≤ κ2 , the
+          x∈Rd1 y∈Rd2                n i=1                                                   2      −2
+                                                                                                       
+                                                                  complexity is O nκ + κ ∆L             , which is sharper than
+where f, fi are continuously differentiable and f is L-           Stochastic GDA.
+Lipschitz smooth jointly in x and y. We focus on the setting
+
+
+      Proceedings of the Thirty-Seventh Conference on Uncertainty in Artificial Intelligence (UAI 2021), PMLR 161:482–492.
+Table 1: Upper and lower complexity bounds for finding an approximate stationary point. Here Õ(·) hides poly-logarithmic
+factor in L, µ and κ. L: Lipschitz smoothness parameter; µ: strong concavity parameter, κ: condition number Lµ ; ∆: initial
+gap of the primal function.
+
+          Setting                 Our Lower Bound                Our Upper Bound                   Previous Upper Bound
+                                      √                              √
+                                   Ω κ∆L−2                       Õ( κ∆L−2 )                O(κ2 ∆L−2 ) [Lin et al., 2020a]
+                                                
+          NC-SC, general                                                                     √
+                                                                                           Õ κ∆L−2 log2 1 [Lin et al., 2020b]
+                                                                                                              
+                                    Theorem 3.1                     Section 4.2
+                                                                                             (       √
+                                      √                               3√
+                                                                                            Õ(n + nκ2 ∆L−2 ) n ≥ κ2
+                                 Ω n + nκ∆L−2                    n + n 4 κ ∆L−2
+                                                
+                           1                               Õ
+                                                                                              O nκ + κ2 ∆L−2           n ≤ κ2
+                                                                                                                   
+          NC-SC, FS, AS
+                                    Theorem 3.2                     Section 4.2
+                                                                                                    [Luo et al., 2020]
+          1
+              FS: finite-sum, AS: averaged smooth; see Section 2 for definitions.
+
+
+Despite this active line of research, whether these state-of-                  Our lower bounds build upon two main ideas: first, we
+the-art complexity bounds can be further improved remains                      start from an NC-SC function whose primal function
+elusive. As a special case by restricting the domain of y                      mimics the lower bound construction in smooth noncon-
+to a singleton, lower bounds for nonconvex smooth mini-                        vex minimization [Carmon et al., 2019a]. Crucially, the
+mization, e.g., [Carmon et al., 2019a,b, Fang et al., 2018,                    smoothness parameter of this primal function is boosted
+Zhou and Gu, 2019, Arjevani et al., 2019], hardly capture                      by an Ω(κ) factor, which strengthens the lower bound.
+the dependence on the condition number κ, which plays a                        Second, the function has an alternating zero-chain struc-
+crucial role in the complexity for general NC-SC smooth                        ture, as utilized in lower bounds for convex-concave set-
+minimax problems. In many of the aforementioned machine                        tings [Ouyang and Xu, 2019]. The combination of these
+learning applications, the condition number is inversely pro-                  features leads to a hard instance for our problem.
+portional the regularization parameter, and can be very large
+                                                                             • To bridge the gap between the lower bounds and existing
+in practice. For example, in statistical learning, where n rep-
+                                                                               upper bounds in both settings, we introduce a generic Cat-
+resents the sample size, the optimal regularization parameter
+                                                                               alyst acceleration framework for NC-SC minimax prob-
+(i.e. with optimal
+           √       empirical/generalization trade-off) leads
+                                                                               lems, inspired by [Lin et al., 2018a, Yang et al., 2020b],
+to κ = Ω( n) [Shalev-Shwartz and Ben-David, 2014].
+                                                                               which applies existing gradient-based methods to solving
+This motivates the following fundamental questions: What                       a sequence of crafted strongly-convex-strongly-concave
+is the complexity limit for NC-SC problems in the general                      (SC-SC) minimax subproblems. When combined with
+and finite-sum settings? Can we design new algorithms to                       the extragradient (EG) method √    [Tseng, 1995], the re-
+meet the performance limits and attain optimal dependence                      sulting algorithm achieves an Õ( κ∆L−2 ) complexity
+on the condition number?                                                       in terms of gradient evaluations, which tightly matches
+                                                                               the lower bound in the general setting (up to logarith-
+                                                                               mic terms in constants) and shaves off the extra poly-
+1.1       CONTRIBUTIONS
+                                                                               logarithmic term in 1 required by the state-of-the-art [Lin
+                                                                               et al., 2020b]. When combined with stochastic variance-
+Our contributions, summarized in Table 1, are as follows:
+                                                                               reduced method, √the resultingalgorithm achieves an over-
+• We establish nontrivial lower complexity bounds for                          all Õ (n + n3/4 κ)∆L−2 complexity for averaged
+  finding an approximate stationary point of nonconvex-                        smooth finite-sum problems, which has nearly-tight de-
+  strongly-concave (NC-SC) minimax       problems.   In the                    pendence on the condition number and improves on the
+                                   √                                           best-known upper bound when n ≤ κ4 .
+  general setting, we prove an Ω κ∆L−2 lower com-
+                                             
+
+  plexity bound which applies to arbitrary determinis-
+  tic linear-span algorithms interacting with the classical                  1.2    RELATED WORK
+  first-order √
+              oracle. In the
+                           finite-sum setting, we prove
+  an Ω n + nκ∆L−2 lower complexity bound (when
+                                                                             Lower bounds for minimax problems. Information-
+  κ = Ω(n))1 for the class of averaged smooth functions
+                                                                             based complexity (IBC) theory [Traub et al., 1988], which
+  and arbitrary linear-span algorithms interacting with a
+                                                                             derives the minimal number of oracle calls to attain an ap-
+  (randomized) incremental first-order oracle (precise defi-
+                                                                             proximate solution with a desired accuracy, is often used in
+  nitions in Sections 2 and 3).
+                                                                             lower bound analysis of optimization algorithms. Unlike the
+      1
+      A concurrent work by Han et al. [2021] provided a similar              case of minimization, e.g., [Nemirovski and Yudin, 1983,
+lower bound result for finite-sum NC-SC problems under proba-                Carmon et al., 2019a,b, Arjevani et al., 2019], lower bounds
+bilistic arguments based on geometric random variables.                      for minimax optimization are far less understood; only a few
+
+
+                                                                       483
+recent works provided lower bounds for finding an approxi-          In contrast, this paper introduces a new catalyst acceleration
+mate saddle point of (strongly)-convex-(strongly)-concave           scheme in the nonconvex-strongly-concave setting, which
+minimax problems [Ouyang and Xu, 2019, Zhang et al.,                relies on different parameter settings and stopping criterion.
+2019, Ibrahim et al., 2020, Xie et al., 2020, Yoon and Ryu,
+2021]. Instead, this paper considers lower bounds for NC-
+SC problems of finding an stationary point, which requires          2    PRELIMINARIES
+different techniques for constructing zero-chain properties.
+Note that there exists another line of research on the purely       Notations Throughout the paper, we use dom F as the
+stochastic setting, e.g., [Rafique et al., 2018, Luo et al.,        domain of a function F , ∇F = (∇x F, ∇y F ) as the full
+2020]; constructing lower bounds in that setting is out of          gradient, k·k as the `2 -norm. We use 0 to represent zero
+the scope of this paper.                                            vectors or scalars, ei to represent unit vector with the i-th
+                                                                    element being 1. For nonnegative functions f (x) and g(x),
+                                                                    we say f = O(g) if f (x) ≤ cg(x) for some c > 0, and
+Complexity of making gradient small. In nonconvex op-               further write f = Õ(g) to omit poly-logarithmic terms on
+timization, most lower complexity bounds we mentioned               constants L, µ and κ, while f = Ω(g) if f (x) ≥ cg(x) (see
+before measure the convergence in gradient norm, and cor-           more in Appendix).
+responding upper bounds are able to match with them [Car-
+mon et al., 2019a]. Although for the convex optimization            We introduce definitions and assumptions used throughout.
+objective value is commonly considered as convergence
+criterion, Nesterov [2012], Allen-Zhu [2018], Foster et al.         Definition 2.1 (Primal and Dual Functions) For a func-
+[2019], Carmon et al. [2019b] provide algorithms with gradi-        tion f (x, y), we define Φ(x) , maxy f (x, y) as the primal
+ent norm convergence, which is easier to check and arguably         function, and Ψ(y) , minx f (x, y) as the dual function.
+more informative than the traditional optimality gap. Re-           We also define the primal-dual gap at a point (x̄, ȳ) as
+cently, Diakonikolas [2020], Diakonikolas and Wang [2021],          gapf (x̄, ȳ) , maxy∈Rd2 f (x̄, y) − minx∈Rd1 f (x, ȳ).
+Yoon and Ryu [2021] attain convergence results in terms
+of gradient norm for convex-concave minimax problems.               Definition 2.2 (Lipschitz Smoothness) We say a function
+In particular, Yoon and Ryu [2021] propose an algorithm             f (x, y) is L-Lipschitz smooth (L-S) jointly in x and y if it
+combining Halpern iteration and extragradient to attain a           is differentiable and for any (x1 , y1 ), (x2 , y2 ) ∈ Rd1 × Rd2 ,
+complexity of O(L/), also with a matching lower bound.             k∇x f (x1 , y1 ) − ∇x f (x2 , y2 )k ≤ L(kx1 −x2 k+ky1 −y2 k)
+                                                                    and k∇y f (x1 , y1 ) − ∇y f (x2 , y2 )k ≤ L(kx1 −x2 k+ky1 −
+Nonconvex minimax optimization. In NC-SC setting,                   y2 k), for some L > 0.
+as we mentioned, there has been several substantial works.
+Among them, Lin et al. [2020b] achieved the best depen-             Definition 2.3 (Average / Individual   Smoothness)
+                                                                                               Pn
+dency on condition number by combining proximal point al-           We say f (x, y) = n1 i=1 fi (x, y) or {fi }ni=1 is
+gorithm with accelerated gradient descent. Luo et al. [2020]        L-averaged smooth (L-AS) if each fi is differen-
+introduced a variance reduction algorithm, SREDA. In ad-            tiable, and for any (x1 , y1 ), (x2 , y2 ) ∈ Rd1 × Rd2 ,
+dition, nonconvex-concave minimax optimization, i.e., the                          Pn                                 2
+                                                                    we have n1 i=1 k∇fi (x1 ,y1 ) − ∇fi (x2 , y2 )k   ≤
+function f is only concave in y, is extensively explored, e.g.,                     2               2                         n
+                                                                    L2 kx1 − x2 k + ky1 − y2 k . We say f or {fi }i=1 is
+[Zhang et al., 2020, Thekumparampil et al., 2019, Nouiehed
+et al., 2019, Yang et al., 2020b]. Recently, [Daskalakis            L-individually smooth (L-IS) if each fi is L-S.
+et al., 2020] showed that for general smooth nonconvex-
+nonconcave objectives, finding locally optimal solutions is         Average smoothness is a weaker condition than the com-
+intractable. Therefore, another line of research is devoted to      mon Lipschitz smoothness assumption of each component
+solving under additional structural properties, e.g., [Yang         in finite-sum / stochastic minimization [Fang et al., 2018,
+et al., 2020c,a, Diakonikolas et al., 2020, Lin et al., 2018b].     Zhou and Gu, 2019]. Similarly in minimax problems, the
+                                                                    following proposition summarizes the relationship among
+Catalyst acceleration. The catalyst framework was ini-              these different notions of smoothness.
+tially studied in [Lin et al., 2015] for convex minimization                                             Pn
+and extended to nonconvex minimization in [Paquette et al.,         Proposition 2.1 Let f (x, y) = n1 i=1 fi (x, y). Then we
+2018] to obtain accelerated algorithms. A similar idea to           have: (a) If the function f is L-IS or L-AS, then it is L-
+accelerate SVRG appeared in [Frostig et al., 2015]. These           S. (b) If f is L-IS, then it is (2L)-AS.√(c) If f is L-AS, then
+                                                                                             τ
+work are rooted on the proximal point algorithm (PPA)               f (x, y)+ τ2x kx−x̃k2 − 2y ky− ỹk2 is 2(L+max{τx , τy })-
+[Rockafellar, 1976] and inexact accelerated PPA [Güler,             AS for any x̃ and ỹ.
+1992]. Recently, [Yang et al., 2020b] generalized the idea
+and obtained state-of-the-art results for solving strongly-         Definition 2.4 (Strong Convexity) A differentiable func-
+convex-concave and nonconvex-concave minimax problems.              tion g : Rd1 → R is convex if g(x2 ) ≥ g(x1 ) +
+
+
+                                                              484
+h∇g(x1 ), x2 − x1 i for any x1 , x2 ∈ Rd1 . Given µ ≥ 0,                   on point z, it returns the gradient OFO (f, z)                 ,
+                                                2
+we say f is µ-strongly convex if g(x) − µ2 kxk is convex,                  (∇x f (x, y), ∇y f (x, y)).
+and it is µ-strongly concave if −g is µ-strongly convex.                 • For the finite-sum setting, incremental first-order oracle
+                                                                           (IFO) is often used in lower bound analysis [Agarwal
+Assumption 2.1 (Main Settings) We assume that f (x, y)                     andPBottou,   2015]. This oracle for a function f (x, y) =
+                                                                            1   n
+in (1) is a nonconvex-strongly-concave (NC-SC) function                     n   i=1 fi (x, y), is such that for each query on point z
+such that f is L-S, and f (x, ·) is µ-strongly concave for any             and given i ∈ [n], it returns the gradient of the i-th com-
+fixed x ∈ Rd1 ; for the finite-sum case, we further assume                 ponent, i.e., OIFO (f, z, i) , (∇x fi (x, y), ∇y fi (x, y)),.
+          n                                                                Here, we consider averaged smooth IFO and individually
+that {fi }i=1 is L-AS. We assume that the initial primal
+suboptimality is bounded: Φ(x0 ) − inf x Φ(x) ≤ ∆.                         smooth IFO, denoted as OL,AS                L,IS
+                                                                                                        IFO (f ) and OIFO (f ), where
+                                                                                n
+                                                                           {fi }i=1 is L-AS or L-IS, respectively.
+Under Assumption 2.1, the primal function Φ(·) is differen-              Algorithm class In this work, we consider the class of
+tiable and 2κL-Lipschitz smooth [Lin et al., 2020b, Lemma                linear-span algorithms interacting with oracle O, denoted
+23] where κ , L   µ . Throughout this paper, we use the sta-             as A(O). These algorithms satisfy the following property:
+tionarity of Φ(·) as the convergence criterion.                          if we let (z t )t be the sequence of queries by the algorithm,
+                                                                         where z t = (xt , y t ); then for all t, we have
+Definition 2.5 (Convergence Criterion) For a differen-
+                                                                           z t+1 ∈ Span z 0 , · · · , z t ; O f, z 0 , · · · , O f, z t . (3)
+                                                                                                                                     
+tiable function Φ, a point x̄ ∈ dom Φ is called an -
+stationary point of Φ if k∇Φ(x̄)k ≤ .                                   For the finite-sum case, the above protocol fits with many ex-
+                                                                         isting deterministic and randomized linear-span algorithms.
+Another commonly used criterion is the stationarity of f ,               We distinguish the general and finite-sum setting by speci-
+i.e., k∇x f (x̄, ȳ)k ≤ , k∇y f (x̄, ȳ)k ≤ . This is a weaker         fying the used oracle, which is OFO or OIFO , respectively.
+convergence criterion. We refer readers to [Lin et al., 2020a,           Most existing first-order algorithms, including simultane-
+Section 4.3] for the comparison of these two criteria.                   ous and alternating update algorithms, can be formulated as
+                                                                         linear-span algorithms. It is worth pointing out that typically
+                                                                         the linear span assumption is used without loss of general-
+3     LOWER BOUNDS FOR NC-SC                                             ity, since there is a standard reduction from deterministic
+      MINIMAX PROBLEMS                                                   linear-span algorithms to arbitrary oracle based determinis-
+                                                                         tic algorithms [Nemirovsky, 1991, 1992, Ouyang and Xu,
+In this section, we establish lower complexity bounds (LB)               2019]. We defer this extension for future work.
+for finding approximate stationary points of NC-SC mini-
+max problems, in both general and finite-sum settings. We                Complexity measures The efficiency of algorithms is
+first present the basic components of the oracle complexity              quantified by the oracle complexity [Nemirovski and Yudin,
+framework [Nemirovski and Yudin, 1983] and then proceed                  1983] of finding an -stationary point of the primal function:
+to the details for each case. For simplicity, in this section            for an algorithm A ∈ A(O) interacting with a FO oracle O,
+only, we denote xd as the d-th coordinate of x and xt as the             an instance f ∈ F, we define
+variable x in the t-th iteration.
+                                                                                  T (f, A) , inf T ∈ N|k∇Φ xT k ≤ 
+                                                                                                                    
+                                                                                                                                    (4)
+
+3.1   FRAMEWORK AND SETUP                                                as the minimum number of oracle calls A makes to reach
+                                                                         stationarity convergence. For the general case, we define the
+We study the lower bound of finding primal stationary point              worst-case complexity
+under the well-known oracle complexity framework [Ne-
+mirovski and Yudin, 1983], here we first present the basics                       Compl (F, A, O) , sup          inf    T (f, A).      (5)
+                                                                                                           f ∈F A∈A(O)
+of the framework.
+                                                                         For finite-sum cases, we lower bound the randomized com-
+Function class We consider the nonconvex-strongly-
+                                                                         plexity by the distributional complexity [Braun et al., 2017]:
+concave (NC-SC) function class, as defined in Assumption
+                                               L,µ,∆
+2.1, with parameters L, µ, ∆ > 0, denoted by FNCSC   .
+                                                                                 Compl (F, A, O) , sup          inf    E T (f, A).     (6)
+                                                                                                         f ∈F A∈A(O)
+Oracle class We consider different oracles for the general
+and finite-sum settings. Define z , (x, y).                              Following the motivation of analysis discussed in Section
+                                                                         1.1, we will use the zero-chain argument for the analysis.
+• For the general setting, we consider the first-order or-               First we define the notion of (first-order) zero-chain [Car-
+  acle (FO), denoted as OFO (f, ·), that for each query                  mon et al., 2019b] and activation as follows.
+
+
+                                                                   485
+Definition 3.1 (Zero Chain, Activation) A function f :                         The resulting primal function resembles the worst-case func-
+Rd → R is a first-order zero-chain if for any x ∈ Rd ,                         tions used in lower bound analysis of minimization prob-
+                                                                               lems [Nesterov, 2018, Carmon et al., 2019b].
+supp{x} ⊆ {1, · · · , i−1} ⇒ supp{∇f (x)} ⊆ {1, · · · , i},
+where supp{x} , {i ∈ [d] | xi 6= 0} and [d] = {1, · · · , d}.                  Zero-Chain Construction First we summarize key prop-
+For an algorithm initialized at 0 ∈ Rd , with iterates {xt }t ,                erties of the instance and its zero-chain mechanism. We
+we say coordinate i is activated at xt , if xti 6= 0 and xsi = 0,              further denote êi ∈ Rd+2 as the unit vector for the variable
+for any s < t.                                                                 y and define (k ≥ 1)
+3.2         GENERAL NC-SC PROBLEMS                                              Xk , Span{e1 , e2 , · · · , ek }, X0 , {0},
+                                                                                                                                         (11)
+                                                                                Yk , Span{êd+2 , êd+1 , · · · , êd−k+2 }, Y0 , {0},
+First we consider the general NC-SC (Gen-NC-SC) minimax
+optimization problems. Following the above framework,                          then we have the following properties for Fd .
+                             L,µ,∆
+we choose function class FNCSC     , oracle OFO , linear-span
+algorithms A, and we analyze the complexity defined in (5).                    Lemma 3.1 (Properties of Fd ) For any d ∈ N+ and α ∈
+                                                                               [0, 1], Fd (x, y; λ, α) in (7) satisfies:
+Hard instance construction Inspired by the hard in-
+stances constructed in [Ouyang and Xu, 2019, Carmon                                                  n ·; λ, α) is LF -Lipschitz
+                                                                                (i) The function Fd (x,                          smooth
+                                                                                                          200λ21 α
+                                                                                                                        o
+et al., 2019b], we introduce the following function Fd :                            where LF = max          λ2 , 2λ1 , 2λ2    .
+Rd+1 × Rd+2 → R (d ∈ N+ ) and
+                                                    √                          (ii) For each fixed x ∈ Rd+1 , Fd (x, ·; λ, α) is µF -strongly
+                                                 λ21 α
+    Fd (x, y; λ, α) , λ1 hBd x, yi − λ2 kyk2 −         he1 , xi                     concave where µF = 2λ2 .
+                                                  2λ2
+                      d                      √                     (7)         (iii) The following properties hold:
+                λ21 α X         λ2 α      λ2 α
+            +           Γ(xi ) − 1 x2d+1 + 1   ,
+                2λ2 i=1         4λ2        4λ2                                    a) x = y = 0 ⇒ ∇x Fd ∈ X1 , ∇y Fd = 0.
+                                                                                  b) x ∈ Xk , y ∈ Yk ⇒ ∇x Fd ∈ Xk+1 , ∇y Fd ∈ Yk .
+where λ = (λ1 , λ2 ) ∈ R2 is the parameter vector, e1 ∈
+Rd+1 is the unit vector with the only non-zero element in                         c) x ∈Xk+1 , y ∈Yk ⇒ ∇x Fd ∈ Xk+1 , ∇y Fd ∈ Yk+1 .
+the first dimension, Γ : R → R and Bd ∈ R(d+2)×(d+1) are                       (iv) For L ≥ µ > 0, if λ = λ∗ = (λ∗1 , λ∗2 ) = ( L2 , µ2 ) and
+                                                                                          µ
+                                                                                    α ≤ 100L , Fd is L-Lipschitz smooth, and for any fixed
+                                                                                         d+1
+            
+                               1
+                                                                                   x ∈ R , Fd (x, ·; λ, α) is µ-strongly concave.
+     
+                          1 −1 
+                         .   .                  Z x 2
+                                                   t (t − 1)                   The proof of Lemma 3.1 is deferred to Appendix. The first
+                       .. ..
+                                
+Bd =                             , Γ(x) = 120              dt.
+                                
+                    1 −1                       1   1 + t2                    two properties show that function Fd is Lipschitz smooth
+     
+      1            −1
+                                 
+                                                                              and NC-SC; the third property above suggests that, starting
+       √
+       4                                                                       from (x, y) = (0, 0), the activation process follows an "al-
+         α
+                                                                   (8)         ternating zero-chain" form [Ouyang and Xu, 2019]. That is,
+Matrix Bd essentially triggers the activation of variables at                  for a linear-span algorithm, when x ∈ Xk , y ∈ Yk , the next
+each iteration, and function Γ introduces nonconvexity in                      iterate will at most activate the (k + 1)-th coordinate of x
+x to the instance. By the first-order optimality condition of                  while keeping y fixed; similarly when x ∈ Xk+1 , y ∈ Yk ,
+Fd (x, ·; λ, α), we can compute its primal function, Φd :                      the next iterate will at most activate the (d − k + 1)-th ele-
+                                                                               ment of y. We need the following properties of Φd for the
+    Φd (x; λ, α) , max Fd (x, y; λ, α)
+                       y∈Rd+1                                                  lower bound argument.
+                                 √       d
+                                                            !
+      λ21       1 >       √        α    X            1−α 2
+=                 x Ad x − αx1 +     +α     Γ(xi ) +    xd+1 , Lemma 3.2 (Properties of Φ ) For any α ∈ [0, 1] and
+    2λ2         2                 2                   2                                  d
+                                        i=1
+                                                                               x ∈ Rd+1 , if xd = xd+1 = 0, we have:
+                                                                   (9)
+                                                                                                        λ2
+where Ad ∈ R(d+1)×(d+1) is                                                     (i) k∇Φd (x; λ, α)k ≥ 8λ12 α3/4 .
+                                                                                                                              √
+      Ad = Bd> Bd − ed+1 e>
+                                
+                                                                                                                         λ2
+                                                                                                                                           
+                                                                                                                                   α
+                √
+                          d+1                                              (ii) Φd (0; λ, α) − inf Φd (x; λ, α) ≤ 2λ12            2 + 10αd     .
+                                                                                                 x∈Rd+1
+            1 + α −1
+                                                       
+            −1       2 −1                             
+                                                                             We defer the proof of Lemma 3.2 to Appendix. This lemma
+                                 ..                   
+                    −1 2             .                          (10)         indicates that, starting from (x, y) = (0, 0) with appropriate
+         =                                            .
+                                                      
+                           . .    . .                                          parameter settings, the primal function Φd will not approxi-
+                              .      .      −1        
+                                                                             mate stationarity until the last two coordinates are activated.
+                                 . ..
+                                                       
+                                            2      −1                        Now we are ready to present our final lower bound result
+                                             −1      1                         for the general NC-SC case.
+
+
+                                                                         486
+Theorem 3.1 (LB for Gen-NC-SC) For the linear-span                       where 0d , Id ∈ Rd×d are the zero and identity matrices
+first-order algorithm class A, parameters
+                                         L, µ, ∆ > 0, and
+                                           √ 
+                                                                         respectively, while the i-th matrix above is the identity ma-
+accuracy  satisfying 2 ≤ min 6400∆L ∆L κ
+                                      , 38400 , we have                  trix. Hence, U(i) x will be the (id − d + 1)-th to the (id)-th
+                                                                         elements of x, similar property also holds for V(i) y.
+            
+              L,µ,∆
+                               √
+                    , A, OFO = Ω κ∆L−2 .
+                                       
+      Compl FNCSC                                         (12)          The hard instance construction here follows the idea of that
+                                                                         in the deterministic hard instance (7), the basic motivation
+The hard instance in the proof is established based on                   is that its primal function will be a finite-sum form of the
+Fd in (7). We choose the scaled function f (x, y) =                      primal function Φd defined in the deterministic case (9). We
+η 2 Fd ( xη , ηy ; λ∗ , α) as the final hard instance, which pre-        choose the following functions Hd : Rd+1 × Rd+2 → R,
+                                                                                                        Pn Pi(d+1)−1
+serves the smoothness and strong convexity , while appro-                Γnd : Rn(d+1) → R, Γnd (x) , i=1 j=i(d+1)−d Γ(xj ),
+priate setting of η will help to fulfill the requirements on                                                          √
+the initial gap and large gradient norm (before thorough                                                           λ21 α
+                                                                          Hd (x, y; λ, α) , λ1 hBd x, yi − λ2 kyk2 −     he1 , xi
+activation) of the primal function. The detailed statement                                                          2λ2
+                                                                                                                        √         (14)
+and proof of Theorem 3.1 are presented in Appendix.                                                       λ2 α        λ2 α
+                                                                                                         − 1 x2d+1 + 1     ,
+                                                                                                          4λ2          4λ2
+Remark 3.1 (Tightness) The best-known upper bounds for
+                                             −2                          then f¯i , f¯ : Rn(d+1) × Rn(d+2) → R, {U(i) }ni=1 ∈
+general NC-SC problems are O(∆Lκ2 √            ) [Lin et al.,
+                                                                         Orth(d + 1, n(d + 1),Pn), {V(i) }ni=1 ∈ Orth(d + 2, n(d +
+2020a, Boţ and Böhm, 2020] and Õ ∆ κL−2 log2 1
+                                                              
+                                                                                                n
+                                                                         2), n), f (x, y) , n i=1 f¯i (x, y) and
+                                                                                 ¯          1
+[Lin et al., 2020b]. Therefore, our result exhibits significant
+gaps in terms of the dependence on  and κ. In order to                                                       λ2 α
+mitigate these gaps, we propose faster algorithms in Section          f¯i (x, y) , Hd U(i) x, V(i) y; λ, α + 1 Γnd (x),
+4. On the other hand, compared to the Ω(∆L−2 ) lower                                                          2nλ2
+                                                                            n                                2
+                                                                                                                        (15)
+bound for nonconvex smooth minimization [Carmon et al.,                 1X         
+                                                                                      (i)    (i)
+                                                                                                           λ 1α n
+                                                                     =           Hd U x, V y; λ, α +              Γ (x) ,
+2019a], our result reveals an explicit dependence on κ.                 n i=1                               2nλ2 d
+
+3.3    FINITE-SUM NC-SC PROBLEMS                                                                             Pd
+                                                                         note that by denoting Γd (x) ,             i=1 Γ(xi ), it is easy to
+                                                                         find that
+The second case we consider is finite-sum NC-SC (FS-NC-
+                                                L,µ,∆
+SC) minimax problems, for the function class FNCSC    , the                            X i(d+1)−1
+                                                                                       n    X                        n
+                                                                                                                     X              
+linear-span algorithm class A and the averaged smooth IFO                  Γnd (x) =                    Γ(xj ) =           Γd U(i) x
+class OL,AS
+        IFO . The complexity is defined in (6).
+                                                                                       i=1 j=i(d+1)−d                i=1
+                                                                                                                                         (16)
+                                                                                       n X
+                                                                                       X d               
+Hard instance construction To derive the finite-sum hard                          =              Γ U(i) x     .
+                                                                                                            j
+instance, we modify Fd in (7) with orthogonal matrices                                 i=1 j=1
+defined as follows.
+                                                                         Define u(i) , U(i) x, we summarize the properties of the
+Definition 3.2 (Orthogonal Matrices) For positive inte-                  above functions in the following lemma.
+gers a, b, n ∈ N+ , we define a matrix sequence
+{U(i) }ni=1 ∈ Orth(a, b, n) if for each i, j ∈ {1, · · · , n}
+                                                                         Lemma 3.3 (Properties of f¯) For the above functions
+and i 6= j, U(i) , U(j) ∈ Ra×b and U(i) (U(i) )> = I ∈
+                                                                         {f¯i }i and f¯ in (15), they satisfy that:
+Ra×a and U(i) (U(j) )> = 0 ∈ Ra×a .
+                                                                               f¯i }i is LF -average smooth where LF
+                                                                          (i) {r                                               =
+Here the intuition for the finite-sum hard instance is com-                             n              2 λ4 α2    4
+                                                                                                                            o
+                                                                                  1         2      2 C          λ α  2
+bining n independent copies of the hard instance in the                          n max 16λ1 + 8λ2 , nλ2
+                                                                                                       γ 1
+                                                                                                               + λ1 2 + 8λ21 .
+                                                                                                                2           2
+general case (7), then appropriate orthogonal matrices will
+convert the n independent variables with dimension d into                (ii) f¯ is µF -strongly concave on y where µF = 2λn2 .
+one variable with dimension n × d, which results in the
+                                                                         (iii) For n ∈ N+ ,p    L ≥ 2nµ > 0, if we set λ = λ∗ =
+desired hard instance. To preserve the zero chain property,                       ∗    ∗         n      nµ           nµ
+for {U(i) }ni=1 ∈ Orth(d + 1, n(d + 1), n), {V(i) }ni=1 ∈
+                                                                               (λ1 , λ2 ) =      40 L, 2 , α = 50L ∈ [0, 1], then
+                                                                               {f¯i }i is L-AS and f¯ is µ-strongly concave on y.
+Orth(d + 2, n(d + 2), n), ∀n, d ∈ N+ and x ∈ Rn(d+1) ,
+y ∈ Rn(d+2) , we set U(i) and V(i) by concatenating n                    (iv) With Φd is defined in (9), let Φ̄(x) , maxy f¯(x, y),
+                                                                                                    Pn
+matrices:                                                                      we have Φ̄(x) = n1 i=1 Φ̄i (x), Φ̄i (x) , Φd (U(i) x).
+      U(i) = 0d+1 · · · 0d+1 Id+1 0d+1 · · · 0d+1 ,
+                                                
+                                                            (13)
+      V(i) = 0d+2 · · · 0d+2 Id+2 0d+2 · · · 0d+2 ,                      We defer the proof of Lemma 3.3 to Appendix. From
+                                                
+
+
+                                                                   487
+Lemma 3.2, we have                                                      minimax problems into efficient, near-optimal algorithms
+                                n                                       for (finite-sum) NC-SC minimax optimization. Rooted in
+                              1 X                        
+Φ̄(0) −       inf     Φ̄(x) ≤        sup Φ̄(0) − Φ̄i (x)                the inexact accelerated proximal point algorithm, the idea of
+          x∈Rn(d+1)           n i=1 x∈Rd+1
+                                   √                      (17)         Catalyst acceleration was introduced in Lin et al. [2015] for
+                               λ21
+                                              
+                                      α                                 convex minimization and later extended to nonconvex mini-
+                            ≤           + 10αd .
+                              2λ2    2                                  mization in Paquette et al. [2018] and nonconvex-concave
+Define the index set I as all the indices i ∈ [n] such that             minimax optimization in Yang et al. [2020b]. In stark con-
+ (i)     (i)
+ud = ud+1 = 0, ∀i ∈ I. Suppose that |I| > n2 , by                       trast, we focus on NC-SC minimax problems.
+orthogonality and Lemma 3.2 we have                                     The backbone of our Catalyst framework is to repeatedly
+                        n              2       n                        solve regularized subproblems of the form:
+              2       1 X   1               2X
+     ∇Φ̄(x)       =                ∇Φd u(i)
+                            ∇Φ̄i (x)
+                             2
+                                           =
+                      n i=1n i=1                                                                                     τ
+                                                                             min max f (x, y) + Lkx − x̃t k2 −         ky − ỹt k2 ,
+  1 X           2
+                          2
+                      1 n λ1 43
+                                2
+                                       λ41    3                             x∈Rd1 y∈Rd2                              2
+≥ 2    ∇Φd u(i)     ≥ 2      α     =         α2 .
+ n i∈I               n 2 8λ2         128nλ22
+                                                                        where x̃t and ỹt are carefully chosen prox-centers, and the
+                                                           (18)
+                                                                        parameter τ ≥ 0 is selected such that the condition numbers
+Now we arrive at our final theorem for the averaged smooth              for x-component and y-component of these subproblems
+FS-NC-SC case as follows.                                               are well-balanced. Since f is L-Lipschitz smooth and µ-
+                                                                        strongly concave in y, the above auxiliary problem is L-
+Theorem 3.2 (LB for AS FS-NC-SC) For the linear-span                    strongly convex in x and (µ + τ )-strongly concave in y.
+algorithm class A, parameters L, µ, ∆ > 0 and component                 Therefore, it can be solved by a wide family of off-the-shelf
+size n ∈ N+ , if √L ≥ 2nµ > 0, the accuracy  satisfies               first-order algorithms with linear convergence rate.
+                    αL2 ∆ αL2 ∆ L2 ∆              nµ
+that 2 ≤ min 76800nµ    , 1280nµ , µ  where α = 50L   ∈                Our Catalyst framework, presented in Algorithm 1, consists
+[0, 1], then we have                                                    of three crucial components: an inexact proximal point step
+                                    √                                 for primal update, an inexact accelerated proximal point
+            L,µ,∆
+                  , A, OL,AS   = Ω n + nκ∆L−2 . (19)
+                                              
+    Compl FNCSC        IFO                                             step for dual update, and a linear-convergent algorithm for
+                                                                        solving the subproblems.
+The theorem above indicates thatP     for any A ∈ A, we can
+                                        n
+construct a function f (x, y) = n1 i=1 fi (x, y), such that
+         L,µ,∆
+                                                                        Inexact proximal point step in the primal. For the x-
+f ∈ F√  NCSC and {f    i }i is L-AS, and A requires at least           update in the outer loop, {xt0 }Tt=1 , can be viewed as applying
+Ω n + nκ∆L−2 IFO calls to attain an approximate                        an inexact proximal point method to the primal function
+primal stationary point. The hard instance construction is              Φ(x), requiring to solve a sequence of auxiliary problems:
+based on f¯ and f¯i above (15), combined with a scaling trick
+similar to the one in the general case. Also we remark that                        h                                    i
+lower bound holds for small enough , while the requirement                 min max fˆt (x, y) , f (x, y) + Lkx − xt0 k2 .             (?)
+                                                                           x∈Rd1 y∈Rd2
+on  is comparable to those in existing literature, e.g. [Zhou
+and Gu, 2019, Han et al., 2021]. The detailed statement and             Inexact proximal point methods have been explored in min-
+proof of the theorem are deferred to Appendix.                          imax optimization in several work, e.g. [Lin et al., 2020b,
+                                                                        Rafique et al., 2018]. Our scheme is distinct from these
+Remark 3.2 (Tightness) The state-of-the-art√upper bound                 work in two aspects: (i) we introduce a new subroutine to
+                                                   2     −2
+for NC-SC finite-sum problems is Õ(n +
+              2                   2      −2
+                                             nκ ∆L 2)                 approximately solve the auxiliary problems (?) with near-
+when n ≥ κ and O nκ + κ ∆L                   when n ≤ κ                optimal complexity, and (ii) the inexactness is measured by
+[Luo et al., 2020]. Note that there is still a large gap be-            an adaptive stopping criterion using the gradient norms:
+tween upper and lower bounds on the dependence in terms
+of κ and n, which motivates the design of faster algorithms,                  k∇fˆt (xt+1  t+1 2       ˆ t t 2
+                                                                                      0 , y0 )k ≤ αt k∇ft (x0 , y0 )k ,            (20)
+we address this in Section 4. Note that a weaker result on
+the lower bound of√nonconvex finite-sum averaged smooth                 where {αt }t is carefully chosen. Using the adaptive stop-
+minimization is Ω( n∆L−2 ) [Zhou and Gu, 2019]; here,                  ping criterion significantly reduces the complexity of solv-
+our result presents explicitly the dependence on κ.                     ing the auxiliary problems. We will show that the number
+                                                                        of steps required is only logarithmic in L, µ without any
+4     FASTER ALGORITHMS FOR NC-SC                                       dependence on target accuracy . Although the auxiliary
+      MINIMAX PROBLEMS                                                  problem is (L, µ)-SC-SC and can be solved with linear con-
+                                                                        vergence by algorithms such as extragradient, OGDA, etc.,
+In this section, we introduce a generic Catalyst acceleration           these algorithms are not optimal in terms of the dependency
+scheme that turns existing optimizers for (finite-sum) SC-SC            on the condition number when L > µ [Zhang et al., 2019].
+
+
+                                                                  488
+Algorithm 1 Catalyst for NC-SC Minimax Problems                        for M include, but are not limited to, EG [Tseng, 1995],
+Input: objective f , initial point (x0 , y0 ), smoothness con-         optimistic gradient descent ascent (OGDA) [Gidel et al.,
+   stant L, strong-concavity const. µ, and param. τ > 0.               2018], SVRG [Balamurugan and Bach, 2016] , SPD1-VR
+                                                                       [Tan et al., 2018], Point-SAGA [Luo et al., 2019]. For ex-
+                                                                                                              L+max{2L,τ }
+                                           µ
+ 1: Let (x00 , y00 ) = (x0 , y0 ) and q = µ+τ .                        ample, in the case of EG, ΛMµ,L (τ ) = 4 min{L,µ+τ } [Tseng,
+ 2: for all t = 0, 1, ..., T do                                        1995].
+ 3:   Let z1 = y0t and k = 1.
+ 4:   Let fˆt (x, y) , f (x, y) + Lkx − xt0 k2 .                       4.1   CONVERGENCE ANALYSIS
+ 5:   repeat
+ 6:      Find inexact solution (xtk , ykt ) to the prob-               In this section, we analyze the complexity of each of the
+         lem below by algorithm M with initial point                   three components we discussed. Let T denote the outer-loop
+         (xtk−1 , yk−1
+                   t
+                       ):                                              complexity, K the inner-loop complexity, and N the number
+                                                                       of iterations for M (expected number if M is randomized)
+           min max [f˜t,k (x, y) ,                   (??)              to solve subproblem (??). The total complexity of Algorithm
+          x∈Rd1 y∈Rd2                            τ                     1 is computed by multiplying K, T and N . Later, we will
+                      f (x, y) + Lkx − xt0 k2 − ky − zk k2 ]
+                                                 2                     provide a guideline for choosing parameter τ to achieve the
+          such that k∇f˜t,k (xt , y t )k2 ≤ t .
+                             √k k           k                          best complexity, given an algorithm M.
+                               q−q
+ 7:      Let zk+1 = ykt + √q+q (ykt − yk−1t
+                                               ), k = k + 1.
+ 8:   until k∇fˆt (xk , yk )k ≤ αt k∇fˆt (x0 , y0t )k2
+                    t    t   2              t
+                                                                       Theorem 4.1 (Outer loop) Suppose function f is NC-SC
+ 9:   Set (xt+1    t+1         t t
+             0 , y0 ) = (xk , yk ).                                    with strong convexity parameter µ and L-Lipschitz smooth.
+10: end for                                                                                 µ5                           µ5
+                                                                       If we choose αt = 504L  5 for t > 0 and α0 = 576 max{1,L7 } ,
+Output: x̂T , which is uniformly sampled from x10 , ..., xT0 .         the output x̂T from Algorithm 1 satisfies
+                                                                                                        268L    28L 0
+                                                                                   Ek∇Φ(x̂T )k2 ≤            ∆+    D ,                  (22)
+Inexact accelerated proximal point step in the dual. To                                                  5T     5T y
+solve the auxiliary problem with optimal complexity, we                where ∆ = Φ(x0 ) − inf x Φ(x), Dy0 = ky0 − y ∗ (x0 )k2 and
+introduce an inexact accelerated proximal point scheme. The            y ∗ (x0 ) = arg maxy∈Rd2 f (x0 , y).
+key idea is to add an extra regularization in y to the objective
+such that the strong-convexity and strong-concavity are well-
+                                                                       This theorem implies that the algorithm finds an  sta-
+balanced. Therefore, we propose to iteratively solve the
+                                                                       tionary point of Φ after inexactly solving (?) for T =
+subproblems:
+                                                                       O L(∆ + Dy0 )−2 times. The dependency on Dy0 can be
+               h                          τ             i
+                                                                       eliminated if we select the initialization y0 close enough to
+  min max f˜t,k (x, y) , fˆt (x, y) − ky − zk k2 , (??)
+ x∈Rd1 y∈Rd2                              2                            y ∗ (x0 ), which only requires an additional logarithmic cost
+                                                                       by maximizing a strongly concave function.
+where {zk }k is updated analogously to Nesterov’s acceler-
+ated method [Nesterov, 2005] and τ ≥ 0 is the regulariza-
+tion parameter. For example, by setting τ = L − µ, the sub-            Theorem 4.2 (Inner loop) Under √
+                                                                                                         the same assumptions in
+                                                                                                        2µ
+problems become (L, L)-SC-SC and can be approximately                  Theorem 4.1, if we choose k = 2 (1 − ρ)k gapfˆt (xt0 , y0t )
+                                                                                                  t
+
+solved by extragradient method with optimal complexity, to                     √        q
+                                                                                           µ
+                                                                       with ρ < q = µ+τ       , we have
+be discussed in more details in next section. Finally, when
+solving these subproblems, we use the following stopping                    k∇fˆt (xtk , ykt )k2
+criterion k∇f˜t,k (x, y)k2 ≤ tk with time-varying accuracy                                         √
+                                                                                 5508L2           18 2L2
+                                                                                                        
+tk that decays exponentially with k.                                     ≤       √             +          (1 − ρ)k k∇fˆt (xt0 , y0t )k2 .
+                                                                              µ2 ( q − ρ)2           µ
+Linearly-convergent algorithms for SC-SC subproblems.                                               √
+Let M be any algorithm that solves the subproblem (??)                 Particularly, setting ρ = 0.9 q, Theorem
+                                                                                                             p 4.2 implies after   
+(denoting (x∗ , y ∗ ) as the optimal solution) at a linear con-        inexactly solving (??) for K = Õ          (τ + µ)/µ log α1t
+vergence rate such that after N iterations:                            times, the stopping criterion (20) is satisfied. This complex-
+                                                                       ity decreases with τ . However, we should not choose τ too
+  kxN − x∗ k2 + kyN − y ∗ k2
+                 !N                                                    small, because the smaller τ is, the harder it is for M to
+           1                                       (21)                solve (??). The following theorem captures the complexity
+ ≤ 1− M             [kx0 − x∗ k2 + ky0 − y ∗ k2 ],                     for algorithm M to solve the subproblem.
+       Λµ,L (τ )
+
+if M is a deterministic algorithm; or taking expectation to            Theorem 4.3 (Complexity of solving subproblems (??))
+the left-hand side above if M is randomized. The choices               Under the same assumptions in Theorem 4.1 and the choice
+
+
+                                                                 489
+of tk in Theorem 4.2, the number of iterations (expected             Catalyst-SVRG/SAGA algorithm. When solving NC-
+number of iterations if M is stochastic) for M to solve (??)          SC minimax problems in the averaged smooth finite-sum
+such that k∇f˜t,k (x, y)k2 ≤ tk is                                   setting, we set M to be either√
+                                                                                                        SVRG or SAGA. Hence,
+                                                                                                 L+ 2 max{2L,τ } 2
+                               
+                                  max{1, L, τ }
+                                                                    we have ΛM µ,L (τ ) ∝  n +   min{L,µ+τ }      [Balamurugan
+                    M
+         N = O Λµ,L (τ ) log                       .                                     2 3             M      √
+                                    min{1, µ}                         and Bach, 2016] . Minimizing Λµ,L (τ ) µ + τ , the best
+                                                                                                           n             o
+                                                                      choice for τ is (proportional to) max √Ln − µ, 0 , which
+The above result implies that the subproblems can be solved
+                                                                      leads to the total complexity of
+within constant iterations that only depends on L, µ, τ and
+ΛMµ,L . This largely benefits from the use of warm-starting
+                                                                                             3√
+                                                                                                                    
+                                                                                  Õ n + n 4 κ L(∆ + Dy0 )−2 .             (25)
+and stopping criterion with time-varying accuracy. In con-
+trast, other inexact proximal point algorithms in minimax
+optimization, such as [Yang et al., 2020b, Lin et al., 2020b],        Remark 4.2 According to the lower bound established
+fix the target accuracy, thus their complexity of solving the         in Theorem 3.2, the dependency on κ in the above up-
+subproblems usually has an extra logarithmic factor in 1/.           per bound is nearly tight, up to logarithmic factors. Re-
+The overall complexity of the algorithm follows immedi-               call that SREDA  √ [Luo et al., 2020] achieves the com-
+ately after combining the above three theorems:                       plexity of Õ κ2 n−2+ n + (n + κ) log(κ) for n ≥ κ2
+                                                                      and O κ2 + κn −2 for n ≤ κ2 . Hence, our Catalyst-
+Corollary 4.1 Under the same assumptions in Theorem                   SVRG/SAGA algorithm attains better complexity in the
+                                                                                     4
+4.1 and setting in Theorem 4.2, the total number (expected               √ n ≤ κ . Particularly, in the critical regime κ =
+                                                                      regime
+number if M is randomized) of gradient evaluations for                Ω( n) arising in statistical learning [Shalev-Shwartz and
+Algorithm 1 to find an -stationary point of Φ, is                    Ben-David, 2014], our algorithm performs strictly better.
+                                              !
+                ΛM                0 r
+                  µ,L (τ )L(∆ + Dy )   µ+τ
+           Õ                                    .    (23)            5    CONCLUSION
+                          2              µ
+                                                                      In this work, we take an initial step towards understand-
+In order to minimize the total complexity, we should
+                                                                      ing the fundamental limits of minimax optimization in the
+choose the regularization parameter τ that minimizes
+          √                                                           nonconvex-strongly-concave setting for both general and
+ΛMµ,L (τ ) µ + τ .                                                    finite-sum cases, and bridge the gaps between lower and up-
+                                                                      per bounds. It remains interesting to investigate whether the
+4.2   SPECIFIC ALGORITHMS AND                                         dependence on n can be further tightened in the complexity
+      COMPLEXITIES                                                    for finite-sum NC-SC minimax optimization.
+
+In this subsection, we discuss specific choices for M and the
+                                                                      Author Contributions
+corresponding optimal choices of τ , as well as the resulting
+total complexities for solving NC-SC problems.
+                                                                      Siqi Zhang and Junchi Yang contributed equally to this
+                                                                      paper.
+Catalyst-EG/OGDA algorithm. When solving NC-SC
+minimax problems in the general setting, we set M to
+be either extra-gradient method (EG) or optimistic gradi-             Acknowledgements
+ent descent ascent (OGDA). Hence, we have ΛM  µ,L (τ ) =
+L+max{2L,τ }
+            [Gidel et al., 2018, Azizian et al., 2020].               This work is supported by NSF CMMI #1761699, NSF
+4 min{L,µ+τ }
+            M       √                                                 CCF #1934986. CG’s research is partially supported by IN-
+Minimizing Λµ,L (τ ) µ + τ yields that the optimal choice
+                                                                      RIA through the INRIA Associate Teams, and FONDECYT
+    τ is L − µ. This leads to a total complexity of
+for √
+                                                                      1210362 project. NK’s research is supported by NSF CCF
+Õ κL(∆ + Dy0 )−2 .
+                                                                      #1704970.
+                    √
+               Õ κL(∆ + Dy0 )−2 .
+                                      
+                                                     (24)
+                                                                             2
+Remark 4.1 The above complexity matches the lower                              Although Balamurugan and Bach [2016] assumes individual
+bound in Theorem 3.1, up to a logarithmic factor in L and             smoothness, its analysis can be extended to average smoothness.
+                                                                             3
+κ. It improves over Minimax-PPA [Lin et al., 2020b] by                         SVRG in [Balamurugan and Bach, 2016] requires computing
+                                             3
+log2 (1/), GDA [Lin et al., 2020a] by κ 2 and therefore              the proximal operator of an (µ, µ)-SC-SC
+                                                                                                          P          function. For any (µ, µ)-
+                                                                      SC-SC      function in the  form of      fi (x, y), we can rewrite it as
+achieves the best of two worlds in terms of dependency on κ           P                  µ      2    µ     2
+                                                                                                             i
+                                                                                                                 µ       2      2
+                                                                          i [fi (x, y)− 2n ||x|| + 2n ||y|| ]+ 2 (||x|| −||y|| ), where the
+and . In addition, our Catalyst-EG/OGDA algorithm does
+                                                                      first term is convex-concave, and the second term is (µ, µ)-SC-SC
+not require the bounded domain assumption on y, unlike                and admits a simple proximal operator.
+[Lin et al., 2020b].
+
+                                                                490
+References                                                           J. Diakonikolas, C. Daskalakis, and M. I. Jordan. Efficient
+                                                                        methods for structured nonconvex-nonconcave min-max
+A. Agarwal and L. Bottou. A lower bound for the optimiza-               optimization. arXiv:2011.00364, 2020.
+  tion of finite sums. In ICML, pages 78–86, 2015.
+                                                                     C. Fang, C. J. Li, Z. Lin, and T. Zhang. Spider: Near-optimal
+Z. Allen-Zhu. How to make the gradients small stochas-                 non-convex optimization via stochastic path-integrated
+  tically: even faster convex and nonconvex sgd. In Pro-               differential estimator. In NIPS, pages 689–699, 2018.
+  ceedings of the 32nd International Conference on Neural
+  Information Processing Systems, pages 1165–1175, 2018.             D. J. Foster, A. Sekhari, O. Shamir, N. Srebro, K. Srid-
+                                                                       haran, and B. Woodworth. The complexity of making
+Y. Arjevani, Y. Carmon, J. C. Duchi, D. J. Foster, N. Sre-             the gradient small in stochastic convex optimization. In
+  bro, and B. Woodworth. Lower bounds for non-convex                   Conference on Learning Theory. PMLR, 2019.
+  stochastic optimization. arXiv:1912.02365, 2019.
+                                                                     R. Frostig, R. Ge, S. Kakade, and A. Sidford. Un-
+W. Azizian, I. Mitliagkas, S. Lacoste-Julien, and G. Gidel.            regularizing: approximate proximal point and faster
+ A tight and unified analysis of gradient-based methods for            stochastic algorithms for empirical risk minimization. In
+  a whole spectrum of differentiable games. In AISTATS,                ICML. PMLR, 2015.
+  pages 2863–2873, 2020.
+                                                                     G. Gidel, H. Berard, G. Vignoud, P. Vincent, and S. Lacoste-
+P. Balamurugan and F. Bach. Stochastic variance reduction              Julien. A variational inequality perspective on generative
+   methods for saddle-point problems. In NIPS, pages 1416–             adversarial networks. In ICLR, 2018.
+   1424, 2016.
+                                                                     O. Güler. New proximal point algorithms for convex mini-
+R. I. Boţ and A. Böhm. Alternating proximal-gradient steps
+                                                                       mization. SIAM Journal on Optimization, 2(4):649–664,
+  for (stochastic) nonconvex-concave minimax problems.
+                                                                       1992.
+  arXiv preprint arXiv:2007.13605, 2020.
+G. Braun, C. Guzmán, and S. Pokutta. Lower bounds on the             Y. Han, G. Xie, and Z. Zhang. Lower complexity bounds
+  oracle complexity of nonsmooth convex optimization via                of finite-sum optimization problems: The results and con-
+  information theory. IEEE Transactions on Information                  struction. arXiv preprint arXiv:2103.08280, 2021.
+  Theory, 63(7):4709–4724, 2017.                                     J. Huang and N. Jiang. On the convergence rate of
+Y. Carmon, J. C. Duchi, O. Hinder, and A. Sidford. Lower                density-ratio based off-policy policy gradient methods.
+   bounds for finding stationary points i. Mathematical                 In NeurIPS Offline Reinforcement Learning Workshop,
+  Programming, pages 1–50, 2019a.                                       2020.
+
+Y. Carmon, J. C. Duchi, O. Hinder, and A. Sidford. Lower             A. Ibrahim, W. Azizian, G. Gidel, and I. Mitliagkas. Linear
+   bounds for finding stationary points ii: first-order methods.       lower bounds and conditioning of differentiable games.
+  Mathematical Programming, pages 1–41, 2019b.                         In ICML, pages 4583–4593. PMLR, 2020.
+
+B. Dai, N. He, Y. Pan, B. Boots, and L. Song. Learning               C. Jin, P. Netrapalli, and M. Jordan. What is local optimality
+  from conditional distributions via dual embeddings. In               in nonconvex-nonconcave minimax optimization? In
+  AISTATS, pages 1458–1467, 2017.                                      ICML, 2020.
+
+B. Dai, A. Shaw, L. Li, L. Xiao, N. He, Z. Liu, J. Chen, and         Q. Lei, J. Lee, A. Dimakis, and C. Daskalakis. Sgd learns
+  L. Song. SBEED: Convergent reinforcement learning                    one-layer networks in wgans. In ICML, 2020.
+  with nonlinear function approximation. In ICML, 2018.
+                                                                     H. Lin, J. Mairal, and Z. Harchaoui. A universal catalyst for
+C. Daskalakis, S. Skoulakis, and M. Zampetakis. The                    first-order optimization. NIPS, 2015.
+  complexity of constrained min-max optimization. arXiv
+  preprint arXiv:2009.09623, 2020.                                   H. Lin, J. Mairal, and Z. Harchaoui. Catalyst acceleration for
+                                                                       first-order convex optimization: from theory to practice.
+J. Diakonikolas. Halpern iteration for near-optimal and                JMLR, 18(1):7854–7907, 2018a.
+   parameter-free monotone inclusion and strong solutions
+   to variational inequalities. In Conference on Learning            Q. Lin, M. Liu, H. Rafique, and T. Yang. Solving
+   Theory, pages 1428–1451. PMLR, 2020.                                weakly-convex-weakly-concave saddle-point problems as
+                                                                       weakly-monotone variational inequality. arXiv preprint
+J. Diakonikolas and P. Wang. Potential function-based                  arXiv:1810.10207, 5, 2018b.
+   framework for making the gradients small in convex and
+   min-max optimization. arXiv preprint arXiv:2101.12101,            T. Lin, C. Jin, and M. Jordan. On gradient descent ascent for
+   2021.                                                                nonconvex-concave minimax problems. In ICML, 2020a.
+
+
+                                                               491
+T. Lin, C. Jin, and M. I. Jordan. Near-optimal algorithms           A. Sinha, H. Namkoong, and J. Duchi. Certifying some dis-
+   for minimax optimization. In COLT, 2020b.                          tributional robustness with principled adversarial training.
+                                                                      In ICLR, 2018.
+L. Luo, C. Chen, Y. Li, G. Xie, and Z. Zhang. A stochas-
+  tic proximal point algorithm for saddle-point problems.           C. Tan, T. Zhang, S. Ma, and J. Liu. Stochastic primal-dual
+  arXiv preprint arXiv:1909.06946, 2019.                              method for empirical risk minimization with o(1) per-
+                                                                      iteration complexity. In NIPS, pages 8366–8375, 2018.
+L. Luo, H. Ye, Z. Huang, and T. Zhang. Stochastic recursive
+   gradient descent ascent for stochastic nonconvex-strongly-       K. K. Thekumparampil, P. Jain, P. Netrapalli, and S. Oh.
+   concave minimax problems. NeurIPS, 33, 2020.                       Efficient algorithms for smooth minimax optimization.
+                                                                      NeurIPS, 32:12680–12691, 2019.
+A. S. Nemirovski and D. B. Yudin. Problem Complexity
+  and Method Efficiency in Optimization. Wiley, 1983.               J. F. Traub, G. W. Wasilkowski, and H. Woźniakowski.
+                                                                       Information-based complexity. Boston, MA: Academic
+A. S. Nemirovsky. On optimality of krylov’s information                Press, Inc., 1988. ISBN 0-12-697545-0.
+  when solving linear operator equations. J. Complex., 7
+                                                                    P. Tseng. On linear convergence of iterative methods for the
+  (2):121–130, 1991.
+                                                                       variational inequality problem. Journal of Computational
+A. S. Nemirovsky. Information-based complexity of linear               and Applied Mathematics, 60(1-2):237–252, 1995.
+  operator equations. J. Complexity, 8(2):153–175, 1992.            G. Xie, L. Luo, Y. Lian, and Z. Zhang. Lower complexity
+Y. Nesterov. Smooth minimization of non-smooth functions.             bounds for finite-sum convex-concave minimax optimiza-
+   Mathematical programming, 103(1):127–152, 2005.                    tion problems. In ICML, 2020.
+                                                                    Z. Xu, H. Zhang, Y. Xu, and G. Lan. A unified single-loop
+Y. Nesterov. How to make the gradients small. Optima.
+                                                                       alternating gradient projection algorithm for nonconvex-
+  Mathematical Optimization Society Newsletter, pages 10–
+                                                                       concave and convex-nonconcave minimax problems.
+  11, 2012.
+                                                                       arXiv preprint arXiv:2006.02032, 2020.
+Y. Nesterov. Lectures on convex optimization, volume 137.           J. Yang, N. Kiyavash, and N. He. Global convergence and
+   Springer, 2018.                                                     variance reduction for a class of nonconvex-nonconcave
+                                                                       minimax problems. NeurIPS, 33, 2020a.
+M. Nouiehed, M. Sanjabi, T. Huang, J. D. Lee, and M. Raza-
+ viyayn. Solving a class of non-convex min-max games                J. Yang, S. Zhang, N. Kiyavash, and N. He. A catalyst
+  using iterative first order methods. NeurIPS, 2019.                  framework for minimax optimization. In NeurIPS, 2020b.
+Y. Ouyang and Y. Xu. Lower complexity bounds of first-              Y. Yang, N. Kiyavash, L. Song, and N. He. The devil is in
+  order methods for convex-concave bilinear saddle-point               the detail: A framework for macroscopic prediction via
+  problems. Mathematical Programming, pages 1–35,                      microscopic models. NeurIPS, 33, 2020c.
+  2019.
+                                                                    T. Yoon and E. K. Ryu. Accelerated algorithms for smooth
+C. Paquette, H. Lin, D. Drusvyatskiy, J. Mairal, and Z. Har-           convex-concave minimax problems with O(1/k 2 ) rate
+  chaoui. Catalyst for gradient-based nonconvex optimiza-              on squared gradient norm. arXiv:2102.07922, 2021.
+  tion. In AISTATS, pages 613–622. PMLR, 2018.
+                                                                    J. Zhang, M. Hong, and S. Zhang. On lower iteration com-
+Q. Qian, S. Zhu, J. Tang, R. Jin, B. Sun, and H. Li. Robust            plexity bounds for the saddle point problems. arXiv
+  optimization over multiple domains. In AAAI, volume 33,              preprint arXiv:1912.07481, 2019.
+  pages 4739–4746, 2019.
+                                                                    J. Zhang, P. Xiao, R. Sun, and Z.-Q. Luo. A single-
+H. Rafique, M. Liu, Q. Lin, and T. Yang. Non-convex min-               loop smoothed gradient descent-ascent algorithm for
+  max optimization: Provable algorithms and applications               nonconvex-concave min-max problems. arXiv preprint
+  in machine learning. arXiv preprint arXiv:1810.02060,                arXiv:2010.15768, 2020.
+  2018.                                                             D. Zhou and Q. Gu. Lower bounds for smooth nonconvex
+R. T. Rockafellar. Monotone operators and the proximal                finite-sum optimization. In International Conference on
+  point algorithm. SIAM J. Control and Optimization, 1976.            Machine Learning, pages 7574–7583. PMLR, 2019.
+
+S. Shalev-Shwartz and S. Ben-David. Understanding ma-
+   chine learning: From theory to algorithms. Cambridge
+   university press, 2014.
+
+
+                                                              492
+

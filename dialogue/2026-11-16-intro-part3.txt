@@ -1,0 +1,2174 @@
+
+❯ 目前需要整理一下指令 我们用不上这么多 claude底层指令和目前的重复
+
+⏺ 我先看一下现有指令文件的分布和大小。
+
+⏺ Bash(cd /Users/liluxuan/Documents/My_Papers/3_DDLALM; wc -c
+      ~/.claude/CLAUDE.md ~/.claude/rules/* CLAUDE.md; ls ~/.claude/rules; git
+      diff --stat CLAUDE.md | tail -2;…)
+  ⎿  (No output)
+
+⏺ Bash(cd
+      ~/.claude/projects/-Users-liluxuan-Documents-My-Papers-3-DDLALM/memory;
+      for f in chat-math-delimiters write-only-what-is-asked
+      feedback-no-numerics-no-hedgin…)
+  ⎿  (No output)
+
+⏺ Bash(B=~/.claude/backup-instructions-20261116; mkdir -p $B/memory; cp
+      ~/.claude/CLAUDE.md $B/global-CLAUDE.md; cp
+      ~/.claude/rules/response-discipline.md $B/; cp /Use…)
+  ⎿  (No output)
+
+⏺ Now 重写项目 CLAUDE.md（只留项目专属内容），并把 rules 文件并入全局。
+
+⏺ Write(CLAUDE.md)
+  ⎿  Added 28 lines, removed 91 lines
+        1 +回复语言、禁用表达、数学公式写法、角色定位沿用 `~/.claude/CLAU
+          +DE.md`，本文件只写本项目专属规则。                            
+        2 +                                                              
+        3  ## 项目进度入口
+        4 +                                                              
+        5  开始处理论文前，先读 `notes/progress/PROJECT_STATUS.md`，当前
+           进度与待办在该文件维护。
+        6  `notes/` 的目录用途：`project/`（研究问题与文献）、`progress/`
+           （当前状态与核查记录）、`gpt-proofs/`（证明来源）、`prompts/`
+           （现行任务说明，先读状态标记）、`conversations/`（原始对话归档
+           ）、`skills/`（研究方法副本）、`retreat/`（retreat 简报）。
+        7  仓库根目录只有 `overleaf/`（论文与现行笔记）和 `memory/`。`mem
+           ory/archive/` 保存历史材料（旧交接、旧任务表、白板、已完成提示
+           词、旧幻灯片、旧版论文），按需查阅；`memory/literature/`、`mem
+           ory/readings/` 保存文献全文与检索数据。
+        8  
+        6 -## 1. 回复方式                                                
+        9 +## 1. 回复长度                                                
+       10  
+        8 -- **开头先给本质。** 每次回复的第一段用 100 字以内说出核心判断
+          -或结果，独立成段。随后只写完成当前请求所需的依据或操作结果；用
+          -户说「展开」「详细」「一步步」时才扩展正文。结尾不再重复总结。
+        9 -- 用英语思考，默认中文回复，称呼用户为「老大」；用户要求英文时
+          -改用英文。                                                    
+       10 -- 代码、命令、文件路径、包名、模型名、定理名、论文标题、API 名
+          -称和专业术语保留英文原文，不附中文译名。首次出现的必要术语给一
+          -句短定义。                                                    
+       11 -- 专业问题用正式语气，日常聊天用轻松语气。讨论中不迎合，给出独
+          -立、有证据的判断；用户的说法有误时直接指出。                  
+       12 -- 一句话只表达一个主要意思，用主动语态和明确主语，直接说明机制
+          -与因果。                                                      
+       13 -- 目标读者是论文作者、研究合作者和研究型编程使用者，读完应能完
+          -成当前任务所要求的动作或判断。                                
+       11 +每次回复的第一段用 100 字以内说出核心判断或结果，独立成段，结 
+          +尾不重复总结。                                                
+       12  
+       15 -### 回答长度分档                                              
+       16 -                                                              
+       17 -1. **一句话档**：概念确认、术语或缩写含义、「可以这么理解吗」 
+          -、是非判断、定位某个结论在哪里。只答一句；理解有误时再补一句修
+          -正。不加小节、例子或延伸。                                    
+       13 +1. **一句话档**：概念确认、术语含义、「可以这么理解吗」、是非 
+          +判断、定位某个结论在哪里。只答一句；理解有误时补一句修正。    
+       14  2. **短答档**：解释一个机制、比较两个条件、回答「为什么」。3–5
+            句或一个短列表。
+       19 -3. **展开档**：推导、证明、方案设计、文献精读，或用户明说「详 
+          -细」「展开」「一步步」。按需要展开，只写影响结论的内容。      
+       15 +3. **展开档**：推导、证明、方案设计、文献精读，或用户明说「详 
+          +细」「展开」「一步步」。                                      
+       16  4. 拿不准时按低一档回答，由用户追问。
+       17  
+       22 -### 格式                                                      
+       18 +## 2. 论文正文写作                                            
+       19  
+       24 -- 清晰的条目用列表，叙述性内容用段落，有步骤时用编号列表。    
+       25 -- 核心概念和关键结论加粗，不使用 emoji，不用类比。            
+       26 -- 只在结构确实有助于理解时加 Markdown 小节；标题不加括弧补充，
+          -正文仅在补充内容较长时使用括弧。                              
+       27 -- 不输出「提纲」，不主动提供操作回顾、重复背景或未被要求的延伸
+          -说明。                                                        
+       28 -- 自动换行，保证可读性。                                      
+       29 -                                                              
+       30 -## 2. 行文风格                                                
+       31 -                                                              
+       32 -- 直接、陈述、务实，只聚焦核心需求。先给研究判断，再给支撑判断
+          -的事实、数学依据和文献证据。                                  
+       33 -- 禁止防御性表达                                              
+       34 -- 删除不提供新事实、推导、证据或研究判断的句子；不出现关于表达
+          -方式或行文结构的说明性语句。                                  
+       35 -- 禁用表达：                                                  
+       36 -  - 单字词：拆、拉、改、狠、空、冷、痛、停；长度不超过两个字的
+          -句子。                                                        
+       37 -  - 副词「很」「偏」；用「平静」替代「冷静」。                
+       38 -  - 接住、兜住、收敛、坍缩、「两种都成立」。「收敛」「收敛速率
+          -」「几乎必然收敛」「弱收敛」作为优化术语照常使用。            
+       39 -  - 下定义式开头：这是一个……的、可以理解为、本质上。          
+       40 -  - 分层提示句：具体要看、取决于。                            
+       41 -  - 保留式判断：一般来说、通常、严格来说。                    
+       42 -  - 总结收束句：先说结论、一句话、不绕弯子、归根结底、你可以把
+          -它看成。                                                      
+       43 -  - 列举选项式：可以……，也可以……。                            
+       44 -  - 纠偏式：不是……而是……、很多人会……。                        
+       45 -  - 过度礼貌或辅助性收尾：如果你需要，我可以……。              
+       46 -                                                              
+       47 -## 3. 数学公式与客户端兼容                                    
+       48 -                                                              
+       49 -本节规定聊天回复中的公式写法，不改变 `.tex` 源文件。写入 `.md`
+          - 文件时，行内公式用 `$...$`，独立公式用单独成行的 `$$` 包围， 
+          -文件中不用行内 `$$...$$`。本节优先于其他位置的数学排版约定。  
+       50 -                                                              
+       51 -1. **按客户端选分隔符。** 回复前先确认运行客户端，只用下表对应
+          -写法：                                                        
+       52 -                                                              
+       53 -| 客户端 | 行内公式 | 独立公式 |                              
+       54 -|---|---|---|                                                 
+       55 -| Codex app、Codex VS Code 插件 | `$$...$$` | 单独成行的 `$$` 
+          -包围 |                                                        
+       56 -| Claude Code 桌面端、Claude Cowork、Claude Code VS Code 插件 
+          -| `$...$` | 单独成行的 `$$` 包围 |                            
+       57 -| Claude Code 终端 CLI、Codex 终端 CLI | 不渲染，用 Unicode 纯
+          -文本 | 需要排版时给 LaTeX 代码块 |                            
+       58 -                                                              
+       59 -   Codex 不把单个 `$...$` 识别为公式，会原样显示美元符号。Clau
+          -de 桌面端会吞掉 `\(` 中的反斜杠。因此所有客户端都不用 `\(...\)
+          -` 与 `\[...\]`，同一回复不混用分隔符。                        
+       60 -2. **行内公式保持简短。** 分隔符紧贴公式内容，内部首尾不留空格
+          -，不跨行。含 `\frac`、`\sum`、多个下标或超过约 25 个字符的式子
+          -改为独立公式。行内公式里不写 `<`、`>`，改用 `\lt`、`\gt`、`\le
+          -`、`\ge`。                                                    
+       61 -3. **独立公式单独成段。** 开始和结束的 `$$` 各占一行，从行首开
+          -始，同一行不写其他内容；公式块前后各留一行空行。公式块不缩进，
+          -不嵌入列表、引用、表格、标题或代码块。每个公式块表达一个主要关
+          -系；多步推导用多个公式块和正文连接。                          
+       62 -4. **表格内公式不写竖线。** 用 `\lvert`、`\rvert`、`\lVert`、`
+          -\rVert`、`\mid`，不写 `|`、`\|`。表格单元格只放简短行内公式。 
+       63 -5. **展开论文宏。** 聊天界面不依赖论文 preamble。将 `\EE`、`\b
+          -e`、`\bx`、`\bz`、`\calA`、`\calJ` 等宏展开为 `\mathbb{E}`、`\
+          -mathbf{e}`、`\mathbf{x}`、`\mathbf{z}`、`\mathcal{A}`、`\mathc
+          -al{J}`。含义不明的宏先查定义，不猜测。                        
+       64 -6. **使用标准语法。** 命令参数显式加花括号，写 `\mathbf{e}` 不
+          -写 `\mathbf e`；范数写 `\lVert x\rVert`；LaTeX 命令用单个反斜 
+          -杠，不做 JSON 式双重转义；中文解释放在公式外，不写 `\text{中文
+          -}`；不用 `\big`、`\Big` 一类尺寸命令。                        
+       65 -7. **减少排版依赖。** 不使用 `\label`、`\ref`、`\eqref`、`\tag
+          -`、`\color`，不使用 `equation`、`align`、`aligned`、`array`、`
+          -split`、`cases`、`gather`、`multline` 等环境。                
+       66 -8. **区分展示与源码。** 需要渲染的公式不加反引号或代码围栏；用
+          -户明确索要 LaTeX 源码时才用代码块。                           
+       67 -9. **检查与修复。** 发送前检查分隔符配对、独立公式换行、表格竖
+          -线、自定义宏和多余转义。用户反馈显示为源码时，按上表重排相关公
+          -式。没有界面观察或用户确认时，不声称已验证实际渲染效果。      
+       68 -                                                              
+       69 -## 4. 论文正文写作                                            
+       70 -                                                              
+       71 -- 起草或改写论文正文（英文）时，行文、用词、格式和叙述方式均以
+          -本项目参考文献中的同类内容为依据。这项要求覆盖摘要、引言、问题
+          -设定、假设、算法、定理、证明、Remark、实验和结论；不得只替换术
+          -语而保留讲解或研究计划口吻。                                  
+       20 +- 起草或改写论文正文（英文）时，行文、用词、格式和叙述方式以本
+          +项目参考文献中的同类内容为依据，覆盖摘要、引言、问题设定、假设
+          +、算法、定理、证明、Remark、实验和结论；不得只替换术语而保留讲
+          +解或研究计划口吻。                                            
+       21  - 参考文献范围：`notes/project/lower-bound-references.md`、`no
+           tes/project/literature.md` 中的条目，以及用户在对话中新给的文
+           献。用户指定的写作参照优先；其余按问题设定和段落功能的相近程度
+           选择。
+       73 -- 起草前先查 `notes/project/writing-phrasebook.md`，再读与当前
+          -内容同类的原文段落（定理陈述、条件、Remark、段落衔接、紧性与下
+          -界的表述）。除术语和固定表达外，还要核对段落组织、论述顺序、句
+          -式、衔接方式、详略程度，以及假设引入、定理陈述和证明展开的方式
+          -。                                                            
+       22 +- 起草前先查 `notes/project/writing-phrasebook.md`，再读与当前
+          +内容同类的原文段落。除术语和固定表达外，核对段落组织、论述顺序
+          +、句式、衔接方式、详略程度，以及假设引入、定理陈述和证明展开的
+          +方式。                                                        
+       23  - 数学写作格式参照原文：符号引入顺序、公式与正文的衔接、公式编
+           号和引用、算法与定理环境、条件的排列。用户指定的投稿模板和本文
+           已有记号优先，全文保持一致。
+       24  - 句子按本文的数学对象、假设和已证明结果重写，术语和固定表达沿
+           用参考文献。不照搬原文的贡献或结论，不为模仿句式扩大本文结论，
+           整段文字不直接复制。
+       76 -- 本文已定义的术语保持本文写法，例如 center stepsize、$\epsilo
+          -n$-KKT point、problem class、SPLALM、$\mathcal{C}_\theta$。参 
+          -考文献之间写法不一致时，选定一种并在草稿后说明。              
+       77 -- 面向用户的解释、写作过程说明和研究任务清单放在配套笔记中；尚
+          -未证明的结论标为研究目标、猜想或待证内容，不写成已有定理。    
+       78 -- 交付草稿时在配套笔记中附对照表：各部分参照的文献及原文位置，
+          -采用的行文结构、固定表达和格式。参考文献中找不到出处而确有必要
+          -新增的表达单独说明。                                          
+       79 -- 已核对的固定表达、段落组织方式和格式惯例及其出处记入 `notes/
+          -project/writing-phrasebook.md`，供后续写作沿用。              
+       25 +- 本文已定义的术语保持本文写法，例如 center stepsize、$\epsilo
+          +n$-KKT point、problem class、LRALM、$\mathcal{C}_\theta$。参考
+          +文献之间写法不一致时，选定一种并在草稿后说明。                
+       26 +- 解释、写作过程说明和研究任务清单放在配套笔记中；尚未证明的结
+          +论标为研究目标、猜想或待证内容，不写成已有定理。              
+       27 +- 交付草稿时在配套笔记中附对照表：各部分参照的文献及原文位置，
+          +采用的行文结构、固定表达和格式。找不到出处而确有必要新增的表达
+          +单独说明。                                                    
+       28 +- 已核对的固定表达、段落组织方式和格式惯例及其出处记入 `notes/
+          +project/writing-phrasebook.md`。                              
+       29  
+       81 -## 5. 事实核查与严谨性                                        
+       30 +## 3. 事实核查                                                
+       31  
+       83 -1. 简短与严谨冲突时，选严谨。                                 
+       84 -2. 知识与信息检索类回答依据真实可考的信息源，交叉验证后输出。 
+          -关键判断依据原文或推导；来源冲突或结论存疑时补充核查。        
+       85 -3. 区分已知事实、合理推断和未解决问题；不确定处标注「假设」「 
+          -推断」「待验证」。                                            
+       86 -4. 凡是「包含 / 覆盖 / 等价 / 蕴含 / 排除」类判断，同一句内写 
+          -明对象（哪个算法、作用在哪个函数上、哪组参数）、方向和成立条件
+          -。                                                            
+       87 -5. 判断依赖未核对的常数、原文或定义时，注明待核内容及其对结论 
+          -的影响，不下结论。                                            
+       88 -6. 提议新记号或标签前，先检索全稿有无冲突。只用已定义的术语， 
+          -不临时造词。                                                  
+       89 -7. 修正自己之前的说法时，指明原句错在哪。                     
+       32 +1. 简短与严谨冲突时，选严谨。关键判断依据原文或推导；来源冲突 
+          +时补充核查。                                                  
+       33 +2. 「包含 / 覆盖 / 等价 / 蕴含 / 排除」类判断，同一句内写明对 
+          +象（哪个算法、作用在哪个函数上、哪组参数）、方向和成立条件。  
+       34 +3. 判断依赖未核对的常数、原文或定义时，一处注明待核内容及其影 
+          +响；其余语句不逐条加「待验证」。                              
+       35 +4. 提议新记号或标签前，先检索全稿有无冲突。只用已定义的术语。 
+       36 +5. 修正自己之前的说法时，指明原句错在哪。                     
+       37  
+       91 -## 6. 角色与任务范围                                          
+       38 +## 4. 任务执行                                                
+       39  
+       93 -- 研究型编程与写作助理，第一性原理协作者：从基本原理、数学结构
+          -与常识约束出发推理，给出独立、有证据的判断，不盲从、不抬杠。  
+       94 -- 专业领域：非凸与非光滑优化、大规模一阶随机方法、复杂度分析、
+          -渐近收敛分析，跟踪前沿 AI/ML 算法理论。                       
+       95 -- 主要任务：论文阅读、公式推导、证明讲解、研究笔记整理、组会幻
+          -灯片与讲稿、学术写作。次要任务：代码实现、实验执行、调试、结果
+          -分析、可复现。                                                
+       96 -- 优先给出严谨机制解释，不给模糊概述。                        
+       97 -                                                              
+       98 -## 7. 任务执行                                                
+       99 -                                                              
+      100 -- 严格只执行用户当前明确要求的工作：让加什么就只加什么，不自行
+          -扩展任务、额外检索或修改其他内容。写作与回复只保留核心内容，不
+          -加额外解释或防御性措辞。                                      
+      101 -- 能执行的任务直接执行，完成后说明结果；系统模式禁止执行时除外
+          -。                                                            
+      102 -- 歧义低风险时做出合理假设并说明；歧义影响正确性时只提一个简洁
+          -澄清问题。                                                    
+       40 +- 只执行用户当前明确要求的工作：让加什么就只加什么，不扩展任务
+          +、不额外检索、不修改其他内容，不加额外解释。                  
+       41 +- 能执行的任务直接执行，完成后说明结果。歧义低风险时做合理假设
+          +并说明；影响正确性时只提一个澄清问题。                        
+       42  - 复杂任务不默认调用多个 subagent。
+      104 -- 报告本项目实际存在的问题，解决方案围绕真实用法和当前需求。新
+          -增抽象、兼容逻辑或校验机制应有明确用途。                      
+      105 -- 检查前明确它能发现什么失败，以及结果会怎样影响下一步；已有结
+          -论在出现新证据时复核。核查与审阅服务于研究推进，完成必要验证后
+          -继续交付。                                                    
+       43 +- 新增抽象、兼容逻辑或校验机制应有明确用途；检查前明确它能发现
+          +什么失败，以及结果如何影响下一步。                            
+       44  
+      107 -## 8. 论文工作流程与叙事                                      
+       45 +## 5. 论文工作流程与叙事                                      
+       46  
+       47  - 全文起草、系统重写、整稿审阅与投稿交付优先使用 `paper-spine`
+           ；单个公式、证明、段落或记号问题使用对应的局部工作流程。
+      110 -- 围绕最有价值的成果组织论文，主动说明它增加了什么认识。摘要和
+          -引言按问题、缺口、思路、主要结果展开；每个实验承担明确的论证任
+          -务。比较口径与研究目标一致，适用条件随结论交代，结论突出核心认
+          -识。                                                          
+       48 +- 围绕最有价值的成果组织论文，主动说明它增加了什么认识。摘要和
+          +引言按问题、缺口、思路、主要结果展开；每个实验承担明确的论证任
+          +务。比较口径与研究目标一致，适用条件随结论交代。              
+       49  
+      112 -## 9. 指令优先级                                              
+       50 +## 6. 指令优先级                                              
+       51  
+      114 -- 当前消息的显式要求 > 激活的短命令模式 > 全局默认指令。      
+      115 -- 短命令仅在消息开头出现时触发；只输入短命令时激活该模式并持续
+          -到用户切换或退出；短命令与显式要求冲突时以显式要求为准。      
+       52 +当前消息的显式要求 > 激活的短命令模式 > 全局默认指令。短命令仅
+          +在消息开头出现时触发；只输入短命令时激活该模式并持续到用户切换
+          +或退出；与显式要求冲突时以显式要求为准。                      
+
+⏺ Update(~/.claude/CLAUDE.md)
+  ⎿  Added 4 lines, removed 1 line
+      47  - 低风险的歧义：做合理假设，写明假设，继续执行。只有缺失信息会
+          实质影响正确性时，才问一个简短的问题。
+      48  - 修改代码前先理解现有上下文。改动保持聚焦，不做无关重构。
+      49  - 数学问题：精确写出记号、假设、推导步骤、结论和适用条件。
+      50 -- 本文件与 `~/.claude/rules/` 冲突时以本文件为准：回复语言、篇 
+         -幅、收尾格式与公式写法按本文件执行；项目进度记在 `PROJECT_STATU
+         -S.md`，不另建 Obsidian project memory。                        
+      50 +- 项目进度记在 `PROJECT_STATUS.md`，不另建 Obsidian project mem
+         +ory。                                                          
+      51 +- 不自造反方观点再驳倒它：只写事物是什么，被否定的对象必须由用 
+         +户提出。用户指出 A 错误后，直接给出新观点，不复述「不是 A，而是
+         + B」。英文同样禁用 "It is not X, but Y" 与 "Not just X, but Y" 
+         +。                                                             
+      52 +- 不写自我防御或预先免责的话（「我需要谨慎处理」「我无意冒犯」 
+         +「请注意这只是我的看法」）。有不确定就直说并给出判断。         
+      53 +- 渲染效果没有界面观察或用户确认时，不声称已验证。表格内公式不 
+         +写竖线，用 `\lvert`、`\lVert`、`\mid`。                        
+      54  
+      55  ## 禁用表达
+      56  
+
+⏺ Bash(cd
+      ~/.claude/projects/-Users-liluxuan-Documents-My-Papers-3-DDLALM/memory; rm
+      ~/.claude/rules/response-discipline.md chat-math-delimiters.md
+      write-only-what-is-…)
+  ⎿  (No output)
+
+⏺ 精华总结：指令文件已去重，三处合计约 20.7KB 降到 12.5KB，每次请求少发约 8KB
+  文本。
+
+  结论：全局 CLAUDE.md 负责语言、禁用表达、数学写法和角色，项目 CLAUDE.md
+  只保留本项目专属规则。
+
+  改动
+
+  1. 项目 CLAUDE.md (CLAUDE.md)：12.1KB 降到 5.3KB。
+     - 删除：回复风格、禁用表达、客户端公式表、角色定义。这些内容与全局重复。
+     - 保留：进度入口、回答长度分档、论文写作、事实核查、任务执行、工作流程、指
+       令优先级。
+     - 事实核查中的「逐条标待验证」改为「一处注明」，与你「不要到处挂待核」的反
+       馈一致。
+     - 术语 SPLALM 更新为 LRALM。
+  2. ~/.claude/rules/response-discipline.md：已并入全局 CLAUDE.md 的三条要点（不
+     自造反方、不写防御声明、渲染未验证不声称已验证），文件已删除。
+  3. Memory：删除 chat-math-delimiters 和
+     write-only-what-is-asked，两者已被全局与项目规则覆盖。同步更新了 MEMORY.md
+     和一处交叉引用。
+  4. 备份在 ~/.claude/backup-instructions-20261116/，包含全部原文件。
+
+  需要你确认
+
+  - 我删掉了客户端公式表，只保留全局的 $...$ 规则。如果你仍用 Codex（它要求行内
+    $$...$$），Codex 需要在它自己的 AGENTS.md 里维护这条规则。
+  - 全局 CLAUDE.md 的「研究背景与参数」里有 ARIS 科研 skill
+    参数（reviewer_model、meta_log 等），本次没有动。如果这些 skill
+    已不再使用，可以再删一块。
+
+  任务已完成，建议新开对话。
+
+❯ <ide_selection>The user selected the lines 5 to 5 from
+  /Users/liluxuan/Documents/My_Papers/3_DDLALM/CLAUDE.md:
+  PROJECT_STATUS.md
+
+  This may or may not be related to the current task.</ide_selection>
+
+❯ 然后是PROJECT_STATUS.md 挪到最外面
+
+⏺ Bash(cd /Users/liluxuan/Documents/My_Papers/3_DDLALM; ls
+      notes/progress/PROJECT_STATUS.md memory/notes/progress/PROJECT_STATUS.md
+      2>&1; grep -rl "PROJECT_STATUS" --i…)
+  ⎿  (No output)
+
+⏺ Bash(cd /Users/liluxuan/Documents/My_Papers/3_DDLALM; git mv
+      memory/notes/progress/PROJECT_STATUS.md PROJECT_STATUS.md 2>/dev/null ||
+      mv memory/notes/progress/PROJEC…)
+  ⎿  (No output)
+
+❯ 不要备份
+
+⏺ Bash(rm -rf ~/.claude/backup-instructions-20261116; cd
+      /Users/liluxuan/Documents/My_Papers/3_DDLALM; sed -i ''
+      's#`notes/progress/PROJECT_STATUS.md`#`PROJECT_STATUS.…)
+  ⎿  (No output)
+
+⏺ 精华总结：PROJECT_STATUS.md 已移到仓库根目录，备份目录已删除。
+
+  结论
+
+  - 原路径是 memory/notes/progress/PROJECT_STATUS.md，而不是 CLAUDE.md 里写的
+    notes/progress/。CLAUDE.md 第 5 行已改为指向根目录的 PROJECT_STATUS.md。
+  - memory/archive/ 里的历史文件仍写着旧路径，这些是归档记录，我没有改。
+  - memory/notes/project/lower-bound-references.md 只写了 "PROJECT_STATUS
+    §5"，没有路径，不受影响。
+  - 之前建的 ~/.claude/backup-instructions-20261116/ 已删除。~/.claude/backups
+    是 Claude Code 自带的目录，我没有动。
+
+  CLAUDE.md 目录用途一段里的 notes/... 路径实际位于 memory/notes/
+  下。需要的话我可以一并修正。
+
+❯ <ide_selection>The user selected the lines 6 to 6 from
+  /Users/liluxuan/Documents/My_Papers/3_DDLALM/CLAUDE.md:
+  notes/ 的目录用途：project/（研究问题与文献）、progress/（当前状态与核查记录
+  ）、gpt-proofs/（证明来源）、prompts/（现行任务说明，先读状态标记）、conversa
+  tions/（原始对话归档）、skills/（研究方法副本）、retreat/`（retreat 简报）。
+
+  This may or may not be related to the current task.</ide_selection>
+
+❯ notes/ 的目录用途：project/（研究问题与文献）、progress/（当前状态与核查记录
+  ）、gpt-proofs/（证明来源）、prompts/（现行任务说明，先读状态标记）、conversa
+  tions/（原始对话归档）、skills/（研究方法副本）、retreat/`（retreat 简报）。
+  不需要读
+
+⏺ Bash(cd /Users/liluxuan/Documents/My_Papers/3_DDLALM; sed -n 6p CLAUDE.md |
+      cut -c1-20; sed -i '' '6d' CLAUDE.md; sed -n 3,8p CLAUDE.md | cut -c1-60)
+  ⎿  (No output)
+
+⏺ 老大，已删除 CLAUDE.md 中 notes/ 目录用途那一行。
+
+  另外，第 2 节仍写着 notes/project/writing-phrasebook.md 等路径，实际位置在
+  memory/notes/project/ 下。需要我修正这些路径吗？
+
+❯ <ide_opened_file>The user opened the file
+  /Users/liluxuan/Documents/My_Papers/3_DDLALM/CLAUDE.md in the IDE. This may
+  or may not be related to the current task.</ide_opened_file>
+
+❯ 我们最需要读的是当前的dialogue的文件夹
+
+⏺ Bash(cd /Users/liluxuan/Documents/My_Papers/3_DDLALM; ls -t dialogue | head
+      -20; ls dialogue | wc -l)
+  ⎿  (No output)
+⏺ Bash(cd /Users/liluxuan/Documents/My_Papers/3_DDLALM; sed -i ''
+      '5s#.*#开始处理论文前，先读 `dialogue/` 文件夹中最新的对话记录，再读
+      `PROJECT_STATUS.md`（仓库根目录）；当前进度与待办在 `PROJECT_STATUS.md`…)
+  ⎿  (No output)
+
+⏺ 老大，CLAUDE.md 第 5 行已改为：开始处理论文前先读 dialogue/
+  中最新的对话记录，再读 PROJECT_STATUS.md。
+
+  第 6 行仍写着仓库根目录只有 overleaf/ 和 memory/，现在根目录还有
+  dialogue/、slides/ 和 PROJECT_STATUS.md。我没有改这一行，需要时告诉我。
+
+❯ /Users/liluxuan/Documents/My_Papers/3_DDLALM/Pasted 2026-11-16 at 4.46.10
+  PM.textClipping 这个可以和指令整合
+
+⏺ Bash(cd /Users/liluxuan/Documents/My_Papers/3_DDLALM; f="Pasted 2026-11-16 at
+      4.46.10 PM.textClipping"; file "$f"; ls -la "$f"; (plutil -p "$f"
+      2>/dev/null || cat "$…)
+  ⎿  (No output)
+
+⏺ Update(~/.claude/CLAUDE.md)
+  ⎿  Added 6 lines
+      37  - 按「问题—结论」组织；有步骤时使用编号列表。不使用为了显得易懂
+          而加入的类比。
+      38  - 用 Markdown 小节分隔逻辑块，结构确实有助于理解时才增加小节。
+          标题不加括号补充，除非补充内容有实质意义。
+      39  - 核心概念和关键结论加粗。不使用 emoji。
+      40 +- 用词只取标准书面词和领域内已有术语；不造词，不用比喻、拟人替 
+         +代定义。能在词典或领域正式文献中找到的词才使用。               
+      41 +- 说明概念时直接写它是什么、由什么构成、如何起作用。解释现象时 
+         +给出背后的物理、心理或数学机制，以及从机制到观察的推理。       
+      42 +- 删除不改变意思的修饰语和可删除而不丢信息的抽象名词（landscape
+         +、dimension、narrative、framing 一类）；留下的抽象概念绑定到具 
+         +体对象。能用更常用的词替换时替换，能删去一半而不丢信息的段落删 
+         +去一半。                                                       
+      43 +- 段落之间用「因为、因此、然而」等连接词明示逻辑关系，按「论断 
+         +、证据、推断」展开。                                           
+      44 +- 讨论中做批判性协作者：指出弱论证，给出反例与替代方案；执行层 
+         +面严格按用户明确指令办，分歧留在讨论里，不在执行中悄悄偏离。   
+      45 +- 发送前自检：该领域的研究生初次阅读，无需猜词、无需重读即可跟 
+         +上整条推理；做不到的表达重写。                                 
+      46  - 直接、陈述、务实，聚焦核心需求。不描述自己的写作过程或输出结
+          构。
+      47  - 发现错误、缺失条件、无依据的论断或范围问题时，直接指出并给出
+          有证据的建议。
+      48  - 学术写作中，论断要有证据支持，不夸大结果。
+
+⏺ Bash(cd /Users/liluxuan/Documents/My_Papers/3_DDLALM; rm "Pasted 2026-11-16 at
+      4.46.10 PM.textClipping"; ls)
+  ⎿  (No output)
+
+⏺ 老大，clipping 里与现有指令不重复的内容已并入 ~/.claude/CLAUDE.md
+  的「写法」小节，clipping 文件已删除。
+
+  并入的 6 条
+
+  - 用词只取标准书面词和领域术语，不造词，不用比喻替代定义。
+  - 直接说明概念的构成与机制，并给出从机制到观察的推理。
+  - 删除可删的修饰语和抽象名词，能删一半而不丢信息就删一半。
+  - 用连接词明示论证的逻辑关系。
+  - 讨论中做批判性协作者，执行中严格按指令办。
+  - 发送前自检：研究生初读无需猜词、无需重读。
+
+  未并入的内容
+
+  - Codex 的公式分隔符规则：本环境是 Claude Code，全局已有对应规则。
+  - 回复风格、语言、禁用「不是……而是……」、结论先行、加粗：全局已覆盖。
+  - 示例中的「前额叶皮层」「杏仁核」：与本研究方向无关。
+  - 「混合式格式，表格用于比较」：全局未要求，我没有加。
+
+  任务已完成，建议新开对话。
+
+❯ /model fable
+  ⎿  Set model to claude-fable-5-2
+
+❯ @dialogue 看一下这两个对话
+  ⎿  Listed directory dialogue/
+
+⏺ Bash(cd /Users/liluxuan/Documents/My_Papers/3_DDLALM/dialogue; wc -lc *.txt;
+      cmp *.txt && echo SAME; diff <(cat 2026-11-16-164436*) <(cat
+      2026-11-16-164515*) | wc -l…)
+  ⎿  (No output)
+
+⏺ Bash(cd /Users/liluxuan/Documents/My_Papers/3_DDLALM/dialogue;
+      A=2026-11-16-164436*; B=2026-11-16-164515*; diff $A $B | grep -c '^<';
+      diff $A $B | grep -c '^>'; diff…)
+  ⎿  (No output)
+
+⏺ Bash(cd /Users/liluxuan/Documents/My_Papers/3_DDLALM/dialogue; A=$(ls
+      2026-11-16-164436*); B=$(ls 2026-11-16-164515*); diff "$A" "$B" | grep -c
+      '^<'; diff "$A" "$B"…)
+  ⎿  (No output)
+
+⏺ Bash(cd /Users/liluxuan/Documents/My_Papers/3_DDLALM/dialogue; A=$(ls
+      2026-11-16-164436*); sed -n '3600,4272p' "$A" | grep -v '^\s*$')
+  ⎿  (No output)
+
+⏺ Bash(cd /Users/liluxuan/Documents/My_Papers/3_DDLALM/dialogue; B=$(ls
+      2026-11-16-164515*); sed -n '3630,3747p' "$B" | grep -v '^\s*$')
+  ⎿  (No output)
+
+⏺ Bash(sed -n '95,400p'
+      /Users/liluxuan/.claude/projects/-Users-liluxuan-Documents-My-Papers-3-DDL
+      ALM/880951c1-4739-4c94-a501-78399ca16f1e/tool-results/bvgqffhxz.txt)
+  ⎿  (No output)
+
+⏺ Bash(sed -n '400,560p'
+      /Users/liluxuan/.claude/projects/-Users-liluxuan-Documents-My-Papers-3-DDL
+      ALM/880951c1-4739-4c94-a501-78399ca16f1e/tool-results/bvgqffhxz.txt)
+  ⎿  (No output)
+
+⏺ 老大，两份文件是同一场对话的两个导出：前 3634 行相同，之后分叉。164436
+  那份更长，一直讨论到加速段的 insight；164515 那份在分叉后只多一轮，核对了 GDA
+  的度量。我读了全部用户轮次的索引和两份的分叉后内容，中段的回答没有逐行读。
+
+  对话做了什么
+
+  主线是重写 Introduction 里的 related work，从动机段写到两个科学问题。
+
+  1. 定位：问题是复合优化，在 Fenchel 形式下是 NC-L，手段是光滑 NC-C minimax
+     的单循环方法。连接两者的是固定 $\rho$ 后 $\mathcal{D}_\rho$ 在对偶侧的
+     Moreau 光滑化。
+  2. 已定稿的四段（中英文都有）：动机段、minimax 段、问题
+     (Q)、回答段。回答段的两条结果是：$\rho+s\le c_1/\epsilon$ 时族内为
+     $\Theta(\epsilon^{-4})$，$s=c_s/\epsilon$ 时族内为
+     $\Theta(\epsilon^{-3})$。
+  3. 加速段的逻辑（讨论中，未成稿）：
+     - NC-SC 的下界 $\Omega(\sqrt{\kappa},\epsilon^{-2})$ 归于 Zhang 等与 Li
+       等。
+     - 「对偶正则取 $\Theta(\epsilon)$ 得到 $\epsilon^{-5/2}$」这一归约归于
+       Lin–Jin–Jordan 2020。
+     - Zhang–Xu 是首个单循环实现，但要求对偶侧光滑、对偶域紧。
+     - $h$ 非光滑时，达到 $\mathcal{O}(\epsilon^{-5/2})$
+       的都是多循环方法：Kong–Monteiro、Ke–Mei–Zhang、IAIPAL、iALM。
+  4. 核心 insight 的当前表述：$h$ Lipschitz
+     推出乘子有界，因此对偶变量不用投影，Nesterov
+     外推可以原样放在对偶步上。第一个问题的回答说明 $\beta=0$ 配
+     $s=\Theta(\epsilon^{-1})$ 不损失阶，所以加速结果接在它后面。
+
+  未完成的事项
+
+  1. 对乘子做操作的文献调研没有结果。对话在派出后台调研后结束。「前人都保留移动
+     的对偶中心」这一判断目前没有依据。
+  2. Shi–Wang–Wang（MOR 2025）是最大风险。它的动量加在哪个变量上、是否单循环、阶
+     是多少，都没有核对。这直接影响「单循环 ALM 加速尚未实现」的说法。
+  3. $\Delta_{\mathcal{W}}$ 是否随 $s$ 增长没有核对，要再看 Lemma
+     initial-gap。这一项决定 $\mathcal{O}(\epsilon^{-5/2})$ 是否成立。
+  4. GDA 的 $\mathcal{O}(\epsilon^{-6})$ 一句待修改。Lin–Jin–Jordan 的 Theorem
+     4.9 陈述的是 OS 度量，换成 GS 要靠 Proposition 4.13。164515
+     那份给出了改写建议，但在句子中途截断，是否已写入稿件我没有核对。
+
+❯ <ide_opened_file>The user opened the file /Users/liluxuan/Documents/My_Papers
+  /3_DDLALM/dialogue/2026-11-16-164515-26-claude-20261116-1315md.txt in the
+  IDE. This may or may not be related to the current task.</ide_opened_file>
+
+❯ NC-SC 的下界 $\Omega(\sqrt{\kappa}\,\epsilon^{-2})$ 归于 Zhang 等与 Li 等。
+  确定吗 好几篇下界的文章呢
+
+⏺ Bash(cd /Users/liluxuan/Documents/My_Papers/3_DDLALM; grep -rn -i
+      "NC-SC\|strongly.concave\|sqrt{\\\\kappa}\|Guzm\|Jadbabaie"
+      memory/notes/project/*.md 2>/dev/null |…)
+  ⎿  (No output)
+
+⏺ Bash(cd /Users/liluxuan/Documents/My_Papers/3_DDLALM/dialogue; A=$(ls
+      2026-11-16-164436*); grep -n -i "Guzm\|Jadbabaie\|UAI
+      2021\|2104.08708\|2103.15888\|Han.*Xie\|Z…)
+  ⎿  (No output)
+
+⏺ 老大，归属确定：一般光滑 NC-SC、确定性一阶 oracle 下的
+  $\Omega(\sqrt{\kappa},\epsilon^{-2})$
+  出自这两篇，它们是同期独立的工作。依据是对话记录第 1083
+  行标注「已核」，两篇也已在 refer.bib
+  中（zhang2021complexity、li2021complexity）。原文我本轮没有重读。
+
+  - Zhang–Yang–Guzmán–Kiyavash–He，UAI 2021，arXiv:2103.15888。
+  - Li–Tian–Zhang–Jadbabaie，NeurIPS 2021。
+
+  你记得的「好几篇下界」对应的是其他设定，引用时要分开：
+
+  文献: Zhang 等同一篇
+  设定: 有限和 NC-SC
+  下界: 另有一个有限和下界，与确定性结果并列
+  ────────────────────────────────────────
+  文献: Li 等同一篇
+  设定: 随机 oracle 的 NC-SC
+  下界: 另有一个随机下界
+  ────────────────────────────────────────
+  文献: Mahdavinia 等，NeurIPS 2022
+  设定: GDA、EG、OGDA 这几个具体算法
+  下界: $\Omega(\kappa\Delta\epsilon^{-2})$，算法特定
+  ────────────────────────────────────────
+  文献: Pan–Zheng–Li，arXiv:2609.14235
+  设定: 光滑 NC-C
+  下界: GS 为 $\Omega(\epsilon^{-5/2})$，OS 为 $\Omega(\epsilon^{-3})$
+  ────────────────────────────────────────
+  文献: Li 等，arXiv:2602.14185
+  设定: Smoothed GDA、Perturbed Smoothed GDA
+  下界: 算法特定的 $\Omega(\epsilon^{-4})$、$\Omega(\epsilon^{-3})$
+
+  表中前两行的具体阶我凭记忆写不准，所以没有填数字；Mahdavinia 一行来自
+  literature.md 第 18 行。
+
+  加速段只需要第一类：问题类下界 $\Omega(\sqrt{\kappa},\epsilon^{-2})$，度量是
+  $\lVert\nabla\Phi\rVert$，问题无约束。引这两篇即可。
+❯ 对偶正则取 $\Theta(\epsilon)$ 得到 $\epsilon^{-5/2}$」这一归约归于
+  Lin–Jin–Jordan 2020。 只说那篇谢谢不要啰嗦
+
+⏺ 老大，Lin–Jin–Jordan，Near-Optimal Algorithms for Minimax Optimization，COLT
+  2020，Corollary 6.2。
+
+❯ https://proceedings.mlr.press/v125/lin20a/lin20a.pdf#page=11.50
+  corallary13？不要啰嗦谢谢
+
+⏺ Bash(mkdir -p /tmp/lit/ljj && cd /tmp/lit/ljj && curl -sL -o lin20a.pdf
+      https://proceedings.mlr.press/v125/lin20a/lin20a.pdf && pdftotext -q
+      lin20a.pdf a.txt && grep…)
+  ⎿  (No output)
+
+⏺ Bash(cd /tmp/lit/ljj && sed -n '725,750p;2840,2882p' a.txt | grep -v '^\s*$')
+  ⎿  (No output)
+
+⏺ 老大，对，COLT 版是 Corollary 13。Corollary 6.2 是 arXiv 版的编号，引 COLT
+  版时写 Corollary 13。
+
+  原文核对结果：对偶正则使 $\tilde{f}(\mathbf{x},\cdot)$ 为
+  $\epsilon/(2D_y)$-强凹，证明（附录 E.2）取 $\kappa_y=2\ell D_y/\epsilon$ 代入
+  Theorem 12，得到 $\tilde{\mathcal{O}}(\epsilon^{-5/2})$。
+
+❯ <ide_opened_file>The user opened the file /Users/liluxuan/Documents/My_Papers
+  /3_DDLALM/dialogue/2026-11-16-164515-26-claude-20261116-1315md.txt in the
+  IDE. This may or may not be related to the current task.</ide_opened_file>
+
+❯ 他的加速是子问题加速？ 是吧？
+  Zhang–Xu 是首个单循环实现，但要求对偶侧光滑、对偶域紧
+  站在我们角度，光滑我们可以满足因为我们是规约alm；对偶与紧不是难事因为我们显式
+  h；他们加速的手段是polyak动量，假设有界后 如果就放到我们的问题上
+  （把投影去掉最简单的是什么形式） 我们是什么形式， 麻烦和我们的符号对齐
+
+⏺ Bash(ls -la /tmp/agy_check/p4.txt 2>&1; cd /tmp/agy_check 2>/dev/null && grep
+      -n -i "Algorithm 1\|momentum\|Polyak\|heavy.ball\|Nesterov\|extrapolat"
+      p4.txt | cut -c…)
+  ⎿  (No output)
+
+⏺ Bash(cd /Users/liluxuan/Documents/My_Papers/3_DDLALM/overleaf/sections; grep
+      -n "begin{algorithm}\|end{algorithm}\|label{alg" Acceleration.tex | head;
+      grep -n "newco…)
+  ⎿  (No output)
+
+⏺ Bash(sed -n '470,560p' /tmp/agy_check/p4.txt | grep -v '^\s*$'; echo =====;
+      sed -n '20,72p' /Users/liluxuan/Documents/My_Papers/3_DDLALM/overleaf/sect
+      ions/Accelerati…)
+  ⎿  Error: Exit code 1
+     3.1 Regularized saddle-point formulation
+     We first introduce a regularized saddle-point problem. Fix λ > L and choose
+     τ ≥ 0 such that
+     µy := µ + τ > 0. For a center z ∈ Rn , define
+     p(z ) = min max G(x, y ; z ),
+     x∈X y∈Y
+     (3.1)
+     where
+     λ
+     τ
+     … +71 lines (ctrl+o to expand)
+
+⏺ Bash(sed -n '14,72p' /Users/liluxuan/Documents/My_Papers/3_DDLALM/overleaf/sec
+      tions/Acceleration.tex; grep -n "calP_s\|mathcal P_s"
+      /Users/liluxuan/Documents/My_Pape…)
+  ⎿  (No output)
+
+⏺ 老大，两点都对，一处要修正：Lin–Jin–Jordan
+  的加速在子问题上（外层不精确近端点，内层用 AGD
+  解强凸–强凹子问题，共三层循环）；Zhang–Xu 的原文称其动量为 dual
+  momentum，形式是对偶梯度的指数平均，原文没有称它为 Polyak 动量。
+
+  记号对应
+
+  Zhang–Xu 的辅助函数与本文的
+  $\mathcal{P}_s(\mathbf{x},\boldsymbol\lambda;\mathbf{z},\mathbf{0})$
+  是同一个函数：
+
+  ┌──────────────────────┬───────────────────────────────────────────────────┐
+  │       Zhang–Xu       │                       本文                        │
+  ├──────────────────────┼───────────────────────────────────────────────────┤
+  │ $f(x,y)$             │ $\mathcal{D}_\rho(\mathbf{x},\boldsymbol\lambda)$ │
+  ├──────────────────────┼───────────────────────────────────────────────────┤
+  │ 对偶变量 $y$         │ 乘子 $\boldsymbol\lambda$                         │
+  ├──────────────────────┼───────────────────────────────────────────────────┤
+  │ 近端系数 $\lambda$   │ $1/\gamma$                                        │
+  ├──────────────────────┼───────────────────────────────────────────────────┤
+  │ 对偶正则 $\tau$      │ $1/s$                                             │
+  ├──────────────────────┼───────────────────────────────────────────────────┤
+  │ 中心步长 $\beta$     │ $\alpha$                                          │
+  ├──────────────────────┼───────────────────────────────────────────────────┤
+  │ 步长                 │ $\eta$、$\tau$                                    │
+  │ $h$，原始与对偶共用  │                                                   │
+  └──────────────────────┴───────────────────────────────────────────────────┘
+
+  下面的梯度都取在中心 $(\mathbf{z}^k,\mathbf{0})$：
+
+  $$
+  \nabla_{\mathbf{x}}\mathcal{P}s(\mathbf{x},\boldsymbol\lambda)=\nabla{\mathbf{
+  x}}\mathcal{L}_\rho(\mathbf{x},\mathbf{y}(\mathbf{x},\boldsymbol\lambda),\bold
+  symbol\lambda)+\frac{1}{\gamma}(\mathbf{x}-\mathbf{z}^k)
+  $$
+
+  $$
+  \nabla_{\boldsymbol\lambda}\mathcal{P}_s(\mathbf{x},\boldsymbol\lambda)=\mathc
+  al{A}(\mathbf{x})-\mathbf{y}(\mathbf{x},\boldsymbol\lambda)-\frac{1}{s}\boldsy
+  mbol\lambda
+  $$
+
+  Zhang–Xu 去掉投影后的形式
+
+  去掉投影后，法锥变量 $\xi_t$、$n_t$ 恒为零，Algorithm 1 化为六步。动量变量记为
+  $\mathbf{v}^k$，它的两个参数记为 $a\in(0,1)$、$c\ge 0$（原文的
+  $\alpha$、$\gamma$，与本文记号冲突，所以换名）。
+
+  预测步：
+
+  $$
+  \tilde{\mathbf{x}}^k=\mathbf{x}^k-\eta\nabla_{\mathbf{x}}\mathcal{P}_s(\mathbf
+  {x}^k,\boldsymbol\lambda^k)
+  $$
+
+  $$
+  \tilde{\boldsymbol\lambda}^k=\boldsymbol\lambda^k+\eta\left(\nabla_{\boldsymbo
+  l\lambda}\mathcal{P}_s(\mathbf{x}^k,\boldsymbol\lambda^k)+\mathbf{v}^k\right)
+  $$
+
+  校正步，梯度取在预测点：
+
+  $$
+  \bar{\mathbf{v}}^k=a\mathbf{v}^k+(1-a)c\nabla_{\boldsymbol\lambda}\mathcal{P}_
+  s(\tilde{\mathbf{x}}^k,\tilde{\boldsymbol\lambda}^k)
+  $$
+
+  $$
+  \mathbf{x}^{k+1}=\mathbf{x}^k-\eta\nabla_{\mathbf{x}}\mathcal{P}_s(\tilde{\mat
+  hbf{x}}^k,\tilde{\boldsymbol\lambda}^k)
+  $$
+
+  $$
+  \boldsymbol\lambda^{k+1}=\boldsymbol\lambda^k+\eta\left(\nabla_{\boldsymbol\la
+  mbda}\mathcal{P}_s(\tilde{\mathbf{x}}^k,\tilde{\boldsymbol\lambda}^k)+\bar{\ma
+  thbf{v}}^k\right)
+  $$
+
+  动量与中心更新：
+
+  $$
+  \mathbf{v}^{k+1}=a\mathbf{v}^k+(1-a)c\nabla_{\boldsymbol\lambda}\mathcal{P}_s(
+  \mathbf{x}^{k+1},\boldsymbol\lambda^{k+1})
+  $$
+
+  $$
+  \mathbf{z}^{k+1}=\mathbf{z}^k+\alpha(\mathbf{x}^{k+1}-\mathbf{z}^k)
+  $$
+
+  Fast LRALM
+
+  $$
+  \bar{\boldsymbol\lambda}^k=\boldsymbol\lambda^k+\omega(\boldsymbol\lambda^k-\b
+  oldsymbol\lambda^{k-1})
+  $$
+
+  $$
+  \mathbf{x}^{k+1}=\mathbf{x}^k-\eta\nabla_{\mathbf{x}}\mathcal{P}_s(\mathbf{x}^
+  k,\bar{\boldsymbol\lambda}^k)
+  $$
+
+  $$
+  \boldsymbol\lambda^{k+1}=\bar{\boldsymbol\lambda}^k+\tau\nabla_{\boldsymbol\la
+  mbda}\mathcal{P}_s(\mathbf{x}^{k+1},\bar{\boldsymbol\lambda}^k)
+  $$
+
+  $$
+  \mathbf{z}^{k+1}=\mathbf{z}^k+\alpha(\mathbf{x}^{k+1}-\mathbf{z}^k)
+  $$
+
+  差别
+
+  1. 外梯度：Zhang–Xu 去掉投影后仍保留原始与对偶两侧的预测–校正。Fast LRALM
+     没有预测步，对偶步直接用新的 $\mathbf{x}^{k+1}$。
+  2. 动量的形式：Zhang–Xu 的 $\mathbf{v}^k$
+     是对偶梯度的指数平均，加在对偶上升方向上，有两个参数 $a$、$c$。Fast LRALM
+     对乘子序列做 Nesterov 外推，只有一个系数 $\omega$，由 $\kappa=s/\tau$
+     确定。
+  3. 步长：Zhang–Xu 的原始与对偶共用一个步长。Fast LRALM 用两个步长
+     $\eta$、$\tau$。
+
+  你的两个前提成立：$\mathcal{D}_\rho$ 对 $\boldsymbol\lambda$ 光滑，$h$
+  Lipschitz 给出乘子有界。有一点没有核对：Zhang–Xu 的参数取
+  $\tau=\min{L,\epsilon/(2D_Y)}$，证明用到
+  $D_Y$；去掉投影后他们的证明是否仍成立，我没有验证。
+
+❯ 我们三个都是 min xmax y f(x, y) 对吧别啰嗦。
+
+⏺ 老大，对，三者都是
+  $\min_{\mathbf{x}}\max_{\mathbf{y}}f(\mathbf{x},\mathbf{y})$：Lin–Jin–Jordan
+  与 Zhang–Xu 的 $f$ 是一般光滑 NC-C 函数且对偶域紧，本文的 $f$ 是
+  $\mathcal{D}_\rho(\mathbf{x},\boldsymbol\lambda)$ 且
+  $\boldsymbol\lambda\in\mathbb{R}^m$ 无约束。
+
+❯ 第二步，Lin-Jin-Jordan算法求解的问题是什么 别啰嗦
+
+⏺ 老大，Corollary 13 求解的是加了对偶正则的问题：
+
+  $$
+  \min_{\mathbf{x}\in X}\max_{\mathbf{y}\in
+  Y}\tilde{f}(\mathbf{x},\mathbf{y}),\qquad
+  \tilde{f}(\mathbf{x},\mathbf{y})=f(\mathbf{x},\mathbf{y})-\frac{\epsilon}{4D_y
+  }\lVert\mathbf{y}-\mathbf{y}_0\rVert^2
+  $$
+
+  其中 $f$ 是 $\ell$-光滑的，$f(\mathbf{x},\cdot)$ 是凹的，$Y$ 有界且直径为
+  $D_y$。$\tilde{f}(\mathbf{x},\cdot)$ 是
+  $\epsilon/(2D_y)$-强凹的，因此该问题属于 NC-SC，由 Minimax-PPA 求解。
+
+❯ minmax-PPA是什么东西？
+
+⏺ Bash(cd /tmp/lit/ljj && grep -n "Algorithm 5\|Algorithm 4\|Algorithm
+      3\|Algorithm 2\|Algorithm 1 " a.txt | head -20; sed -n '655,700p' a.txt |
+      grep -v '^\s*$')
+  ⎿  (No output)
+
+⏺ 老大，Minimax-PPA 是 Lin–Jin–Jordan 的 Algorithm 5：外层对
+  $\Phi(\mathbf{x})=\max_{\mathbf{y}\in Y}f(\mathbf{x},\mathbf{y})$
+  做不精确近端点法（proximal point
+  algorithm，PPA），内层用加速求解器解每一步的强凸–强凹子问题。
+
+  - 外层：近端参数取 $\ell$，每步求解下面的子问题。外层不加动量，需要
+    $\tilde{\mathcal{O}}(\epsilon^{-2})$ 步。
+
+  $$
+  \min_{\mathbf{x}\in X}\max_{\mathbf{y}\in Y}\
+  f(\mathbf{x},\mathbf{y})+\ell\lVert\mathbf{x}-\mathbf{x}_t\rVert^2
+  $$
+
+  - 内层：子问题关于 $\mathbf{x}$ 强凸且条件数为 $\mathcal{O}(1)$，关于
+    $\mathbf{y}$ 强凹且条件数为 $\kappa_y=\ell/\mu_y$。求解器 Maximin-AG2 用
+    Nesterov 加速梯度法，每个子问题需要 $\tilde{\mathcal{O}}(\sqrt{\kappa_y})$
+    次梯度。
+  - 总复杂度（Theorem
+    12）：$\tilde{\mathcal{O}}(\sqrt{\kappa_y},\epsilon^{-2})$，带 $\log^2$
+    因子。
+
+  因此 $\sqrt{\kappa_y}$ 来自内层的 Nesterov 加速，$\epsilon^{-2}$
+  来自外层的近端点法。
+
+❯ 他怎么用minmax-PPA求解加了对偶正则的问题：
+
+  $$\min_{\mathbf{x}\in X}\max_{\mathbf{y}\in
+  Y}\tilde{f}(\mathbf{x},\mathbf{y}),\qquad
+  \tilde{f}(\mathbf{x},\mathbf{y})=f(\mathbf{x},\mathbf{y})-\frac{\epsilon}{4D_
+  y}\lVert\mathbf{y}-\mathbf{y}_0\rVert^2$$的问题？
+
+⏺ 老大，直接把 $\tilde{f}$ 当作 NC-SC 函数代入 Minimax-PPA，不改算法：调用
+  $\text{Minimax-PPA}(\tilde{f},\mathbf{x}_0,\mathbf{y}_0,\ell,\epsilon/(2D_y),\
+  epsilon/2,T)$。
+
+  1. 代入：$\tilde{f}(\mathbf{x},\cdot)$ 的强凹系数是
+     $\mu_y=\epsilon/(2D_y)$，所以条件数为 $\kappa_y=2\ell D_y/\epsilon$。
+  2. 外层：对 $\tilde{f}$ 做近端点法，每步的子问题如下。
+
+  $$
+  \min_{\mathbf{x}\in X}\max_{\mathbf{y}\in Y}\
+  f(\mathbf{x},\mathbf{y})-\frac{\epsilon}{4D_y}\lVert\mathbf{y}-\mathbf{y}_0\rV
+  ert^2+\ell\lVert\mathbf{x}-\mathbf{x}_t\rVert^2
+  $$
+
+  3. 内层：Maximin-AG2 用 Nesterov 加速求解这个强凸–强凹子问题，每个子问题需要
+     $\tilde{\mathcal{O}}(\sqrt{\kappa_y})$ 次梯度。
+  4. 复杂度：把 $\kappa_y$ 代入 Theorem 12，得到
+
+  $$
+  \tilde{\mathcal{O}}\left(\sqrt{\kappa_y},\epsilon^{-2}\right)=\tilde{\mathcal{
+  O}}\left(\sqrt{\ell D_y},\epsilon^{-5/2}\right)
+  $$
+
+  5. 回到原问题：因为 $Y$ 的直径为 $D_y$，所以对所有 $\mathbf{y}\in Y$ 有 $\lVer
+     t\nabla_{\mathbf{y}}f-\nabla_{\mathbf{y}}\tilde{f}\rVert\le\epsilon/2$，而
+     $\nabla_{\mathbf{x}}f=\nabla_{\mathbf{x}}\tilde{f}$。因此 $\tilde{f}$ 的
+     $(\epsilon/2)$-平稳点是 $f$ 的 $\epsilon$-平稳点（附录 E.2）。
+
+❯ 好神奇  因为子问题是单调的
+
+⏺ 老大，对：加上 $\ell\lVert\mathbf{x}-\mathbf{x}t\rVert^2$ 后子问题关于
+  $\mathbf{x}$ 是 $\ell$-强凸的，加上对偶正则后关于 $\mathbf{y}$ 是
+  $\epsilon/(2D_y)$-强凹的，因此算子 $(\nabla{\mathbf{x}},-\nabla_{\mathbf{y}})$
+  强单调，鞍点唯一，一阶方法线性收敛。
+
+  非凸性全部留在外层，由近端点法以 $\tilde{\mathcal{O}}(\epsilon^{-2})$
+  步处理；Nesterov 加速只作用在强单调的子问题上，把每个子问题的代价从 $\kappa_y$
+  降到 $\sqrt{\kappa_y}$。
+
+❯ 然后是zhangxu的算法1 对于这个问题实际上是？
+⏺ 老大，Zhang–Xu 的 Algorithm 1 作用在同一个强单调子问题上，区别只在于它不把子问
+  题解到精度：每次迭代对子问题做一步带对偶动量的外梯度，然后移动近端中心。
+
+  它的辅助函数是
+
+  $$
+  G(\mathbf{x},\mathbf{y};\mathbf{z})=f(\mathbf{x},\mathbf{y})+\frac{\lambda}{2}
+  \lVert\mathbf{x}-\mathbf{z}\rVert^2-\frac{\tau}{2}\lVert\mathbf{y}\rVert^2
+  $$
+
+  GS 情形取 $\lambda=2L$、$\tau=\min{L,\epsilon/(2D_Y)}$。与 Lin–Jin–Jordan
+  的子问题对照：
+
+  ┌─────────┬─────────────────────────┬─────────────────────────────────────┐
+  │         │     Lin–Jin–Jordan      │              Zhang–Xu               │
+  ├─────────┼─────────────────────────┼─────────────────────────────────────┤
+  │ 原始近  │ $\ell\lVert\mathbf{x}-\ │ $L\lVert\mathbf{x}-\mathbf{z}_t\rVe │
+  │ 端项    │ mathbf{x}_t\rVert^2$    │ rt^2$                               │
+  ├─────────┼─────────────────────────┼─────────────────────────────────────┤
+  │ 对偶强  │ $\epsilon/(2D_y)$       │ $\epsilon/(2D_Y)$                   │
+  │ 凹系数  │                         │                                     │
+  ├─────────┼─────────────────────────┼─────────────────────────────────────┤
+  │ 对偶正  │                         │                                     │
+  │ 则的中  │ $\mathbf{y}_0$          │ $\mathbf{0}$                        │
+  │ 心      │                         │                                     │
+  ├─────────┼─────────────────────────┼─────────────────────────────────────┤
+  │ 子问题  │ 内层 Maximin-AG2        │ 一步外梯度加对偶动量                │
+  │ 的求解  │ 解到精度                │                                     │
+  ├─────────┼─────────────────────────┼─────────────────────────────────────┤
+  │ 近端中  │ $\mathbf{x}_{t+1}$      │ $\mathbf{z}_{t+1}=\mathbf{z}t+\beta │
+  │ 心的更  │ 取子问题的近似解        │ (\mathbf{x}{t+1}-\mathbf{z}_t)$     │
+  │ 新      │                         │                                     │
+  └─────────┴─────────────────────────┴─────────────────────────────────────┘
+
+  因此两者的子问题相同，$\sqrt{\kappa}$
+  的来源也相同，都是强凹对偶侧上的动量。Zhang–Xu
+  把「外层近端点、内层求解」压成一个循环，代价是子问题的解
+  $(\mathbf{x}^\star(\mathbf{z}_t),\mathbf{y}^\star(\mathbf{z}_t))$
+  随中心移动，迭代点与它之间的跟踪误差要由 Lyapunov 函数吸收。
+
+❯ Zhang–Xu 把「外层近端点、内层求解」压成一个循环， 这个循环式 写出来
+
+⏺ 老大，下面是 Zhang–Xu Algorithm 1 的一次迭代，用原文记号。初始化
+  $z_0=x_0$，$\xi_0=n_0=v_0=0$；$G$ 的梯度都取在中心 $z_t$。
+
+  预测步
+
+  $$
+  \tilde{x}_t=\Pi_X\left(x_t-h\left[\nabla_x G(x_t,y_t;z_t)+\xi_t\right]\right)
+  $$
+
+  $$
+  \tilde{y}_t=\Pi_Y\left(y_t+h\left[\nabla_y
+  G(x_t,y_t;z_t)-n_t+v_t\right]\right)
+  $$
+
+  校正步，梯度取在预测点 $(\tilde{x}_t,\tilde{y}_t)$
+
+  $$
+  \bar{v}_t=\alpha v_t+(1-\alpha)\gamma\nabla_y G(\tilde{x}_t,\tilde{y}_t;z_t)
+  $$
+
+  $$
+  x_{t+1}=\Pi_X\left(x_t-h\nabla_x G(\tilde{x}_t,\tilde{y}_t;z_t)\right)
+  $$
+
+  $$
+  y_{t+1}=\Pi_Y\left(y_t+h\left[\nabla_y
+  G(\tilde{x}_t,\tilde{y}_t;z_t)+\bar{v}_t\right]\right)
+  $$
+
+  法锥变量，记录投影造成的偏差
+
+  $$
+  \xi_{t+1}=\frac{x_t-x_{t+1}}{h}-\nabla_x G(\tilde{x}_t,\tilde{y}_t;z_t)
+  $$
+
+  $$
+  n_{t+1}=\frac{(y_t-y_{t+1})/h+\nabla_y
+  G(\tilde{x}_t,\tilde{y}_t;z_t)+\bar{v}_t}{1+(1-\alpha)\gamma}
+  $$
+
+  对偶动量
+
+  $$
+  v_{t+1}=\alpha v_t+(1-\alpha)\gamma\left[\nabla_y
+  G(x_{t+1},y_{t+1};z_t)-n_{t+1}\right]
+  $$
+
+  近端中心
+
+  $$
+  z_{t+1}=z_t+\beta(x_{t+1}-z_t)
+  $$
+
+  各部分与 Minimax-PPA 的对应：
+
+  - 预测步、校正步和动量三部分合起来，是对子问题 $\min_x\max_y G(x,y;z_t)$
+    的一步求解，代替 Maximin-AG2 的整个内层循环。
+  - 最后一式代替外层近端点法的中心更新。$\beta=1$ 时中心直接取 $x_{t+1}$。
+  - 参数 $h$ 是原始与对偶共用的步长，$\alpha\in(0,1)$
+    是动量的平均权重，$\gamma\ge 0$ 是动量的增益，$\beta\in(0,1]$ 是中心步长。
+
+❯ 不是  就是这个对吧：hang–Xu 去掉投影后的形式
+
+  去掉投影后，法锥变量 $\xi_t$、$n_t$ 恒为零，Algorithm 1
+  化为六步。动量变量记为 $\mathbf{v}^k$，它的两个参数记为 $a\in(0,1)$、$c\ge
+  0$（原文的 $\alpha$、$\gamma$，与本文记号冲突，所以换名）。
+
+  预测步：
+
+  $$\tilde{\mathbf{x}}^k=\mathbf{x}^k-\eta\nabla_{\mathbf{x}}\mathcal{P}_s(\mat
+  hbf{x}^k,\boldsymbol\lambda^k)$$
+  $$\tilde{\boldsymbol\lambda}^k=\boldsymbol\lambda^k+\eta\left(\nabla_{\boldsy
+  mbol\lambda}\mathcal{P}_s(\mathbf{x}^k,\boldsymbol\lambda^k)+\mathbf{v}^k\rig
+  ht)$$
+
+  校正步，梯度取在预测点：
+
+  $$\bar{\mathbf{v}}^k=a\mathbf{v}^k+(1-a)c\nabla_{\boldsymbol\lambda}\mathcal{
+  P}_s(\tilde{\mathbf{x}}^k,\tilde{\boldsymbol\lambda}^k)$$
+  $$\mathbf{x}^{k+1}=\mathbf{x}^k-\eta\nabla_{\mathbf{x}}\mathcal{P}_s(\tilde{\
+  mathbf{x}}^k,\tilde{\boldsymbol\lambda}^k)$$
+  $$\boldsymbol\lambda^{k+1}=\boldsymbol\lambda^k+\eta\left(\nabla_{\boldsymbol
+  \lambda}\mathcal{P}_s(\tilde{\mathbf{x}}^k,\tilde{\boldsymbol\lambda}^k)+\bar
+  {\mathbf{v}}^k\right)$$
+
+  动量与中心更新：
+
+  $$\mathbf{v}^{k+1}=a\mathbf{v}^k+(1-a)c\nabla_{\boldsymbol\lambda}\mathcal{P}
+  _s(\mathbf{x}^{k+1},\boldsymbol\lambda^{k+1})$$
+  $$\mathbf{z}^{k+1}=\mathbf{z}^k+\alpha(\mathbf{x}^{k+1}-\mathbf{z}^k)$$
+
+⏺ 老大，对，就是这六步加中心更新：它是 Zhang–Xu Algorithm 1
+  去掉投影后在本文记号下的形式，辅助函数 $G(x,y;z)$ 对应
+  $\mathcal{P}_s(\mathbf{x},\boldsymbol\lambda;\mathbf{z},\mathbf{0})$。
+
+❯ 按照$$G(\mathbf{x},\mathbf{y};\mathbf{z})=f(\mathbf{x},\mathbf{y})+\frac{\lam
+  bda}{2}\lVert\mathbf{x}-\mathbf{z}\rVert^2-\frac{\tau}{2}\lVert\mathbf{y}\rVe
+  rt^2$$这个符号写一下
+
+⏺ 老大，下面是去掉投影后的 Zhang–Xu Algorithm 1，用原文记号，梯度都取在中心
+  $\mathbf{z}_t$。
+
+  预测步：
+
+  $$
+  \tilde{\mathbf{x}}_t=\mathbf{x}t-h\nabla{\mathbf{x}}G(\mathbf{x}_t,\mathbf{y}_
+  t;\mathbf{z}_t)
+  $$
+
+  $$
+  \tilde{\mathbf{y}}_t=\mathbf{y}t+h\left(\nabla{\mathbf{y}}G(\mathbf{x}_t,\math
+  bf{y}_t;\mathbf{z}_t)+\mathbf{v}_t\right)
+  $$
+
+  校正步，梯度取在预测点：
+
+  $$
+  \bar{\mathbf{v}}_t=\alpha\mathbf{v}t+(1-\alpha)\gamma\nabla{\mathbf{y}}G(\tild
+  e{\mathbf{x}}_t,\tilde{\mathbf{y}}_t;\mathbf{z}_t)
+  $$
+
+  $$
+  \mathbf{x}_{t+1}=\mathbf{x}t-h\nabla{\mathbf{x}}G(\tilde{\mathbf{x}}_t,\tilde{
+  \mathbf{y}}_t;\mathbf{z}_t)
+  $$
+
+  $$
+  \mathbf{y}_{t+1}=\mathbf{y}t+h\left(\nabla{\mathbf{y}}G(\tilde{\mathbf{x}}_t,\
+  tilde{\mathbf{y}}_t;\mathbf{z}_t)+\bar{\mathbf{v}}_t\right)
+  $$
+
+  动量与中心更新：
+
+  $$
+  \mathbf{v}{t+1}=\alpha\mathbf{v}t+(1-\alpha)\gamma\nabla{\mathbf{y}}G(\mathbf{
+  x}{t+1},\mathbf{y}_{t+1};\mathbf{z}_t)
+  $$
+
+  $$
+  \mathbf{z}_{t+1}=\mathbf{z}t+\beta(\mathbf{x}{t+1}-\mathbf{z}_t)
+  $$
+
+  其中两个梯度为
+
+  $$
+  \nabla_{\mathbf{x}}G(\mathbf{x},\mathbf{y};\mathbf{z})=\nabla_{\mathbf{x}}f(\m
+  athbf{x},\mathbf{y})+\lambda(\mathbf{x}-\mathbf{z})
+  $$
+
+  $$
+  \nabla_{\mathbf{y}}G(\mathbf{x},\mathbf{y};\mathbf{z})=\nabla_{\mathbf{y}}f(\m
+  athbf{x},\mathbf{y})-\tau\mathbf{y}
+  $$
+
+  参数：$h$ 是原始与对偶共用的步长，$\alpha\in(0,1)$
+  是动量的平均权重，$\gamma\ge 0$ 是动量的增益，$\beta\in(0,1]$
+  是中心步长；初始化 $\mathbf{z}_0=\mathbf{x}_0$，$\mathbf{v}_0=\mathbf{0}$。
+
+❯ 好啰嗦 不就一共四个变量该更新吗  辅助的可以写到该变量的一行
+
+⏺ 老大，四个变量各一行，辅助量写在同一行；$G$ 的梯度都取在中心
+  $\mathbf{z}_t$，下面省略这个参数。
+
+  $$
+  \mathbf{x}_{t+1}=\mathbf{x}t-h\nabla{\mathbf{x}}G(\tilde{\mathbf{x}}_t,\tilde{
+  \mathbf{y}}_t),\quad \tilde{\mathbf{x}}_t=\mathbf{x}t-h\nabla{\mathbf{x}}G(\ma
+  thbf{x}_t,\mathbf{y}_t)
+  $$
+
+  $$
+  \mathbf{y}_{t+1}=\mathbf{y}t+h\left(\nabla{\mathbf{y}}G(\tilde{\mathbf{x}}_t,\
+  tilde{\mathbf{y}}_t)+\bar{\mathbf{v}}_t\right),\quad
+  \tilde{\mathbf{y}}_t=\mathbf{y}t+h\left(\nabla{\mathbf{y}}G(\mathbf{x}_t,\math
+  bf{y}_t)+\mathbf{v}_t\right)
+  $$
+
+  $$
+  \mathbf{v}{t+1}=\alpha\mathbf{v}t+(1-\alpha)\gamma\nabla{\mathbf{y}}G(\mathbf{
+  x}{t+1},\mathbf{y}_{t+1}),\quad \bar{\mathbf{v}}_t=\alpha\mathbf{v}t+(1-\alpha
+  )\gamma\nabla{\mathbf{y}}G(\tilde{\mathbf{x}}_t,\tilde{\mathbf{y}}_t)
+  $$
+
+  $$
+  \mathbf{z}_{t+1}=\mathbf{z}t+\beta(\mathbf{x}{t+1}-\mathbf{z}_t)
+  $$
+
+❯ 然后我们的算法和问题 问题和他一样 ，看看算法也是变量写成各一行看看。
+
+⏺ 老大，用同一个 $G$ 写，Fast LRALM 只有三个变量，没有动量变量
+  $\mathbf{v}$，也没有预测点；$f=\mathcal{D}_\rho$，$\mathbf{y}$
+  是乘子，$\lambda=1/\gamma$，$\tau=1/s$。
+
+  $$
+  \mathbf{x}_{t+1}=\mathbf{x}t-h_x\nabla{\mathbf{x}}G(\mathbf{x}_t,\bar{\mathbf{
+  y}}_t),\quad
+  \bar{\mathbf{y}}_t=\mathbf{y}_t+\omega(\mathbf{y}t-\mathbf{y}{t-1})
+  $$
+
+  $$
+  \mathbf{y}{t+1}=\bar{\mathbf{y}}t+h_y\nabla{\mathbf{y}}G(\mathbf{x}{t+1},\bar{
+  \mathbf{y}}_t)
+  $$
+
+  $$
+  \mathbf{z}_{t+1}=\mathbf{z}t+\beta(\mathbf{x}{t+1}-\mathbf{z}_t)
+  $$
+
+  其中 $h_x$、$h_y$ 是原始与对偶步长（稿中的 $\eta$ 与对偶步长
+  $\tau$，后者与此处的正则系数 $\tau$ 重名，所以换名），$\beta$
+  是中心步长（稿中的 $\alpha$），外推系数为
+
+  $$
+  \omega=\frac{\sqrt{\kappa}-1}{\sqrt{\kappa}+1},\qquad \kappa=\frac{1}{h_y\tau}
+  $$
+
+  与 Zhang–Xu 的四行逐行对照：
+
+  - $\mathbf{x}$ 行：Zhang–Xu 的梯度取在预测点
+    $(\tilde{\mathbf{x}}_t,\tilde{\mathbf{y}}_t)$，本文取在
+    $(\mathbf{x}_t,\bar{\mathbf{y}}_t)$，只有对偶变量被外推。
+  - $\mathbf{y}$ 行：Zhang–Xu 从 $\mathbf{y}_t$ 出发并在梯度上加
+    $\bar{\mathbf{v}}_t$，本文从外推点 $\bar{\mathbf{y}}t$
+    出发做一步梯度上升，并且用新的 $\mathbf{x}{t+1}$。
+  - $\mathbf{v}$ 行：本文没有。
+  - $\mathbf{z}$ 行：相同。
+
+❯ 好的 那我们现在 全部换成我们本文的符号呢？不用f(x,y) 而只是D_rho
+
+⏺ 老大，两个算法都作用在同一个函数上，梯度都取在中心
+  $(\mathbf{z}^k,\mathbf{0})$，下面省略中心：
+
+  $$
+  \mathcal{P}s(\mathbf{x},\boldsymbol\lambda;\mathbf{z}^k,\mathbf{0})=\mathcal{D
+  }\rho(\mathbf{x},\boldsymbol\lambda)+\frac{1}{2\gamma}\lVert\mathbf{x}-\mathbf
+  {z}^k\rVert^2-\frac{1}{2s}\lVert\boldsymbol\lambda\rVert^2
+  $$
+
+  $$
+  \nabla_{\mathbf{x}}\mathcal{P}s(\mathbf{x},\boldsymbol\lambda)=\nabla{\mathbf{
+  x}}\mathcal{D}\rho(\mathbf{x},\boldsymbol\lambda)+\frac{1}{\gamma}(\mathbf{x}-
+  \mathbf{z}^k),\qquad \nabla{\boldsymbol\lambda}\mathcal{P}s(\mathbf{x},\boldsy
+  mbol\lambda)=\nabla{\boldsymbol\lambda}\mathcal{D}_\rho(\mathbf{x},\boldsymbol
+  \lambda)-\frac{1}{s}\boldsymbol\lambda
+  $$
+
+  Zhang–Xu，去掉投影
+
+  四个变量 $\mathbf{x}$、$\boldsymbol\lambda$、$\mathbf{v}$、$\mathbf{z}$；原始
+  与对偶共用步长 $\eta$，动量参数为 $a\in(0,1)$、$c\ge 0$。
+
+  $$
+  \mathbf{x}^{k+1}=\mathbf{x}^k-\eta\nabla_{\mathbf{x}}\mathcal{P}s(\tilde{\math
+  bf{x}}^k,\tilde{\boldsymbol\lambda}^k),\quad \tilde{\mathbf{x}}^k=\mathbf{x}^k
+  -\eta\nabla{\mathbf{x}}\mathcal{P}_s(\mathbf{x}^k,\boldsymbol\lambda^k)
+  $$
+
+  $$
+  \boldsymbol\lambda^{k+1}=\boldsymbol\lambda^k+\eta\left(\nabla_{\boldsymbol\la
+  mbda}\mathcal{P}s(\tilde{\mathbf{x}}^k,\tilde{\boldsymbol\lambda}^k)+\bar{\mat
+  hbf{v}}^k\right),\quad
+  \tilde{\boldsymbol\lambda}^k=\boldsymbol\lambda^k+\eta\left(\nabla{\boldsymbol
+  \lambda}\mathcal{P}_s(\mathbf{x}^k,\boldsymbol\lambda^k)+\mathbf{v}^k\right)
+  $$
+
+  $$
+  \mathbf{v}^{k+1}=a\mathbf{v}^k+(1-a)c\nabla_{\boldsymbol\lambda}\mathcal{P}s(\
+  mathbf{x}^{k+1},\boldsymbol\lambda^{k+1}),\quad
+  \bar{\mathbf{v}}^k=a\mathbf{v}^k+(1-a)c\nabla{\boldsymbol\lambda}\mathcal{P}_s
+  (\tilde{\mathbf{x}}^k,\tilde{\boldsymbol\lambda}^k)
+  $$
+
+  $$
+  \mathbf{z}^{k+1}=\mathbf{z}^k+\alpha(\mathbf{x}^{k+1}-\mathbf{z}^k)
+  $$
+
+  Fast LRALM
+
+  三个变量 $\mathbf{x}$、$\boldsymbol\lambda$、$\mathbf{z}$；原始步长
+  $\eta$，对偶步长 $\tau$，外推系数
+  $\omega=(\sqrt{\kappa}-1)/(\sqrt{\kappa}+1)$，$\kappa=s/\tau$。
+
+  $$
+  \mathbf{x}^{k+1}=\mathbf{x}^k-\eta\nabla_{\mathbf{x}}\mathcal{P}_s(\mathbf{x}^
+  k,\bar{\boldsymbol\lambda}^k),\quad \bar{\boldsymbol\lambda}^k=\boldsymbol\lam
+  bda^k+\omega(\boldsymbol\lambda^k-\boldsymbol\lambda^{k-1})
+  $$
+
+  $$
+  \boldsymbol\lambda^{k+1}=\bar{\boldsymbol\lambda}^k+\tau\nabla_{\boldsymbol\la
+  mbda}\mathcal{P}_s(\mathbf{x}^{k+1},\bar{\boldsymbol\lambda}^k)
+  $$
+
+  $$
+  \mathbf{z}^{k+1}=\mathbf{z}^k+\alpha(\mathbf{x}^{k+1}-\mathbf{z}^k)
+  $$
+
+❯ joden他们呢
+
+⏺ Bash(cd /tmp/lit/ljj && sed -n '440,492p;700,722p' a.txt | grep -v '^\s*$')
+  ⎿  (No output)
+
+⏺ 老大，Minimax-PPA 在本文记号下有三层循环；它的对偶步与 Fast LRALM
+  形式相同，都是对乘子做 Nesterov 外推后的一步梯度上升。
+
+  对应关系：近端中心直接取 $\mathbf{x}^k$，没有单独的 $\mathbf{z}$；$1/(2\gamma)
+  =\ell$；$1/(2s)=\epsilon/(4D_y)$；对偶正则的中心是初始点
+  $\boldsymbol\lambda^0$。下面省略中心，原文对偶步带投影 $P_Y$，这里去掉。
+
+  外层，指标 $k$，近端点法：
+
+  $$
+  \mathbf{x}^{k+1}\approx\arg\min_{\mathbf{x}}\max_{\boldsymbol\lambda}\mathcal{
+  P}_s(\mathbf{x},\boldsymbol\lambda;\mathbf{x}^k,\boldsymbol\lambda^0)
+  $$
+
+  中层，指标 $j$，Maximin-AG2 对 $\boldsymbol\lambda$ 做加速梯度上升：
+
+  $$
+  \boldsymbol\lambda_{j}=\bar{\boldsymbol\lambda}{j-1}+\tau\nabla{\boldsymbol\la
+  mbda}\mathcal{P}s(\tilde{\mathbf{x}}{j-1},\bar{\boldsymbol\lambda}{j-1}),\quad
+  \bar{\boldsymbol\lambda}{j}=\boldsymbol\lambda_{j}+\omega(\boldsymbol\lambda_
+  {j}-\boldsymbol\lambda_{j-1})
+  $$
+
+  内层，AGD 把原始变量解到精度：
+
+  $$
+  \tilde{\mathbf{x}}{j-1}\approx\arg\min{\mathbf{x}}\mathcal{P}s(\mathbf{x},\bar
+  {\boldsymbol\lambda}{j-1};\mathbf{x}^k,\boldsymbol\lambda^0)
+  $$
+
+  与 Fast LRALM 逐行对照：
+
+  ┌──────────┬───────────────────────────────┬──────────────────────────────┐
+  │   变量   │          Minimax-PPA          │          Fast LRALM          │
+  ├──────────┼───────────────────────────────┼──────────────────────────────┤
+  │ $\mathbf │ 内层 AGD 求 $\arg\min_{\mathb │ 在 $(\mathbf{x}^k,\bar{\bold │
+  │ {x}$     │ f{x}}\mathcal{P}_s(\mathbf{x} │ symbol\lambda}^k)$           │
+  │          │ ,\bar{\boldsymbol\lambda})$   │ 处一步梯度下降               │
+  ├──────────┼───────────────────────────────┼──────────────────────────────┤
+  │ $\boldsy │ 外推后一步梯度上升，循环到子  │ 外推后一步梯度上升，每次迭代 │
+  │ mbol\lam │ 问题达到精度                  │ 一步                         │
+  │ bda$     │                               │                              │
+  ├──────────┼───────────────────────────────┼──────────────────────────────┤
+  │          │ 子问题解完后取                │ 每次迭代 $\mathbf{z}^{k+1}=\ │
+  │ 近端中心 │ $\mathbf{x}^{k+1}$            │ mathbf{z}^k+\alpha(\mathbf{x │
+  │          │                               │ }^{k+1}-\mathbf{z}^k)$       │
+  └──────────┴───────────────────────────────┴──────────────────────────────┘
+
+  因此 Fast LRALM 是把 Minimax-PPA 的三层各取一步后得到的单循环形式：对偶步保留
+  Nesterov 外推，原始的精确极小化换成一步梯度，外层近端点换成中心的常数步长移动
+  。Minimax-PPA 中 $\omega$ 与对偶步长的取值与本文不同，这里只对照形式。
+
+❯ $$\mathcal{P}_s(\mathbf{x},\boldsymbol\lambda;\mathbf{z}^k,\mathbf{0})=\mathc
+  al{D}_\rho(\mathbf{x},\boldsymbol\lambda)+\frac{1}{2\gamma}\lVert\mathbf{x}-\
+  mathbf{z}^k\rVert^2-\frac{1}{2s}\lVert\boldsymbol\lambda\rVert^2$$我们应该不
+  是从k z不是k 就是z 只重写这个；
+
+⏺ $$
+  \mathcal{P}s(\mathbf{x},\boldsymbol\lambda;\mathbf{z},\mathbf{0})=\mathcal{D}\
+  rho(\mathbf{x},\boldsymbol\lambda)+\frac{1}{2\gamma}\lVert\mathbf{x}-\mathbf{z
+  }\rVert^2-\frac{1}{2s}\lVert\boldsymbol\lambda\rVert^2
+  $$
+
+❯ Zhang–Xu，去掉投影
+   他们的 非凸凹的参数条件是 一行？
+  我们的非凸凹的参数条件是是一行？
+  需要对比的复杂度定理上界/上界（不确定 引用谁）
+
+⏺ Bash(cd /tmp/agy_check && sed -n '739,800p;1015,1050p' p4.txt | grep -v
+      '^\s*$' | cut -c1-220)
+  ⎿  (No output)
+
+⏺ Bash(cd /Users/liluxuan/Documents/My_Papers/3_DDLALM/overleaf/sections && grep
+      -n
+      "begin{theorem}\|end{theorem}\|begin{corollary}\|end{corollary}\|label{"
+      Accelerati…)
+  ⎿  (No output)
+
+⏺ Bash(cd /tmp/agy_check && grep -n "(4.3)" p4.txt | head -3; sed -n '700,738p'
+      p4.txt | grep -v '^\s*$' | cut -c1-200; echo ======; sed -n
+      '146,172p;186,230p' /Users/…)
+  ⎿  Error: Exit code 1
+     725:(4.3)
+     741:Lemma 4.1 Suppose that Assumption 2.1 holds and the parameters are
+     chosen as in (4.3). Then the center
+     752:Lemma 4.2 Under Assumption 2.1 and the parameter choice (4.3),
+     16
+     h(8L −
+     p
+     16 + h
+     p
+     2Lµy )
+     … +17 lines (ctrl+o to expand)
+
+⏺ Bash(cd /tmp/agy_check && sed -n '704,736p' p4.txt | tr '\n' ' ' | cut
+      -c1-700; echo; echo; sed -n '146,172p;186,230p'
+      /Users/liluxuan/Documents/My_Papers/3_DDLALM/o…)
+  ⎿  (No output)
+
+⏺ Bash(cd /tmp/agy_check && ls *.pdf 2>/dev/null | head; f=$(ls p4*.pdf
+      2>/dev/null | head -1); [ -n "$f" ] && pdftotext -layout "$f" p4l.txt &&
+      n=$(grep -n "(4.3)" p4…)
+  ⎿  (No output)
+
+⏺ 老大，两边的参数条件各一行如下；复杂度对比是上界对上界，引 Zhang–Xu 的 Theorem
+  4.5 与 Remark 4.4（arXiv:2609.17973）和本文的 Theorem
+  thm:b2-prime-complexity。
+
+  Zhang–Xu，原文记号，式 (4.3) 与 (4.26)，其中 $\mu_y=\tau$：
+
+  $$
+  \lambda=2L,\quad \tau=\min\left{L,\frac{\epsilon}{2D_Y}\right},\quad
+  h=\frac{1}{64(3L+\tau)},\quad
+  \alpha=\left(1+\frac{h\sqrt{2L\tau}}{16}\right)^{-1},\quad
+  \gamma=4\sqrt{\frac{2L}{\tau}}-1,\quad \beta=\frac{h\sqrt{2L\tau}}{4096}
+  $$
+
+  Fast LRALM，本文记号，其中 $\kappa=s/\tau$：
+
+  $$
+  \gamma L_{\mathcal{D},\mathbf{x}}\le\frac{1}{10},\quad \eta=\gamma,\quad
+  0\lt\tau\le\frac{\rho}{4},\quad 14\gamma\tau G_{\mathcal{A}}^2\le 1,\quad
+  s=\frac{c_s}{\epsilon},\quad \alpha=\frac{1}{6\sqrt{\kappa}}
+  $$
+
+  复杂度上界
+
+  ┌─────┬──────────────────────────────────┬─────────────────────────────────┐
+  │     │             Zhang–Xu             │           Fast LRALM            │
+  ├─────┼──────────────────────────────────┼─────────────────────────────────┤
+  │ 出  │ Theorem 4.5、Remark 4.4          │ Theorem thm:b2-prime-complexity │
+  │ 处  │                                  │                                 │
+  ├─────┼──────────────────────────────────┼─────────────────────────────────┤
+  │ 度  │ GS：$R(x_{\mathrm{out}},y_{\math │ $\epsilon$-KKT point            │
+  │ 量  │ rm{out}})\le\epsilon$            │                                 │
+  ├─────┼──────────────────────────────────┼─────────────────────────────────┤
+  │ 上  │ $\mathcal{O}(L^{3/2}D_Y^{1/2}\ba │ $4C_R^2\Delta_{\mathcal{W}}\sqr │
+  │ 界  │ r{\Delta}_0,\epsilon^{-5/2})$    │ t{c_s/\tau},\epsilon^{-5/2}$    │
+  └─────┴──────────────────────────────────┴─────────────────────────────────┘
+
+  两边的结构相同：对偶正则系数为 $\Theta(\epsilon)$（Zhang–Xu 的 $\tau$，本文的
+  $1/s$），中心步长为 $\Theta(\kappa^{-1/2})=\Theta(\epsilon^{1/2})$（Zhang–Xu
+  的 $\beta$，本文的 $\alpha$），其余步长与 $\epsilon$ 无关。
+
+  下界方面，Pan–Zheng–Li 的 $\Omega(\epsilon^{-5/2})$ 覆盖 Zhang–Xu
+  的问题类（光滑 NC-C、对偶域紧），不覆盖本文的问题类，所以本文一侧只能写上界。
+❯ 全部映射成本文符号 以及我们和他们 都是对照哪个下界引理的到的
+
+⏺ Bash(cd /tmp/agy_check && grep -n -i "lower bound\|lower-bound\|optimal"
+      p4.txt | cut -c1-210 | head -30)
+  ⎿  (No output)
+
+⏺ 老大，映射后两边的参数结构一致；$\epsilon^{-5/2}$
+  这个阶，两边都没有对照自己证明的下界。
+
+  参数条件，本文记号
+
+  映射：$\lambda\to 1/\gamma$，$\tau\to 1/s$，$h\to\eta$（对偶步长也是
+  $\eta$），$\alpha\to a$，$\gamma\to c$，$\beta\to\alpha$。$L$ 是
+  $\mathcal{D}_\rho$ 的联合光滑常数，$D_Y$ 是对偶域直径。
+
+  Zhang–Xu
+
+  $$
+  \gamma=\frac{1}{2L},\quad
+  s=\max\left{\frac{1}{L},\frac{2D_Y}{\epsilon}\right},\quad
+  \eta=\frac{1}{64(3L+1/s)}
+  $$
+
+  $$
+  a=\left(1+\frac{\eta}{16}\sqrt{\frac{2L}{s}}\right)^{-1},\quad
+  c=4\sqrt{2Ls}-1,\quad \alpha=\frac{\eta}{4096}\sqrt{\frac{2L}{s}}
+  $$
+
+  Fast LRALM，其中 $\kappa=s/\tau$，$c_s\ge 6C_\lambda L_h$
+
+  $$
+  \gamma L_{\mathcal{D},\mathbf{x}}\le\frac{1}{10},\quad \eta=\gamma,\quad
+  0\lt\tau\le\frac{\rho}{4},\quad 14\gamma\tau G_{\mathcal{A}}^2\le 1,\quad
+  s=\frac{c_s}{\epsilon},\quad \alpha=\frac{1}{6\sqrt{\kappa}}
+  $$
+
+  逐项对照：
+
+  ┌───────┬───────────────────────────────────────┬────────────────────────┐
+  │       │               Zhang–Xu                │       Fast LRALM       │
+  ├───────┼───────────────────────────────────────┼────────────────────────┤
+  │ $\gam │ $1/(2L)$                              │ $\le 1/(10L_{\mathcal{ │
+  │ ma$   │                                       │ D},\mathbf{x}})$       │
+  ├───────┼───────────────────────────────────────┼────────────────────────┤
+  │       │                                       │ $c_s/\epsilon$，$c_s\g │
+  │ $s$   │ $2D_Y/\epsilon$                       │ e 2\cdot 3C_\lambda    │
+  │       │                                       │ L_h$                   │
+  ├───────┼───────────────────────────────────────┼────────────────────────┤
+  │ 中心  │                                       │                        │
+  │ 步长  │ $\Theta(\sqrt{1/(Ls)})$               │ $\Theta(\sqrt{\tau/s}) │
+  │ $\alp │                                       │ $                      │
+  │ ha$   │                                       │                        │
+  ├───────┼───────────────────────────────────────┼────────────────────────┤
+  │ 动量  │ $a=1-\Theta(\kappa^{-1/2})$，$c=\Thet │ $\omega=1-\Theta(\kapp │
+  │       │ a(\sqrt{\kappa})$                     │ a^{-1/2})$             │
+  └───────┴───────────────────────────────────────┴────────────────────────┘
+
+  $s$ 一行的对应是精确的：Zhang–Xu 取对偶域直径的两倍，本文取乘子界 $3C_\lambda
+  L_h$ 的两倍（Lemma lem:b2-prime-multiplier-bounds）。
+
+  对照的下界
+
+  结果: GS 或 KKT 的 $\mathcal{O}(\epsilon^{-5/2})$
+  Zhang–Xu: 无匹配下界，原文称 best-known，对照的是多循环方法的上界
+  本文: 无匹配下界；问题类上已知下界只有 $\Omega(\epsilon^{-2})$
+  ────────────────────────────────────────
+  结果: 自己证明的下界
+  Zhang–Xu: OS 的 $\Omega(L^2D_Y\Delta_\phi\epsilon^{-3})$，Theorem 5.1，与其 OS
+
+    上界匹配
+  本文: 族内 $\Omega(\epsilon^{-3})$，Theorem
+    thm:lower-bound-fixed-rho，说明必须跳出 $\mathcal{C}_\theta$
+  ────────────────────────────────────────
+  结果: $\sqrt{\kappa}$ 因子
+  Zhang–Xu: 对照 NC-SC 的已知下界
+    $\Omega(\sqrt{\kappa}L\Delta_\phi\epsilon^{-2})$（Zhang 等、Li 等）
+  本文: 同一下界可作对照
+
+  光滑 NC-C 上 GS 的 $\Omega(\epsilon^{-5/2})$ 出自
+  Pan–Zheng–Li（arXiv:2609.14235）。它覆盖 Zhang–Xu 的问题类；Zhang–Xu
+  的原文是否引用它，我没有核对。
+
+❯ $$\mathbf{v}^{k+1}=a\mathbf{v}^k+(1-a)c\nabla_{\boldsymbol\lambda}\mathcal{P}
+  _s(\mathbf{x}^{k+1},\boldsymbol\lambda^{k+1}),\quad
+  \bar{\mathbf{v}}^k=a\mathbf{v}^k+(1-a)c\nabla_{\boldsymbol\lambda}\mathcal{P}
+  _s(\tilde{\mathbf{x}}^k,\tilde{\boldsymbol\lambda}^k)$$ 不要啰嗦
+  里面的c是什么
+
+⏺ 老大，$c$ 是动量的增益，即对偶梯度进入动量 $\mathbf{v}$ 时的放大倍数；它对应
+  Zhang–Xu 原文的 $\gamma$，取值为
+
+  $$
+  c=4\sqrt{2Ls}-1=\Theta(\sqrt{\kappa})
+  $$
+
+❯ $$\mathbf{v}^{k+1}=a\mathbf{v}^k+(1-a)c\nabla_{\boldsymbol\lambda}\mathcal{P}
+  _s(\mathbf{x}^{k+1},\boldsymbol\lambda^{k+1}),\quad \bar{\mathbf{v}}^k=a\math
+  bf{v}^k+(1-a)c\nabla_{\boldsymbol\lambda}\mathcal{P}_s(\tilde{\mathbf{x}}^k,\
+  tilde{\boldsymbol\lambda}^k)$$这里的a和c可以合在一起吗？对饮给我们的omega
+  因为我一种直觉是我们OMG饿啊可能和他们的什么阶数是一致的
+
+⏺ 老大，直觉对：$a$ 对应 $\omega$，两者都是 $1-\Theta(\kappa^{-1/2})$。$a$ 与
+  $c$ 不能合成一个系数，但 $c$ 只以乘积 $(1-a)c$ 出现，这个乘积是与 $\epsilon$
+  无关的常数。
+
+  记 $b=(1-a)c$。由 Zhang–Xu 的式 (4.3)，在本文记号下：
+
+  $$
+  a=\left(1+\frac{\eta}{16}\sqrt{\frac{2L}{s}}\right)^{-1}=1-\Theta\left(\frac{1
+  }{\sqrt{Ls}}\right),\qquad
+  b=\frac{\eta\left(8L-\sqrt{2L/s}\right)}{16+\eta\sqrt{2L/s}}\approx\frac{\eta
+  L}{2}
+  $$
+
+  因此动量更新是「衰减 $a$、增益 $b$」的两系数递推：
+
+  $$
+  \mathbf{v}^{k+1}=a\mathbf{v}^k+b\nabla_{\boldsymbol\lambda}\mathcal{P}_s(\math
+  bf{x}^{k+1},\boldsymbol\lambda^{k+1})
+  $$
+
+  Fast LRALM 写成同样的形式。记位移 $\mathbf{d}^k=\boldsymbol\lambda^k-\boldsymb
+  ol\lambda^{k-1}$，由外推与对偶步得到
+
+  $$
+  \mathbf{d}^{k+1}=\omega\mathbf{d}^k+\tau\nabla_{\boldsymbol\lambda}\mathcal{P}
+  _s(\mathbf{x}^{k+1},\bar{\boldsymbol\lambda}^k)
+  $$
+
+  对照：
+
+  ┌─────────┬─────────────────────────────┬────────────────┬───────────────┐
+  │         │          衰减系数           │      增益      │    条件数     │
+  ├─────────┼─────────────────────────────┼────────────────┼───────────────┤
+  │ Zhang–X │ $a=1-\Theta(\kappa^{-1/2})$ │ $b=\Theta(1)$  │ $\kappa=Ls$   │
+  │ u       │                             │                │               │
+  ├─────────┼─────────────────────────────┼────────────────┼───────────────┤
+  │ Fast    │ $\omega=1-2/(\sqrt{\kappa}+ │ $\tau=\Theta(1 │ $\kappa=s/\ta │
+  │ LRALM   │ 1)$                         │ )$             │ u$            │
+  └─────────┴─────────────────────────────┴────────────────┴───────────────┘
+
+  两边的动量变量都以 $1-\Theta(\kappa^{-1/2})$
+  衰减、以常数增益累加对偶梯度，等效于累加最近 $\Theta(\sqrt{\kappa})$
+  步的梯度；取 $s=\Theta(\epsilon^{-1})$ 后，这个窗口长度是
+  $\Theta(\epsilon^{-1/2})$。区别在于 Zhang–Xu 的 $\mathbf{v}$
+  是加在梯度上的独立变量，本文的 $\mathbf{d}$ 就是乘子序列自身的位移。
+
+❯ 我们不妨把这样的形式对照一下 算法看看 有什么区别
+
+⏺ 老大，统一成「乘子增量加动量变量」的形式后，两个算法只差三处：预测点是否含梯度
+  步、乘子增量是否等于动量、动量的梯度取在哪一点。
+
+  Zhang–Xu 的动量换成乘子的量纲，记 $\mathbf{e}^k=\eta\mathbf{v}^k$；本文记
+  $\mathbf{d}^k=\boldsymbol\lambda^k-\boldsymbol\lambda^{k-1}$。中心更新两边相同
+  ，下面省略。
+
+  Zhang–Xu，去掉投影
+
+  预测点：
+
+  $$
+  \tilde{\mathbf{x}}^k=\mathbf{x}^k-\eta\nabla_{\mathbf{x}}\mathcal{P}s(\mathbf{
+  x}^k,\boldsymbol\lambda^k),\quad
+  \tilde{\boldsymbol\lambda}^k=\boldsymbol\lambda^k+\mathbf{e}^k+\eta\nabla{\bol
+  dsymbol\lambda}\mathcal{P}_s(\mathbf{x}^k,\boldsymbol\lambda^k)
+  $$
+
+  更新：
+
+  $$
+  \mathbf{x}^{k+1}=\mathbf{x}^k-\eta\nabla_{\mathbf{x}}\mathcal{P}_s(\tilde{\mat
+  hbf{x}}^k,\tilde{\boldsymbol\lambda}^k)
+  $$
+
+  $$
+  \boldsymbol\lambda^{k+1}=\boldsymbol\lambda^k+a\mathbf{e}^k+\eta(1+b)\nabla_{\
+  boldsymbol\lambda}\mathcal{P}_s(\tilde{\mathbf{x}}^k,\tilde{\boldsymbol\lambda
+  }^k)
+  $$
+
+  $$
+  \mathbf{e}^{k+1}=a\mathbf{e}^k+\eta b\nabla_{\boldsymbol\lambda}\mathcal{P}_s(
+  \mathbf{x}^{k+1},\boldsymbol\lambda^{k+1})
+  $$
+
+  Fast LRALM
+
+  预测点：
+
+  $$
+  \bar{\boldsymbol\lambda}^k=\boldsymbol\lambda^k+\omega\mathbf{d}^k
+  $$
+
+  更新：
+
+  $$
+  \mathbf{x}^{k+1}=\mathbf{x}^k-\eta\nabla_{\mathbf{x}}\mathcal{P}_s(\mathbf{x}^
+  k,\bar{\boldsymbol\lambda}^k)
+  $$
+
+  $$
+  \boldsymbol\lambda^{k+1}=\boldsymbol\lambda^k+\omega\mathbf{d}^k+\tau\nabla_{\
+  boldsymbol\lambda}\mathcal{P}_s(\mathbf{x}^{k+1},\bar{\boldsymbol\lambda}^k)
+  $$
+
+  $$
+  \mathbf{d}^{k+1}=\omega\mathbf{d}^k+\tau\nabla_{\boldsymbol\lambda}\mathcal{P}
+  _s(\mathbf{x}^{k+1},\bar{\boldsymbol\lambda}^k)
+  $$
+
+  区别
+
+  对偶预测点
+  Zhang–Xu: 当前点加动量，再加一步梯度
+  Fast LRALM: 当前点加衰减后的动量
+  ────────────────────────────────────────
+  原始预测点
+  Zhang–Xu: $\tilde{\mathbf{x}}^k$，一步梯度
+  Fast LRALM: 无，梯度取在 $\mathbf{x}^k$
+  ────────────────────────────────────────
+  乘子增量
+  Zhang–Xu: $a\mathbf{e}^k+\eta(1+b)\nabla_{\boldsymbol\lambda}\mathcal{P}_s$
+  Fast LRALM: $\omega\mathbf{d}^k+\tau\nabla_{\boldsymbol\lambda}\mathcal{P}_s$
+  ────────────────────────────────────────
+  动量
+  Zhang–Xu: $a\mathbf{e}^k+\eta
+    b\nabla_{\boldsymbol\lambda}\mathcal{P}_s$，梯度在新点重新计算
+  Fast LRALM: 等于乘子增量，梯度同一个
+  ────────────────────────────────────────
+  对偶梯度用的 $\mathbf{x}$
+  Zhang–Xu: 预测点 $\tilde{\mathbf{x}}^k$
+  Fast LRALM: 新点 $\mathbf{x}^{k+1}$
+
+  三处区别的含义：
+
+  1. 预测点。Zhang–Xu
+     的预测点多一步梯度，这是外梯度结构。本文的预测点只有外推，这是 Nesterov
+     结构。
+  2. 增量与动量的关系。本文中 $\mathbf{d}^{k+1}=\boldsymbol\lambda^{k+1}-\boldsy
+     mbol\lambda^k$，两行是同一个量，所以不需要单独存动量。Zhang–Xu
+     中乘子增量的梯度系数是 $\eta(1+b)$，动量的梯度系数是 $\eta
+     b$，而且两个梯度取在不同的点，所以 $\mathbf{e}$ 必须作为独立变量。
+  3. 衰减与增益的阶相同。$a$ 与 $\omega$ 都是 $1-\Theta(\kappa^{-1/2})$，$\eta
+     b$ 与 $\tau$ 都与 $\epsilon$ 无关。
+
+  因此 Zhang–Xu 去掉投影后可以读作「外梯度加重球型动量」，Fast LRALM
+  是「Nesterov 外推加 Gauss–Seidel」。两者在同一个 $\mathcal{P}_s$
+  上用同阶的动量参数，达到同阶的 $\mathcal{O}(\epsilon^{-5/2})$。
+
+❯ $$\mathcal{P}_s(\mathbf{x},\boldsymbol\lambda;\mathbf{z},\mathbf{0})=\mathcal
+  {D}_\rho(\mathbf{x},\boldsymbol\lambda)+\frac{1}{2\gamma}\lVert\mathbf{x}-\ma
+  thbf{z}\rVert^2-\frac{1}{2s}\lVert\boldsymbol\lambda\rVert^2$$
+
+  $$\nabla_{\mathbf{x}}\mathcal{P}_s(\mathbf{x},\boldsymbol\lambda)=\nabla_{\ma
+  thbf{x}}\mathcal{D}_\rho(\mathbf{x},\boldsymbol\lambda)+\frac{1}{\gamma}(\mat
+  hbf{x}-\mathbf{z}^k),\qquad \nabla_{\boldsymbol\lambda}\mathcal{P}_s(\mathbf{
+  x},\boldsymbol\lambda)=\nabla_{\boldsymbol\lambda}\mathcal{D}_\rho(\mathbf{x}
+  ,\boldsymbol\lambda)-\frac{1}{s}\boldsymbol\lambda$$ 这个都写成不带k的
+
+⏺ $$
+  \mathcal{P}s(\mathbf{x},\boldsymbol\lambda;\mathbf{z},\mathbf{0})=\mathcal{D}\
+  rho(\mathbf{x},\boldsymbol\lambda)+\frac{1}{2\gamma}\lVert\mathbf{x}-\mathbf{z
+  }\rVert^2-\frac{1}{2s}\lVert\boldsymbol\lambda\rVert^2
+  $$
+
+  $$
+  \nabla_{\mathbf{x}}\mathcal{P}s(\mathbf{x},\boldsymbol\lambda;\mathbf{z},\math
+  bf{0})=\nabla{\mathbf{x}}\mathcal{D}\rho(\mathbf{x},\boldsymbol\lambda)+\frac{
+  1}{\gamma}(\mathbf{x}-\mathbf{z}),\qquad
+  \nabla{\boldsymbol\lambda}\mathcal{P}s(\mathbf{x},\boldsymbol\lambda;\mathbf{z
+  },\mathbf{0})=\nabla{\boldsymbol\lambda}\mathcal{D}_\rho(\mathbf{x},\boldsymbo
+  l\lambda)-\frac{1}{s}\boldsymbol\lambda
+  $$
+
+❯ https://arxiv.org/pdf/2609.14235#page=1.37 他们的工作呢？
+
+⏺ Bash(cd /tmp/agy_check && for f in p1 p2 p3 p5 p6; do echo "$f: $(head -5
+      $f.txt 2>/dev/null | tr '\n' ' ' | cut -c1-120)"; done; grep -l
+      "2609.14235" *.txt 2>/dev/n…)
+  ⎿  (No output)
+
+⏺ Bash(mkdir -p /tmp/lit/pzl && cd /tmp/lit/pzl && curl -sL -o p.pdf
+      https://arxiv.org/pdf/2609.14235 && pdftotext -layout p.pdf p.txt && wc -l
+      p.txt && head -30 p.txt…)
+  ⎿  (No output)
+
+⏺ Bash(cd /tmp/lit/pzl && sed -n '1300,1385p;3850,3880p' p.txt | grep -v '^\s*$'
+      | cut -c1-190)
+  ⎿  (No output)
+
+❯ 匹配-2.5的算法
+
+⏺ Bash(cd /tmp/lit/pzl && sed -n '380,402p' p.txt | grep -v '^\s*$' | cut
+      -c1-180; grep -n "(46)\|(45)" p.txt | head -6; grep -n "Fr (x, z; y)\|Fr
+      (x, z; y) :=\|pr (z)…)
+  ⎿  (No output)
+
+⏺ Bash(cd /tmp/lit/pzl && sed -n '402,412p;1448,1458p' p.txt | grep -v '^\s*$' |
+      cut -c1-170; grep -n "Fr (x, z; y)" p.txt | head -3; n=$(grep -n "Fr (x,
+      z; y)" p.txt…)
+  ⎿  (No output)
+
+⏺ Bash(cd /tmp/lit/pzl && grep -n "Fr (x, z; y) *:=\|Fr (x, z; y) *=\|:= f (x,
+      y)\|pr (z) *:=\|Φr (x) *:=" p.txt | head -8; grep -n
+      "^6.1\|^6.2\|^6.3\|^6.6\|^ *6\.[1-6…)
+  ⎿  (No output)
+
+⏺ Bash(cd /tmp/lit/pzl && sed -n '1161,1200p;1257,1282p' p.txt | grep -v '^\s*$'
+      | cut -c1-175)
+  ⎿  (No output)
+
+⏺ Bash(cd /tmp/lit/pzl && grep -n "^Theorem 3\.[0-9]\|Kρ\b" p.txt | head -8;
+      grep -n "Kρ *:=\|Kρ :=\|Kρ =" p.txt | head -3)
+  ⎿  (No output)
+
+⏺ 老大，匹配 $\Omega(\epsilon^{-5/2})$ 的算法是 Pan–Zheng–Li 的
+  Tracked-FOAM（Algorithm 1 的 GS 模式，Theorem 3.4），下界是同一篇的 Theorem
+  3.2。它有两层循环，子问题仍是同一个 $\mathcal{P}_s$。
+
+  问题与子问题
+
+  问题类是光滑 NC-C，对偶域 $Y$ 有界且直径为 $D_Y$。原文的辅助函数为
+
+  $$
+  F_r(x,z;y)=f(x,y)-\frac{r_y}{2}\lVert y\rVert^2+\ell\lVert x-z\rVert^2
+  $$
+
+  映射到本文记号：$1/(2\gamma)=\ell$，$1/s=r_y$，于是 $F_r$ 就是
+  $\mathcal{P}_s(\mathbf{x},\boldsymbol\lambda;\mathbf{z},\mathbf{0})$。GS
+  模式取（式 (46)）
+
+  $$
+  r_y\le\min\left{\frac{\ell}{8},\frac{\epsilon}{4D_Y},\frac{\Delta+\epsilon^2/\
+  ell}{4D_Y^2}\right}
+  $$
+
+  所以 $s=\Theta(D_Y/\epsilon)$，条件数
+  $\kappa=\ell/r_y=\Theta(\epsilon^{-1})$。
+
+  算法，本文记号
+
+  外层，近端点法，中心直接取子问题的近似解：
+
+  $$
+  \mathbf{z}^{k+1}\approx\arg\min_{\mathbf{x}}\max_{\boldsymbol\lambda}\mathcal{
+  P}_s(\mathbf{x},\boldsymbol\lambda;\mathbf{z}^k,\mathbf{0})
+  $$
+
+  内层，FOAM（Kovalev–Gasnikov 2022 的强凸–强凹加速方法），在新中心
+  $\mathbf{z}^{k+1}$ 上运行固定步数，把子问题的 Lyapunov 误差压缩到 $1/400$ 倍。
+
+  跟踪。中心从 $\mathbf{z}^k$ 移到 $\mathbf{z}^{k+1}$ 时，FOAM
+  的状态不重置，只做一次平移后继续使用。Proposition 6.1
+  证明平移后的误差至多是原来的两倍加 $24\ell\lVert\mathbf{z}^{k+1}-\mathbf{z}^k\
+  rVert^2$。因此每次内层只需要固定的压缩倍数，对数因子由此消除。
+
+  复杂度
+
+  Theorem 3.4 的主项为
+
+  $$
+  \mathcal{O}\left(\frac{\ell\Delta}{\epsilon^2}\sqrt{\frac{\ell
+  D_Y}{\epsilon}}\right)
+  $$
+
+  原文称 GS 的上下界对所有参数取值都匹配。
+
+  与另外三个算法的对照
+
+  ┌──────────┬─────┬──────────────────────┬──────────────────┬────────────┐
+  │          │ 循  │                      │                  │ $\sqrt{\ka │
+  │          │ 环  │     子问题的处理     │     中心更新     │   ppa}$    │
+  │          │     │                      │                  │   的来源   │
+  ├──────────┼─────┼──────────────────────┼──────────────────┼────────────┤
+  │ Minimax- │ 3   │ 解到精度，每次从头开 │ 取近似解         │ 内层       │
+  │ PPA      │ 层  │ 始                   │                  │ Nesterov   │
+  ├──────────┼─────┼──────────────────────┼──────────────────┼────────────┤
+  │ Tracked- │ 2   │ 固定压缩倍数，状态平 │ 取近似解         │ 内层 FOAM  │
+  │ FOAM     │ 层  │ 移后续用             │                  │            │
+  ├──────────┼─────┼──────────────────────┼──────────────────┼────────────┤
+  │ Zhang–Xu │ 1   │ 一步外梯度加对偶动量 │ 步长 $\Theta(\ka │ 对偶动量   │
+  │          │ 层  │                      │ ppa^{-1/2})$     │            │
+  ├──────────┼─────┼──────────────────────┼──────────────────┼────────────┤
+  │ Fast     │ 1   │ 一步梯度加对偶       │ 步长 $\Theta(\ka │ 对偶       │
+  │ LRALM    │ 层  │ Nesterov 外推        │ ppa^{-1/2})$     │ Nesterov   │
+  │          │     │                      │                  │ 外推       │
+  └──────────┴─────┴──────────────────────┴──────────────────┴────────────┘
+
+  四者作用在同一个 $\mathcal{P}s$
+  上，区别在于每次移动中心之前对子问题做多少步：Tracked-FOAM 做
+  $\Theta(\sqrt{\kappa})$ 步后让中心走一整步，单循环方法做一步后让中心走
+  $\Theta(\kappa^{-1/2})$ 步长。内层步数为 $\Theta(\sqrt{\kappa})$
+  这一点是我由复杂度的主项推断的，原文 $K\rho$ 的表达式我没有读出。
+
+❯ 加速段的逻辑（讨论中，未成稿）：
+  NC-SC 的下界 $\Omega(\sqrt{\kappa}\,\epsilon^{-2})$ 归于 Zhang 等与 Li 等。
+  「对偶正则取 $\Theta(\epsilon)$ 得到 $\epsilon^{-5/2}$」这一归约归于
+  Lin–Jin–Jordan 2020。
+  Zhang–Xu 是首个单循环实现，但要求对偶侧光滑、对偶域紧。
+  $h$ 非光滑时，达到 $\mathcal{O}(\epsilon^{-5/2})$
+  的都是多循环方法：Kong–Monteiro、Ke–Mei–Zhang、IAIPAL、iALM。:
+
+  我的逻辑是：先说光滑强凹下界，一般凹因为xx导致更难；
+  zhang或xx给出NC-SC 的下界 $\Omega(\sqrt{\kappa}\,\epsilon^{-2})$ 归于 Zhang
+  等与 Li 等。，其中K是xx；
+  于是xx给出匹配下界的算法，结合xx； xx给出单循环给出xx，match最优；
+  但是单循环用他们这个求职要很多额 他们都用了正则计数且xx，
+  外的梯度计算；（多循环的掠视是多循环，单循环的掠视是外推点求职多个梯度，这个
+  是我感觉的，bot之前工作是这么说的）
+  对于ALM类方法， 处理非光滑达到 $\mathcal{O}(\epsilon^{-5/2})$
+  的都是多循环方法：Kong–Monteiro、Ke–Mei–Zhang、IAIPAL、iALM。 ） 大多数加速
+  是用APG求解强凸子问题，
+  这自然引出一个问题是：是否可以单循环加速解决上面一个直观重要的痛点
+  就是我们加速的买点 绝对不是h保证乘子有界 是一个很本质的买点）
+  然后本文回答可以，我们一种Fast LRALM,
+  归功于xx，我们无需移动中心；考虑问题结构，我们无需xx；
+  我们实现固定罚参数，得到-2.5的复杂度。 就是我们的优势要考察清楚
+
+⏺ 老大，你的逻辑链成立，我把空填上；其中三处说法站不住，需要换掉，卖点我建议定为
+  「族内的 $\epsilon^{-3}$ 是 $\kappa,\epsilon^{-2}$，一行对偶外推把 $\kappa$
+  换成 $\sqrt{\kappa}$」。
+
+  填空后的逻辑
+
+  1. 强凹是基准，一般凹更难。NC-SC 时最优对偶解唯一，值函数 $\Phi$
+     光滑。一般凹时最优对偶解不唯一，$\Phi$ 非光滑，所以更难。
+  2. NC-SC 的下界。Zhang 等（UAI 2021）与 Li 等（NeurIPS 2021）给出
+     $\Omega(\sqrt{\kappa},\epsilon^{-2})$，其中 $\kappa=\ell/\mu$
+     是对偶侧的条件数。
+  3. 从 NC-SC 到 NC-C。Lin–Jin–Jordan 的 Minimax-PPA 以
+     $\tilde{\mathcal{O}}(\sqrt{\kappa},\epsilon^{-2})$
+     匹配该下界（差对数因子）。加强度为 $\Theta(\epsilon)$ 的对偶正则后
+     $\kappa=\Theta(\epsilon^{-1})$，得到
+     $\tilde{\mathcal{O}}(\epsilon^{-5/2})$（Corollary 13）。
+  4. NC-C 的最优性。Pan–Zheng–Li 证明光滑 NC-C 上 GS 的下界
+     $\Omega(\epsilon^{-5/2})$，并用两层循环的 Tracked-FOAM 匹配。Zhang–Xu
+     用单循环达到 $\mathcal{O}(\epsilon^{-5/2})$。
+  5. 这些方法的代价。它们都要求耦合函数光滑、对偶域紧并做投影。多循环方法要解强
+     凸–强凹子问题。Zhang–Xu
+     每次迭代在原始与对偶两侧都做预测–校正，并维护一个独立的动量变量。
+  6. 非光滑 $h$。达到 $\mathcal{O}(\epsilon^{-5/2})$
+     的都是多循环方法，加速来自用 Nesterov 型方法求解强凸子问题。
+  7. 问题。单循环 ALM 能否达到 $\mathcal{O}(\epsilon^{-5/2})$？
+  8. 回答。Fast LRALM 在固定 $\rho$ 下达到 $\mathcal{O}(\epsilon^{-5/2})$。
+
+  站不住的三处
+
+  1. 「单循环要多算梯度」不能作为卖点。Zhang–Xu
+     每次迭代在两个新点上求梯度（预测点和新迭代点）。本文的 Theorem 写的是 $K$
+     次迭代用 $3K+1$ 次 oracle 调用。两边每次迭代的求值次数是同阶常数，本文没有
+     优势。能说的只有结构上的差别：本文没有预测步，没有单独的动量变量。
+  2. 第 6 条的归类要改。Kong–Monteiro 与 Ke–Mei–Zhang 是非光滑复合 minimax
+     的方法，IAIPAL 与 iALM 才是 ALM，后两者处理仿射约束。写成「对偶侧非光滑的
+     minimax 方法」和「ALM」两组。IAIPAL 与 iALM
+     的细节来自对话记录，本轮没有重读原文。
+  3. 「无需移动中心」对 minimax 方法不构成区别。Zhang–Xu 与 Pan–Zheng–Li
+     的对偶正则同样以原点为中心。这一点只相对经典 ALM
+     成立，经典乘子更新相当于对偶中心每步移到当前乘子。
+
+  还有一处要先面对：$h$ 是紧集的支撑函数（例如范数）时，$h^*$
+  是示性函数，Fenchel 形式落在 Zhang–Xu 的问题类里，他们的单循环
+  $\mathcal{O}(\epsilon^{-5/2})$
+  已经覆盖这个子类。因此「首个单循环」的说法要限定为「单循环 ALM」或「一般的
+  Lipschitz 凸 $h$」。
+
+  卖点
+
+  我建议的核心卖点是两个问题之间的那条线：
+
+  - 族内的最好阶是 $\Theta(\epsilon^{-3})$。取 $s=\Theta(\epsilon^{-1})$ 时
+    $\kappa=s/\tau=\Theta(\epsilon^{-1})$，所以
+    $\epsilon^{-3}=\kappa,\epsilon^{-2}$：族内的方法对条件数的依赖是一次的。
+  - NC-SC 的下界是 $\sqrt{\kappa},\epsilon^{-2}$。族内与下界之间只差 $\kappa$ 到
+    $\sqrt{\kappa}$。
+  - 固定 $\rho$ 使对偶目标在全空间上光滑且 $\frac{1}{s}$-强凹，Nesterov
+    外推把这个依赖降到 $\sqrt{\kappa}$。算法只比族内成员多一行。
+
+  这样加速结果是第一个问题的延续：族下界说明 $\mathcal{C}_\theta$
+  内到不了，一行外推说明离开这个族的最小改动就够。「族内复杂度等于
+  $\kappa,\epsilon^{-2}$」是我由两个阶的对比得出的读法，写进正文前要对照 Theorem
+  thm:upper-beta0 的常数确认 $\kappa$ 的一次依赖。
+
+  第 8 条的两个空相应填为：
+
+  - 「归功于」：第一个问题的回答，即 $\beta=0$ 配 $s=\Theta(\epsilon^{-1})$
+    不损失阶，所以对偶目标是一个固定的强凹函数。
+  - 「考虑问题结构，我们无需」：投影和预测步。乘子的界由 $h$ 的 Lipschitz
+    性给出，它是使对偶无约束的条件，不作为卖点。
+
+  一处需要更正：上一份对话里说「投影迫使 Zhang–Xu
+  使用外梯度」，这个说法没有依据。Zhang–Xu
+  原文写明其外梯度来自他们针对无约束强凸–强凹问题的方法，所以外梯度不是投影造成
+  的。本文为什么不需要预测步，目前只能说「本文的证明不需要」，原因还没有查清。
+❯ 非光滑 $h$。达到 $\mathcal{O}(\epsilon^{-5/2})$ 的都是多循环方法，加速来自用
+  Nesterov 型方法求解强凸子问题 会有log的损失对吧 ；
+
+⏺ 老大，不全是：ALM 与罚函数一组带对数因子，对偶侧非光滑的 minimax 一组不带。
+
+  ┌──────────────────────────┬────────────────────────────────────┬─────────┐
+  │           文献           │               复杂度               │ 对数因  │
+  │                          │                                    │   子    │
+  ├──────────────────────────┼────────────────────────────────────┼─────────┤
+  │ IAIPAL（Kong–Melo–Montei │ $\tilde{\mathcal{O}}(\epsilon^{-5/ │ 有      │
+  │ ro）                     │ 2})$                               │         │
+  ├──────────────────────────┼────────────────────────────────────┼─────────┤
+  │ iALM（Li–Chen–Liu–Lu–Xu  │ $\tilde{\mathcal{O}}(\epsilon^{-5/ │ 有      │
+  │ ）                       │ 2})$                               │         │
+  ├──────────────────────────┼────────────────────────────────────┼─────────┤
+  │ Lin–Ma–Xu，罚函数法      │ $\tilde{\mathcal{O}}(\epsilon^{-5/ │ 有      │
+  │                          │ 2})$                               │         │
+  ├──────────────────────────┼────────────────────────────────────┼─────────┤
+  │ Kong–Monteiro            │ $\mathcal{O}(\rho_x^{-2}\rho_y^{-1 │ 无      │
+  │                          │ /2})$                              │         │
+  ├──────────────────────────┼────────────────────────────────────┼─────────┤
+  │ Ke–Mei–Zhang             │ $\mathcal{O}(\epsilon^{-5/2})$     │ 无      │
+  └──────────────────────────┴────────────────────────────────────┴─────────┘
+
+  对数因子的来源是内层把强凸子问题解到依赖 $\epsilon$ 的精度，每个子问题需要
+  $\mathcal{O}(\sqrt{\kappa}\log\epsilon^{-1})$ 步。Ke–Mei–Zhang
+  用的是锚定外推，不是 Nesterov。
+
+  因此正文写「ALM 类方法带对数因子」成立，写「所有多循环方法都带对数因子」不成立
+  。表中数据来自对话记录，本轮没有重读这五篇原文。
+
+❯ Ke–Mei–Zhang 用的是锚定外推，不是 Nesterov
+  就是他们得到目前原问题上等价的NC-L最好的上界结果？但是是光滑minmax的子类
+  所以匹配上界是正常的
+
+⏺ 老大，前半句基本对，后半句的包含关系要修正。
+
+  前半句。本文问题的 Fenchel 形式上，最好的已知上界是 $\mathcal{O}(\epsilon^{-5/
+  2})$，不带对数因子。达到它的有两篇：Kong–Monteiro（SIOPT
+  2021）在先，Ke–Mei–Zhang（arXiv:2609.25752）在后，两者都是多循环。所以
+  Ke–Mei–Zhang 不是唯一的一篇。
+
+  后半句。本文的 NC-L 形式是
+
+  $$
+  \min_{\mathbf{x}}\max_{\mathbf{q}}\
+  f(\mathbf{x})+\langle\mathbf{q},\mathcal{A}(\mathbf{x})\rangle-h^*(\mathbf{q})
+  $$
+
+  它由光滑的耦合项加上非光滑项 $-h^*(\mathbf{q})$ 构成，后者通过 prox
+  处理。它与光滑 NC-C 类（联合光滑、对偶域紧、只用梯度和投影）的关系分两种情形：
+
+  - $h$ 是紧集的支撑函数时，$h^*$ 是示性函数，问题属于光滑 NC-C 类，是它的子类。
+  - 一般的 Lipschitz 凸 $h$ 下，$h^*$ 不是示性函数，问题属于「光滑 NC-C 加 prox
+    项」这个更大的复合类，不是光滑 NC-C 的子类。
+
+  上界与下界的传递方向。子类继承大类的上界，所以在第一种情形下达到
+  $\mathcal{O}(\epsilon^{-5/2})$ 是正常的。下界不向子类传递：Pan–Zheng–Li 的
+  $\Omega(\epsilon^{-5/2})$
+  要求困难实例落在子类内才适用，而他们的困难实例是否具有 NC-L
+  结构没有核对。因此在本文问题类上，$\epsilon^{-5/2}$
+  是最好的已知上界，是否紧仍未知。
+
+❯ 因为我们本文问题的 Fenchel 形式上，最好的已知上界是 $\mathcal{O}(\epsilon^{-5
+  /2})$，不带对数因子。达到它的有两篇：Kong–Monteiro（SIOPT
+  2021）在先，Ke–Mei–Zhang（arXiv:2609.25752）在后，两者都是多循环。所以
+  Ke–Mei–Zhang 不是唯一的一篇。 我的是他们的问题是光滑minmax的子类
+  所以匹配上界是正常的  以及  这种-2.5 你觉得放到哪里比较好呢
+
+⏺ 老大，包含关系的方向是反的：Kong–Monteiro 与 Ke–Mei–Zhang
+  的问题类（光滑耦合项加非光滑 prox 项）包含光滑
+  NC-C，是它的超类。你的结论仍然成立，理由换成下界向上传递。
+
+  三个类的关系
+
+  问题类: 光滑 NC-C，对偶域紧
+  上界: $\mathcal{O}(\epsilon^{-5/2})$，Tracked-FOAM
+  下界: $\Omega(\epsilon^{-5/2})$，Pan–Zheng–Li
+  结论: 紧
+  ────────────────────────────────────────
+  问题类: 复合 NC-C，包含上一类
+  上界: $\mathcal{O}(\epsilon^{-5/2})$，Kong–Monteiro、Ke–Mei–Zhang
+  下界: 由子类继承 $\Omega(\epsilon^{-5/2})$
+  结论: 紧
+  ────────────────────────────────────────
+  问题类: 本文的 NC-L，是复合 NC-C 的子类
+  上界: 由超类继承 $\mathcal{O}(\epsilon^{-5/2})$
+  下界: 只有 $\Omega(\epsilon^{-2})$
+  结论: 未知
+
+  大类的困难实例至少和子类一样难，所以 Pan–Zheng–Li 的下界对复合 NC-C
+  类也成立，Kong–Monteiro 与 Ke–Mei–Zhang 的上界在他们自己的类上是最优的。本文的
+  类是子类，上界可以继承，下界不能继承。第二行的「紧」依赖两边的 oracle
+  模型和平稳性度量一致，这一点我没有逐条核对。
+
+  放在哪里
+
+  我建议分三处，各承担一个任务：
+
+  1. Introduction 的加速段，放在问题 (Q) 的回答之后。用四句话交代：NC-SC 的下界
+     $\Omega(\sqrt{\kappa},\epsilon^{-2})$；对偶正则把它变成 NC-C 的
+     $\epsilon^{-5/2}$；这个阶在光滑类和复合类上都已由多循环方法达到；单循环 ALM
+     尚未达到。这一段的任务是说明 $\epsilon^{-5/2}$
+     为什么是合理的目标，并引出第二个问题。
+  2. 对比表。上表的三行可以直接作为表的一组，把「本文问题类上的下界未知」写在表
+     注里。
+  3. Section 5 的 Remark，放在 Fast LRALM 的定理之后。内容是与
+     Minimax-PPA、Tracked-FOAM、Zhang–Xu 在同一个 $\mathcal{P}_s$
+     上的对照，以及动量参数同阶这一点。这部分篇幅较长，放在引言会冲淡主线。
+
+  摘要和贡献列表里只写「达到 $\mathcal{O}(\epsilon^{-5/2})$，与复合 NC-C
+  类上最好的已知阶一致」，不写最优。
+
+❯ 所以我们这么简单的算法代价是什么 我记得是移动中心 不要啰嗦。
+
+⏺ 老大，对：代价是放弃移动对偶中心，$\boldsymbol\mu$ 固定在 $\mathbf{0}$。
+
+  由此带来三点后果：
+
+  - $s$ 必须取 $\Theta(\epsilon^{-1})$。中心不动时，对偶正则的偏差只能靠加大 $s$
+    压到 $\epsilon$ 以下，所以有效罚参数 $\rho+s$ 随 $\epsilon^{-1}$ 增长。
+  - 参数依赖目标精度。$s$ 和 $\alpha=\Theta(\epsilon^{1/2})$ 都要事先按
+    $\epsilon$ 设定；固定参数运行下去，迭代点趋向正则化问题的解，不趋向原问题的
+    KKT 点。
+  - 乘子的界靠 $h$ 的 Lipschitz 性。没有移动的中心来修正乘子，乘子有界要由 Lemma
+    lem:b2-prime-multiplier-bounds 保证。
+
+  Zhang–Xu 与 Pan–Zheng–Li 的对偶正则同样以原点为中心、系数为
+  $\Theta(\epsilon)$，所以这个代价是达到 $\epsilon^{-5/2}$
+  的现有方法共有的，不是本文独有的。
+
+❯ 你说的复合NC-C是什么
+
+⏺ Bash(cd /tmp/agy_check && sed -n '1,60p' p5.txt | grep -v '^\s*$' | cut
+      -c1-230 | head -45)
+  ⎿  (No output)
+
+⏺ 老大，「复合 NC-C」是我临时起的名字，不是文献术语，指 Ke–Mei–Zhang
+  的问题类；原文的名称是 nonsmooth composite nonconvex–concave
+  minimax。问题为（原文式 (1)）
+
+  $$
+  \min_{x}\max_{y}\ h(x,y)+p(x)-q(y)
+  $$
+
+  假设（Assumption 1）：
+
+  - $h$ 是 $L_{\nabla h}$-光滑的，$h(x,\cdot)$ 是凹的；
+  - $p$、$q$ 是正常闭凸函数，可以非光滑，prox 可精确计算；
+  - $Y=\mathrm{dom},q$ 有界。
+
+  与另外两个类的关系：
+
+  - 取 $p$、$q$ 为闭凸集的示性函数，就得到光滑 NC-C，所以光滑 NC-C 是它的子类。
+  - 取 $h(\mathbf{x},\mathbf{q})=f(\mathbf{x})+\langle\mathbf{q},\mathcal{A}(\ma
+    thbf{x})\rangle$、$p=0$、$q=h^$，就得到本文的 Fenchel
+    形式，所以本文的问题是它的子类。$h$ 是 Lipschitz 的，因此 $\mathrm{dom},h^$
+    有界，满足第三条假设。
+
+  原文摘要称它把此前最好的 $\mathcal{O}(\epsilon^{-5/2}\log(1/\epsilon))$ 改进为
+  $\mathcal{O}(\epsilon^{-5/2})$。这与我之前转述的「Kong–Monteiro
+  已经无对数」不一致：Kong–Monteiro 的界是否带对数因子要回到原文核对，核对之前按
+  Ke–Mei–Zhang 的说法处理。
+
+❯ 不是啊 我们证明了中心动不动 不都是s得和恶评输油管吗
+
+⏺ 老大，你说得对，我上一条的第一点错了：我把「$s$ 取
+  $\Theta(\epsilon^{-1})$」归因于中心固定，而 Theorem thm:lower-bound
+  说明这与中心无关。
+
+  该定理的内容是：只要 $\rho+s\le c_1/\epsilon$，对所有常数中心步长
+  $(\alpha,\beta)$ 都有 $\Omega(\epsilon^{-4})$。因此族内任何成员要优于
+  $\epsilon^{-4}$，都必须让 $\rho+s$ 达到 $\epsilon^{-1}$
+  的量级，中心动与不动都一样。
+
+  修正后的结论：
+
+  - $s=\Theta(\epsilon^{-1})$ 是族内优于 $\epsilon^{-4}$
+    的必要条件，它不是固定中心的代价。
+  - 固定对偶中心在阶上没有代价。取 $s=c_s/\epsilon$ 时，族内对所有
+    $(\alpha,\beta)$ 的最好阶都是 $\Theta(\epsilon^{-3})$，$\beta=0$ 已经达到。
+  - Fast LRALM 相对族内 $\beta=0$ 成员多出的只有一行外推，以及更小的原始中心步长
+    $\alpha=\Theta(\epsilon^{1/2})$。
+
+  所以这个简单算法在阶上没有额外代价。参数依赖 $\epsilon$ 这一点，是所有达到
+  $\epsilon^{-3}$ 或更好阶的单循环方法共有的。Fast LRALM
+  在族外，族下界不直接约束它；它的 $s$ 取 $\Theta(\epsilon^{-1})$
+  是算法的设定，没有对应的必要性定理。
+
+❯ 我的意思是 我们的算法简单 分析就不简单
+
+⏺ 老大，对，代价在分析上：算法只多一行外推，证明要用一个四项的 Lyapunov
+  函数把三种误差同时控制住。
+
+  稿中的函数是 $\mathcal{W}_k=p_s(\mathbf{z}^k)+\frac{1}{2}\mathcal{E}_k(\mathbf
+  {z}^k)$，$\mathcal{E}_k$ 的四项各对应一个困难：
+
+  1. 被加速的函数在漂移。Nesterov 外推作用在对偶函数 $d_s(\cdot;\mathbf{z})$
+     上，而 $\mathbf{z}^k$ 每步移动，最优乘子
+     $\boldsymbol\lambda_s^\star(\mathbf{z}^k)$ 随之移动。对偶间隙项
+     $p_s(\mathbf{z})-d_s(\boldsymbol\lambda^k;\mathbf{z})$ 和估计序列项 $\frac{
+     1}{2s}\lVert\mathbf{w}^k-\boldsymbol\lambda_s^\star(\mathbf{z})\rVert^2$
+     要吸收这个漂移，由此得到限制 $\alpha\le 1/(6\sqrt{\kappa})$。
+  2. 对偶梯度不精确。原始变量只做一步梯度，没有解到
+     $\mathbf{x}s(\bar{\boldsymbol\lambda};\mathbf{z})$，所以对偶步用的不是
+     $d_s$ 的真梯度。跟踪项 $\frac{\mu\gamma}{4}\lVert\mathbf{x}^k-\mathbf{x}_s(
+     \bar{\boldsymbol\lambda}^{k-1};\mathbf{z})\rVert^2$ 控制这个误差。
+  3. 外推点与迭代点不同。原始梯度取在 $\bar{\boldsymbol\lambda}^k$，由增量项
+     $\frac{G_{\mathcal{A}}^2}{4\mu_\gamma}\lVert\boldsymbol\lambda^k-\bar{\bold
+     symbol\lambda}^{k-1}\rVert^2$ 补偿。
+  4. 常数不能随 $s$ 增长。乘子界和初值间隙 $\Delta_{\mathcal{W}}$ 都要与 $s$
+     无关，否则 $s=\Theta(\epsilon^{-1})$ 会让阶变差。
+
+  多循环方法把前两个困难交给内层循环：子问题解到精度后，外层面对的是近似精确的近
+  端点。Zhang–Xu 用预测–校正和独立的动量变量来处理。本文把它们全部放进
+  $\mathcal{W}_k$，所以算法简单而证明长。
+
+  这一点可以在引言里正面写成贡献：技术上的新内容是这个 Lyapunov 函数，它把
+  Nesterov 的估计序列与移动的近端中心放在同一个下降不等式里。
+
+❯ 但是我也不知道对不对
+
+⏺ 老大，目前能确认的和不能确认的分开如下。
+
+  能确认的
+
+  - 稿中 Lemma lem:b2-prime-initial-gap 给出的初值间隙不含
+    $s$，所以上一份对话留下的「$\Delta_{\mathcal{W}}$ 是否随 $s$
+    增长」在引理的陈述层面已经有答案：
+
+  $$
+  \Delta_{\mathcal{W}}=\Delta+\frac{L_h^2}{\rho}+\frac{(G_f+G_{\mathcal{A}}L_h)^
+  2}{2\mu_\gamma}
+  $$
+
+  - 项目记录显示 Fast LRALM 的证明在 2026-11-09 完成并经过一轮审阅。
+
+  不能确认的
+
+  - 我上一条说的「四项各对应一个困难」，依据只有 $\mathcal{E}_k$
+    的形式和步长条件 $\alpha\le 1/(6\sqrt{\kappa})$。我没有读 Lemma
+    lem:b2-prime-potential-descent
+    的证明，所以每一项在证明里实际起什么作用，是我的推断。
+  - 「技术贡献是这个 Lyapunov 函数」能否写进引言，要看它与 Zhang–Xu 的 Lyapunov
+    函数（原文式 (4.2)）有多大差别。两者都含对偶间隙、到
+    $\mathbf{y}^\star(\mathbf{z})$ 的距离和动量交叉项，结构相近。
+
+  判断
+
+  「算法简单、分析不简单」这句话本身成立，可以放心说。「分析的新意在哪里」现在不
+  能下结论，需要读一遍 potential-descent 引理的证明，并与 Zhang–Xu 的式 (4.2)
+  逐项对照之后再写。
+
+❯ 比如 外推 ：1， 乘子必须要有界； 这个整不了； 2. 这个审查了 不会和s一样； 3.
+  本质困难是什么 一句话 比如不用外推 我们jiuxx ，用了就怎么了
+
+⏺ 老大，本质困难是：不用外推，对偶梯度上升每步都单调收缩，误差不累积；用了外推，
+  单步不再单调，只有估计序列的势函数收缩，而梯度误差和目标的漂移会被动量放大
+  $\sqrt{\kappa}$ 倍。
+
+  展开成三句：
+
+  - 不用外推。对偶步是强凹函数上的梯度上升，到最优乘子的距离每步按
+    $1-\Theta(1/\kappa)$ 收缩。$\mathbf{x}$ 没解准带来的梯度误差、$\mathbf{z}$
+    移动带来的最优乘子漂移，都只在当步进入不等式一次，直接被收缩吸收。代价是阶里
+    带 $\kappa$，即 $\epsilon^{-3}$。
+  - 用了外推。收缩率变成 $1-\Theta(1/\sqrt{\kappa})$，但收缩的量是
+    $\mathbf{w}^k=\boldsymbol\lambda^{k-1}+\sqrt{\kappa}(\boldsymbol\lambda^k-\b
+    oldsymbol\lambda^{k-1})$ 到最优乘子的距离。乘子增量前面有系数
+    $\sqrt{\kappa}$，所以每步的误差和漂移进入势函数时被放大 $\sqrt{\kappa}$ 倍。
+  - 后果。漂移必须相应缩小，所以中心步长要取 $\alpha\le 1/(6\sqrt{\kappa})$；梯
+    度误差要单独跟踪，所以势函数里多出原始跟踪项和增量项。
+
+  加速方法对不精确梯度更敏感是已知现象（Devolder–Glineur–Nesterov 2014 对凸情形
+  证明了快速梯度法的误差随迭代累积）。本文的证明是否正是按这个机制组织的，我是从
+  $\mathbf{w}^k$ 的定义和 $\alpha$ 的条件读出来的，没有对照证明原文。

@@ -1,0 +1,329 @@
+\section{Introduction}
+\label{sec:introduction}
+In this paper, we study the structured nonsmooth nonconvex composite problem
+\begin{align}
+    \min_{\bx\in\RR^n}\quad & F(\bx) := f(\bx) + h(\calA(\bx)),
+    \tag{\textbf{P}}
+    \label{prob:main}
+\end{align}
+where $f\colon\RR^n\to\RR$ is a possibly nonconvex function with a Lipschitz
+continuous gradient, $\calA\colon\RR^n\to\RR^m$ is a smooth and possibly nonlinear
+mapping, and $h\colon\RR^m\to\RR\cup\{+\infty\}$ is a proper closed convex function
+whose proximal mapping is easy to evaluate; the complete assumptions are stated in
+Section~\ref{sec:assumptions}. The two components play complementary roles: $f$ is
+usually a smooth loss or data-fidelity term, whereas $h$ is a nonsmooth convex function
+that imposes robustness, sparsity, or other structure on the transformed variable
+$\calA(\bx)$
+\cite{charisopoulos2021low,markovsky2008structured,parekh2015convex}. Several models
+of practical interest take this form.  
+\subsection{Motivating Examples}
+\textbf{Robust phase retrieval}~\cite{duchi2019solving}.
+Given measurement vectors $\mathbf a_i\in\RR^n$ and observations
+$b_i\approx\langle\mathbf a_i,\bx^\star\rangle^2$, a fraction of which may be grossly
+corrupted, one solves
+\begin{equation*}
+  \min_{\bx\in\RR^n}\;\frac1m\sum_{i=1}^m
+  \bigl|\langle\mathbf a_i,\bx\rangle^2-b_i\bigr|.
+\end{equation*}
+This is~Problem \eqref{prob:main} with $f\equiv0$, $h=\frac1m\|\cdot\|_1$, and
+$\calA(\bx)_i=\langle\mathbf a_i,\bx\rangle^2-b_i$; the $\ell_1$ loss makes the
+model robust to outliers.
+
+\textbf{Robust low-rank matrix recovery}~\cite{charisopoulos2021low}.
+Given a linear measurement map $\mathcal M\colon\RR^{d_1\times d_2}\to\RR^m$ and
+observations $\mathbf b$ containing outliers, a rank-$r$ matrix is recovered in
+factorized form via
+\begin{equation*}
+  \min_{\mathbf U\in\RR^{d_1\times r},\,\mathbf V\in\RR^{d_2\times r}}
+  \frac1m\bigl\|\mathcal M(\mathbf U\mathbf V^\top)-\mathbf b\bigr\|_1.
+\end{equation*}
+Here $\bx=(\mathbf U,\mathbf V)$, $h=\frac1m\|\cdot\|_1$, and
+$\calA(\bx)=\mathcal M(\mathbf U\mathbf V^\top)-\mathbf b$ is bilinear in
+$(\mathbf U,\mathbf V)$, so the model again has the form~Problem \eqref{prob:main}.
+
+\textbf{Minimizing a pointwise maximum}~\cite{zhang2020smoothed}.
+For smooth losses $f_1,\dots,f_m$, such as the losses on $m$ data subgroups, one solves
+\begin{equation*}
+  \min_{\bx\in\RR^n}\;\max_{1\le i\le m} f_i(\bx).
+\end{equation*}
+This is~Problem \eqref{prob:main} with $h(u)=\max_{1\le i\le m}u_i$ and
+$\calA(\bx)=(f_1(\bx),\dots,f_m(\bx))$; a smooth regularizer, if present, enters
+through $f$, and the proximal mapping of $h$ reduces to a projection onto the unit
+simplex.
+
+\subsection{Related Work}
+
+A standard way to handle the nonsmooth composition in Problem~\eqref{prob:main}
+is to introduce the auxiliary variable $\by=\calA(\bx)$ and rewrite it as the
+equality-constrained problem
+\begin{equation}\label{prob:split}
+  \min_{\bx,\by}\; f(\bx)+h(\by)\quad\text{s.t.}\quad \calA(\bx)=\by.
+\end{equation}
+Because $h\circ\calA$ is neither globally smooth nor directly prox-friendly,
+methods that solve inner subproblems---such as prox-linear
+schemes~\cite{Drusvyatskiy2019}, quadratic penalty methods
+\cite{kong2019complexity,lin2022complexity}, and inexact or proximal augmented
+Lagrangian methods (ALMs)~\cite{sahin2019inexact,li2021rate,xie2021proximal}---incur
+inner-loop overhead and termination-criteria tuning. For large-scale problems,
+single-loop first-order methods, which perform one explicit gradient or
+proximal step per variable at each iteration without an inner solver, are
+therefore attractive. Yet without additional regularity assumptions, existing
+single-loop methods for Problem~\eqref{prob:main} stop at $\mathcal O(\epsilon^{-3})$
+complexity and require an algorithm parameter to scale with $1/\epsilon$.
+Moreau-envelope smoothing~\cite{bohm2021variable} sets the smoothing parameter
+to $\Theta(\epsilon)$ to control the approximation bias (for linear $\calA$),
+which inflates the surrogate gradient's Lipschitz constant to $\Theta(\epsilon^{-1})$.
+Similarly, single-loop penalty and linearized ALM/ADMM schemes acting
+on~\eqref{prob:split} drive the penalty or dual-perturbation parameter to
+$\Theta(\epsilon^{-1})$ to control feasibility
+\cite{hajinezhad2019perturbed,luSingleLoopGradientDescent2022,hallak2023adaptive,alacaoglu2024complexity,sun2024dual_descent_alm_admm,elbourkhissi2025perturbed,shi2025momentum};
+a large penalty likewise inflates the primal smoothness constant and shrinks
+the primal stepsize to $\Theta(\epsilon)$. Fixed-penalty $\mathcal O(\epsilon^{-2})$
+guarantees are available under structural regularity conditions---such as
+polyhedral error bounds for affine constraints~\cite{zhang2022global} or
+uniform LICQ for smooth nonlinear constraints
+\cite{elbourkhissi2025linearized,liu2026fixed}---but do not apply to the
+general nonsmooth composite problem~\eqref{prob:main}, where we impose no such
+assumptions.
+
+Eliminating $\by$ from the Lagrangian of~\eqref{prob:split} yields the
+equivalent nonconvex--linear minimax formulation
+\begin{equation}\label{eq:ncl}
+  \min_{\bx\in\RR^n}\max_{\bq\in\RR^m}\;
+  \calL(\bx,\bq) = \Phi(\bx,\bq)-h^*(\bq), \qquad
+  \Phi(\bx,\bq):=f(\bx)+\langle\bq,\calA(\bx)\rangle,
+\end{equation}
+whose game-stationary (GS) points match KKT points of~\eqref{prob:split}.
+Likewise, for any fixed penalty $\rho>0$, minimizing the augmented Lagrangian
+of~\eqref{prob:split} over $\by$ produces a smooth nonconvex--concave (NC--C)
+minimax problem on which single-loop linearized ALMs act as gradient
+descent--ascent (GDA) schemes (Section~\ref{subsec:reduced-al}). For smooth
+NC--C minimax problems, two-timescale GDA requires $\mathcal O(\epsilon^{-6})$
+iterations~\cite{lin2020gradient}. Adding primal smoothing (Smoothed
+GDA~\cite{zhang2020smoothed}) or dual perturbation (Perturbed GDA /
+AGP~\cite{lu2020hybrid,xu2023unified}) improves the complexity to
+$\mathcal O(\epsilon^{-4})$, and combining both in Perturbed Smoothed GDA
+achieves $\mathcal O(\epsilon^{-3})$ with a dual regularization parameter of
+order $\epsilon^{-1}$; Li et al.~\cite{li2026smoothing} establish matching
+algorithm-specific lower bounds of $\Omega(\epsilon^{-4})$ and
+$\Omega(\epsilon^{-3})$ for Smoothed GDA and Perturbed Smoothed GDA,
+respectively. Single-loop methods tailored to nonconvex--linear structure
+likewise attain $\mathcal O(\epsilon^{-3})$ via $\epsilon$-dependent dual
+regularization~\cite{pan2021efficient,he2024approximation,xu2026rada}.
+
+Across all of these $\mathcal O(\epsilon^{-3})$ single-loop guarantees, some
+parameter grows with $1/\epsilon$---either the penalty parameter itself or the
+dual regularization parameter. In practice, however, a primary appeal of ALMs
+over penalty methods is keeping the penalty parameter fixed so that the primal
+smoothness constant does not blow up as $\epsilon\to0$. Because existing lower
+bounds for single-loop methods apply only to individual algorithms under fixed
+parameter rules~\cite{mahdavinia2022tight,li2026smoothing} (whereas
+problem-class bounds for smooth nonconvex or affinely constrained problems do
+not address this trade-off~\cite{carmon2020lower,liu2026lower}), it remains
+unclear whether growing a parameter is fundamentally unavoidable for
+single-loop linearized ALMs, and if so, whether the penalty itself must bear
+this growth. This motivates our first question:
+\begin{quote}
+  \textbf{(Q1)}
+  \emph{Without additional regularity assumptions, must a single-loop
+  linearized ALM let some parameter grow with $1/\epsilon$ to reach
+  $\mathcal O(\epsilon^{-3})$ complexity? If so, must this growth be carried by
+  the penalty parameter?}
+\end{quote}
+
+In this paper, we provide a precise characterization addressing \textbf{(Q1)}.
+We study LRALM, a family $\calC_\theta$ of single-loop linearized ALMs that
+perform one GDA step per iteration on the reduced augmented Lagrangian with a
+fixed penalty $\rho$, a dual regularization parameter $s$, and primal and dual
+centers updated with constant center stepsizes $(\alpha,\beta)\in[0,1]^2$
+(Section~\ref{sec:algorithm-framework}). The family $\calC_\theta$ subsumes
+Smoothed GDA and Perturbed Smoothed GDA as special cases, and every member
+shares the effective penalty $\rho+s$ (Lemma~\ref{lem:effective-penalty}). We
+answer the first part of \textbf{(Q1)} affirmatively and the second part
+negatively. Whenever $\rho+s\le c_1/\epsilon$, every choice of constant center
+stepsizes in $\calC_\theta$ requires $\Omega(\epsilon^{-4})$ iterations to find
+an $\epsilon$-KKT point (Theorem~\ref{thm:lower-bound}), matching an
+$\mathcal O(\epsilon^{-4})$ upper bound in the family
+(Theorem~\ref{thm:upper-beta1}). In contrast, keeping $\rho$ fixed and setting
+$s=\Theta(\epsilon^{-1})$ attains $\mathcal O(\epsilon^{-3})$ within
+$\calC_\theta$ (Theorem~\ref{thm:upper-beta0}), while every choice of constant
+center stepsizes in $\calC_\theta$ with fixed $\rho$ and
+$s=\Theta(\epsilon^{-1})$ still requires $\Omega(\epsilon^{-3})$ iterations
+(Theorem~\ref{thm:lower-bound-fixed-rho}). Hence some parameter must grow to
+order $1/\epsilon$, the dual regularization $s$ alone can carry this growth
+while $\rho$ stays fixed, and $\Theta(\epsilon^{-3})$ is tight throughout
+$\calC_\theta$.
+
+\begin{table}[tbp]
+\centering
+\begin{threeparttable}
+\caption{Comparison of complexity bounds (iterations for single-loop methods;
+first-order oracle calls for multi-loop methods) for finding an $\epsilon$-KKT
+point (ALM-based methods and ours) or an $\epsilon$-GS point (smooth NC--C
+minimax methods).}
+\label{tab:known-results}
+\scriptsize
+\setlength{\tabcolsep}{2.4pt}
+\renewcommand{\arraystretch}{1.12}
+\setlength{\aboverulesep}{0pt}
+\setlength{\belowrulesep}{0pt}
+\begin{tabular}{lccccccc}
+\toprule
+\multirow{2}{*}[-1.2ex]{Method} & \multirow{2}{*}[-1.2ex]{Single-loop}
+ & \multirow{2}{*}[-1.2ex]{Nonlinear} & \multirow{2}{*}[-1.2ex]{CQ-free}
+ & \multicolumn{3}{c}{Parameter scale}
+ & \multirow{2}{*}[-1.2ex]{Complexity} \\
+\cmidrule(lr){5-7}
+ & & & & Penalty $\rho$ & Dual reg.\ $s$
+ & Primal prox.\ $\gamma$ & \\
+\midrule
+\multicolumn{8}{l}{\textit{ALM-based methods}} \\
+PProx-PDA~\cite{hajinezhad2019perturbed}
+ & \checkmark & -- & \checkmark & $\Theta(\epsilon^{-1})$ & $\Theta(\epsilon^{-1})$ & --
+ & $\mathcal O(\epsilon^{-4})$ \\
+iALM~\cite{li2021rate,kong2023iteration}
+ & -- & -- & -- & $\Theta(\epsilon^{-1})$ & -- & $\Theta(1)$
+ & $\tilde{\mathcal O}(\epsilon^{-5/2})$ \\
+S-prox-ALM~\cite{zhang2022global}
+ & \checkmark & -- & \checkmark & $\Theta(1)$ & -- & $\Theta(1)$
+ & $\mathcal O(\epsilon^{-2})$ \\
+GDPA~\cite{luSingleLoopGradientDescent2022,sun2024dual_descent_alm_admm}
+ & \checkmark & \checkmark & -- & $\Theta(\epsilon^{-1})$ & $\Theta(\epsilon^{-1})$ & --
+ & $\mathcal O(\epsilon^{-3})$ \\
+NR-LALM~\cite{liu2026fixed}
+ & \checkmark & \checkmark & -- & $\Theta(1)$ & -- & --
+ & $\mathcal O(\epsilon^{-2})$ \\
+\midrule
+\multicolumn{8}{l}{\textit{Smooth NC--C minimax}\tnote{a}} \\
+Smoothed GDA~\cite{zhang2020smoothed,li2026smoothing}
+ & \checkmark & \checkmark & \checkmark & -- & -- & $\Theta(1)$
+ & $\Theta(\epsilon^{-4})$ \\
+Perturbed Smoothed GDA~\cite{li2026smoothing}
+ & \checkmark & \checkmark & \checkmark & -- & \cellcolor{gray!25}$\Theta(\epsilon^{-1})$ & $\Theta(1)$
+ & \cellcolor{gray!25}$\Theta(\epsilon^{-3})$ \\
+Alg.~1 of~\cite{zhang2026matching}\tnote{b}
+ & \checkmark & \checkmark & \checkmark & -- & $\Theta(\epsilon^{-1})$ & $\Theta(1)$
+ & $\mathcal O(\epsilon^{-5/2})$ \\
+Tracked-FOAM~\cite{pan2026optimal}
+ & -- & \checkmark & \checkmark & -- & $\Theta(\epsilon^{-1})$ & $\Theta(1)$
+ & $\Theta(\epsilon^{-5/2})$ \\
+\midrule
+\multicolumn{8}{l}{\textit{Ours}} \\
+\phantom{\textbf{LRALM} $\boldsymbol{\calC_\theta}$} (Thms.~\ref{thm:upper-beta1}, \ref{thm:lower-bound})
+ & \checkmark & \checkmark & \checkmark & \cellcolor{gray!25}$\Theta(1)$ & \cellcolor{gray!25}$\Theta(1)$ & $\Theta(1)$
+ & \cellcolor{gray!25}$\Theta(\epsilon^{-4})$ \\
+\multirow{-2}{*}{\textbf{LRALM} $\boldsymbol{\calC_\theta}$} (Thms.~\ref{thm:upper-beta0}, \ref{thm:lower-bound-fixed-rho})
+ & \checkmark & \checkmark & \checkmark & \cellcolor{gray!25}$\Theta(1)$ & \cellcolor{gray!25}$\Theta(\epsilon^{-1})$ & $\Theta(1)$
+ & \cellcolor{gray!25}$\Theta(\epsilon^{-3})$ \\
+\textbf{Fast LRALM} (Alg.~\ref{alg:b2-prime})\tnote{c}
+ & \checkmark & \checkmark & \checkmark & \cellcolor{gray!25}$\Theta(1)$ & \cellcolor{gray!25}$\Theta(\epsilon^{-1})$ & $\Theta(1)$
+ & \cellcolor{gray!25}$\mathcal O(\epsilon^{-5/2})$ \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}[flushleft]
+\scriptsize
+\item[] ``Nonlinear'': nonlinear constraints/couplings allowed; ``CQ-free'': no
+constraint qualification required. Gray shading highlights the scales of
+$\rho,s$ and the resulting complexity.
+\item[a] Lower bounds for Smoothed GDA and Perturbed Smoothed GDA are
+algorithm-specific; that for Tracked-FOAM holds over the smooth NC--C class.
+\item[b] Applied to $\mathcal D_\rho$ on the dual ball of radius $2L_h$, this
+method also yields $\mathcal O(\epsilon^{-5/2})$ for Problem~\eqref{prob:main}.
+\item[c] Whether $\mathcal O(\epsilon^{-5/2})$ is tight for
+Problem~\eqref{prob:main} remains open.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+Our resolution of \textbf{(Q1)} shows that $\Theta(\epsilon^{-3})$ is an
+unimprovable barrier for the LRALM family $\calC_\theta$. Faster rates of order
+$\epsilon^{-5/2}$ are nevertheless known in related settings. For smooth NC--C
+minimax problems, the optimal deterministic first-order complexity for
+$\epsilon$-GS points is $\Theta(\epsilon^{-5/2})$~\cite{pan2026optimal}
+(reflecting the $\Omega(\sqrt{\kappa}\,\epsilon^{-2})$ lower bound for
+nonconvex--strongly-concave problems with dual condition number
+$\kappa=\Theta(\epsilon^{-1})$~\cite{zhang2021complexity,li2021complexity}),
+attained by multi-loop methods~\cite{pan2026optimal} and, recently, by a
+single-loop projected extragradient scheme with dual gradient
+averaging~\cite{zhang2026matching}. For nonsmooth composite minimax and
+constrained problems, however, existing $\epsilon^{-5/2}$-order methods all
+rely on multi-loop architectures: composite minimax methods attain
+$\mathcal O(\epsilon^{-5/2})$ via nested proximal-point or anchored
+schemes~\cite{kong2021accelerated,ke2026efficient}, and inexact ALM and penalty
+methods for affinely constrained problems attain
+$\widetilde{\mathcal O}(\epsilon^{-5/2})$ using accelerated inner
+solvers~\cite{li2021rate,lin2022complexity,kong2023iteration}. This contrast
+between the $\Theta(\epsilon^{-3})$ barrier of $\calC_\theta$ and the known
+$\mathcal O(\epsilon^{-5/2})$ complexity motivates our second question:
+\begin{quote}
+  \textbf{(Q2)}
+  \emph{Can a single-loop linearized ALM with a fixed, $\epsilon$-independent
+  penalty parameter break the $\Theta(\epsilon^{-3})$ barrier of $\calC_\theta$
+  and attain $\mathcal O(\epsilon^{-5/2})$ complexity for
+  Problem~\eqref{prob:main}?}
+\end{quote}
+
+To answer \textbf{(Q2)}, we introduce Fast LRALM (Algorithm~\ref{alg:b2-prime}
+in Section~\ref{sec:acceleration}). A key structural consequence of our
+analysis of \textbf{(Q1)} is that, with $\rho$ fixed and
+$s=\Theta(\epsilon^{-1})$, fixing the dual center at zero ($\beta=0$) incurs no
+loss in complexity order while making the regularized dual objective fixed,
+smooth, and $s^{-1}$-strongly concave on all of $\RR^m$. Stepping outside
+$\calC_\theta$, Fast LRALM adds Nesterov extrapolation directly to the dual
+multiplier step while preserving a single explicit primal--dual update per
+iteration, with no inner solvers, dual projections, or extragradient steps.
+We prove that Fast LRALM finds an $\epsilon$-KKT point of
+Problem~\eqref{prob:main} in $\mathcal O(\epsilon^{-5/2})$ iterations with a
+fixed penalty $\rho$ and $s=\Theta(\epsilon^{-1})$
+(Theorem~\ref{thm:b2-prime-complexity}), improving on the
+$\Theta(\epsilon^{-3})$ complexity of $\calC_\theta$ and matching the
+$\mathcal O(\epsilon^{-5/2})$ rate of multi-loop methods (and
+of~\cite{zhang2026matching} applied to the reduced augmented Lagrangian on a
+bounded dual ball) via a simpler single-loop ALM update. Because the dual step
+is unconstrained and extrapolated, establishing uniform multiplier boundedness
+without projection and controlling the $\sqrt{\kappa}$-amplified tracking error
+under a moving primal center require a dedicated Lyapunov analysis, developed
+in Section~\ref{sec:acceleration}. Table~\ref{tab:known-results} compares our
+guarantees and parameter scales with representative methods.
+
+\paragraph{Organization}
+Section~\ref{sec:preliminaries} introduces the problem class, the KKT
+criterion, the oracle model, and the reduced augmented Lagrangian together with
+its regularized potential.
+Section~\ref{sec:algorithm-framework} introduces the LRALM family and the
+complexity measure, shows that every member of the family has the effective
+penalty $\rho+s$, and establishes the lower and upper bounds.
+Section~\ref{sec:acceleration} presents Fast LRALM and its iteration
+complexity. Section~\ref{sec:experiments} reports numerical experiments, and
+Section~\ref{sec:conclusion} discusses open questions. The hard instances
+and the remaining proofs are given in the appendices.
+
+\paragraph{Notation}
+We use $\langle\cdot,\cdot\rangle$ and $\|\cdot\|$ for the
+Euclidean inner product and norm; for a matrix, $\|\cdot\|$ is the spectral
+norm. For $\calA=(A_1,\ldots,A_m)^\top$, the Jacobian
+$J_{\calA}(\bx)\in\RR^{m\times n}$ has $i$th row $\nabla A_i(\bx)^\top$. For a
+nonempty closed convex set $C$, $\dist(\bu,C):=\min_{\bv\in C}\|\bu-\bv\|$, and
+$\Pi_C(\bu)$ is the Euclidean projection of $\bu$ onto $C$. When convenient, we
+identify $\RR^2$ with $\mathbb C$, so that $\|p\|=|p|$ and
+$\langle p,q\rangle=\operatorname{Re}(\bar pq)$.
+% Throughout the paper, $\partial h$ denotes the limiting
+% subdifferential of $h$.
+
+For a proper closed convex function \(h:\RR^m\to\RR\cup\{+\infty\}\), its
+subdifferential, convex conjugate, and proximal mapping are
+\[
+    \partial h(\by):=\{\bv:\ h(\bw)\ge h(\by)+\langle\bv,\bw-\by\rangle
+    \ \text{for all }\bw\},
+    \qquad
+    h^*(\bq):=\sup_{\by\in\RR^m}\{\langle\bq,\by\rangle-h(\by)\},
+\]
+\begin{equation}
+    \prox_{t h}(\bu)
+    :=\argmin_{\by\in\RR^m}
+       \Bigl\{h(\by)+\frac{1}{2t}\|\by-\bu\|^2\Bigr\},
+    \qquad t>0;
+    \label{eq:prox-definition}
+\end{equation}
+see~\cite{rockafellar1970convex}. We write
+\(\dom\partial h^*:=\{\bq:\partial h^*(\bq)\neq\varnothing\}\).

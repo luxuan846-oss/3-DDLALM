@@ -1,0 +1,234 @@
+\section{Properties of the Regularized Potential and Value Functions}
+\label{app:fast-lralm-value-functions}
+
+\subsection{Proof of Proposition~\ref{prop:curvature-smoothness}}
+\label{app:curvature-smoothness}
+
+\begin{proof}
+By~\eqref{eq:prox-multiplier} and the Moreau decomposition~\cite{rockafellar1970convex},
+we have
+\[
+    \bq(\bx,\blmbd)
+    =\rho\Bigl[\calA(\bx)+\frac{\blmbd}{\rho}
+    -\prox_{h/\rho}\Bigl(\calA(\bx)+\frac{\blmbd}{\rho}\Bigr)\Bigr]
+    =\prox_{\rho h^*}\bigl(\blmbd+\rho\calA(\bx)\bigr).
+\]
+Since \(\prox_{\rho h^*}\) is nonexpansive and \(\calA\) is
+\(G_{\calA}\)-Lipschitz by Assumption~\ref{ass:smoothness}, for all
+\(\bx,\bx'\in\RR^n\) and \(\blmbd,\blmbd'\in\RR^m\),
+\[
+    \|\bq(\bx,\blmbd)-\bq(\bx',\blmbd')\|
+    \le\|\blmbd-\blmbd'\|+\rho G_{\calA}\|\bx-\bx'\|.
+\]
+Moreover, \(\bq(\bx,\blmbd)\in\partial h(\by(\bx,\blmbd))\) implies
+\(\|\bq(\bx,\blmbd)\|\le L_h\) by Assumption~\ref{ass:h}. Combining these
+bounds with~\eqref{eq:reduced-al-gradient} and Assumption~\ref{ass:smoothness}
+gives, for fixed \(\blmbd\),
+\[
+    \|\nabla_{\bx}\calD_\rho(\bx,\blmbd)-\nabla_{\bx}\calD_\rho(\bx',\blmbd)\|
+    \le(L_f+L_{\calA}L_h+\rho G_{\calA}^2)\|\bx-\bx'\|
+    =L_{\calD,\bx}\|\bx-\bx'\|,
+\]
+and, for fixed \(\bx\),
+\[
+    \|\nabla_{\bx}\calD_\rho(\bx,\blmbd)-\nabla_{\bx}\calD_\rho(\bx,\blmbd')\|
+    =\|J_{\calA}(\bx)^\top(\bq(\bx,\blmbd)-\bq(\bx,\blmbd'))\|
+    \le G_{\calA}\|\blmbd-\blmbd'\|.
+\]
+In particular, \(\calD_\rho(\cdot,\blmbd)\) is \(L_{\calD,\bx}\)-smooth and
+hence \(L_{\calD,\bx}\)-weakly convex. Adding \(\frac{1}{2\gamma}\|\bx-\bz\|^2\)
+with \(\gamma L_{\calD,\bx}<1/2\) makes
+\(\mathcal P_s(\cdot,\blmbd;\bz,\bmu)\) \(\mu_\gamma\)-strongly convex and
+\(L_x\)-smooth in \(\bx\), and yields~\eqref{eq:payoff-x-smoothness}.
+
+For fixed \((\bx,\bz,\bmu)\), \(\calD_\rho(\bx,\cdot)\) is concave in
+\(\blmbd\) as the pointwise infimum of affine functions of \(\blmbd\), so
+subtracting \(\frac{1}{2s}\|\blmbd-\bmu\|^2\) makes
+\(\mathcal P_s(\bx,\cdot;\bz,\bmu)\) \(s^{-1}\)-strongly concave in \(\blmbd\).
+Furthermore, by~\eqref{eq:prox-multiplier} and~\eqref{eq:reduced-al-gradient},
+\[
+    \nabla_{\blmbd}\mathcal P_s(\bx,\blmbd;\bz,\bmu)
+    =\frac{1}{\rho}\bigl(\bq(\bx,\blmbd)-\blmbd\bigr)
+    -\frac{1}{s}(\blmbd-\bmu).
+\]
+Since \(\prox_{\rho h^*}\) is firmly nonexpansive, so is
+\(I-\prox_{\rho h^*}\), whence
+\(\|\nabla_{\blmbd}\calD_\rho(\bx,\blmbd)-\nabla_{\blmbd}\calD_\rho(\bx,\blmbd')\|
+\le\frac{1}{\rho}\|\blmbd-\blmbd'\|\) and
+\(\|\nabla_{\blmbd}\calD_\rho(\bx,\blmbd)-\nabla_{\blmbd}\calD_\rho(\bx',\blmbd)\|
+=\frac{1}{\rho}\|\bq(\bx,\blmbd)-\bq(\bx',\blmbd)\|\le G_{\calA}\|\bx-\bx'\|\).
+Adding the linear term \(-\frac{1}{s}(\blmbd-\bmu)\)
+yields~\eqref{eq:payoff-lambda-smoothness} and shows that
+\(\mathcal P_s(\bx,\cdot;\bz,\bmu)\) is \(L_\lambda\)-smooth in \(\blmbd\).
+\end{proof}
+
+\subsection{Properties of the value functions}
+
+This subsection establishes the properties of the dual and proximal functions
+in Table~\ref{tab:acc-notation} that are used in
+Section~\ref{subsec:fast-lralm-analysis} to bound the three terms
+in~\eqref{eq:b2-prime-decomposition}, first at a fixed center and then with
+respect to the center. The Lipschitz bounds on \(\bx_s(\cdot;\cdot)\) and
+\(\bx_s^\star(\cdot)\) parallel those for the smoothed gradient
+descent--ascent method in~\cite[Lemma~B.2]{zhang2020smoothed}; the bound on
+\(\blmbd_s^\star(\cdot)\) additionally uses the \(s^{-1}\)-strong concavity
+of \(\mathcal P_s\) in \(\blmbd\).
+
+\begin{lemma}
+\label{lem:b2-prime-fixed-center-values}
+Suppose that Assumptions~\ref{ass:smoothness} and~\ref{ass:h} hold. Then, for
+every \(\bz\in\RR^n\), the following statements hold.
+\begin{enumerate}[label=(\roman*)]
+\item For all \(\blmbd,\blmbd'\in\RR^m\),
+\[
+    \|\bx_s(\blmbd;\bz)-\bx_s(\blmbd';\bz)\|
+    \le\frac{G_{\calA}}{\mu_\gamma}\|\blmbd-\blmbd'\| .
+\]
+\item For all \(\bx\in\RR^n\) and \(\blmbd\in\RR^m\),
+\[
+    \frac{\mu_\gamma}{2}\|\bx-\bx_s(\blmbd;\bz)\|^2
+    \le\mathcal P_s(\bx,\blmbd;\bz)-d_s(\blmbd;\bz)
+    \le\frac{L_x}{2}\|\bx-\bx_s(\blmbd;\bz)\|^2 .
+\]
+\item For every \(\blmbd\in\RR^m\),
+\[
+    p_s(\bz)-d_s(\blmbd;\bz)
+    \ge\frac{1}{2s}\|\blmbd-\blmbd_s^\star(\bz)\|^2
+    +\frac{\mu_\gamma}{2}\|\bx_s(\blmbd;\bz)-\bx_s^\star(\bz)\|^2 .
+\]
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+(i) By the optimality of \(\bx_s(\blmbd;\bz)\) and \(\bx_s(\blmbd';\bz)\),
+we have
+\(\nabla_{\bx}\mathcal P_s(\bx_s(\blmbd;\bz),\blmbd;\bz)
+=\nabla_{\bx}\mathcal P_s(\bx_s(\blmbd';\bz),\blmbd';\bz)=\zero\). Then, the
+\(\mu_\gamma\)-strong convexity of \(\mathcal P_s(\cdot,\blmbd;\bz)\)
+and~\eqref{eq:payoff-x-smoothness} yield
+\begin{align*}
+    &\mu_\gamma\|\bx_s(\blmbd;\bz)-\bx_s(\blmbd';\bz)\|^2\\
+    &\le\bigl\langle\nabla_{\bx}\mathcal P_s(\bx_s(\blmbd';\bz),\blmbd';\bz)
+    -\nabla_{\bx}\mathcal P_s(\bx_s(\blmbd';\bz),\blmbd;\bz),\,
+    \bx_s(\blmbd;\bz)-\bx_s(\blmbd';\bz)\bigr\rangle\\
+    &\le G_{\calA}\|\blmbd-\blmbd'\|\,
+    \|\bx_s(\blmbd;\bz)-\bx_s(\blmbd';\bz)\|,
+\end{align*}
+which proves~(i).
+
+(ii) By Proposition~\ref{prop:curvature-smoothness},
+\(\mathcal P_s(\cdot,\blmbd;\bz)\) is \(\mu_\gamma\)-strongly convex and
+\(L_x\)-smooth, with minimizer \(\bx_s(\blmbd;\bz)\) and minimum value
+\(d_s(\blmbd;\bz)\), which gives~(ii).
+
+(iii) By~\eqref{eq:minimax-equality}, we have
+\(p_s(\bz)=\mathcal P_s(\bx_s^\star(\bz),\blmbd_s^\star(\bz);\bz)\), so
+\begin{align*}
+    p_s(\bz)-d_s(\blmbd;\bz)
+    &=\bigl[\mathcal P_s(\bx_s^\star(\bz),\blmbd_s^\star(\bz);\bz)
+    -\mathcal P_s(\bx_s^\star(\bz),\blmbd;\bz)\bigr]
+    +\bigl[\mathcal P_s(\bx_s^\star(\bz),\blmbd;\bz)-d_s(\blmbd;\bz)\bigr]\\
+    &\ge\frac{1}{2s}\|\blmbd-\blmbd_s^\star(\bz)\|^2
+    +\frac{\mu_\gamma}{2}\|\bx_s(\blmbd;\bz)-\bx_s^\star(\bz)\|^2,
+\end{align*}
+where the inequality follows from the fact that \(\blmbd_s^\star(\bz)\)
+maximizes the \(s^{-1}\)-strongly concave function
+\(\mathcal P_s(\bx_s^\star(\bz),\cdot;\bz)\) and from~(ii). This completes
+the proof.
+\end{proof}
+
+\begin{lemma}
+\label{lem:b2-prime-center-dependence}
+Suppose that Assumptions~\ref{ass:smoothness} and~\ref{ass:h} hold. Let
+\(\bz,\bz'\in\RR^n\) and \(\blmbd\in\RR^m\). Then
+\begin{align*}
+    p_s(\bz')-p_s(\bz)
+    &\le\frac1\gamma\bigl\langle\bz-\bx_s^\star(\bz),\bz'-\bz\bigr\rangle
+    +\frac{1}{2\gamma}\|\bz'-\bz\|^2,\\
+    d_s(\blmbd;\bz')-d_s(\blmbd;\bz)
+    &\ge\frac1\gamma\bigl\langle\bz-\bx_s(\blmbd;\bz'),\bz'-\bz\bigr\rangle
+    +\frac{1}{2\gamma}\|\bz'-\bz\|^2 ,
+\end{align*}
+and
+\[
+    \max\bigl\{\|\bx_s(\blmbd;\bz')-\bx_s(\blmbd;\bz)\|,\,
+    \|\bx_s^\star(\bz')-\bx_s^\star(\bz)\|\bigr\}
+    \le\frac{\|\bz'-\bz\|}{\gamma\mu_\gamma},
+    \qquad
+    \|\blmbd_s^\star(\bz')-\blmbd_s^\star(\bz)\|
+    \le\frac{\sqrt{s}\,\|\bz'-\bz\|}{2\gamma\sqrt{\mu_\gamma}} .
+\]
+\end{lemma}
+
+\begin{proof}
+By~\eqref{eq:potential}, for all \(\bx\in\RR^n\) and \(\blmbd\in\RR^m\), we
+have
+\begin{equation}
+    \mathcal P_s(\bx,\blmbd;\bz')-\mathcal P_s(\bx,\blmbd;\bz)
+    =\frac{1}{\gamma}\langle\bz-\bx,\bz'-\bz\rangle
+    +\frac{1}{2\gamma}\|\bz'-\bz\|^2 .
+    \label{eq:b2-prime-center-shift}
+\end{equation}
+Since the right-hand side of~\eqref{eq:b2-prime-center-shift} is independent
+of \(\blmbd\), \eqref{eq:minimax-equality} and the saddle-point property of
+\(\bigl(\bx_s^\star(\bz),\blmbd_s^\star(\bz)\bigr)\) yield
+\[
+    p_s(\bz')
+    \le\max_{\blmbd\in\RR^m}\mathcal P_s(\bx_s^\star(\bz),\blmbd;\bz')
+    =p_s(\bz)+\frac1\gamma\bigl\langle\bz-\bx_s^\star(\bz),\bz'-\bz\bigr\rangle
+    +\frac{1}{2\gamma}\|\bz'-\bz\|^2,
+\]
+which is the first inequality. Similarly, by the definition of \(d_s\)
+and~\eqref{eq:b2-prime-center-shift} with \(\bx=\bx_s(\blmbd;\bz')\), we have
+\[
+    d_s(\blmbd;\bz)
+    \le\mathcal P_s(\bx_s(\blmbd;\bz'),\blmbd;\bz)
+    =d_s(\blmbd;\bz')
+    -\frac1\gamma\bigl\langle\bz-\bx_s(\blmbd;\bz'),\bz'-\bz\bigr\rangle
+    -\frac{1}{2\gamma}\|\bz'-\bz\|^2,
+\]
+which is the second inequality.
+
+We next show the Lipschitz bounds. By~\eqref{eq:b2-prime-center-shift}, we
+have \(\nabla_{\bx}\mathcal P_s(\bx,\blmbd;\bz)
+=\nabla_{\bx}\mathcal P_s(\bx,\blmbd;\bz')+(\bz'-\bz)/\gamma\) and
+\(\nabla_{\blmbd}\mathcal P_s(\bx,\blmbd;\bz)
+=\nabla_{\blmbd}\mathcal P_s(\bx,\blmbd;\bz')\). Then, the optimality of
+\(\bx_s(\blmbd;\bz)\) and \(\bx_s(\blmbd;\bz')\) gives
+\(\nabla_{\bx}\mathcal P_s(\bx_s(\blmbd;\bz),\blmbd;\bz)=\zero\) and
+\(\nabla_{\bx}\mathcal P_s(\bx_s(\blmbd;\bz'),\blmbd;\bz)=(\bz'-\bz)/\gamma\),
+and the \(\mu_\gamma\)-strong convexity of \(\mathcal P_s(\cdot,\blmbd;\bz)\)
+yields
+\[
+    \mu_\gamma\|\bx_s(\blmbd;\bz')-\bx_s(\blmbd;\bz)\|^2
+    \le\frac1\gamma\bigl\langle\bz'-\bz,
+    \bx_s(\blmbd;\bz')-\bx_s(\blmbd;\bz)\bigr\rangle
+    \le\frac1\gamma\|\bz'-\bz\|\,\|\bx_s(\blmbd;\bz')-\bx_s(\blmbd;\bz)\|,
+\]
+which gives the bound on \(\|\bx_s(\blmbd;\bz')-\bx_s(\blmbd;\bz)\|\).
+Similarly, the optimality conditions of the saddle points at \(\bz\) and
+\(\bz'\) give
+\(\nabla_{\bx}\mathcal P_s(\bx_s^\star(\bz'),\blmbd_s^\star(\bz');\bz)
+=(\bz'-\bz)/\gamma\) and
+\(\nabla_{\blmbd}\mathcal P_s(\bx_s^\star(\bz'),\blmbd_s^\star(\bz');\bz)
+=\zero\), while both partial gradients of \(\mathcal P_s(\cdot,\cdot;\bz)\)
+vanish at \(\bigl(\bx_s^\star(\bz),\blmbd_s^\star(\bz)\bigr)\). Since
+\(\mathcal P_s(\cdot,\cdot;\bz)\) is \(\mu_\gamma\)-strongly convex in
+\(\bx\) and \(s^{-1}\)-strongly concave in \(\blmbd\), the mapping
+\((\bx,\blmbd)\mapsto\bigl(\nabla_{\bx}\mathcal P_s(\bx,\blmbd;\bz),
+-\nabla_{\blmbd}\mathcal P_s(\bx,\blmbd;\bz)\bigr)\) is strongly monotone,
+which yields
+\begin{align*}
+    \mu_\gamma\|\bx_s^\star(\bz')-\bx_s^\star(\bz)\|^2
+    +\frac1s\|\blmbd_s^\star(\bz')-\blmbd_s^\star(\bz)\|^2
+    &\le\frac1\gamma\bigl\langle\bz'-\bz,
+    \bx_s^\star(\bz')-\bx_s^\star(\bz)\bigr\rangle\\
+    &\le\frac1\gamma\|\bz'-\bz\|\,\|\bx_s^\star(\bz')-\bx_s^\star(\bz)\|.
+\end{align*}
+Dropping the second term on the left-hand side gives the bound on
+\(\|\bx_s^\star(\bz')-\bx_s^\star(\bz)\|\). Moreover, using
+\(\frac1\gamma\|\bz'-\bz\|\,t-\mu_\gamma t^2
+\le\|\bz'-\bz\|^2/(4\gamma^2\mu_\gamma)\) for all \(t\ge0\), we obtain
+\(\frac1s\|\blmbd_s^\star(\bz')-\blmbd_s^\star(\bz)\|^2
+\le\|\bz'-\bz\|^2/(4\gamma^2\mu_\gamma)\), which completes the proof.
+\end{proof}

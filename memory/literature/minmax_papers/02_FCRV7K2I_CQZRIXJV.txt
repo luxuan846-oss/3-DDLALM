@@ -1,0 +1,2026 @@
+                                           Efficient Parameter-Free First-Order Methods for Nonsmooth Composite
+                                                                    Minimax Optimization
+                                                                       Shaozhe Ke ∗               Sanyou Mei ∗               Jiheng Zhang ∗
+                                                                                               September 22, 2026
+
+                                                                                                      Abstract
+                                                     In this paper we propose first-order methods for a class of nonsmooth composite strongly convex–strongly
+                                                 concave and nonconvex–concave minimax optimization. We first develop an inexact proximal method and an
+                                                 accumulative regularizated method for strongly convex–strongly concave problems. The latter achieves the
+
+
+
+
+arXiv:2609.25752v1 [math.OC] 22 Sep 2026
+                                                 optimal dependence on the curvature parameters and places the smaller curvature inside the accuracy logarithm.
+                                                 Using this method as a subsolver, we propose a proximal point method for nonconvex–concave problems. Under
+                                                 suitable assumptions, it finds an ϵ-stationary point with an operation complexity of O(ϵ−5/2 ), which improves
+                                                 the best-known O(ϵ−5/2 log(1/ϵ)) bounds by removing the logarithmic factor. We further develop parameter-free
+                                                 variants for both problem classes, and achieve the same complexity without knowledge of any problem constants.
+                                                 All proposed methods are equipped with verifiable termination criteria.
+                                           Keywords: Minimax optimization, parameter free, first-order methods, accelerated proximal methods, accumulated
+                                           regularization, operation complexity.
+
+                                           Mathematics Subject Classification: 90C47, 90C26, 90C25, 65K05.
+
+
+                                           1     Introduction
+                                           In this paper, we consider the composite minimax problem
+
+                                                                                   min max{H(x, y) := h(x, y) + p(x) − q(y)}.                                            (1)
+                                                                                     x    y
+
+                                           Throughout the paper, we let X := dom p and Y := dom q. We make the following assumptions.
+                                           Assumption 1. (i) p : Rm → (−∞, +∞] and q : Rn → (−∞, +∞] are proper closed convex functions, and the
+                                              proximal operator of p and q can be exactly evaluated.
+                                           (ii) The set Y is bounded, namely, we have ∥y∥ ≤ Dy for some Dy ≥ 1.
+                                           (iii) h : Rm+n → R is L∇h -smooth on X × Y for some L∇h > 0. For any x ∈ X , h(x, ·) is concave on Y.
+                                           (iv) Problem (1) has at least one optimal solution with finite optimal value H ∗ = minx maxy H(x, y).
+                                               Problem (1) provides a common formulation for several learning and decision problems. Examples include
+                                           distributionally robust learning [1, 2, 3] and learning with nondecomposable losses, including area-under-the-curve
+                                           maximization [3, 4]. In these applications, the minimization variable represents a prediction model, while the
+                                           maximization variable describes an uncertain distribution or arises from a variational representation of the loss.
+                                           The convex terms p and q incorporate constraints and nonsmooth regularization. Problems of this form also arise
+                                           as subproblems in methods for constrained minimax optimization [5]. Their scale and composite structure motivate
+                                           methods based on evaluations of h, ∇h, and the proximal operators of p and q.
+                                               There have been numerous studies on structured special cases of (1). When h(·, y) is convex for every y ∈ Y, its
+                                           saddle-point optimality conditions form a monotone inclusion (MI). More generally, consider finding u such that
+                                           0 ∈ (F + B)(u), where F is monotone and LF -Lipschitz continuous, and B is maximally monotone with an exactly
+                                           computable resolvent. Proximal-point, splitting, extragradient, and extrapolation methods have been extensively
+                                           studied for monotone inclusions and their saddle-point special cases [6, 7, 8, 9, 10, 11]. More recent work establishes
+                                           accelerated pointwise residual guarantees through anchoring and related extrapolation schemes [12, 13, 14, 15].
+                                           Under µ-strong monotonicity, an O((LF /µ) log(1/ϵ)) bound, with the remaining problem data fixed, can be obtained
+                                           for the numbers of evaluations of F and the resolvent of B, respectively, to find an ϵ-residual solution [11]. Such
+                                           methods apply to strongly convex–strongly concave (SCSC) minimax problems, but treating these problems as
+                                           general strongly monotone inclusions only uses the smaller of their two curvature parameters.
+                                              ∗ Department of Industrial Engineering and Decision Analytics, Hong Kong University of Science and Technology, Hong Kong, China
+
+                                           (email: shaozheke1220@gmail.com, symei@ust.hk, jiheng@ust.hk).
+
+
+
+                                                                                                           1
+    More specifically, consider an SCSC problem with the same composite structure as (1), with h replaced by an
+L∇f -smooth function f that is µx -strongly convex in x and µy -strongly concave in y, where 0 < µy ≤ µx ≤ L∇f .
+Neither X nor Y needs to be bounded. A direct application of the above MI complexity has a dependence on L∇f /µy .
+Accelerated methods exploit the separate primal and dual curvatures to improve this dependence [16, 17, 18, 19],
+while lower bounds characterize the attainable dependence on the smoothness and curvature parameters [20].
+                                                                        √
+In particular, the method in [19] attains the optimal factor L∇f / µx µy by combining a pointwise-conjugate
+reformulation with acceleration and an MI subsolver. A modification with a verifiable termination criterion for
+approximate primal-dual stationarity was developed in [5]. Nevertheless, when SCSC problems serve as subproblems
+and µy decreases with the target accuracy, the scale inside the accuracy logarithm also matters.
+    We address this issue with two SCSC methods. The first applies an accelerated inexact proximal scheme
+to a strongly convex reformulation of the saddle problem. It builds on the reformulation in [19], proximal
+acceleration [21, 22, 23], and relative-error criteria for inexact proximal methods [24, 25, 26]. The resulting
+subproblems have comparable primal and dual curvatures and can be solved using an MI subsolver that returns
+a computed pointwise residual. Our analysis requires only a residual bound proportional to LF ∥u0 − u∗ ∥/N ,
+where N bounds the separate evaluation counts. The second method combines this contraction with accumulated
+regularization. This approach is related to recursive regularization for gradient minimization [27] and, more directly,
+the accumulated-regularization framework in [28]. By increasing the regularization and updating its center to retain
+the preceding quadratic terms, we obtain a bound with the smaller curvature µy inside the accuracy logarithm.
+This improvement is essential for the nonconvex–concave application.
+    When h(·, y) is nonconvex, most existing methods aim to find an approximate stationary point. This setting
+has been studied through multistep and two-timescale gradient descent-ascent [29, 30], proximal-point methods [3,
+16, 31, 32, 33], and smoothing methods [34, 35, 36]. Alternating proximal and projected-gradient methods have
+also been developed for composite and constrained formulations [37, 38]. The intermediate nonconvex–strongly
+concave setting has also received substantial attention, including near-optimal algorithms and lower bounds [16, 39].
+Two commonly studied criteria in the nonconvex–concave setting are stationarity of the primal value function
+maxy H(·, y), measured through its Moreau envelope, and approximate satisfaction of the first-order conditions in
+both variables. The latter is the ϵ-stationarity criterion used in this paper and is defined in Subsection 1.1. These
+criteria and the oracles used to attain them must be distinguished when comparing complexity bounds.
+    For stationarity of the primal value function, the method in [16] achieves an O(ϵ−3 log2 (1/ϵ)) complexity for
+smooth constrained problems. For stationarity in both variables, the accelerated inexact proximal point smoothing
+method in [32] achieves an O(ϵ−5/2 ) bound under an oracle that exactly solves a regularized maximization problem
+involving the coupling function. Such an oracle generally requires more than a gradient or a proximal evaluation.
+Using gradients and the separate proximal operators, an O(ϵ−5/2 log(1/ϵ)) bound was established in [5]; see also [36]
+for a smoothing and perturbation approach with the same dependence on ϵ for game stationarity. Removing this
+logarithmic factor while retaining computable stopping criteria is the main objective of our nonconvex analysis.
+    We propose an inexact proximal point method that uses the new SCSC solver to attain this objective. The
+smaller-curvature residual bound allows the total inner cost to be controlled by the descent over the outer iterations.
+Consequently, the method finds an ϵ-stationary point with an operation complexity O(ϵ−5/2 ) . To the best of our
+knowledge, this paper is the first to remove the logarithmic factor for the general problem class in (1). Independent
+and concurrent work [40] also removes this factor for a special case of (1) using a substantially different approach.
+Moreover, our framework accommodates proximable nonsmooth terms and admits a parameter-free variant that
+achieves the same complexity bound.
+    Implementing minimax methods often requires smoothness and curvature parameters or a bound on the dual
+domain. Adaptive methods have been studied for monotone inclusions and convex optimization [11, 12, 28, 41].
+Methods that adapt to unknown smoothness and strong concavity parameters have also been developed for
+nonconvex–strongly concave problems [42, 43], and parameter-free line-search methods have been proposed for the
+nonconvex–concave setting [44]. We develop parameter-free variants for both problem classes considered here. The
+SCSC method accepts tentative parameters through a computed residual-reduction test. The nonconvex–concave
+method adapts its smoothness estimate through a verifiable model inequality, and its parameter-free variant also
+selects a dual-radius estimate. Their complexity bounds count unsuccessful trials as well as successful ones. The
+main contributions are summarized below.
+   • We develop an accelerated inexact proximal method that reduces the solution distance by a fixed factor within
+              √
+     O(L∇f / µx µy ) evaluations of ∇f , proxp , and proxq , respectively. Using it as a subsolver, our accumulative
+                                                                         √
+     regularization method finds an ϵ-stationary point within O((L∇f / µx µy ) log(1/ϵ)) evaluations of each oracle.
+     This bound retains the optimal dependence on the curvature parameters and places the smaller curvature µy
+     inside the accuracy logarithm, which is essential for removing the logarithmic factor in the nonconvex–concave
+     complexity. We also propose a parameter-free variant that preserves the optimal complexity for SCSC minimax
+     problem. All proposed algorithms are equipped with verifiable termination criteria.
+   • We develop a proximal point method that finds an ϵ-stationary point of (1) within O(ϵ−5/2 ) evaluations of
+     h, ∇h, proxp , and proxq , respectively, for fixed problem data. To the best of our knowledge, this paper is
+     the first to remove the logarithmic factor from the best-known O(ϵ−5/2 log(1/ϵ)) complexity bound for the
+
+
+                                                          2
+      general problem class (1), while the independent and concurrent work [40] obtains the same improvement for
+      a special case of (1) using a substantially different approach. Moreover, our method is parameter-free and
+      equipped with a verifiable termination criterion.
+   The rest of this paper is organized as follows. In Subsection 1.1, we introduce some notation and terminology. In
+Section 2, we propose first-order methods for SCSC minimax optimization and study their complexity. In Section 3,
+we propose a first-order method for problem (1) and its parameter-free variant, and present complexity results for
+them. Finally, we provide the proofs of the main results in Section 4.
+
+1.1    Notation and preliminaries
+The following notation will be used throughout this paper. Let Rd denote the Euclidean space of dimension d,
+⟨·, ·⟩ denote the standard inner product, and ∥ · ∥ denote the Euclidean norm. We write N = {1, 2, . . .}. For any
+a ∈ R, let a+ = max{a, 0}, and let ⌈a⌉ and ⌊a⌋ denote the least integer greater than or equal to a and the greatest
+integer less than or equal to a, respectively. The notation log denotes the natural logarithm, and logb denotes the
+logarithm to base b. Given a point u ∈ Rd and a set S ⊆ Rd , let dist(u, S) = inf v∈S ∥u − v∥, with dist(u, ∅) = +∞.
+     Given a proper closed convex function g : Rd → (−∞, +∞], its domain is dom g = {u : g(u) < +∞}, and its
+subdifferential is
+                        ∂g(u) = {v : g(z) ≥ g(u) + ⟨v, z − u⟩ for all z ∈ Rd }    ∀u ∈ dom g,
+with ∂g(u) = ∅ for u ∈
+                     / dom g. The proximal operator associated with g is denoted by proxg and defined as
+
+                                                          1
+                                                                  
+                          proxg (u) = arg minz∈Rd g(z) + ∥z − u∥2          ∀u ∈ Rd .
+                                                          2
+
+We count the evaluation of proxγg (u) as one evaluation of the proximal operator of g for any γ > 0 and u ∈ Rd .
+    A mapping G is said to be LG -Lipschitz continuous on a set S if ∥G(u) − G(v)∥ ≤ LG ∥u − v∥ for all u, v ∈ S.
+A function g is said to be L∇g -smooth on S if ∇g exists on S and is L∇g -Lipschitz continuous there. A function g
+is µ-strongly convex on a convex set S if g − µ∥ · ∥2 /2 is convex on S, and L-weakly convex on S if g + L∥ · ∥2 /2 is
+convex on S. It is µ-strongly concave if −g is µ-strongly convex.
+Definition 1. For ϵ ≥ 0, a point (x, y) ∈ X × Y is called an ϵ-stationary point of the minimax problem (1) if
+
+                         dist(0, ∇x h(x, y) + ∂p(x)) ≤ ϵ,        dist(0, ∇y h(x, y) − ∂q(y)) ≤ ϵ.
+
+We use the same definition for other composite minimax problems, with h replaced by the corresponding smooth
+coupling.
+    For a set-valued operator T : Rd ⇒ Rd , let dom T = {u : T (u) ̸= ∅}. The operator T is µ-strongly monotone if
+
+                        ⟨v − w, u − z⟩ ≥ µ∥u − z∥2          ∀u, z ∈ dom T, v ∈ T (u), w ∈ T (z),
+
+and monotone if the same inequality holds with µ = 0. It is maximally monotone if its graph is not properly
+contained in the graph of another monotone operator. Let I denote the identity operator. For maximally monotone
+T and γ > 0, the resolvent (I + γT )−1 is single-valued, defined on Rd , and nonexpansive, that is, 1-Lipschitz
+continuous. We count the evaluation of (I + γT )−1 (u) as one evaluation of the resolvent of T for any γ > 0 and
+u ∈ Rd .
+   Define                                                                    
+                                           ∇x h(x, y)                     ∂p(x)
+                               A(x, y) =                 ,   B(x, y) =            .
+                                           −∇y h(x, y)                    ∂q(y)
+The KKT system of (1) is 0 ∈ (A + B)(u). By Assumption 1(iii), A is L∇h -Lipschitz continuous on X × Y, and
+A + L∇h I is monotone there. By Assumption 1(i), B is maximally monotone, and for every γ > 0,
+
+                                     (I + γB)−1 (x, y) = (proxγp (x), proxγq (y)).
+
+
+2     First-order methods for strongly convex–strongly concave minimax
+      optimization
+In this section we consider the strongly convex–strongly concave minimax problem
+
+                                          min max{f (x, y) + p(x) − q(y)},                                        (2)
+                                            x   y
+
+where p : Rm → (−∞, +∞] and q : Rn → (−∞, +∞] are proper, closed, convex, and proximable. No boundedness
+assumption is imposed on their domains. We make the following assumption on f .
+
+
+                                                             3
+Assumption 2. The function f is µx -strongly convex in x, µy -strongly concave in y, and L∇f -smooth on X × Y,
+where 0 < µy ≤ µx ≤ L∇f .
+Remark 1. The ordering µy ≤ µx entails no loss of generality. If µx < µy , exchanging the two variable blocks and
+reversing the objective sign yields the equivalent saddle-point with the curvature bounds and proximal mappings
+interchanged.
+   Under Assumption 2, problem (2) has a unique saddle point. For u = (x, y), set
+
+                                         ∇x f (x, y)
+                                                                       
+                                                                    ∂p(x)
+                              F (u) =                  ,  B(u) =            .                                       (3)
+                                        −∇y f (x, y)                ∂q(y)
+
+The KKT system of (2) is 0 ∈ (F + B)(u). Under Assumption 2, F is L∇f -Lipschitz and µy -strongly monotone on
+X × Y. Moreover, B is maximally monotone, and its resolvent is evaluated by the proximal operators of p and q.
+    More generally, consider monotone inclusion 0 ∈ (F + B)(u), where B is maximally monotone with an exactly
+computable resolvent, F is monotone and LF -Lipschitz on dom B, and F + B is µ-strongly monotone on dom B,
+with 0 < µ ≤ LF . Suppose this inclusion has a solution u∗ , which is unique. Although linearly convergent methods
+are available for strongly monotone inclusions [11], a sublinear pointwise residual bound of order LF ∥u0 − u∗ ∥/(k + 1)
+suffices for our analysis. We therefore impose the following requirement on the subsolver.
+Assumption 3. There exist an algorithm A(F, B, u0 , LF , µ) and constants CA > 0 and NA ∈ N, with NA ≥ 1,
+such that the following holds. From any u0 ∈ dom B, one run of A generates, for every ϑ > 0, a computed pair
+(u, r) with
+                                    r ∈ (F + B)(u),   ∥r∥ ≤ ϑ∥u0 − u∗ ∥,
+using at most NA + ⌈CA LF /ϑ⌉ evaluations of F and of the resolvent of B, respectively. Every evaluation of F is at
+a point of dom B. Both counts include initialization and computation of r. The constants depend only on A, not
+on the inclusion, its parameters, or its initial point. Neither u∗ nor its distance from u0 is an input.
+Remark 2. For the subdifferential operator B used here, the EAG and past-EAG methods in [45, Corollary 3.1], with
+one forward–backward initialization step, satisfy Assumption 3. With τk = 1/(k+2), one may take (NA , CA ) = (4, 22)
+for EAG with stepsize 1/(2LF ), and (NA , CA ) = (4, 28) for past-EAG with stepsize 1/(3LF ).
+
+2.1    An inexact proximal method for SCSC problems
+We first develop an accelerated inexact proximal method for the SCSC problem (2). Our approach applies the
+accelerated proximal point framework of [25] to a strongly convex reformulation of the saddle-point problem.
+Specifically, we consider
+                                                      nµ                             o
+                                                         x
+               min Φ(ξ, y) where Φ(ξ, y) = q(y) + sup      ∥x − ξ∥2 − f (x, y) − p(x)  ∀y ∈ Y,            (4)
+                ξ,y                                x    2
+
+with Φ(ξ, y) = +∞ for y ∈/ Y. The function Φ is proper, closed, and µy -strongly convex, and its unique minimizer
+coincides with the saddle point u∗ of (2). The key to implementing this approach is that the proximal step
+                                                 n        µx            o
+                                            min   Φ(v)  +    ∥v − c k 2
+                                                                     ∥
+                                          v∈Rm+n           2
+can be computed through the balanced saddle problem
+                               n                       µx               µx            o
+                      min max f (x, y) + p(x) − q(y) −    ∥x − ckx ∥2 −    ∥y − cky ∥2 .                            (5)
+                       x    y                           4                2
+For µy ≤ µx , the quadratic terms balance the primal and dual curvatures at order µx . Moreover, an approximate
+KKT pair for this problem yields, after a simple correction, an inexact proximal certificate for Φ; see Lemma 2.
+    We control the accuracy of the inner solves through a relative-error criterion with an additional absolute
+allowance, based on the mixed-error setting studied in [26]. Combining these inexact proximal steps with residual-
+corrected extrapolation yields Algorithm 1 below. The algorithm requires neither evaluating Φ nor computing the
+supremum defining it.
+
+
+
+
+                                                           4
+Algorithm 1 An inexact proximal method for SCSC contraction
+Input: Subroutine A satisfying Assumption 3, L∇f , µx , µy satisfying Assumption 2, ũ0 = c0 = u0 ∈ X × Y.
+ 1: for k = 0, 1, . . . do
+ 2:   Call A(Fk , B, cbk , L∇f + µx , µx /2), where
+                                                             µx             !
+                                               ∇x f (x, y) −    (x − ckx )
+                                Fk (x, y) =                   2               ∀(x, y) ∈ X × Y,                          (6)
+                                               −∇y f (x, y) + µx (y − cky )
+
+                                                                                                      1
+                              cbk = (I + γk B)−1 ck − γk Fk (u0 ) ,                  γk =
+                                                                 
+                                                                                                                  .
+                                                                                              (L∇f + µx )(k + 2)2
+        Terminate this call at a computed pair uk+1 = (xk+1 , y k+1 ), rk+1 = (rxk+1 , ryk+1 ) ∈ (Fk + B)(uk+1 ) satisfying
+
+                                                                                 ∥ck − u0 ∥
+                                                                                           
+                                                             µx
+                                               ∥r   k+1
+                                                          ∥≤        ∥u k+1
+                                                                           −c ∥+
+                                                                             k
+                                                                                              .                         (7)
+                                                             64                   (k + 2)2
+
+ 3:     Compute
+
+                                  ek+1 = (ek+1
+                                            x  , ek+1
+                                                  y    ) = F (uk+1 ) + rk+1 − Fk (uk+1 ),                               (8)
+                                                    1 k+1
+                                  ũk+1 = uk+1 −      (e     , 0),                                                      (9)
+                                                   µx x
+                                                     k                      k+2
+                                  ck+1 = ũk+1 +         (ũk+1 − ũk ) +           (2rxk+1 , −ryk+1 ).               (10)
+                                                  k+3                     (k + 3)µx
+
+ 4:     Terminate and output (uk+1 , ek+1 ) if
+
+                                                                   1   3
+                                                                                    
+                                                                                µx
+                                                                            r
+                                          ∥ek+1 ∥ ≤ µx               −                       ∥uk+1 − u0 ∥.            (11)
+                                                                   9 k+2        µy       +
+
+ 5: end for
+
+
+Remark 3. It can be observed from (8)–(10) that ek+1 is the original KKT residual, ũk+1 is an inexact proximal
+point for Φ, and ck+1 is the next extrapolation center. Moreover, the inner test (7) controls the proximal inexactness,
+while (11) determines when the algorithm returns. The decreasing parameter γk is used only in the initialization
+resolvent.
+      The following theorem presents our results on the above algorithm, whose proof is deferred to Subsection 4.1.
+Theorem   1. Suppose Assumptions 2 and 3 hold. Then Algorithm 1 is well-defined and terminates within
+⌈128 µx /µy ⌉ iterations. If it terminates at iteration k, its output satisfies ek+1 ∈ (F + B)(uk+1 ) and
+    p
+
+                                                          1 0                                 µx 0
+                                  ∥uk+1 − u∗ ∥ ≤            ∥u − u∗ ∥,     ∥ek+1 ∥ ≤             ∥u − u∗ ∥.           (12)
+                                                          8                                    8
+The numbers of evaluations of ∇f , proxp , and proxq are bounded, respectively, by
+
+                                                           128CA (L∇f + µx )
+                                                                                    
+                                         µx                                         L∇f
+                                     r
+                          1 + 128               1 + NA +                        =O √         .                        (13)
+                                         µy                       µx                 µx µy
+
+The hidden constant depends only on NA and CA .
+
+      The proof is given in Section 4.1. The iteration bound is used only in the analysis; the algorithm stops by (11).
+
+2.2      An accumulative regularizated method for SCSC problems
+In this subsection we use Algorithm 1 to find an ϵ-stationary point of (2), where ϵ > 0 is given. Algorithm 1 reduces
+the initial solution distance by an absolute factor. Its residual bound, however, involves µx . We combine these
+contractions with accumulated regularization to obtain an evaluation bound involving the smaller curvature µy
+inside the accuracy logarithm.
+    At each regularized iteration we approximately solve a saddle problem with center ū = (ūx , ūy ) of the form
+                                                                                  
+                                                        λ              λ
+                     min max f (x, y) + p(x) − q(y) + ∥x − ūx ∥2 − ∥y − ūy ∥2 ,           λ > 0.
+                      x    y                            2              2
+
+
+                                                                       5
+Following the accumulated-center construction in [28, Algorithm 2.1], we increase λ and update ū so that the
+preceding quadratic terms are retained. One preliminary call to Algorithm 1 bounds the remaining solution distance
+by its computed displacement. We use this displacement and ϵ to choose the initial regularization, and then continue
+the accumulation until the original residual is at most ϵ.
+
+Algorithm 2 Am accumulated regularizated method for SCSC minimax optimization
+Input: Subroutine A satisfying Assumption 3, L∇f , µx , µy satisfying Assumption 2, u0 ∈ X × Y, ϵ > 0.
+ 1: Call Algorithm 1 with (L∇f , µx , µy , u0 , A) ← (L∇f , µx , µy , u0 , A) for solving problem (2), and denote its output
+    by (u1 , e1 ). Terminate and output (u1 , e1 ) if ∥e1 ∥ ≤ ϵ. Otherwise, set ū1 = u1 and λ1 = ϵ/∥u1 − u0 ∥.
+ 2: for k = 1, 2, . . . do
+ 3:   Call Algorithm 1 with (L∇f , µx , µy , u0 , A) ← (L∇f + λk , µx + λk , µy + λk , uk , A) for solving
+      minx maxy {fk (x, y) + p(x) − q(y)} and denote its output by (uk+1 , rk+1 ), where
+
+                                                               λk                λk
+                                      fk (x, y) = f (x, y) +      ∥x − ūkx ∥2 −    ∥y − ūky ∥2 .
+                                                               2                 2
+
+ 4:   Compute ek+1 = rk+1 − λk (uk+1 − ūk ).
+ 5:   Terminate and output (uk+1 , ek+1 ) if ∥ek+1 ∥ ≤ ϵ. Otherwise, set λk+1 = 4λk and ūk+1 = (ūk + 3uk+1 )/4.
+ 6: end for
+
+
+Remark 4. The preliminary call determines λ1 from the computed displacement. At each regularized iteration,
+rk+1 is the residual of the regularized subproblem, and step 4 converts it to the original residual ek+1 used in the
+stopping test.
+      The following theorem presents our results on the above algorithm, whose proof is deferred to Subsection 4.2.
+Theorem 2. Suppose Assumptions 2 and 3 hold. Then Algorithm 2 is well-defined and terminates. Its output
+(uk+1 , ek+1 ), with k = 0 for a return in step 1, satisfies ek+1 ∈ (F + B)(uk+1 ) and ∥ek+1 ∥ ≤ ϵ. The numbers of
+evaluations of ∇f , proxp , and proxq are bounded, respectively, by
+
+                                                                       µy ∥u0 − u∗ ∥
+                                                                                   
+                                                 L∇f
+                             2 (NA + 256CA + 3) √
+                              11
+                                                          1 + log4 1 +
+                                                  µx µy                      ϵ
+                                                             0    ∗
+                                                                 
+                                   L∇f                  µy ∥u − u ∥
+                              =O √        1 + log 1 +                    ,                                             (14)
+                                   µx µy                      ϵ
+
+where u∗ is the saddle point of (2) and the hidden constant depends only on NA and CA .
+
+2.3      A parameter-free method for SCSC problems
+In this subsection we develop a variant of Algorithm 2 for solving (2) without knowing L∇f , µx , or µy . We call
+Algorithm 2 with tentative smoothness and curvature parameters and accept its output when the residual is
+sufficiently reduced.
+    In addition to Assumption 3, we require an implementation of A that is well-defined for all positive supplied
+parameters and can be interrupted before an evaluation of F or the resolvent of B. These requirements apply to
+every supplied inclusion, even when its smoothness and curvature parameters are invalid. No convergence guarantee
+is required for invalid parameters.
+    For the simplicity of our discussion, let I be the list of integer triples (i, j, k) with i ≥ 0 and 0 ≤ j ≤ k,
+ordered by increasing 2i + j + k, with any fixed order for ties. Each call to Algorithm 2 below is called a trial. Its
+evaluation limit applies separately to the numbers of evaluations of ∇f , proxp , and proxq , including all inner calls,
+initializations, and residual computations.
+
+
+
+
+                                                               6
+Algorithm 3 A parameter-free method for SCSC minimax optimization
+Input: Subroutine A satisfying Assumption 3, u0 = (u0x , u0y ) ∈ X × Y, d ̸= 0 with u0x + d ∈ X , and ϵ > 0.
+ 1: Set ρ = ∥∇x f (u0x + d, u0y ) − ∇x f (u0x , u0y )∥/∥d∥.
+ 2: Compute u1 = (I + ρ−1 B)−1 u0 − ρ−1 F (u0 ) and r 1 = ρ(u0 − u1 ) + F (u1 ) − F (u0 ).
+                                                          
+
+ 3: Terminate and output u1 if ∥r 1 ∥ ≤ ϵ. Otherwise, set (i1 , j1 , k1 ) = (0, 0, 0).
+ 4: for t = 1, 2, . . . do
+ 5:   Set Ut = ρ2it , αt = ρ2−jt , and νt = ρ2−kt .
+ 6:   Call Algorithm 2 with (L∇f , µx , µy , u0 , ϵ, A) ← (Ut , αt , νt , ut , max{ϵ, ∥rt ∥/8}, A) for solving problem (2),
+                                    √
+      allowing at most ⌈CeA Ut / αt νt ⌉ evaluations of ∇f , proxp , and proxq , respectively, where CeA = 213 (NA +
+      256CA + 3). Stop the call and declare the trial unsuccessful before any evaluation exceeding its corresponding
+      limit. If the call terminates with an output, denote it by (ũt+1 , et+1 ).
+ 7:   Terminate and output ũt+1 if the call returns a pair satisfying ∥et+1 ∥ ≤ ϵ.
+ 8:   if the call returns a pair satisfying ∥et+1 ∥ ≤ ∥rt ∥/2 then
+ 9:      Set (ut+1 , rt+1 ) = (ũt+1 , et+1 ) and (it+1 , jt+1 , kt+1 ) = (it , jt , kt ).
+10:   else
+11:      Set (ut+1 , rt+1 ) = (ut , rt ) and let (it+1 , jt+1 , kt+1 ) be the next triple after (it , jt , kt ) in I.
+12:   end if
+13: end for
+
+
+Remark 5. For the update of (it+1 , jt+1 , kt+1 ) in step 11, one may choose (i, j, k) lexicographically among triples
+with the same value of 2i + j + k. The resulting list I starts with (0, 0, 0), (0, 0, 1), (0, 0, 2), (0, 1, 1), (1, 0, 0), . . .. A
+successful trial retains the current triple, while an unsuccessful trial advances to the next triple and retains the
+current point and residual.
+    The following theorem presents our results on the above algorithm, whose proof is deferred to Subsection 4.3.
+Theorem 3. Suppose Assumption 2 holds, and A satisfies Assumption 3 and the additional execution requirements
+in this subsection. Then Algorithm 3 is well-defined and terminates with an ϵ-stationary point of (2) for every
+input satisfying its requirements. The numbers of evaluations of ∇f , proxp , and proxq are bounded, respectively, by
+
+                                                                                   4L2∇f ∥u0 − u∗ ∥
+                                                                 2 &                               !'!
+                                           √
+                                               
+                              L ∇f                      L∇f
+              3 + 4(CeA + 1) √        (2 + 2) 2 log2 √        + 6 + log2 1 +
+                               µx µy                    µx µy                            µx ϵ
+                                                            µy ∥u0 − u∗ ∥
+                                                                     
+                       L∇f                L∇f
+               =O √            log2 2 + √         + log 1 +                    ,                                 (15)
+                       µx µy              µx µy                   ϵ
+
+where u∗ is the saddle point of (2) and CeA is defined in step 6 of Algorithm 3.
+Remark 6. (i) A successful trial verifies residual reduction, not the validity of its global parameter estimates. The
+   parameter search contributes the first term in (15), which is additive to the accuracy term.
+(ii) The logarithmic term in (15) satisfies
+
+                               4L2∇f ∥u0 − u∗ ∥
+                   &                            !'
+                                                                                   µy ∥u0 − u∗ ∥
+                                                                                                
+                                                                 L∇f
+                     log2 1 +                      ≤ 3 + 2 log2 √       + log2 1 +                 .
+                                     µx ϵ                         µx µy                  ϵ
+                 √                                                             √
+      Since L∇f / µx µy ≥ 1, the constant and the additional logarithm of L∇f / µx µy are absorbed into the squared
+      logarithm in (15). This yields the stated O(·) expression, whose hidden constant depends only on NA and CA .
+
+
+3     First-order method for nonconvex–concave minimax optimization
+3.1     A proximal point method for NCC problems without knowledge of L∇L
+We first develop a method for (1) that uses a supplied radius D ≥ 1 and calls Algorithm 2 without knowing L∇h .
+By Assumption 1(ii), ∥y − y 0 ∥ ≤ 2Dy for every y ∈ Y. Thus, with D = 2Dy , the method finds an ϵ-stationary
+point of (1). We impose the additional execution requirements on A stated in Subsection 2.3, including when the
+supplied subproblems are not SCSC.
+   Each call to Algorithm 2 is called a trial. The dual regularization parameter µ remains fixed. We maintain a
+primal center xt , an initial pair (x̂, ŷ) for the inner call, and a residual rt of the subproblem (16) at that pair. After
+an accepted trial, the returned primal point becomes the next center and the returned pair initializes the next call.
+A rejected trial retains the center and initial pair and doubles βt . A trial is called accepted if its call returns, passes
+the radius test in step 5, fails the stopping test in step 6, and satisfies (18). The radius test returns failure when
+the supplied radius is exceeded and Algorithm 5 uses this outcome to select the radius.
+
+
+                                                                7
+Algorithm 4 A proximal point method for nonconvex–concave minimax optimization without knowledge of L∇h
+Input: Subroutine A satisfying Assumption 3, (x0 , y 0 ) ∈ X × Y, D ≥ 1, and ϵ > 0.
+ 1: Set β1 = ϵ/32, µ = ϵ/(32D), and x1 = x0 .
+ 2: Compute
+
+                             (x̂, ŷ) = (I + β1−1 B)−1 (x0 , y 0 ) − β1−1 A(x0 , y 0 )
+                                                                                       
+
+                             r1 = A(x̂, ŷ) − A(x0 , y 0 ) + β1 (x̂ − x0 ), (µ − β1 )(ŷ − y 0 ) .
+                                                                                                
+
+
+
+ 3: for t = 1, 2, . . . dop
+ 4:   Set τt = (ϵ/64) µ/βt .   Call Algorithm 2 with (L∇f , µx , µy , u0 , ϵ, A) ← (3βt , βt , µ, (x̂, ŷ), τt , A) for solving
+      minx maxy {ht (x, y) + p(x) − q(y)}, where
+                                                                                   µ
+                                          ht (x, y) = h(x, y) + βt ∥x − xt ∥2 −      ∥y − y 0 ∥2 ,                        (16)
+                                                                                   2
+      allowing at most                &       s                           s                     !!'
+                                                  βt                 64                βt t 2
+                                        CeA            1 + log4   1+       ∥rxt ∥2 +     ∥r ∥                             (17)
+                                                  µ                   ϵ                µ y
+
+      evaluations of ∇h, proxp , and proxq , respectively, where CeA is defined in step 6 of Algorithm 3. Stop
+      the call before any evaluation exceeding its corresponding limit. If the call returns, denote its output by
+      ((xt+1 , y t+1 ), et+1 ).
+ 5:   If the call returns a pair satisfying ∥y t+1 − y 0 ∥ > D, terminate and return failure.
+ 6:   If the call returns a pair satisfying ∥xt+1 − xt ∥ ≤ ϵ/(4βt ), terminate and output (xt+1 , y t+1 ).
+ 7:   If the call returns a pair satisfying
+                                                                                                βt t+1
+                      h(xt , y t+1 ) − h(xt+1 , y t+1 ) + ⟨∇x h(xt+1 , y t+1 ), xt+1 − xt ⟩ +     ∥x   − xt ∥2 ≥ 0,       (18)
+                                                                                                2
+      set (x̂, ŷ) = (xt+1 , y t+1 ), rt+1 = et+1 − 2β   (x          ), 0  , and βt+1 = βt .
+                                                           t+1     t
+                                                                         
+                                                       t       − x
+      Otherwise, set r          = r + 2βt (x̂ − x ), 0 , x     = x , and βt+1 = 2βt .
+                         t+1        t             t
+                                                       t+1       t
+
+ 8: end for
+
+
+   The following theorem establishes the evaluation complexity with the radius D = 2Dy , whose proof is deferred
+to Subsection 4.4.
+
+Theorem 4. Suppose Assumption 1 holds, and A satisfies Assumption 3 and the additional execution requirements
+in Subsection 2.3. Let 0 < ϵ < 32L∇h . Then Algorithm 4 with D = 2Dy is well-defined and terminates with an
+ϵ-stationary point (x, y) of (1). The numbers of evaluations of h, ∇h, proxp , and proxq , including all unsuccessful
+trials, are bounded, respectively, by
+                                                 r
+                                          √                       L∇h ∆0
+                                                                                   
+                                                   L∇h Dy                  L∇h Dy
+                               2 + 2 (1 + 2)CA
+                                     13       e              1+          +
+                                                      ϵ             ϵ2          ϵ
+                                         r                                 !
+                                                          L∇h ∆0
+                                                   
+                                           L∇h Dy                   L∇h Dy
+                                =O 1+                1+           +             ,                                (19)
+                                              ϵ             ϵ2         ϵ
+
+where ∆0 = maxy H(x0 , y) − H ∗ , and Dy and L∇h are given in Assumption 1(ii) and (iii), respectively.
+Remark 7. The first primal center is x0 , so ∆0 is the original objective gap. The pair (x̂, ŷ) is used only as the
+initial point for the inner calls and is updated after each accepted trial. Algorithm 4 uses the radius bound Dy , but
+does not require L∇h or ∆0 . Its radius test cannot return failure when D = 2Dy .
+
+3.2    A parameter-free proximal point method for SCSC problems
+We now remove the need for Dy by calling Algorithm 4 with successively doubled radius estimates. Each call
+starts from the original point (x0 , y 0 ) and initializes its own smoothness estimate. A phase is one complete call to
+Algorithm 4: its supplied radius remains fixed, and failure starts the next phase with twice that radius.
+
+
+
+
+                                                                  8
+Algorithm 5 A parameter-free proximal point method for nonconvex–concave minimax optimization
+Input: Subroutine A satisfying Assumption 3, (x0 , y 0 ) ∈ X × Y, and ϵ > 0.
+ 1: for k = 1, 2, . . . do
+ 2:   Set Dk = 2k−1 .
+ 3:   Call Algorithm 4 with (D, x0 , y 0 , ϵ, A) ← (Dk , x0 , y 0 , ϵ, A) for solving problem (1).
+ 4:   If the call returns a point (x, y), terminate and output (x, y).
+ 5: end for
+
+
+    The following theorem presents our results on the above algorithm, whose proof is deferred to Subsection 4.4.
+Theorem 5. Suppose Assumption 1 holds, and A satisfies Assumption 3 and the additional execution requirements
+in Subsection 2.3. Let 0 < ϵ < 32L∇h . Then Algorithm 5 is well-defined and terminates with an ϵ-stationary
+point (x, y) of (1). The numbers of evaluations of h, ∇h, proxp , and proxq , including all calls to Algorithm 4, are
+bounded, respectively, by                r                                   !
+                                                         L∇h ∆0
+                                                    
+                                            L∇h Dy                   L∇h Dy
+                                 O 1+                 1+          +              ,                               (20)
+                                               ϵ            ϵ2          ϵ
+
+where ∆0 is defined in Theorem 4, and Dy and L∇h are given in Assumption 1(ii) and (iii), respectively.
+Remark 8. It can be observer from the above theorem that ALgorithm 5 enjoys a O(ϵ−5/2 ) operation complexity for
+finding an ϵ-stationary point (x, y) of (1). To the best of our knowledge, this improves the best known complexity
+be a logarithmic factor for the first time. Moreover, our method is parameter-free and equipped with a verifiable
+termination criterion.
+
+
+4     Proof of the main results
+In this section we provide a proof of our main results presented in Sections 2 and 3, which are particularly Theorems
+1–5.
+
+4.1    Proof of the main result in Subsection 2.1
+In this subsection we first establish several lemmas and then prove Theorem 1. All iteration indices in this subsection
+refer to iterations reached by Algorithm 1. Throughout this subsection, u∗ denotes the saddle point of (2), and uk∗
+denotes the solution of the balanced subproblem at ck .
+    The following lemma establishes that the call to the subsolver terminates in finitely many evaluations.
+Lemma 1. Suppose Assumptions 2 and 3 hold. For every iteration k reached by Algorithm 1, its subsolver initial
+point cbk belongs to X × Y, and its call in step 2 terminates and outputs a pair satisfying the termination criteria (7)
+within
+                                                         128CA (L∇f + µx )
+                                                                          
+                                             1 + NA +
+                                                                µx
+evaluations of ∇f , proxp , and proxq , respectively.
+
+Proof. Fix any reached iteration k. The definition of cbk in step 2 implies that cbk ∈ X × Y. Thus cbk is an valid
+initial point for A. It follows from Assumption 2 that the balanced subproblem (5) has a unique saddle point
+uk∗ . By (6), Fk is (L∇f + µx )-Lipschitz and µx /2-strongly monotone on X × Y, so the parameters in step 2 are
+valid. Since 0 ∈ (Fk + B)(uk∗ ), we have uk∗ = (I + γk B)−1 (uk∗ − γk Fk (uk∗ )). By the definition of cbk in step 2 and the
+nonexpansivity of the resolvent, one has
+
+                         ck − uk∗ ∥ ≤ ∥ck − uk∗ − γk (Fk (u0 ) − Fk (uk∗ ))∥
+                        ∥b
+                         ≤ ∥ck − uk∗ ∥ + γk (L∇f + µx )∥u0 − uk∗ ∥
+                                         ∥u0 − uk∗ ∥             1                    ∥ck − u0 ∥
+                                                                     
+                         = ∥ck − uk∗ ∥ +             ≤   1 +            ∥ck − uk∗ ∥ +            ,
+                                          (k + 2)2           (k + 2)2                  (k + 2)2
+
+where the first inequality follows from the nonexpansivity of the resolvent, the second inequality follows from the
+Lipschitz continuity of Fk , and the equality follows from γk (L∇f + µx ) = (k + 2)−2 . Unless the call has already
+terminated, Assumption 3 with ϑ = µx /128 implies that the current call of A generates a pair (u, r) satisfying
+r ∈ (Fk + B)(u) and
+                                  µx k             5µx k                µx
+                           ∥r∥ ≤       c − uk∗ ∥ ≤
+                                      ∥b               ∥c − uk∗ ∥ +             ∥ck − u0 ∥,                     (21)
+                                  128              512              128(k + 2)2
+
+
+
+
+                                                              9
+where the last inequality follows from (k +2)−2 ≤ 1/4. This pair is generated in at most NA +⌈128CA (L∇f +µx )/µx ⌉
+evaluations of Fk and of the resolvent of B, respectively. By strong monotonicity and 0 ∈ (Fk + B)(uk∗ ), one has
+                                      µx
+                                         ∥u − uk∗ ∥2 ≤ ⟨r, u − uk∗ ⟩ ≤ ∥r∥∥u − uk∗ ∥,
+                                       2
+and hence ∥ck − uk∗ ∥ ≤ ∥u − ck ∥ + ∥u − uk∗ ∥ ≤ ∥u − ck ∥ + 2∥r∥/µx . Substituting this into (21), we obtain
+                                     5µx               2∥r∥
+                                                            
+                                                                      µx
+                             ∥r∥ ≤         ∥u − c ∥ +
+                                                  k
+                                                               +             ∥ck − u0 ∥.
+                                     512                 µx      128(k + 2)2
+Rearranging, we obtain
+                          5µx                 2µx                                         ∥ck − u0 ∥
+                                                                                                    
+                                                                   µx
+                    ∥r∥ ≤     ∥u − ck ∥ +             ∥ck − u0 ∥ ≤             ∥u − c ∥ +
+                                                                                     k
+                                                                                                       .
+                          502             251(k + 2)2              64                      (k + 2)2
+Hence, this pair satisfies (7). By (6),
+                                                         µ                            
+                                                            x
+                                    Fk (u0 ) = F (u0 ) + − (x0 − ckx ), µx (y 0 − cky ) .
+                                                           2
+Thus the initialization evaluates each of proxp and proxq once and computes Fk (u0 ) from the previously evaluated
+F (u0 ) by affine arithmetic. Each subsequent evaluation of Fk requires one evaluation of ∇f , and each resolvent
+evaluation requires one evaluation of each proximal mapping. The conclusion then follows from these.
+   The next lemma establishes the inclusions and relative-error bound for ek+1 and ũk+1 in (8) and (9), respectively.
+Lemma 2. Suppose Assumptions 2 and 3 hold. Let F and B be defined in (3), and Φ in (4). For the sequence
+generated by Algorithm 1 from u0 , let ek+1 , ũk+1 , and ck+1 be defined by (8)–(10). Then ek+1 ∈ (F + B)(uk+1 )
+and (−ek+1
+        x  , ek+1
+              y   ) ∈ ∂Φ(ũk+1 ) at every reached iteration k. Moreover, we have
+                                                                                   ∥ck − u0 ∥
+                                                                                             
+                                                             µx
+                        µx (ũk+1 − ck ) + (−ek+1 , ek+1
+                                                         ) ≤      ∥ũk+1
+                                                                         − c k
+                                                                               ∥ +              .           (22)
+                                              x      y
+                                                              8                     (k + 2)2
+Proof. Fix any reached iteration k. By step 2 of Algorithm 1 and (8), rk+1 − Fk (uk+1 ) ∈ B(uk+1 ) and
+                             ek+1 = F (uk+1 ) + rk+1 − Fk (uk+1 ) ∈ (F + B)(uk+1 ).
+                                                                 
+
+In particular, ek+1
+                x    ∈ ∇x f (uk+1 ) + ∂p(xk+1 ). In addition, it follows from (9) that ek+1  x    = µx (xk+1 − ũk+1
+                                                                                                                 x   ). Using
+this and strong convexity, we obtain that for every x ∈ X ,
+                                                                                       µx
+                  f (x, y k+1 ) + p(x) ≥ f (uk+1 ) + p(xk+1 ) + ⟨ek+1   , x − xk+1 ⟩ +    ∥x − xk+1 ∥2
+                                                                    x
+                                                                                        2
+                                                                                µx
+                   = f (uk+1 ) + p(xk+1 ) + ⟨ek+1   , x − ũk+1  − ek+1 /µx ⟩ +     ∥x − ũk+1 − ek+1 /µx ∥2
+                                                x           x       x
+                                                                                 2         x      x
+
+                                              µx                   ∥ek+1 ∥2
+                   = f (uk+1 ) + p(xk+1 ) +       ∥x − ũk+1  ∥2 − x         ,                                           (23)
+                                               2         x
+                                                                      2µx
+where the first equality follows from ek+1
+                                        x     = µx (xk+1 − ũk+1
+                                                               x  ). Notice that equality holds in the first inequality at
+x=x  k+1
+         . Thus the supremum in Φ(ũ     k+1
+                                             ) in (4) is attained at xk+1 . Since ũk+1y    = y k+1 ,
+                                                       nµ                                         o
+                                                           x
+                          Φ(ũk+1 ) = q(y k+1 ) + sup        ∥x − ũk+1 ∥2 − f (x, y k+1 ) − p(x)
+                                                     x    2         x
+
+                                                                 µx k+1
+                           = q(y k+1
+                                     ) − f (u k+1
+                                                  ) − p(x k+1
+                                                              )+      ∥x     − ũk+1 ∥2
+                                                                  2              x
+
+                                                                 ∥ek+1 ∥2
+                           = q(y k+1 ) − f (uk+1 ) − p(xk+1 ) + x          ,                                          (24)
+                                                                    2µx
+where the second equality follows from (23), and the last uses xk+1 − ũk+1
+                                                                        x   = ek+1
+                                                                               x   /µx . For any (ξ, y) ∈ dom Φ, it
+follows from xk+1
+                  = ũx + ex /µx that
+                      k+1    k+1
+
+
+                           µx k+1        ∥ek+1 ∥2                        µx
+                              ∥x  − ξ∥2 = x       − ⟨ek+1 , ξ − ũk+1 ⟩+    ∥ξ − ũk+1 ∥2 .                             (25)
+                            2              2µx        x           x
+                                                                          2        x
+
+
+Using this, (4), and (24), we obtain
+                                                                  µx k+1
+                  Φ(ξ, y) ≥ q(y) − f (xk+1 , y) − p(xk+1 ) +         ∥x      − ξ∥2
+                                                                   2
+                   ≥ q(y k+1 ) − f (uk+1 ) − p(xk+1 ) + ⟨ek+1y   , y − y k+1 ⟩
+                       µy                    µx k+1
+                     +     ∥y − y k+1 ∥2 +      ∥x      − ξ∥2
+                        2                     2
+                                                                         µx                 µy
+                   = Φ(ũk+1 ) + ⟨(−ek+1   , ek+1 ), (ξ, y) − ũk+1 ⟩ +     ∥ξ − ũk+1 ∥2 +    ∥y − y k+1 ∥2 ,
+                                       x      y
+                                                                          2        x
+                                                                                            2
+
+
+                                                              10
+where the first inequality follows from the definition of the supremum and the choice xk+1 , the second inequality is
+due to the µy -strong convexity of q(·) − f (xk+1 , ·) with subgradient ek+1
+                                                                           y     at y k+1 , and the equality follows from (24)
+and (25). Hence, (−ex , ey ) ∈ ∂Φ(ũ
+                       k+1 k+1            k+1
+                                              ).
+   We next show that (22) holds. By (6) and (8), one has
+                                                   µ                                     
+                                                       x
+                                  ek+1 = rk+1 +          (xk+1 − ckx ), −µx (y k+1 − cky ) .
+                                                      2
+Using this and (9), we obtain
+
+                                                rxk+1   xk+1 − ckx k+1         + ckx
+                                                                         k+1
+                         ek+1                                                          rxk+1 k+1
+                                                                                              
+                                                                          x
+       ũk+1
+             = x  k+1
+                      −   x
+                              ,y k+1
+                                      = x k+1
+                                              −       −           ,y    =            −      ,y     ,                     (26)
+                          µx                     µx         2                 2         µx
+
+where the second equality follows from ek+1
+                                        x   = rxk+1 + µx (xk+1 − ckx )/2. In addition, we have
+
+                  µx (ũk+1 − ck ) + (−ek+1 , ek+1 ) = µx (xk+1 − ckx ) − 2ek+1 , µx (y k+1 − cky ) + ek+1
+                                                                                                             
+                                         x     y                            x                          y
+                                                   µx k+1                
+                  = µx (x   k+1
+                                 − cx ) − 2 rx +
+                                    k         k+1
+                                                        (x   − cx ) , ry
+                                                                k       k+1
+                                                                              = (−2rx , ry ),
+                                                                                        k+1 k+1
+                                                                                                                         (27)
+                                                      2
+where the first equality follows from ũk+1
+                                         x    = xk+1 − ek+1
+                                                         x   /µx and ũk+1
+                                                                         y    = y k+1 , and the second follows from (6)
+and (8).
+   By (26), xk+1 − ckx = 2(ũk+1
+                              x  − ckx ) + 2rxk+1 /µx and y k+1 − cky = ũk+1
+                                                                          y   − cky . Using these, we obtain
+
+                                                                         2rx
+                                                                         k+1 
+                    ∥uk+1 − ck ∥ = 2(ũk+1         k
+                                                     ),   k+1     k
+                                                                      +      ,0
+                                                                    
+                                          x    − c x    ũy   − c y
+                                                                          µx
+                                                                 2 k+1                        2 k+1
+                       q
+                     ≤ 4∥ũk+1
+                            x    − ckx ∥2 + ∥ũk+1
+                                               y    − cky ∥2 +      ∥rx ∥ ≤ 2∥ũk+1 − ck ∥ +    ∥r  ∥.
+                                                                µx                           µx
+
+Substituting this bound into (7) yields
+
+                                        ∥ck − u0 ∥                     1
+                                                  
+                   µx                                  µx k+1                        µx
+        ∥r k+1
+               ∥≤       ∥uk+1
+                              −c ∥+
+                                 k
+                                                     ≤    ∥ũ − ck ∥ + ∥rk+1 ∥ +            ∥ck − u0 ∥,
+                   64                    (k + 2)2      32             32         64(k + 2)2
+
+which further implies that
+                                               µx k+1              µx
+                                   ∥rk+1 ∥ ≤      ∥ũ − ck ∥ +            ∥ck − u0 ∥.                                    (28)
+                                               31              62(k + 2)2
+Using this and (27), we have
+                                                   q
+                     µx (ũk+1 − ck ) + (−ek+1
+                                           x          ) =
+                                                    4∥rxk+1 ∥2 + ∥ryk+1 ∥2 ≤ 2∥rk+1 ∥
+                                               , ek+1
+                                                  y
+
+                      2µx k+1                                                    ∥ck − u0 ∥
+                                                                                           
+                                        µx                  µx
+                    ≤     ∥ũ −c ∥+
+                                k                k   0
+                                               ∥c − u ∥ ≤        ∥ũk+1
+                                                                         −c ∥+
+                                                                            k
+                                                                                              ,
+                       31           31(k + 2)2               8                    (k + 2)2
+
+where the second inequality follows from (28). Hence, (22) holds.
+   The next three lemmas establish an energy estimate, a uniform bound, and the point and residual bounds for
+Algorithm 1.
+
+Lemma 3. Suppose Assumptions 2 and 3 hold. Let u∗ be the unique saddle point of (2), and let Φ be defined
+in (4). For the sequence generated by Algorithm 1, define
+
+                                                            i+2 i i i
+                                                    ūi =      c − ũ                                                    (29)
+                                                             2    2
+at each generated index i. Then, at every reached iteration k,
+                                                                         k
+                     (k + 2)2                    1                 31 X
+                              Φ(ũk+1 ) − Φ(u∗ ) + ∥ūk+1 − u∗ ∥2 +         (i + 2)2 ∥ũi+1 − ci ∥2
+                       4µx                        2                 256 i=0
+                                             k
+                         1 0             1 X ∥ci − u0 ∥2
+                     ≤     ∥u − u∗ ∥2 +                  .                                                               (30)
+                         2              256 i=0 (i + 2)2
+
+Proof. Fix any reached iteration k. By Lemma 2, (−ei+1   x , ey ) ∈ ∂Φ(ũ
+                                                              i+1           i+1
+                                                                                ) for 0 ≤ i ≤ k. By the subgradient
+inequality, one has
+                          Φ(ũi+1 ) − Φ(ũi ) ≤ ⟨(−ei+1
+                                                    x , ey ), ũ
+                                                         i+1    i+1
+                                                                    − ũi ⟩   ∀1 ≤ i ≤ k.                      (31)
+
+
+                                                             11
+In addition, by the µy -strong convexity of Φ and 0 ∈ ∂Φ(u∗ ), we have
+                   µy i+1
+                     ∥ũ  − u∗ ∥2 ≤ Φ(ũi+1 ) − Φ(u∗ ) ≤ ⟨(−ei+1
+                                                             x , ey ), ũ
+                                                                  i+1    i+1
+                                                                             − u∗ ⟩                 ∀0 ≤ i ≤ k.             (32)
+                   2
+By (29), ū0 = u0 . Using this definition and (10), we obtain, for 0 ≤ i ≤ k,
+
+                            i+3                                    i+2                         i + 1 i+1
+                                                                                           
+                                            i
+                   ūi+1 =        ũi+1 +      (ũi+1 − ũi ) +           (2rxi+1 , −ryi+1 ) −      ũ
+                              2           i+3                   (i + 3)µx                        2
+                       i + 2 i+1 i i i + 2 i+1
+                    =       ũ  − ũ +         (2rx , −ryi+1 ).
+                         2          2      2µx
+
+Recall from (27) that (2rxi+1 , −ryi+1 ) = −µx (ũi+1 − ci ) − (−ei+1
+                                                                  x , ey ). Substituting this identity into the displayed
+                                                                       i+1
+
+expression for ū i+1
+                      and using (29), we obtain
+                                   i+2 i i i i+2                      i+2
+                         ūi+1 =      c − ũ −     (−ei+1
+                                                      x , ey ) = ū −
+                                                           i+1     i
+                                                                          (−ei+1
+                                                                             x , ey ).
+                                                                                  i+1
+                                    2    2     2µx                    2µx
+It then follows that
+                 1 i+1          1                 i+2                          (i + 2)2 i+1 2
+                   ∥ū − u∗ ∥2 − ∥ūi − u∗ ∥2 = −         x , ey ), ū − u ⟩ +
+                                                      ⟨(−ei+1  i+1    i   ∗
+                                                                                       ∥e ∥ .                               (33)
+                 2              2                 2µx                            8µ2x
+
+For 1 ≤ i ≤ k, multiplying (31) by i(i + 2)/(4µx ) and the upper bound in (32) by (i + 2)/(2µx ) and adding them,
+we obtain
+                      (i + 2)2                     i(i + 2)
+                                Φ(ũi+1 ) − Φ(u∗ ) −               Φ(ũi ) − Φ(u∗ )
+                                                                                   
+                        4µx                               4µx
+                         i(i + 2)                          i+2
+                       =           Φ(ũi+1 ) − Φ(ũi ) +           Φ(ũi+1 ) − Φ(u∗ )
+                                                                                     
+                           4µx                             2µx
+                         i(i + 2)                                  i+2
+                                       x , ey ), ũ
+                                  ⟨(−ei+1                − ũi ⟩ +            x , ey ), ũ    − u∗ ⟩
+                                             i+1    i+1
+                       ≤                                                  ⟨(−ei+1    i+1  i+1
+                           4µx                                      2µx
+                         i+2
+                       =            x , ey ), (i + 2)ũ
+                               ⟨(−ei+1    i+1            i+1
+                                                              − iũi − 2u∗ ⟩
+                          4µx
+                         (i + 2)2                                  i+2
+                       =               x , ey ), ũ
+                                  ⟨(−ei+1    i+1     i+1
+                                                         − ci ⟩ +             x , ey ), ū − u ⟩,
+                                                                          ⟨(−ei+1    i+1  i    ∗
+                                                                                                              (34)
+                            4µx                                     2µx
+where the inequality follows from (31) and (32) and the last equality follows from (29). Using (22) to bound the
+sum of (33) and (34), we obtain
+
+               (i + 2)2                      1                            (i + 1)2                     1
+                         Φ(ũi+1 ) − Φ(u∗ ) + ∥ūi+1 − u∗ ∥2 −                         Φ(ũi ) − Φ(u∗ ) − ∥ūi − u∗ ∥2
+                 4µx                                2                        4µx                         2
+                  (i + 2)2                                     (i +   2) 2
+                                x , ey ), ũ
+                           ⟨(−ei+1                   − ci ⟩ +
+                                       i+1      i+1
+               ≤                                                           ∥ei+1 ∥2
+                    4µx                                           8µ2x
+                  (i + 2)2                              i+1 i+1 2
+                                                                                                 
+               =              µ x (ũi+1
+                                         − c i
+                                               ) +  (−e     , e     )     − µ 2
+                                                                                ∥ũ i+1
+                                                                                        − c i 2
+                                                                                              ∥
+                    8µ2x                                 x      y             x
+
+                                                               2
+                  (i + 2)2                       ∥ci − u0 ∥          (i + 2)2 i+1
+                                                           
+               ≤             ∥ũi+1 − ci ∥ +                      −             ∥ũ     − c i ∥2
+                     512                          (i + 2)2                8
+                    31(i + 2)2 i+1                    ∥ci − u0 ∥2
+               ≤−              ∥ũ     − ci ∥2 +                   ,                                                        (35)
+                        256                          256(i + 2)2
+
+where the first inequality also uses i(i + 2) ≤ (i + 1)2 and Φ(ũi ) ≥ Φ(u∗ ), the second inequality follows from (22),
+and the last inequality is due to the convexity of | · |2 .
+   At i = 0, multiplying the upper bound in (32) by 1/µx and adding (33), we obtain
+         1                    1                  1                   1                                1
+            Φ(ũ1 ) − Φ(u∗ ) + ∥ū1 − u∗ ∥2 − ∥u0 − u∗ ∥2 ≤             ⟨(−e1x , e1y ), ũ1 − c0 ⟩ + 2 ∥e1 ∥2
+        µx                         2              2                  µx                               2µx
+            1                                                       11                                 31
+                                                                                      
+                                         1 1 2
+        =          µx (ũ1
+                           − c 0
+                                 ) + (−e  , e ) − µ 2
+                                                      ∥ũ 1
+                                                            − c 0 2
+                                                                 ∥   ≤          −   1     ∥ũ1 − c0 ∥2 ≤ − ∥ũ1 − c0 ∥2 ,
+           2µ2x                          x y        x
+                                                                        2 64                              64
+
+where the first inequality follows from ū0 = c0 = u0 and (33), and the second inequality follows from (22) and
+c0 = u0 . Summing this inequality and (35) for i = 1, . . . , k yields (30).
+   The following lemma bounds the accumulated error in (30).
+
+
+                                                                 12
+Lemma 4. Suppose Assumptions 2 and 3 hold. Let u∗ be the unique saddle point of (2), Φ be defined in (4), and
+ūi be defined by (29). Then the sequence generated by Algorithm 1 satisfies ∥ck − u0 ∥ ≤ 3∥u0 − u∗ ∥ and
+                                                                k
+             (k + 2)2                    1                 1 X
+                      Φ(ũk+1 ) − Φ(u∗ ) + ∥ūk+1 − u∗ ∥2 +        (i + 2)2 ∥ũi+1 − ci ∥2 ≤ ∥u0 − u∗ ∥2           (36)
+               4µx                        2                 16 i=0
+
+at every reached iteration k.
+Proof. Fix any reached iteration k. We show by induction that
+                                                            √
+                   ∥ũi − u∗ ∥ ≤ 2∥u0 − u∗ ∥,  ∥ūi − u∗ ∥ ≤ 2∥u0 − u∗ ∥           ∀0 ≤ i ≤ k + 1.                 (37)
+Both bounds hold at i = 0 by definition. Suppose that they hold through some t ≤ k. By (29), one has for 0 ≤ i ≤ t
+that
+                                              i                   2
+                             ∥ci − u0 ∥ =         (ũi − u∗ ) +       (ūi − u∗ ) + (u∗ − u0 )
+                                            i+2                 i+2
+                                         √
+                                   2i + 2 2
+                                                
+                              ≤              + 1 ∥u0 − u∗ ∥ ≤ 3∥u0 − u∗ ∥,                                      (38)
+                                     i+2
+where the first inequality follows from the induction hypothesis. Using this, we obtain
+                                    t                               t
+                                                                                  !
+              1 0               1  X   ∥ci
+                                           − u 0 2
+                                                ∥        1      9  X        1
+                ∥u − u∗ ∥2 +                        ≤      +                        ∥u0 − u∗ ∥2 ≤ ∥u0 − u∗ ∥2 ,
+              2                256 i=0 (i + 2)2          2 256 i=0 (i + 2)2
+                                        Pt
+where the last inequality follows from i=0 (i + 2)−2 ≤ 1. By this, (30), and 31/256 ≥ 1/16, the bound (36) holds
+with k = t. Since all terms on the left are nonnegative, one has
+                                         √                                  4
+                          ∥ūt+1 − u∗ ∥ ≤ 2∥u0 − u∗ ∥,     ∥ũt+1 − ct ∥ ≤     ∥u0 − u∗ ∥.                  (39)
+                                                                           t+2
+In addition, by (10) and (29), we obtain
+                                       t                 2                   1
+                      ∥ũt+1 − u∗ ∥ =    (ũt − u∗ ) +      (ūt+1 − u∗ ) +    (−2rxt+1 , ryt+1 )
+                                     t+2                t+2                 µx
+                                           2                   1                 ∥ct − u0 ∥
+                                                                                             
+                          t
+                      ≤      ∥ũ − u ∥ +
+                                t   ∗
+                                               ∥ū t+1
+                                                       −u ∥+
+                                                         ∗
+                                                                   ∥ũt+1
+                                                                          −c ∥+
+                                                                             t
+                        t+2              t+2                   8                  (t + 2)2
+                              √
+                        2t + 2 2 + 3/4 0
+                      ≤                ∥u − u∗ ∥ ≤ 2∥u0 − u∗ ∥,
+                             t+2
+where the first inequality follows from (22) and (27), and the second follows from (38), (39), the induction hypothesis,
+and t + 2 ≥ 2. This completes the induction and establishes (36). Finally, by (29) and (37), one has
+                                    k                 2
+                    ∥ck − u0 ∥ ≤       ∥ũk − u∗ ∥ +     ∥ūk − u∗ ∥ + ∥u0 − u∗ ∥ ≤ 3∥u0 − u∗ ∥.                   (40)
+                                   k+2               k+2
+Hence, the conclusion follows.
+   We can now establish the point and residual bounds.
+Lemma 5. Suppose Assumptions 2 and 3 hold. Let u∗ be the unique saddle point of (2), and let ek+1 and ũk+1 be
+defined by (8) and (9), respectively, in Algorithm 1. Then, at every reached iteration k, we have
+                                          3      µx 0                       5µx
+                                              r
+                       ∥ũk+1 − u∗ ∥ ≤             ∥u − u∗ ∥,     ∥ek+1 ∥ ≤       ∥u0 − u∗ ∥.             (41)
+                                        k + 2 µy                            k+2
+Proof. Fix any reached iteration k. By the lower bound in (32) and (36), one has
+                      (k + 2)2 µy k+1             (k + 2)2
+                                        − u∗ ∥2 ≤          Φ(ũk+1 ) − Φ(u∗ ) ≤ ∥u0 − u∗ ∥2 .
+                                                                             
+                                  ∥ũ
+                          8µx                       4µx
+                                              √
+The first bound in (41) follows from this and 8 ≤ 3. In addition, we have
+                            ∥ek+1 ∥ ≤ µx (ũk+1 − ck ) + (−ek+1
+                                                             x  , ek+1
+                                                                   y   ) + µx ∥ũk+1 − ck ∥
+                               9µx k+1                 µx
+                             ≤      ∥ũ  − ck ∥ +            ∥ck − u0 ∥
+                                8                 8(k + 2)2
+                                     9          3                         5µx
+                                                      
+                             ≤           +               µx ∥u0 − u∗ ∥ ≤       ∥u0 − u∗ ∥,
+                                 2(k + 2) 8(k + 2)2                      k+2
+where the first inequality follows from the triangle inequality, the second inequality follows from (22), and the third
+inequality follows from (36) and (40). Hence, the second bound in (41) holds.
+
+
+                                                          13
+   We are now ready to prove Theorem 1.
+Proof of Theorem 1. By Lemma 1, each call in step 2 starts at a point in X × Y and terminates with a pair
+satisfying (7). Since the remaining updates are explicit, Algorithm 1 is well-defined at every reached iteration. In
+addition, it follows from Lemma 2 that ek+1 ∈ (F + B)(uk+1 ).
+    Suppose that Algorithm 1 terminates at iteration k. If ek+1p = 0, then the strong monotonicity of F + B yields
+uk+1
+      = u∗ , so (12) holds. Otherwise, by (11), one has 1/9 − 3 µx /µy /(k + 2) > 0. Using this, (9), and (41), we
+obtain
+                                                   1 k+1                         ∥ek+1 ∥
+                     ∥uk+1 − u∗ ∥ = ũk+1 − u∗ +     (ex , 0) ≤ ∥ũk+1 − u∗ ∥ +
+                                                  µx                               µx
+                          3                      1      3
+                                                           r 
+                                µx 0                          µ
+                             r
+                                                               x
+                      ≤            ∥u − u∗ ∥ +     −               ∥uk+1 − u0 ∥
+                        k + 2 µy                 9 k + 2 µy
+                          3                      1      3
+                                                           r 
+                                µx 0                          µx
+                             r
+                                   ∥u − u∗ ∥ +                      ∥uk+1 − u∗ ∥ + ∥u0 − u∗ ∥
+                                                                                             
+                      ≤                            −
+                        k + 2 µy                 9 k + 2 µy
+                        1              1      3
+                                                r 
+                                                    µx
+                      = ∥u0 − u∗ ∥ +     −                ∥uk+1 − u∗ ∥,
+                        9              9 k + 2 µy
+
+where the second inequality follows from (11) and (41). Rearranging, we obtain ∥uk+1 − u∗ ∥ ≤ ∥u0 − u∗ ∥/8. Using
+this and (11), we obtain
+                                µx k+1          µx                           µx 0
+                    ∥ek+1 ∥ ≤      ∥u  − u0 ∥ ≤    ∥uk+1 − u∗ ∥ + ∥u0 − u∗ ∥ ≤   ∥u − u∗ ∥.
+                                 9               9                             8
+Thus (12) holds whenever the algorithm terminates.
+   We next establish the iteration bound. Suppose that it reaches iteration k = ⌈128 µx /µy ⌉ − 1. By (9) and (41),
+                                                                                    p
+
+one has
+
+                                                                  3 µx /µy + 5 0
+                                                                    p
+                                                       ∥ek+1 ∥
+                        ∥u k+1     ∗
+                                − u ∥ ≤ ∥ũk+1
+                                               −u ∥+
+                                                  ∗
+                                                               ≤                 ∥u − u∗ ∥
+                                                         µx            k+2
+                             8 µx /µy                1 0
+                               p
+                         ≤              ∥u0 − u∗ ∥ =    ∥u − u∗ ∥,
+                            128 µx /µy               16
+                                p
+
+
+where the last inequality follows from k + 2 ≥ 128       µx /µy and µx ≥ µy . It then follows that
+                                                     p
+
+                                                                            15 0
+                              ∥uk+1 − u0 ∥ ≥ ∥u0 − u∗ ∥ − ∥uk+1 − u∗ ∥ ≥       ∥u − u∗ ∥.
+                                                                            16
+Using this and the second bound in (41), we obtain
+
+                   5µx              5µx 0                                          1   3
+                                                                                                    
+                                                    µx k+1                                      µx
+                                                                                            r
+       ∥ek+1 ∥ ≤       ∥u0 − u∗ ∥ ≤     ∥u − u∗ ∥ ≤    ∥u  − u0 ∥ ≤ µ x              −                   ∥uk+1 − u0 ∥,
+                   k+2              128             24                             9 k+2        µy
+
+where the last inequality follows from 1/9 − 3 µx /µy /(k + 2) ≥ 1/9 − 3/128 ≥ 1/24. Thus (11) holds, and the
+                                              p
+
+algorithm terminates within ⌈128 µx /µy ⌉ iterations.
+                                  p
+
+   The iteration bound and Lemma 1 yield the explicit evaluation bound in (13). Its leading term 1 accounts for
+the initial evaluation of ∇f and is not needed for proxp or proxq . Since L∇f /µx ≥ 1 and µx /µy ≥ 1, the same
+bound has the stated asymptotic order.
+
+4.2    Proof of the main result in Subsection 2.2
+In this subsection we first prove two lemmas for Algorithm 2 and then prove Theorem 2.
+Lemma 6. Suppose that Assumptions 2 and 3 hold. Let u∗ be the unique saddle point of (2), and let F and B
+be defined in (3). Then Algorithm 2, initialized at u0 , is well-defined at every reached iteration. The pair (u1 , e1 )
+generated in step 1 satisfies e1 ∈ (F + B)(u1 ) and
+                                                                     9 0
+                                       7∥u1 − u∗ ∥ ≤ ∥u1 − u0 ∥ ≤      ∥u − u∗ ∥.                                        (42)
+                                                                     8
+At every reached regularized iteration k ≥ 1, the subproblem in step 3 has a unique saddle point uk∗ . Moreover, uk+1
+and ek+1 , defined in steps 3 and 4, respectively, satisfy uk+1 ∈ X × Y and ek+1 ∈ (F + B)(uk+1 ).
+
+
+
+
+                                                            14
+Proof. By Theorem 1, the preliminary call terminates with u1 ∈ X ×Y, e1 ∈ (F +B)(u1 ), and ∥u1 −u∗ ∥ ≤ ∥u0 −u∗ ∥/8.
+Using this and the triangle inequality, we obtain
+                                                                                          9 0
+                        8∥u1 − u∗ ∥ ≤ ∥u1 − u0 ∥ + ∥u1 − u∗ ∥,             ∥u1 − u0 ∥ ≤     ∥u − u∗ ∥.
+                                                                                          8
+It then follows that (42) holds. If u1 = u0 , this inequality implies u0 = u∗ . By this and (12), one has e1 = 0, and
+hence the algorithm terminates in step 1. Therefore, whenever the regularized loop is reached, ∥u1 − u0 ∥ > 0, and
+the definitions of λ1 and ū1 in step 1 are well-defined with λ1 > 0 and ū1 = u1 .
+    We next show by induction that uk ∈ X × Y, λk > 0, and ūk is well-defined at every reached regularized
+iteration k. These properties hold at k = 1 by step 1. Suppose that they hold at some reached iteration k ≥ 1. By
+Assumption 2 and the definition of fk in step 3, fk has an (L∇f + λk )-Lipschitz gradient and is (µx + λk )-strongly
+convex in x and (µy + λk )-strongly concave in y on X × Y. Hence the regularized problem satisfies Assumption 2
+with the supplied parameters and has a unique saddle point uk∗ . It then follows from Theorem 1 that the call in
+step 3 terminates with uk+1 ∈ X × Y and
+                                        rk+1 ∈ (F + B)(uk+1 ) + λk (uk+1 − ūk ).
+Using this and the definition of ek+1 in step 4, we obtain ek+1 ∈ (F + B)(uk+1 ). If the algorithm does not terminate
+in step 5, then λk+1 = 4λk > 0 and ūk+1 = (ūk + 3uk+1 )/4 are well-defined. Thus the induction hypothesis holds
+at iteration k + 1. Hence the induction is completed and the conclusion of this lemma holds.
+   The next lemma bounds the residual ek+1 defined in step 4 of Algorithm 2.
+Lemma 7. Suppose that Assumptions 2 and 3 hold. Let u∗ be the unique saddle point of (2). For the sequence
+generated by Algorithm 2, let u1 and λ1 be defined in step 1, λk by step 5 for k ≥ 2, and ek+1 by step 4. Then, at
+every reached regularized iteration k ≥ 1, we have
+                                               9
+                                                                    
+                                   ∥e k+1
+                                          ∥≤     λ1 + (µx + 2λk )8−k
+                                                                       ∥u1 − u∗ ∥.                            (43)
+                                               4
+Proof. Fix any reached regularized iteration k ≥ 1. Let ui∗ be the unique saddle point of the subproblem in step 3
+at iteration i, whose existence follows from Lemma 6. By steps 1 and 5 of Algorithm 2, one has ū1 = u1 and
+                        λi = 4i−1 λ1       ∀1 ≤ i ≤ k,                                                                       (44)
+                                       ūi−1 + 3ui
+                        λi ūi = 4λi−1             = λi−1 ūi−1 + (λi − λi−1 )ui            ∀2 ≤ i ≤ k.                      (45)
+                                             4
+By the definition of fi in step 3 and the KKT condition at ui∗ , one has
+                 0 ∈ (F + B)(ui∗ ) − λi (ūi − ui∗ )   ⇒       λi (ūi − ui∗ ) ∈ (F + B)(ui∗ )       ∀1 ≤ i ≤ k.             (46)
+Using ū1 = u1 , 0 ∈ (F + B)(u∗ ), and (46) at i = 1, we obtain
+         0 ≤ 2⟨u1 − u1∗ , u1∗ − u∗ ⟩ = ∥u1 − u∗ ∥2 − ∥u1 − u1∗ ∥2 − ∥u1∗ − u∗ ∥2        ⇒        ∥u1 − u1∗ ∥ ≤ ∥u1 − u∗ ∥,   (47)
+where the first inequality follows from the monotonicity of F + B and λ1 > 0. For 1 ≤ i ≤ k, applying Theorem 1
+to the call in step 3 with initial point ui and strong convexity parameter µx + λi , we obtain
+                                               1 i                              µx + λi i
+                             ∥ui+1 − ui∗ ∥ ≤     ∥u − ui∗ ∥,        ∥ri+1 ∥ ≤          ∥u − ui∗ ∥.                           (48)
+                                               8                                   8
+For 2 ≤ i ≤ k, it follows from (45) and (46) that
+                               (λi − λi−1 )(ui − ui∗ ) ∈ (F + B)(ui∗ ) + λi−1 (ui∗ − ūi−1 ).
+In addition, (46) at i − 1 implies 0 ∈ (F + B)(ui−1
+                                                ∗ ) + λi−1 (u∗
+                                                             i−1
+                                                                 − ūi−1 ). By these inclusions, the monotonicity of
+u 7→ (F + B)(u) + λi−1 (u − ū ), and λi > λi−1 , one has
+                               i−1
+
+
+                       0 ≤ 2⟨ui − ui∗ , ui∗ − ui−1
+                                               ∗ ⟩ = ∥u − u∗ ∥ − ∥u − u∗ ∥ − ∥u∗ − u∗ ∥ .
+                                                       i   i−1 2   i   i 2     i    i−1 2
+
+
+Using this and (48) at i − 1, we obtain
+                                                               1 i−1
+                             ∥ui − ui∗ ∥ ≤ ∥ui − ui−1
+                                                  ∗ ∥≤           ∥u  − ui−1
+                                                                        ∗ ∥           ∀2 ≤ i ≤ k.
+                                                               8
+By (47), the first bound in (49) below holds at i = 1. Suppose that it holds at some i < k. Using the displayed
+inequality at i + 1, we obtain ∥ui+1 − ui+1
+                                        ∗ ∥ ≤ ∥u − u∗ ∥/8 ≤ 8 ∥u − u ∥. Hence the induction is completed.
+                                                   i    i       −i  1     ∗
+
+Using this and (48), we obtain
+                  ∥ui − ui∗ ∥ ≤ 8−(i−1) ∥u1 − u∗ ∥,        ∥ui+1 − ui∗ ∥ ≤ 8−i ∥u1 − u∗ ∥           ∀1 ≤ i ≤ k.              (49)
+
+
+                                                               15
+In addition, by (48) and the first bound in (49), one has
+
+                                       ∥ri+1 ∥ ≤ (µx + λi )8−i ∥u1 − u∗ ∥       ∀1 ≤ i ≤ k.                                     (50)
+
+   We next bound the accumulated regularization term. By (45), one has, for 2 ≤ i ≤ k,
+
+                            λi (ūi − ui∗ ) − λi−1 (ūi−1 − ui−1
+                                                             ∗ ) = λi (u − u∗ ) − λi−1 (u − u∗ ).
+                                                                        i   i            i   i−1
+
+
+Summing this equality over i = 2, . . . , k and using ū1 = u1 , we obtain
+                                                k
+                                                X
+        ∥λk (ūk − uk∗ )∥ = λ1 (u1 − u1∗ ) +           λi (ui − ui∗ ) − λi−1 (ui − ui−1
+                                                                                    ∗ )
+                                                                                           
+                                                i=2
+                              k
+                              X
+         ≤ λ1 ∥u1 − u1∗ ∥ +          λi ∥ui − ui∗ ∥ + λi−1 ∥ui − ui−1
+                                                                      
+                                                                  ∗ ∥
+                               i=2
+                    k
+                                                !                         k
+                                                                                       !
+                    X                                                 5 X −(i−1)                             9
+         ≤   λ1 +         (λi + λi−1 )8−(i−1)       ∥u1 − u∗ ∥ =   1+       2              λ1 ∥u1 − u∗ ∥ ≤     λ1 ∥u1 − u∗ ∥,   (51)
+                    i=2
+                                                                      4 i=2                                  4
+
+where the first inequality follows from the triangle inequality, the second inequality follows from (47) and the two
+bounds in (49) at i and i − 1, respectively, the second equality follows from λi = 4i−1 λ1 , and the last inequality
+             Pk
+follows from i=2 2−(i−1) ≤ 1. The sums are empty when k = 1. Finally, by step 4 of Algorithm 2, one has
+
+                ∥ek+1 ∥ = ∥rk+1 − λk (uk+1 − uk∗ ) + λk (ūk − uk∗ )∥
+                                                                      9
+                                                                                            
+                 ≤ ∥r k+1
+                          ∥ + λk ∥uk+1
+                                       − u∗ ∥ + ∥λk (ū − u∗ )∥ ≤
+                                          k            k    k
+                                                                        λ1 + (µx + 2λk )8 −k
+                                                                                               ∥u1 − u∗ ∥,
+                                                                      4
+where the first inequality follows from the triangle inequality and the second follows from (49), (50), and (51).
+Hence the conclusion of this lemma holds.
+Proof of Theorem 2. Let u∗ be the unique saddle point of (2), and let F and B be defined in (3). By Lemma 6,
+Algorithm 2 is well-defined and ek+1 ∈ (F + B)(uk+1 ) at every reached iteration, including the preliminary output
+at k = 0. By the stopping conditions in steps 1 and 5, its output also satisfies ∥ek+1 ∥ ≤ ϵ whenever the algorithm
+terminates.
+   We next show that the algorithm terminates. Suppose that it does not terminate in step 1. For any reached
+regularized iteration k with λk ≥ µx , using (42), (43), and (44), we obtain
+                                   9                              9 3 −(k−1)
+                                                                             
+                      ∥e k+1
+                             ∥≤      λ1 + 3λk 8−k
+                                                    ∥u − u ∥ =
+                                                      1    ∗
+                                                                    + 2           λ1 ∥u1 − u∗ ∥
+                                   4                              4 8
+                          21                 3                3
+                       ≤     λ1 ∥u1 − u∗ ∥ ≤ λ1 ∥u1 − u0 ∥ ≤ ϵ,
+                           8                 8                8
+where the first inequality also uses λk ≥ µx , the equality follows from λk = 4k−1 λ1 , the second inequality follows
+from k ≥ 1, the third follows from (42), and the last follows from the definition of λ1 in step 1. Thus the stopping
+condition in step 5 holds whenever λk ≥ µx . In addition, every call terminates by Lemma 6, and (44) implies
+λk ≥ µx for all sufficiently large k if the algorithm does not terminate. Hence Algorithm 2 terminates no later than
+the first iteration with λk ≥ µx .
+   We next prove the evaluation bound. For a call of Algorithm 1 with regularization parameter λ ≥ 0, the
+supplied smoothness and curvature parameters are (L∇f + λ, µx + λ, µy + λ). Each evaluation of the gradient of
+the regularized smooth part requires one evaluation of ∇f . By this and (13), the numbers of evaluations of ∇f ,
+proxp , and proxq for this call are bounded, respectively, by
+
+                                                                  L∇f + λ
+                                          129(NA + 256CA + 3) p                 ,                                               (52)
+                                                               (µx + λ)(µy + λ)
+
+where we used ⌈a⌉ ≤ a + 1 and L∇f ≥ µx ≥ µy > 0. The preliminary call corresponds to λ = 0, so (14) holds if the
+algorithm terminates in step 1. Otherwise, let k ≥ 1 be its terminating regularized iteration.
+    By (44), there are at most ⌈(log4 (µy /λ1 ))+ ⌉ iterations with λi < µy . Since µy ≤ L∇f , one has, at each such
+iteration,
+                                                 L∇f + λi            2L∇f
+                                                                  ≤√        .
+                                            (µx + λi )(µy + λi )
+                                          p
+                                                                      µx µy
+For the iterations with µy ≤ λi < µx , we have
+                                                        L∇f + λi           2L∇f
+                                                                          ≤√       ,                                            (53)
+                                                     (µx + λi )(µy + λi )
+                                                p
+                                                                             µx λi
+
+                                                                   16
+where the inequality follows from λi < µx ≤ L∇f , µx + λi ≥ µx , and µy + λi ≥ λi . By (44), the right-hand
+side of (53) decreases by a factor of two at each successive iteration. Its sum over these iterations is at most
+       √
+4L∇f / µx µy , where we used λi ≥ µy at the first such iteration. In addition, the termination argument implies
+that at most one reached iteration satisfies λi ≥ µx . At this iteration, one has
+                                      L∇f + λi            L∇f     L∇f     2L∇f
+                                                        ≤     +1≤     +1≤ √       ,
+                                   (µx + λi )(µy + λi )
+                               p
+                                                           λi      µx       µx µy
+
+where the first inequality follows from (µx + λi )(µy + λi ) ≥ λi , the second follows from λi ≥ µx , and the last
+                                       p
+
+follows from L∇f ≥ µx ≥ µy . Adding the bounds over the three ranges, we obtain
+           k
+                                               &              '        !                                !
+                    L∇f + λi
+                                                                                                 
+           X                                             µy                   L∇f                   µy          L∇f
+                                      ≤    2        log4            +6       √       ≤   8 + 2 log4            √       ,   (54)
+                 (µx + λi )(µy + λi )
+               p
+           i=1
+                                                         λ1    +               µx µy                λ1    +      µx µy
+
+where the second inequality follows from ⌈t⌉ ≤ t + 1. In addition, by step 1 of Algorithm 2 and (42), one has
+
+                                          µy   µy ∥u1 − u0 ∥   9µy ∥u0 − u∗ ∥
+                                             =               ≤                .
+                                          λ1         ϵ               8ϵ
+Using this, (52), and (54), and including the preliminary call, we obtain that the numbers of evaluations of ∇f ,
+proxp , and proxq are bounded, respectively, by
+
+                                                                 9µy ∥u0 − u∗ ∥
+                                                                              
+                                                                                    L∇f
+                          129(NA + 256CA + 3) 9 + 2 log4 1 +                       √
+                                                                       8ϵ            µx µy
+                                                                                0   ∗
+                                                                                    
+                                                   L∇f                    µy ∥u − u ∥
+                           ≤ 211 (NA + 256CA + 3) √        1 + log4 1 +                    ,
+                                                    µx µy                        ϵ
+
+where the first bound follows from (log4 a)+ ≤ log4 (1 + a) for a > 0, and the inequality follows from 1 + 9a/8 ≤
+9(1 + a)/8 for a ≥ 0 and 129(9 + 2 log4 (9/8)) < 211 . Hence (14) holds and the proof is completed.
+
+4.3    Proof of the main result in Subsection 2.3
+In this subsection we provide a proof of Theorem 3. We first establish the residual inclusion and evaluation bound
+for each trial of Algorithm 3.
+Lemma 8. Suppose Assumptions 2 and 3 hold. Let F and B be defined in (3). For any reached trial t of
+Algorithm 3, let (ut , rt ) be the pair generated by the algorithm and let Ut , αt , and νt be defined in step 5. Then any
+output (ũt+1 , et+1 ) of the call in step 6 satisfies et+1 ∈ (F + B)(ũt+1 ). Moreover, if
+
+                                     Ut ≥ L∇f ,         0 < νt ≤ µy ,           νt ≤ αt ≤ µx ,                             (55)
+
+then the trial completes within its evaluation limits and returns a pair satisfying
+
+                                                  ∥et+1 ∥ ≤ max{ϵ, ∥rt ∥/8}.                                               (56)
+
+Proof. Fix any reached trial t. By the stopping tests and updates in Algorithm 3, one has ∥rt ∥ > ϵ > 0. The
+execution requirements on A and the residual corrections in (8) and step 4 of Algorithm 2 imply et+1 ∈ (F +B)(ũt+1 )
+whenever the call returns.
+     Suppose that (55) holds, and let u∗ be the saddle point of (2). Since rt ∈ (F + B)(ut ) and 0 ∈ (F + B)(u∗ ), the
+νt -strong monotonicity of F + B implies νt ∥ut − u∗ ∥ ≤ ∥rt ∥. By Theorem 2 with parameters (Ut , αt , νt ), initial point
+ut , and tolerance max{ϵ, ∥rt ∥/8}, the call in step 6 without evaluation limits terminates with a pair satisfying (56).
+In addition, by (14), its numbers of evaluations of ∇f , proxp , and proxq are bounded, respectively, by
+
+                                                                             νt ∥ut − u∗ ∥
+                                                                                         
+                                                 Ut
+                           211 (NA + 256CA + 3) √          1 + log4 1 +
+                                                  αt νt                    max{ϵ, ∥rt ∥/8}
+                                                      Ut                          Ut
+                            ≤ 211 (NA + 256CA + 3) √         (1 + log4 9) < CeA √       ,
+                                                      α t νt                      αt νt
+
+where the first inequality follows from νt ∥ut − u∗ ∥ ≤ ∥rt ∥ and max{ϵ, ∥rt ∥/8} ≥ ∥rt ∥/8, and the last inequality
+follows from log4 9 < 2 and the definition of CeA in step 6 of Algorithm 3. Thus the call completes within its
+evaluation limits. Hence the conclusion follows.
+
+   We now prove Theorem 3.
+
+
+                                                                   17
+Proof of Theorem 3. Let u∗ be the saddle point of (2). By step 1 of Algorithm 3, one has
+
+          µx ∥d∥2 ≤ ⟨∇x f (u0x + d, u0y ) − ∇x f (u0x , u0y ), d⟩ ≤ ∥∇x f (u0x + d, u0y ) − ∇x f (u0x , u0y )∥∥d∥ = ρ∥d∥2 ,
+
+where the first inequality follows from the µx -strong convexity of f (·, u0y ), the second follows from the Cauchy–
+Schwarz inequality, and the equality follows from the definition of ρ. Since d ̸= 0 and both points belong to X × Y,
+we obtain µx ≤ ρ. Using this, Assumption 2, and the Lipschitz continuity of ∇f , we have 0 < µy ≤ µx ≤ ρ ≤ L∇f .
+   By step 2 and the resolvent identity, one has
+
+                 ρ(u0 − u1 ) − F (u0 ) ∈ B(u1 ),         r1 = ρ(u0 − u1 ) + F (u1 ) − F (u0 ) ∈ (F + B)(u1 ).
+
+Thus u1 ∈ X × Y, and the initialization is well-defined. In addition, one has
+
+                                  ρ∥u0 − u1 ∥2 ≤ ⟨ρ(u0 − u∗ ) + F (u0 ) − F (u∗ ), u0 − u1 ⟩
+                                                 ≤ (ρ + L∇f )∥u0 − u∗ ∥∥u0 − u1 ∥,
+
+where the first inequality follows from ρ(u0 − u1 ) − F (u0 ) ∈ B(u1 ), −F (u∗ ) ∈ B(u∗ ), and the monotonicity of F
+and B, and the second follows from the Cauchy–Schwarz inequality and the Lipschitz continuity of F . Dividing by
+ρ∥u0 − u1 ∥ when it is positive, with the zero case immediate, we obtain ∥u0 − u1 ∥ ≤ (1 + L∇f /ρ)∥u0 − u∗ ∥. Using
+this and the definition of r1 in step 2, we obtain
+
+                                                            (ρ + L∇f )2 0          4L2∇f 0
+                       ∥r1 ∥ ≤ (ρ + L∇f )∥u0 − u1 ∥ ≤                  ∥u − u∗ ∥ ≤      ∥u − u∗ ∥,                            (57)
+                                                                 ρ                  µx
+where the first inequality follows from the triangle inequality and the Lipschitz continuity of F , the second follows
+from ∥u0 − u1 ∥ ≤ (1 + L∇f /ρ)∥u0 − u∗ ∥, and the last follows from µx ≤ ρ ≤ L∇f .
+    The computations in steps 1 and 2 use at most three evaluations of ∇f and one of each proximal mapping. If
+∥r1 ∥ ≤ ϵ, step 3 returns u1 , which is an ϵ-stationary point by Definition 1, and the conclusion follows. Suppose now
+that ∥r1 ∥ > ϵ. The parameters and evaluation limits in every reached trial are positive and finite. By the execution
+requirements on A, each call can therefore be executed up to its limit. Since r1 ∈ (F + B)(u1 ), Lemma 8 and the
+updates in steps 9 and 11 imply rt ∈ (F + B)(ut ) at every reached trial t. Thus Algorithm 3 is well-defined.
+    We next prove finite termination. By steps 9 and 11, an unsuccessful trial advances to the next triple in I, and
+a successful trial keeps the triple unchanged. Let
+                                                                                     
+                                         L∇f                     ρ                      ρ
+                             i∗ = log2          ,    j∗ = log2       ,     k∗ = log2        .
+                                          ρ                     µx                     µy
+
+By µy ≤ µx ≤ ρ ≤ L∇f and the definition of the ceiling function, one has i∗ ≥ 0, 0 ≤ j∗ ≤ k∗ , and
+
+                                        ρ2i∗ ≥ L∇f ,       ρ2−j∗ ≤ µx ,        ρ2−k∗ ≤ µy .
+
+It follows that (i∗ , j∗ , k∗ ) ∈ I and the corresponding parameters satisfy (55). By Lemma 8, every trial with this
+triple either terminates in step 7 or passes the acceptance test in step 8. Hence no later triple is reached. Let
+q∗ = 2i∗ + j∗ + k∗ . Using the definitions of i∗ , j∗ , and k∗ and ⌈a⌉ ≤ a + 1, we obtain
+
+                                                                                               4L∇f
+                                                                           
+                              L∇f         ρ         ρ                 L∇f
+              q∗ ≤ 2 log2          + log2    + log2    + 4 = 2 log2 √         + 4 ⇒ 2q∗ /2 ≤ √        .         (58)
+                                ρ         µx        µy                µx µy                     µx µy
+
+Suppose that s successful trials precede a reached trial t. By the stopping and acceptance tests in steps 7 and 8
+and the updates in steps 9 and 11, one has ϵ < ∥rt ∥ ≤ 2−s ∥r1 ∥ and hence s < log2 (∥r1 ∥/ϵ). Thus there are at most
+⌈log2 (∥r1 ∥/ϵ)⌉ successful trials, including the terminating trial. In addition, each unsuccessful trial advances to a
+new triple, and there are finitely many triples up to (i∗ , j∗ , k∗ ) in I. By these and the fact that no later triple is
+reached, Algorithm 3 terminates in finitely many trials. By Lemma 8, the stopping test in step 7, and Definition 1,
+the returned point is an ϵ-stationary point of (2).
+    It remains to establish the evaluation bound. For a fixed level q, the indices satisfy 2i + j + k = q and 0 ≤ j ≤ k.
+For every 0 ≤ i ≤ ⌊q/2⌋, there are ⌊q/2⌋ − i + 1 choices of j, and each determines k = q − 2i − j. Thus the number
+of triples at level q satisfies
+                                ⌊q/2⌋
+                                 X                         (⌊q/2⌋ + 1)(⌊q/2⌋ + 2)
+                                       (⌊q/2⌋ − i + 1) =                          ≤ (q + 2)2 .                                (59)
+                                 i=0
+                                                                     2
+                                                                  √
+By step 5, every trial t at level q has 2it + jt + kt = q and Ut / αt νt = 2q/2 . Using this, q ≥ 0, and the evaluation
+limit in step 6, we obtain that the numbers of evaluations of ∇f , proxp , and proxq in that trial are bounded,
+respectively, by (CeA + 1)2q/2 . Since there is at most one unsuccessful trial at each triple, (59) bounds the number
+
+
+                                                                 18
+of unsuccessful trials at level q. In addition, each successful trial has level at most q∗ , and there are at most
+⌈log2 (∥r1 ∥/ϵ)⌉ such trials. Combining these bounds and the initialization cost, we obtain that the total numbers of
+evaluations of ∇f , proxp , and proxq are bounded, respectively, by
+                           q∗
+                                                                   !
+                                                      1
+                                                         
+                           X                       ∥r   ∥
+           3 + (CeA + 1)      (q + 2)2 2q/2 + log2          2q∗ /2
+                          q=0
+                                                     ϵ
+                                         √                       ∥r1 ∥
+                                                                     
+            ≤ 3 + (CA + 1)2
+                    e       q∗ /2
+                                    (2 + 2)(q∗ + 2) + log2
+                                                   2
+                                                                   ϵ
+                                                                                   4L2∇f ∥u0 − u∗ ∥
+                                                                        2 &                        !'!
+                                            √
+                                                
+                              L ∇f                          L∇f
+            ≤ 3 + 4(CeA + 1) √          (2 + 2) 2 log2 √            + 6 + log2 1 +                      ,
+                               µx µy                        µx µy                        µx ϵ
+
+where the termP3 accounts for the evaluations
+                                      √       in steps 1 and 2, the first inequality follows from (q + 2)2 ≤ (q∗ + 2)2
+                 q∗
+for q ≤ q∗ and q=0  2−(q∗ −q)/2 ≤ 2 + 2, and the last inequality follows from (57), (58), and the monotonicity of
+the logarithm and ceiling functions. Hence (15) holds, and the conclusion follows.
+
+
+4.4    Proof of the main result in Subsections 3.1 and 3.2
+.
+    In this subsection we first establish four lemmas and then prove Theorems 4 and 5. Accepted trials are defined
+before Algorithm 4. In particular, an accepted trial updates the primal center, inner initial point, and stored
+residual in step 7 without terminating or changing the smoothness estimate. For µ > 0, define
+                                                                   µ
+                                           Hµ (x, y) = H(x, y) −     ∥y − y 0 ∥2 .                                     (60)
+                                                                   2
+By Assumption 1(i)–(iii), the maxima of H(x, ·) and Hµ (x, ·) are finite and attained for every x ∈ X .
+Lemma 9. Suppose that Assumption 1 holds. For the sequence generated by Algorithm 4, let τt be defined in step 4.
+Then the algorithm is well-defined at every reached trial t, and its call in step 4 returns or is interrupted after
+finitely many evaluations. If the call returns, the returned point is a τt -stationary point of the subproblem in step 4.
+
+Proof. We prove by induction that, at the beginning of every reached trial t, one has xt ∈ X , (x̂, ŷ) ∈ X × Y, and
+
+                                               ∇x ht (x̂, ŷ)
+                                                             
+                                        rt ∈                    + B(x̂, ŷ),                                     (61)
+                                               −∇y ht (x̂, ŷ)
+
+where (x̂, ŷ) denotes the inner initial point at that trial. By step 2 and the resolvent identity,
+
+                                       β1 (x0 , y 0 ) − (x̂, ŷ) − A(x0 , y 0 ) ∈ B(x̂, ŷ).
+                                                                
+
+
+Together with x1 = x0 , (16), and the definition of r1 in step 2, this proves the induction hypothesis at t = 1.
+   Suppose that the hypothesis holds at a reached trial t. By the parameter updates, 0 < µ ≤ ϵ/32 ≤ βt and τt > 0.
+Thus the bound in (17) is finite. The execution requirements on A ensure that the call in step 4 is well-defined and
+returns or is interrupted within this bound. If it returns, its residual corrections and stopping tests imply that
+∥et+1 ∥ ≤ τt and, before any reset in step 7,
+
+                                              ∇x ht (xt+1 , y t+1 )
+                                                                   
+                                   e t+1
+                                         ∈                            + B(xt+1 , y t+1 ).                        (62)
+                                             −∇y ht (xt+1 , y t+1 )
+
+Hence (xt+1 , y t+1 ) ∈ X × Y is a τt -stationary point of the subproblem in step 4.
+    If the trial is accepted, the center changes to xt+1 and the inner initial point changes to (xt+1 , y t+1 ). Subtracting
+ 2βt (x     − x ), 0 from (62) proves (61) at trial t + 1. Ifstep 7 rejects the trial, the center and inner initial point
+        t+1     t
+                     
+
+are retained, while βt+1 = 2βt . Adding 2βt (x̂ − xt ), 0 to (61) proves the same inclusion at trial t + 1. The
+feasibility statements are also preserved. This completes the induction and proves the conclusion.
+
+    The next two lemmas bound the decrease at an accepted trial and its sum within a run, respectively.
+Lemma 10. Suppose Assumptions 1 and 3 hold. For the sequence generated by Algorithm 4, let µ and τt be defined
+in steps 1 and 4, respectively, and let Hµ be defined in (60). Then, at every accepted trial t, one has
+
+                                                                                         ϵ2
+                             max Hµ (xt , y) − max Hµ (xt+1 , y) ≥ βt ∥xt+1 − xt ∥2 >        .                         (63)
+                                y                y                                      16βt
+
+
+                                                            19
+Proof. Fix any accepted trial t. By Lemma 9 and step 6 of Algorithm 4, one has ∥et+1 ∥ ≤ τt and ∥xt+1 −xt ∥ > ϵ/(4βt ).
+By (62), et+1
+          y   ∈ ∂(−Hµ (xt+1 , ·))(y t+1 ). Using this and the µ-strong convexity of −Hµ (xt+1 , ·), we obtain that for
+every y ∈ Y,
+                                                                                µ
+                         Hµ (xt+1 , y) ≤ Hµ (xt+1 , y t+1 ) − ⟨et+1
+                                                                y ,y − y
+                                                                         t+1
+                                                                             ⟩ − ∥y − y t+1 ∥2
+                                                                                2
+                                                                 t+1 2
+                                                              ∥e y  ∥
+                                       ≤ Hµ (xt+1 , y t+1 ) +          .
+                                                                 2µ
+Taking the maximum over y and using the convexity of p and (62), we obtain
+         max Hµ (xt , y) − max Hµ (xt+1 , y)
+           y                     y
+
+                                                                         ∥et+1
+                                                                           y ∥
+                                                                               2
+         ≥ h(xt , y t+1 ) − h(xt+1 , y t+1 ) + p(xt ) − p(xt+1 ) −
+                                                                           2µ
+                                                                                                              ∥et+1
+                                                                                                                y ∥
+                                                                                                                    2
+         ≥ h(xt , y t+1 ) − h(xt+1 , y t+1 ) + ⟨∇x h(xt+1 , y t+1 ) − et+1
+                                                                       x ,x
+                                                                           t+1
+                                                                               − xt ⟩ + 2βt ∥xt+1 − xt ∥2 −
+                                                                                                                2µ
+           3βt t+1                              τ2
+         ≥     ∥x   − xt ∥2 − τt ∥xt+1 − xt ∥ − t
+            2                                   2µ
+             3    1    1                                            ϵ2
+                         
+         >     −    −        βt ∥xt+1 − xt ∥2 ≥ βt ∥xt+1 − xt ∥2 >      ,
+             2 16 512                                              16βt
+where the third inequality follows from (18) and ∥et+1 ∥ ≤ τt , and the fourth follows from τt ≤ ϵ/64, τt2 /(2µ) =
+ϵ2 /(8192βt ), and ∥xt+1 − xt ∥ > ϵ/(4βt ). Hence, (63) holds.
+Lemma 11. Suppose Assumptions 1 and 3 hold. For the sequence generated by Algorithm 4, let T be the set of
+accepted trials up to any reached trial. Then
+                                          X                           ϵDy
+                                              βt ∥xt+1 − xt ∥2 ≤ ∆0 +     ,                           (64)
+                                                                       8
+                                                 t∈T
+
+where ∆0 is defined in Theorem 4 and Dy is given in Assumption 1(ii). Moreover, any consecutive trials with fixed
+βt contain at most 1 + 16βt (∆0 + ϵDy /8)/ϵ2 calls to Algorithm 2.
+Proof. Fix any accepted trial t. By (62), one has
+                                      et+1
+                                       y   − µ(y t+1 − y 0 ) ∈ ∂q(y t+1 ) − ∇y h(xt+1 , y t+1 ).
+By Lemma 9 and steps 1, 4, and 5 of Algorithm 4, ∥et+1 ∥ ≤ τt , µ ≤ βt , and ∥y t+1 − y 0 ∥ ≤ D. Thus
+                                                                                   3ϵ
+                                                                    r
+                                                                  ϵ   µ      ϵ
+                             t+1
+                           ∥ey − µ(y  t+1
+                                          − y )∥ ≤ τt + µD =
+                                             0
+                                                                          +    ≤      .
+                                                                 64 βt      32     64
+By the convexity of q − h(xt+1 , ·), one has
+                         H(xt+1 , y) ≤ H(xt+1 , y t+1 ) + ⟨µ(y t+1 − y 0 ) − et+1
+                                                                              y ,y − y
+                                                                                       t+1
+                                                                                           ⟩,      ∀y ∈ Y.
+Using these inequalities and ∥y − y t+1 ∥ ≤ 2Dy from Assumption 1(ii), we obtain
+                                                      3ϵDy
+                          max H(xt+1 , y) ≤ H(xt+1 , y t+1 ) +
+                            y                           32
+                                            µ t+1          3ϵDy                       ϵDy
+                          ≤ max Hµ (x , y) + ∥y
+                                     t+1
+                                                  −y ∥ +
+                                                    0 2
+                                                                ≤ max Hµ (xt+1 , y) +     ,                             (65)
+                             y              2               32     y                   8
+where the second inequality follows from (60), and the last follows from µ∥y t+1 − y 0 ∥2 /2 ≤ µDDy = ϵDy /32, by
+the radius test and Assumption 1(ii).
+   If T = ∅, (64) follows from ∆0 ≥ 0. Suppose now that T ̸= ∅, and let a = max T . Since µ is fixed, x1 = x0 ,
+and step 7 implies xk+1 = xk at every rejected trial, summing (63) over t ∈ T yields
+               X
+                  βt ∥xt+1 − xt ∥2 ≤ max Hµ (x0 , y) − max Hµ (xa+1 , y)
+                                             y                  y
+               t∈T
+                                                             ϵDy                         ϵDy        ϵDy
+               ≤ max H(x0 , y) − max H(xa+1 , y) +               ≤ max H(x0 , y) − H ∗ +     = ∆0 +     ,
+                     y                   y                    8     y                     8          8
+where the second inequality follows from Hµ ≤ H and (65), and the last inequality and equality follow from the
+definitions of H ∗ and ∆0 , respectively. Hence, (64) holds.
+    By Lemma 10 and (64), the number of accepted trials with fixed βt is at most 16βt (∆0 + ϵDy /8)/ϵ2 . Any other
+trial either terminates the run or doubles βt . Thus consecutive trials with fixed βt contain at most one additional
+trial, which proves the remaining conclusion.
+
+
+                                                                    20
+Lemma 12. Suppose Assumptions 1 and 3 hold, and 0 < ϵ < 32L∇h . Let Algorithm 4 be run with 1 ≤ D ≤ 4Dy .
+Then the algorithm terminates with an ϵ-stationary point of (1) or with failure, and failure occurs only if D < 2Dy .
+Proof. Fix any reached trial t with βt ≥ L∇h . By Assumption 1(iii), (16), and µ ≤ βt , the subproblem in step 4 is
+βt -strongly convex in x and µ-strongly concave in y, and ∇ht is 3βt -Lipschitz continuous. Let (xt∗ , y∗t ) be its unique
+saddle point and (x̂, ŷ) its initial point. By (61), strong monotonicity, one has
+                                                                                                  !1/2
+                                                                              ∥rxt ∥2   ∥ryt ∥2                                            1/2
+    βt ∥x̂ − xt∗ ∥2 + µ∥ŷ − y∗t ∥2 ≤ ⟨rt , (x̂, ŷ) − (xt∗ , y∗t )⟩ ≤                +                  βt ∥x̂ − xt∗ ∥2 + µ∥ŷ − y∗t ∥2          .
+                                                                                βt        µ
+
+Using this, µ ≤ βt , and τt = (ϵ/64) µ/βt , we obtain
+                                    p
+
+                                                                                s
+                                          µ                              64                    βt t 2
+                                             ∥(x̂, ŷ) − (xt∗ , y∗t )∥ ≤           ∥rxt ∥2 +     ∥r ∥ .
+                                          τt                              ϵ                    µ y
+
+By Theorem 2 with (L∇f , µx , µy ) = (3βt , βt , µ) and 3 · 211 (NA + 256CA + 3) ≤ CeA , the call finishes within the
+limit (17). In addition, the L∇h -weak convexity of h(·, y t+1 ) implies
+                                                                                    βt t+1            βt − L∇h t+1
+   h(xt , y t+1 ) − h(xt+1 , y t+1 ) + ⟨∇x h(xt+1 , y t+1 ), xt+1 − xt ⟩ +            ∥x   − x t ∥2 ≥         ∥x   − xt ∥2 ≥ 0.
+                                                                                    2                     2
+Thus (18) holds, so the trial either terminates the run or is accepted. Since β1 = ϵ/32 < L∇h , step 7 can double βt
+only when βt < L∇h . Together with µ = ϵ/(32D) and 1 ≤ D ≤ 4Dy , this implies
+                                                  ϵ               ϵ
+                                                      ≤ µ ≤ β1 =    ≤ βt < 2L∇h .                                                                     (66)
+                                                128Dy            32
+
+By (66), only finitely many rejected trials occur. Lemmas 9 and 11 ensure that each call is finite and that only
+finitely many consecutive trials retain the same βt . Hence the run terminates.
+    If the run returns a point in step 6, then (16) and (62) imply
+
+                            et+1 − 2βt (xt+1 − xt ), µ(y t+1 − y 0 ) ∈ (A + B)(xt+1 , y t+1 ).
+                                                                    
+
+By Lemma 9 and steps 5 and 6, the norm of this residual is at most
+                                                                                             ϵ  ϵ  ϵ   35ϵ
+    ∥et+1 − 2βt (xt+1 − xt ), µ(y t+1 − y 0 ) ∥ ≤ τt + 2βt ∥xt+1 − xt ∥ + µ∥y t+1 − y 0 ∥ ≤    + +   =
+                                             
+                                                                                                           < ϵ.
+                                                                                            64 2 32    64
+Thus the returned point is an ϵ-stationary point of (1) by Definition 1. If the run returns failure in step 5,
+Assumption 1(ii) and Lemma 9 imply D < ∥y t+1 − y 0 ∥ ≤ 2Dy .
+
+
+Proof of Theorem 4. We first bound the numbers of evaluations in a run of Algorithm 4 with any 1 ≤ D ≤ 4Dy .
+By Lemma 12, the run terminates.
+   The tests in steps 5–7 require at most two evaluations of h and one additional evaluation of ∇h. By (17),
+βs ≥ µ, and CeA ≥ 3, the numbers of evaluations of h, ∇h, proxp , and proxq at every trial s, including its tests, are
+bounded, respectively, by          s                       s                   !!
+                                     β s                64            β s
+                              2CeA        1 + log4 1 +       ∥rxs ∥2 + ∥rys ∥2    .                               (67)
+                                      µ                  ϵ             µ
+Fix a maximal group of consecutive trials with the same βt , and let t be its first index. We first bound the logarithm
+in (67) at trial t.
+    Suppose no trial before t has been accepted. Then xt = x0 and (x̂, ŷ) is the point computed in step 2. Its
+optimality condition and the convexity of p imply
+
+                                     p(x̂) − p(x0 ) ≤ −⟨∇x h(x0 , y 0 ), x̂ − x0 ⟩ − β1 ∥x̂ − x0 ∥2 .
+
+Using this, 0 < β1 /L∇h < 1, the convexity of p, and the Lipschitz continuity of ∇h, we obtain that for every y ∈ Y,
+
+                                                                                                         β12
+                                
+                 β1                                 β1
+      H x + 0
+                     (x̂ − x ), y ≤ H(x0 , y) +
+                            0
+                                                            ⟨∇x h(x0 , y), x̂ − x0 ⟩ + p(x̂) − p(x0 ) +      ∥x̂ − x0 ∥2
+                                                                                                     
+                L∇h                               L∇h                                                   2L∇h
+                       β1                                                β12
+       ≤ H(x0 , y) +       ⟨∇x h(x0 , y) − ∇x h(x0 , y 0 ), x̂ − x0 ⟩ −        ∥x̂ − x0 ∥2
+                      L∇h                                               2L∇h
+                                           β12
+       ≤ H(x0 , y) + 2β1 Dy ∥x̂ − x0 ∥ −        ∥x̂ − x0 ∥2 ,
+                                          2L∇h
+
+                                                                         21
+where the last inequality follows from ∥y − y 0 ∥ ≤ 2Dy by Assumption 1(ii). Taking the maximum over y and using
+the definitions of H ∗ and ∆0 , we obtain
+                                           β12
+                                               ∥x̂ − x0 ∥2 − 2β1 Dy ∥x̂ − x0 ∥ ≤ ∆0 .
+                                          2L∇h
+Solving this quadratic inequality and using ∥ŷ − y 0 ∥ ≤ 2Dy yields
+                                                                                        √
+                                                  q
+                                         2L∇h Dy + 4L2∇h Dy2 + 2L∇h ∆0         4L∇h Dy + 2L∇h ∆0
+        ∥(x̂, ŷ) − (x0 , y 0 )∥ ≤ 2Dy +                               ≤ 2Dy +                   .
+                                                       β1                              β1
+Moreover, steps 2 and 7 imply
+                          rt = A(x̂, ŷ) − A(x0 , y 0 ) + (2βt − β1 )(x̂ − x0 ), (µ − β1 )(ŷ − y 0 ) .
+                                                                                                     
+
+By (66), ∥rt ∥ ≤ (L∇h + 2βt )∥(x̂, ŷ) − (x0 , y 0 )∥ ≤ 5L∇h ∥(x̂, ŷ) − (x0 , y 0 )∥. Combining these inequalities, we obtain
+                       s                                    s                            √
+                    64                              320L                     4L∇h Dy + 2L∇h ∆0
+                                                                                                    
+                                    β t                  ∇h   βt
+                         ∥rxt ∥2 + ∥ryt ∥2 ≤                        2Dy +                             .                   (68)
+                     ϵ               µ                 ϵ      µ                          β1
+
+    Suppose now that a trial before t has been accepted, and let i < t be the last such trial. Then (x̂, ŷ) =
+(xi+1 , y i+1 ) and xt = xi+1 . The
+                                  residual correction in every p intervening rejected trial is zero, so step 7 implies
+rt = ei+1 − 2βi (xi+1 − xi ), 0 . Using this, ∥ei+1 ∥ ≤ (ϵ/64) µ/βi , (64), and (66), we obtain
+                 s                   s                             s              s
+              64                              128β                    2L      128
+                                                                                                       
+                           β t          β t        i                     ∇h                        ϵDy
+                   ∥rx ∥ + ∥ry ∥ ≤
+                     t  2       t 2         +        ∥x i+1   i
+                                                            −x ∥≤           +        2L∇h ∆0 +            .
+               ϵ           µ            βi      ϵ                      β1       ϵ                    8
+
+Using this, (66), (68), and Dy ≥ 1, we obtain in both cases
+                                        s                     !
+                                     64               βt t 2
+                       1 + log4 1 +        ∥rx ∥ + ∥ry ∥
+                                             t   2
+                                      ϵ               µ
+                                                                  5/2 !
+                                               L∇h ∆0
+                                        
+                                                           L∇h Dy
+                        ≤ 1 + log4 220
+                                          1+             +
+                                                   ϵ2         ϵ
+                                5           L∇h ∆0                       2L∇h ∆0   2L∇h Dy
+                                                               
+                                                         L∇h Dy
+                        = 11 + log4 1 +                +          ≤ 11 +         +         ,                             (69)
+                                2               ϵ2          ϵ              ϵ2         ϵ
+where the last inequality follows from log(1 + v) ≤ v for v ≥ 0. Combining (67) and (69), we obtain that the
+numbers of evaluations at trial t are bounded, respectively, by
+                                          s 
+                                                     2L∇h ∆0      2L∇h Dy
+                                                                          
+                                           βt
+                                      2CA
+                                       e        11 +            +           .                           (70)
+                                            µ            ϵ2          ϵ
+    Every later trial s in this group follows an accepted trial s − 1 with the same parameters. By step 7 and
+∥es ∥ ≤ τt , one has                 s
+                                     64                βt s 2        128βt s
+                                           ∥rxs ∥2 +     ∥ry ∥ ≤ 1 +      ∥x − xs−1 ∥.
+                                      ϵ                µ               ϵ
+By (63), βt ∥xs − xs−1 ∥/ϵ > 1/4. Using this, (67), and 1 + log4 (2 + 128v) ≤ 64v 2 for v ≥ 1/4, we obtain that the
+numbers of evaluations at trial s are bounded, respectively, by
+                                                  s
+                                                     βt βt2 ∥xs − xs−1 ∥2
+                                           128CeA                         .                                    (71)
+                                                     µ          ϵ2
+
+Each such trial follows a distinct accepted trial. By (64), (66), (70), and (71), summing the trial bounds yields the
+following respective bounds for the numbers of evaluations of h, ∇h, proxp , and proxq in this group:
+                   s                                              s 
+                                260L    ∆     36L                              L∇h ∆0
+                                                                                               
+                      β t             ∇h 0           D
+                                                   ∇h y               βt                L∇h Dy
+               CA
+                e         22 +             +               ≤ 2 CA
+                                                               9e
+                                                                          1+          +            .             (72)
+                      µ              ϵ2            ϵ                  µ           ϵ2       ϵ
+    Let s1 < · · · < sJ be the first indices of these groups. By step 7, βsj+1 = 2βsj for every 1 ≤ j < J. Using
+this, (66), and µ = ϵ/(32D), we obtain
+                        s        s                              s
+                     J                   J                                          r
+                    X     βs j     βsJ X −(J−j)/2           √     2L∇h          √      L∇h D
+                               =           2          ≤ (2 + 2)         = 8(2 + 2)           .
+                    j=1
+                           µ        µ j=1                           µ                     ϵ
+
+
+                                                               22
+Summing (72) and adding the two gradient evaluations and one evaluation of each proximal mapping in step 2, we
+obtain that the numbers of evaluations of h, ∇h, proxp , and proxq in the run are bounded, respectively, by
+                                                     r
+                                         √                           L∇h ∆0
+                                                                                    
+                                                         L∇h D                L∇h Dy
+                            2 + 2 (2 +
+                                 12
+                                             2)CeA                1+        +          .                   (73)
+                                                           ϵ           ϵ2       ϵ
+
+With D = 2Dy , Lemma 12 excludes failure, so Algorithm 4 returns an ϵ-stationary point of (1). Since Dy ≥ 1 and
+ϵ < 32L∇h , (73) implies (19). Hence the conclusion follows.
+Proof of Theorem 5. We first prove by induction that every reached phase k satisfies Dk ≤ 4Dy and its call to
+Algorithm 4 terminates. Since D1 = 1 ≤ Dy , the claim holds for k = 1 by Lemma 12. Suppose it holds at a
+reached phase k. If phase k + 1 is reached, the call at phase k returned failure. By Lemma 12, Dk < 2Dy and
+hence Dk+1 = 2Dk < 4Dy . Applying the same lemma at phase k + 1 proves the induction claim.
+   Since Dk = 2k−1 and Lemma 12 excludes failure when Dk ≥ 2Dy , only finitely many phases are reached. Let K
+be the last phase. By Lemma 12, its output is an ϵ-stationary point of (1). Moreover, DK ≤ 4Dy , so
+                     K p        K
+                     X      p   X                 √ p          √ p
+                        Dk = DK   2−(K−k)/2 ≤ (2 + 2) DK ≤ (2 + 2) 4Dy .
+                     k=1                 k=1
+
+Every phase starts from (x0 , y 0 ) with the same tolerance, so ∆0 is unchanged. Since Dk ≥ 1 and ϵ < 32L∇h ,
+summing (73) with D = Dk and using the last inequality yields (20), including the initialization in every phase.
+Hence the conclusion follows.
+
+
+
+
+                                                             23
+References
+ [1] H. Namkoong and J. C. Duchi. Stochastic gradient methods for distributionally robust optimization with
+     f -divergences. Advances in Neural Information Processing Systems, 29:2208–2216, 2016.
+ [2] J. C. Duchi and H. Namkoong. Learning models with uniform performance via distributionally robust
+     optimization. The Annals of Statistics, 49(3):1378–1406, 2021.
+ [3] H. Rafique, M. Liu, Q. Lin, and T. Yang. Weakly-convex–concave min–max optimization: provable algorithms
+     and applications in machine learning. Optimization Methods and Software, 37(3):1087–1121, 2022.
+ [4] Y. Ying, L. Wen, and S. Lyu. Stochastic online AUC maximization. Advances in Neural Information Processing
+     Systems, 29:451–459, 2016.
+ [5] Z. Lu and S. Mei. A first-order augmented Lagrangian method for constrained minimax optimization. Mathe-
+     matical Programming, 213:1063–1104, 2025.
+ [6] R. T. Rockafellar. Monotone operators and the proximal point algorithm. SIAM Journal on Control and
+     Optimization, 14(5):877–898, 1976.
+ [7] P. Tseng. A modified forward-backward splitting method for maximal monotone mappings. SIAM Journal on
+     Control and Optimization, 38(2):431–446, 2000.
+ [8] A. Nemirovski. Prox-method with rate of convergence O(1/t) for variational inequalities with Lipschitz contin-
+     uous monotone operators and smooth convex-concave saddle point problems. SIAM Journal on Optimization,
+     15(1):229–251, 2004.
+ [9] Y. Malitsky and M. K. Tam. A forward-backward splitting method for monotone inclusions without cocoercivity.
+     SIAM Journal on Optimization, 30(2):1451–1472, 2020.
+[10] A. Mokhtari, A. Ozdaglar, and S. Pattathil. A unified analysis of extra-gradient and optimistic gradient methods
+     for saddle point problems: proximal point approach. In International Conference on Artificial Intelligence and
+     Statistics, pages 1497–1507, 2020.
+[11] Z. Lu and S. Mei. Primal-dual extrapolation methods for monotone inclusions under local Lipschitz continuity.
+     Mathematics of Operations Research, 50(4):2577–2599, 2025.
+[12] J. Diakonikolas. Halpern iteration for near-optimal and parameter-free monotone inclusion and strong solutions
+     to variational inequalities. In Conference on Learning Theory, pages 1428–1451, 2020.
+[13] T. Yoon and E. K. Ryu. Accelerated algorithms for smooth convex-concave minimax problems with O(1/k 2 )
+     rate on squared gradient norm. In International Conference on Machine Learning, pages 12098–12109, 2021.
+[14] Y. Cai and W. Zheng. Accelerated single-call methods for constrained min-max optimization. International
+     Conference on Learning Representations, 2023.
+[15] T. Yoon and E. K. Ryu. Accelerated minimax algorithms flock together. SIAM Journal on Optimization,
+     35(1):180–209, 2025.
+[16] T. Lin, C. Jin, and M. I. Jordan. Near-optimal algorithms for minimax optimization. In Conference on Learning
+     Theory, pages 2738–2779, 2020.
+[17] Y. Wang and J. Li. Improved algorithms for convex-concave minimax optimization. Advances in Neural
+     Information Processing Systems, 33:4800–4810, 2020.
+[18] Y. Jin, A. Sidford, and K. Tian. Sharper rates for separable minimax and finite sum optimization via primal-dual
+     extragradient methods. In Conference on Learning Theory, pages 4362–4415, 2022.
+[19] D. Kovalev and A. Gasnikov. The first optimal algorithm for smooth and strongly-convex-strongly-concave
+     minimax optimization. Advances in Neural Information Processing Systems, 35:14691–14703, 2022.
+[20] J. Zhang, M. Hong, and S. Zhang. On lower iteration complexity bounds for the convex concave saddle point
+     problems. Mathematical Programming, 194:901–935, 2022.
+[21] O. Güler. New proximal point algorithms for convex minimization. SIAM Journal on Optimization, 2(4):649–664,
+     1992.
+[22] R. D. C. Monteiro and B. F. Svaiter. An accelerated hybrid proximal extragradient method for convex
+     optimization and its implications to second-order methods. SIAM Journal on Optimization, 23(2):1092–1125,
+     2013.
+
+
+                                                         24
+[23] H. Lin, J. Mairal, and Z. Harchaoui. Catalyst acceleration for first-order convex optimization: from theory to
+     practice. Journal of Machine Learning Research, 18(212):1–54, 2018.
+[24] M. V. Solodov and B. F. Svaiter. A hybrid approximate extragradient–proximal point algorithm using the
+     enlargement of a maximal monotone operator. Set-Valued Analysis, 7:323–345, 1999.
+[25] Y. Bello-Cruz, M. L. N. Gonçalves, and N. Krislock. On inexact accelerated proximal gradient methods with
+     relative error rules. arXiv:2005.03766, 2020.
+[26] M. Barré, A. Taylor, and F. Bach. A note on approximate accelerated forward-backward methods with absolute
+     and relative errors, and possibly strongly convex objectives. Open Journal of Mathematical Optimization, 3,
+     article 1:1–15, 2022. https://doi.org/10.5802/ojmo.12.
+[27] Z. Allen-Zhu. How to make the gradients small stochastically: even faster convex and nonconvex SGD. Advances
+     in Neural Information Processing Systems, 31:1157–1167, 2018.
+[28] G. Lan, Y. Ouyang, and Z. Zhang. Optimal and parameter-free gradient minimization methods for convex and
+     nonconvex optimization. arXiv:2310.12139, version 3, 2024.
+[29] M. Nouiehed, M. Sanjabi, T. Huang, J. D. Lee, and M. Razaviyayn. Solving a class of non-convex min-max
+     games using iterative first order methods. Advances in Neural Information Processing Systems, 32, 2019.
+[30] T. Lin, C. Jin, and M. I. Jordan. On gradient descent ascent for nonconvex-concave minimax problems. In
+     International Conference on Machine Learning, pages 6083–6093, 2020.
+[31] K. K. Thekumparampil, P. Jain, P. Netrapalli, and S. Oh. Efficient algorithms for smooth minimax optimization.
+     Advances in Neural Information Processing Systems, 32, 2019.
+[32] W. Kong and R. D. C. Monteiro. An accelerated inexact proximal point method for solving nonconvex–concave
+     min–max problems. SIAM Journal on Optimization, 31(4):2558–2585, 2021.
+[33] D. M. Ostrovskii, A. Lowy, and M. Razaviyayn. Efficient search of first-order Nash equilibria in nonconvex-
+     concave smooth min-max problems. SIAM Journal on Optimization, 31(4):2508–2538, 2021.
+[34] J. Zhang, P. Xiao, R. Sun, and Z.-Q. Luo. A single-loop smoothed gradient descent-ascent algorithm for
+     nonconvex-concave min-max problems. Advances in Neural Information Processing Systems, 33:7377–7389,
+     2020.
+[35] R. Zhao. A primal-dual smoothing framework for max-structured non-convex optimization. Mathematics of
+     Operations Research, 49(3):1535–1565, 2024.
+[36] J. Li, M. Nagarajan, S. Pan, and N. Zhang. Smoothing meets perturbation: unified and tight analysis for
+     nonconvex–concave minimax optimization. arXiv:2602.14185, 2026.
+[37] R. I. Boţ and A. Böhm. Alternating proximal-gradient steps for (stochastic) nonconvex-concave minimax
+     problems. SIAM Journal on Optimization, 33(3):1884–1913, 2023.
+[38] Z. Xu, H. Zhang, Y. Xu, and G. Lan. A unified single-loop alternating gradient projection algorithm for
+     nonconvex-concave and convex-nonconcave minimax problems. Mathematical Programming, 201:635–706, 2023.
+[39] S. Zhang, J. Yang, C. Guzmán, N. Kiyavash, and N. He. The complexity of nonconvex-strongly-concave
+     minimax optimization. In Conference on Uncertainty in Artificial Intelligence, pages 482–492, 2021.
+[40] S. Pan, T. Zheng, and J. Li. Optimal deterministic first-order oracle complexity for nonconvex–concave minimax
+     optimization. arXiv:2609.14235, 2026. Concurrent work.
+[41] Z. Lu and S. Mei. Accelerated first-order methods for convex optimization with locally Lipschitz continuous
+     gradient. arXiv:2206.01209, version 3, 2023.
+[42] J. Yang, X. Li, and N. He. Nest your adaptive algorithm for parameter-agnostic nonconvex minimax optimization.
+     Advances in Neural Information Processing Systems, 35:11202–11216, 2022.
+[43] X. Li, J. Yang, and N. He. TiAda: A time-scale adaptive algorithm for nonconvex minimax optimization. In
+     International Conference on Learning Representations, 2023.
+[44] J. Yang, H. Zhang, and Z. Xu. Completely parameter-free single-loop algorithms for nonconvex-concave
+     minimax problems. arXiv:2407.21372, version 3, 2025.
+[45] Q. Tran-Dinh and N. Nguyen-Trung. Accelerated extragradient-type methods: generalization and unified
+     convergence analysis. arXiv:2501.04585v2, 2025.
+
+
+
+                                                        25
+
