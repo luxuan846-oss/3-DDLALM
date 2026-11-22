@@ -1,19 +1,29 @@
 % !TEX root = ../main.tex
 \section{Conclusion}
 \label{sec:conclusion}
-This paper studies LRALM, a single-loop linearized regularized augmented
-Lagrangian framework for the structured nonsmooth nonconvex composite
-problem~\eqref{prob:main}. Within the constant-stepsize family \(\calC_\theta\),
-we establish tight worst-case complexity bounds for finding an
-\(\epsilon\)-KKT point, obtaining \(\Theta(\epsilon^{-4})\) whenever
-\(\rho+s\le c_1/\epsilon\) and \(\Theta(\epsilon^{-3})\) for fixed \(\rho\) and
-\(s=c_s/\epsilon\) with sufficiently large \(c_s\). Our analysis shows that the
-complexity order of \(\calC_\theta\) is governed by the effective penalty
-\(\rho+s\) uniformly across all constant center stepsizes, so the dual
-regularization alone can carry the required \(1/\epsilon\) growth while keeping
-the penalty \(\rho\) fixed. Fixing the dual center at zero, we further develop a novel algorithm 
-Fast LRALM with one Nesterov extrapolation step on the dual variable and
-establish its \(\mathcal O(\epsilon^{-5/2})\) iteration complexity. To the best of our knowledge, Fast LRALM is the first single-loop
-linearized ALM that finds an \(\epsilon\)-KKT point of
-Problem~\eqref{prob:main} in \(\mathcal O(\epsilon^{-5/2})\) iterations
-with a fixed penalty parameter. 
+This paper studies the LRALM family \(\calC_\theta\) for the structured
+nonsmooth nonconvex composite Problem~\eqref{prob:main}. Within
+\(\calC_\theta\), we establish tight worst-case complexity bounds for finding
+an \(\epsilon\)-KKT point, obtaining \(\Theta(\epsilon^{-4})\) whenever
+\(\rho+s\le c_1/\epsilon\) and \(\Theta(\epsilon^{-3})\) for a fixed penalty
+\(\rho\) and dual regularization \(s=c_s/\epsilon\) with sufficiently large
+\(c_s\). These results delineate the complementary roles of \(\rho\) and \(s\).
+Because the complexity order of \(\calC_\theta\) is governed by the effective
+penalty \(\rho+s\) uniformly across all constant center stepsizes, \(s\) alone
+can carry the required \(1/\epsilon\) growth while keeping \(\rho\) and the
+primal smoothness modulus fixed. Moving beyond \(\calC_\theta\) with the dual center anchored at zero, we
+develop Fast LRALM by adding Nesterov extrapolation to the dual update and
+prove that it attains \(\mathcal O(\epsilon^{-5/2})\) iteration complexity with
+a fixed penalty, matching, to the best of our knowledge, the fastest multi-loop
+rate for this problem class without inner solvers or dual projections. An
+interesting direction for future research is to
+determine whether \(\mathcal O(\epsilon^{-5/2})\) is optimal for
+Problem~\eqref{prob:main} and whether accuracy-independent parameter schedules
+can achieve the same rate.
+
+\paragraph{Acknowledgment.}
+Generative artificial intelligence tools were used to assist in the
+exploratory development, checking, and exposition of mathematical proofs, as
+well as the implementation of numerical experiments. The authors independently
+verified, critically assessed, and revised all arguments, and retain full
+responsibility for the mathematical content and the final manuscript.

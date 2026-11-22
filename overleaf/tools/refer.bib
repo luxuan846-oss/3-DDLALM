@@ -310,7 +310,7 @@
 }
 
 @article{bot2015variable,
-  author  = {R. I. Bo{\c{t}} and C. Hendrick},
+  author  = {R. I. Bo{\c{t}} and C. Hendrich},
   title   = {A variable smoothing algorithm for solving convex optimization problems},
   journal = {TOP},
   volume  = {23},
@@ -449,16 +449,6 @@
   publisher={Springer}
 }
 
-@article{boct2020proximal,
-  title={The proximal alternating direction method of multipliers in the nonconvex setting: convergence analysis and rates},
-  author={Bo{\c{t}}, Radu Ioan and Nguyen, Dang-Khoa},
-  journal={Mathematics of Operations Research},
-  volume={45},
-  number={2},
-  pages={682--712},
-  year={2020},
-  publisher={INFORMS}
-}
 
 
 @article{zhang2020optimal,
@@ -581,11 +571,13 @@ year = {2018},
 }
 
 
-@article{nocedal2006numerical,
-  title={Numerical optimization},
-  author={Nocedal, Jorge},
-  journal={Springer Ser. Oper. Res. Financ. Eng./Springer},
-  year={2006}
+@book{nocedal2006numerical,
+  author    = {Nocedal, Jorge and Wright, Stephen J.},
+  title     = {Numerical Optimization},
+  edition   = {2nd},
+  publisher = {Springer},
+  address   = {New York},
+  year      = {2006}
 }
 
 @article{charisopoulos2019composite,
@@ -994,33 +986,8 @@ year = {2023}
 % ============================================================
 %  Semi-stochastic: linearized ALM + variance reduction
 % ============================================================
-@article{shi2022linearized,
-  title   = {A Linearized Augmented {Lagrangian} Method with Variance
-             Reduction for Nonconvex Stochastic Constrained Optimization},
-  author  = {Shi, Chuwen and Lin, Runcheng},
-  journal = {arXiv preprint arXiv:2211.XXXXX},
-  year    = {2022},
-  note    = {Verify exact authors, title, and publication venue}
-}
 
-@article{lu2022single,
-  title   = {Single-Loop Algorithms for Stochastic Nonconvex Functional
-             Constrained Optimization},
-  author  = {Lu, Haihao and Mei, Song},
-  journal = {arXiv preprint},
-  year    = {2022},
-  note    = {Verify exact authors, title, and publication venue}
-}
 
-@inproceedings{jin2022nested,
-  title     = {A Single-Loop Smoothed Gradient Descent-Ascent Algorithm for
-               Nonconvex-Concave Min-Max Problems with Coupled Linear
-               Constraints},
-  author    = {Jin, Zhiyan and Wang, Tianhao},
-  booktitle = {Advances in Neural Information Processing Systems},
-  year      = {2022},
-  note      = {Verify exact title, authors, and venue; may be different paper}
-}
 
 % ============================================================
 %  Fully stochastic: STORM-based ALMs
@@ -1213,14 +1180,6 @@ year = {2023}
   pdf       = {https://raw.githubusercontent.com/mlresearch/v267/main/assets/jin25e/jin25e.pdf}
 }
 
-@article{berahas2025linearized,
-  title   = {Complexity of Linearized Perturbed Augmented Lagrangian Methods for Nonsmooth Nonconvex Optimization with Nonlinear Equality Constraints},
-  author  = {El Bourkhissi, Lahcen and Necoara, Ion and Patrinos, Panagiotis and Tran-Dinh, Quoc},
-  journal = {arXiv preprint arXiv:2503.01056},
-  year    = {2025},
-  xdoi     = {10.48550/arXiv.2503.01056},
-  xurl     = {https://arxiv.org/abs/2503.01056}
-}
 
 
 @inproceedings{zhang2020smoothed,
@@ -1558,7 +1517,8 @@ year = {2023}
   journal = {Mathematical Programming},
   year    = {2025},
   volume  = {214},
-  pages   = {591--641}
+  pages   = {591--641},
+  xdoi    = {10.1007/s10107-025-02197-1}
 }
 @book{rockafellar1970convex,
   author    = {Rockafellar, R. Tyrrell},
@@ -1698,4 +1658,208 @@ year = {2023}
   pages   = {2227--2275},
   year    = {2011},
   xdoi     = {10.1134/S0005117911110026}
+}
+
+@article{deng2026augmented,
+  author  = {Deng, Kangkang and Wang, Rui and Zhu, Zhenyuan and Zhang, Junyu and Wen, Zaiwen},
+  title   = {The Augmented Lagrangian Methods: Overview and Recent Advances},
+  journal = {SIAM Review},
+  volume  = {68},
+  number  = {3},
+  pages   = {471--576},
+  year    = {2026},
+  xdoi     = {10.1137/24M1706153}
+}
+
+@misc{zhu2026primal,
+  author        = {Zhu, Linglingzhi and Ding, Wentao and Liu, Shangyuan and So, Anthony Man-Cho},
+  title         = {Primal-Dual Methods for Nonsmooth Nonconvex Optimization with Orthogonality Constraints},
+  year          = {2026},
+  howpublished  = {arXiv preprint arXiv:2604.04130},
+  eprint        = {2604.04130},
+  archivePrefix = {arXiv},
+  primaryClass  = {math.OC}
+}
+
+% ===== Added 2026-11-21: citation strengthening =====
+
+@article{li2020understanding,
+  author  = {Li, Jiajin and So, Anthony Man-Cho and Ma, Wing-Kin},
+  title   = {Understanding Notions of Stationarity in Nonsmooth Optimization: A Guided Tour of Various Constructions of Subdifferential for Nonsmooth Functions},
+  journal = {IEEE Signal Processing Magazine},
+  volume  = {37},
+  number  = {5},
+  pages   = {18--31},
+  year    = {2020},
+  xdoi     = {10.1109/MSP.2020.3003845}
+}
+
+@article{li2020nonconvex,
+  author  = {Li, Xiao and Zhu, Zhihui and So, Anthony Man-Cho and Vidal, Ren{\'e}},
+  title   = {Nonconvex Robust Low-Rank Matrix Recovery},
+  journal = {SIAM Journal on Optimization},
+  volume  = {30},
+  number  = {1},
+  pages   = {660--686},
+  year    = {2020},
+  xdoi     = {10.1137/18M1224738}
+}
+
+@misc{zhu2026nonconvex,
+  author        = {Zhu, Linglingzhi and Li, Jiajin},
+  title         = {Nonconvex Composite Functional Constraints via First-Order Augmented {L}agrangian Methods under Local Regularity},
+  year          = {2026},
+  howpublished  = {arXiv preprint arXiv:2607.08954},
+  eprint        = {2607.08954},
+  archivePrefix = {arXiv},
+  primaryClass  = {math.OC}
+}
+
+@article{nesterov1983method,
+  author  = {Nesterov, Yurii E.},
+  title   = {A method for solving the convex programming problem with convergence rate {$O(1/k^2)$}},
+  journal = {Soviet Mathematics Doklady},
+  volume  = {27},
+  number  = {2},
+  pages   = {372--376},
+  year    = {1983}
+}
+
+@misc{he2010acceleration,
+  author       = {He, Bingsheng and Yuan, Xiaoming},
+  title        = {On the Acceleration of Augmented {L}agrangian Method for Linearly Constrained Optimization},
+  year         = {2010},
+  howpublished = {Optimization Online, 2760},
+  xurl          = {https://optimization-online.org/2010/10/2760/}
+}
+
+@article{kang2015inexact,
+  author  = {Kang, Myeongmin and Kang, Myungjoo and Jung, Miyoun},
+  title   = {Inexact Accelerated Augmented {L}agrangian Methods},
+  journal = {Computational Optimization and Applications},
+  volume  = {62},
+  number  = {2},
+  pages   = {373--404},
+  year    = {2015},
+  xdoi     = {10.1007/s10589-015-9742-8}
+}
+
+@article{yang2013linearized,
+  author  = {Yang, Junfeng and Yuan, Xiaoming},
+  title   = {Linearized Augmented {L}agrangian and Alternating Direction Methods for Nuclear Norm Minimization},
+  journal = {Mathematics of Computation},
+  volume  = {82},
+  number  = {281},
+  pages   = {301--329},
+  year    = {2013},
+  xdoi     = {10.1090/S0025-5718-2012-02598-1}
+}
+
+@article{lewis2016proximal,
+  author  = {Lewis, Adrian S. and Wright, Stephen J.},
+  title   = {A Proximal Method for Composite Minimization},
+  journal = {Mathematical Programming},
+  volume  = {158},
+  number  = {1--2},
+  pages   = {501--546},
+  year    = {2016},
+  xdoi     = {10.1007/s10107-015-0943-9}
+}
+
+@article{burke1985descent,
+  author  = {Burke, James V.},
+  title   = {Descent Methods for Composite Nondifferentiable Optimization Problems},
+  journal = {Mathematical Programming},
+  volume  = {33},
+  number  = {3},
+  pages   = {260--279},
+  year    = {1985},
+  xdoi     = {10.1007/BF01584377}
+}
+
+@book{nemirovski1983problem,
+  author    = {Nemirovsky, Arkadi S. and Yudin, David B.},
+  title     = {Problem Complexity and Method Efficiency in Optimization},
+  publisher = {Wiley-Interscience},
+  address   = {New York},
+  year      = {1983}
+}
+
+@inproceedings{sagawa2020distributionally,
+  author    = {Sagawa, Shiori and Koh, Pang Wei and Hashimoto, Tatsunori B. and Liang, Percy},
+  title     = {Distributionally Robust Neural Networks for Group Shifts: On the Importance of Regularization for Worst-Case Generalization},
+  booktitle = {International Conference on Learning Representations},
+  year      = {2020}
+}
+
+@article{li2015global,
+  author  = {Li, Guoyin and Pong, Ting Kei},
+  title   = {Global Convergence of Splitting Methods for Nonconvex Composite Optimization},
+  journal = {SIAM Journal on Optimization},
+  volume  = {25},
+  number  = {4},
+  pages   = {2434--2460},
+  year    = {2015},
+  xdoi     = {10.1137/140998135}
+}
+
+@article{hong2016convergence,
+  author  = {Hong, Mingyi and Luo, Zhi-Quan and Razaviyayn, Meisam},
+  title   = {Convergence Analysis of Alternating Direction Method of Multipliers for a Family of Nonconvex Problems},
+  journal = {SIAM Journal on Optimization},
+  volume  = {26},
+  number  = {1},
+  pages   = {337--364},
+  year    = {2016},
+  xdoi     = {10.1137/140990309}
+}
+
+@inproceedings{lin2020near,
+  author    = {Lin, Tianyi and Jin, Chi and Jordan, Michael I.},
+  title     = {Near-Optimal Algorithms for Minimax Optimization},
+  booktitle = {Proceedings of the 33rd Conference on Learning Theory},
+  series    = {Proceedings of Machine Learning Research},
+  volume    = {125},
+  pages     = {2738--2779},
+  year      = {2020}
+}
+
+@article{ostrovskii2021efficient,
+  author  = {Ostrovskii, Dmitrii M. and Lowy, Andrew and Razaviyayn, Meisam},
+  title   = {Efficient Search of First-Order {N}ash Equilibria in Nonconvex-Concave Smooth Min-Max Problems},
+  journal = {SIAM Journal on Optimization},
+  volume  = {31},
+  number  = {4},
+  pages   = {2508--2538},
+  year    = {2021},
+  xdoi     = {10.1137/20M1337600}
+}
+
+@article{bot2023alternating,
+  author  = {Bo{\c{t}}, Radu Ioan and B{\"o}hm, Axel},
+  title   = {Alternating Proximal-Gradient Steps for (Stochastic) Nonconvex-Concave Minimax Problems},
+  journal = {SIAM Journal on Optimization},
+  volume  = {33},
+  number  = {3},
+  pages   = {1884--1913},
+  year    = {2023},
+  xdoi     = {10.1137/21M1465470}
+}
+
+@article{li2021augmented,
+  author  = {Li, Zichong and Xu, Yangyang},
+  title   = {Augmented {L}agrangian-Based First-Order Methods for Convex-Constrained Programs with Weakly Convex Objective},
+  journal = {INFORMS Journal on Optimization},
+  volume  = {3},
+  number  = {4},
+  pages   = {373--397},
+  year    = {2021},
+  xdoi     = {10.1287/ijoo.2021.0052}
+}
+
+@inproceedings{daskalakis2018training,
+  author    = {Daskalakis, Constantinos and Ilyas, Andrew and Syrgkanis, Vasilis and Zeng, Haoyang},
+  title     = {Training {GANs} with Optimism},
+  booktitle = {International Conference on Learning Representations},
+  year      = {2018}
 }

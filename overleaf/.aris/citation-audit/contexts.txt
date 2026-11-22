@@ -1,0 +1,179 @@
+KEY Drusvyatskiy2019 COUNT 1
+  sections/Introduction.tex:61 Most algorithms for Problems~\eqref{prob:main} and~\eqref{prob:split} rely on nested loops. Prox-linear methods~\cite{Drusvyatskiy2019}, quadratic penalty methods~\cite{kong2019complexity,lin2022complexity}, and inexact or proximal
+KEY alacaoglu2024complexity COUNT 1
+  sections/Introduction.tex:74 single-loop penalty and linearized ALM or ADMM schemes~\cite{hajinezhad2019perturbed,luSingleLoopGradientDescent2022,hallak2023adaptive,alacaoglu2024complexity,sun2024dual_descent_alm_admm,elbourkhissi2025perturbed,shi2025momentum} drive the penalty or dual perturbation parameter to order $\epsilon^{-1}$ to
+KEY bohm2021variable COUNT 1
+  sections/Introduction.tex:71 $\mathcal O(\epsilon^{-3})$ complexity only by letting a parameter scale with $\epsilon$. Variable smoothing~\cite{bohm2021variable} replaces $h$ with its Moreau envelope using a smoothing parameter of order $\epsilon$, while
+KEY carmon2020lower COUNT 3
+  sections/Introduction.tex:180 $\mathcal O(\epsilon^{-5/2})$. The baseline lower bound $\Omega(\epsilon^{-2})$ is due to~\cite{carmon2020lower}.} \label{fig:complexity-axis}
+  sections/LRALMFamily.tex:188 iteration complexity over \(\mathcal I(\mathbf C,\Delta)\)~\cite{nesterov2018lectures,carmon2020lower,li2021complexity} as follows.
+  sections/Preliminaries.tex:72 For complexity analysis, we specify the problem class~\cite{carmon2020lower} and the oracle model for Problem~\eqref{prob:main}.
+KEY charisopoulos2021low COUNT 2
+  sections/Introduction.tex:17 $\calA(\bx)$ \cite{charisopoulos2021low,markovsky2008structured,parekh2015convex}. Several models of practical interest take this form.
+  sections/Introduction.tex:32 \textbf{Robust low-rank matrix recovery}~\cite{charisopoulos2021low}. Given a linear measurement map $\mathcal M\colon\RR^{d_1\times d_2}\to\RR^m$ and
+KEY duchi2019solving COUNT 1
+  sections/Introduction.tex:20 \subsection{Motivating Examples} \textbf{Robust phase retrieval}~\cite{duchi2019solving}. Given measurement vectors $\mathbf a_i\in\RR^n$ and observations
+KEY elbourkhissi2025linearized COUNT 1
+  sections/Introduction.tex:81 bounds for affine constraints~\cite{zhang2022global} or uniform LICQ for smooth nonlinear constraints~\cite{elbourkhissi2025linearized,liu2026fixed}.
+KEY elbourkhissi2025perturbed COUNT 1
+  sections/Introduction.tex:74 single-loop penalty and linearized ALM or ADMM schemes~\cite{hajinezhad2019perturbed,luSingleLoopGradientDescent2022,hallak2023adaptive,alacaoglu2024complexity,sun2024dual_descent_alm_admm,elbourkhissi2025perturbed,shi2025momentum} drive the penalty or dual perturbation parameter to order $\epsilon^{-1}$ to
+KEY hajinezhad2019perturbed COUNT 3
+  sections/Acceleration.tex:164 which resembles the multiplier update of single-loop perturbed ALMs~\cite{hajinezhad2019perturbed,luSingleLoopGradientDescent2022} except that it is evaluated at the extrapolated multiplier \(\bar{\blmbd}^k\). However,
+  sections/Introduction.tex:74 single-loop penalty and linearized ALM or ADMM schemes~\cite{hajinezhad2019perturbed,luSingleLoopGradientDescent2022,hallak2023adaptive,alacaoglu2024complexity,sun2024dual_descent_alm_admm,elbourkhissi2025perturbed,shi2025momentum} drive the penalty or dual perturbation parameter to order $\epsilon^{-1}$ to
+  sections/Introduction.tex:244 \multicolumn{8}{l}{\textit{ALM-based methods}} \\ PProx-PDA~\cite{hajinezhad2019perturbed} & \checkmark & -- & \checkmark & $\Theta(\epsilon^{-1})$ & $\Theta(\epsilon^{-1})$ & --
+KEY hallak2023adaptive COUNT 1
+  sections/Introduction.tex:74 single-loop penalty and linearized ALM or ADMM schemes~\cite{hajinezhad2019perturbed,luSingleLoopGradientDescent2022,hallak2023adaptive,alacaoglu2024complexity,sun2024dual_descent_alm_admm,elbourkhissi2025perturbed,shi2025momentum} drive the penalty or dual perturbation parameter to order $\epsilon^{-1}$ to
+KEY he2024approximation COUNT 1
+  sections/Introduction.tex:106 $\mathcal O(\epsilon^{-3})$ through $\epsilon$-dependent dual regularization~\cite{pan2021efficient,he2024approximation,xu2026rada}.
+KEY hestenes1969multiplier COUNT 1
+  sections/Preliminaries.tex:160 \(\bx\)-minimization of classical ALM~\cite{hestenes1969multiplier,powell1969method,rockafellar1973multiplier} by a single gradient step, is alternating gradient descent-ascent (GDA) on
+KEY ke2026efficient COUNT 1
+  sections/Introduction.tex:310 rely on nested loops, including multi-loop proximal-point or anchored minimax schemes~\cite{kong2021accelerated,ke2026efficient} and inexact ALM or penalty methods with accelerated inner
+KEY khlebnikov2011optimization COUNT 1
+  sections/Acceleration.tex:240 We next show that the multipliers remain bounded, adapting the quadratic Lyapunov function of~\cite[Section~2.3]{khlebnikov2011optimization} to the dual recursion of Fast LRALM. \begin{lemma}[Uniform multiplier bound]
+KEY kong2019complexity COUNT 1
+  sections/Introduction.tex:62 loops. Prox-linear methods~\cite{Drusvyatskiy2019}, quadratic penalty methods~\cite{kong2019complexity,lin2022complexity}, and inexact or proximal augmented Lagrangian methods
+KEY kong2021accelerated COUNT 3
+  sections/Acceleration.tex:100 whose exact computation requires solving a minimax subproblem and leads to double-loop schemes~\cite{kong2021accelerated,zhang2021complexity}. Instead, we replace \(\bx_s^\star(\bz^k)\) with the primal iterate \(\bx^{k+1}\), which
+  sections/Acceleration.tex:401 the single-loop analysis. Double-loop accelerated minimax methods~\cite{kong2021accelerated,zhang2021complexity} avoid this difficulty by solving each proximal subproblem to high accuracy before updating the center.
+  sections/Introduction.tex:310 rely on nested loops, including multi-loop proximal-point or anchored minimax schemes~\cite{kong2021accelerated,ke2026efficient} and inexact ALM or penalty methods with accelerated inner
+KEY kong2023iteration COUNT 3
+  sections/Acceleration.tex:172 needed for Nesterov acceleration. Inexact ALMs~\cite{li2021rate,kong2023iteration} likewise solve proximal subproblems, but they fix each one and run an inner accelerated solver until a stopping
+  sections/Introduction.tex:247 & $\mathcal O(\epsilon^{-4})$ \\ iALM~\cite{li2021rate,kong2023iteration} & -- & -- & -- & $\Theta(\epsilon^{-1})$ & -- & $\Theta(1)$
+  sections/Introduction.tex:312 methods with accelerated inner solvers~\cite{li2021rate,lin2022complexity,kong2023iteration}. This contrast motivates the second question we tackle in this paper.
+KEY li2021complexity COUNT 2
+  sections/Introduction.tex:304 consistent with the nonconvex-strongly-concave lower bound at dual condition number $\Theta(\epsilon^{-1})$~\cite{zhang2021complexity,li2021complexity}. This rate is attained by multi-loop schemes~\cite{pan2026optimal} and by a
+  sections/LRALMFamily.tex:188 iteration complexity over \(\mathcal I(\mathbf C,\Delta)\)~\cite{nesterov2018lectures,carmon2020lower,li2021complexity} as follows.
+KEY li2021rate COUNT 4
+  sections/Acceleration.tex:172 needed for Nesterov acceleration. Inexact ALMs~\cite{li2021rate,kong2023iteration} likewise solve proximal subproblems, but they fix each one and run an inner accelerated solver until a stopping
+  sections/Introduction.tex:64 augmented Lagrangian methods (ALMs)~\cite{sahin2019inexact,li2021rate,xie2021proximal} solve a subproblem approximately at every outer iteration, which incurs inner-loop overhead and
+  sections/Introduction.tex:247 & $\mathcal O(\epsilon^{-4})$ \\ iALM~\cite{li2021rate,kong2023iteration} & -- & -- & -- & $\Theta(\epsilon^{-1})$ & -- & $\Theta(1)$
+  sections/Introduction.tex:312 methods with accelerated inner solvers~\cite{li2021rate,lin2022complexity,kong2023iteration}. This contrast motivates the second question we tackle in this paper.
+KEY li2026smoothing COUNT 32
+  appendix/LowerBoundConstructions.tex:226 The construction in~\cite[Section~5.1.1]{li2026smoothing} chooses both the hard instance and the initial point, with the latter lying along an
+  appendix/UpperBounds.tex:7 by reducing \(\mathrm{LRALM}_{\theta,\alpha,\beta}\) at \(\beta\in\{0,1\}\) to (Perturbed) Smoothed GDA~\cite{li2026smoothing} on \(\calD_\rho\). All references to~\cite{li2026smoothing} follow the numbering of
+  appendix/UpperBounds.tex:8 (Perturbed) Smoothed GDA~\cite{li2026smoothing} on \(\calD_\rho\). All references to~\cite{li2026smoothing} follow the numbering of arXiv:2602.14185v2. Throughout, we set
+  appendix/UpperBounds.tex:22 \(\calD_\rho(\bx,\cdot)\) is concave and \(\mathcal Y\) is compact and convex, so Assumptions~2.1 and~2.2 of~\cite{li2026smoothing} hold on \(\RR^n\times\mathcal Y\). We first collect three auxiliary lemmas and then
+  appendix/UpperBounds.tex:42 \(\{(\bx^{t+1},\blmbd^{t+1},\bz^{t+1})\}_{t\ge0}\) coincides with Smoothed GDA~\cite[Algorithm~3, \(r_y=0\)]{li2026smoothing} applied to \(\min_{\bx\in\RR^n}\max_{\blmbd\in\mathcal Y}\calD_\rho(\bx,\blmbd)\) from
+  appendix/UpperBounds.tex:50 \(\{(\bx^k,\blmbd^k,\bz^k)\}_{k\ge0}\) coincides with Perturbed Smoothed GDA~\cite[Algorithm~3, \(r_y=1/s\)]{li2026smoothing} applied to the same problem from \((\zero,\blmbd^0,\bz^0)\) with the same parameters.
+  appendix/UpperBounds.tex:74 is \(L_h\)-Lipschitz. Notice that~\eqref{eq:splalm-updates} and \cite[Algorithm~3]{li2026smoothing} have the same update order (old multiplier in the primal step, new primal iterate in the dual and center steps); whenever
+  appendix/UpperBounds.tex:106 By~\eqref{eq:ub-bridge}, \(\inf\Phi_{r_y}\ge\inf F-\frac{r_y}{2}L_h^2>-\infty\); the descent argument of~\cite[Section~4]{li2026smoothing} uses only a lower bound on its Lyapunov function, so attainment of \(\inf\Phi_{r_y}\) is not
+  appendix/UpperBounds.tex:109 needed. We next bound the initial gap \(\Delta_{\Psi_2}\) of~\cite[Definition~3.1(ii)]{li2026smoothing} and relate its game-stationarity residual
+  appendix/UpperBounds.tex:123 satisfy \(\|\hat\blmbd\|\le L_h\). Set \(M:=\|\hat\bx-\hat\bz\|\). Then the initial gap of~\cite[Definition~3.1(ii)]{li2026smoothing} for \(\calD_\rho\) at \((\hat\bx,\hat\blmbd,\hat\bz)\) satisfies
+  appendix/UpperBounds.tex:134 Let \(K(\bx):=\calD_\rho(\bx,\hat\blmbd)+\frac1{2\gamma}\|\bx-\hat\bz\|^2\). By~\cite[(3.1) and Definition~3.1(ii)]{li2026smoothing} and the definition of \(\Phi_{r_y}\),
+  appendix/UpperBounds.tex:191 let \(\gamma\le\bar\gamma\), \(\eta\le\gamma/2\), \(\tau\le\bar\tau\), and \(s\ge\tau\). We first check~\cite[Condition~3.2(i)]{li2026smoothing} at \(r_y=0\): \(r_x=1/\gamma\ge4\ell>3\ell\), \(1/(r_x+\ell)\ge4\gamma/5>\eta\),
+  appendix/UpperBounds.tex:205 \(\beta_{\mathrm{Li}}=\Theta(\epsilon^2/(\ell^2D_{\mathcal Y}^2))\) in \cite[Condition~3.2(i)]{li2026smoothing}.
+  appendix/UpperBounds.tex:220 Applying~\cite[Theorem~B.1]{li2026smoothing} at accuracy \(\frac{10}{11}\epsilon\) to the shifted sequence yields an index \(t\ge0\) with
+  appendix/UpperBounds.tex:251 in~\eqref{eq:beta0-main-stepsizes} are precisely the conditions on \((r_x,c,\alpha_{\mathrm{Li}})\) in~\cite[Condition~3.2]{li2026smoothing} at \(r_y=0\). By continuity in \(r_y\), there exists \(\bar r>0\), depending only
+  appendix/UpperBounds.tex:255 with \(\ell+r_y\) in place of \(\ell\) for all \(r_y\in(0,\bar r]\). On this interval, the quantity \(\omega^t\) in~\cite[Condition~3.2(ii)]{li2026smoothing} satisfies \((\omega^t)^2\le\bar\Omega/r_y\) for a constant \(\bar\Omega\)
+  appendix/UpperBounds.tex:259 \((\rho,\gamma,\eta,\tau,\mathbf C)\), such that \(\alpha=c_\alpha\epsilon\) satisfies~\cite[Condition~3.2(ii)]{li2026smoothing} whenever \(\epsilon\in(0,\bar\epsilon]\) with \(\bar\epsilon:=\min\{1,c_s\bar r\}\).
+  appendix/UpperBounds.tex:275 Finally,~\cite[Theorem~3.3(i) and (4.20)]{li2026smoothing} control the dual game-stationarity residual by a decaying term plus \(r_yD_{\mathcal Y}\). Since
+  appendix/UpperBounds.tex:277 game-stationarity residual by a decaying term plus \(r_yD_{\mathcal Y}\). Since \(r_yD_{\mathcal Y}=\epsilon/4\), applying~\cite[Theorem~3.3(i)]{li2026smoothing} at accuracy \(\epsilon/2\) yields an index \(k\ge0\) with
+  sections/Acceleration.tex:342 Building on the potential function in~\cite{zhang2022proximal,zhang2020smoothed,li2026smoothing}, we define the Lyapunov sequence tied to Algorithm~\ref{alg:b2-prime} as
+  sections/Acceleration.tex:359 The above Lyapunov sequence differs from the potential function in~\cite{zhang2022proximal,zhang2020smoothed,li2026smoothing} in the dual and primal parts. The dual part adds
+  sections/Introduction.tex:103 $\Omega(\epsilon^{-4})$ and $\Omega(\epsilon^{-3})$ certify that these rates are tight for the two algorithms~\cite{li2026smoothing}. Single-loop methods exploiting the nonconvex-linear structure likewise achieve
+  sections/Introduction.tex:190 primal-dual methods apply only to individual algorithms under prescribed stepsizes~\cite{mahdavinia2022tight,li2026smoothing}, whether parameter growth is inherent to single-loop linearized ALMs, and whether the penalty itself must
+  sections/Introduction.tex:261 \multicolumn{8}{l}{\textit{Smooth NC-C minimax}\tnote{a}} \\ Smoothed GDA~\cite{zhang2020smoothed,li2026smoothing} & \checkmark & \checkmark & \checkmark & -- & -- & $\Theta(1)$
+  sections/Introduction.tex:264 & $\Theta(\epsilon^{-4})$ \\ Perturbed Smoothed GDA~\cite{li2026smoothing} & \checkmark & \checkmark & \checkmark & -- & \cellcolor{gray!25}$\Theta(\epsilon^{-1})$ & $\Theta(1)$
+  sections/LRALMFamily.tex:150 \node[anchor=south,text=cTeal] at (0.5,0.04) {Perturbed Smoothed GDA~\cite{li2026smoothing}}; \node[cRed,anchor=south west,align=left] at (1.03,0.99)
+  sections/LRALMFamily.tex:181 GDA~\cite{lu2020hybrid,xu2023unified} at \(\alpha=1\) and Perturbed Smoothed GDA~\cite{li2026smoothing} for \(\alpha\in(0,1)\). Finally, the region \((\alpha,\beta)\in(0,1)^2\) shares the constant-stepsize update structure of
+  sections/LRALMFamily.tex:312 The matching upper bound is attained by Perturbed Smoothed GDA~\cite{li2026smoothing}, the member of \(\calC_{\theta(\epsilon)}\) with \(\beta=0\).
+  sections/LRALMFamily.tex:468 For \(\alpha>\alpha_\epsilon\) and \(\beta\in(0,1]\), we adapt the quadratic rotational construction of~\cite[Example~5.1]{li2026smoothing} and~\cite[Appendix~C.1]{mahdavinia2022tight}, attaching a convex turnaround and
+  sections/Preliminaries.tex:177 \(\epsilon\)-game-stationary (\(\epsilon\)-GS) point of \(\min_{\bx}\max_{\blmbd}\calD_\rho(\bx,\blmbd)\)~\cite{li2026smoothing,pan2026optimal} if
+  sections/Preliminaries.tex:196 is a smooth nonconvex-concave (NC-C) problem, where single-timescale GDA may fail to converge~\cite{li2026smoothing}. To induce strong convexity in \(\bx\) and strong concavity in \(\blmbd\), we add primal~\cite{zhang2020smoothed} and
+  sections/Preliminaries.tex:198 and strong concavity in \(\blmbd\), we add primal~\cite{zhang2020smoothed} and dual~\cite{lu2020hybrid,xu2023unified,zheng2023universal,li2026smoothing} quadratic regularizers centered at \((\bz,\bmu)\in\RR^n\times\RR^m\), yielding
+KEY lin2020gradient COUNT 1
+  sections/Introduction.tex:96 minimax problems, two-timescale GDA requires $\mathcal O(\epsilon^{-6})$ iterations~\cite{lin2020gradient}. Primal smoothing in Smoothed GDA~\cite{zhang2020smoothed} and dual perturbation in Perturbed
+KEY lin2022complexity COUNT 2
+  sections/Introduction.tex:62 loops. Prox-linear methods~\cite{Drusvyatskiy2019}, quadratic penalty methods~\cite{kong2019complexity,lin2022complexity}, and inexact or proximal augmented Lagrangian methods
+  sections/Introduction.tex:312 methods with accelerated inner solvers~\cite{li2021rate,lin2022complexity,kong2023iteration}. This contrast motivates the second question we tackle in this paper.
+KEY liu2026fixed COUNT 2
+  sections/Introduction.tex:81 bounds for affine constraints~\cite{zhang2022global} or uniform LICQ for smooth nonlinear constraints~\cite{elbourkhissi2025linearized,liu2026fixed}.
+  sections/Introduction.tex:256 & $\mathcal O(\epsilon^{-3})$ \\ NR-LALM~\cite{liu2026fixed} & \checkmark & \checkmark & -- & $\Theta(1)$ & -- & --
+KEY lu2020hybrid COUNT 4
+  sections/Introduction.tex:98 GDA~\cite{zhang2020smoothed} and dual perturbation in Perturbed GDA~\cite{lu2020hybrid,xu2023unified} each improve the rate to $\mathcal O(\epsilon^{-4})$. Combining both techniques, Perturbed Smoothed GDA
+  sections/LRALMFamily.tex:155 \node[cTeal,anchor=south west] at (1.03,0.04) {Perturbed GDA~\cite{lu2020hybrid,xu2023unified}}; % the two regularization directions
+  sections/LRALMFamily.tex:180 \(\beta=0\) with \(\bmu^0=\zero\) yields Perturbed GDA~\cite{lu2020hybrid,xu2023unified} at \(\alpha=1\) and Perturbed Smoothed GDA~\cite{li2026smoothing} for \(\alpha\in(0,1)\). Finally, the region
+  sections/Preliminaries.tex:198 and strong concavity in \(\blmbd\), we add primal~\cite{zhang2020smoothed} and dual~\cite{lu2020hybrid,xu2023unified,zheng2023universal,li2026smoothing} quadratic regularizers centered at \((\bz,\bmu)\in\RR^n\times\RR^m\), yielding
+KEY luSingleLoopGradientDescent2022 COUNT 6
+  sections/Acceleration.tex:164 which resembles the multiplier update of single-loop perturbed ALMs~\cite{hajinezhad2019perturbed,luSingleLoopGradientDescent2022} except that it is evaluated at the extrapolated multiplier \(\bar{\blmbd}^k\). However,
+  sections/Introduction.tex:74 single-loop penalty and linearized ALM or ADMM schemes~\cite{hajinezhad2019perturbed,luSingleLoopGradientDescent2022,hallak2023adaptive,alacaoglu2024complexity,sun2024dual_descent_alm_admm,elbourkhissi2025perturbed,shi2025momentum} drive the penalty or dual perturbation parameter to order $\epsilon^{-1}$ to
+  sections/Introduction.tex:253 & $\mathcal O(\epsilon^{-2})$ \\ GDPA~\cite{luSingleLoopGradientDescent2022,sun2024dual_descent_alm_admm} & \checkmark & \checkmark & -- & $\Theta(\epsilon^{-1})$ & $\Theta(\epsilon^{-1})$ & --
+  sections/LRALMFamily.tex:152 \node[cRed,anchor=south west,align=left] at (1.03,0.99) {Linearized ALM~\cite{luSingleLoopGradientDescent2022}\\[-1pt] \scriptsize\textcolor{cRed!80}{(GDA on $\calD_\rho$)}};
+  sections/LRALMFamily.tex:177 Figure~\ref{fig:lralm-family}. At \((\alpha,\beta)=(1,1)\), LRALM recovers linearized ALM~\cite{luSingleLoopGradientDescent2022}, while \(\beta=1\) with \(\alpha\in(0,1)\) gives Smoothed GDA~\cite{zhang2020smoothed}. Setting
+  sections/Preliminaries.tex:158 By Lemma~\ref{lem:reduced-al}, linearized ALM~\cite{luSingleLoopGradientDescent2022}, which replaces the exact \(\bx\)-minimization of classical
+KEY mahdavinia2022tight COUNT 2
+  sections/Introduction.tex:190 primal-dual methods apply only to individual algorithms under prescribed stepsizes~\cite{mahdavinia2022tight,li2026smoothing}, whether parameter growth is inherent to single-loop linearized ALMs, and whether the penalty itself must
+  sections/LRALMFamily.tex:469 rotational construction of~\cite[Example~5.1]{li2026smoothing} and~\cite[Appendix~C.1]{mahdavinia2022tight}, attaching a convex turnaround and a linear tail outside radius \(R_*\) so that \(f\) remains \(1\)-smooth,
+KEY markovsky2008structured COUNT 1
+  sections/Introduction.tex:17 $\calA(\bx)$ \cite{charisopoulos2021low,markovsky2008structured,parekh2015convex}. Several models of practical interest take this form.
+KEY nesterov2018lectures COUNT 4
+  sections/Acceleration.tex:115 \(\kappa=s/\tau\) grows with \(s\). We therefore take one step of Nesterov's accelerated gradient ascent~\cite{nesterov2018lectures} with \(\omega=(\sqrt{\kappa}-1)/(\sqrt{\kappa}+1)\). By Danskin's theorem,
+  sections/Acceleration.tex:362 the distance term of the estimate-sequence Lyapunov function~\cite{nesterov2018lectures,wilson2021lyapunov}, since under Nesterov extrapolation the dual gap alone need not decrease. The primal part replaces
+  sections/Acceleration.tex:524 \(\bx_s(\bar{\blmbd}^k;\bz^k)\), so the contraction of gradient descent~\cite{nesterov2018lectures} and the \(L_x\)-smoothness give \begin{align*}
+  sections/LRALMFamily.tex:188 iteration complexity over \(\mathcal I(\mathbf C,\Delta)\)~\cite{nesterov2018lectures,carmon2020lower,li2021complexity} as follows.
+KEY pan2021efficient COUNT 1
+  sections/Introduction.tex:106 $\mathcal O(\epsilon^{-3})$ through $\epsilon$-dependent dual regularization~\cite{pan2021efficient,he2024approximation,xu2026rada}.
+KEY pan2026optimal COUNT 5
+  sections/Introduction.tex:270 & $\mathcal O(\epsilon^{-5/2})$ \\ Tracked-FOAM~\cite{pan2026optimal} & -- & \checkmark & \checkmark & -- & $\Theta(\epsilon^{-1})$ & $\Theta(1)$
+  sections/Introduction.tex:302 smooth NC-C minimax problems, the optimal deterministic first-order complexity for $\epsilon$-GS points is $\Theta(\epsilon^{-5/2})$~\cite{pan2026optimal}, consistent with the nonconvex-strongly-concave lower bound at dual condition
+  sections/Introduction.tex:305 number $\Theta(\epsilon^{-1})$~\cite{zhang2021complexity,li2021complexity}. This rate is attained by multi-loop schemes~\cite{pan2026optimal} and by a single-loop projected extragradient method with dual gradient
+  sections/Introduction.tex:333 optimal deterministic first-order rate for smooth nonconvex--concave minimax problems under game stationarity~\cite{pan2026optimal}. In the absence of dual projection, we derive uniform multiplier bounds directly from the reduced
+  sections/Preliminaries.tex:177 \(\epsilon\)-game-stationary (\(\epsilon\)-GS) point of \(\min_{\bx}\max_{\blmbd}\calD_\rho(\bx,\blmbd)\)~\cite{li2026smoothing,pan2026optimal} if
+KEY parekh2015convex COUNT 1
+  sections/Introduction.tex:17 $\calA(\bx)$ \cite{charisopoulos2021low,markovsky2008structured,parekh2015convex}. Several models of practical interest take this form.
+KEY powell1969method COUNT 1
+  sections/Preliminaries.tex:160 \(\bx\)-minimization of classical ALM~\cite{hestenes1969multiplier,powell1969method,rockafellar1973multiplier} by a single gradient step, is alternating gradient descent-ascent (GDA) on
+KEY rockafellar1970convex COUNT 2
+  sections/Preliminaries.tex:8 Following~\cite{rockafellar1970convex}, for a proper closed convex function \(h\colon\RR^m\to\RR\cup\{+\infty\}\), its subdifferential, convex conjugate,
+  sections/Preliminaries.tex:212 saddle-point properties of \(\mathcal P_s\), which follow directly from standard convex analysis~\cite{rockafellar1970convex}.
+KEY rockafellar1973multiplier COUNT 1
+  sections/Preliminaries.tex:160 \(\bx\)-minimization of classical ALM~\cite{hestenes1969multiplier,powell1969method,rockafellar1973multiplier} by a single gradient step, is alternating gradient descent-ascent (GDA) on
+KEY rockafellar1976augmented COUNT 1
+  sections/Preliminaries.tex:110 Eliminating \(\by\) yields the reduced augmented Lagrangian~\cite{rockafellar1976augmented}, \begin{equation}
+KEY sahin2019inexact COUNT 1
+  sections/Introduction.tex:64 augmented Lagrangian methods (ALMs)~\cite{sahin2019inexact,li2021rate,xie2021proximal} solve a subproblem approximately at every outer iteration, which incurs inner-loop overhead and
+KEY shi2025momentum COUNT 1
+  sections/Introduction.tex:74 single-loop penalty and linearized ALM or ADMM schemes~\cite{hajinezhad2019perturbed,luSingleLoopGradientDescent2022,hallak2023adaptive,alacaoglu2024complexity,sun2024dual_descent_alm_admm,elbourkhissi2025perturbed,shi2025momentum} drive the penalty or dual perturbation parameter to order $\epsilon^{-1}$ to
+KEY sun2024dual_descent_alm_admm COUNT 2
+  sections/Introduction.tex:74 single-loop penalty and linearized ALM or ADMM schemes~\cite{hajinezhad2019perturbed,luSingleLoopGradientDescent2022,hallak2023adaptive,alacaoglu2024complexity,sun2024dual_descent_alm_admm,elbourkhissi2025perturbed,shi2025momentum} drive the penalty or dual perturbation parameter to order $\epsilon^{-1}$ to
+  sections/Introduction.tex:253 & $\mathcal O(\epsilon^{-2})$ \\ GDPA~\cite{luSingleLoopGradientDescent2022,sun2024dual_descent_alm_admm} & \checkmark & \checkmark & -- & $\Theta(\epsilon^{-1})$ & $\Theta(\epsilon^{-1})$ & --
+KEY wilson2021lyapunov COUNT 1
+  sections/Acceleration.tex:362 the distance term of the estimate-sequence Lyapunov function~\cite{nesterov2018lectures,wilson2021lyapunov}, since under Nesterov extrapolation the dual gap alone need not decrease. The primal part replaces
+KEY xie2021proximal COUNT 1
+  sections/Introduction.tex:64 augmented Lagrangian methods (ALMs)~\cite{sahin2019inexact,li2021rate,xie2021proximal} solve a subproblem approximately at every outer iteration, which incurs inner-loop overhead and
+KEY xu2023unified COUNT 4
+  sections/Introduction.tex:98 GDA~\cite{zhang2020smoothed} and dual perturbation in Perturbed GDA~\cite{lu2020hybrid,xu2023unified} each improve the rate to $\mathcal O(\epsilon^{-4})$. Combining both techniques, Perturbed Smoothed GDA
+  sections/LRALMFamily.tex:155 \node[cTeal,anchor=south west] at (1.03,0.04) {Perturbed GDA~\cite{lu2020hybrid,xu2023unified}}; % the two regularization directions
+  sections/LRALMFamily.tex:180 \(\beta=0\) with \(\bmu^0=\zero\) yields Perturbed GDA~\cite{lu2020hybrid,xu2023unified} at \(\alpha=1\) and Perturbed Smoothed GDA~\cite{li2026smoothing} for \(\alpha\in(0,1)\). Finally, the region
+  sections/Preliminaries.tex:198 and strong concavity in \(\blmbd\), we add primal~\cite{zhang2020smoothed} and dual~\cite{lu2020hybrid,xu2023unified,zheng2023universal,li2026smoothing} quadratic regularizers centered at \((\bz,\bmu)\in\RR^n\times\RR^m\), yielding
+KEY xu2026rada COUNT 1
+  sections/Introduction.tex:106 $\mathcal O(\epsilon^{-3})$ through $\epsilon$-dependent dual regularization~\cite{pan2021efficient,he2024approximation,xu2026rada}.
+KEY zhang2020smoothed COUNT 10
+  appendix/ValueFunctions.tex:238 \(\bx_s^\star(\cdot)\) parallel those for the smoothed gradient descent--ascent method in~\cite[Lemma~B.2]{zhang2020smoothed}; the bound on \(\blmbd_s^\star(\cdot)\) additionally uses the \(s^{-1}\)-strong concavity
+  sections/Acceleration.tex:342 Building on the potential function in~\cite{zhang2022proximal,zhang2020smoothed,li2026smoothing}, we define the Lyapunov sequence tied to Algorithm~\ref{alg:b2-prime} as
+  sections/Acceleration.tex:359 The above Lyapunov sequence differs from the potential function in~\cite{zhang2022proximal,zhang2020smoothed,li2026smoothing} in the dual and primal parts. The dual part adds
+  sections/Introduction.tex:44 \textbf{Minimizing a pointwise maximum}~\cite{zhang2020smoothed}. For smooth losses $f_1,\dots,f_m$, such as the losses on $m$ data subgroups, one solves
+  sections/Introduction.tex:97 iterations~\cite{lin2020gradient}. Primal smoothing in Smoothed GDA~\cite{zhang2020smoothed} and dual perturbation in Perturbed GDA~\cite{lu2020hybrid,xu2023unified} each improve the rate to
+  sections/Introduction.tex:261 \multicolumn{8}{l}{\textit{Smooth NC-C minimax}\tnote{a}} \\ Smoothed GDA~\cite{zhang2020smoothed,li2026smoothing} & \checkmark & \checkmark & \checkmark & -- & -- & $\Theta(1)$
+  sections/LRALMFamily.tex:145 \node[anchor=north,text=cRed] at (0.5,0.96) {Smoothed GDA~\cite{zhang2020smoothed}}; \node[align=center,text=cNavy] at (0.5,0.5)
+  sections/LRALMFamily.tex:178 linearized ALM~\cite{luSingleLoopGradientDescent2022}, while \(\beta=1\) with \(\alpha\in(0,1)\) gives Smoothed GDA~\cite{zhang2020smoothed}. Setting \(\beta=0\) with \(\bmu^0=\zero\) yields Perturbed
+  sections/LRALMFamily.tex:263 The matching upper bound is attained by Smoothed GDA~\cite{zhang2020smoothed}, the member of \(\calC_\theta\) with \(\beta=1\).
+  sections/Preliminaries.tex:197 fail to converge~\cite{li2026smoothing}. To induce strong convexity in \(\bx\) and strong concavity in \(\blmbd\), we add primal~\cite{zhang2020smoothed} and dual~\cite{lu2020hybrid,xu2023unified,zheng2023universal,li2026smoothing}
+KEY zhang2021complexity COUNT 3
+  sections/Acceleration.tex:100 whose exact computation requires solving a minimax subproblem and leads to double-loop schemes~\cite{kong2021accelerated,zhang2021complexity}. Instead, we replace \(\bx_s^\star(\bz^k)\) with the primal iterate \(\bx^{k+1}\), which
+  sections/Acceleration.tex:401 the single-loop analysis. Double-loop accelerated minimax methods~\cite{kong2021accelerated,zhang2021complexity} avoid this difficulty by solving each proximal subproblem to high accuracy before updating the center.
+  sections/Introduction.tex:304 consistent with the nonconvex-strongly-concave lower bound at dual condition number $\Theta(\epsilon^{-1})$~\cite{zhang2021complexity,li2021complexity}. This rate is attained by multi-loop schemes~\cite{pan2026optimal} and by a
+KEY zhang2022global COUNT 2
+  sections/Introduction.tex:80 complexity rely on structural regularity conditions, such as polyhedral error bounds for affine constraints~\cite{zhang2022global} or uniform LICQ for smooth nonlinear constraints~\cite{elbourkhissi2025linearized,liu2026fixed}.
+  sections/Introduction.tex:250 & $\tilde{\mathcal O}(\epsilon^{-5/2})$ \\ S-prox-ALM~\cite{zhang2022global} & \checkmark & -- & \checkmark & $\Theta(1)$ & -- & $\Theta(1)$
+KEY zhang2022proximal COUNT 2
+  sections/Acceleration.tex:342 Building on the potential function in~\cite{zhang2022proximal,zhang2020smoothed,li2026smoothing}, we define the Lyapunov sequence tied to Algorithm~\ref{alg:b2-prime} as
+  sections/Acceleration.tex:359 The above Lyapunov sequence differs from the potential function in~\cite{zhang2022proximal,zhang2020smoothed,li2026smoothing} in the dual and primal parts. The dual part adds
+KEY zhang2026matching COUNT 2
+  sections/Introduction.tex:267 & \cellcolor{gray!25}$\Theta(\epsilon^{-3})$ \\ Alg.~1 of~\cite{zhang2026matching}\tnote{b} & \checkmark & \checkmark & \checkmark & -- & $\Theta(\epsilon^{-1})$ & $\Theta(1)$
+  sections/Introduction.tex:307 single-loop projected extragradient method with dual gradient averaging~\cite{zhang2026matching}. For nonsmooth composite minimax and affinely constrained problems, existing $\epsilon^{-5/2}$-order algorithms all
+KEY zheng2023universal COUNT 3
+  sections/LRALMFamily.tex:147 \node[align=center,text=cNavy] at (0.5,0.5) {DS-GDA~\cite{zheng2023universal}\\[-1pt] \scriptsize\textcolor{cNavy!75}{$(\alpha,\beta)\in(0,1)^2$}};
+  sections/LRALMFamily.tex:183 \((\alpha,\beta)\in(0,1)^2\) shares the constant-stepsize update structure of doubly smoothed GDA (DS-GDA)~\cite{zheng2023universal}.
+  sections/Preliminaries.tex:198 and strong concavity in \(\blmbd\), we add primal~\cite{zhang2020smoothed} and dual~\cite{lu2020hybrid,xu2023unified,zheng2023universal,li2026smoothing} quadratic regularizers centered at \((\bz,\bmu)\in\RR^n\times\RR^m\), yielding

@@ -2,64 +2,120 @@
 \section{Hard Instances for the Lower Bounds}
 \label{app:lower-bound}
 
-This appendix gives the hard instances used in Section~\ref{sec:lb-proof}.
+This appendix gives the proofs deferred from Section~\ref{sec:lb-proof}
+and the complete analyses of the hard instances. Throughout, we set
+\(\mathbf C_0:=(1,1,0,1,1)\). Since \(\mathcal I(\mathbf C,\Delta)\) and
+\(\mathcal S_0(\mathbf C)\) are monotone in \(\mathbf C\), membership for
+\(\mathbf C_0\) implies membership for every \(\mathbf C\) with
+\(L_f,G_f,G_{\calA},L_h\ge1\).
 
-\subsection{Small primal center stepsize $\alpha$}
-\label{subsec:lb-plateau}
+\subsection{Reduction to a gradient descent-ascent recursion}
+\label{subsec:gda-embedding}
+\label{app:gda-embedding-proof}
 
-In this subsection, we treat the pairs \((\alpha,\beta)\) with
-\(\alpha\le\alpha_\epsilon\). We construct a hard instance on which, for
-every \(\beta\in[0,1]\), \(\mathrm{LRALM}_{\theta,\alpha,\beta}\) requires
-more than \(\Delta/(16\gamma\alpha\epsilon^2)\) iterations to produce an
-\(\epsilon\)-KKT output. The hard instance is
-Example~\ref{ex:plateau} in Section~\ref{subsec:hard-instances}.
+Define the region
+\(\mathcal R_\rho:=\{(\bx,\blmbd)\in\RR^n\times\RR^m:\blmbd+\rho\calA(\bx)\in\partial h(\zero)\}\)
+and the smooth nonconvex-linear function
+\[
+    \Psi_\rho(\bx,\blmbd):=f(\bx)+\frac{\rho}{2}\|\calA(\bx)\|^2
+    +\langle\blmbd,\calA(\bx)\rangle.
+\]
 
-This instance shows that a small primal center stepsize can force
-\(\Omega\bigl(\Delta/(\gamma\alpha\epsilon^2)\bigr)\) iterations even on a
-smooth one-dimensional problem, regardless of the dual center stepsize.
-The iterates must traverse a long constant-gradient interval
-(Figure~\ref{fig:plateau-instance}) before an output can satisfy the KKT
-tolerance. A small \(\alpha\) limits how quickly the center moves, and the
-primal variable stays within a bounded distance of that center. Since the
-multipliers remain zero, every output on this interval has KKT residual
-\(2\epsilon>\epsilon\). The next lemma bounds the distance traveled and
-converts it into a lower bound on the number of iterations.
-
-\begin{lemma}
-\label{lem:plateau}
-Let \((\alpha,\beta)\in[0,1]^2\), and suppose that \(\epsilon\) satisfies the
-condition in Example~\ref{ex:plateau} and \(\epsilon^2\le\Delta/(16\gamma)\).
-Run \(\mathrm{LRALM}_{\theta,\alpha,\beta}\) on Example~\ref{ex:plateau}.
-Then the following hold.
-\begin{enumerate}[label=(\roman*)]
-\item For all \(k\ge0\), \(\lambda^k=\mu^k=0\), \(y^{k+1}=0\), and
-  \(R_k=\|\nabla f(x^{k+1})\|\).
-\item If \(\alpha>0\), then for every integer \(k\) with \(0\le k\le\Delta/(16\gamma\alpha\epsilon^2)\),
-  \[
-  \|z^k-z^0\|\le2\alpha\gamma\epsilon\,k,\qquad
-  \|x^k-z^k\|\le2\gamma\epsilon,
-  \]
-  and
-  \[
-  \|x^k-x^0\|\le2\gamma\epsilon(1+\alpha k)
-  \le x_\star-2\epsilon .
-  \]
-  When \(\alpha=0\), these bounds hold for all \(k\ge0\).
-\item Let \(I\) denote the instance of Example~\ref{ex:plateau}. Then
-  \(T_\epsilon(\theta,\alpha,\beta;I)>\Delta/(16\gamma\alpha\epsilon^2)\)
-  if \(\alpha>0\), and \(T_\epsilon(\theta,\alpha,\beta;I)=+\infty\)
-  if \(\alpha=0\).
-\end{enumerate}
-\end{lemma}
+\begin{proposition}[Local linearity of \(\calD_\rho\) on \(\mathcal R_\rho\)]
+\label{prop:reduction}
+Let \(\rho>0\) and \((\bx,\blmbd)\in\mathcal R_\rho\). Then
+\(\by(\bx,\blmbd)=\zero\), \(\bq(\bx,\blmbd)=\blmbd+\rho\calA(\bx)\),
+\[
+    \nabla_{\bx}\calD_\rho(\bx,\blmbd)=\nabla_{\bx}\Psi_\rho(\bx,\blmbd),
+    \qquad
+    \nabla_{\blmbd}\calD_\rho(\bx,\blmbd)=\nabla_{\blmbd}\Psi_\rho(\bx,\blmbd)
+    =\calA(\bx),
+\]
+and \(\calD_\rho(\bx,\blmbd)=\Psi_\rho(\bx,\blmbd)+h(\zero)\).
+\end{proposition}
 
 \begin{proof}
+Set \(\bv:=\calA(\bx)+\blmbd/\rho\). By~\eqref{eq:prox-multiplier}, \(\by(\bx,\blmbd)\)
+is the unique minimizer of \(h(\by)+\frac{\rho}{2}\|\by-\bv\|^2\), and
+\(\by\) is this minimizer if and only if \(\rho(\bv-\by)\in\partial h(\by)\).
+For \(\by=\zero\) the inclusion reads
+\(\blmbd+\rho\calA(\bx)\in\partial h(\zero)\), which holds because
+\((\bx,\blmbd)\in\mathcal R_\rho\). Hence \(\by(\bx,\blmbd)=\zero\) and
+\(\bq(\bx,\blmbd)=\blmbd+\rho\calA(\bx)\). Since
+\(\nabla_{\bx}\bigl(\frac{\rho}{2}\|\calA(\bx)\|^2\bigr)=\rho J_{\calA}(\bx)^\top\calA(\bx)\),
+\eqref{eq:reduced-al-gradient} gives
+\[
+\nabla_{\bx}\calD_\rho(\bx,\blmbd)=
+\nabla f(\bx)+J_{\calA}(\bx)^\top\bigl(\blmbd+\rho\calA(\bx)\bigr)
+=\nabla_{\bx}\Psi_\rho(\bx,\blmbd),
+\]
+and \(\nabla_{\blmbd}\calD_\rho(\bx,\blmbd)=\calA(\bx)-\zero=\calA(\bx)=\nabla_{\blmbd}\Psi_\rho(\bx,\blmbd)\).
+Finally, completing the square in~\eqref{eq:reduced-al} gives
+\(\calD_\rho(\bx,\blmbd)=f(\bx)+\min_{\by}\{h(\by)+\frac{\rho}{2}\|\by-\bv\|^2\}
+-\frac{1}{2\rho}\|\blmbd\|^2\), and the minimum equals
+\(h(\zero)+\frac{\rho}{2}\|\bv\|^2\) because its minimizer is \(\zero\). Hence
+\[
+\calD_\rho(\bx,\blmbd)
+=f(\bx)+h(\zero)+\frac{\rho}{2}\|\calA(\bx)\|^2+\langle\blmbd,\calA(\bx)\rangle
++\frac{1}{2\rho}\|\blmbd\|^2-\frac{1}{2\rho}\|\blmbd\|^2
+=\Psi_\rho(\bx,\blmbd)+h(\zero).
+\]
+\end{proof}
+
+For \(\theta=(\rho,s,\gamma,\eta,\tau)\) and \((\alpha,\beta)\in[0,1]^2\), consider
+the recursion
+\begin{equation}\label{eq:gda-recursion}
+\begin{aligned}
+\bx^{k+1}&=\bx^k-\eta\Bigl[\nabla_{\bx}\Psi_\rho(\bx^k,\blmbd^k)
+  +\frac{1}{\gamma}(\bx^k-\bz^k)\Bigr],\\
+\blmbd^{k+1}&=\blmbd^k+\tau\Bigl[\nabla_{\blmbd}\Psi_\rho(\bx^{k+1},\blmbd^k)
+  -\frac{1}{s}(\blmbd^k-\bmu^k)\Bigr],\\
+\bz^{k+1}&=\bz^k+\alpha(\bx^{k+1}-\bz^k),\qquad
+\bmu^{k+1}=\bmu^k+\beta(\blmbd^{k+1}-\bmu^k).
+\end{aligned}
+\end{equation}
+
+\begin{proposition}[Embedding]
+\label{prop:embedding}
+Let \(\rho>0\), and let the sequence
+\(\{(\bx^k,\blmbd^k,\bz^k,\bmu^k)\}_{k\ge0}\) be generated by
+\(\mathrm{LRALM}_{\theta,\alpha,\beta}\). Suppose that for some \(K\ge1\),
+\((\bx^k,\blmbd^k)\in\mathcal R_\rho\) and
+\((\bx^{k+1},\blmbd^k)\in\mathcal R_\rho\) for all \(0\le k<K\).
+Then~\eqref{eq:gda-recursion} holds for \(0\le k<K\), and
+\[
+R_k=\max\bigl\{\|\nabla_{\bx}\Psi_\rho(\bx^{k+1},\blmbd^k)\|,\;
+\|\nabla_{\blmbd}\Psi_\rho(\bx^{k+1},\blmbd^k)\|\bigr\},
+\qquad 0\le k<K.
+\]
+\end{proposition}
+
+\begin{proof}
+Apply Proposition~\ref{prop:reduction} at \((\bx^k,\blmbd^k)\) in the
+\(\bx\)-update of~\eqref{eq:splalm-updates}, and at \((\bx^{k+1},\blmbd^k)\) in
+the \(\blmbd\)-update. The same point gives \(\by^{k+1}=\zero\) and
+\(\bq^k=\blmbd^k+\rho\calA(\bx^{k+1})\), so the formula for \(R_k\) follows
+from~\eqref{eq:kkt-residual}.
+\end{proof}
+
+
+\subsection{Proof of Lemma~\ref{lem:main-plateau}}
+\label{subsec:lb-plateau}
+
+\begin{proof}[Proof of Lemma~\ref{lem:main-plateau}]
+A direct check shows that \((f,\calA,h)\in\mathcal I(\mathbf C_0,\Delta)\) with
+\(f(0)=\Delta\) and \(\inf f=f(x_\star)=0\).
+We establish three properties of the iterates of
+\(\mathrm{LRALM}_{\theta,\alpha,\beta}\) on Example~\ref{ex:plateau} from
+\(\bu^0=\zero\).
+
 (i) Since \(\calA\equiv0\) and \(\partial h(0)=[-1,1]\), every pair
 \((x,0)\) lies in \(\mathcal R_\rho\), and \(\Psi_\rho(x,\lambda)=f(x)\). The
 \(\lambda\)-update in~\eqref{eq:gda-recursion} reads
 \(\lambda^{k+1}=\lambda^k-\frac{\tau}{s}(\lambda^k-\mu^k)\). Starting from
 \(\lambda^0=\mu^0=0\), induction gives \(\lambda^k=\mu^k=0\) for all \(k\).
 Proposition~\ref{prop:embedding} then gives \(y^{k+1}=0\) and
-\(R_k=\max\{\|\nabla f(x^{k+1})\|,0\}\).
+\(R_k=\max\{\|\nabla f(x^{k+1})\|,0\}=\|\nabla f(x^{k+1})\|\).
 
 (ii) We use the Euclidean norm, which coincides with the absolute value
 in one dimension. By (i), the primal update gives
@@ -79,17 +135,15 @@ The center update implies
 \qquad
 \|z^{k+1}-z^k\|=\alpha\|x^{k+1}-z^k\|.
 \]
-Starting from \(x^0=z^0\), induction gives
+Starting from \(x^0=z^0=0\), induction gives
 \(\|x^k-z^k\|\le2\gamma\epsilon\) and
 \(\|x^{k+1}-z^k\|\le2\gamma\epsilon\) for all \(k\ge0\).
 Consequently,
 \[
 \|z^k-z^0\|
 \le\sum_{j=0}^{k-1}\|z^{j+1}-z^j\|
-\le2\alpha\gamma\epsilon k.
-\]
-Using \(x^0=z^0=0\), we obtain
-\[
+\le2\alpha\gamma\epsilon k,
+\qquad
 \|x^k-x^0\|
 \le\|x^k-z^k\|+\|z^k-z^0\|
 \le2\gamma\epsilon(1+\alpha k).
@@ -117,47 +171,20 @@ Thus, none of the first
 \(\lfloor\Delta/(16\gamma\alpha\epsilon^2)\rfloor\) outputs is an
 \(\epsilon\)-KKT point. Definition~\ref{def:complexity-measure} yields
 \[
-T_\epsilon(\theta,\alpha,\beta;I)
+T_\epsilon(\theta,\alpha,\beta;I,\zero)
 \ge\left\lfloor\frac{\Delta}{16\gamma\alpha\epsilon^2}\right\rfloor+1
 >\frac{\Delta}{16\gamma\alpha\epsilon^2}.
 \]
 When \(\alpha=0\), (ii) keeps every iterate in the constant-gradient region.
 Hence \(R_k=2\epsilon>\epsilon\) for all \(k\ge0\), and
-\(T_\epsilon(\theta,\alpha,\beta;I)=+\infty\).
+\(T_\epsilon(\theta,\alpha,\beta;I,\zero)=+\infty\).
 \end{proof}
 
-For \(0<\alpha\le\alpha_\epsilon\), Lemma~\ref{lem:plateau}~(iii) gives
-\[
-T_\epsilon(\theta,\alpha,\beta;I)
->\frac{\Delta}{16\gamma\alpha\epsilon^2}
-\ge\frac{\Delta\,\epsilon^{-4}}{16384\,\gamma\max\{1,4\tau,4\gamma\tau\}}.
-\]
-
-\subsection{Large primal center stepsize \texorpdfstring{$\alpha$}{alpha}, and \texorpdfstring{$\beta>0$}{beta>0}}
+\subsection{Proof of Lemma~\ref{lem:main-rotation}}
 \label{subsec:lb-rotation}
 
-In this subsection, we prove the lower bound for
-\(\alpha>\alpha_\epsilon\) and \(\beta>0\). For every such pair, we construct
-a hard instance on which LRALM, initialized at zero, never produces an
-\(\epsilon\)-KKT point. The hard instance is Example~\ref{ex:rotation} in
-Section~\ref{subsec:hard-instances}.
-
-% On the region where the objective is quadratic, and as long as the prox
-% outputs vanish, every update of LRALM is linear. One iteration is therefore
-% a fixed matrix acting on the current state, and the eigenvalues of this
-% matrix determine the trajectory. If all eigenvalues had modulus less than
-% one, the iterates would converge to a KKT point and the residual would
-% vanish; if some eigenvalue had modulus greater than one, the iterates would
-% leave the quadratic region. We therefore choose the parameters so that the
-% matrix has a non-real eigenvalue of modulus one. The corresponding component
-% of the trajectory rotates with constant amplitude and never settles at a
-% fixed point. The initialization is fixed at zero and is not on this
-% component. We show that the trajectory from zero differs from the rotation
-% by a decaying term that stays small at every iteration, so the residual
-% stays above \(\epsilon\). The hard instance is given below.
-
-To establish this lower bound, we analyze the LRALM updates on
-Example~\ref{ex:rotation}. Specifically, since \(h=\|\cdot\|_2\), Proposition~\ref{prop:reduction} ensures that both proximal outputs vanish
+We analyze \(\mathrm{LRALM}_{\theta,\alpha,\beta}\) on Example~\ref{ex:rotation}
+initialized at \(\bu^0=\zero\). Since \(h=\|\cdot\|_2\), Proposition~\ref{prop:reduction} ensures that both proximal outputs vanish
 whenever
 \[
 \max_{j\in\{k,k+1\}}\|\lambda^k+\rho\calA(x^j)\|\le1.
@@ -231,8 +258,8 @@ and the KKT residual remains above \(\epsilon\).
 \begin{lemma}
 \label{lem:rot-estimates}
 Let \(\alpha>\alpha_\epsilon\), \(0<\beta\le1\), \(0<\epsilon<c_2\), and
-\(\epsilon(\rho+s)\le c_1\), with \(c_1,c_2\) as specified in
-Theorem~\ref{thm:lower-bound}. Then:
+\(\epsilon(\rho+s)\le c_1\), with \(c_1\), \(c_2\), and \(\alpha_\epsilon\)
+given in~\eqref{eq:rot-thresholds}. Then:
 \begin{enumerate}[label=(\roman*)]
 \item the instance of Example~\ref{ex:rotation} belongs to
   \(\mathcal I(\mathbf C_0,\Delta)\);
@@ -250,8 +277,7 @@ given in Appendix~\ref{app:lb-rotation}.
 
 Using these estimates, we now show that the sequence generated by the linear
 recursion coincides with the LRALM iterates and that its KKT residual
-remains above \(\epsilon\) at every iteration (see
-Figure~\ref{fig:rotation-instance} for a concrete trajectory).
+remains above \(\epsilon\) at every iteration.
 
 \begin{lemma}
 \label{lem:rot-trajectory}
@@ -264,7 +290,7 @@ x^k-x_c=\zeta^kX+(\mathbb T^k\br)_x,
 \lambda^k-\lambda_c=\zeta^k\Lambda+(\mathbb T^k\br)_\lambda,
 \]
 and \(R_k\ge\frac76\epsilon\). Hence
-\(T_\epsilon(\theta,\alpha,\beta;I)=+\infty\).
+\(T_\epsilon(\theta,\alpha,\beta;I,\zero)=+\infty\).
 \end{lemma}
 
 \begin{proof}
@@ -332,55 +358,21 @@ right-hand side below by \(\frac{23}{32}b\|\Lambda\|\). If
 \(X\ge\|\Lambda\|\), we use the second term instead. In both cases,
 \(R_k\ge\frac b2\max\{X,\|\Lambda\|\}=\frac b6\ge\frac76\epsilon\).
 \end{proof}
- 
 
-
-\subsection{Large primal center stepsize \texorpdfstring{$\alpha$}{alpha}, and \texorpdfstring{$\beta=0$}{beta=0}}
+\subsection{Proof of Lemma~\ref{lem:main-huber}}
 \label{subsec:lb-huber}
 
-In this subsection, we prove the lower bound for \(\alpha>\alpha_\epsilon\)
-and \(\beta=0\), using Example~\ref{ex:huber} in
-Section~\ref{subsec:hard-instances}. On this instance, \(\mathrm{LRALM}_{\theta,\alpha,0}\), initialized
-at zero, never produces an \(\epsilon\)-KKT point, for every
-\(\alpha\in[0,1]\).
-
-When \(\beta=0\), the dual center stays at \(\mu^k=\mu^0=0\). The dual
-perturbation term \(-\frac{1}{2s}\|\lambda\|^2\) in~\eqref{eq:potential}
-therefore pulls \(\lambda^k\) toward zero at every iteration. On this
-instance, the output \(y^{k+1}\) equals \(a_0\) only when
-\(\lambda^k=\nabla h(a_0)=q_ha_0\), whereas the dual iterates converge to a
-smaller value. The difference keeps the feasibility residual
-\(\|\calA(x^{k+1})-y^{k+1}\|\) above \(\epsilon\) at every iteration. Since
-\(J_{\calA}=0\), the multiplier does not enter the primal update, and the
-dual iterates have the closed form given in the next lemma.
-
-\begin{lemma}
-\label{lem:huber}
-Let \(\alpha\in[0,1]\) and \(\beta=0\). Suppose that \(\epsilon\) satisfies
-the condition in Example~\ref{ex:plateau} and \(\epsilon(\rho+s)\le c_1\),
-with \(c_1\) as specified in Theorem~\ref{thm:lower-bound}. Run
-\(\mathrm{LRALM}_{\theta,\alpha,0}\) on Example~\ref{ex:huber}, and set
+\begin{proof}[Proof of Lemma~\ref{lem:main-huber}]
+Since \(h\) is convex and \(1\)-Lipschitz, \(\calA\) is constant, and
+\(F=f+h(a_0)\) has the same initial gap \(\Delta\) as \(f\), we have
+\((f,\calA,h)\in\mathcal I(\mathbf C_0,\Delta)\).
+Run \(\mathrm{LRALM}_{\theta,\alpha,0}\) on Example~\ref{ex:huber} from
+\(\bu^0=\zero\), and set
 \[
 \varphi:=1-\frac{\tau}{s}-\frac{\tau}{\rho+q_h},
 \qquad
 \bar\lambda:=\frac{s\,q_ha_0}{\rho+q_h+s}.
 \]
-Then the following hold.
-\begin{enumerate}[label=(\roman*)]
-\item For all \(k\ge0\),
-  \[
-  \mu^k=0,\qquad
-  \lambda^k=\bar\lambda\bigl(1-\varphi^k\bigr),\qquad
-  y^{k+1}=\frac{\rho a_0+\lambda^k}{\rho+q_h}.
-  \]
-\item For all \(k\ge0\),
-  \(R_k\ge\|\calA(x^{k+1})-y^{k+1}\|\ge3\epsilon\). Hence, with \(I\) the
-  instance of Example~\ref{ex:huber},
-  \(T_\epsilon(\theta,\alpha,0;I)=+\infty\).
-\end{enumerate}
-\end{lemma}
-
-\begin{proof}
 We first collect three bounds on the parameters. Since \(0<\tau\le s\) and
 \(\rho+q_h>2s\),
 \begin{equation}
@@ -401,9 +393,11 @@ q_ha_0=4\epsilon(\rho+3s+1)
 \le\frac14 .
 \]
 
-(i) Since \(\beta=0\) and \(\mu^0=0\), the dual center update gives
-\(\mu^k=0\) for all \(k\). Next, fix \(x\in\RR\) and
-\(\lambda\in[0,q_ha_0]\), and set
+We first show by induction that for all \(k\ge0\),
+\(\mu^k=0\), \(\lambda^k=\bar\lambda(1-\varphi^k)\), and
+\(y^{k+1}=(\rho a_0+\lambda^k)/(\rho+q_h)\). Since \(\beta=0\) and \(\mu^0=0\),
+the dual center update gives \(\mu^k=0\) for all \(k\). Next, fix \(x\in\RR\)
+and \(\lambda\in[0,q_ha_0]\), and set
 \(y_\lambda:=(\rho a_0+\lambda)/(\rho+q_h)\). Then
 \(0\le y_\lambda\le a_0\le q_h^{-1}\), where the last inequality uses
 \(q_ha_0\le\frac14\). On \([-q_h^{-1},q_h^{-1}]\), the function \(h\) is
@@ -419,11 +413,10 @@ in~\eqref{eq:reduced-al}. Hence \(y(x,\lambda)=y_\lambda\), and
 By Danskin's theorem,
 \(\nabla_\lambda\calD_\rho(x,\lambda)=\calA(x)-y(x,\lambda)\).
 
-We now prove the formula for \(\lambda^k\) by induction. It holds for
-\(k=0\) because \(\lambda^0=0\). Assume that it holds for some \(k\ge0\).
-Then \(\lambda^k\in[0,q_ha_0]\), so
-\(y^{k+1}=y(x^{k+1},\lambda^k)=y_{\lambda^k}\). Together with
-\(\mu^k=0\), the dual update in~\eqref{eq:splalm-updates} reads
+The formula for \(\lambda^k\) holds at \(k=0\) because \(\lambda^0=0\).
+Assume that it holds for some \(k\ge0\). Then \(\lambda^k\in[0,q_ha_0]\), so
+\(y^{k+1}=y(x^{k+1},\lambda^k)=y_{\lambda^k}\). Together with \(\mu^k=0\), the
+dual update in~\eqref{eq:splalm-updates} reads
 \[
 \lambda^{k+1}
 =\lambda^k+\tau\Bigl[\frac{q_ha_0-\lambda^k}{\rho+q_h}
@@ -434,11 +427,11 @@ A direct computation shows that
 \(\bar\lambda=\varphi\bar\lambda+\tau q_ha_0/(\rho+q_h)\). Subtracting the
 two identities gives
 \(\lambda^{k+1}-\bar\lambda=\varphi(\lambda^k-\bar\lambda)
-=-\bar\lambda\varphi^{k+1}\), which completes the induction.
+=-\bar\lambda\varphi^{k+1}\), completing the induction.
 
-(ii) Since \(J_{\calA}=0\), \eqref{eq:kkt-residual} gives
-\(R_k=\max\{\|\nabla f(x^{k+1})\|,\|\calA(x^{k+1})-y^{k+1}\|\}\). By (i)
-and \(q_ha_0-\bar\lambda=q_ha_0(\rho+q_h)/(\rho+q_h+s)\),
+Finally, since \(J_{\calA}=0\), \eqref{eq:kkt-residual} gives
+\(R_k=\max\{\|\nabla f(x^{k+1})\|,\|\calA(x^{k+1})-y^{k+1}\|\}\). Using
+\(q_ha_0-\bar\lambda=q_ha_0(\rho+q_h)/(\rho+q_h+s)\),
 \[
 \calA(x^{k+1})-y^{k+1}
 =\frac{q_ha_0-\lambda^k}{\rho+q_h}
@@ -447,9 +440,9 @@ and \(q_ha_0-\bar\lambda=q_ha_0(\rho+q_h)/(\rho+q_h+s)\),
 \]
 where the last equality uses \(\rho+q_h+s=\rho+3s+1\).
 By~\eqref{eq:huber-ratio}, \(\frac{s}{\rho+q_h}\varphi^k>-\frac14\), so
-\(\|\calA(x^{k+1})-y^{k+1}\|>3\epsilon\). Thus no output is an
+\(R_k\ge\|\calA(x^{k+1})-y^{k+1}\|>3\epsilon\). Thus no output is an
 \(\epsilon\)-KKT point, and
-\(T_\epsilon(\theta,\alpha,0;I)=+\infty\).
+\(T_\epsilon(\theta,\alpha,0;I,\zero)=+\infty\).
 \end{proof}
 
 \subsection{Details for the rotating instance}
@@ -458,24 +451,22 @@ By~\eqref{eq:huber-ratio}, \(\frac{s}{\rho+q_h}\varphi^k>-\frac14\), so
 \subsubsection{Parameters}
 \label{app:lb-rotation-params}
 Let \(V:=\beta+\frac{\tau}{s}(1-\beta)\) and
-\begin{equation}
+\[
 \nu:=\frac{64\eta\tau\alpha\beta\epsilon^2}
   {\bigl(\alpha+\frac{\eta}{\gamma}(1-\alpha)\bigr)V},
 \qquad
 \zeta:=1-\frac{\nu}{2}+i\sqrt{\nu-\frac{\nu^2}{4}} .
-\label{eq:rot-basic}
-\end{equation}
+\]
 Under the conditions of Lemma~\ref{lem:rot-estimates}, \(0<\nu<4\); hence
 \(\zeta\notin\RR\), \(|\zeta|=1\), and \(|\zeta-1|^2=\nu\). Let
 \(W:=1+\frac{\eta}{\gamma}\alpha(1-\alpha)/|\zeta-1+\alpha|^2\), and define
-\begin{equation}
+\[
 b^2:=\frac{\nu W|\zeta-1+V|^2}{\eta\tau\bigl(\beta V+(1-V)\nu\bigr)},
 \qquad
 a:=\frac{\nu(W-1)}{\eta\alpha}+\frac{\tau b^2(V-\beta)}{|\zeta-1+V|^2},
 \qquad
 c_\kappa:=\rho b^2+a.
-\label{eq:rot-b-a}
-\end{equation}
+\]
 Let \(X>0\) be such that \(\max\{X,\|\Lambda\|\}=\frac13\), where
 \(\Lambda:=\frac{\tau b\zeta(\zeta-1+\beta)}{(\zeta-1)(\zeta-1+V)}X\), and set
 \begin{equation}
@@ -488,7 +479,8 @@ are chosen so that \(-\bu_c-\bv\) lies in the \(\mathbb T\)-invariant subspace
 on which the spectral radius of \(\mathbb T\) is less than one.
 
 
-We use the following choices of the constants in Theorem~\ref{thm:lower-bound}:
+We use the following choices of the constants in Theorem~\ref{thm:lower-bound}
+and of the partition threshold \(\alpha_\epsilon\):
 \begin{equation}
 \label{eq:rot-thresholds}
 \begin{aligned}
@@ -499,7 +491,8 @@ c_1&:=\min\left\{
 c_2&:=\min\left\{\frac1{64},\,
 \frac1{32\sqrt{\max\{1,4\tau,4\gamma\tau\}}},\,
 \frac\Delta{12},\,\frac{\sqrt\Delta}{2},\,
-\sqrt{\frac\Delta{64\gamma}}\right\}.
+\sqrt{\frac\Delta{64\gamma}}\right\},\\
+\alpha_\epsilon&:=1024\max\{1,4\tau,4\gamma\tau\}\,\epsilon^2.
 \end{aligned}
 \end{equation}
 Throughout this appendix, assume the parameter conditions of
@@ -517,7 +510,7 @@ H:=|\zeta-1+V|^2=V^2+(1-V)\nu,
 \[
 \Upsilon:=\beta V+(1-V)\nu,\qquad
 \xi:=\frac{\eta\tau b^2(V-\beta)}H,\qquad
-C_{\rm tr}:=\frac1{d_\tau}+\frac{2(1+d_\tau^{-1})}{\chi}.
+C_\mathrm{tr}:=\frac1{d_\tau}+\frac{2(1+d_\tau^{-1})}{\chi}.
 \]
 These quantities are used only to prove the estimates and spectral identities.
 
@@ -562,10 +555,10 @@ Since \(V\Upsilon-\beta H=(1-V)(V-\beta)\nu\ge0\),
 \]
 Also, \(H\ge V^2\), \(V\ge d_\tau\), and \(V-\beta\le V\) imply
 \(0\le\xi\le\eta s b^2\). Using
-\(C_{\rm tr}\le(1+4/\chi)/d_\tau\) and~\eqref{eq:rot-thresholds}, we obtain
+\(C_\mathrm{tr}\le(1+4/\chi)/d_\tau\) and~\eqref{eq:rot-thresholds}, we obtain
 \begin{equation}
 \label{eq:rot-small-feedback}
-\xi C_{\rm tr}
+\xi C_\mathrm{tr}
 \le\frac{64\eta(1+4/\chi)}\tau(\epsilon s)^2
 \le\frac1{16}.
 \end{equation}
@@ -579,7 +572,7 @@ now yields \(b^2/(64\epsilon^2)\ge12/13>49/64\), proving
 The normalization of \(X\) gives \(\max\{X,\|\Lambda\|\}=1/3\).
 
 To bound \(a\), set
-\(a_{\rm p}:=\nu(W-1)/(\eta\alpha)\) and \(a_{\rm d}:=\xi/\eta\).
+\(a_\mathrm{p}:=\nu(W-1)/(\eta\alpha)\) and \(a_\mathrm{d}:=\xi/\eta\).
 The definitions imply
 \begin{equation}
 \label{eq:rot-algebra-identities}
@@ -587,8 +580,8 @@ The definitions imply
 \qquad \eta\tau b^2=\nu W+V\xi,
 \qquad U-D=\frac{(1-\alpha)\nu(W-1)}\alpha.
 \end{equation}
-Hence \(a=a_{\rm p}+a_{\rm d}\),
-\(a_{\rm p}\le\tau b^2/\alpha\), and \(a_{\rm d}\le sb^2\).
+Hence \(a=a_\mathrm{p}+a_\mathrm{d}\),
+\(a_\mathrm{p}\le\tau b^2/\alpha\), and \(a_\mathrm{d}\le sb^2\).
 Since \(c_1\le1/224\) and \(\epsilon<1/64\),
 \[
 0<c_\kappa\le(\rho+s)b^2+\frac{\tau b^2}\alpha
@@ -607,21 +600,20 @@ Moreover,
 where the difference in the first inequality is \((V-\beta)\nu/2\).
 Consequently,
 \[
-\frac{a_{\rm p}X}{b\|\Lambda\|}
+\frac{a_\mathrm{p}X}{b\|\Lambda\|}
 =\frac{\sqrt\nu(W-1)\Upsilon}{\alpha W\sqrt{HE_\beta}}
 \le\frac{\sqrt\nu}\alpha\le\frac18,
 \]
 \[
-\frac{a_{\rm p}X^2}{b^2\|\Lambda\|^2}
+\frac{a_\mathrm{p}X^2}{b^2\|\Lambda\|^2}
 =\frac{\eta(W-1)\Upsilon^2}{\alpha W^2HE_\beta}
 \le\frac\eta D\le2\gamma.
 \]
-Adding the bound on \(a_{\rm d}\) proves the asserted bound on \(aX\)
+Adding the bound on \(a_\mathrm{d}\) proves the asserted bound on \(aX\)
 and also gives
-\begin{equation}
-\label{eq:rot-gap-curvature}
+\[
 c_\kappa X^2\le(\rho+s+2\gamma)b^2\max\{X^2,\|\Lambda\|^2\}.
-\end{equation}
+\]
 Finally, \(b\le8\epsilon\) and~\eqref{eq:rot-thresholds} imply
 \[
 bs\Bigl(\frac1\chi+\frac52\Bigr)
@@ -729,10 +721,10 @@ proved above give \(\zeta\notin\RR\) and \(|\zeta|=1\).
 We next prove
 \begin{equation}
 \label{eq:rot-annihilator}
-Q_{\rm f}(\mathbb T)\br=0,
-\qquad Q_{\rm f}(t):=(t-1+D)(t-1+V)-\vartheta(t-1+\alpha).
+Q_\mathrm{f}(\mathbb T)\br=0,
+\qquad Q_\mathrm{f}(t):=(t-1+D)(t-1+V)-\vartheta(t-1+\alpha).
 \end{equation}
-First consider distinct roots \(t_1,t_2\) of \(Q_{\rm f}\), with
+First consider distinct roots \(t_1,t_2\) of \(Q_\mathrm{f}\), with
 \(\alpha<1\), \(\beta<1\), \(d_\tau<1\), \(V\ne\alpha\), and all
 following denominators nonzero. An eigenvector associated with a root \(t\) is
 \[
@@ -752,14 +744,14 @@ coordinates, and equal second and fourth coordinates, gives
 \]
 To solve these two equations, set
 \(S_0:=c_1'+c_2'\), \(S_1:=\sum_j(t_j-1)c_j'\),
-\(C_{\rm f}:=D+V-\vartheta\), and \(D_{\rm f}:=DV-\alpha\vartheta\).
-At a root \(v=t_j-1\) of \(v^2+C_{\rm f}v+D_{\rm f}\),
+\(C_\mathrm{f}:=D+V-\vartheta\), and \(D_\mathrm{f}:=DV-\alpha\vartheta\).
+At a root \(v=t_j-1\) of \(v^2+C_\mathrm{f}v+D_\mathrm{f}\),
 \[
 \frac v{v+\alpha}
-=\frac{D_{\rm f}+\alpha v}{\alpha^2-C_{\rm f}\alpha+D_{\rm f}},
+=\frac{D_\mathrm{f}+\alpha v}{\alpha^2-C_\mathrm{f}\alpha+D_\mathrm{f}},
 \qquad
 \frac{v+1}{v+V}
-=\frac{D_{\rm f}-C_{\rm f}+V-(1-V)v}{V^2-C_{\rm f}V+D_{\rm f}}.
+=\frac{D_\mathrm{f}-C_\mathrm{f}+V-(1-V)v}{V^2-C_\mathrm{f}V+D_\mathrm{f}}.
 \]
 The two denominators equal \(\alpha(W-1)(V-\alpha)\) and
 \(\vartheta(V-\alpha)\), respectively. The resulting system has
@@ -776,7 +768,7 @@ formula for \(r_\lambda\). The center synchronization gives
 Thus this linear combination is precisely \(\br\), proving
 \eqref{eq:rot-annihilator} in the stated nondegenerate case.
 
-All entries of \(Q_{\rm f}(\mathbb T)\br\) are continuous functions
+All entries of \(Q_\mathrm{f}(\mathbb T)\br\) are continuous functions
 of the admissible parameters: \(\alpha,b,V>0\), \(W+\xi>0\), and
 \(|\zeta-1+\alpha|,|\zeta-1+V|>0\).
 To justify the density used here, first take
@@ -784,11 +776,11 @@ To justify the density used here, first take
 Then \(W-1>0\) and \(\vartheta>0\), so the two displayed denominators
 and the coefficient determinant are nonzero. Moreover,
 \[
-Q_{\rm f}(1)=DV-\alpha\vartheta
+Q_\mathrm{f}(1)=DV-\alpha\vartheta
 =\frac{\alpha\beta\eta\tau b^2}{\nu}>0,
 \]
 so neither root equals one. The remaining exclusion is a repeated root.
-For fixed \(\alpha,\beta,d_\tau\), its discriminant
+Given \(\alpha,\beta,d_\tau\), its discriminant
 \[
 (D+V-\vartheta)^2-4(DV-\alpha\vartheta)
 \]
@@ -803,20 +795,20 @@ first decrease \(\epsilon\) slightly if
 Taking limits therefore proves~\eqref{eq:rot-annihilator} also when roots
 coincide, \(V=\alpha\), or \(\alpha=1\), \(\beta=1\), or \(d_\tau=1\).
 
-To locate the roots of \(Q_{\rm f}\), note that
+To locate the roots of \(Q_\mathrm{f}\), note that
 \(0<D,V\le1\) and, by~\eqref{eq:rot-small-feedback},
 \[
 \frac{2\vartheta}{DV}\le\frac{4\xi}{\chi d_\tau}
-\le2\xi C_{\rm tr}\le\frac18.
+\le2\xi C_\mathrm{tr}\le\frac18.
 \]
 If \(|t|\ge1\), then
 \[
 |(t-1+D)(t-1+V)|\ge DV|t|^2
 >2\vartheta|t|\ge|\vartheta(t-1+\alpha)|.
 \]
-Thus every root of \(Q_{\rm f}\) lies inside the unit circle.
-The subspace \(\ker Q_{\rm f}(\mathbb T)\) is invariant under \(\mathbb T\),
-and every eigenvalue of the restriction is a root of \(Q_{\rm f}\).
+Thus every root of \(Q_\mathrm{f}\) lies inside the unit circle.
+The subspace \(\ker Q_\mathrm{f}(\mathbb T)\) is invariant under \(\mathbb T\),
+and every eigenvalue of the restriction is a root of \(Q_\mathrm{f}\).
 It contains \(\br\) by~\eqref{eq:rot-annihilator}, proving (ii), including
 repeated roots. Finally, \(\bv+\br=-\bu_c\) follows from
 \eqref{eq:rot-shift}, proving (iii).
@@ -829,14 +821,14 @@ Write \((\mathbb T^k\br)_x\), \((\mathbb T^k\br)_\lambda\), and
 \((\mathbb T^k\br)_\mu\) as \(p_k,\ell_k,m_k\), respectively.
 These are components of the linear recursion, not new algorithm iterates.
 By the preceding spectral proof, all these components tend to zero.
-Put \(r_{\rm p}:=1-D\), \(r_{\rm d}:=1-V\), and
+Put \(r_\mathrm{p}:=1-D\), \(r_\mathrm{d}:=1-V\), and
 \(\vartheta:=(1-V)\xi\). Equation~\eqref{eq:rot-annihilator} gives
 \[
-p_{k+2}-(r_{\rm p}+r_{\rm d})p_{k+1}+r_{\rm p}r_{\rm d}p_k
+p_{k+2}-(r_\mathrm{p}+r_\mathrm{d})p_{k+1}+r_\mathrm{p}r_\mathrm{d}p_k
 =\vartheta\bigl(p_{k+1}-(1-\alpha)p_k\bigr).
 \]
 The initial values are \(p_0=r_x\) and
-\(p_1=r_{\rm p}r_x+\omega_x\), where
+\(p_1=r_\mathrm{p}r_x+\omega_x\), where
 \[
 \omega_x:=\xi\left((1-\alpha)r_x+
 \frac{(V-\alpha)\zeta}{\zeta-1+V}X\right).
@@ -851,19 +843,19 @@ As \(|V-\alpha|\le1\), it follows that
 \begin{equation}
 \label{eq:rot-initial-transient}
 |r_x|+\frac{|\omega_x|}D
-\le\left(\frac18+\xi C_{\rm tr}\right)X\le\frac{3X}{16}.
+\le\left(\frac18+\xi C_\mathrm{tr}\right)X\le\frac{3X}{16}.
 \end{equation}
 
 For \(j\ge0\), define the convolution kernel
-\(G_j:=\sum_{i=0}^jr_{\rm p}^{j-i}r_{\rm d}^i\).
-Since \(0\le r_{\rm p},r_{\rm d}<1\),
+\(G_j:=\sum_{i=0}^jr_\mathrm{p}^{j-i}r_\mathrm{d}^i\).
+Since \(0\le r_\mathrm{p},r_\mathrm{d}<1\),
 \[
-0\le G_j\le\sum_{i=0}^jr_{\rm p}^{j-i}\le\frac1D,
+0\le G_j\le\sum_{i=0}^jr_\mathrm{p}^{j-i}\le\frac1D,
 \qquad \sum_{j\ge0}G_j=\frac1{DV}.
 \]
 Solving the scalar recurrence gives, for \(k\ge1\),
 \[
-p_k=r_{\rm p}^kr_x+G_{k-1}\omega_x+
+p_k=r_\mathrm{p}^kr_x+G_{k-1}\omega_x+
 \vartheta\sum_{j=0}^{k-2}G_{k-2-j}\bigl(p_{j+1}-(1-\alpha)p_j\bigr),
 \]
 with an empty sum when \(k=1\). This formula follows by substitution
@@ -927,268 +919,52 @@ Thus
 as required.
 \end{proof}
 
-\subsection{Large primal center stepsize at \texorpdfstring{\(s=c_s/\epsilon\)}{s=cs/epsilon}}
+\subsection{Proof of Lemma~\ref{lem:main-radial}}
 \label{app:radial}
 
-This appendix proves only the large primal-center stepsize branch for
-\(s=c_s/\epsilon\). We use the initialization, update order, output,
-problem class, and first hitting time of
-Definitions~\ref{def:splalm}, \ref{def:problem-class}, and
-\ref{def:complexity-measure}. The instance has the radial form of
-Example~\ref{ex:rotation}, but its frequency and amplitude are chosen
-differently. Neither the hypothesis \(\epsilon(\rho+s)\le c_1\) nor
-\(\beta>0\) is imposed. In particular, the strict spectral-radius
-conclusion of Lemma~\ref{lem:rot-spectral} is not invoked.
-
-We identify \(\RR^2\) with \(\mathbb C\), as in the preliminaries.
-Thus each complex coordinate below represents a real two-dimensional
-block, its modulus is its Euclidean norm, and
-\(\langle p,q\rangle=\operatorname{Re}(\overline p q)\).
-All matrices acting on the four complex coordinates have real entries.
-
-\subsubsection{Fixed constants and the statement}
-\label{subsec:radial-constants}
-
-Fix
-\[
-\rho>0,\qquad 0<\eta\le\gamma,\qquad
-\tau>0,\qquad c_s>0,\qquad \Delta>0,
-\qquad \chi:=\frac{\eta}{\gamma}\in(0,1].
-\]
-Choose the following explicit positive constants:
+Throughout this subsection we identify \(\RR^2\) with \(\mathbb C\), so each
+complex coordinate represents a vector in \(\RR^2\) with Euclidean norm equal to
+its modulus and \(\langle p,q\rangle=\operatorname{Re}(\overline p q)\).
+Given fixed \(\rho>0\), \(0<\eta\le\gamma\), \(\tau>0\), \(c_s>0\), and
+\(\Delta>0\), set \(\chi:=\eta/\gamma\in(0,1]\) and define the constants
 \begin{equation}
 \begin{aligned}
 \omega_0&:=\min\left\{
-  \frac{\chi}{512},\,
-  \frac{\sqrt{\eta\tau}}{2},\,
-  \sqrt{\frac{\eta}{4(1+\rho/\tau)}}\right\},
-&\delta_0&:=\frac{\omega_0^2}{64},\\
-M_\lambda&:=\frac{400}{\chi^2},
-&A_0&:=\min\left\{
-  \frac14,\,\frac{\Delta}{4},\,
-  \frac{1}{8(1+M_\lambda)+5\rho}\right\},\\
-c_{\rm r}&:=\frac34 A_0\omega_0
-  \min\left\{\frac{1}{\sqrt{\eta\tau}},\frac{1}{2\tau}\right\},
-&B&:=\max\left\{1,\frac{\tau}{c_s\delta_0},\frac{2}{c_{\rm r}}\right\},\\
-\epsilon_{\rm r}&:=\min\left\{1,\frac{c_s}{2\tau},\frac{1}{2B}\right\}.
+  \frac12,\;
+  \frac{\sqrt{\eta\tau}}{2},\;
+  \frac12\sqrt{\frac{\eta}{1+\rho/\tau}}\right\},
+& A_0&:=\min\left\{\frac14,\;\frac{\Delta}{2},\;\frac{1}{2+\rho}\right\},\\
+c_\mathrm{r}&:=A_0\omega_0
+  \min\left\{\frac{1}{\sqrt{\eta\tau}},\;\frac{1}{2\tau}\right\},
+& B&:=\max\left\{1,\;\frac{2\tau}{c_s\omega_0^2},\;\frac{1}{c_\mathrm{r}}\right\},\\
+\epsilon_\mathrm{r}&:=\min\left\{\frac12,\;\frac{c_s}{2\tau},\;\frac{1}{B}\right\}.
 \end{aligned}
 \label{eq:radial-fixed-constants}
 \end{equation}
-These constants depend only on
-\((\rho,\gamma,\eta,\tau,c_s,\Delta)\). They do not depend on
-\(\epsilon,\alpha,\beta\), or the instance dimensions.
-The constant \(\delta_0\) bounds \(d/\alpha\).
+These constants depend only on \((\rho,\gamma,\eta,\tau,c_s,\Delta)\).
 
-\begin{lemma}[Large primal center stepsizes at \(s=c_s/\epsilon\)]
-\label{lem:radial}
-Let the constants be given by~\eqref{eq:radial-fixed-constants}.
-For every
-\[
-0<\epsilon<\epsilon_{\rm r},\qquad
-\alpha\in(B\epsilon,1],\qquad \beta\in[0,1],\qquad
-s:=\frac{c_s}{\epsilon},
-\]
-there exists an instance
-\(I\in\mathcal I(\mathbf C_0,\Delta)\), with
-\(\mathbf C_0=(1,1,0,1,1)\) and \(n=m=2\), such that LRALM
-started from zero satisfies
-\[
-R_k\ge c_{\rm r}\alpha>\epsilon
-\qquad\text{for every }k\ge0.
-\]
-Consequently,
-\[
-T_\epsilon(\theta(\epsilon),\alpha,\beta;I)
-=+\infty,
-\qquad
-\theta(\epsilon)=(\rho,c_s/\epsilon,\gamma,\eta,\tau).
-\]
-\end{lemma}
-
-The proof is completed in Step~5 below. Throughout the construction let
-\[
-d:=\frac{\tau}{s}=\frac{\tau\epsilon}{c_s}.
-\]
-The choice of \(B\) and the strict inequality \(\alpha>B\epsilon\)
-give
-\begin{equation}
-0<d<\delta_0\alpha,\qquad 0<\alpha\le1,
-\qquad d<\frac12,
-\qquad 0<\omega_0\le\frac{\chi}{512}\le\frac1{512}.
-\label{eq:radial-domain}
-\end{equation}
-In particular, \(s>\tau\), as required by Definition~\ref{def:splalm}.
-
-\subsubsection{Parameters of the linear recursion}
-\label{subsec:radial-parameters}
-
-Set
+Given \(\epsilon\in(0,\epsilon_\mathrm{r})\), \(\alpha\in(B\epsilon,1]\),
+\(\beta\in[0,1]\), and \(s:=c_s/\epsilon\), and write \(d:=\tau/s=\tau\epsilon/c_s\).
+By~\eqref{eq:radial-fixed-constants}, we have \(0<d\le\frac12\),
+\(d<\frac{\omega_0^2}{2}\alpha\), and \(s>\tau\). Define the instance parameters
 \begin{equation}
 \begin{aligned}
 \nu&:=\omega_0^2\alpha^2,
-&\zeta&:=1-\frac{\nu}{2}
-       +\mathrm{i}\sqrt{\nu-\frac{\nu^2}{4}},
+&\zeta&:=1-\frac{\nu}{2}+\mathrm{i}\sqrt{\nu-\frac{\nu^2}{4}},
 &u&:=\zeta-1,\\
 V&:=\beta+d(1-\beta),
-&E&:=\alpha^2+(1-\alpha)\nu,
-&W&:=1+\frac{\chi\alpha(1-\alpha)}{E},\\
-D&:=\alpha W,
-&H&:=V^2+(1-V)\nu,
-&\Upsilon&:=\beta V+(1-V)\nu,\\
+&E_\alpha&:=|u+\alpha|^2=\alpha^2+(1-\alpha)\nu,
+&W&:=1+\frac{\chi\alpha(1-\alpha)}{E_\alpha},\\
+H&:=|u+V|^2=V^2+(1-V)\nu,
+&\Upsilon&:=\beta V+(1-V)\nu,
+&\xi&:=\frac{\nu W(V-\beta)}{\Upsilon},\\
 b^2&:=\frac{\nu WH}{\eta\tau\Upsilon},
-&\xi&:=\frac{\nu W(V-\beta)}{\Upsilon},
-&a&:=\frac{\nu(W-1)}{\eta\alpha}+\frac{\xi}{\eta},\\
-c_\kappa&:=\rho b^2+a,
-&\vartheta&:=(1-V)\xi,
-&U&:=\alpha+\chi(1-\alpha),
+&a&:=\frac{\nu(W-1)}{\eta\alpha}+\frac{\xi}{\eta},
+&c_\kappa&:=\rho b^2+a,
 \end{aligned}
 \label{eq:radial-parameters}
 \end{equation}
-where \(b\) denotes the positive square root. The symbol
-\(\Upsilon\) is the denominator denoted by \(J\) in the proposed
-construction. The radial curvature \(c_\kappa\) has the same meaning
-as in Example~\ref{ex:rotation}.
-
-\begin{lemma}[Uniform parameter bounds]
-\label{lem:radial-parameters}
-All quantities in~\eqref{eq:radial-parameters} are well-defined,
-including when \(\beta=0\). They satisfy
-\begin{equation}
-\begin{gathered}
-|\zeta|=1,\qquad |u|=\sqrt{\nu}=\omega_0\alpha,
-\qquad u^2+\nu u+\nu=0,\\
-\frac{\chi}{2}\le D\le1,\qquad D\ge\alpha,
-\qquad 0\le\xi\le2\delta_0 D,
-\qquad 0\le\vartheta\le\delta_0 D,\\
-\frac{\omega_0^2\alpha^2}{\eta\tau}
-\le b^2\le\frac{2\omega_0^2}{\eta\tau}\le\frac12,
-\qquad 0\le\eta a\le2\omega_0^2,
-\qquad 0<c_\kappa\le\frac12.
-\end{gathered}
-\label{eq:radial-parameter-bounds}
-\end{equation}
-For every \(t\in[0,1]\),
-\begin{equation}
-|u+t|^2=t^2+(1-t)\nu\ge\frac{\nu}{4}.
-\label{eq:radial-denominator-bound}
-\end{equation}
-Finally,
-\begin{equation}
-\begin{aligned}
-\eta a&=\frac{\nu(W-1)}{\alpha}+\xi,
-&\eta\tau b^2&=\nu W+V\xi,\\
-U-D&=\frac{(1-\alpha)\nu(W-1)}{\alpha},
-&\beta\eta\tau b^2&=\nu(WV-\vartheta).
-\end{aligned}
-\label{eq:radial-algebra-identities}
-\end{equation}
-\end{lemma}
-
-\begin{proof}
-By~\eqref{eq:radial-domain}, \(0<\nu<1\) and \(0<V\le1\).
-If \(\beta>0\), then \(\Upsilon\ge\beta V>0\).
-If \(\beta=0\), then
-\(V=d<1\) and \(\Upsilon=(1-d)\nu>0\).
-Also \(E>0\) and \(H>0\). This proves that the definitions are valid.
-The definition of \(\zeta\) gives its modulus, \(|u|^2=\nu\), and
-\(u^2+\nu u+\nu=0\). Since
-\(\operatorname{Re}(u)=-\nu/2\),
-\[
-|u+t|^2=t^2+(1-t)\nu
-=(t-\nu/2)^2+\nu(1-\nu/4)
-\ge\frac34\nu\ge\frac14\nu.
-\]
-This proves~\eqref{eq:radial-denominator-bound}.
-
-Substitution of \(\nu=\omega_0^2\alpha^2\) gives
-\[
-D=\alpha+
-\frac{\chi(1-\alpha)}{1+(1-\alpha)\omega_0^2}.
-\]
-It follows that
-\[
-D\ge\alpha,\qquad
-\frac{U}{1+\omega_0^2}\le D\le U\le1,
-\qquad U\ge\chi.
-\]
-Since \(\omega_0\le1\), these inequalities imply \(D\ge\chi/2\).
-
-For \(\beta<1\), use
-\(V-\beta=d(1-\beta)\),
-\(1-V=(1-d)(1-\beta)\), and
-\(\Upsilon\ge(1-V)\nu\) to obtain
-\[
-\frac{\xi}{W}
-=\frac{\nu(V-\beta)}{\Upsilon}
-\le\frac{d}{1-d}\le2d,
-\]
-\[
-\vartheta
-=\frac{\nu W(V-\beta)(1-V)}{\Upsilon}
-\le W(V-\beta)\le Wd\le\delta_0 D.
-\]
-Thus \(\xi\le2dW\le2\delta_0 D\).
-When \(\beta=1\), both \(\xi\) and \(\vartheta\) are zero, so the
-same bounds hold.
-
-The identity \(H-\Upsilon=V(V-\beta)\) gives
-\[
-\eta\tau b^2
-=\frac{\nu WH}{\Upsilon}
-=\nu W+V\xi.
-\]
-Since \(H\ge\Upsilon\) and \(W\ge1\),
-\[
-b^2\ge\frac{\nu}{\eta\tau}.
-\]
-For the upper bound, use \(\nu W=\omega_0^2\alpha D\),
-\(V\le1\), and \(D\le1\):
-\[
-\eta\tau b^2
-\le\omega_0^2\alpha D+2\delta_0 D
-\le\omega_0^2+2\delta_0\le2\omega_0^2.
-\]
-Moreover,
-\[
-\eta a
-=\omega_0^2\alpha(W-1)+\xi
-=\omega_0^2(D-\alpha)+\xi
-\le\omega_0^2D+2\delta_0 D\le2\omega_0^2.
-\]
-The choices of \(\omega_0\) in~\eqref{eq:radial-fixed-constants}
-therefore imply
-\[
-b^2\le\frac{2\omega_0^2}{\eta\tau}\le\frac12,
-\qquad
-0<c_\kappa=\rho b^2+a
-\le\frac{2\omega_0^2}{\eta}\left(1+\frac{\rho}{\tau}\right)
-\le\frac12.
-\]
-Strict positivity of \(c_\kappa\) follows from \(\rho>0\) and \(b>0\).
-
-The first identity in~\eqref{eq:radial-algebra-identities} is the
-definition of \(a\); the second was proved above. For the third,
-\[
-U-D
-=\chi(1-\alpha)\left(1-\frac{\alpha^2}{E}\right)
-=\frac{\chi(1-\alpha)^2\nu}{E}
-=\frac{(1-\alpha)\nu(W-1)}{\alpha}.
-\]
-For the last identity, the definition of \(\xi\) gives
-\(\xi[\beta V+(1-V)\nu]=\nu W(V-\beta)\). Hence
-\[
-\begin{aligned}
-\beta(\nu W+V\xi)-\nu(WV-\vartheta)
-&=-\nu W(V-\beta)+\xi[\beta V+(1-V)\nu]\\
-&=0.
-\end{aligned}
-\]
-\end{proof}
-
-\subsubsection{Step 1: explicit zero-initialization decomposition}
-\label{subsec:radial-decomposition}
-
-Define
+with \(b>0\), and define the rotating eigenmode, centers, and initialization by
 \begin{equation}
 \begin{aligned}
 L&:=\frac{\tau b\zeta(u+\beta)}{u(u+V)},
@@ -1196,1001 +972,238 @@ L&:=\frac{\tau b\zeta(u+\beta)}{u(u+V)},
 &\Lambda&:=LX,\\
 Z&:=\frac{\alpha\zeta}{u+\alpha}X,
 &M&:=\frac{\beta\zeta}{u+\beta}\Lambda,
-&\bv&:=(X,\Lambda,Z,M)^{\mathsf{T}}.
+&x_c&:=-X,\quad\lambda_c:=-M,\\
+\bv&:=(X,\Lambda,Z,M)^{\top},
+&\bu_c&:=(x_c,\lambda_c,x_c,\lambda_c)^{\top},
+&\bu^0&:=\bu_c+\bv=(0,\Lambda-M,Z-X,0)^{\top}.
 \end{aligned}
-\label{eq:radial-eigenvector}
+\label{eq:radial-eigenmode}
 \end{equation}
-Thus \(X>0\), \(L\ne0\), and
-\(\max\{X,|\Lambda|\}=A_0\).
-Set
-\begin{equation}
-\begin{aligned}
-r_x&:=-\frac{
- (W-1)\dfrac{u}{u+\alpha}
- +\xi\dfrac{\zeta}{u+V}}{W+\xi}\,X,\\
-\Omega_x&:=\xi\left((1-\alpha)r_x
-                  +(V-\alpha)\frac{\zeta}{u+V}X\right),\\
-r_\lambda&:=\frac{\chi(X-Z)+(\eta a+D)r_x-\Omega_x}{\eta b},\\
-r_z&:=r_x+X-Z,
-\qquad r_\mu:=r_\lambda+\Lambda-M,\\
-x_c&:=-(X+r_x),
-\qquad\lambda_c:=-(\Lambda+r_\lambda),\\
-\br&:=(r_x,r_\lambda,r_z,r_\mu)^{\mathsf{T}},
+
+\begin{proof}[Proof of Lemma~\ref{lem:main-radial}]
+We verify the parameter bounds and initialization admissibility, class
+membership, exact trajectory, and residual lower bound in four steps.
+
+\paragraph{Step 1: parameter bounds and \(\bu^0\in\mathcal S_0(\mathbf C_0)\).}
+Since \(0<\nu\le\omega_0^2\le\frac14\), we have \(|\zeta|=1\),
+\(|u|=\sqrt{\nu}=\omega_0\alpha>0\), and \(u^2+\nu u+\nu=0\).
+For every \(t\in[0,1]\),
+\[
+|u+t|^2=t^2+(1-t)\nu=\Bigl(t-\frac{\nu}{2}\Bigr)^2+\nu\Bigl(1-\frac{\nu}{4}\Bigr)
+\ge\frac34\nu>\frac14\nu>0.
+\]
+Hence \(E_\alpha\ge\alpha^2>0\), \(H\ge\frac34\nu>0\), and all denominators
+in~\eqref{eq:radial-parameters}--\eqref{eq:radial-eigenmode} are nonzero
+(for \(\beta=0\), \(V=d\le\frac12\) gives \(\Upsilon=(1-d)\nu>0\); for
+\(\beta>0\), \(\Upsilon\ge\beta V>0\)).
+Substituting \(\nu=\omega_0^2\alpha^2\) yields
+\[
+\alpha W=\alpha+\frac{\chi(1-\alpha)}{1+(1-\alpha)\omega_0^2}\le1,
+\]
+so \(W\ge1\) and \(\alpha(W-1)\le1\). If \(\beta=1\), then \(\xi=0\). If
+\(\beta<1\), then \(V-\beta=d(1-\beta)\), \(1-V=(1-d)(1-\beta)\), and
+\(\Upsilon\ge(1-V)\nu\) imply
+\[
+\xi\le\frac{d}{1-d}W\le2dW=\frac{2d}{\alpha}(\alpha W)\le\frac{2d}{\alpha}<\omega_0^2.
+\]
+Using \(H-\Upsilon=V(V-\beta)\), we obtain \(\eta\tau b^2=\nu W+V\xi\).
+Since \(W\ge1\), \(\nu W=\omega_0^2\alpha(\alpha W)\le\omega_0^2\), and
+\(V\le1\), it follows that
+\[
+\frac{\omega_0^2\alpha^2}{\eta\tau}\le b^2\le\frac{2\omega_0^2}{\eta\tau}\le\frac12,
 \qquad
-\bu_c:=(x_c,\lambda_c,x_c,\lambda_c)^{\mathsf{T}}.
-\end{aligned}
-\label{eq:radial-initial-shift}
-\end{equation}
-All denominators are nonzero by Lemma~\ref{lem:radial-parameters}.
-The real matrix of the shifted four-step recursion is
-\begin{equation}
-\mathbb{T}:=\begin{pmatrix}
-1+\eta a-\chi & -\eta b & \chi & 0\\
-\tau b(1+\eta a-\chi) & 1-d-\eta\tau b^2 & \tau b\chi & d\\
-\alpha(1+\eta a-\chi) & -\alpha\eta b & 1-\alpha+\alpha\chi & 0\\
-\beta\tau b(1+\eta a-\chi) & \beta(1-d-\eta\tau b^2)
-  & \beta\tau b\chi & 1-\beta+\beta d
-\end{pmatrix}.
-\label{eq:radial-matrix}
-\end{equation}
-Introduce
-\begin{equation}
-Q(t):=(t-1+D)(t-1+V)-\vartheta(t-1+\alpha).
-\label{eq:radial-Q}
-\end{equation}
-
-\begin{lemma}[Spectral identities and the prescribed initialization]
-\label{lem:radial-decomposition}
-For every parameter choice above, including \(\beta=0\),
-\begin{equation}
-\mathbb{T}\bv=\zeta\bv,
-\qquad Q(\mathbb{T})\br=0,
-\qquad \bv+\br=-\bu_c.
-\label{eq:radial-decomposition-identities}
-\end{equation}
-Consequently, the candidate sequence
-\begin{equation}
-\widetilde{\bu}^{\,k}:=
-\bu_c+\zeta^k\bv+\mathbb{T}^k\br
-\label{eq:radial-candidate}
-\end{equation}
-satisfies \(\widetilde{\bu}^{\,0}=0\) and
-\[
-\widetilde{\bu}^{\,k+1}-\bu_c
-=\mathbb{T}(\widetilde{\bu}^{\,k}-\bu_c).
-\]
-The subspace \(\ker Q(\mathbb{T})\) is invariant under \(\mathbb{T}\).
-No assertion of strict stability at \(\beta=0\) is made here.
-\end{lemma}
-
-\begin{proof}
-We first prove the characteristic factorization. In
-\((1+t)I-\mathbb{T}\), replace the third row by the third row minus
-\(\alpha\) times the first row, and the fourth row by the fourth row
-minus \(\beta\) times the original second row. Then replace the second
-row by the second row minus \(\tau b\) times the first row.
-These determinant-preserving operations give the matrix
-\[
-\begin{pmatrix}
-t-\eta a+\chi&\eta b&-\chi&0\\
--\tau b(1+t)&t+d&0&-d\\
--\alpha(1+t)&0&t+\alpha&0\\
-0&-\beta(1+t)&0&t+\beta
-\end{pmatrix}.
-\]
-For a spectral variable \(1+t\), elimination of the two center
-coordinates therefore gives
-\[
-z=\frac{\alpha(1+t)}{t+\alpha}x,
+0\le\eta a=\omega_0^2\alpha(W-1)+\xi\le2\omega_0^2,
 \qquad
-\mu=\frac{\beta(1+t)}{t+\beta}\lambda.
+0<c_\kappa\le\frac{2\omega_0^2}{\eta}\Bigl(1+\frac{\rho}{\tau}\Bigr)\le\frac12,
 \]
-Substitution into the primal and dual rows produces the two equations
-\[
-\bigl[t(t+U)-\eta a(t+\alpha)\bigr]x
-       +\eta b(t+\alpha)\lambda=0,
-\]
-\[
-t(t+V)\lambda-\tau b(1+t)(t+\beta)x=0.
-\]
-The center block has determinant \((t+\alpha)(t+\beta)\),
-which cancels the denominators introduced in these two equations.
-Thus, initially away from these denominators and then as a polynomial
-identity,
-\begin{equation}
-\begin{aligned}
-P(t):=\det((1+t)I-\mathbb{T})
-={}&t^2(t+U)(t+V)-\eta a\,t(t+\alpha)(t+V)\\
-&+\eta\tau b^2(t+1)(t+\alpha)(t+\beta).
-\end{aligned}
-\label{eq:radial-characteristic-unfactored}
-\end{equation}
-Write
-\[
-A:=\frac{\nu(W-1)}{\alpha},\qquad
-C:=D+V-\vartheta,\qquad N:=DV-\alpha\vartheta.
-\]
-Then~\eqref{eq:radial-algebra-identities} reads
-\[
-\eta a=A+\xi,\quad
-\eta\tau b^2=\nu W+V\xi,\quad
-U=D+(1-\alpha)A,\quad
-\alpha A=\nu(W-1),\quad
-\beta\eta\tau b^2=\nu(WV-\vartheta).
-\]
-The coefficient of \(t^3\) in \(P\) is
-\[
-U+V-\eta a+\eta\tau b^2
-=D+V-\vartheta-\alpha A+\nu W=C+\nu.
-\]
-The coefficient of \(t^2\) is
-\[
-\begin{aligned}
-UV-\eta a(\alpha+V)+\eta\tau b^2(1+\alpha+\beta)
-&=N+\nu(V+1)+\nu W(\alpha+\beta-V)+\beta V\xi\\
-&=N+\nu(V+1)+\nu D-\nu\vartheta\\
-&=N+\nu C+\nu.
-\end{aligned}
-\]
-Here the second equality uses
-\(\nu W(\beta-V)+\beta V\xi=-\nu\vartheta\), which follows
-from the last identity in~\eqref{eq:radial-algebra-identities}.
-The coefficient of \(t\) is
-\[
-\begin{aligned}
--\eta a\alpha V+\eta\tau b^2(\alpha+\beta+\alpha\beta)
-&=-\nu V(W-1)+\nu D
-   +(1+\alpha)\nu(WV-\vartheta)\\
-&=\nu(C+N).
-\end{aligned}
-\]
-The constant coefficient is
-\(\alpha\beta\eta\tau b^2=\nu N\), and the leading coefficient
-is one. Hence
-\begin{equation}
-P(t)=(t^2+\nu t+\nu)
-       \bigl((t+D)(t+V)-\vartheta(t+\alpha)\bigr).
-\label{eq:radial-characteristic-factorization}
-\end{equation}
+by the definition of \(\omega_0\) in~\eqref{eq:radial-fixed-constants}.
 
-Next, \(u^2+\nu u+\nu=0\) implies \(P(u)=0\).
-Divide~\eqref{eq:radial-characteristic-unfactored}, evaluated at
-\(u\), by \(u(u+V)(u+\alpha)\). The result is
+Next, \(\max\{X,|\Lambda|\}=A_0\le\frac14\). Since \(|u+\alpha|\ge\alpha\) and
+\(|u+\beta|^2=\beta^2+(1-\beta)\nu\ge\max\{\beta^2,(1-\beta)\nu\}\), we have
 \[
-\frac{u(u+U)}{u+\alpha}-\eta a
- +\frac{\eta\tau b^2\zeta(u+\beta)}{u(u+V)}=0.
-\]
-Since
-\(X-Z=(1-\alpha)uX/(u+\alpha)\) and
-\(\Lambda/X=\tau b\zeta(u+\beta)/(u(u+V))\), this equation gives
-\[
-uX=\eta aX-\eta b\Lambda-\chi(X-Z).
-\]
-This is precisely the first row of \(\mathbb{T}\bv=\zeta\bv\).
-The definition of \(\Lambda\) gives
-\[
-u(u+V)\Lambda=\tau b\zeta(u+\beta)X.
-\]
-Together with
-\(\Lambda-M=(1-\beta)u\Lambda/(u+\beta)\), it implies
-\[
-u\Lambda=\tau b\zeta X-d(\Lambda-M),
-\]
-which verifies the dual row after the primal row.
-The identities
-\[
-(u+\alpha)Z=\alpha\zeta X,
-\qquad (u+\beta)M=\beta\zeta\Lambda
-\]
-verify the two center rows. Thus \(\mathbb{T}\bv=\zeta\bv\).
-
-We now prove the annihilator identity without assuming stability.
-For this algebraic argument only, allow \(\nu\) to vary independently
-in \((0,4)\), with the other formulas unchanged and with arbitrary
-\(X>0\). Initially assume
-\[
-0<\alpha,\beta,d<1,\qquad V\ne\alpha,
-\]
-and that the roots \(t_1,t_2\) of \(Q\) are distinct.
-Here
-\[
-Q(1)=N=\frac{D\beta H}{\Upsilon}>0,
-\]
-\[
-Q(1-\alpha)=\alpha(W-1)(V-\alpha)\ne0,
-\qquad Q(1-V)=\vartheta(V-\alpha)\ne0.
-\]
-Therefore none of the following eigenvector denominators vanishes:
-\[
-\mathbf{e}(t):=
-\left(
-1,\frac{\tau bt(t-1+\beta)}{(t-1)(t-1+V)},
-\frac{\alpha t}{t-1+\alpha},
-\frac{\tau b\beta t^2}{(t-1)(t-1+V)}
-\right)^{\mathsf{T}}.
-\]
-The elimination equations above, and the factorization of \(P\), give
-\(\mathbb{T}\mathbf{e}(t_j)=t_j\mathbf{e}(t_j)\).
-For coefficients \(c_1,c_2\), requiring
-\(\bv+\sum_jc_j\mathbf{e}(t_j)\) to have equal first and third
-coordinates, and equal second and fourth coordinates, yields
-\begin{equation}
-\sum_{j=1}^2c_j\frac{t_j-1}{t_j-1+\alpha}
-=-\frac{u}{u+\alpha}X,
+|z^0|=|Z-X|=\frac{(1-\alpha)|u|}{|u+\alpha|}X\le\omega_0 X\le\frac18<1,
 \qquad
-\sum_{j=1}^2c_j\frac{t_j}{t_j-1+V}
-=-\frac{\zeta}{u+V}X.
-\label{eq:radial-synchronization-system}
-\end{equation}
-Indeed, the first coordinate difference in \(\mathbf{e}(t)\) is
-\((1-\alpha)(t-1)/(t-1+\alpha)\); the second coordinate
-difference is \((1-\beta)\tau bt/(t-1+V)\). Dividing by the
-nonzero factors \(1-\alpha\) and \((1-\beta)\tau b\),
-respectively, gives~\eqref{eq:radial-synchronization-system}.
-
-Let \(v_j=t_j-1\). These numbers satisfy
-\(v_j^2+Cv_j+N=0\). At any such root,
+|M|=\frac{\beta}{|u+\beta|}|\Lambda|\le|\Lambda|\le A_0,
+\]
+and
 \[
-\frac{v_j}{v_j+\alpha}
-=\frac{N+\alpha v_j}{\alpha^2-C\alpha+N},
+|\lambda^0|^2=|\Lambda-M|^2
+=\frac{(1-\beta)^2\nu}{|u+\beta|^2}|\Lambda|^2
+\le(1-\beta)|\Lambda|^2\le A_0^2,
+\]
+so \(|\lambda^0|\le A_0\le\frac14<1=L_h\). Together with \(x^0=\mu^0=0\), this
+gives \(\bu^0\in\mathcal S_0(\mathbf C_0)\).
+
+\paragraph{Step 2: membership in \(\mathcal I(\mathbf C_0,\Delta)\).}
+By the radial-Hessian argument in Appendix~\ref{app:lb-rotation-params-proof}
+with \(R_*=X\), the function \(f\) in Example~\ref{ex:radial} satisfies
+\(L_f\le c_\kappa\le\frac12\) and
+\(\|\nabla f(x)\|\le c_\kappa X+b|M|\le\frac32A_0\le\frac38<1\).
+Moreover, \(L_{\calA}=0\), \(G_{\calA}=b<1\), and \(h=\|\cdot\|_2\) is convex
+and \(1\)-Lipschitz. Since \(|\lambda_c|=|M|\le\frac14\) and
+\(\psi(r)\ge-c_\kappa X^2\), every \(x\in\mathbb C\) satisfies
+\[
+F(x)=\psi(\|x-x_c\|)-b\langle\lambda_c,x-x_c\rangle+b\|x-x_c\|
+\ge-c_\kappa X^2+b(1-|\lambda_c|)\|x-x_c\|\ge-c_\kappa X^2.
+\]
+At the origin, \(\|0-x_c\|=X\), so \(\psi(X)=-\frac{c_\kappa}{2}X^2\) and
+\(F(0)\le-\frac{c_\kappa}{2}X^2+b(1+|\lambda_c|)X\le-\frac{c_\kappa}{2}X^2+\frac54A_0\).
+Hence
+\[
+F(0)-\inf F\le\frac{c_\kappa}{2}X^2+\frac54A_0
+\le\frac14A_0^2+\frac54A_0<2A_0\le\Delta,
+\]
+proving \(I\in\mathcal I(\mathbf C_0,\Delta)\).
+
+\paragraph{Step 3: exact rotating trajectory.}
+Let \(\mathbb T\) be the linear recursion matrix~\eqref{eq:rot-matrix} on
+\(\|x-x_c\|\le R_*\) and \(\mathcal R_\rho\). We verify \(\mathbb T\bv=\zeta\bv\)
+directly. Since \(u^2+\nu u+\nu=0\), we have \(u\overline u=\nu\) and
+\(\zeta/u=(1+u)/u=-u/\nu\); a direct computation then gives
+\[
+\frac{u}{u+\alpha}=\frac{u(\overline u+\alpha)}{E_\alpha}=\frac{\nu+\alpha u}{E_\alpha},
 \qquad
-\frac{v_j+1}{v_j+V}
-=\frac{N-C+V-(1-V)v_j}{V^2-CV+N}.
+\frac{\zeta(u+\beta)}{u(u+V)}=-\frac{u(u+\beta)(\overline u+V)}{\nu H}
+=\frac{V-\beta}{H}-\frac{\Upsilon}{\nu H}u.
 \]
-These identities follow by multiplying by their denominators and
-replacing \(v_j^2\) by \(-Cv_j-N\).
-The two constant denominators are
+Using \(X-Z=\frac{(1-\alpha)u}{u+\alpha}X\) and the definitions of \(W,b^2,\xi,a\)
+in~\eqref{eq:radial-parameters},
 \[
-A_\alpha:=\alpha^2-C\alpha+N
-=\alpha(W-1)(V-\alpha),
+u+\chi\frac{(1-\alpha)u}{u+\alpha}-\eta a+\eta\tau b^2\frac{\zeta(u+\beta)}{u(u+V)}
+=\Bigl(W-\eta\tau b^2\frac{\Upsilon}{\nu H}\Bigr)u
+ +\Bigl(\frac{\nu(W-1)}{\alpha}-\eta a+\xi\Bigr)=0.
 \]
-\[
-A_V:=V^2-CV+N=\vartheta(V-\alpha).
-\]
-With \(S_0=c_1+c_2\) and \(S_1=c_1v_1+c_2v_2\),
-the synchronization system becomes
-\begin{equation}
-\begin{pmatrix}
-N&\alpha\\ N-C+V&-(1-V)
-\end{pmatrix}
-\begin{pmatrix}S_0\\ S_1\end{pmatrix}
-=-X\begin{pmatrix}
-A_\alpha u/(u+\alpha)\\ A_V\zeta/(u+V)
-\end{pmatrix}.
-\label{eq:radial-two-by-two-system}
-\end{equation}
-Its determinant is
-\[
--N(1-V)-\alpha(N-C+V)
-=(\alpha-V)\bigl[D(1-V)+\alpha\vartheta\bigr]
-=\alpha(1-V)(\alpha-V)(W+\xi)\ne0.
-\]
-Cramer's rule for the first component gives
-\[
-S_0
-=-\frac{(W-1)u/(u+\alpha)+\xi\zeta/(u+V)}{W+\xi}X
-=r_x.
-\]
-The first equation in~\eqref{eq:radial-two-by-two-system}
-then gives
-\[
-S_1=-(WV-\vartheta)r_x
-       -(W-1)(V-\alpha)\frac{u}{u+\alpha}X.
-\]
-Using
-\[
-(W-1)\frac{u}{u+\alpha}X
-=-(W+\xi)r_x-\xi\frac{\zeta}{u+V}X,
-\]
-we obtain
-\[
-\begin{aligned}
-S_1
-&=\bigl[-WV+\vartheta+(V-\alpha)(W+\xi)\bigr]r_x
-  +\xi(V-\alpha)\frac{\zeta}{u+V}X\\
-&=-Dr_x+\Omega_x.
-\end{aligned}
-\]
-The coefficients themselves exist explicitly:
-\[
-c_1=\frac{S_1-v_2S_0}{v_1-v_2},
-\qquad
-c_2=\frac{v_1S_0-S_1}{v_1-v_2}.
-\]
-For \(\br':=c_1\mathbf{e}(t_1)+c_2\mathbf{e}(t_2)\),
-its first coordinate is \(r_x\), and its synchronization equations
-give \(r'_z=r_x+X-Z\) and
-\(r'_\mu=r'_\lambda+\Lambda-M\).
-The first row of \(\mathbb{T}-I\) gives
-\[
-S_1=\eta ar_x-\eta br'_\lambda+\chi(X-Z).
-\]
-Consequently
-\[
-r'_\lambda
-=\frac{\chi(X-Z)+(\eta a+D)r_x-\Omega_x}{\eta b}
-=r_\lambda.
-\]
-All four coordinates of \(\br'\) therefore equal those of \(\br\).
-Since each \(t_j\) is a root of \(Q\),
-\(Q(\mathbb{T})\br=0\) in this nondegenerate case.
+Multiplying by \(X\) gives the first row \((\mathbb T\bv)_x=\zeta X\). Next,
+\(\Lambda-M=\frac{(1-\beta)u}{u+\beta}\Lambda\) and the definition of \(L\)
+give \(u\Lambda+d(\Lambda-M)=\frac{u(u+V)}{u+\beta}\Lambda=\tau b\zeta X\),
+verifying the dual row \((\mathbb T\bv)_\lambda=\zeta\Lambda\). The two center
+rows follow directly from \((u+\alpha)Z=\alpha\zeta X\) and
+\((u+\beta)M=\beta\zeta\Lambda\). Thus \(\mathbb T\bv=\zeta\bv\).
 
-For completeness, the continuation to excluded parameter values is
-purely algebraic. On
+Define \(\widetilde\bu^{\,k}:=\bu_c+\zeta^k\bv\) for \(k\ge0\). Then
+\(\widetilde\bu^{\,0}=\bu^0\) and
+\(\widetilde\bu^{\,k+1}-\bu_c=\mathbb T(\widetilde\bu^{\,k}-\bu_c)\).
+For every \(k\ge0\) and \(j\in\{k,k+1\}\), we have
+\(|\widetilde x^{\,j}-x_c|=|\zeta^j X|=X=R_*\) and
 \[
-0<\alpha\le1,\quad 0\le\beta\le1,\quad 0<d<1,
-\quad 0<\nu<4,
-\]
-all entries of \(Q(\mathbb{T})\br\) are continuous: \(b>0\),
-\(W+\xi>0\), \(\Upsilon>0\), and the complex denominators
-\(u\), \(u+\alpha\), \(u+\beta\), and \(u+V\) do not vanish.
-The nondegenerate parameters used above are dense. To see this, first
-choose interior \((\alpha,\beta,d)\) with \(V\ne\alpha\) and
-\(V\ne U\), which is possible arbitrarily close to any target since
-\(V=\beta+d(1-\beta)\) varies strictly with \(\beta\) when \(d<1\).
-For these fixed interior parameters, the discriminant
-\(C^2-4N\) is a rational function of \(\nu\) and tends to
-\((U-V)^2>0\) as \(\nu\downarrow0\). Its numerator is therefore
-not the zero polynomial, and its zeros are isolated. Perturbing \(\nu\)
-arbitrarily little avoids them. Taking limits proves the annihilator
-identity at repeated roots, \(V=\alpha\), \(\alpha=1\),
-\(\beta=1\), and \(\beta=0\). One then specializes back to
-\(\nu=\omega_0^2\alpha^2\). This continuation concerns only an
-identity, not strict stability.
-
-Finally, the definitions give, coordinate by coordinate,
-\[
-\bv+\br
-=(X+r_x,\Lambda+r_\lambda,X+r_x,\Lambda+r_\lambda)^{\mathsf{T}}
-=-\bu_c.
-\]
-The candidate initialization and recurrence now follow from
-\(\mathbb{T}\bv=\zeta\bv\). The kernel is invariant because
-\(Q(\mathbb{T})\mathbb{T}=\mathbb{T}Q(\mathbb{T})\).
-\end{proof}
-
-\subsubsection{Step 2: uniform bounds for the remainder}
-\label{subsec:radial-remainder}
-
-\begin{lemma}[A uniformly bounded second-order kernel]
-\label{lem:radial-kernel}
-Write \(Q(t)=t^2-St+P_0\), so that
-\[
-S=2-D-V+\vartheta,
-\qquad P_0=(1-D)(1-V)+\vartheta(1-\alpha).
-\]
-Both roots \(t_1,t_2\) lie in the closed unit disk. Define
-\[
-G_{-1}:=0,
-\qquad G_j:=\sum_{i=0}^jt_1^{\,j-i}t_2^{\,i},\quad j\ge0,
-\]
-with the same finite sum used when the roots coincide. Then
-\begin{equation}
-\sup_{j\ge0}|G_j|\le\frac4D.
-\label{eq:radial-kernel-bound}
-\end{equation}
-Every sequence satisfying \(y_{k+2}=Sy_{k+1}-P_0y_k\) has
-\begin{equation}
-y_k=G_{k-1}y_1-P_0G_{k-2}y_0,\qquad k\ge1.
-\label{eq:radial-recurrence-solution}
-\end{equation}
-These statements include \(\beta=0\).
-\end{lemma}
-
-\begin{proof}
-Let \(h_0=(1-\delta_0)D\). The parameter bounds give
-\[
-S\ge0,\qquad
-0\le P_0\le1-D+\vartheta\le1-h_0<1,
-\]
-\[
-Q(1)=DV-\alpha\vartheta
-=\frac{D\beta H}{\Upsilon}\ge0.
-\]
-If the roots are real, their nonnegative sum and product imply that
-both are nonnegative. If one exceeded one and the other were less
-than one, \(Q(1)\) would be negative. If both were at least one and
-one exceeded one, their product would exceed one. Thus both roots
-belong to \([0,1]\). Order them as \(t_1\ge t_2\). Then
-\[
-t_2\le\sqrt{P_0}\le\sqrt{1-h_0},
-\qquad
-|G_j|\le\sum_{i=0}^jt_2^i
-\le\frac{1}{1-\sqrt{1-h_0}}
-\le\frac{2}{h_0}\le\frac4D.
-\]
-Here \(1-\sqrt{1-h_0}=h_0/(1+\sqrt{1-h_0})\ge h_0/2\),
-and \(\delta_0\le1/2\).
-If the roots are nonreal, they are conjugate and have common modulus
-\(q=\sqrt{P_0}\le\sqrt{1-h_0}<1\). Hence
-\[
-|G_j|\le(j+1)q^j
-\le\sum_{i=0}^jq^i
-\le\frac{1}{1-\sqrt{1-h_0}}\le\frac4D.
-\]
-This proves the kernel bound, including repeated real roots.
-The kernel satisfies \(G_0=1\), \(G_1=S\), and
-\(G_{j+1}=SG_j-P_0G_{j-1}\).
-Thus the right-hand side of~\eqref{eq:radial-recurrence-solution}
-has initial values \(y_1\), \(Sy_1-P_0y_0\), and satisfies the
-same recurrence. Induction proves the formula.
-\end{proof}
-
-\begin{lemma}[Remainder bounds independent of \(s\)]
-\label{lem:radial-remainder}
-Write
-\[
-(p_k,\ell_k,z_k^{\rm r},m_k)^{\mathsf{T}}:=\mathbb{T}^k\br.
-\]
-Then, for every \(k\ge0\),
-\begin{equation}
-\begin{aligned}
-|p_k|&\le\frac{36\omega_0}{\chi}X<\frac X8,
-&|z_k^{\rm r}|&\le\frac{36\omega_0}{\chi}X,\\
-|\ell_k|&\le M_\lambda|\Lambda|,
-&|m_k|&\le(1+M_\lambda)|\Lambda|.
-\end{aligned}
-\label{eq:radial-remainder-bounds}
-\end{equation}
-In particular, \(\mathbb{T}^k\br\) is uniformly bounded also when
-\(\beta=0\). None of the constants in these bounds grows with \(s\).
-\end{lemma}
-
-\begin{proof}
-From the formula for \(r_x\), the inequalities
-\(|u+\alpha|\ge\alpha\),
-\(\xi/W\le2d\), and
-\(|u+V|\ge\sqrt{\nu}/2\) give
-\[
-\begin{aligned}
-\frac{|r_x|}{X}
-&\le\frac{W-1}{W+\xi}\frac{|u|}{|u+\alpha|}
-   +\frac{\xi}{W+\xi}\frac{1}{|u+V|}\\
-&\le\omega_0+\frac{4d}{\sqrt{\nu}}
-\le\omega_0+\frac{4\delta_0}{\omega_0}
-=\frac{17}{16}\omega_0\le2\omega_0.
-\end{aligned}
-\]
-The estimates \(\xi\le2\delta_0 D\),
-\(|V-\alpha|\le V+\alpha\),
-\(V/|u+V|\le1\), and
-\(\alpha/|u+V|\le2/\omega_0\) imply
-\[
-\begin{aligned}
-\frac{|\Omega_x|}{DX}
-&\le2\delta_0\left(2\omega_0+1+\frac{2}{\omega_0}\right)\\
-&=4\delta_0\omega_0+2\delta_0+\frac{4\delta_0}{\omega_0}
-=\frac{\omega_0^3}{16}+\frac{\omega_0^2}{32}+\frac{\omega_0}{16}
-\le\frac{5\omega_0}{32}\le\omega_0.
-\end{aligned}
-\]
-By the first row of \(\mathbb{T}\) and the definition of
-\(r_\lambda\),
-\[
-p_0=r_x,
-\qquad p_1=(1-D)r_x+\Omega_x.
-\]
-The identity \(Q(\mathbb{T})\br=0\) shows that \(p_k\)
-satisfies the recurrence in Lemma~\ref{lem:radial-kernel}.
-For \(k\ge1\), its solution formula therefore yields
-\[
-\begin{aligned}
-|p_k|
-&\le\frac4D\bigl(|p_1|+P_0|p_0|\bigr)\\
-&\le\frac4D\bigl(2|r_x|+|\Omega_x|\bigr)\\
-&\le\left(\frac{16\omega_0}{D}+4\omega_0\right)X
-\le\frac{36\omega_0}{\chi}X.
-\end{aligned}
-\]
-The bound also holds for \(k=0\).
-Because \(\omega_0\le\chi/512\),
-\(36\omega_0/\chi\le36/512<1/8\).
-
-The center identity gives
-\[
-X-Z=\frac{(1-\alpha)u}{u+\alpha}X,
-\qquad |X-Z|\le\omega_0 X.
-\]
-Consequently \(|r_z|\le3\omega_0 X\).
-The third row of the recursion is
-\[
-z_{k+1}^{\rm r}=(1-\alpha)z_k^{\rm r}+\alpha p_{k+1}.
-\]
-Since \(0<\alpha\le1\), induction bounds \(|z_k^{\rm r}|\)
-by \(\max\{|r_z|,\sup_j|p_j|\}\), which is at most
-\(36\omega_0 X/\chi\).
-
-To estimate the multiplier without a factor proportional to \(s\),
-use the primal row itself:
-\[
-\eta b\ell_k=(1+\eta a-\chi)p_k+\chi z_k^{\rm r}-p_{k+1}.
-\]
-Its first coefficient is nonnegative because \(\chi\le1\) and
-\(a\ge0\). Since \(\eta a\le2\omega_0^2\le2\),
-\begin{equation}
-\eta b|\ell_k|
-\le(2+\eta a)\frac{36\omega_0}{\chi}X
-\le\frac{144\omega_0}{\chi}X.
-\label{eq:radial-dual-from-primal}
-\end{equation}
-Let \(E_\beta:=|u+\beta|^2=\beta^2+(1-\beta)\nu\).
-Using \(\operatorname{Re}(u)=-\nu/2\), we have
-\[
-\operatorname{Re}\bigl((u+V)\overline{(u+\beta)}\bigr)
-=\Upsilon+\frac{\nu}{2}(V-\beta)
-\ge\Upsilon.
-\]
-The modulus of this product is \(\sqrt{HE_\beta}\), so
-\(\sqrt{HE_\beta}\ge\Upsilon\). The definition of \(\Lambda\)
-then implies
-\begin{equation}
-\begin{aligned}
-\eta b|\Lambda|
-&=\frac{\eta\tau b^2\sqrt{E_\beta}}{\sqrt{\nu H}}X\\
-&=\frac{\sqrt{\nu}W\sqrt{HE_\beta}}{\Upsilon}X
-\ge\sqrt{\nu}WX=\omega_0 DX.
-\end{aligned}
-\label{eq:radial-dual-amplitude-lower}
-\end{equation}
-Combining~\eqref{eq:radial-dual-from-primal}
-and~\eqref{eq:radial-dual-amplitude-lower} gives
-\[
-|\ell_k|
-\le\frac{144}{\chi D}|\Lambda|
-\le\frac{288}{\chi^2}|\Lambda|
-\le M_\lambda|\Lambda|.
-\]
-
-Finally,
-\[
-\Lambda-M=\frac{(1-\beta)u}{u+\beta}\Lambda.
-\]
-Since \(E_\beta\ge(1-\beta)\nu\),
-\[
-|\Lambda-M|^2
-=\frac{(1-\beta)^2\nu}{E_\beta}|\Lambda|^2
-\le(1-\beta)|\Lambda|^2\le|\Lambda|^2.
-\]
-Thus \(|r_\mu|\le(1+M_\lambda)|\Lambda|\).
-The fourth row reads
-\[
-m_{k+1}=(1-\beta)m_k+\beta\ell_{k+1}.
-\]
-Induction gives the asserted bound for \(m_k\), including
-\(\beta=0\), when \(m_k=r_\mu\) for every \(k\).
-\end{proof}
-
-\subsubsection{Step 3: membership in the normalized problem class}
-\label{subsec:radial-instance}
-
-Set \(R_*:=5X/4\), and define the instance by
-\begin{equation}
-\calA(x):=b(x-x_c),\qquad
-h(y):=\|y\|_2,\qquad
-f(x):=\psi(\|x-x_c\|)-b\langle\lambda_c,x-x_c\rangle,
-\label{eq:radial-instance}
-\end{equation}
-where
-\begin{equation}
-\psi(r):=
-\begin{cases}
--\dfrac{c_\kappa}{2}r^2,&0\le r\le R_*,\\[3pt]
-\dfrac{c_\kappa}{2}(r-2R_*)^2-c_\kappa R_*^2,
-   &R_*\le r\le3R_*,\\[3pt]
-c_\kappa R_*(r-3R_*)-\dfrac{c_\kappa}{2}R_*^2,
-   &r\ge3R_*.
-\end{cases}
-\label{eq:radial-radial-extension}
-\end{equation}
-
-\begin{lemma}[Uniform global constants and the initial gap]
-\label{lem:radial-instance}
-The instance in~\eqref{eq:radial-instance} belongs to
-\(\mathcal I(\mathbf C_0,\Delta)\). More explicitly, it satisfies
-\[
-L_f\le\frac12,\qquad G_f\le\frac9{32}<1,
-\qquad L_{\calA}=0,\qquad G_{\calA}=b\le1,
-\qquad L_h=1,
-\]
-and \(F(0)-\inf F\le\Delta\).
-\end{lemma}
-
-\begin{proof}
-By the remainder bounds at \(k=0\),
-\[
-|x_c|\le X+|r_x|\le\frac98X<R_*,
-\]
-\[
-|\lambda_c|\le|\Lambda|+|r_\lambda|
-\le(1+M_\lambda)A_0\le\frac18.
-\]
-The last inequality follows from
-\(A_0\le[8(1+M_\lambda)+5\rho]^{-1}\).
-Also \(R_*\le5A_0/4\).
-
-The values and first derivatives of \(\psi\) agree at both junctions.
-At \(R_*\) the two values equal \(-c_\kappa R_*^2/2\), and both
-first derivatives equal \(-c_\kappa R_*\). At \(3R_*\) both values
-again equal \(-c_\kappa R_*^2/2\), and both first derivatives equal
-\(c_\kappa R_*\). On the three open pieces,
-\[
-\psi'(r)=
-\begin{cases}
--c_\kappa r,&r<R_*,\\
-c_\kappa(r-2R_*),&R_*<r<3R_*,\\
-c_\kappa R_*,&r>3R_*,
-\end{cases}
-\qquad
-\psi''(r)\in\{-c_\kappa,c_\kappa,0\}.
-\]
-In particular, \(|\psi'(r)|\le c_\kappa R_*\).
-For \(r>0\), the radial and tangential Hessian eigenvalues of
-\(\psi(\|x-x_c\|)\) are \(\psi''(r)\) and \(\psi'(r)/r\).
-The latter equals \(-c_\kappa\) in the first piece, belongs to
-\([-c_\kappa,c_\kappa/3]\) in the middle piece, and belongs to
-\([0,c_\kappa/3]\) in the last piece. Near the origin of these radial
-coordinates, the function is the quadratic
-\(-c_\kappa\|x-x_c\|^2/2\).
-Its gradient is therefore continuous everywhere. Integrating its
-piecewise bounded Hessian along a line segment proves that this gradient
-is globally \(c_\kappa\)-Lipschitz. The added linear term does not change
-this Lipschitz constant. Hence \(L_f\le c_\kappa\le1/2\).
-Furthermore,
-\[
-\|\nabla f(x)\|
-\le c_\kappa R_*+b|\lambda_c|
-\le\frac58A_0+\frac18
-\le\frac9{32}.
-\]
-The affine map has constant Jacobian \(bI_2\), so
-\(L_{\calA}=0\) and \(G_{\calA}=b\le1\).
-The Euclidean norm is convex, and the reverse triangle inequality
-shows that its Lipschitz constant is one.
-
-The radial extension satisfies \(\psi(r)\ge-c_\kappa R_*^2\).
-Writing \(r=\|x-x_c\|\), the objective satisfies
-\[
-F(x)=\psi(r)-b\langle\lambda_c,x-x_c\rangle+br
-\ge-c_\kappa R_*^2+b(1-|\lambda_c|)r
-\ge-c_\kappa R_*^2.
-\]
-At zero, \(|x_c|<R_*\), so \(\psi(|x_c|)\le0\). Therefore
-\[
-F(0)\le b(1+|\lambda_c|)|x_c|
-\le\frac98 bR_*\le\frac{45}{32}A_0.
-\]
-It follows that
-\[
-\begin{aligned}
-F(0)-\inf F
-&\le\frac{45}{32}A_0+c_\kappa R_*^2\\
-&\le\frac{45}{32}A_0+\frac{25}{32}A_0^2\\
-&\le\frac{205}{128}A_0
-<2A_0\le\frac{\Delta}{2}\le\Delta.
-\end{aligned}
-\]
-This verifies every constant in \(\mathbf C_0\) and the gap budget.
-\end{proof}
-
-\subsubsection{Step 4: both proximal outputs and the actual trajectory}
-\label{subsec:radial-realization}
-
-\begin{lemma}[The candidate sequence is the actual algorithm sequence]
-\label{lem:radial-realization}
-For the instance above, the actual LRALM iterates are
-\[
-\bu^k=\bu_c+\zeta^k\bv+\mathbb{T}^k\br,
-\qquad k\ge0.
-\]
-For every \(k\ge0\), both proximal evaluations, at
-\((x^k,\lambda^k)\) and \((x^{k+1},\lambda^k)\), return zero.
-Moreover,
-\begin{equation}
-\frac34X\le|x^k-x_c|\le\frac54X=R_*.
-\label{eq:radial-annulus}
-\end{equation}
-\end{lemma}
-
-\begin{proof}
-First consider only the candidate sequence
-\(\widetilde{\bu}^{\,k}\) in~\eqref{eq:radial-candidate}.
-Its first coordinate satisfies
-\[
-\widetilde x^{\,k}-x_c=\zeta^kX+p_k.
-\]
-Since \(|\zeta|=1\) and \(|p_k|<X/8\),
-\[
-\frac78X\le|\widetilde x^{\,k}-x_c|\le\frac98X.
-\]
-These bounds imply the weaker annulus in
-\eqref{eq:radial-annulus} for every candidate point.
-Its multiplier satisfies
-\[
-|\widetilde\lambda^{\,k}|
-\le|\lambda_c|+|\Lambda|+|\ell_k|
-\le2(1+M_\lambda)A_0.
-\]
-Consequently, for both \(j=k\) and \(j=k+1\),
-\begin{equation}
-\begin{aligned}
 |\widetilde\lambda^{\,k}+\rho\calA(\widetilde x^{\,j})|
-&\le2(1+M_\lambda)A_0+\frac54\rho bX\\
-&\le\left[2(1+M_\lambda)+\frac54\rho\right]A_0
-\le\frac14<1.
-\end{aligned}
-\label{eq:radial-prox-interior}
-\end{equation}
-The final inequality uses the definition of \(A_0\), whose third
-upper bound is the reciprocal of four times the bracket.
+=|-M+\zeta^k\Lambda+\rho b\zeta^j X|
+\le|M|+|\Lambda|+\rho bX
+\le(2+\rho)A_0\le1,
+\]
+so \((\widetilde x^{\,k},\widetilde\lambda^{\,k}),(\widetilde x^{\,k+1},\widetilde\lambda^{\,k})\in\mathcal R_\rho\)
+and every primal iterate lies in the quadratic region of \(\psi\). By
+Proposition~\ref{prop:embedding} and induction, the actual iterates of
+\(\mathrm{LRALM}_{\theta(\epsilon),\alpha,\beta}\) from \(\bu^0\) satisfy
+\(\bu^k=\bu_c+\zeta^k\bv\) for all \(k\ge0\).
 
-For \(h(y)=\|y\|_2\),
-\(\partial h(0)=\{q:\|q\|_2\le1\}\).
-The optimality condition for the strongly convex proximal problem is
+\paragraph{Step 4: uniform residual lower bound.}
+By Proposition~\ref{prop:embedding},
+\(R_k\ge|\nabla_\lambda\Psi_\rho(x^{k+1},\lambda^k)|=b|x^{k+1}-x_c|=bX\)
+for all \(k\ge0\). Since \(\sqrt H=|u+V|\ge\frac12\sqrt\nu\) and
+\(V-\beta\le d<\frac{\omega_0^2}{2}\alpha=\frac{\omega_0}{2}\sqrt\nu\le\sqrt H\),
+we have \(|u+\beta|\le|u+V|+(V-\beta)\le2\sqrt H\), and therefore
 \[
-y=\prox_{h/\rho}(\calA(x)+\lambda/\rho)
-\quad\Longleftrightarrow\quad
-\lambda+\rho(\calA(x)-y)\in\partial h(y).
+\frac{b}{|L|}=\frac{\sqrt\nu\sqrt H}{\tau|u+\beta|}\ge\frac{\omega_0\alpha}{2\tau}.
 \]
-Thus \(|\lambda+\rho\calA(x)|\le1\) makes its unique minimizer
-\(y=0\). Equation~\eqref{eq:radial-prox-interior} proves this
-for both candidate evaluations, at every iteration.
-
-On the candidate trajectory, all primal points lie in the quadratic
-piece. With \(p=x-x_c\) and \(\ell=\lambda-\lambda_c\),
-the reduced function is exactly
+Combining this with \(b\ge\frac{\omega_0\alpha}{\sqrt{\eta\tau}}\) and
+\(X=A_0/\max\{1,|L|\}\) gives, for every \(k\ge0\),
 \[
-\calD_\rho(x,\lambda)
-=-\frac{c_\kappa-\rho b^2}{2}|p|^2+b\langle\ell,p\rangle
-=-\frac a2|p|^2+b\langle\ell,p\rangle.
+R_k\ge bX=A_0\min\left\{b,\;\frac{b}{|L|}\right\}
+\ge A_0\omega_0\min\left\{\frac{1}{\sqrt{\eta\tau}},\;\frac{1}{2\tau}\right\}\alpha
+=c_\mathrm{r}\alpha>c_\mathrm{r}B\epsilon\ge\epsilon.
 \]
-Here \(h(0)=0\). Its gradients at the relevant evaluation points are
-\[
-\nabla_x\calD_\rho=-ap+b\ell,
-\qquad \nabla_\lambda\calD_\rho=bp.
-\]
-After shifting both centers by \((x_c,\lambda_c)\), the actual four
-updates consequently read
-\[
-\begin{aligned}
-p^+&=(1+\eta a-\chi)p-\eta b\ell+\chi z,\\
-\ell^+&=\ell+\tau bp^+-d(\ell-m),\\
-z^+&=(1-\alpha)z+\alpha p^+,\\
-m^+&=(1-\beta)m+\beta\ell^+.
-\end{aligned}
-\]
-These are precisely the rows of~\eqref{eq:radial-matrix}.
-The candidate sequence satisfies this recurrence and starts from zero
-by Lemma~\ref{lem:radial-decomposition}. It also satisfies every
-proximal and quadratic-region condition just verified.
-Therefore, at iteration zero its four updates equal the actual updates.
-If the two sequences agree through iteration \(k\), the unique primal
-update and the unique proximal output at the new primal point agree,
-and then the dual and center updates agree as well. Induction proves
-identity of the two sequences for all \(k\).
+Hence \(T_\epsilon(\theta(\epsilon),\alpha,\beta;I,\bu^0)=+\infty\).
 \end{proof}
 
-\subsubsection{Step 5: a residual lower bound at every iteration}
-\label{subsec:radial-residual}
+\subsection{Proofs of Theorems~\ref{thm:lower-bound} and~\ref{thm:lower-bound-fixed-rho}}
+\label{app:lb-combine-all}
 
-\begin{lemma}[Uniform residual lower bound]
-\label{lem:radial-residual}
-For every \(k\ge0\), the actual post-primal output satisfies
-\[
-R_k\ge\frac34 bX\ge c_{\rm r}\alpha.
-\]
-\end{lemma}
+\subsubsection{Proof of Theorem~\ref{thm:lower-bound}}
+\label{subsec:lb-combine}
 
-\begin{proof}
-The previous lemma gives \(y^{k+1}=0\), and hence
-\[
-q^k=\lambda^k+\rho\calA(x^{k+1})\in\partial h(0).
-\]
-The prescribed KKT residual is therefore
-\[
-R_k=\max\left\{
-\left|-a(x^{k+1}-x_c)+b(\lambda^k-\lambda_c)\right|,
-\ b|x^{k+1}-x_c|\right\}.
-\]
-Using only its feasibility component and the annulus gives
-\(R_k\ge3bX/4\).
+Let \(c_1\) and \(c_2\) be given by~\eqref{eq:rot-thresholds}. The constant
+\(c_1\) depends only on \((\gamma,\eta,\tau)\), and \(c_2\) depends only on
+\((\gamma,\tau,\Delta)\), as required in Theorem~\ref{thm:lower-bound}.
 
-It remains to lower-bound the normalized amplitude \(bX\).
-The parameter bounds give
+\begin{proof}[Proof of Theorem~\ref{thm:lower-bound}]
+Consider any \(\epsilon\in(0,c_2)\), \(\rho>0\), \(s\ge\tau\) with
+\(\epsilon(\rho+s)\le c_1\), and \((\alpha,\beta)\in[0,1]^2\). The
+definition of \(c_2\) gives \(\epsilon\le\frac1{64}\le\frac12\),
+\(\epsilon\le\sqrt\Delta/2\), and
+\(\epsilon^2\le\Delta/(64\gamma)\le\Delta/(16\gamma)\). Note that
+\(\zero\in\mathcal S_0(\mathbf C_0)\subseteq\mathcal S_0(\mathbf C)\). We treat
+the three parts of the partition of \([0,1]^2\) in Section~\ref{subsec:hard-instances}
+separately.
+
+\emph{Case 1: \(\alpha\le\alpha_\epsilon\).} Let \(I\in\mathcal I(\mathbf C_0,\Delta)\)
+be the instance of Example~\ref{ex:plateau}. If \(\alpha=0\),
+Lemma~\ref{lem:main-plateau} gives
+\(T_\epsilon(\theta,\alpha,\beta;I,\zero)=+\infty\). If
+\(0<\alpha\le\alpha_\epsilon\), Lemma~\ref{lem:main-plateau} and the
+definition of \(\alpha_\epsilon\) give
 \[
-b\ge\frac{\sqrt{\nu}}{\sqrt{\eta\tau}}
-=\frac{\omega_0\alpha}{\sqrt{\eta\tau}}.
+T_\epsilon(\theta,\alpha,\beta;I,\zero)
+>\frac{\Delta}{16\gamma\alpha\epsilon^2}
+\ge\frac{\Delta}{16\gamma\alpha_\epsilon\epsilon^2}
+=\frac{\Delta\,\epsilon^{-4}}{16384\,\gamma\max\{1,4\tau,4\gamma\tau\}}.
 \]
-Also, since \(|u+V|=\sqrt H\) and
-\(|u+\beta|=\sqrt{E_\beta}\),
-\[
-\sqrt{E_\beta}=|u+\beta|
-\le|u+V|+(V-\beta)\le\sqrt H+d.
-\]
-By \(\sqrt H\ge\sqrt\nu/2\) and \(d\le\delta_0\alpha\),
-\[
-\frac{d}{\sqrt H}
-\le\frac{2\delta_0}{\omega_0}=\frac{\omega_0}{32}\le1.
-\]
-Consequently \(\sqrt{E_\beta}\le2\sqrt H\).
-The definition of \(L\) now yields
-\[
-\frac{b}{|L|}
-=\frac{\sqrt\nu\sqrt H}{\tau\sqrt{E_\beta}}
-\ge\frac{\omega_0\alpha}{2\tau}.
-\]
-Since \(L\ne0\) and \(X=A_0/\max\{1,|L|\}\),
-\[
-\begin{aligned}
-bX
-&=A_0\min\left\{b,\frac{b}{|L|}\right\}\\
-&\ge A_0\omega_0\alpha
-\min\left\{\frac{1}{\sqrt{\eta\tau}},\frac{1}{2\tau}\right\}.
-\end{aligned}
-\]
-Multiplication by \(3/4\) gives the asserted constant
-\(c_{\rm r}\) in~\eqref{eq:radial-fixed-constants}.
+Both bounds hold for every \(\beta\in[0,1]\).
+
+\emph{Case 2: \(\alpha>\alpha_\epsilon\) and \(\beta>0\).} By
+Lemma~\ref{lem:main-rotation} (proved via Lemmas~\ref{lem:rot-estimates}
+and~\ref{lem:rot-trajectory}), the instance \(I\in\mathcal I(\mathbf C_0,\Delta)\)
+of Example~\ref{ex:rotation} satisfies
+\(T_\epsilon(\theta,\alpha,\beta;I,\zero)=+\infty\).
+
+\emph{Case 3: \(\alpha>\alpha_\epsilon\) and \(\beta=0\).} By
+Lemma~\ref{lem:main-huber}, the instance \(I\in\mathcal I(\mathbf C_0,\Delta)\)
+of Example~\ref{ex:huber} satisfies
+\(T_\epsilon(\theta,\alpha,0;I,\zero)=+\infty\).
+
+The three cases cover \([0,1]^2\). Since
+\(\mathcal I(\mathbf C_0,\Delta)\subseteq\mathcal I(\mathbf C,\Delta)\) and
+\(\zero\in\mathcal S_0(\mathbf C)\) for every \(\mathbf C\in\RR^5_{\ge0}\) with
+\(L_f,G_f,G_{\calA},L_h\ge1\), taking the supremum over
+\((I,\bu^0)\in\mathcal I(\mathbf C,\Delta)\times\mathcal S_0(\mathbf C)\) and
+then the infimum over \((\alpha,\beta)\in[0,1]^2\) in
+Definition~\ref{def:complexity-measure} gives the claimed lower bound.
 \end{proof}
 
-\begin{proof}[Proof of Lemma~\ref{lem:radial}]
-The conditions \(0<\epsilon<\epsilon_{\rm r}\) and
-\(\alpha>B\epsilon\) imply~\eqref{eq:radial-domain}.
-Lemmas~\ref{lem:radial-parameters}--\ref{lem:radial-decomposition}
-therefore define the instance parameters and its zero-initialized
-candidate trajectory. Lemma~\ref{lem:radial-instance} places the
-instance in \(\mathcal I(\mathbf C_0,\Delta)\), and
-Lemma~\ref{lem:radial-realization} proves that this is the actual
-algorithm trajectory. By Lemma~\ref{lem:radial-residual} and
-\(B\ge2/c_{\rm r}\),
+\subsubsection{Proof of Theorem~\ref{thm:lower-bound-fixed-rho}}
+\label{subsec:lb-fixed-rho-proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:lower-bound-fixed-rho}]
+With \(B\) and \(\epsilon_\mathrm{r}\) given
+in~\eqref{eq:radial-fixed-constants}, set
+\(\epsilon_0:=\min\{\epsilon_\mathrm{r},\,\sqrt{\Delta}/2,\,\sqrt{\Delta/(16\gamma)}\}\).
+Consider any \(\epsilon\in(0,\epsilon_0)\) and \((\alpha,\beta)\in[0,1]^2\), and
+write \(\theta=\theta(\epsilon)\).
+
+\emph{Case 1: \(\alpha\le B\epsilon\).} Since \(\epsilon_\mathrm{r}\le\frac12\),
+\(\epsilon\) satisfies the conditions of Example~\ref{ex:plateau} and
+Lemma~\ref{lem:main-plateau}. Let \(I\in\mathcal I(\mathbf C_0,\Delta)\) be the
+instance of Example~\ref{ex:plateau}. If \(\alpha=0\),
+Lemma~\ref{lem:main-plateau} gives
+\(T_\epsilon(\theta,\alpha,\beta;I,\zero)=+\infty\). If
+\(0<\alpha\le B\epsilon\), it gives
 \[
-R_k\ge c_{\rm r}\alpha
->c_{\rm r}B\epsilon\ge2\epsilon>\epsilon
-\qquad\text{for every }k\ge0.
+    T_\epsilon(\theta,\alpha,\beta;I,\zero)
+    >\frac{\Delta}{16\gamma\alpha\epsilon^2}
+    \ge\frac{\Delta\,\epsilon^{-3}}{16\gamma B}.
 \]
-No output satisfies the tolerance. Definition~\ref{def:complexity-measure}
-therefore gives \(T_\epsilon=+\infty\).
+
+\emph{Case 2: \(\alpha>B\epsilon\).} Lemma~\ref{lem:main-radial} gives the
+instance \(I\in\mathcal I(\mathbf C_0,\Delta)\) and initialization
+\(\bu^0\in\mathcal S_0(\mathbf C_0)\) of Example~\ref{ex:radial} with
+\(T_\epsilon(\theta,\alpha,\beta;I,\bu^0)=+\infty\).
+
+The two cases cover \([0,1]^2\). Since
+\(\mathcal I(\mathbf C_0,\Delta)\subseteq\mathcal I(\mathbf C,\Delta)\) and
+\(\mathcal S_0(\mathbf C_0)\subseteq\mathcal S_0(\mathbf C)\) for every
+\(\mathbf C\in\RR^5_{\ge0}\) with \(L_f,G_f,G_{\calA},L_h\ge1\), taking the
+supremum over \((I,\bu^0)\in\mathcal I(\mathbf C,\Delta)\times\mathcal S_0(\mathbf C)\)
+and then the infimum over \((\alpha,\beta)\in[0,1]^2\) in
+Definition~\ref{def:complexity-measure} gives the bound.
 \end{proof}
 
-\subsubsection{Step 6: separation from the proved upper-bound path}
-\label{subsec:radial-upper-separation}
-
-\begin{proposition}[Nonoverlap with Theorem~\ref{thm:upper-beta0}]
-\label{prop:radial-upper-separation}
-Whenever the fixed parameters also satisfy the hypotheses of
-Theorem~\ref{thm:upper-beta0}, its prescribed stepsize
-\[
-\alpha_{\rm ub}=\frac{\varkappa}{\ell s},\qquad\beta=0,
-\]
-where \(\varkappa\) denotes the coefficient in
-\eqref{eq:beta0-alpha}, satisfies
-\[
-\alpha_{\rm ub}<\frac{d}{384}<B\epsilon
-\]
-for all sufficiently small \(\epsilon\) at the same
-\(s=c_s/\epsilon\). Thus the two conclusions have disjoint
-parameter ranges.
-\end{proposition}
-
-\begin{proof}
-Use the upper-bound appendix's notation, with subscripts here to avoid
-confusing it with the present instance parameters:
-\[
-r_{\rm ub}:=\gamma^{-1},\qquad
-b_s^{\rm ub}:=\ell+s^{-1},\qquad
- a_s^{\rm ub}:=r_{\rm ub}-b_s^{\rm ub}>0.
-\]
-The quantity in~\eqref{eq:beta0-stepsizes} is
-\[
-(\omega_s^{\rm ub})^2
-=s\frac{[a_s^{\rm ub}
- +\tau b_s^{\rm ub}(3r_{\rm ub}-2b_s^{\rm ub})]^2}
- {\tau^2(a_s^{\rm ub})^3}.
-\]
-Since \(b_s^{\rm ub}<r_{\rm ub}\),
-\(3r_{\rm ub}-2b_s^{\rm ub}>0\); hence
-\[
-(\omega_s^{\rm ub})^2\ge\frac{s}{\tau^2a_s^{\rm ub}}.
-\]
-The third upper bound on \(\alpha\) in
-\eqref{eq:beta0-stepsizes} consequently gives
-\[
-\alpha_{\rm ub}
-\le\frac{1}{384r_{\rm ub}\tau(\omega_s^{\rm ub})^2}
-\le\frac{\tau a_s^{\rm ub}}{384r_{\rm ub}s}
-<\frac{\tau}{384s}=\frac{d}{384}.
-\]
-On the other hand, our threshold satisfies
-\[
-B\epsilon\ge\frac{\tau\epsilon}{c_s\delta_0}
-=\frac{d}{\delta_0}>\frac{d}{384},
-\]
-because \(0<\delta_0<1\).
-This proves, in particular, the requested strict inequality
-\[
-B\epsilon>\frac{\varkappa}{\ell s}.
-\]
-No extra dependence of \(B\) on an unspecified upper-bound coefficient
-is needed.
-\end{proof}
-
-\subsubsection{The difference between \(\beta=0\) and \(\beta>0\)}
-\label{subsec:radial-beta-endpoint}
-
-The construction, all six steps, and their constants are uniform over
-\(\beta\in[0,1]\). Their spectral interpretations differ as follows.
-
-For \(\beta>0\),
-\[
-Q(1)=\frac{D\beta H}{\Upsilon}>0.
-\]
-The root argument in Lemma~\ref{lem:radial-kernel} then puts both
-roots strictly inside the unit disk: real roots lie in \([0,1]\),
-and the displayed strict inequality excludes one; nonreal roots have
-modulus \(\sqrt{P_0}<1\).
-Each component of \(\mathbb{T}^k\br\) satisfies the scalar
-second-order recurrence. For distinct roots, its solution is a linear
-combination of their powers. For a repeated root \(t\), the solution
-has the form \((c_0+c_1k)t^k\), with the zero-root case interpreted
-directly from the recurrence. These expressions tend to zero.
-Thus the remainder decays for each fixed \(\beta>0\), although no
-uniform decay rate as \(\beta\downarrow0\) is needed or asserted.
-
-For \(\beta=0\), the parameter formulas instead give exactly
-\[
-V=d,\qquad \Upsilon=(1-d)\nu,
-\qquad \xi=\frac{Wd}{1-d},\qquad \vartheta=Wd.
-\]
-Therefore
-\begin{equation}
-Q(t)=(t-1)(t-r_0),
-\qquad r_0:=1-D+d(W-1).
-\label{eq:radial-beta-zero-factorization}
-\end{equation}
-Because \(W\ge1\), \(D\le1\), and \(Wd\le\delta_0 D\),
-\[
-0\le1-D\le r_0
-\le1-(1-\delta_0)D<1,
-\qquad
-1-r_0\ge(1-\delta_0)D\ge\frac{\chi}{4}.
-\]
-The unit root is simple. There is no Jordan growth at that root on
-\(\ker Q(\mathbb{T})\), because the two factors in
-\eqref{eq:radial-beta-zero-factorization} are distinct.
-More explicitly, define
-\[
-\br^{(1)}:=\frac{(\mathbb{T}-r_0I)\br}{1-r_0},
-\qquad
-\br^{(0)}:=\frac{(I-\mathbb{T})\br}{1-r_0}.
-\]
-The annihilator identity proves directly that
-\[
-\br=\br^{(1)}+\br^{(0)},\qquad
-\mathbb{T}\br^{(1)}=\br^{(1)},\qquad
-\mathbb{T}\br^{(0)}=r_0\br^{(0)}.
-\]
-Consequently,
-\begin{equation}
-\mathbb{T}^k\br=\br^{(1)}+r_0^k\br^{(0)},\qquad k\ge0.
-\label{eq:radial-beta-zero-remainder}
-\end{equation}
-The denominator \(1-r_0\) is bounded below by \(\chi/4\).
-Independently of this decomposition, Lemma~\ref{lem:radial-remainder}
-already provides the stated componentwise uniform bounds, so no
-summation of a nondecaying remainder is used.
-
-In this endpoint case \(M=0\), and the fourth row of \(\mathbb{T}\)
-is the identity on the fourth coordinate. Moreover,
-\[
-r_\mu=r_\lambda+\Lambda=-\lambda_c.
-\]
-Thus the actual dual center is exactly
-\[
-\mu^k=\lambda_c+\zeta^kM+(\mathbb{T}^k\br)_\mu
-=\lambda_c+r_\mu=0\qquad(k\ge0),
-\]
-as required by the algorithm with \(\beta=0\) and zero initialization.
-The persistent component in~\eqref{eq:radial-beta-zero-remainder}
-need not vanish; its primal component is nevertheless bounded together
-with the entire remainder by \(X/8\). It therefore cannot cancel the
-unit-modulus rotational component of primal amplitude \(X\).
-This is the precise replacement for the strict-stability argument used
-in the original \(\beta>0\) rotation branch.

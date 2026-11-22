@@ -1,0 +1,65 @@
+{
+ "eps": 1e-05,
+ "budget": 15000,
+ "inst": {
+  "sigma_min": 0.001
+ },
+ "best": {
+  "Fast LRALM": {
+   "params": {
+    "rho": 1.0,
+    "s": 300000.0,
+    "gamma": 0.5,
+    "tau": 1.0,
+    "alpha": 1.0,
+    "omega": 0.98
+   },
+   "calls_to_eps": 765.0,
+   "best_kkt": 7.045349511038374e-06
+  },
+  "Smoothed GDA": {
+   "params": {
+    "rho": 1.0,
+    "s": 1.0,
+    "gamma": 0.5,
+    "eta": 0.5,
+    "tau": 4.0,
+    "alpha": 1.0
+   },
+   "calls_to_eps": 3928.0,
+   "best_kkt": 3.096486709928894e-06
+  },
+  "Perturbed Smoothed GDA": {
+   "params": {
+    "rho": 1.0,
+    "s": 300000.0,
+    "gamma": 0.5,
+    "eta": 0.5,
+    "tau": 4.0,
+    "alpha": 1.0
+   },
+   "calls_to_eps": 5881.0,
+   "best_kkt": 7.665476643692364e-06
+  },
+  "iALM": {
+   "params": {
+    "rho0": 0.1,
+    "sigma": 1.5,
+    "gamma": 1.8181818181818181,
+    "tol0": 0.1
+   },
+   "calls_to_eps": Infinity,
+   "best_kkt": 0.0013550157523833496
+  },
+  "Zhang-Xu Alg. 1": {
+   "params": {
+    "h": 0.125,
+    "beta": 0.01,
+    "lam_mult": 1.0,
+    "tz": 0.01
+   },
+   "calls_to_eps": Infinity,
+   "best_kkt": 0.010515147176734648
+  }
+ }
+}

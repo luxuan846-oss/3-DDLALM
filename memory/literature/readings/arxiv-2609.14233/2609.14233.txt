@@ -1,0 +1,2433 @@
+                                                   Lower Bounds for Nonconvex-Concave Minimax Optimization
+
+                                                          Qilong Wu*                      Zhihao Gu*                       Junchi Yang†
+                                                     The Chinese University          The Pennsylvania State            The Chinese University
+                                                    of Hong Kong, Shenzhen                 University                 of Hong Kong, Shenzhen
+                                                    qilongwu@link.cuhk.edu.cn              zbg5155@psu.edu              yangjunchi@cuhk.edu.cn
+
+
+
+
+arXiv:2609.14233v1 [math.OC] 13 Sep 2026
+                                                                                              Abstract
+                                                       We study lower bounds on the first-order oracle complexity of smooth nonconvex–concave
+                                                   minimax optimization. We consider objectives f that are jointly L-smooth in the primal and dual
+                                                   variables (x, y), concave in y, and whose primal value function Φ(x) := maxy∈Y f (x, y) satisfies
+                                                   the initial-gap condition Φ(0) − infx∈X Φ(x) ≤ ∆Φ , with a bounded dual domain satisfying
+                                                   diam(Y) ≤ DY . We measure stationarity by the norm of the gradient of the Moreau envelope
+                                                   of Φ + ιX with parameter 1/(2L). We prove that any deterministic zero-respecting first-order
+                                                   algorithm requires Ω L2 DY ∆Φ ϵ−3 oracle evaluations to find an ϵ-stationary point. Under
+                                                   an unbiased stochastic first-order oracle
+                                                                                            with bounded variance, any stochastic zero-respecting
+                                                   algorithm requires Ω L3 DY  2
+                                                                                 ∆Φ ϵ−6 oracle evaluations. The same lower bounds hold when ∆Φ
+                                                   is replaced by the initial primal–dual gap G0 . These deterministic and stochastic lower bounds
+                                                   match the corresponding upper bounds of [14] and [29], respectively, up to a logarithmic factor
+                                                   in the deterministic setting.
+
+
+                                           1       Introduction
+                                           Minimax optimization provides a common formulation for a broad range of problems in machine
+                                           learning, statistics, and robust decision making. Such problems arise in applications including
+                                           two-player zero-sum games [24], generative modeling [8], reinforcement learning [21, 27], robust
+                                           and adversarial machine learning [15, 22], and robust optimization [2]. Optimization of pointwise
+                                           maxima of nonconvex losses can also be written as a minimax problem through a dual representa-
+                                           tion [30]. A canonical formulation is
+
+                                                                                          min max f (x, y),                                            (1)
+                                                                                          x∈X y∈Y
+
+                                           where x denotes the model or decision variable and y represents an adversary, perturbation, or dual
+                                           variable. A substantial part of the recent complexity theory has focused on the nonconvex–strongly-
+                                           concave (NC–SC) setting, for which the first-order complexity is now relatively well understood:
+                                           near-optimal algorithms and matching lower bounds, up to logarithmic factors, are known under
+                                           standard smoothness assumptions [14, 11, 28].
+                                               The strong-concavity assumption, however, can be restrictive in applications. In many adver-
+                                           sarial and robust formulations, the inner problem is naturally concave but has no intrinsic strongly
+                                               ∗
+                                              Equal contribution.
+                                               †
+                                              Corresponding author. Also aﬀiliated with Shenzhen Research Institute of Big Data and Shenzhen International
+                                           Center for Industrial and Applied Mathematics.
+
+
+                                                                                                  1
+Table 1: Upper and lower bounds for Φ-Moreau stationarity under standard normalization. The
+function classes and the primal-value-gap and primal–dual-gap parameterizations are defined in
+Definition 2.1. Universal constants, logarithmic factors, and the small-ϵ regime are suppressed.
+ Setting              Function class                  Oracle class                    Result            References              Complexity
+
+                      FNCC (L, ∆Φ , DY )                first-order                 Upper bound     Corollary A.8 in [14]      Õ(L2 DY ∆Φ ϵ−3 )
+ Deterministic NC–C   FNCC (L, ∆Φ , DY )        first-order zero-respecting         Lower bound   This paper (Theorem 4.1)     Ω(L2 DY ∆Φ ϵ−3 )
+                       pd
+                      FNCC (L, G0 , DY )        first-order zero-respecting         Lower bound   This paper (Corollary 4.2)   Ω(L2 DY G0 ϵ−3 )
+                       pd
+                      FNCC (L, G0 , DY )           stochastic first-order           Upper bound       Theorem 5 in [29]        O(L3 DY
+                                                                                                                                     2
+                                                                                                                                       G0 ϵ−6 )
+ Stochastic NC–C      FNCC (L, ∆Φ , DY )   stochastic first-order zero-respecting   Lower bound   This paper (Theorem 5.5)     Ω(L3 DY
+                                                                                                                                     2
+                                                                                                                                       ∆Φ ϵ−6 )
+                       pd
+                      FNCC (L, G0 , DY )   stochastic first-order zero-respecting   Lower bound   This paper (Corollary 5.6)   Ω(L3 DY
+                                                                                                                                     2
+                                                                                                                                       G0 ϵ−6 )
+
+
+
+
+concave curvature. This motivates the more general nonconvex–concave (NC–C) setting, where
+f (x, ·) is assumed only concave and the dual geometry is typically controlled through a bounded
+feasible set Y, for example with diam(Y) ≤ DY . Define the primal value function
+
+                                                        Φ(x) := max f (x, y),
+                                                                      y∈Y
+
+and its extended value function φ := Φ + ιX . Under L-Lipschitz smoothness assumption on f , φ
+is L-weakly convex. A standard stationarity measure for NC–C minimax optimization is based on
+the Moreau envelope of φ, defined by
+                                                       
+                                             1
+                    φλ (x) := min φ(z) +       kz − xk ,
+                                                      2
+                                                              0 < λ < L−1 .                (2)
+                              z∈Rdx         2λ
+
+The envelope φλ is continuously differentiable for such λ, even when Φ itself is not. The literature
+has focused on finding an ϵ-stationary point x satisfying
+
+                                                             k∇φλ (x)k ≤ ϵ,                                                                 (3)
+
+or the corresponding expected stationarity criterion in the stochastic setting [6, 23, 14, 25, 10, 29].
+    Despite substantial progress on algorithms for NC–C minimax optimization, considerably less
+is known about its fundamental oracle complexity. The best-known first-order methods achieve
+ e
+O(ϵ−3 ) gradient evaluations in the deterministic setting [14] and O(ϵ−6 ) stochastic gradient evalu-
+ations under a bounded-variance oracle [29]. In contrast, general lower bounds for NC–C minimax
+optimization remain much less developed. Since the NC–C class contains smooth nonconvex min-
+imization and NC–SC minimax optimization as special cases, lower bounds for these problems
+immediately carry over to the NC–C setting. However, such inherited lower bounds do not match
+the best-known NC–C upper bounds. Existing lower-bound results tailored specifically to NC–C
+problems are instead largely algorithm-specific: they establish tight complexity guarantees for par-
+ticular update rules, such as GDA, OGDA, extragradient, and perturbed or smoothed variants of
+GDA [16, 12], rather than for a broad class of zero-respecting first-order methods.
+
+1.1    Our Contributions and Main Results
+We establish oracle lower bounds for zero-respecting first-order algorithms. These bounds match the
+best-known upper bounds [14, 29], up to a logarithmic factor in the deterministic setting. Table 1
+summarizes the resulting complexity landscape. Our main contributions are as follows:
+
+
+                                                                        2
+  • Oracle lower bounds for NC–C minimax optimization. We establish oracle lower
+    bounds of Ω(L2 DY ϵ−3 ) in the deterministic setting and Ω(L3 DY2 ϵ−6 ) in the stochastic setting.
+    Both bounds hold under either of two standard initial-gap conditions: a bounded initial
+    primal–dual gap or a bounded initial gap measured through the Moreau envelope of the
+    primal value function. The deterministic lower bound matches the upper bound of [14] up to
+    logarithmic factors, while the stochastic lower bound tightly matches the upper bound of [29].
+    These results characterize its intrinsic diﬀiculty relative to smooth nonconvex minimization
+    and NC–SC minimax optimization.
+  • A bounded zero-chain construction. The deterministic lower bound is based on a se-
+    quence of primal coordinates coupled through dual blocks: each successive primal coordinate
+    can become nonzero only after first-order information has propagated through the interven-
+    ing dual block. The construction is scaled so that the unconstrained dual maximizer lies in
+    the interior of the prescribed bounded dual domain and the primal value function admits an
+    exact representation. Moreover, the joint gradient is Lipschitz continuous with a constant in-
+    dependent of the chain dimensions, while the norm of the Moreau-envelope gradient remains
+    bounded away from zero whenever the terminal primal coordinate is zero. Thus, the construc-
+    tion combines the standard nonconvex zero-chain obstruction with the additional oracle cost
+    required for first-order information to propagate through the dual variables.
+  • A stochastic dual-gate mechanism. For the stochastic lower bound, we replace the
+    quadratic difference terms (yk − yk+1 )2 along each dual block with clipped quadratic terms.
+    This modification preserves both the primal value function and the dual maximizers, while
+                                                                   (i)         (i)
+    uniformly bounding the gradient components corresponding to y2 , . . . , yN in each dual block.
+                                                                            (i)
+    We apply Bernoulli randomization only to these coordinates, leaving y1 and all primal coor-
+    dinates deterministic. After contracting the deterministic transitions, the progress analysis
+    reduces to a probability-p zero-chain over randomized dual coordinates. This yields the
+    stochastic lower bound without imposing a uniform bound on the full dual gradient.
+
+1.2   Related Work
+Lower bounds for smooth nonconvex optimization. Lower bounds for first-order optimiza-
+tion have a long history dating back to the information-based complexity framework of Nemirovski
+and Yudin [17]. In the noiseless convex setting, oracle complexity is well understood for a broad
+range of smooth [18] and nonsmooth [17] problems. A common approach is to construct high-
+dimensional instances for which each oracle call reveals only limited information about the solution.
+This idea appears in several forms, including resisting-oracle arguments, linear-span restrictions,
+and zero-respecting constructions. Zero-respecting constructions are particularly useful for non-
+convex problems, where the hard instance can be organized as a chain whose coordinates must be
+revealed sequentially.
+    For smooth high-dimensional nonconvex optimization, Carmon et al. [3, 4] establish essentially
+tight first-order lower bounds for finding stationary points. For an L-smooth function with initial
+function gap at most ∆, their results imply that Ω L∆ϵ−2 first-order oracle evaluations are nec-
+essary in the worst case to find an x satisfying k∇F (x)k ≤ ϵ. This bound matches the complexity
+of gradient descent up to constants under the standard normalization. Their construction has a
+sequential zero-chain structure: before the algorithm reveals a given coordinate, the oracle pro-
+vides no information about subsequent coordinates. This zero-respecting framework has become a
+standard tool for proving lower bounds in high-dimensional nonconvex optimization and is also the
+
+
+                                                 3
+starting point of the hard instance developed in this paper. In stochastic nonconvex optimization,
+Arjevani et al. [1] combine deterministic nonconvex zero-chains with stochastic oracle constructions
+to obtain sharp lower bounds under bounded-variance and mean-squared-smoothness assumptions.
+Under a bounded-variance stochastic gradient oracle, the worst-case complexity can scale as Ω(ϵ−4 ),
+whereas mean-squared smoothness leads to the characteristic ϵ−3 dependence. These results show
+that the zero-chain framework applies to both deterministic and stochastic oracle models.
+
+Lower bounds for minimax optimization. For convex–concave saddle-point problems, lower
+complexity bounds were established using primal–dual hard instances in which information propa-
+gates alternately between the two variable blocks [19, 26]. For nonconvex–strongly-concave (NC–
+                                                                                   √
+SC) minimax optimization, Zhang et al. [28] established lower bounds of Ω L∆ κ ϵ−2 in the
+                                  √                  
+deterministic setting and Ω L∆ κ ϵ−2 + κ1/3 σ 2 ϵ−4 in the stochastic setting. Although NC–SC
+problems form a subclass of NC–C problems, the lower bounds in [11, 28] cannot be directly ex-
+tended to the NC–C setting by simply letting the strong-concavity parameter µ tend to zero. In
+particular, increasing the condition number alone does not ensure that the dual maximizers remain
+within a domain of prescribed diameter. Imposing such a restriction on the dual domain may al-
+ter the induced primal value function and thereby invalidate the gradient lower bound established
+for the original construction. Likewise, rescaling the instance to enforce the diameter constraint
+changes both the smoothness and stationarity scales, leading to a weaker complexity lower bound
+than the one established here.
+
+Upper bounds for NC–C minimax optimization. We next review existing upper bounds
+for NC–C minimax optimization under the stationarity measure adopted in this paper, namely,
+the norm of the gradient of a Moreau envelope of the primal value function. In the deterministic
+                                                             e −3 ) complexity under this stationarity
+setting, existing first-order methods achieve an essentially O(ϵ
+criterion. This rate was first attained by Thekumparampil et al. [23] using an inexact proximal-
+point method. It was subsequently achieved by several other approaches, including accelerated
+inexact proximal-point methods [14, 10], Catalyst-type schemes [25], and primal–dual smoothing
+methods for max-structured nonconvex optimization [30]. In the stochastic setting, Zhang et al. [29]
+proposed SAPD+, which achieves an O(ϵ−6 ) stochastic oracle complexity under a bounded-variance
+stochastic gradient oracle. Accordingly, the relevant upper-bound benchmarks are O(ϵ   e −3 ) in the
+                                −6
+deterministic setting and O(ϵ ) in the stochastic setting.
+
+Notation. For a vector z ∈ Rd , zi is its ith coordinate, supp(z) := {i ∈ [d] : zi 6= 0} is its
+support, and kzk and kzk∞ are its Euclidean and ℓ∞ norms. For a matrix M , kM kop is its
+Euclidean operator norm and M ⊤ is its transpose. We write ei for the ith standard basis vector,
+Bd2 for the Euclidean unit ball in Rd , and PC for Euclidean projection onto a nonempty closed
+convex set C. For a nonempty closed convex set C, its indicator function is denoted by ιC , where
+                                              (
+                                                0,   z ∈ C,
+                                    ιC (z) :=
+                                                +∞, z ∈ / C,
+
+and its normal cone is NC (z) := {v : hv, u − zi ≤ 0 for every u ∈ C}. For f : X × Y → R, we
+write ∇f = (∇x f, ∇y f ) for the joint gradient. All unspecified norms are Euclidean.
+
+
+
+
+                                                  4
+2     Problem Setup
+In this section, we first formalize the problem class, the stationarity measure, and the oracle model.
+We then introduce the two components used in both the deterministic and stochastic hard instances:
+the tridiagonal path matrix Bα,N , which defines the dual chain, and the smooth functions ν and r,
+which are used to construct the primal relay.
+
+2.1    Function Class and Stationarity Measure
+For a f : X × Y → R, define its primal value function by
+
+                                    Φf (x) := max f (x, y),         x ∈ X,
+                                                y∈Y
+
+and its extended-valued version by φf := Φf + ιX on the ambient primal space.
+     We first introduce the function classes for smooth nonconvex–concave minimax problems. The
+two classes differ in how the initial optimality gap is measured. The first bounds the initial gap of
+the primal value function, whereas the second bounds the primal–dual gap at the reference point
+(0, 0). The former is used in [14], while the latter is used in [29].
+
+Definition 2.1 (NC–C function classes). Given L, DY > 0, consider continuously differentiable
+functions f : X × Y → R, over all finite dimensions dx , dy ∈ N, where X ⊂ Rdx and Y ⊂ Rdy are
+nonempty closed convex sets with 0 ∈ X and 0 ∈ Y, satisfying:
+    1. f is jointly L-smooth on X × Y:
+
+               k∇f (x, y) − ∇f (x′ , y ′ )k ≤ Lk(x, y) − (x′ , y ′ )k,         ∀(x, y), (x′ , y ′ ) ∈ X × Y.
+
+    2. For every x ∈ X , f (x, ·) is concave.
+    3. The dual domain satisfies: diam(Y) := supy,y′ ∈Y ky − y ′ k ≤ DY .
+    4. The initial scale is parameterized in either of the following two ways:
+
+        (i) For ∆Φ > 0, FNCC (L, ∆Φ , DY ) denotes the class of functions satisfying
+
+                                                Φf (0) − inf Φf (x) ≤ ∆Φ ;
+                                                           x∈X
+
+                          pd
+        (ii) For G0 > 0, FNCC (L, G0 , DY ) denotes the class of functions satisfying
+
+                                            max f (0, y) − inf f (x, 0) ≤ G0 .
+                                            y∈Y              x∈X
+
+
+   No convexity is imposed on f (·, y). Since Y is closed and has finite diameter in a finite-
+dimensional space, it is compact. The continuity of f therefore ensures that the maximum defining
+Φf is attained for every x ∈ X . These two quantities satisfy
+
+                            Φf (0) − inf Φf (x) ≤ max f (0, y) − inf f (x, 0),
+                                      x∈X             y∈Y                x∈X
+
+because Φf (x) ≥ f (x, 0) for every x ∈ X . Thus, a bound on the initial primal–dual gap also
+bounds the initial primal value gap. We will present the lower bounds for both classes.
+
+
+                                                       5
+   For λ > 0 and x ∈ Rdx , define the constrained proximal set by
+                                               
+                                    1
+       Pλ (x) := arg min Φf (p) +      kp − xk , Gλ (x; p) := λ−1 (x − p),
+                                              2
+                                                                                        p ∈ Pλ (x).   (4)
+                     p∈X           2λ
+The initial-gap condition implies that Φf is bounded below on X . Equivalently, the set Pλ (x) is
+the proximal set of the extended-value function φf at x with parameter λ on Rdx . Although f is
+smooth, the primal value function Φf need not be differentiable because the dual maximizer may
+be nonunique. Nevertheless, joint L-smoothness of f implies that f (·, y) is L-weakly convex for
+every y ∈ Y. Consequently, φf is a proper, lower semicontinuous, and L-weakly convex function.
+We next recall the standard Moreau-envelope regularity result for this class of functions.
+Lemma 2.2 (Lemma 2.2 in [6]). Let φ : Rdx → R ∪ {+∞} be proper, lower semicontinuous, and
+L-weakly convex. For every 0 < λ < L−1 and every x ∈ Rdx , the proximal problem has a unique
+minimizer, denoted by pφ
+                       λ (x):
+                                                     
+                                          1
+                          arg min φ(p) +    kp − xk = {pφ
+                                                    2
+                                                             λ (x)}.
+                              p∈R d x    2λ
+Moreover, the Moreau envelope
+                                                                           
+                                                               1
+                                φλ (x) := min          φ(p) +    kp − xk2
+                                           p∈Rdx              2λ
+is continuously differentiable, and
+                                                              
+                                      ∇φλ (x) = λ−1 x − pφ
+                                                         λ (x) .                                      (5)
+                                                                       φ
+   Applying Lemma 2.2 to φf = Φf + ιX , we write pλ (x) := pλ f (x). For 0 < λ < L−1 , this gives
+                                                                       
+                    Pλ (x) = {pλ (x)},     ∇(φf )λ (x) = Gλ x; pλ (x) .
+
+For both function classes, we measure stationarity using the gradient of the Moreau envelope of
+the value function, as defined below. This is a standard stationarity measure for weakly convex
+optimization [6, 7] and nonconvex–concave minimax optimization [29]. By Lemma 2.2, the corre-    
+sponding stationarity conditions can equivalently be expressed in terms of G1/(2L) x; p1/(2L) (x) .
+                                               pd
+Definition 2.3. Let f ∈ FNCC (L, ∆Φ , DY ) ∪ FNCC   (L, G0 , DY ). A point x ∈ X is ϵ-stationary for
+the primal value function if
+                                      ∇(φf )1/(2L) (x) ≤ ϵ.
+A random output x is expected ϵ-stationary if
+
+                                        E ∇(φf )1/(2L) (x) ≤ ϵ.
+
+2.2   Oracle and Algorithm Classes
+We consider deterministic and stochastic first-order algorithms for nonconvex–concave minimax
+optimization. We begin by specifying the corresponding first-order oracle models.
+Definition 2.4 (Deterministic first-order oracle). The deterministic first-order oracle of a differen-
+tiable function f : X × Y → R is the mapping
+
+                 Offo (x, y) = (f (x, y), ∇x f (x, y), ∇y f (x, y)),       (x, y) ∈ X × Y.
+
+                                                        6
+Definition 2.5 (Stochastic first-order oracle). The stochastic first-order oracle of a differentiable
+function f : X × Y → R returns
+                                         b x f (x, y; ξ), ∇
+               Ofsfo (x, y) = (f (x, y), ∇                b y f (x, y; ξ)),     (x, y) ∈ X × Y,
+
+where ξ is a random variable satisfying
+                                                        h                          i
+                   b (x, y; ξ)] = ∇f (x, y),
+               Eξ [∇f                                     b (x, y; ξ) − ∇f (x, y)k2 ≤ σ 2 .
+                                                      Eξ k∇f
+
+    We restrict attention to zero-respecting first-order algorithms. Informally, such an algorithm
+can update only coordinates that have been revealed by previous first-order oracle responses. This
+class includes many standard first-order methods, including gradient descent–ascent, extragradient,
+and their standard momentum and stochastic variants [3, 11].
+Definition 2.6 (Zero-respecting first-order algorithm). A first-order algorithm is zero-respecting
+if, for every admissible function f and every oracle transcript, the (t + 1)-th iterate (xt+1 , y t+1 )
+satisfies                                                                            
+                                           [                                        
+                xt+1 ∈ PX (u) : supp(u) ⊆        supp(xi ) ∪ supp(∇x f (xi , y i ))     ,
+                                                                                     
+                                                  0≤i≤t
+
+and                                                                                            
+                                                  [                                           
+                y t+1 ∈    P (v) : supp(v) ⊆              supp(y i ) ∪ supp(∇y f (xi , y i ))     .
+                           Y                                                                   
+                                                  0≤i≤t
+
+In the stochastic setting, the same condition is imposed pathwise with ∇x f (xi , y i ) and ∇y f (xi , y i )
+replaced by the realized stochastic gradients b∇x f (xi , y i ; ξi ) and b
+                                                                         ∇y f (xi , y i ; ξi ), respectively.
+
+    Throughout, all algorithms are initialized at (x0 , y 0 ) = (0, 0), and the final primal output is also
+required to satisfy the same zero-respecting condition as the primal iterates. Since Euclidean pro-
+jection onto each feasible set constructed in Section 3 preserves coordinate support, Definition 2.6
+implies that every query is supported only on coordinates revealed by previous gradient evalua-
+tions. In the stochastic setting, the zero-respecting condition is imposed pathwise with respect to
+the realized stochastic gradients.
+
+2.3   Zero-chain Framework
+Zero-chain constructions are a standard tool for establishing first-order oracle lower bounds [3, 4,
+1, 11, 9, 5]. To describe the sequential revelation of coordinates, for v ∈ Rd and θ ≥ 0, define
+                                                                               
+                         progθ (v) := max {j ∈ {1, . . . , d} : |vj | > θ} ∪ {0} .
+
+Thus, progθ (v) is the largest index of a coordinate whose magnitude exceeds θ, or zero if no such
+coordinate exists. In particular, prog0 (v) is the largest index in the support of v, with prog0 (0) = 0.
+Definition 2.7 (Zero-chain). A differentiable function f : X ⊆ Rd → R is a first-order zero-chain
+if, for every x ∈ X ,
+                            prog0 (∇f (x)) ≤ min{prog0 (x) + 1, d}.
+
+   This condition ensures that a gradient evaluation reveals no coordinate with index greater than
+prog0 (x) + 1. The following stochastic analogue additionally bounds the probability of revealing
+that next coordinate.
+
+                                                          7
+Definition 2.8 (Probability-p zero-chain). Let p ∈ (0, 1], and let f : X ⊆ Rd → R be     a differen-
+                                                                 sfo            b
+tiable function equipped with a stochastic first-order oracle Of (x) = f (x), ∇f (x; ξ) . We call f
+a probability-p zero-chain with respect to this oracle if, for every x ∈ X with r := prog0 (x) < d,
+                                                                               
+                       b (x; ξ)) = r + 1 ≤ p,
+             Pξ prog0 (∇f                            Pξ prog0 (∇fb (x; ξ)) > r + 1 = 0.
+
+Here, the probability is taken over the randomness of the oracle.
+
+    Thus, the stochastic gradient has no nonzero coordinate with index greater than r + 1 almost
+surely, and its (r + 1)st coordinate is nonzero with probability at most p.
+    When Euclidean projection onto each feasible set preserves coordinate support, a zero-respecting
+algorithm initialized at the origin can reveal at most one new coordinate per oracle call on a
+deterministic zero-chain. After t oracle calls, its next query and any admissible output are therefore
+supported on the first t coordinates. After t oracle calls, its next query and any admissible output
+are therefore supported on the first t coordinates. To establish a deterministic lower bound, it thus
+suﬀices to construct a zero-chain in the target function class for which the stationarity measure
+exceeds ϵ at every feasible point x satisfying prog0 (x) < T . Any zero-respecting algorithm must
+then make at least T oracle calls to obtain an ϵ-stationary point. For a probability-p zero-chain,
+each oracle call reveals a new coordinate with conditional probability at most p, given the preceding
+oracle transcript and the current query. Consequently, revealing the first T coordinates requires
+Ω(T /p) oracle calls in expectation.
+
+2.4   Component Functions
+We now introduce several functions that will serve as building blocks for the hard instance con-
+structed later. We also establish some of their key properties, which provide intuition for how these
+functions are used in the construction.
+
+Quadratic chain. Following [18, 4], for α > 0 and an integer N ≥ 2, define the tridiagonal
+matrix                                                
+                               1 + α2 −1
+                              −1        2 −1          
+                                                      
+                                       ..   ..   ..   
+                    Bα,N :=               .    .    .  ∈ RN ×N .                     (6)
+                                                      
+                                            −1 2 −1   
+                                                  −1 1
+The associated quadratic function is
+                                                            N −1
+                                  1            α2 2 1 X
+                       fα,N (x) := x⊤ Bα,N x =   x +    (xk − xk+1 )2 .                           (7)
+                                  2            2 1 2
+                                                            k=1
+
+Each difference term couples two neighboring coordinates, while the term α2 x21 /2 ensures that Bα,N
+is positive definite. The tridiagonal structure implies that each gradient component depends only
+on the corresponding coordinate and its immediate neighbors. Our later construction includes the
+negative of this quadratic function in the dual variable, which is a concave term. Its structure re-
+stricts the propagation of first-order information along the dual path and allows the dual maximizer
+to be computed explicitly.
+
+
+
+                                                  8
+Scalar component functions. For nonconvex optimization, Carmon et al. [4] construct zero-
+chains using the smooth functions
+                         (                                          Z t
+                                             t ≤ 2,
+                                                   1
+                           0,                                  √
+                                                                        e−s /2 ds.
+                                                                           2
+                Ψ̄(t) :=                               Φ̄(t) :=   e                   (8)
+                           exp 1 − (2t−1)
+                                      1
+                                          2  , t > 1
+                                                   2 ,               −∞
+
+
+The function Ψ̄ vanishes below a fixed threshold, which restricts when one coordinate can affect
+the gradient of the next. In our minimax instance construction, we want the dual maximizers to
+remain within a prescribed bounded domain while retaining a stationarity lower bound for the value
+function that is independent of the chain length. A direct rescaling of an unconstrained zero-chain
+from [4] does not guarantee both properties. We therefore introduce two continuously differentiable
+functions:
+                                                                    
+                       
+                       0,             t ≤ 0,                        
+                                                                     t,        t ≤ 0,
+                ν(t) := 3t2 − 2t3 ,    0 < t < 1,             r(t) := t(1 − t), 0 < t < 1,              (9)
+                       
+                                                                    
+                                                                     
+                         1,            t ≥ 1,                          1 − t,   t ≥ 1.
+
+    The function ν is the cubic transition function used in previous zero-chain constructions [20].
+It takes values in [0, 1], equals zero on (−∞, 0], and equals one on [1, ∞). We use it to couple
+successive primal coordinates without introducing a direct gradient contribution at a coordinate
+equal to zero, since ν ′ (0) = 0.
+    The function r has zeros at 0 and 1, and satisfies r′ (0) = 1. In the hard instance, this nonzero
+derivative allows an auxiliary variable to produce a nonzero gradient at the next primal coordinate
+even when that coordinate is zero. The following lemma summarizes the key properties of these
+two functions. Its proof is deferred to Appendix A.1.
+
+Lemma 2.9. The functions ν and r are C 1,1 and satisfy
+                                  3
+                          |ν ′ | ≤ ,      |ν ′′ | ≤ 6,       |r′ | ≤ 1,     |r′′ | ≤ 2,                (10)
+                                  2
+where the second-derivative bounds hold almost everywhere. Moreover,
+
+               ν(0) = ν ′ (0) = r(0) = 0,        r′ (0) = 1,        ν ′ (t) = 6r(t),      0 < t < 1.   (11)
+
+For every κ ∈ (0, 1/8), if t ≤ 2κ, then
+
+                                  ν(t) ≤ 2|r(t)|,            r′ (t) ≥ 1 − 4κ,
+
+and if t ≥ 1 − 2κ, then
+                                            1 − ν(t) ≤ 2|r(t)|.
+
+    The derivative bounds are used to establish smoothness of the hard instance. The remaining
+inequalities relate the values and derivatives of the component functions near the two thresholds 0
+and 1; they are used to prove the stationarity lower bound before the terminal primal coordinate
+is revealed.
+
+
+
+
+                                                         9
+Normalized coupling between primal coordinates. Fix an integer T ≥ 2. For u ∈ RT ,
+define q(u) = (q1 (u), . . . , qT −1 (u)) by
+                                                          
+                             qi (u) := ν(ui ) 1 − ν(ui+1 ) , i = 1, . . . , T − 1. (12)
+
+Each component depends only on two successive coordinates. In particular, qi (u) = 0 if ui ≤ 0 or
+ui+1 ≥ 1, whereas qi (u) = 1 if ui ≥ 1 and ui+1 ≤ 0. Thus, q identifies transitions from a coordinate
+above the upper threshold to a subsequent coordinate below the lower threshold. Such a transition
+is central to the stationarity argument when the first primal coordinate is near or above 1 but the
+terminal coordinate is still zero.
+    Although each component of q is bounded by one, its Euclidean norm can grow with T . We
+therefore define
+                                                    q(u)
+                                       ρ(u) := q              ,
+                                                 1 + kq(u)k2
+so that
+                                     kρ(u)k ≤ 1,       u ∈ RT .                                 (13)
+This uniform bound allows ρ to be coupled to auxiliary primal variables whose feasible radius is
+independent of T . The normalization preserves the zero coordinates of q. Moreover, if uj = 0, then
+ν ′ (uj ) = 0, so the jth column of Dq(u), and hence of Dρ(u), vanishes. This property is used to
+verify that the normalized coupling preserves the required zero-chain structure.
+      The next lemma gives uniform bounds on the Jacobians of q and ρ, where D denotes the
+Jacobian. All constants are independent of T , which is essential for obtaining a smoothness bound
+independent of the dimensions of the hard instance. The proof is given in Appendix A.2.
+
+Lemma 2.10. For all u, v ∈ RT ,
+
+                     kDq(u)kop ≤ 3,        kDq(u) − Dq(v)kop ≤ 17 ku − vk ,
+
+and
+                     kDρ(u)kop ≤ 3,        kDρ(u) − Dρ(v)kop ≤ 71 ku − vk .
+
+
+3     The Hard Instance
+In this section, we first construct the deterministic hard instance and then establish the properties
+needed to prove both the deterministic and stochastic lower bounds.
+
+3.1   Construction of the Hard Instance
+The hard instance is constructed as the sum of primal and dual components. The primal compo-
+nent depends only on the primal variables and forms a chain along the primal coordinates. The
+dual component depends on both the primal and dual variables; it forms a chain along the dual
+coordinates while coupling the dual part to the primal chain [11, 9, 5].
+
+Primal components. Fix T, N ≥ 2. The primal variables are ũ ∈ RT , ã, b̃ ∈ RT −1 , with
+feasible domain           n                                             o
+                C0 := RT × (ã, b̃) ∈ RT −1 × RT −1 : kãk2 + kb̃k2 ≤ R2 ,           (14)
+
+
+                                                 10
+where R > 0 is a universal constant. Using the relay function r defined in (9), define r̄(ũ) :=
+(r(ũ2 ), . . . , r(ũT )). Then, the primal component function Ψ0 : RT × RT −1 × RT −1 → R is defined as
+                                          1                 1            2 1             
+              Ψ0 (ũ, ã, b̃) :=H(ũ) +     kã − ρ(ũ)k2 +   b̃ − r̄(ũ) + kãk2 + kb̃k2 ,              (15)
+                                          2                 2              2
+where cη > 0 is a universal constant. The function H : RT → R is defined as
+
+                                                     X               cη X
+                                                     T                   T
+                             H(ũ) := −cη ũ1 − cη         ν(ũj ) +      r(ũj )2 .
+                                                                     2
+                                                     j=2               j=1
+
+    As illustrated in Figure 1, the two quadratic coupling terms connect successive primal coordi-
+nates through the auxiliary variables ũi . The term 12 kã − ρ(ũ)k2 couples ũi to ãi through ρi (ũ),
+while 12 kb̃ − r̄(ũ)k2 couples b̃i to ũi+1 . In particular, when ũi+1 = 0, the latter term contributes −b̃i
+to the partial derivative with respect to ũi+1 , since r(0) = 0 and r′ (0) = 1. The shifted coordinates
+in the definition of r̄(ũ) therefore ensure that each auxiliary variable b̃i is coupled to the next
+primal coordinate.
+    The function H(ũ) ensures that this sequential dependence leads to a stationarity lower bound.
+Its linear term −cη ũ1 produces a nonzero gradient in the first primal coordinate at the origin. The
+terms involving ν and r2 are used to show that, at a point with suﬀiciently small constrained
+stationarity residual, each coordinate of ũ must lie either near zero or above a threshold close to
+one. The first coordinate must lie above this threshold. If the terminal coordinate remains zero,
+there must therefore be a transition between the two regions. The coupling terms rule out a small
+stationarity residual at such a transition, yielding the required lower bound before the terminal
+primal coordinate is revealed.
+
+Dual components. The dual variable consists of T − 1 path blocks y (i) ∈ RN . Set α := N −1/2 .
+The matrix Bα,N in (6) satisfies the positive-definite identity in (7). For a, b ∈ R, the function
+hN : (R × R) × RN → R is defined as
+                                                             ⊤                   
+                                 1 ⊤                     α             α2 (N − 1) 2
+             hN (a, b; y) := ℓ0 − y Bα,N y + αae1 − beN           y−             b ,          (16)
+                                 2                       2                  8
+
+where ℓ0 > 0 is a scaling parameter to be specified in the lower-bound theorems.
+   The tridiagonal matrix Bα,N couples neighboring dual coordinates, while the linear terms couple
+a to y1 and b to yN . Thus, first-order information propagates from one endpoint to the other
+through the intervening dual coordinates. Together with the primal coupling terms in Ψ0 , these
+dependencies give the zero-chain structure shown in Figure 1: a zero-respecting algorithm must
+reveal a block of N dual coordinates before it can proceed to the next primal coordinate.
+
+Rescaling and coupling the two components. For a scaling parameter s > 0, define the
+primal and dual feasible sets by
+               n                                            o                             DY (T −1)N
+     X0 := RT × (a, b) ∈ RT −1 × RT −1 : kak2 + kbk2 ≤ (Rs)2 ,                    Y0 :=     B        .   (17)
+                                                                                           2 2
+The variables u are unconstrained, whereas the auxiliary variables (a, b) lie in a Euclidean ball of
+radius Rs. This bound controls the norms of the unconstrained dual maximizers of the path blocks.
+With the parameter choices specified below, their concatenation lies in the interior of Y0 for every
+
+                                                      11
+feasible primal point. Consequently, restricting the dual maximization to Y0 does not change its
+value.
+    For x = (u, a, b) ∈ X0 , define the scaled variables
+
+                                    ũ := u/s,         ã := a/s,            b̃ := b/s.                        (18)
+
+Then (ũ, ã, b̃) ∈ C0 , so the scaled primal domain is independent of s. The parameters ℓ0 and s
+will be chosen to obtain the required smoothness and stationarity bounds while satisfying the dual
+feasibility condition.
+                                                              
+    We now define the hard instance f : RT × RT −1 × RT −1 × R(T −1)N → R by
+
+                                                                     X
+                                                                     T −1
+                               f (x, y) := ℓ0 s2 Ψ0 (ũ, ã, b̃) +          hN (ai , bi ; y (i) ).             (19)
+                                                                     i=1
+
+The minimax problem is defined by restricting f to X0 × Y0 , and its primal value function is
+
+                                       Φ(x) := max f (x, y),                 x ∈ X0 .                          (20)
+                                                  y∈Y0
+
+For this instance, Pλ and Gλ denote the proximal set and scaled proximal displacement defined in
+(4), with primal value function Φ and feasible set X = X0 .
+
+Coordinate ordering. We order the joint coordinates according to the dependencies shown in
+                                                                                  (i)          (i)
+Figure 1. Starting from u1 , each stage passes through ai , the dual coordinates y1 , . . . , yN , and bi
+before reaching ui+1 . The total number of coordinates is
+
+                                            K = 1 + (T − 1)(N + 3).                                            (21)
+
+Let π = (π1 , . . . , πK ) denote this ordering of the coordinate labels. Explicitly,
+
+                                     π1+(i−1)(N +3) = ui ,           i = 1, . . . , T,
+
+and, for i = 1, . . . , T − 1 and j = 1, . . . , N ,
+                                                                       (i)
+               π2+(i−1)(N +3) = ai ,        π2+(i−1)(N +3)+j = yj ,                 πN +3+(i−1)(N +3) = bi .
+
+The corresponding ordering is also used for the normalized primal coordinates. Since s > 0, nor-
+malization preserves their support.
+   For a joint vector v, let [v]πr denote its coordinate at position r in the ordering π illustrated in
+Figure 1. For θ ≥ 0, define
+                                                                                
+                      progπθ (v) := max {r ∈ {1, . . . , K} : |[v]πr | > θ} ∪ {0} .                (22)
+
+For a primal vector, we apply this definition after adjoining zero dual components, retaining the
+same joint coordinate ordering.
+
+
+
+
+                                                           12
+ 𝑢       𝑎                       𝑏         𝑢      𝑎                            𝑏         𝑢             𝑢      𝑎                           𝑏            𝑢
+                                                                                                 ⋯
+
+                             ⋯                                        ⋯                                                               ⋯
+             ( )       ( )           ( )              ( )       ( )                ( )                            (   )       (   )           (   )
+         𝑦         𝑦             𝑦                𝑦         𝑦                  𝑦                              𝑦           𝑦               𝑦
+
+
+Figure 1: Zero-chain structure of the hard instance in (19). The primal coordinates ũi , ãi , b̃i
+                                         (i)         (i)
+are connected through dual path blocks y1 , . . . , yN , so information must propagate sequentially
+through each dual path before the next primal relay coordinate can be revealed.
+
+
+3.2     Structural Properties
+We next establish the properties of the hard instance needed for the lower-bound analysis. These
+include an exact expression for the primal value function and its initial gap, a smoothness bound
+independent of the problem dimensions, and a stationarity lower bound when the terminal primal
+coordinate is zero.
+    We first analyze the dual maximization problem and the resulting primal value function. To
+state the value-function formula, define Ψ : RT × RT −1 × RT −1 → R by
+
+                                                                                         1     1 2
+                                           Ψ(ũ, ã, b̃) := Ψ0 (ũ, ã, b̃) +              ã − b̃ .                                                  (23)
+                                                                                         2     2
+
+The following lemma shows that, under the stated feasibility condition, the unconstrained dual
+maximizer is unique and lies in the interior of Y0 for every feasible primal point. Thus, restricting
+the dual maximization to Y0 leaves its value unchanged. The lemma expresses Φ as a scaled version
+of Ψ and computes the exact initial value gap, which will be used to choose parameters satisfying
+the gap bound of the target function class. The proof is given in Appendix A.3.
+
+Lemma 3.1. Assume 2N 2 R2 s2 ≤ (DY /4)2 . Then the hard instance (19) satisfies:
+     1. For every x ∈ X0 , the function f (x, y) is strictly concave in y, and its unconstrained maxi-
+        mizer belongs to the interior of Y0 .
+     2. The constrained value function has the exact representation
+
+                                                   Φ(u, a, b) = ℓ0 s2 Ψ(u/s, a/s, b/s).                                                               (24)
+
+     3. The initial gap is                                                
+                                                                         1
+                                                Φ(0) − inf Φ(x) = cη T +     ℓ0 s2 .                                                                  (25)
+                                                      x∈X0               2
+
+   We next verify joint smoothness of the hard instance. The following lemma bounds the Lipschitz
+constant of ∇f by Cℓ ℓ0 , independently of the chain lengths T, N and the scaling parameter s. Thus,
+choosing ℓ0 = L/Cℓ ensures that f is jointly L-smooth, while leaving T, N and s available to satisfy
+the remaining requirements of the construction. The proof is given in Appendix A.4.
+
+Lemma 3.2. For every T, N ≥ 2, every s > 0, and every ℓ0 > 0, the hard instance (19) satisfies
+
+                             ∇f (z) − ∇f (z ′ ) ≤ Cℓ ℓ0 z − z ′                              for all z, z ′ ∈ X0 × Y0 ,                               (26)
+
+for a universal constant Cℓ > 0.
+
+                                                                          13
+   The remaining step is to relate the zero-chain structure to stationarity of the primal value
+function. Specifically, we show that the norm of the Moreau-envelope gradient remains bounded
+away from zero whenever the terminal primal coordinate is zero. To establish this bound, we first
+analyze the normalized primal function Ψ on C0 . Define its constrained stationarity residual by
+                                                                                    
+                        RC0 (ũ, ã, b̃) := dist 0, ∇Ψ(ũ, ã, b̃) + NC0 (ũ, ã, b̃) .        (27)
+
+This residual measures the violation of the first-order optimality condition for minimizing Ψ over
+C0 .
+     The following lemma first verifies that f is a first-order zero-chain with respect to the ordering
+π mentioned in Section 3.1. It then establishes a uniform positive lower bound on RC0 whenever
+ũT ≤ 1/4. Using the optimality conditions for the proximal problem, this bound yields a lower
+bound on the Moreau-envelope gradient norm at every feasible primal point with uT = 0. Since uT
+is the last coordinate in the ordering, the zero-chain property ensures that the same bound applies
+to every deterministic zero-respecting output produced in fewer than K oracle calls. The proof is
+given in Appendix A.5.
+Lemma 3.3. Assume 2N 2 R2 s2 ≤ (DY /4)2 , and set
+
+                                                L̄ := Cℓ ℓ0 .                                     (28)
+
+Then the hard instance has the following properties.
+    1. The function f is a first-order zero-chain with respect to the coordinate ordering π.
+    2. For every (ũ, ã, b̃) ∈ C0 with ũT ≤ 1/4,
+
+                                               RC0 (ũ, ã, b̃) ≥ Cδ ,                            (29)
+
+       for a universal constant Cδ > 0.
+    3. For every primal point x = (u, a, b) ∈ X0 with uT = 0 and every p ∈ P1/(2L̄) (x),
+
+                                                                  Cδ
+                                             G1/(2L̄) (x; p) >       ℓ0 s.                        (30)
+                                                                  2
+       Consequently, the same bound holds for every deterministic zero-respecting output produced
+       in fewer than K oracle calls.
+
+
+4     Lower Bound for Deterministic NC-C Minimax Optimization
+We now derive the deterministic first-order oracle lower bound by specifying the parameters of the
+hard instance in (19). Using Lemmas 3.1–3.3, we choose ℓ0 , s, T, N so that the instance satisfies
+the prescribed smoothness, initial-gap, and dual-diameter bounds, while the norm of the Moreau-
+envelope gradient exceeds ϵ at every feasible primal point with uT = 0. The zero-chain property
+then implies that a zero-respecting algorithm must reveal the terminal primal coordinate before
+returning an ϵ-stationary point. Counting the oracle calls required to reach this coordinate gives
+the following theorem. Its proof is given in Appendix B.1.
+Theorem 4.1 (Deterministic zero-respecting lower bound). There exist universal constants c0 , c1 >
+0 such that, for every L, ∆Φ , DY > 0 and every ϵ satisfying
+                                                 p
+                                  0 < ϵ ≤ c1 min{ L∆Φ , LDY },                                (31)
+
+                                                     14
+there is an instance f ∈ FNCC (L, ∆Φ , DY ) on finite-dimensional closed convex sets X0 , Y0 , with
+diam(Y0 ) = DY , for which the following lower bound holds. Let Φ(x) := maxy∈Y0 f (x, y) and
+φ := Φ + ιX0 . For any deterministic zero-respecting first-order algorithm, every zero-respecting
+primal output x ∈ X0 produced after q joint oracle calls with
+
+                                         q < c0 L2 DY ∆Φ ϵ−3                                       (32)
+
+satisfies
+                                 ∇φ1/(2L) (x) = G1/(2L) (x; p) > ϵ,                                (33)
+where p is the unique point in P1/(2L) (x). Consequently, the deterministic zero-respecting first-order
+oracle complexity of finding an ϵ-stationary point is
+                                                          
+                                           Ω L2 DY ∆Φ ϵ−3 .
+
+    Theorem 4.1 expresses the lower bound in terms of the initial primal value gap. For the hard
+instance constructed in its proof, this gap equals the initial primal–dual gap. Therefore, replacing
+                                                                                pd
+∆Φ by G0 in the same construction gives the corresponding lower bound for FNCC     (L, G0 , DY ). The
+proof of the following corollary is given in Appendix B.2.
+
+Corollary 4.2. There exists a universal constant c > 0 such that, for every L, G0 , DY > 0 and
+every ϵ satisfying                            p
+                                0 < ϵ ≤ c min{ LG0 , LDY },
+there is an instance
+                                             pd
+                                        f ∈ FNCC (L, G0 , DY )
+on which every deterministic zero-respecting first-order algorithm requires
+                                                         
+                                          Ω L2 DY G0 ϵ−3
+
+joint oracle evaluations to return an ϵ-stationary point of the primal value function.
+
+
+5    Lower Bound for Stochastic NC-C Minimax Optimization
+We extend the deterministic construction to establish a lower bound under unbiased stochastic
+first-order oracles with bounded variance. The construction retains the same primal value function
+and the stationarity lower bound at points with uT = 0. We modify the dual blocks so that the
+                                           (i)      (i)
+gradient components corresponding to y2 , . . . , yN are uniformly bounded, and apply Bernoulli
+                                                                  (i)
+randomization only to these coordinates. The coordinates y1 and all primal coordinates are
+returned deterministically.
+    To reach the terminal primal coordinate, a zero-respecting algorithm must cross M = (T −
+1)(N − 1) randomized dual coordinates. Each such coordinate requires a successful Bernoulli
+trial, while the intervening deterministic transitions can be treated as free in the progress analysis.
+Combining this progress bound with the stationarity obstruction yields the stochastic oracle lower
+bound.
+    Throughout this section, we retain the notation and universal constants introduced in Section 3.
+In particular, we use the same primal functions Ψ0 , Ψ, feasible sets C0 , X0 , Y0 , coordinate ordering
+π, and chain length K. We take α = N −1/2 and ℓ0 = L/Cℓ , using the same universal constant Cℓ
+fixed in Appendix A.4. Only the dual blocks are modified.
+
+                                                  15
+                                                             0.5
+
+                                                             0.0
+
+                                                             0.5
+      (t)                                            r(t)
+                                                             1.0
+            1 2
+            2
+                                                             1.5
+
+                                                             2.0
+                               0                                   2    1           0           1   2   3
+                                                             2.0
+                                                             1.5
+                                                             1.0
+                                                             0.5
+      (t)
+       0                                             r0(t)   0.0
+                                                             0.5
+                                                             1.0
+                                                             1.5
+                                                             2.0
+                               0                                   2    1           0           1   2   3
+                               t                                                         t
+
+Figure 2: The functions r and χτ , together with their derivatives. The function r couples auxiliary
+primal variables to subsequent primal coordinates. The clipping in χτ provides the uniform gradient
+                                                      (i)      (i)
+bound needed for the randomized dual coordinates y2 , . . . , yN .
+
+
+5.1    Clipping the Dual Quadratic Terms
+                                                                             (i)        (i)
+The stochastic oracle will randomize only the dual coordinates y2 , . . . , yN . To control the variance
+of this oracle, we need a uniform bound on the corresponding gradient components. In the deter-
+ministic construction, the quadratic difference terms produce gradients whose magnitude depends
+on the neighboring dual coordinates, and the diameter bound on Y0 alone does not provide the
+required dependence on N . We therefore replace these terms with clipped quadratics.
+    For τ > 0, define
+                                                               
+                               1 t2 ,         |t| ≤ τ,         
+                                                                −τ, t < −τ,
+                                2                        ′
+                    χτ (t) :=                           χτ (t) = t,          |t| ≤ τ,               (34)
+                              τ |t| − 1 τ 2 , |t| > τ,         
+                                                                
+                                       2                          τ,         t > τ.
+
+The function χτ is convex and continuously differentiable, and its derivative satisfies
+
+                       |χ′τ (t)| ≤ τ,   |χ′τ (t) − χ′τ (t′ )| ≤ |t − t′ |,         t, t′ ∈ R.               (35)
+
+The first bound controls the gradient contribution of each difference term, while the second provides
+the regularity needed for a smoothness bound independent of the problem dimensions. The function
+and its derivative are shown in Figure 2.
+   We choose the clipping threshold as
+
+                                               τN := Rαs.                                                   (36)
+
+For the deterministic maximizer of a block with feasible endpoint parameters ai , bi , every difference
+between neighboring dual coordinates equals αbi /2. Since |bi | ≤ Rs, its magnitude is at most τN /2.
+
+                                                     16
+Thus, every such difference lies strictly inside the quadratic region of χτN . The lemma below verifies
+that this choice preserves both the maximizer and the maximum value of each feasible block.
+   For scalar parameters a, b ∈ R, we define the clipped dual block as
+                             " N −1                                                          #
+                                  X                      α2 2                  α 2 (N − 1)
+            clip
+           hN (a, b; y) := ℓ0 −       χτN (yk − yk+1 ) −    y + c(a, b)⊤ y −               b2 .   (37)
+                                                          2 1                        8
+                                       k=1
+
+where c(a, b) := αae1 − α2 beN . Replacing each deterministic dual block by this function gives
+
+                                                  X
+                                                  T −1
+                                                                                         u                a            b
+         f sg (x, y) := ℓ0 s2 Ψ0 (ũ, ã, b̃) +          hclip          (i)
+                                                          N (ai , bi ; y ),      ũ =      ,       ã =     ,   b̃ =     .   (38)
+                                                                                         s                s            s
+                                                   i=1
+
+We use the same feasible sets as in the deterministic construction:
+                  n                                               o                                       DY (T −1)N
+       X0 = RT × (a, b) ∈ RT −1 × RT −1 : kak2 + kbk2 ≤ (Rs)2 ,                                    Y0 =     B        .
+                                                                                                           2 2
+Define the primal value function by
+
+                                     Φsg (x) := max f sg (x, y),              x ∈ X0 ,                                       (39)
+                                                     y∈Y0
+
+and let φsg := Φsg + ιX0 denote its extended-valued version.
+     The following lemma establishes the properties needed for the stochastic construction. In addi-
+tion to preserving the primal value function, clipping retains concavity, joint smoothness, and the
+zero-chain property. It also gives a uniform bound on the gradient components corresponding to
+ (i)
+yj , j = 2, . . . , N , which are precisely the coordinates randomized by the stochastic oracle. The
+proof is given in Appendix C.1.
+Lemma 5.1. Assume T, N ≥ 2, α = N −1/2 , and
+
+                                                  2N 2 R2 s2 ≤ (DY /4)2 .                                                    (40)
+
+Then the instance (38) has the following properties.
+   1. For every x = (u, a, b) ∈ X0 and every i = 1, . . . , T − 1, the vector y ∗ (ai , bi ) with components
+                                                  ai   bi   αbi
+                               yk∗ (ai , bi ) =      −    −     (k − 1),           k = 1, . . . , N,                         (41)
+                                                  α    2α    2
+
+      is the unique maximizer of hclip
+                                  N (ai , bi ; ·) over R , and
+                                                        N
+
+                                                                                       2
+                                                                  ℓ0               bi
+                                          max hclip
+                                                N (ai , bi ; y) =             ai −           .                               (42)
+                                          y∈R N                   2                2
+
+   2. The concatenation of these block maximizers lies in the interior of Y0 . Consequently, the
+      constrained primal value function equals that of the deterministic instance:
+
+                                           Φsg (u, a, b) = ℓ0 s2 Ψ(u/s, a/s, b/s).                                           (43)
+
+      In particular,                                                                
+                                                                                 1
+                                       Φsg (0) − inf Φsg (x) = cη             T+         ℓ0 s2 .                             (44)
+                                                    x∈X0                         2
+
+                                                               17
+  3. For every x ∈ X0 , the function f sg (x, ·) is concave on Y0 .
+  4. The hard instance f sg (x, y) is differentiable and satisfies
+
+                        ∇f sg (z) − ∇f sg (z ′ ) ≤ Cℓ ℓ0 z − z ′ ,          z, z ′ ∈ X0 × Y0 .      (45)
+
+      In particular, with ℓ0 = L/Cℓ , the function f sg is L-smooth.
+  5. The function f sg is a first-order zero-chain with respect to the ordering π:
+                                  sg
+                                       
+                      progπ0 ∇f (z) ≤ min{prog0 (z) + 1, K},            z ∈ X0 × Y0 .
+                                                    π
+                                                                                                    (46)
+
+      Moreover, for every z ∈ X0 × Y0 , we have
+
+                          ∇y(i) f sg (z) ≤ GN ,     i = 1, . . . , T − 1,    j = 2, . . . , N.      (47)
+                              j
+
+
+      where GN = 2ℓ0 τN .
+
+5.2   A Probability-p Dual Zero-chain
+We first recall two standard results for stochastic zero-chains.
+Lemma 5.2 (Lemma 3 in [1]). Let f : X → R be a zero-chain on X ⊂ RT . For x ∈ X , let
+i∗ (x) := inf{i ∈ [T ] : xi = 0} denote the next coordinate to be discovered. For p ∈ (0, 1], define
+                                                 
+                                                  ξ ∇ f (x), i = i∗ (x),
+                                   b
+                                  [∇f (x, ξ)]i := p
+                                                       i
+                                                 
+                                                   ∇i f (x),  otherwise,
+                                                                                                   
+where ξ ∼ Bernoulli(p). Suppose k∇f (x)k∞ ≤ G for every x ∈ X . Then O : x 7→ f (x), ∇f   b (x, ξ)
+is a stochastic first-order oracle with variance bounded by σ 2 ≤ G2 1−p
+                                                                      p . Moreover, f equipped with
+O is a probability-p zero-chain.
+Lemma 5.3 (Lemma 1 in [1]). Let f : X → R, where X ⊂ RT satisfies supp(PX (x)) =
+supp(x), ∀ x ∈ RT , and suppose that f is a probability-p zero-chain equipped with a stochastic
+first-order oracle. Then, for any first-order algorithm, with probability at least 1 − δ,
+                                                         T − log(1/δ)
+                                   xtT = 0,       ∀t ≤                .
+                                                              2p
+
+    We now apply the same Bernoulli randomization to the clipped construction. We randomize
+                            (i)                                                          (i)
+only the dual coordinates yj , i = 1, . . . , T − 1, j = 2, . . . , N . The coordinates y1 and all primal
+coordinates are left deterministic. By Part 5 of Lemma 5.1, every randomized coordinate satisfies,
+for every feasible z,
+
+                       ∇y(i) f sg (z) ≤ GN ,      GN := 2ℓ0 τN ,        j = 2, . . . , N.           (48)
+                          j
+
+
+   At an oracle call, if the next coordinate in the zero-chain ordering is one of the randomized dual
+coordinates, we multiply only that gradient component by ξ/pN , where ξ ∼ Bernoulli(pN ). All
+remaining gradient components are returned exactly. If the next coordinate is not randomized, the
+exact gradient is returned.
+
+                                                    18
+   Since all nonrandomized gradient components are returned exactly, the difference b
+                                                                                    ∇f sg (z; ξ) −
+∇f sg (z) is supported only on the randomized dual coordinate. Therefore, the bound in (48) and
+the Bernoulli calculation in Lemma 5.2 give
+                                      h            i
+                                        b sg (z; ξ) = ∇f sg (z),
+                                    Eξ ∇f                                                     (49)
+
+and                                                                       
+                                       b sg (z; ξ) − ∇f sg (z)
+                                                                       2               1 − pN
+                             Eξ        ∇f                                      ≤ G2N          .           (50)
+                                                                                         pN
+   For a prescribed variance bound σ 2 , choose
+                                       
+                                       1,                                      σ = 0,
+                               pN :=                                                                      (51)
+                                       min{1, G2 /σ 2 },                       σ > 0.
+                                                N
+
+Then
+                                                         1 − pN
+                                                   G2N          ≤ σ2,
+                                                           pN
+so the resulting oracle is unbiased with mean-square error at most σ 2 .
+    We next consider the progress of a stochastic zero-respecting algorithm. Each dual block con-
+tains N − 1 randomized coordinates,
+                                            (i)           (i)
+                                           y2 , . . . , y N ,
+so the total number of randomized dual coordinates that must be crossed before the terminal primal
+coordinate uT can be activated is
+                                     M := (T − 1)(N − 1).                                     (52)
+                                      (i)
+The transitions through ui , ai , y1 , and bi are deterministic. Treating these deterministic transitions
+as free can only accelerate the algorithm. Hence, after suppressing them, progress is measured
+through the ordered sequence
+                           (1)              (1)   (2)         (2)          (T −1)            (T −1)
+                          y2 , . . . , y N , y 2 , . . . , y N , . . . , y 2        , . . . , yN      .
+
+By the zero-chain property in Lemma 5.1, these coordinates cannot be skipped, while each next ran-
+domized coordinate is revealed only after a successful Bernoulli trial with probability pN . Therefore
+the progress bound of Lemma 5.3 applies to this contracted sequence.
+   Taking δ = 1/4 and replacing the chain length in Lemma 5.3 by M gives
+
+                                                             M − log 4
+                                                        q≤                                                (53)
+                                                               2pN
+and consequently
+                                                               3
+                                                    P(uT = 0) ≥ .                                         (54)
+                                                               4
+Since
+                                        M = (T − 1)(N − 1) = Θ(T N ),
+contracting the deterministic transitions changes only universal constants in the final oracle-complexity
+bound.
+
+
+
+                                                              19
+    By Lemma 5.1, the clipped construction has the same primal value function, and hence the
+same proximal mapping, as the deterministic construction. Therefore the stationarity lower bound
+in Lemma 3.3 also applies to f sg . Choose
+                                                      8ϵ
+                                              s :=          .                                    (55)
+                                                     3Cδ ℓ0
+Since Cℓ ℓ0 = L, Part 3 of Lemma 3.3 gives
+                                                           Cδ       4
+                                    ∇(φsg )1/(2L) (x) >       ℓ0 s = ϵ
+                                                           2        3
+whenever uT = 0. Under (53), this event has probability at least 3/4. Taking expectations therefore
+yields the following lemma.
+Lemma 5.4. Assume (40), the scale (55), and the progress budget (53). Let x be any zero-respecting
+primal output produced after q oracle calls to the stochastic oracle defined above, and let
+                                             p = p1/(2L) (x)
+denote the unique proximal point of φsg at scale 1/(2L). Then
+                                        E G1/(2L) (x; p) > ϵ.
+
+5.3    The Stochastic Lower Bound
+We now choose the chain lengths to satisfy the prescribed initial-gap and dual-diameter bounds.
+With ℓ0 = L/Cℓ and s given by (55), these choices have the orders
+                                                                  
+                          T = Θ L∆Φ ϵ−2 ,         N = Θ LDY ϵ−1 .
+The number of randomized dual coordinates is therefore
+                                   M = (T − 1)(N − 1) = Θ(T N ).
+The probability pN is chosen as in (51) to satisfy the variance bound. Combining the resulting
+progress bound with Lemma 5.4 gives the following theorem.
+Theorem 5.5 (Stochastic zero-respecting lower bound). There exist universal constants cd , cn , c1 >
+0 such that, for every L, ∆Φ , DY > 0, every σ ≥ 0, and every ϵ satisfying
+                                                 p
+                                  0 < ϵ ≤ c1 min{ L∆Φ , LDY },                                  (56)
+there is an instance f sg ∈ FNCC (L, ∆Φ , DY ) on finite-dimensional closed convex sets X0 , Y0 , with
+diam(Y0 ) = DY , equipped with an unbiased stochastic first-order oracle whose mean-square error is
+at most σ 2 . For this instance and oracle, every zero-respecting primal output x ∈ X0 produced by
+an adaptive stochastic zero-respecting algorithm after q oracle calls with
+                               q < cd L2 DY ∆Φ ϵ−3 + cn L3 DY2 ∆Φ σ 2 ϵ−6                        (57)
+satisfies                                               
+                                      E ∇(φsg )1/(2L) (x) > ϵ.                                   (58)
+Consequently, finding an expected ϵ-stationary point requires
+                                                                      
+                                 Ω L2 DY ∆Φ ϵ−3 + L3 DY2 ∆Φ σ 2 ϵ−6                              (59)
+stochastic first-order oracle evaluations.
+
+                                                     20
+  The dependence on the problem parameters follows from the gradient bound GN and the number
+M of randomized dual coordinates. Since
+                            GN = 2ℓ0 τN ,        τN = Rαs,         α2 N = 1,
+we have, under (55),
+                                     G2N N = 4R2 ℓ20 s2 = Θ(ϵ2 ).
+With the choice of pN in (51), including pN = 1 when σ = 0,
+                                                   
+                            M                    σ2
+                                = Θ TN + TN 2
+                            pN                  GN
+                                               2 2 −2
+                                                      
+                                = Θ TN + TN σ ϵ
+                                                                     
+                                 = Θ L2 DY ∆Φ ϵ−3 + L3 DY2 ∆Φ σ 2 ϵ−6 .
+For the parameter choices in the proof, T, N ≥ 4, and hence M ≥ 9. Therefore
+                                                        M
+                                             qpN ≤
+                                                        4
+implies
+                                                M − log 4
+                                            q≤             ,
+                                                    2pN
+which is precisely the progress condition (53). Lemma 5.4 then rules out expected ϵ-stationarity.
+This yields the stated oracle lower bound. The full proof, including the choices of integer chain
+lengths and verification of the function-class conditions, is given in Appendix C.3.
+   The same construction gives a lower bound under the primal–dual-gap parameterization. Clip-
+ping preserves both the primal value function and the function values at y = 0, so the initial
+primal–dual gap still equals the initial primal value gap. Applying Theorem 5.5 with ∆Φ = G0
+therefore yields the following corollary. Its proof is given in Appendix C.4.
+Corollary 5.6. There exists a universal constant c > 0 such that, for every L, G0 , DY > 0, every
+σ ≥ 0, and every ϵ satisfying                  p
+                                 0 < ϵ ≤ c min{ LG0 , LDY },
+there is an instance
+                                               pd
+                                       f sg ∈ FNCC (L, G0 , DY )
+equipped with a unbiased stochastic first-order oracle whose mean-square error is at most σ 2 , for
+which every adaptive stochastic zero-respecting algorithm requires
+                                                                    
+                                 Ω L2 DY G0 ϵ−3 + L3 DY2 G0 σ 2 ϵ−6
+oracle calls to return an expected ϵ-stationary output.
+
+
+6    Conclusion and Future Work
+We established first-order oracle lower bounds for smooth nonconvex–concave minimax optimization
+within the class of zero-respecting algorithms. Under the primal-value-gap and primal–dual-gap
+parameterizations, the deterministic lower bounds are Ω(L2 DY ∆Φ ϵ−3 ) and Ω(L2 DY G0 ϵ−3 ), re-
+spectively. In the stochastic setting, the corresponding lower bounds are Ω(L3 DY2 ∆Φ σ 2 ϵ−6 ) and
+Ω(L3 DY2 G0 σ 2 ϵ−6 ). In their dependence on L, DY , and ϵ, these bounds match the deterministic
+upper bound of [14] up to a logarithmic factor and the stochastic upper bound of [29].
+   Several questions remain open:
+
+                                                   21
+Beyond zero-respecting algorithms. Our lower bounds are proved for first-order zero-respecting
+methods. A natural next step is to determine whether the same rates hold for arbitrary, possibly ran-
+domized, first-order algorithms. In classical nonconvex optimization, zero-chain lower bounds can
+often be extended using random rotations or resisting-oracle arguments. Establishing an analogous
+reduction while preserving the primal–dual structure of the present construction is an important
+open problem.
+
+Separate oracle complexities. Our lower bounds concern the joint first-order oracle, where
+each query returns both ∇x f and ∇y f . It remains open whether the primal and dual gradient
+complexities differ when counted separately. The structure of our hard instance suggests possible
+primal and dual gradient complexities scaling as ϵ−2 and ϵ−3 , respectively, in the deterministic
+setting, and as ϵ−2 and ϵ−6 in the bounded-variance stochastic setting. The best-known existing
+algorithms, however, require the same order of primal and dual gradient evaluations. Resolving
+this question may require new lower-bound constructions tailored to separate primal and dual first-
+order oracles, new algorithms with improved primal or dual gradient complexity, or both. Such
+results would clarify whether existing joint-oracle methods are individually optimal in their use of
+primal and dual gradients.
+
+f -stationarity versus Φ-stationarity. Recent algorithmic results have demonstrated that game
+stationarity and optimization stationarity may exhibit genuinely different complexity behavior [13,
+12]. Our lower bounds concern stationarity of the value function Φ(x) = maxy∈Y f (x, y). It
+remains open whether comparable lower bounds hold for stationarity notions defined directly in
+terms of the saddle function f , such as k∇f k. Since an f -stationary pair need not correspond to
+a nearly maximizing dual variable, the complexity of f -stationarity may differ substantially from
+that of Φ-stationarity. Determining the tight complexity of the two notions, and whether a genuine
+separation exists between them, is an interesting open question.
+
+NC–C Bilevel Optimization. An important direction for future research is to extend the
+present lower-bound framework to NC–C bilevel optimization, for which general first-order com-
+plexity lower bounds remain open. A natural question is whether the primal–dual information
+propagation mechanism developed here can be transferred to this setting and used to establish
+lower bounds for NC–C bilevel problems.
+
+
+AI Disclosure
+The hard-instance construction was developed through iterative collaboration with OpenAI’s GPT-
+5.6 Sol Ultra. The authors provided the model with an independently developed proof draft that
+already contained the central dual-chain construction, the ℓ2 constraint on the auxiliary primal
+variables, and the scaling argument underlying the ϵ−3 deterministic lower bound. The model was
+then used to help identify and refine several composite functions in the primal component, which
+addressed a key obstacle in the original construction. For the stochastic lower bound, the authors in-
+dependently introduced the stochastic dual zero-chain mechanism used in the final proof. Building
+on these ingredients, the model assisted in refining the construction and in developing several techni-
+cal arguments, including parts of the clipping mechanism. The authors subsequently simplified and
+independently verified the resulting arguments and take full responsibility for the correctness and
+presentation of the paper. A Lean formalization, developed with Codex and available at https://
+
+
+                                                  22
+github.com/Wu-Qilong/Lower-Bounds-for-Nonconvex-Concave-Minimax-Optimization, provides
+a formal verification.
+
+
+References
+ [1] Yossi Arjevani, Yair Carmon, John C. Duchi, Dylan J. Foster, Nathan Srebro, and Blake
+     Woodworth. Lower bounds for non-convex stochastic optimization. Mathematical Program-
+     ming, 199(1):165–214, 2023.
+
+ [2] Aharon Ben-Tal, Arkadi Nemirovski, and Laurent El Ghaoui. Robust optimization. 2009.
+
+ [3] Yair Carmon, John C Duchi, Oliver Hinder, and Aaron Sidford. Lower bounds for finding
+     stationary points i. Mathematical Programming, (1):1–50, 2019.
+
+ [4] Yair Carmon, John C. Duchi, Oliver Hinder, and Aaron Sidford. Lower bounds for finding
+     stationary points ii: First-order methods. Mathematical Programming, 185(1–2), 2021.
+
+ [5] Lesi Chen and Jingzhao Zhang. On the condition number dependency in bilevel optimization.
+     arXiv preprint arXiv:2511.22331, 2025.
+
+ [6] Damek Davis and Dmitriy Drusvyatskiy. Stochastic model-based minimization of weakly con-
+     vex functions. SIAM Journal on Optimization, 29(1):207–239, 2019.
+
+ [7] Damek Davis and Benjamin Grimmer. Proximally guided stochastic subgradient method for
+     nonsmooth, nonconvex problems. SIAM Journal on Optimization, 29(3):1908–1930, 2019.
+
+ [8] Ian Goodfellow, Jean Pouget-Abadie, Mehdi Mirza, Bing Xu, David Warde-Farley, Sherjil
+     Ozair, Aaron Courville, and Yoshua Bengio. Generative adversarial networks. Communications
+     of the ACM, 63(11):139–144, 2020.
+
+ [9] Kaiyi Ji. Lower complexity bounds for nonconvex-strongly-convex bilevel optimization with
+     first-order oracles. arXiv preprint arXiv:2511.19656, 2025.
+
+[10] Weiwei Kong and Renato DC Monteiro. An accelerated inexact proximal point method for
+     solving nonconvex-concave min-max problems. SIAM Journal on Optimization, 31(4):2558–
+     2585, 2021.
+
+[11] Haochuan Li, Yi Tian, Jingzhao Zhang, and Ali Jadbabaie. Complexity lower bounds for
+     nonconvex-strongly-concave min-max optimization. Advances in Neural Information Process-
+     ing Systems, 34:1792–1804, 2021.
+
+[12] Jiajin Li, Mahesh Nagarajan, Siyu Pan, and Nanxi Zhang. Smoothing meets perturba-
+     tion: Unified and tight analysis for nonconvex-concave minimax optimization. arXiv preprint
+     arXiv:2602.14185, 2026.
+
+[13] Jiajin Li, Linglingzhi Zhu, and Anthony Man-Cho So. Nonsmooth nonconvex–nonconcave
+     minimax optimization: Primal–dual balancing and iteration complexity analysis: J. li et al.
+     Mathematical Programming, 214(1):591–641, 2025.
+
+[14] Tianyi Lin, Chi Jin, and Michael I Jordan. Near-optimal algorithms for minimax optimization.
+     In Conference on learning theory, pages 2738–2779. PMLR, 2020.
+
+
+                                               23
+[15] Aleksander Madry, Aleksandar Makelov, Ludwig Schmidt, Dimitris Tsipras, and Adrian Vladu.
+     Towards deep learning models resistant to adversarial attacks. In ICLR, 2018.
+[16] Pouria Mahdavinia, Yuyang Deng, Haochuan Li, and Mehrdad Mahdavi. Tight analysis of
+     extra-gradient and optimistic gradient methods for nonconvex minimax problems. In Advances
+     in Neural Information Processing Systems, volume 35, pages 31213–31225, 2022.
+[17] Arkadij Semenovič Nemirovskij and David Borisovich Yudin. Problem complexity and method
+     eﬀiciency in optimization. 1983.
+[18] Yurii Nesterov. Lectures on Convex Optimization, volume 137. Springer, 2018.
+[19] Yuyuan Ouyang and Yangyang Xu. Lower complexity bounds of first-order methods for convex-
+     concave bilinear saddle-point problems. Mathematical Programming, 185(1):1–35, 2021.
+[20] Siyu Pan and Jiajin Li. Lower bounds for nonconvex–pł minimax optimization. arXiv preprint
+     arXiv:2608.26799, 2026.
+[21] Lerrel Pinto, James Davidson, Rahul Sukthankar, and Abhinav Gupta. Robust adversarial
+     reinforcement learning. In International conference on machine learning, pages 2817–2826.
+     PMLR, 2017.
+[22] Aman Sinha, Hongseok Namkoong, and John Duchi. Certifiable distributional robustness
+     with principled adversarial training. In International Conference on Learning Representations,
+     2018.
+[23] Kiran K Thekumparampil, Prateek Jain, Praneeth Netrapalli, and Sewoong Oh. Eﬀicient algo-
+     rithms for smooth minimax optimization. Advances in neural information processing systems,
+     32, 2019.
+[24] J v. Neumann. Zur theorie der gesellschaftsspiele. Mathematische annalen, 100(1):295–320,
+     1928.
+[25] Junchi Yang, Siqi Zhang, Negar Kiyavash, and Niao He. A catalyst framework for minimax
+     optimization. Advances in Neural Information Processing Systems, 33:5667–5678, 2020.
+[26] Junyu Zhang, Mingyi Hong, and Shuzhong Zhang. On lower iteration complexity bounds for
+     the convex concave saddle point problems. Mathematical Programming, 194(1):901–935, 2022.
+[27] Kaiqing Zhang, Zhuoran Yang, and Tamer Başar. Multi-agent reinforcement learning: A
+     selective overview of theories and algorithms. Handbook of reinforcement learning and control,
+     pages 321–384, 2021.
+[28] Siqi Zhang, Junchi Yang, Cristóbal Guzmán, Negar Kiyavash, and Niao He. The complexity
+     of nonconvex-strongly-concave minimax optimization. In Uncertainty in artificial intelligence,
+     pages 482–492. PMLR, 2021.
+[29] Xuan Zhang, Necdet Serhat Aybat, and Mert Gürbüzbalaban. Sapd+: An accelerated stochas-
+     tic method for nonconvex-concave minimax problems. Advances in Neural Information Pro-
+     cessing Systems, 35:21668–21681, 2022.
+[30] Renbo Zhao. A primal-dual smoothing framework for max-structured non-convex optimization.
+     Mathematics of operations research, 49(3):1535–1565, 2024.
+
+
+                                                24
+A      Proofs for the Setup and Hard Instance
+A.1      Proof of Lemma 2.9
+Proof. The formulas in (9) agree in value and first derivative at 0 and 1, so both functions are C 1 .
+On (0, 1),
+                ν ′ (t) = 6t(1 − t) = 6r(t),  ν ′′ (t) = 6 − 12t,    r′ (t) = 1 − 2t.
+Outside (0, 1), ν ′ is zero and r′ is constant with magnitude one. This gives (10) and (11).
+   It remains to verify the two transition estimates. If t ≤ 0, then ν(t) = 0; if 0 < t ≤ 2κ < 1/4,
+then
+                            ν(t)   t(3 − 2t)
+                                 =           ≤ 2,    r′ (t) = 1 − 2t ≥ 1 − 4κ.
+                            r(t)      1−t
+Similarly, if t ≥ 1, then 1 − ν(t) = 0; while for 1 − 2κ ≤ t < 1,
+                                        1 − ν(t)   (1 − t)(1 + 2t)
+                                                 =                 ≤ 2.
+                                          r(t)            t
+The claimed implications follow.
+
+A.2      Proof of Lemma 2.10
+Proof. Differentiating (12),
+
+                          Dqi (u)[h] = ν ′ (ui )(1 − ν(ui+1 ))hi − ν(ui )ν ′ (ui+1 )hi+1 .
+
+Every row and every column of Dq(u) has at most two nonzero entries, each with magnitude at
+most 3/2. Therefore                  q
+                                 kDq(u)kop ≤        kDq(u)k1 kDq(u)k∞ ≤ 3.
+Set
+                         Ai (u) := ν ′ (ui )(1 − ν(ui+1 )),     Bi (u) := ν(ui )ν ′ (ui+1 ).
+Using (10),
+                                                                9
+                               |Ai (u) − Ai (v)| ≤ 6|ui − vi | + |ui+1 − vi+1 |,
+                                                                4
+and
+                                           9
+                        |Bi (u) − Bi (v)| ≤ |ui − vi | + 6|ui+1 − vi+1 |.
+                                           4
+The same two-row/two-column sparsity argument gives
+
+                                     kDq(u) − Dq(v)kop ≤ 17 ku − vk .
+                       q
+      Let n(z) := z/    1 + kzk2 , so that ρ = n ◦ q. Direct differentiation yields
+
+                                                I         zz ⊤
+                                    Dn(z) = q        −        2 3/2 ,
+                                             1 + kzk2 (1 + kzk )
+
+hence kDn(z)kop ≤ 1 and kDn(z) − Dn(z ′ )kop ≤ 6 kz − z ′ k. Since q is 3-Lipschitz,
+
+                   kDρ(u) − Dρ(v)kop ≤ kDn(q(u)) − Dn(q(v))kop kDq(u)kop
+
+                                                         25
+                                                + kDn(q(v))kop kDq(u) − Dq(v)kop
+                                              ≤ 6 · 3 · 3 ku − vk + 17 ku − vk
+                                              = 71 ku − vk .
+
+The bound kDρ(u)kop ≤ 3 follows from kDnkop ≤ 1 and kDqkop ≤ 3.
+
+A.3    Proof of Lemma 3.1
+Proof. We first compute the inverse of Bα,N . Define
+
+                          Gij := α−2 + min{i, j} − 1,               i, j = 1, . . . , N.
+
+For each fixed j, the jth column of G increases by one at each index up to j and remains constant
+after index j. Since the interior rows of Bα,N act as a discrete second-difference operator, we have
+
+                       (1 + α2 )G1j − G2j = 1{j=1} ,
+                       − Gi−1,j + 2Gij − Gi+1,j = 1{i=j} ,                2 ≤ i ≤ N − 1,
+                       − GN −1,j + GN j = 1{j=N } .
+
+Thus Bα,N G = I, and hence
+                                       −1
+                                     (Bα,N )ij = α−2 + min{i, j} − 1.                            (60)
+   Now let c(a, b) := αae1 − α2 beN . The first-order condition for maximizing hN (a, b; ·) is
+
+                                                Bα,N y = c(a, b).
+
+Using (60), its unique solution is
+                                         a   b   αb
+                         yk∗ (a, b) =      −   −    (k − 1),              k = 1, . . . , N.      (61)
+                                         α 2α    2
+Since Bα,N is positive definite,
+                                                       ℓ0
+                    hN (a, b; y ∗ ) − hN (a, b; y) =      (y − y ∗ )⊤ Bα,N (y − y ∗ ) ≥ 0,
+                                                       2
+with equality only at y = y ∗ . Thus y ∗ is the unique unconstrained maximizer.
+   From (60),
+                      −1          −1                     −1
+                   (Bα,N )11 = (Bα,N  )1N = α−2 ,      (Bα,N )N N = α−2 + N − 1.
+Since α2 = 1/N ,                                                                    
+                                                                  b   2          1
+                                     ⊤    −1
+                           c(a, b)       Bα,N c(a, b) = a2 − ab +             2−         .
+                                                                     4           N
+Substituting y ∗ into hN , we obtain
+                                                                          2
+                                                        ℓ0            b
+                                     max hN (a, b; y) =            a−           .                (62)
+                                     y∈RN               2             2
+
+   We next verify that the unconstrained maximizer lies in Y0 . Rewrite (61) as
+                                                                
+                        ∗         a − ck b         1       k−1
+                      yk (a, b) =          , ck :=     1+          ∈ [0, 1].
+                                     α             2        N
+
+                                                       26
+Therefore
+                                           |yk∗ (a, b)|2 ≤ 2N (a2 + b2 ),
+and, summing over k = 1, . . . , N and i = 1, . . . , T − 1,
+
+                          X −1
+                          T
+                                                                     
+                                 ky ∗ (ai , bi )k2 ≤ 2N 2 kak2 + kbk2 ≤ 2N 2 R2 s2 .
+                           i=1
+
+By assumption, the right-hand side is at most (DY /4)2 . Since Y0 is the Euclidean ball of ra-
+dius DY /2, the concatenated unconstrained maximizer lies in the interior of Y0 . Moreover, each
+hN (ai , bi ; ·) has y-Hessian −ℓ0 Bα,N ≺ 0, so f (x, ·) is strictly concave. This proves the first claim.
+    We now compute the value function. Since the unconstrained maximizer of the dual variables
+lies in Y0 , (62) gives
+                                                                    T −1         
+                                                                 ℓ0 X           bi 2
+                                              2
+                             Φ(u, a, b) = ℓ0 s Ψ0 (ũ, ã, b̃) +           ai −
+                                                                 2              2
+                                                                     i=1
+                                                "                                #
+                                                                   1        1 2                        (63)
+                                              2
+                                        = ℓ0 s Ψ0 (ũ, ã, b̃) +       ã − b̃
+                                                                   2        2
+                                         = ℓ0 s2 Ψ(ũ, ã, b̃).
+This proves the second claim.
+   It remains to compute the initial gap. Every squared term in Ψ is nonnegative. For j ≥ 2,
+                                                          cη
+                                           −cη ν(t) +        r(t)2 ≥ −cη ,
+                                                          2
+while for the first coordinate,
+                                                      cη          3
+                                            −cη t +      r(t)2 ≥ − cη .
+                                                      2           2
+Hence                                                             
+                                                                 1
+                                         Ψ(ũ, ã, b̃) ≥ −cη T +     .
+                                                                 2
+Equality is attained at
+                                      ũ∗ = (2, 1, . . . , 1),          ã = b̃ = 0,
+for which ρ(ũ∗ ) = r̄(ũ∗ ) = 0. Since Ψ(0, 0, 0) = 0, (63) yields
+                                                                  
+                                                                 1
+                                  Φ(0) − inf Φ(x) = cη T +           ℓ0 s2 .
+                                         x∈X0                    2
+
+This proves the third claim.
+
+A.4     Proof of Lemma 3.2
+Proof. Fix
+                              z̃ = (ũ, ã, b̃) ∈ C0 ,           z̃ ′ = (ũ′ , ã′ , b̃′ ) ∈ C0 .
+In particular,
+                                            kãk, kã′ k, kb̃k, kb̃′ k ≤ R.
+
+
+
+
+                                                           27
+   We first bound the Lipschitz constant of the gradient of the normalized primal component Ψ0 .
+We define
+                                                1
+                                  Fa (ũ, ã) = kã − ρ(ũ)k2 ,
+                                                2
+                                                1
+                                  Fb (ũ, b̃) = kb̃ − r̄(ũ)k2 ,
+                                                2
+                                               1                
+                                  Q(ã, b̃) = kãk2 + kb̃k2 ,
+                                               2
+and thus Ψ0 = H + Fa + Fb + Q. By Lemma 2.9, ν ′ is 6-Lipschitz and t 7→ r(t)r′ (t) is 2-Lipschitz.
+Hence
+                              k∇H(ũ) − ∇H(ũ′ )k ≤ 8cη kũ − ũ′ k.                          (64)
+   For Fa , we have
+                                                                                 
+                        ∇ã Fa = ã − ρ(ũ),         ∇ũ Fa = −Dρ(ũ)⊤ ã − ρ(ũ) .
+
+Then, we define du := kũ − ũ′ k, da := kã − ã′ k, and db := kb̃ − b̃′ k. Using Lemma 2.10, kρ(ũ)k ≤ 1,
+and kãk, kã′ k ≤ R, we obtain
+
+                                  ∇ã Fa (ũ, ã) − ∇ã Fa (ũ′ , ã′ ) ≤ da + 3du ,
+
+and                                                                              
+                      ∇ũ Fa (ũ, ã) − ∇ũ Fa (ũ′ , ã′ ) ≤ 3da + 9 + 71(R + 1) du .
+                                                                  p
+Thus, since R is a constant, there exists a constant Ca = (80 + 71R)2 + 19 such that
+                                                                    p
+                             k∇Fa (ũ, ã) − ∇Fa (ũ′ , ã′ )k ≤ Ca d2u + d2a .                       (65)
+
+   For Fb , it suﬀices to consider ϑ(t, b) := 12 (b − r(t))2 . Wherever the Hessian exists,
+                                          ′ 2                               
+                                           r (t) − (b − r(t))r′′ (t) −r′ (t)
+                            ∇ ϑ(t, b) =
+                             2
+                                                                               .
+                                                     −r′ (t)            1
+
+Although r is unbounded on R, we have r′′ (t) = 0 for t ∈  / [0, 1], while |r(t)| ≤ 1/4 for t ∈ [0, 1].
+                ′            ′′
+Together with |r (t)| ≤ 1, |r (t)| ≤ 2 almost everywhere, and |b| ≤ R, this gives
+                                                                             3
+                                      r′ (t)2 − (b − r(t))r′′ (t) ≤ 2R +
+                                                                             2
+wherever the Hessian exists. Consequently,
+                                                                 s              2
+                                                                           3
+                          k∇ ϑ(t, b)kop ≤ Cb ,
+                              2
+                                                         Cb :=        2R +            + 3.
+                                                                           2
+
+Since ∇ϑ is continuous across t = 0, 1, integrating along line segments in R × [−R, R] shows that
+∇ϑ is Cb -Lipschitz on this set. Applying this bound to the disjoint coordinate pairs in Fb yields
+                                                                   q
+                             k∇Fb (ũ, b̃) − ∇Fb (ũ′ , b̃′ )k ≤ Cb d2u + d2b .                 (66)
+
+   Finally, ∇Q is 1-Lipschitz. Therefore there exists a constant CΨ = 8cη + Ca + Cb + 1 > 0 such
+that
+                               k∇Ψ0 (z̃) − ∇Ψ0 (z̃ ′ )k ≤ CΨ kz̃ − z̃ ′ k.                  (67)
+
+                                                        28
+   For x = (u, a, b) ∈ X0 and x′ = (u′ , a′ , b′ ) ∈ X0 , the first term of the hard instance depends
+only on the primal variables and is given by ℓ0 s2 Ψ0 (x/s). By the chain rule and (67), we have
+                                                          
+                      ∇ ℓ0 s2 Ψ0 (x/s) − ∇ ℓ0 s2 Ψ0 (x′ /s) ≤ CΨ ℓ0 kx − x′ k.                   (68)
+
+    It remains to bound the dual component terms. For one block hN , in the coordinate order
+(a, y, b), the Hessian divided by ℓ0 is
+                                                            
+                                    0    αe⊤
+                                           1         0
+                                αe1    −Bα,N   −(α/2)eN  .
+                                              ⊤
+                                    0 −(α/2)eN −α2 (N − 1)/4
+
+Since N ≥ 2 and α = N −1/2 ≤ 1, every absolute row sum of this symmetric matrix is at most 4.
+Hence its operator norm is at most 4, and therefore
+
+                   k∇hN (a, b; y) − ∇hN (a′ , b′ ; y ′ )k ≤ 4ℓ0 k(a, b, y) − (a′ , b′ , y ′ )k.   (69)
+
+The different path blocks act on disjoint coordinates, so the same bound holds for their sum.
+   Combining (68) and (69), we obtain
+
+                              k∇f (z) − ∇f (z ′ )k ≤ (CΨ + 4)ℓ0 kz − z ′ k.
+
+Fix a universal constant Cℓ satisfying
+
+                                       Cℓ ≥ max{CΨ + 6, Cδ + 1},
+
+where Cδ is the universal constant in Lemma 3.3. This choice proves the claim and will also be
+used for the stochastic construction.
+
+A.5    Proof of Lemma 3.3
+Proof. Part 1: zero-chain property. Fix z = (x, y) ∈ X0 × Y0 , where x = (u, a, b), and set
+m := progπ 0 (z). The desired inequality is immediate if m ≥ K − 1. Otherwise, all coordinates at
+positions greater than m are zero. We show that
+
+                                 [∇f (z)]πk = 0,          k = m + 2, . . . , K.
+
+Since s > 0, normalization preserves the support of the primal variables.
+   We first record two properties of the normalized coupling. The definition of q and ν(0) = 0
+imply
+                                ũi = 0 =⇒ qi (ũ) = ρi (ũ) = 0.
+Moreover, every potentially nonzero entry in the jth column of Dq(ũ) contains the factor ν ′ (ũj ).
+Thus, ν ′ (0) = 0 and the chain rule give
+
+                          ũj = 0     =⇒      Dq(ũ)ej = 0,           Dρ(ũ)ej = 0.
+
+   Fix k ≥ m + 2. We distinguish the four possible types of πk in the ordering π.
+   Case 1: πk = uj . Then j ≥ 2. Since bj−1 immediately precedes uj , both coordinates are zero.
+At ũj = 0, the derivative of H with respect to ũj vanishes, as does the contribution involving
+Dρ(ũ)ej . The dual blocks do not depend on u. Hence
+                                                      
+                        ∂uj f (z) = −ℓ0 s b̃j−1 − r(0) r′ (0) = −ℓ0 bj−1 = 0.
+
+                                                       29
+                                                                               (i)                  (i)
+     Case 2: πk = ai . The adjacent coordinates are ui and y1 , so ui = ai = y1 = 0. In particular,
+ρi (ũ) = 0, and
+                                                                   (i)
+                             ∂ai f (z) = ℓ0 s 2ãi − ρi (ũ) + ℓ0 αy1 = 0.
+                          (i)
+         Case 3: πk = yj . Differentiating the dual block gives
+                                          
+                                          
+                                          
+                                                             (i)  (i)
+                                            αai − (1 + α2 )y1 + y2 ,                 j = 1,
+                                          
+                                          
+                        ℓ−1
+                                             (i)      (i)    (i)
+                         0 ∂y (i) f (z) = yj−1 − 2yj + yj+1 ,                       2 ≤ j ≤ N − 1,
+                             j            
+                                          
+                                          y (i) − y (i) − α bi ,                    j = N.
+                                             N −1    N
+                                                           2
+Each expression involves only coordinates at positions k − 1, k, and k + 1, all greater than m. Thus
+∂y(i) f (z) = 0.
+     j
+                                                                      (i)                 (i)
+         Case 4: πk = bi . The adjacent coordinates are yN and ui+1 , so yN = bi = ui+1 = 0. Therefore
+                                                             ℓ0 α (i) ℓ0 α2 (N − 1)
+                           ∂bi f (z) = ℓ0 s 2b̃i − r(ũi+1 ) −    y −                bi = 0.
+                                                               2 N            4
+         Consequently,
+                                        
+                                0 ∇f (z) ≤ min{prog0 (z) + 1, K},
+                            progπ                                                     z ∈ X0 × Y0 .
+                                                   π
+
+
+This proves part 1.
+    Part 2: normalized stationarity obstruction. For the second claim, fix (ũ, ã, b̃) ∈ C0 with
+ũT ≤ 1/4. We argue by contradiction. Suppose that RC0 (ũ, ã, b̃) < Cδ . Then there exists
+n = (nu , nab ) ∈ NC0 (ũ, ã, b̃) such that
+
+                                                 k∇Ψ(ũ, ã, b̃) + nk < Cδ .                                         (70)
+
+Since                                           n                             o
+                                       C0 = RT × (ã, b̃) : kãk2 + kb̃k2 ≤ R2 ,
+we have nu = 0. Hence
+                                                   k∇ũ Ψ(ũ, ã, b̃)k < Cδ .                                        (71)
+         We first derive the implications of (71) for the coordinates of ũ. Partition the tail coordinates
+as
+                Iout := {j ∈ {2, . . . , T } : ũj ∈
+                                                   / (0, 1)},         Imid := {j ∈ {2, . . . , T } : 0 < ũj < 1}.
+   For j ∈ Iout , ν ′ (ũj ) = 0 and the jth column of Dρ(ũ) vanishes. Moreover, |r′ (ũj )| = 1, and
+therefore                                                                     
+                                  (∇ũ Ψ)j = r′ (ũj ) (cη + 1)r(ũj ) − b̃j−1 .
+Using (71) and kb̃k ≤ R gives
+                                                                      1/2
+                                                       X
+                                         (cη + 1)             r(ũj )2      ≤ Cδ + R.                              (72)
+                                                      j∈Iout
+
+
+         For j ∈ Imid , let t = ũj . Since ν ′ (t) = 6r(t) and r′ (t) = 1 − 2t,
+
+                                (∇ũ Ψ)j = −γj r(t) − b̃j−1 r′ (t) − hã − ρ(ũ), Dρ(ũ)ej i ,
+
+                                                                 30
+where
+                                      γj := cη (5 + 2t) − r′ (t) ≥ 5cη − 1.
+Using (71), Lemma 2.10, kãk, kb̃k ≤ R, and kρ(ũ)k ≤ 1, we obtain
+                                                                  1/2
+                                                  X
+                               (5cη − 1)                 r(ũj )2       ≤ 4R + 3 + Cδ .               (73)
+                                                 j∈Imid
+
+
+   Since Iout and Imid partition {2, . . . , T }, (72) and (73) imply
+                                                                                  1/2
+                                              X                     X
+                             kr̄(ũ)k =              r(ũj )2 +            r(ũj )2 
+                                             j∈Iout                j∈Imid
+                                                             1/2                          1/2
+                                              X                               X
+                                     ≤               r(ũj )2        +             r(ũj )2 
+                                             j∈Iout                          j∈Imid
+                                         R + Cδ   4R + 3 + Cδ
+                                     ≤          +             .                                         (74)
+                                         cη + 1     5cη − 1
+
+Define
+                                                  R + Cδ   4R + 3 + Cδ
+                                         κ :=            +             .                                (75)
+                                                  cη + 1     5cη − 1
+Then
+                                                        kr̄(ũ)k ≤ κ.                                   (76)
+   We choose the universal construction constants R ≥ 1, Cδ > 0, and cη > 0 so that
+
+                                        1                   3
+                                    0<κ< ,                    cη − 3(R + 1) > Cδ ,                      (77)
+                                        8                   4
+and                                         
+                            17   κ                   7            1 − 4κ    (1 − 4κ)2
+                  12κ          +   + Cδ          +      κ + 2Cδ <                          .            (78)
+                            26 13                    13             13 1 + (1 − 4κ)2 + 4κ2
+Such universal choices exist: for fixed R ≥ 1 and suﬀiciently small Cδ , taking cη suﬀiciently large
+makes κ arbitrarily small, while the right-hand side of (78) converges to 1/26.
+   We now show that every tail coordinate is either close to zero or close to one. In fact,
+
+                               |ũj | ≤ 2κ    or ũj ≥ 1 − 2κ,                 j = 2, . . . , T.        (79)
+
+Indeed, (76) gives |r(ũj )| ≤ κ. If ũj ≤ 0, then |ũj | = |r(ũj )| ≤ κ, while ũj ≥ 1 satisfies the second
+alternative immediately. If 0 < ũj < 1, then
+
+                                                      ũj (1 − ũj ) ≤ κ.
+
+If both ũj > 2κ and ũj < 1 − 2κ, one of ũj and 1 − ũj is at least 1/2 and the other is larger than
+2κ, giving ũj (1 − ũj ) > κ, a contradiction.
+    We next show that the first coordinate satisfies the second alternative:
+
+                                                       ũ1 ≥ 1 − 2κ.                                    (80)
+
+                                                              31
+Otherwise ũ1 < 1 − 2κ < 1. Since r(t)r′ (t) ≤ 1/4 for t ≤ 1, Lemma 2.10 gives
+
+                            ∂ũ1 Ψ = −cη + cη r(ũ1 )r′ (ũ1 ) − hã − ρ(ũ), Dρ(ũ)e1 i
+                                      3
+                                   ≤ − cη + 3(R + 1)
+                                      4
+                                   < −Cδ ,
+
+contradicting (71).
+    We refer to the two alternatives in (79) as low and high, respectively. Since ũ1 is high and
+ũT ≤ 1/4 < 1 − 2κ, the terminal coordinate is low. Thus there must be a high-to-low transition.
+Define
+                      J := {i ∈ {1, . . . , T − 1} : ũi ≥ 1 − 2κ, |ũi+1 | ≤ 2κ} .           (81)
+Then J 6= ∅. Let
+                                             J c := {1, . . . , T − 1} \ J,
+and for any I ⊆ {1, . . . , T − 1}, let qI (ũ) and ρI (ũ) denote the corresponding subvectors.
+   We next lower bound the coupling across these transitions. For i ∈ J, the definition of ν gives
+
+                                  ν(ũi ) ≥ 1 − 2κ,        1 − ν(ũi+1 ) ≥ 1 − 2κ,
+
+and hence
+                                           qi (ũ) ≥ (1 − 2κ)2 ≥ 1 − 4κ.                                    (82)
+For i ∈
+      / J, either ũi is low or ũi+1 is high. Lemma 2.9 then gives, respectively,
+
+                                qi (ũ) ≤ 2|r(ũi )|    or       qi (ũ) ≤ 2|r(ũi+1 )|.
+
+Assigning i to the corresponding tail coordinate gives an injective assignment, since no coordinate
+can be both low and high. Therefore
+
+                                            kqJ c (ũ)k ≤ 2kr̄(ũ)k ≤ 2κ.                                   (83)
+
+Since J 6= ∅, (82)–(83) imply
+
+                                                            (1 − 4κ)2
+                                       kρJ (ũ)k2 ≥                        .                                (84)
+                                                       1 + (1 − 4κ)2 + 4κ2
+
+   The residual bound also controls the auxiliary variables. For fixed ũ, the partial gradients with
+respect to (ã, b̃) are
+                                                1
+                                     ga = 3ã − b̃ − ρ(ũ),
+                                                2                                                (85)
+                                            1     9
+                                     gb = − ã + b̃ − r̄(ũ).
+                                            2     4
+Their unique common zero is
+                                           9          1
+                                     ã∗ = ρ(ũ) + r̄(ũ),
+                                          26         13                                          (86)
+                                       ∗   1          6
+                                     b̃ = ρ(ũ) + r̄(ũ).
+                                          13         13
+For da = ã − ã′ and db = b̃ − b̃′ , direct calculation gives
+    D                                    E D                                 E                         1   2
+        ga (ã, b̃) − ga (ã′ , b̃′ ), da + gb (ã, b̃) − gb (ã′ , b̃′ ), db = 2 kda k2 + kdb k2 + da − db .
+                                                                                                        2
+
+                                                          32
+Thus the (ã, b̃)-gradient is 2-strongly monotone.
+   By (76) and kρ(ũ)k ≤ 1,
+                                               9  κ                            1   6κ
+                                   kã∗ k ≤      + ,                kb̃∗ k ≤     +    .
+                                              26 13                            13 13
+Since κ < 1/8 and R ≥ 1, these bounds imply
+
+                                              kã∗ k2 + kb̃∗ k2 < R2 ,
+
+so (ã∗ , b̃∗ ) lies in the interior of the radius-R ball.
+    Define                                                            
+                                              d := ã − ã∗ , b̃ − b̃∗ .
+Since (ã∗ , b̃∗ ) is feasible, the normal-cone condition gives
+
+                                                   hnab , di ≥ 0.
+
+Let e := (ga , gb ) + nab . By (70), kek < Cδ . Strong monotonicity therefore yields
+
+                             2kdk2 ≤ h(ga , gb ), di = he, di − hnab , di ≤ Cδ kdk,
+
+and hence
+                                                                   Cδ
+                                                    kdk ≤             .                          (87)
+                                                                   2
+Let ea := ã − ã∗ , and eb := b̃ − b̃∗ . Then (86) gives
+                                                    17          1
+                                    ã − ρ(ũ) = −     ρ(ũ) + r̄(ũ) + ea ,
+                                                    26          13                               (88)
+                                                  1           7
+                                     b̃ − r̄(ũ) = ρ(ũ) − r̄(ũ) + eb ,
+                                                  13         13
+where kea k, keb k ≤ Cδ .
+   We now use the high-to-low transitions to construct a direction that contradicts (71). Define
+v ∈ RT by                              (
+                                         ρi (ũ), i ∈ J,
+                      v1 := 0, vi+1 :=                     i = 1, . . . , T − 1.            (89)
+                                         0,       i∈/ J,
+By (84),
+                                                       (1 − 4κ)2
+                          kvk2 = kρJ (ũ)k2 ≥                         ,               kvk ≤ 1.   (90)
+                                                  1 + (1 − 4κ)2 + 4κ2
+   The indices in J are pairwise nonadjacent. Moreover, for each i ∈ J, the coordinate ũi+1 is
+low, so the (i + 1)st column of Dq(ũ) has at most two nonzero entries, each with magnitude at
+most 6κ. The supports of these columns are disjoint for distinct i ∈ J. Since v is supported on the
+coordinates i + 1 with i ∈ J,               X
+                                 Dq(ũ)v =      vi+1 Dq(ũ)ei+1 .
+                                                        i∈J
+Hence, by the disjointness of the supports,
+                                          X
+                           kDq(ũ)vk2 =      2
+                                            vi+1 kDq(ũ)ei+1 k2
+                                                  i∈J
+                                                              X
+                                               ≤ 2(6κ)2              2
+                                                                    vi+1 = 2(6κ)2 kvk2 .
+                                                              i∈J
+
+
+                                                              33
+                        √
+Therefore, kDq(ũ)vk ≤ 6 2 κkvk. Since
+
+                                                q(ũ)
+                                     ρ(ũ) = p
+                                              1 + kq(ũ)k2
+                                                 p
+and the Jacobian of the normalization map z 7→ z/ 1 + kzk2 has operator norm at most one,
+                                             √
+                               kDρ(ũ)vk ≤ 6 2 κkvk ≤ 12κkvk.                           (91)
+
+   We finally evaluate the directional derivative along v. For every j in the support of v, we have
+j ≥ 2, ũj ≤ 2κ < 1, and vj ≥ 0. Moreover,
+                                       (
+                                         cη ũj ,                ũj ≤ 0,
+                          ∂ũj H(ũ) =
+                                         −cη (5 + 2ũj )r(ũj ), 0 < ũj ≤ 2κ.
+
+Both expressions are nonpositive. Therefore DH(ũ)[v] ≤ 0. Using (88), (76), (84), (91), and
+r′ (ũi+1 ) ≥ 1 − 4κ for i ∈ J, we obtain
+                                                   
+                                         17   κ        1 − 4κ              7
+            Dũ Ψ(ũ, ã, b̃)[v] ≤ 12κ      +   + Cδ −        kρJ (ũ)k2 + κ + Cδ
+                                         26 13           13                13
+                                                   
+                                         17   κ        7            1 − 4κ     (1 − 4κ)2
+                                 ≤ 12κ      +   + Cδ + κ + Cδ −
+                                         26 13         13              13 1 + (1 − 4κ)2 + 4κ2
+                                 < −Cδ ,
+
+where the last inequality follows from (78). On the other hand, (71) and kvk ≤ 1 imply
+
+                               Dũ Ψ(ũ, ã, b̃)[v] ≤ k∇ũ Ψ(ũ, ã, b̃)k kvk
+                                                   < Cδ ,
+
+a contradiction. Therefore,
+                                          RC0 (ũ, ã, b̃) ≥ Cδ ,
+which proves the second claim.
+   Part 3: Moreau-envelope obstruction. Fix any x = (u, a, b) ∈ X0 with uT = 0.
+   By Lemma 3.1, Φ is continuous and bounded below on X0 . Hence, for this x, the function
+
+                                      p 7−→ Φ(p) + L̄ kp − xk2
+
+is coercive on the closed set X0 , so P1/(2L̄) (x) is nonempty. Fix p ∈ P1/(2L̄) (x) and set
+
+                                   g := G1/(2L̄) (x; p) = 2L̄(x − p).                          (92)
+
+By the exact value identity in Lemma 3.1, Φ is the restriction to X0 of the C 1 function x 7→
+ℓ0 s2 Ψ(x/s). Hence first-order optimality of p on the closed convex set X0 gives
+
+                                        g ∈ ∇Φ(p) + NX0 (p).                                   (93)
+
+Suppose, toward a contradiction, that
+                                                     Cδ
+                                             kgk ≤      ℓ0 s.                                  (94)
+                                                     2
+
+                                                    34
+Write
+                                      p = sp̄,         p̄ = (ū, ā, b̄) ∈ C0 .
+Since uT = 0,
+                               |puT − xuT |   kp − xk   kgk    Cδ ℓ0   Cδ   1
+                    |ūT | =                ≤         =      ≤       =     < .                   (95)
+                                    s            s      2L̄s    4L̄    4Cℓ  4
+The last inequality follows from the fixed choice Cℓ > Cδ .
+   The value identity gives
+
+                               Φ(sp̄) = ℓ0 s2 Ψ(p̄),        ∇Φ(sp̄) = ℓ0 s∇Ψ(p̄).                (96)
+
+Moreover, X0 = sC0 implies NX0 (sp̄) = NC0 (p̄), and the latter is a cone. Therefore
+                                                                           
+                   dist 0, ∇Φ(p) + NX0 (p) = dist 0, ℓ0 s∇Ψ(p̄) + NC0 (p̄)
+                                                                              
+                                             = ℓ0 s dist 0, ∇Ψ(p̄) + NC0 (p̄)
+                                                       = ℓ0 s RC0 (p̄).                          (97)
+
+By (95), part 2 applies to p̄, and hence RC0 (p̄) ≥ Cδ . Combining this with (93) and (97) yields
+                                                            
+                              kgk ≥ dist 0, ∇Φ(p) + NX0 (p) ≥ Cδ ℓ0 s,
+
+contradicting (94). Therefore
+                                                      Cδ
+                                           G1/(2L̄) (x; p) >
+                                                         ℓ0 s,
+                                                       2
+which is exactly (30). This proves part 3 and completes the lemma.
+
+
+B     Proofs for the Deterministic Lower Bound
+B.1     Proof of Theorem 4.1
+Proof. We apply the hard instance constructed in Section 3. By Lemma 3.2, its gradient is Cℓ ℓ0 -
+Lipschitz. Moreover, Lemma 3.3, with L̄ = Cℓ ℓ0 , shows that every zero-respecting output obtained
+before the terminal coordinate is activated satisfies
+                                                                  Cδ
+                                           G1/(2L̄) (x; p) >         ℓ0 s.
+                                                                  2
+Thus, the smoothness and stationarity requirements are satisfied if
+                                                              Cδ
+                                          Cℓ ℓ0 = L,             ℓ0 s = ϵ.                       (98)
+                                                              2
+   It remains to choose the two chain lengths so that the hard instance belongs to FNCC (L, ∆Φ , DY ).
+By Lemma 3.1, the dual maximizer is feasible whenever
+                                                         
+                                                      DY 2
+                                        2N R s ≤
+                                          2 2 2
+                                                             .                                   (99)
+                                                       4
+Under this feasibility condition, Lemma 3.1 gives the exact initial value gap. We therefore impose
+the additional requirement
+                                                         
+                                                        1
+                            Φ(0) − inf Φ(x) = cη T +        ℓ 0 s 2 ≤ ∆Φ .                    (100)
+                                    x∈X0                2
+
+                                                         35
+   We now choose the parameters to satisfy (98)–(100). Set
+
+                                             L                   2ϵ     2Cℓ ϵ
+                                   ℓ0 :=        ,       s :=          =       ,
+                                             Cℓ                 Cδ ℓ0   Cδ L
+and choose                                                    
+                            Cδ2 L∆Φ                      Cδ LDY
+                       T :=              ,          N :=           ,              α := N −1/2 .
+                            16cη Cℓ ϵ2                   16RCℓ ϵ
+For a suﬀiciently small universal constant c1 , the assumption
+                                                  p
+                                     ϵ ≤ c1 min{ L∆Φ , LDY }
+
+ensures that T, N ≥ 2 and
+
+                                             Cδ2 L∆Φ                      Cδ LDY
+                                 T −1≥                  ,         N≥              .               (101)
+                                             64cη Cℓ ϵ2                   32RCℓ ϵ
+
+By the choice of N ,
+                                                      DY
+                                                    N Rs ≤   ,
+                                                        8
+which implies (99). Moreover, since T ≥ 2, the choice of T gives
+                                    
+                                   1            5               5
+                         cη T +        ℓ 0 s 2 ≤ c η T ℓ 0 s 2 ≤ ∆Φ ≤ ∆Φ .
+                                   2            4               16
+
+Thus, (100) also holds. Hence, by Lemmas 3.1 and 3.2,
+
+                                           f ∈ FNCC (L, ∆Φ , DY ).
+
+Finally, the zero-chain has length K = 1 + (T − 1)(N + 3) ≥ (T − 1)N . Using (101),
+
+                                         L 2 D Y ∆Φ                         Cδ3
+                                K ≥ c0              ,           c0 :=               .
+                                              ϵ3                        2048cη RCℓ2
+
+Hence, if
+                                              L 2 D Y ∆Φ
+                                               q < c0    ,
+                                                   ϵ3
+then q < K. Lemma 3.3 therefore gives, for every p ∈ P1/(2L) (x),
+
+                                                                 Cδ
+                                       G1/(2L) (x; p) >             ℓ0 s = ϵ.
+                                                                 2
+By Lemma 2.2,
+                                               ∇φ1/(2L) (x) > ϵ.
+This proves the result.
+
+
+
+
+                                                        36
+B.2    Proof of Corollary 4.2
+Proof. Take c = c1 from Theorem 4.1 and apply that theorem with the value-gap budget ∆Φ = G0 .
+We only need to verify that the same hard instance also satisfies the primal–dual-gap budget. For
+this construction, maxy∈Y0 f (0, y) = Φf (0) = 0. Write
+
+                                                       X                 cη X
+                                                       T                     T
+                              H(ũ) := −cη ũ1 − cη          ν(ũj ) +        r(ũj )2 .
+                                                                         2
+                                                       j=2                  j=1
+
+At y = 0, the hard instance satisfies
+                                                                                                    
+       f (x, 0)          1               1                1                           1 α2 (N − 1)
+              2
+                = H(ũ) + kã − ρ(ũ)k2 + kb̃ − r̄(ũ)k2 + kãk2 +                      −                kb̃k2 .
+         ℓ0 s            2               2                2                           2      8
+
+Since α2 = 1/N ,
+                               1 α2 (N − 1)       3N + 1
+                                  −             =         > 0.
+                               2         8          8N
+The lower bound on H established in the proof of Lemma 3.1 gives
+                                                       
+                                                      1
+                                   H(ũ) ≥ −cη T +        ,
+                                                      2
+
+and equality is attained at ũ∗ = (2, 1, . . . , 1) with ã = b̃ = 0. Consequently,
+                                                           
+                                                          1
+                           inf f (x, 0) = −cη T +             ℓ0 s2 = inf Φf (x),
+                          x∈X0                            2           x∈X0
+
+where the last equality follows from Lemma 3.1 and Φf (0) = 0. Therefore the initial primal–dual
+gap equals the value-function gap:
+
+                       max f (0, y) − inf f (x, 0) = Φf (0) − inf Φf (x) ≤ G0 .
+                       y∈Y0            x∈X0                              x∈X0
+
+                                    pd
+Thus the hard instance belongs to FNCC  (L, G0 , DY ). Applying the query lower bound of Theo-
+rem 4.1 with ∆Φ = G0 gives the claimed Ω(L2 DY G0 ϵ−3 ) bound.
+
+
+C     Proofs for the Stochastic Lower Bound
+C.1    Proof of Lemma 5.1
+Proof. Part 1: maximizer and optimal value of the clipped dual block. Fix x = (u, a, b) ∈ X0 and
+a block index i ∈ {1, . . . , T − 1}. For this part of the proof, abbreviate a = ai and b = bi .
+    Let y ∗ denote the unique maximizer of the deterministic quadratic block obtained in Lemma 3.1.
+Its explicit form in (41) gives
+                                                αb
+                                 yk∗ − yk+1
+                                        ∗
+                                            =      ,         k = 1, . . . , N − 1.
+                                                2
+Thus all successive-coordinate differences of y ∗ are equal. For convenience, denote their common
+value by
+                                                    αb
+                                              d :=     .
+                                                    2
+
+                                                        37
+Since the primal variables satisfy |b| ≤ Rs and τN = Rαs, we have
+                                                 Rαs   τN
+                                         |d| ≤       =    < τN .                                  (102)
+                                                  2     2
+Hence all neighboring-coordinate differences of y ∗ lie in the quadratic branch of χτN .
+  To verify that y ∗ remains optimal after clipping, define
+
+                                 Dτ (d, t) := χτ (t) − χτ (d) − d(t − d).                         (103)
+
+Because |d| < τ , we have χ′τ (d) = d. By convexity of χτ ,
+
+                                                 Dτ (d, t) ≥ 0,                                   (104)
+
+with equality only when t = d. Indeed, χτ is strictly convex on (−τ, τ ), while its two aﬀine pieces
+have slopes ±τ , which are different from d. For convenience, write
+
+                              ek (y) := yk − yk+1 ,          k = 1, . . . , N − 1.
+
+Since y ∗ satisfies Bα,N y ∗ = c(a, b) and ek (y ∗ ) = d, the first-order condition of the deterministic
+quadratic block gives
+
+                                                                      X −1
+                                                                      N
+                                                                                       
+                       c(a, b)⊤ (y − y ∗ ) = α2 y1∗ (y1 − y1∗ ) + d          ek (y) − d .         (105)
+                                                                      k=1
+
+Using this identity to compare the clipped objective at y and y ∗ yields
+                                                "N −1                                 #
+                                                 X                   α 2
+                         ∗
+              hclip            clip
+               N (a, b; y ) − hN (a, b; y) = ℓ0       DτN d, ek (y) +     (y1 − y1∗ )2 .          (106)
+                                                                       2
+                                                       k=1
+
+The right-hand side is nonnegative, and hence y ∗ is a global maximizer. Moreover, equality in (106)
+requires
+                         y1 = y1∗ ,   ek (y) = d for all k = 1, . . . , N − 1.
+These relations determine all coordinates recursively, and therefore y = y ∗ . Thus the maximizer is
+unique.
+    Finally, (102) shows that every successive-coordinate difference of y ∗ lies in the quadratic region
+of χτN . Hence the clipped block and the deterministic quadratic block agree at y ∗ , and Lemma 3.1
+gives
+                                                              
+                                     clip      ∗    ℓ0       b 2
+                                    hN (a, b; y ) =      a−       .
+                                                    2        2
+This proves the first claim.
+    Part 2: value function and initial gap. By Part 1, the clipped and deterministic dual blocks
+have the same unique maximizers and optimal values. Let y ∗ (x) denote the concatenation of the
+block maximizers y ∗ (ai , bi ), i = 1, . . . , T − 1. The range estimate in Lemma 3.1 therefore remains
+valid:
+                                               ky ∗ (x)k2 ≤ 2N 2 R2 s2 .
+Under (40), the blockwise maximizer lies in int(Y0 ) and hence is also the constrained maximizer.
+Consequently,
+                                  Φsg (x) = ℓ0 s2 Ψ(ũ, ã, b̃),
+
+                                                      38
+which is (43). Since this is exactly the same value function as in the deterministic construction, the
+initial-gap identity (44) follows immediately from Lemma 3.1.
+    Part 3: dual concavity. For each edge, y 7→ ek (y) is aﬀine and χτN is convex, hence −χτN (ek (y))
+is concave. The anchor −(α2 /2)y12 is concave, the endpoint source is aﬀine, and the b2 correction
+is independent of y. Thus every clipped path block is concave on the entire dual space. The outer
+relay term is independent of y, proving part 3.
+    Part 4: dimension-free smoothness. Fix z, z ′ ∈ X0 × Y0 . The primal component is unchanged
+from the deterministic construction, so it remains to control the smoothness of the clipped dual
+blocks. Let EN : RN → RN −1 be the forward difference operator,
+
+                               (EN y)k = yk − yk+1 ,       k = 1, . . . , N − 1.
+
+Since kEN kop ≤ 2 and χ′τN is 1-Lipschitz, where χ′τN is applied coordinatewise, we have
+
+                  ⊤
+                                                 
+                 EN χ′τN (EN y) − χ′τN (EN v)        ≤ kEN kop χ′τN (EN y) − χ′τN (EN v)
+                                                     ≤ kEN k2op ky − vk
+                                                     ≤ 4ky − vk.
+
+Thus the clipped squared-difference terms have a Lipschitz gradient with a constant independent
+of N .
+   Consider two points (a, b, y) and (a′ , b′ , v) in one dual block, and write
+
+                         da := |a − a′ |,     db := |b − b′ |,     dy := ky − vk.
+
+From the definition of hclip
+                        N ,
+                                       ∇a hclip
+                                            N (a, b; y) = ℓ0 αy1 ,
+                                                                         
+                                clip                 α        α2 (N − 1)
+                            ∇b hN (a, b; y) = ℓ0 − yN −                  b ,
+                                                     2             4
+and                                      h                                       α     i
+                                              ⊤ ′
+                ∇y hclip
+                    N    (a, b; y) = ℓ 0   −E  χ
+                                              N τN (E N y) − α 2
+                                                                 y  e
+                                                                   1 1 + αae 1 −   be N .
+                                                                                 2
+Since α ≤ 1 and α2 (N − 1) ≤ 1, the preceding estimate gives
+                               1                        clip ′ ′
+                                  ∇a hclip
+                                      N (a, b; y) − ∇a hN (a , b ; v) ≤ dy ,
+                               ℓ0
+                         1                        clip ′ ′       1    1
+                            ∇b hclip
+                                N (a, b; y) − ∇b hN (a , b ; v) ≤ dy + db ,
+                         ℓ0                                      2    4
+and
+                    1                             clip ′ ′             1
+                       ∇y hclip
+                             N (a, b; y) − ∇y hN (a , b ; v) ≤ da + db + 5dy .
+                    ℓ0                                                 2
+Consequently, taking Cdual := 6, we obtain
+                                                                    q
+                                          clip ′ ′
+                    ∇hclip
+                       N   (a, b; y) − ∇h N   (a , b ; v) ≤ C         2    2    2
+                                                              dual 0 da + db + dy .
+                                                                  ℓ                             (107)
+
+        sg
+   Let fdual denote the sum of the T − 1 clipped dual blocks. Since these blocks involve disjoint
+coordinate groups, (107) yields
+                                 sg
+                               ∇fdual         sg
+                                      (z) − ∇fdual (z ′ ) ≤ Cdual ℓ0 kz − z ′ k.                (108)
+
+                                                     39
+   Let fouter (x, y) := ℓ0 s2 Ψ0 (x/s). The primal component is the same as in Lemma 3.2. Hence,
+with Cprimal := CΨ as defined in Appendix A.4,
+
+                                 ∇fouter (z) − ∇fouter (z ′ ) ≤ Cprimal ℓ0 kz − z ′ k.              (109)
+
+Combining (108) and (109) gives
+
+                             ∇f sg (z) − ∇f sg (z ′ ) ≤ (Cprimal + Cdual )ℓ0 kz − z ′ k.
+
+By the fixed choice of Cℓ in Appendix A.4,
+
+                                          Cprimal + Cdual = CΨ + 6 ≤ Cℓ .
+
+Therefore,
+                                      ∇f sg (z) − ∇f sg (z ′ ) ≤ Cℓ ℓ0 kz − z ′ k.
+Since ℓ0 = L/Cℓ , this further gives
+
+                                         ∇f sg (z) − ∇f sg (z ′ ) ≤ Lkz − z ′ k,
+
+which proves (45) and completes part 4.
+   Part 5: zero-chain property and dual gradient bound. The clipped quadratic coincides with
+the original quadratic in a neighborhood of the origin and still involves only neighboring dual
+coordinates. In particular, χ′τN (0) = 0, so the same coordinate-local argument as in Lemma 3.3
+gives                                       
+                                       sg
+                            progπ 0 ∇f (z) ≤ min {prog0 (z) + 1, K} .
+                                                        π
+
+
+   It remains to prove (47). For every dual block i ∈ {1, . . . , T − 1} and every j ∈ {2, . . . , N − 1},
+                                        h                                       i
+                                                      (i)                (i) 
+                     ∇y(i) f sg (z) = ℓ0 χ′τN yj−1 − yj − χ′τN yj − yj+1 .
+                                               (i)                  (i)
+                             j
+
+
+Since |χ′τN (t)| ≤ τN , ∀t ∈ R, we have
+
+                                  ∇y(i) f sg (z) ≤ 2ℓ0 τN ,      j = 2, . . . , N − 1.
+                                     j
+
+
+For j = N ,                                   h
+                                                             (i)  α i
+                           ∇y(i) f sg (z) = ℓ0 χ′τN yN −1 − yN − bi .
+                                                     (i)
+                             N                                     2
+Using |bi | ≤ Rs and τN = Rαs,
+                                                    α  3
+                             ∇y(i) f sg (z) ≤ ℓ0 τN + |bi | ≤ ℓ0 τN ≤ 2ℓ0 τN .
+                               N                     2       2
+Therefore, for every feasible z,
+
+                      ∇y(i) f sg (z) ≤ 2ℓ0 τN ,         i = 1, . . . , T − 1,   j = 2, . . . , N.   (110)
+                         j
+
+
+This proves part 5.
+
+
+
+
+                                                          40
+C.2   Proof of Lemma 5.4
+Proof. By (54), P(uT = 0) ≥ 43 . Let
+                                              E := {uT = 0}.
+By Lemma 5.1, the clipped construction has the same primal value function as the deterministic
+construction. Hence the two instances have the same proximal mapping. Since Cℓ ℓ0 = L, Part 3
+of Lemma 3.3 and (55) give, on E,
+                                                                      Cδ       4
+                               G1/(2L) x; p1/(2L) (x)            >        ℓ0 s = ϵ.
+                                                                       2        3
+Therefore,                                                                      
+                   E G1/(2L) x; p1/(2L) (x)          ≥ E G1/(2L) x; p1/(2L) (x) 1E
+                                                       4
+                                                     > ϵ P(E)
+                                                       3
+                                                       4 3
+                                                     ≥ ϵ · = ϵ.
+                                                       3 4
+This proves the claim.
+
+C.3   Proof of Theorem 5.5
+Proof. We apply the clipped hard instance constructed in Section 5.1. Set
+                                              L                    8ϵ
+                                       ℓ0 =      ,         s=            ,
+                                              Cℓ                  3Cδ ℓ0
+and choose                                                 
+                        9Cδ2 L∆Φ                     3Cδ LDY
+                   T :=               ,         N :=            ,                α := N −1/2 .
+                        256cη Cℓ ϵ2                   64RCℓ ϵ
+For a suﬀiciently small universal constant c1 , the assumption (56) ensures that T, N ≥ 4 and
+
+                                        9Cδ2 L∆Φ                          3Cδ LDY
+                             T −1≥                  ,            N≥                .             (111)
+                                       1024cη Cℓ ϵ2                       128RCℓ ϵ
+
+   We first verify that the clipped instance belongs to the required function class. By the choice
+of N ,
+                                                   DY
+                                           N Rs ≤      ,
+                                                    8
+and hence                                                  
+                                               DY2       DY 2
+                                   2N R s ≤
+                                       2 2 2
+                                                   <           .
+                                                32        4
+Thus the dual-feasibility condition in Lemma 5.1 is satisfied. By the choice of T ,
+                                                                ∆Φ
+                                              cη T ℓ 0 s2 ≤        .
+                                                                 4
+Moreover, since the quantity inside the floor defining T is at least 4,
+                                                              ∆Φ
+                                               cη ℓ0 s2 ≤        .
+                                                              16
+
+
+                                                      41
+Therefore, Lemma 5.1 gives
+                                                              
+                                                             1
+                                  Φsg (0) − inf Φsg = cη T +      ℓ0 s2
+                                                             2
+                                                      ∆Φ ∆Φ
+                                                    ≤     +
+                                                       4    32
+                                                      9∆Φ
+                                                    =      < ∆Φ .
+                                                       32
+Together with the dual concavity, L-smoothness, and diam(Y0 ) = DY , this shows that f sg ∈
+FNCC (L, ∆Φ , DY ). The oracle constructed in Section 5.2, with pN chosen as in (51), is unbiased
+and has mean-square error at most σ 2 .
+   We next estimate the number of oracle calls required to cross the randomized dual coordinates.
+Recall that M = (T − 1)(N − 1). Since N ≥ 4, we have N − 1 ≥ N /2. Combining this with (111)
+gives
+                                   L 2 D Y ∆Φ                27Cδ3
+                          M ≥ cM              ,  c M :=                 .                   (112)
+                                        ϵ3               262144 cη RCℓ2
+We also have
+                                           LDY                        3Cδ
+                                  N ≥ cN       ,            cN :=          .               (113)
+                                            ϵ                       128RCℓ
+   On the other hand, since
+
+                             GN = 2ℓ0 τN ,        τN = Rαs,             α2 N = 1,
+
+we have
+                                                                            256R2
+                             G2N N = 4R2 ℓ20 s2 = cG ϵ2 ,           cG :=         .        (114)
+                                                                             9Cδ2
+The choice (51) gives                                                      
+                                                   σ2         1          σ2
+                               p−1
+                                N = max          1, 2       ≥         1+ 2        .
+                                                   GN         2         GN
+Consequently,
+                                  M    M   M σ2   M   M N σ2
+                                     ≥   +      =   +        .
+                                  pN   2   2G2N   2   2G2N N
+Using (112), (113), and (114), we obtain
+                             M
+                                ≥ c′d L2 DY ∆Φ ϵ−3 + c′n L3 DY2 ∆Φ σ 2 ϵ−6 ,               (115)
+                             pN
+where c′d := cM    ′
+              2 , cn := 2cG are universal positive constants. Since T, N ≥ 4, we have M ≥ 9, and
+                        cM cN
+
+therefore
+                                        M      M − log 4
+                                            ≤            .
+                                         4          2
+                c′       ′
+Choose cd := 4d , cn := c4n . Then every q satisfying (57) obeys
+                                1 ′ 2                                    
+                             q<   cd L DY ∆Φ ϵ−3 + c′n L3 DY2 ∆Φ σ 2 ϵ−6
+                                4
+                                 M
+                              ≤
+                                4pN
+                                M − log 4
+                              ≤           .
+                                  2pN
+
+                                                    42
+Thus the progress condition (53) is satisfied.
+   Lemma 5.4 therefore yields, for the unique proximal point
+
+                                            p = p1/(2L) (x),
+
+that
+                                      E G1/(2L) (x; p) > ϵ.
+By Lemma 2.2,                                     
+                            G1/(2L) x; p1/(2L) (x) = ∇(φsg )1/(2L) (x),
+and hence
+                                     E ∇(φsg )1/(2L) (x) > ϵ.
+This proves (58). Consequently, any stochastic zero-respecting algorithm that returns an expected
+ϵ-stationary point requires                                       
+                               Ω L2 DY ∆Φ ϵ−3 + L3 DY2 ∆Φ σ 2 ϵ−6
+oracle calls.
+
+C.4    Proof of Corollary 5.6
+Proof. Consider the stochastic hard instance used in Theorem 5.5. By Lemma 5.1, the clipped
+construction has the same primal value function as the deterministic construction:
+
+                                         Φsg (x) = Φf (x).
+
+Moreover, since χτN (0) = 0, clipping does not change the objective at y = 0:
+
+                                       f sg (x, 0) = f (x, 0).
+
+Therefore the argument in the proof of Corollary 4.2 applies verbatim and gives
+
+                    max f sg (0, y) − inf f sg (x, 0) = Φsg (0) − inf Φsg (x).
+                    y∈Y0             x∈X0                        x∈X0
+
+Now apply Theorem 5.5 with ∆Φ = G0 . The common gap is at most G0 , so the resulting instance
+            pd
+belongs to FNCC (L, G0 , DY ). The claimed oracle lower bound follows directly.
+
+
+
+
+                                                  43
+

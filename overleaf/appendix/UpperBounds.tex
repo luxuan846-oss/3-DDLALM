@@ -2,504 +2,293 @@
 \section{Proofs of the Upper Bounds}
 \label{app:upper-bounds}
 
-\subsection{Game stationarity and KKT points}
-\label{app:kkt-gs}
+This appendix proves Propositions~\ref{prop:upper-beta1} and~\ref{prop:upper-beta0}
+by reducing \(\mathrm{LRALM}_{\theta,\alpha,\beta}\) at \(\beta\in\{0,1\}\) to
+(Perturbed) Smoothed GDA~\cite{li2026smoothing} on \(\calD_\rho\). All
+references to~\cite{li2026smoothing} follow the numbering of
+arXiv:2602.14185v2. Throughout, we set
+\[
+\begin{aligned}
+\ell&:=\max\Bigl\{L_{\calD,\bx},\,G_{\calA},\,\frac1\rho\Bigr\},
+&\qquad G_F&:=G_f+G_{\calA}L_h,\\
+\mathcal Y&:=\{\blmbd\in\RR^m:\|\blmbd\|\le L_h+1\},
+&\qquad D_{\mathcal Y}&:=2(L_h+1),
+\end{aligned}
+\]
+where \(L_{\calD,\bx}\) is defined in Section~\ref{subsec:regularized-al}. By
+Proposition~\ref{prop:curvature-smoothness}, \(\nabla_{\bx}\calD_\rho\) and
+\(\nabla_{\blmbd}\calD_\rho\) are \(\ell\)-Lipschitz in each block; moreover,
+\(\calD_\rho(\bx,\cdot)\) is concave and \(\mathcal Y\) is compact and convex,
+so Assumptions~2.1 and~2.2 of~\cite{li2026smoothing} hold on
+\(\RR^n\times\mathcal Y\). We first collect three auxiliary lemmas and then
+prove the two propositions directly.
 
-We next relate Definition~\ref{def:eps-kkt} to game stationarity (GS) for the
-minimax reformulation~Problem~\eqref{eq:ncl} of Problem~\eqref{prob:main}. We use the
-following GS definition from \cite[Definition~3.1(b)]{li2025nonsmooth} and
-\cite[(2.10)--(2.11)]{zhang2026matching}.
-\begin{definition}[\(\epsilon\)-GS point]
-\label{def:eps-gs}
-Let \(\epsilon>0\). A pair \((\bx,\bq)\in\RR^n\times\dom\partial h^*\) is an
-\(\epsilon\)-game stationary point (\(\epsilon\)-GS) of~Problem~\eqref{eq:ncl} if
-\[
-    \calG(\bx,\bq)
-    :=
-    \max\Bigl\{
-        \bigl\|\nabla f(\bx)+J_{\calA}(\bx)^\top\bq\bigr\|,\;
-        \dist\bigl(\calA(\bx),\partial h^*(\bq)\bigr)
-    \Bigr\}
-    \le\epsilon .
-\]
-\end{definition}
-We now relate $\epsilon$-KKT points of Problem~\eqref{prob:main}
-to $\epsilon$-GS points of its Fenchel saddle reformulation~Problem~\eqref{eq:ncl}. 
-\begin{proposition}[KKT points of Problem~\eqref{prob:main} and GS points of~Problem~\eqref{eq:ncl}]
-\label{prop:kkt-gs}
-Suppose that Assumption~\ref{ass:h} holds, and let
-\((\bx,\bq)\in\RR^n\times\dom\partial h^*\). Then the following measurement relationship holds: 
-\[
-    \calG(\bx,\bq)
-    =
-    \min_{\by\in\partial h^*(\bq)}
-    \mathcal{R}_{\mathrm{KKT}}(\bx,\by,\bq),
-\]
-with minimum attained at
-\(\hat\by=\Pi_{\partial h^*(\bq)}\bigl(\calA(\bx)\bigr)\). Consequently, for
-every \(\epsilon>0\):
-\begin{enumerate}[label=(\alph*)]
-\item if \((\bx,\by,\bq)\) is an \(\epsilon\)-KKT point
-  of~Problem~\eqref{prob:main}, then \((\bx,\bq)\) is an \(\epsilon\)-GS point
-  of~Problem~\eqref{eq:ncl};
-\item if \((\bx,\bq)\) is an \(\epsilon\)-GS point of~Problem~\eqref{eq:ncl}, then
-  \((\bx,\hat\by,\bq)\) is an \(\epsilon\)-KKT point of~Problem~\eqref{prob:main}.
+\subsection{Auxiliary lemmas}
+\label{app:upper-lemmas}
+
+For \(r_y\ge0\), define the perturbed value function
+\(\Phi_{r_y}(\bx):=\max_{\blmbd\in\mathcal Y}\bigl\{\calD_\rho(\bx,\blmbd)
+-\frac{r_y}{2}\|\blmbd\|^2\bigr\}\).
+
+\begin{lemma}[Reduction to (Perturbed) Smoothed GDA]
+\label{lem:ub-reduction}
+Let \(I\in\mathcal I(\mathbf C,\Delta)\) and
+\(\bu^0=(\zero,\blmbd^0,\bz^0,\zero)\in\mathcal S_0(\mathbf C)\), and run
+\(\mathrm{LRALM}_{\theta,\alpha,\beta}\) from \(\bu^0\).
+\begin{enumerate}[label=(\roman*)]
+\item If \(\beta=1\) and \(\tau\le\rho/2\), then \(\|\blmbd^k\|\le L_h\) for
+all \(k\ge0\), \(\bmu^k=\blmbd^k\) for all \(k\ge1\), and the shifted sequence
+\(\{(\bx^{t+1},\blmbd^{t+1},\bz^{t+1})\}_{t\ge0}\) coincides with Smoothed
+GDA~\cite[Algorithm~3, \(r_y=0\)]{li2026smoothing} applied to
+\(\min_{\bx\in\RR^n}\max_{\blmbd\in\mathcal Y}\calD_\rho(\bx,\blmbd)\) from
+\((\bx^1,\blmbd^1,\bz^1)\) with
+\((r_x,c,\alpha_{\mathrm{Li}},\beta_{\mathrm{Li}})=(1/\gamma,\eta,\tau,\alpha)\),
+independently of \(s\).
+\item If \(\beta=0\) and \(\tau(1/\rho+1/s)\le1\), then \(\bmu^k=\zero\) and
+\(\|\blmbd^k\|\le L_h\) for all \(k\ge0\), and
+\(\{(\bx^k,\blmbd^k,\bz^k)\}_{k\ge0}\) coincides with Perturbed Smoothed
+GDA~\cite[Algorithm~3, \(r_y=1/s\)]{li2026smoothing} applied to the same
+problem from \((\zero,\blmbd^0,\bz^0)\) with the same parameters.
+\item For every \(r_y\ge0\) and \(\bx\in\RR^n\),
+\begin{equation}
+F(\bx)-\frac{r_y}{2}L_h^2\le\Phi_{r_y}(\bx)\le F(\bx),
+\qquad \Phi_0=F.
+\label{eq:ub-bridge}
+\end{equation}
 \end{enumerate}
-\end{proposition}
+\end{lemma}
 
 \begin{proof}
-Since \(h\) is proper, closed, and convex,
-\(\bq\in\partial h(\by)\) if and only if \(\by\in\partial h^*(\bq)\)
-\cite[Theorem~23.5]{rockafellar1970convex}. The first term of
-\(\mathcal{R}_{\mathrm{KKT}}\) does not depend on \(\by\). The set
-\(\partial h^*(\bq)\) is nonempty, closed, and convex, so
-\(\min_{\by\in\partial h^*(\bq)}\|\calA(\bx)-\by\|
-=\dist(\calA(\bx),\partial h^*(\bq))\), attained at \(\hat\by\).
-Statements~(a) and~(b) follow.
-\end{proof}
-
-\subsection{Proof of Theorem~\ref{thm:upper-beta1}}
-\label{app:upper-beta1}
-
-\subsubsection{Proof of the iteration complexity bound}
-
-Throughout this appendix, let
-\[
-L:=\sqrt2\,\max\Bigl\{L_{\calD,\bx},\ G_{\calA},\ \frac1\rho\Bigr\},
-\qquad
-\bar\gamma:=\frac1{4L},
-\qquad
-\bar\tau:=\frac1{36L}\Bigl(\frac\eta\gamma\Bigr)^2,
-\]
-and let \(\mathcal Y:=\{\blmbd\in\RR^m:\|\blmbd\|\le L_h+1\}\). We write
-\([\mathrm{ZXSL}]\) for~\cite{zhang2020smoothed}; equation and lemma numbers
-refer to its arXiv version~2010.15768v3.
-
-\paragraph{Step 1: reduction to Smoothed GDA}
-Since \(\beta=1\) and \(\bmu^0=\blmbd^0=\zero\), induction gives
-\(\bmu^k=\blmbd^k\) for all \(k\). Hence the gradient of the dual regularizer
-vanishes at every dual step, and the updates~\eqref{eq:splalm-updates} read
-\[
-\bx^{k+1}=\bx^k-\eta\Bigl[\nabla_{\bx}\calD_\rho(\bx^k,\blmbd^k)
-  +\frac1\gamma(\bx^k-\bz^k)\Bigr],
-\qquad
-\blmbd^{k+1}=\blmbd^k+\tau\nabla_{\blmbd}\calD_\rho(\bx^{k+1},\blmbd^k),
-\]
-together with \(\bz^{k+1}=\bz^k+\alpha(\bx^{k+1}-\bz^k)\). None of these
-updates involves \(s\). By~\eqref{eq:prox-multiplier},
-\(\nabla_{\blmbd}\calD_\rho(\bx,\blmbd)=\calA(\bx)-\by(\bx,\blmbd)
-=(\bq(\bx,\blmbd)-\blmbd)/\rho\), so
-\[
-\blmbd^{k+1}=\Bigl(1-\frac\tau\rho\Bigr)\blmbd^k+\frac\tau\rho\,\bq^k,
-\qquad \|\bq^k\|\le L_h,
-\]
-where the bound holds because \(\bq^k\in\partial h(\by^{k+1})\) and \(h\) is
-\(L_h\)-Lipschitz. Since \(L\ge1/\rho\), we have
-\(\tau\le\bar\tau\le1/(144L)\le\rho\), and induction gives
-\(\|\blmbd^k\|\le L_h\) for all \(k\). Hence every \(\blmbd^k\) lies in the
-interior of \(\mathcal Y\), and the projection onto \(\mathcal Y\) does not
-change the iterates. Consequently, \(\{(\bx^k,\blmbd^k,\bz^k)\}\) is the
-sequence generated by Smoothed GDA~\cite[Algorithm~2]{zhang2020smoothed}
-applied to
-\(\min_{\bx\in\RR^n}\max_{\blmbd\in\mathcal Y}\calD_\rho(\bx,\blmbd)\) from
-zero, with smoothing parameter \(p=1/\gamma\), primal stepsize \(\eta\), dual
-stepsize \(\tau\), and averaging parameter \(\alpha\).
-
-\paragraph{Step 2: assumptions of~\cite[Theorem~3.4]{zhang2020smoothed}}
-The proof of Proposition~\ref{prop:curvature-smoothness} gives
-\[
-\begin{aligned}
-\|\nabla_{\bx}\calD_\rho(\bx,\blmbd)-\nabla_{\bx}\calD_\rho(\bx',\blmbd')\|
-&\le L_{\calD,\bx}\|\bx-\bx'\|+G_{\calA}\|\blmbd-\blmbd'\|,\\
-\|\nabla_{\blmbd}\calD_\rho(\bx,\blmbd)-\nabla_{\blmbd}\calD_\rho(\bx',\blmbd')\|
-&\le G_{\calA}\|\bx-\bx'\|+\frac1\rho\|\blmbd-\blmbd'\|.
-\end{aligned}
-\]
-By the Cauchy--Schwarz inequality, both gradients are \(L\)-Lipschitz on
-\(\RR^n\times\RR^m\). The set \(\mathcal Y\) is convex and compact,
-\(\RR^n\) is closed and convex, and \(\calD_\rho(\bx,\cdot)\) is concave. By
-Lemma~\ref{lem:effective-penalty},
-\[
-\calD_\rho(\bx,\blmbd)
-=\max_{\bq}\Bigl\{\calL(\bx,\bq)-\frac1{2\rho}\|\bq-\blmbd\|^2\Bigr\}
-\le\max_{\bq}\calL(\bx,\bq)=F(\bx),
-\]
-with equality for \(\blmbd\in\partial h(\calA(\bx))\). Every such
-\(\blmbd\) satisfies \(\|\blmbd\|\le L_h\) and hence lies in \(\mathcal Y\).
-Therefore \(\max_{\blmbd\in\mathcal Y}\calD_\rho(\bx,\blmbd)=F(\bx)\), which
-is bounded below by \(\inf F>-\infty\). Thus Assumption~3.3 of
-\([\mathrm{ZXSL}]\) holds with gradient Lipschitz constant \(L\).
-
-\paragraph{Step 3: parameter conditions}
-We verify condition~(3.3) of \([\mathrm{ZXSL}]\). First,
-\(\gamma\le\bar\gamma\) gives \(p=1/\gamma\ge4L>3L\). Second, since
-\(\gamma L\le1/4\),
-\(\gamma/(1+\gamma L)\ge4\gamma/5>\gamma/2\ge\eta\), hence
-\(\eta<1/(p+L)\). Third, put \(a:=\eta(p-L)\). Then
-\(3\eta/(4\gamma)\le a<\eta p\le1/2\), so
-\[
-\frac{\eta^2(p-L)^2}{4L(1+\eta(p-L))^2}
->\frac{a^2}{16L}
-\ge\frac9{256L}\Bigl(\frac\eta\gamma\Bigr)^2
->\bar\tau\ge\tau,
-\]
-and \(\bar\tau\le1/(144L)<1/(11L)\). Finally, the averaging parameter
-\(\alpha=c\epsilon^2\le c\) satisfies
-\(\alpha\le\min\{1/36,(p-L)^2/(384p(p+L)^2)\}\) by the choice of \(c\) in
-Step~5.
-
-\paragraph{Step 4: initial gap}
-Let \(K(\bx,\bz;\blmbd):=\calD_\rho(\bx,\blmbd)+\frac1{2\gamma}\|\bx-\bz\|^2\),
-\(d(\blmbd,\bz):=\min_{\bx}K(\bx,\bz;\blmbd)\), and
-\(P(\bz):=\min_{\bx}\max_{\blmbd\in\mathcal Y}K(\bx,\bz;\blmbd)\). The
-potential function of~\cite[(4.1)]{zhang2020smoothed} at the zero
-initialization is \(\varphi^0=K(\zero,\zero;\zero)-2d(\zero,\zero)+2P(\zero)\).
-By Proposition~\ref{prop:curvature-smoothness}, \(K(\cdot,\zero;\zero)\) is
-\(\mu_\gamma\)-strongly convex, and
-\(\|\nabla_{\bx}\calD_\rho(\zero,\zero)\|
-=\|\nabla f(\zero)+J_{\calA}(\zero)^\top\bq(\zero,\zero)\|\le G_f+G_{\calA}L_h\).
-Hence
-\[
-d(\zero,\zero)\ge\calD_\rho(\zero,\zero)-\frac{(G_f+G_{\calA}L_h)^2}{2\mu_\gamma}.
-\]
-By Step~2, \(P(\zero)=\min_{\bx}\{F(\bx)+\frac1{2\gamma}\|\bx\|^2\}\le F(\zero)\).
-Moreover,
-\(\calD_\rho(\zero,\zero)=f(\zero)+\min_{\by}\{h(\by)+\frac\rho2\|\calA(\zero)-\by\|^2\}\),
-and the Lipschitz continuity of \(h\) gives
-\(0\le F(\zero)-\calD_\rho(\zero,\zero)\le L_h^2/(2\rho)\). Combining these
-bounds,
-\[
-\varphi^0-\inf F\le\hat\Delta
-:=\Delta+\frac{L_h^2}{2\rho}+\frac{(G_f+G_{\calA}L_h)^2}{\mu_\gamma},
-\]
-where \(\mu_\gamma\ge1/\gamma-L\ge3/(4\gamma)>0\).
-
-\paragraph{Step 5: rate}
-For \(t\ge0\), set
-\[
-S_{t+1}:=\max\bigl\{\|\nabla_{\bx}\calD_\rho(\bx^{t+1},\blmbd^{t+1})\|,\
-\|\nabla_{\blmbd}\calD_\rho(\bx^{t+1},\blmbd^{t+1})\|\bigr\}.
-\]
-Since \(\blmbd^{t+1}\) lies in the interior of \(\mathcal Y\), the normal
-cone of \(\mathcal Y\) at \(\blmbd^{t+1}\) is \(\{\zero\}\), and
-\((\bx^{t+1},\blmbd^{t+1})\) is an \(S_{t+1}\)-solution in the sense
-of~\cite[Definition~3.1]{zhang2020smoothed}. Fix \(T\ge1\). The proof
-of~\cite[Theorem~3.4]{zhang2020smoothed} distinguishes the cases (B.52) and
-(B.53) and yields some \(t\in\{0,\dots,T-1\}\) with either
-\[
-\text{(i)}\quad S_{t+1}\le\lambda_1\max\{\alpha,\sqrt\alpha\}
-\qquad\text{or}\qquad
-\text{(ii)}\quad S_{t+1}\le\lambda_2\sqrt{\frac{\varphi^0-\inf F}{T\alpha}},
-\]
-by (B.62)--(B.63) with Lemma~B.11 in case (i) and by Lemma~B.12 in case (ii).
-Here \(\lambda_1\) and \(\lambda_2\) depend only on \(L\), \(p\), \(\eta\),
-\(\tau\), and the diameter \(2(L_h+1)\) of \(\mathcal Y\). Choose
-\[
-c:=\min\Bigl\{\frac1{36},\ \frac{(p-L)^2}{384p(p+L)^2},\
-\Bigl(\frac{10}{11\lambda_1}\Bigr)^2\Bigr\},
-\qquad
-T:=\Bigl\lceil\Bigl(\frac{11}{10}\Bigr)^2\frac{\lambda_2^2\hat\Delta}{c\,\epsilon^4}\Bigr\rceil.
-\]
-Since \(\alpha=c\epsilon^2\le1\), case (i) gives
-\(S_{t+1}\le\lambda_1\sqrt c\,\epsilon\le\frac{10}{11}\epsilon\), and case
-(ii) gives \(S_{t+1}\le\frac{10}{11}\epsilon\) by Step~4 and the choice of
-\(T\).
-
-\paragraph{Step 6: from \(S_{t+1}\) to the KKT residual}
-By~\eqref{eq:kkt-residual} and~\eqref{eq:prox-multiplier},
-\(\mathcal R_{\mathrm{KKT}}(\bx^{t+1},\by^{t+1},\bq^t)
-=\max\{\|\nabla_{\bx}\calD_\rho(\bx^{t+1},\blmbd^t)\|,\|\mathbf g\|\}\), where
-\(\mathbf g:=\nabla_{\blmbd}\calD_\rho(\bx^{t+1},\blmbd^t)\) and
-\(\blmbd^{t+1}-\blmbd^t=\tau\mathbf g\). By Step~2 and \(\tau/\rho\le1/144\),
-\(\|\nabla_{\blmbd}\calD_\rho(\bx^{t+1},\blmbd^{t+1})-\mathbf g\|\le\|\mathbf g\|/144\),
-hence \(\|\mathbf g\|\le\frac{144}{143}S_{t+1}\). Similarly,
-\(G_{\calA}\tau\le1/144\) gives
-\(\|\nabla_{\bx}\calD_\rho(\bx^{t+1},\blmbd^t)\|
-\le S_{t+1}+G_{\calA}\tau\|\mathbf g\|\le\frac{144}{143}S_{t+1}\). Therefore
-\(\mathcal R_{\mathrm{KKT}}(\bx^{t+1},\by^{t+1},\bq^t)\le\frac{11}{10}S_{t+1}\le\epsilon\),
-and
-\[
-T_\epsilon(\theta,\alpha,1;I)\le t+1\le T\le C\epsilon^{-4},
-\qquad
-C:=\Bigl(\frac{11}{10}\Bigr)^2\frac{\lambda_2^2\hat\Delta}{c}+1,
-\]
-where the last inequality uses \(\epsilon\le1\). The constant \(c\) depends
-only on \(L\), \(\gamma\), \(\eta\), \(\tau\), and \(L_h\), hence only on
-\(\theta\) and \(\mathbf C\); the constant \(C\) depends in addition on
-\(\Delta\) through \(\hat\Delta\). Neither depends on the instance or on the
-dimensions.
-\hfill\(\square\)
-
-\subsection{Proof of Theorem~\ref{thm:upper-beta0}}
-\label{app:upper-beta0}
-
-All references to~\cite{li2026smoothing} in this appendix use the numbering
-of arXiv:2602.14185v2. Let
-\[
-\ell:=\max\Bigl\{L_{\calD,\bx},G_{\calA},\frac1\rho\Bigr\},
-\qquad r:=\frac1\gamma,\qquad \delta:=\frac1s,
-\qquad \mathcal Y:=\{\blmbd\in\RR^m:\|\blmbd\|\le2L_h\},
-\qquad D_{\mathcal Y}:=4L_h,
-\]
-where \(L_{\calD,\bx}\) is defined in~\eqref{eq:x-weak-convexity-modulus}.
-We take \(L_h>0\). If the supplied class constant is zero, we use the
-admissible Lipschitz bound \(L_h=1/16\) throughout this appendix; the
-choice \(c_s=\max\{1,16L_h\}\) below remains \(1\), and the algorithm is
-unchanged. All auxiliary constants are chosen from the fixed parameters
-and class bounds, independently of the instance and its dimensions.
-
-\paragraph{Step 1: reduction to Perturbed Smoothed GDA}
-Since \(\beta=0\) and \(\bmu^0=\zero\), we have \(\bmu^k=\zero\) for all
-\(k\). The potential function becomes
-\[
-\mathcal P_s(\bx,\blmbd;\bz,\zero)
-=\calD_\rho(\bx,\blmbd)+\frac r2\|\bx-\bz\|^2
--\frac\delta2\|\blmbd\|^2.
-\]
-The correspondence with~\cite[(3.1) and Algorithm~3]{li2026smoothing} is
-\[
-f_{\mathrm{Li}}=\calD_\rho,\quad
-(r_x,r_y^t,c^t,\alpha^t_{\mathrm{Li}},\beta^t_{\mathrm{Li}})
-=(r,\delta,\eta,\tau,\alpha),\quad
-\mathcal X=\RR^n.
-\]
-In particular, both algorithms use the old multiplier in the primal step,
-the new primal iterate in the dual step, and the new primal iterate in the
-center step. By~\eqref{eq:prox-multiplier}, the dual update reads
-\[
+By~\eqref{eq:reduced-al-gradient} and~\eqref{eq:prox-multiplier},
+\(\nabla_{\blmbd}\calD_\rho(\bx,\blmbd)=(\bq(\bx,\blmbd)-\blmbd)/\rho\), so
+the dual update of~\eqref{eq:splalm-updates} reads
+\begin{equation}
 \blmbd^{k+1}
 =\Bigl(1-\frac\tau\rho-\frac\tau s\Bigr)\blmbd^k
-+\frac\tau\rho\bq^k,
-\qquad \|\bq^k\|\le L_h.
-\]
-The step-size conditions in Step~3 give
-\(\tau\le1/(11(\ell+1/s))<1/(1/\rho+1/s)\).
-Thus both coefficients are nonnegative and sum to \(1-\tau/s\le1\).
-Induction yields \(\|\blmbd^k\|\le L_h\). Every multiplier lies in the
-interior of \(\mathcal Y\), so the projection onto \(\mathcal Y\) does not
-change the iterates and its normal cone at \(\blmbd^k\) is
-\(\{\zero\}\). The primal projection is the identity. Consequently,
-LRALM generates exactly the sequence of Perturbed Smoothed GDA applied to
-\(\calD_\rho\) on \(\RR^n\times\mathcal Y\), from zero.
-
-\paragraph{Step 2: assumptions and the unperturbed objective}
-The gradient estimates in Step~2 of Appendix~\ref{app:upper-beta1} imply
-\[
-\begin{aligned}
-\|\nabla_{\bx}\calD_\rho(\bx,\blmbd)
--\nabla_{\bx}\calD_\rho(\bx',\blmbd')\|
-&\le\ell\bigl(\|\bx-\bx'\|+\|\blmbd-\blmbd'\|\bigr),\\
-\|\nabla_{\blmbd}\calD_\rho(\bx,\blmbd)
--\nabla_{\blmbd}\calD_\rho(\bx',\blmbd')\|
-&\le\ell\bigl(\|\bx-\bx'\|+\|\blmbd-\blmbd'\|\bigr).
-\end{aligned}
-\]
-Hence Assumption~2.1 of~\cite{li2026smoothing} holds. Moreover,
-\(\calD_\rho(\bx,\cdot)\) is concave and \(\mathcal Y\) is a compact
-convex set containing zero, as required by its Assumption~2.2.
-Taking \(\by=\calA(\bx)\) in~\eqref{eq:reduced-al} gives
-\(\calD_\rho(\bx,\blmbd)\le F(\bx)\). For any
-\(\blmbd\in\partial h(\calA(\bx))\), proximal optimality gives
-\(\by(\bx,\blmbd)=\calA(\bx)\) and equality. Such a multiplier belongs
-to \(\mathcal Y\), since its norm is at most \(L_h\). Therefore
-\[
-\max_{\blmbd\in\mathcal Y}\calD_\rho(\bx,\blmbd)=F(\bx),
-\qquad \inf F>-\infty.
-\]
-The descent argument of~\cite[Section~4.2]{li2026smoothing} uses a lower
-bound on the potential function. Accordingly, its minimum objective value
-can be replaced by the infimum; attainment of \(\inf F\) is not needed.
-The primal subproblems with quadratic regularization attain their minima
-by strong convexity and coercivity.
-
-\paragraph{Step 3: step-size conditions}
-Set \(a_s:=r-\ell-\delta\) and \(b_s:=\ell+\delta\), and define
-\[
-\omega_s:=\frac1{\sqrt\delta}\,
-\frac{a_s+\tau b_s(3r-2b_s)}{\tau a_s^{3/2}}.
-\]
-Under the correspondence in Step~1, Condition~3.2(ii)
-of~\cite{li2026smoothing} reads
-\begin{equation}
-\begin{aligned}
-&r=\Theta(\ell),\quad r>3\ell,\quad a_s>0,\quad \delta=1/s>0,\\
-&\eta=\Theta(1/\ell),\quad 0<\eta<\frac1{r+\ell+\delta},\\
-&\tau=\Theta(1/\ell),\quad
-0<\tau\le\min\Bigl\{\frac1{11b_s},
-\frac{\eta^2a_s^2}{4b_s(1+\eta a_s)^2}\Bigr\},\\
-&\alpha=\Theta(\delta/\ell),\quad
-0<\alpha\le\min\Bigl\{\frac1{36},
-\frac{a_s^2}{384r(r+\ell+\delta)^2},
-\frac1{384r\tau\omega_s^2}\Bigr\}.
-\end{aligned}
-\label{eq:beta0-stepsizes}
++\frac\tau\rho\,\bq^k+\frac\tau s\,\bmu^k,
+\qquad \|\bq^k\|\le L_h,
+\label{eq:ub-dual-step}
 \end{equation}
-The constants in these order relations are independent of \(s\).
-For fixed \(r,\eta,\tau,\ell\) satisfying the first three conditions for
-all sufficiently large \(s\), we have \(\omega_s^2=\Theta(s)\).
-We can therefore choose a fixed, sufficiently small \(\varkappa>0\), as a
-function of these fixed quantities, so that
-\begin{equation}
-\alpha:=\frac{\varkappa}{\ell s}
-\label{eq:beta0-alpha}
-\end{equation}
-satisfies the last condition for all sufficiently large \(s\).
-The conditions also give \(\eta<\gamma\) and \(\tau<s\), as required
-by Definition~\ref{def:splalm}.
+where \(\|\bq^k\|\le L_h\) because \(\bq^k\in\partial h(\by^{k+1})\) and \(h\)
+is \(L_h\)-Lipschitz. Notice that~\eqref{eq:splalm-updates} and
+\cite[Algorithm~3]{li2026smoothing} have the same update order (old multiplier
+in the primal step, new primal iterate in the dual and center steps); whenever
+\(\|\blmbd^k\|\le L_h\), every multiplier lies in the interior of \(\mathcal Y\)
+and projection onto \(\mathcal Y\) is inactive.
 
-For example, all conditions hold for
-\[
-\gamma=\frac1{4\ell},\qquad \eta=\frac1{12\ell},\qquad
-\tau=\frac1{800\ell},\qquad
-\alpha=\frac1{2{,}000{,}000\,\ell s},\qquad
-s\ge\max\{1,1/\ell\}.
-\]
-Indeed, \(2\ell\le a_s\le3\ell\) and \(b_s\le2\ell\), and
-\[
-\frac{\eta^2a_s^2}{4b_s(1+\eta a_s)^2}
-\ge\frac1{392\ell}>\tau,\qquad
-\frac{a_s^2}{384r(r+\ell+\delta)^2}\ge\frac1{13824\ell},
-\qquad \omega_s^2\le800000\,\ell s.
-\]
-Thus \(1/(384r\tau\omega_s^2)\ge1/(1536000\,\ell s)>\alpha\),
-and the remaining inequalities follow directly.
+(i) At \(k=0\), \(\bmu^0=\zero\), \(\|\blmbd^0\|\le L_h\), and
+\(\tau/s\in(0,1]\) by Definition~\ref{def:splalm}. Setting
+\(c_0:=1-\tau/\rho-\tau/s\), we have
+\(|c_0|+\tau/\rho\le\max\{1-\tau/s,\,2\tau/\rho\}\le1\) since
+\(\tau\le\rho/2\), so~\eqref{eq:ub-dual-step} yields \(\|\blmbd^1\|\le L_h\).
+Since \(\beta=1\), the center update gives \(\bmu^1=\blmbd^1\), and induction
+gives \(\bmu^k=\blmbd^k\) for all \(k\ge1\). Hence for \(k\ge1\) the dual
+regularizer drops out,~\eqref{eq:ub-dual-step} reduces to the convex
+combination \(\blmbd^{k+1}=(1-\tau/\rho)\blmbd^k+(\tau/\rho)\bq^k\), and
+induction keeps \(\|\blmbd^k\|\le L_h\). This proves~(i).
 
-\paragraph{Step 4: initial gap for the perturbed objective}
-Define
+(ii) Since \(\beta=0\) and \(\bmu^0=\zero\), we have \(\bmu^k=\zero\) for all
+\(k\ge0\). Because \(\tau(1/\rho+1/s)\le1\), the two remaining coefficients
+in~\eqref{eq:ub-dual-step} are nonnegative and sum to \(1-\tau/s\le1\), so
+induction from \(\|\blmbd^0\|\le L_h\) gives \(\|\blmbd^k\|\le L_h\) for all
+\(k\ge0\), proving~(ii).
+
+(iii) Setting \(\by=\calA(\bx)\) in~\eqref{eq:reduced-al} gives
+\(\calD_\rho(\bx,\blmbd)\le F(\bx)\) for all \(\blmbd\), hence
+\(\Phi_{r_y}(\bx)\le F(\bx)\). Conversely, any \(\bq\in\partial h(\calA(\bx))\)
+satisfies \(\|\bq\|\le L_h\) (so \(\bq\in\mathcal Y\)) and
+\(\calD_\rho(\bx,\bq)=F(\bx)\), whence
+\(\Phi_{r_y}(\bx)\ge\calD_\rho(\bx,\bq)-\frac{r_y}{2}\|\bq\|^2
+\ge F(\bx)-\frac{r_y}{2}L_h^2\). Setting \(r_y=0\) gives \(\Phi_0=F\).
+\end{proof}
+
+By~\eqref{eq:ub-bridge}, \(\inf\Phi_{r_y}\ge\inf F-\frac{r_y}{2}L_h^2>-\infty\);
+the descent argument of~\cite[Section~4]{li2026smoothing} uses only a lower
+bound on its Lyapunov function, so attainment of \(\inf\Phi_{r_y}\) is not
+needed. We next bound the initial gap \(\Delta_{\Psi_2}\)
+of~\cite[Definition~3.1(ii)]{li2026smoothing} and relate its game-stationarity
+residual
 \[
-\Phi_s(\bx):=\max_{\blmbd\in\mathcal Y}
-\Bigl\{\calD_\rho(\bx,\blmbd)-\frac1{2s}\|\blmbd\|^2\Bigr\}.
+S_{k+1}:=\max\bigl\{\|\nabla_{\bx}\calD_\rho(\bx^{k+1},\blmbd^{k+1})\|,\
+\|\nabla_{\blmbd}\calD_\rho(\bx^{k+1},\blmbd^{k+1})\|\bigr\}
 \]
-The maximization in~\eqref{eq:effective-penalty}, with \(\bmu=\zero\),
-has an optimal multiplier \(s\bq/(\rho+s)\), where
-\(\|\bq\|\le L_h\). This multiplier belongs to \(\mathcal Y\), so
-restricting the maximization to \(\mathcal Y\) does not change its value.
-It follows that
-\begin{equation}
-\Phi_s(\bx)=\calD_{\rho+s}(\bx,\zero),\qquad
-F(\bx)-\frac{L_h^2}{2(\rho+s)}\le\Phi_s(\bx)\le F(\bx).
-\label{eq:beta0-perturbed-objective}
-\end{equation}
-Let
+(where the normal cone of \(\mathcal Y\) vanishes at interior points
+\(\blmbd^{k+1}\)) to the KKT residual
+\(R_k:=\mathcal R_{\mathrm{KKT}}(\bx^{k+1},\by^{k+1},\bq^k)\).
+
+\begin{lemma}[Initial gap]
+\label{lem:ub-initial-gap}
+Let \(\gamma<1/(3\ell)\), \(r_y\ge0\), and let \((\hat\bx,\hat\blmbd,\hat\bz)\)
+satisfy \(\|\hat\blmbd\|\le L_h\). Set \(M:=\|\hat\bx-\hat\bz\|\). Then the
+initial gap of~\cite[Definition~3.1(ii)]{li2026smoothing} for \(\calD_\rho\)
+at \((\hat\bx,\hat\blmbd,\hat\bz)\) satisfies
 \[
-\begin{aligned}
-v_0&:=\calD_\rho(\zero,\zero),\qquad
- d_0:=\min_{\bx}\Bigl\{\calD_\rho(\bx,\zero)
-                         +\frac1{2\gamma}\|\bx\|^2\Bigr\},\\
-p_0&:=\min_{\bx}\Bigl\{\Phi_s(\bx)+\frac1{2\gamma}\|\bx\|^2\Bigr\}.
-\end{aligned}
-\]
-Since \(\mu_\gamma=1/\gamma-L_{\calD,\bx}>0\), the argument in
-Step~4 of Appendix~\ref{app:upper-beta1} gives
-\[
-d_0\ge v_0-\frac{(G_f+G_{\calA}L_h)^2}{2\mu_\gamma},\qquad
-p_0\le F(\zero),\qquad v_0\ge F(\zero)-\frac{L_h^2}{2\rho}.
-\]
-At zero initialization, the initial gap in
-\cite[Definition~3.1(ii)]{li2026smoothing}, with the infimum convention
-explained in Step~2, is
-\(\Delta_{\Psi_2}=v_0-2d_0+2p_0-\inf\Phi_s\). Hence
-\begin{equation}
-\begin{aligned}
 \Delta_{\Psi_2}
-&\le\Delta+\frac{L_h^2}{2\rho}
-+\frac{(G_f+G_{\calA}L_h)^2}{\mu_\gamma}
-+\frac{L_h^2}{2(\rho+s)}\\
-&\le\bar\Delta:=\Delta+\frac{L_h^2}{\rho}
-+\frac{(G_f+G_{\calA}L_h)^2}{\mu_\gamma}.
-\end{aligned}
-\label{eq:beta0-initial-gap}
-\end{equation}
-The bound \(\bar\Delta\) is uniform over the problem class and independent
-of \(s\), the target accuracy, and the dimensions.
-
-\paragraph{Step 5: iteration complexity for game stationarity}
-For \(k\ge0\), set
-\[
-S_{k+1}:=\max\Bigl\{
-\|\nabla_{\bx}\calD_\rho(\bx^{k+1},\blmbd^{k+1})\|,
-\|\nabla_{\blmbd}\calD_\rho(\bx^{k+1},\blmbd^{k+1})\|\Bigr\}.
+\le F(\hat\bx)-\inf F+\frac{2L_h^2}{\rho}+r_yL_h^2+\frac{M^2}{2\gamma}
++\frac{3\gamma}{2}\Bigl(G_F+\frac M\gamma\Bigr)^2 .
 \]
-Both normal-cone terms vanish by Step~1, so this is the game-stationarity
-measure for the unperturbed function \(\calD_\rho\) in
-\cite[Theorem~3.3(i)]{li2026smoothing}.
-The descent estimate in its Section~4.2 and estimates (4.19)--(4.23),
-with~\eqref{eq:beta0-alpha}, give a constant
-\(C_*=C_*(\eta\ell,\tau\ell,r/\ell,\varkappa)>0\) such that, among the first
-\(K\ge1\) updates, some \(0\le k<K\) satisfies
+\end{lemma}
+
+\begin{proof}
+Let \(K(\bx):=\calD_\rho(\bx,\hat\blmbd)+\frac1{2\gamma}\|\bx-\hat\bz\|^2\).
+By~\cite[(3.1) and Definition~3.1(ii)]{li2026smoothing} and the definition
+of \(\Phi_{r_y}\),
+\[
+\Delta_{\Psi_2}
+=2\bigl(K(\hat\bx)-\min K\bigr)-K(\hat\bx)+\frac{r_y}2\|\hat\blmbd\|^2
++2\min_{\bx}\Bigl\{\Phi_{r_y}(\bx)+\frac1{2\gamma}\|\bx-\hat\bz\|^2\Bigr\}
+-\inf\Phi_{r_y}.
+\]
+Since \(\gamma L_{\calD,\bx}<1/3\), Proposition~\ref{prop:curvature-smoothness}
+implies that \(K\) is \(\mu_\gamma\)-strongly convex with
+\(\mu_\gamma\ge2/(3\gamma)\). Moreover,
+\(\|\nabla K(\hat\bx)\|\le G_F+M/\gamma\) because
+\(\|\nabla_{\bx}\calD_\rho\|=\|\nabla f+J_{\calA}^\top\bq\|\le G_F\). Hence
+\(2(K(\hat\bx)-\min K)\le\|\nabla K(\hat\bx)\|^2/\mu_\gamma
+\le\frac{3\gamma}2(G_F+M/\gamma)^2\). Next, evaluating~\eqref{eq:dual-smoothing}
+at \(\bq\in\partial h(\calA(\hat\bx))\) yields
+\(\calD_\rho(\hat\bx,\hat\blmbd)\ge F(\hat\bx)-\|\bq-\hat\blmbd\|^2/(2\rho)
+\ge F(\hat\bx)-2L_h^2/\rho\), so
+\(-K(\hat\bx)\le-F(\hat\bx)+2L_h^2/\rho-M^2/(2\gamma)\). Finally,
+by~\eqref{eq:ub-bridge}, the minimum over \(\bx\) is at most
+\(F(\hat\bx)+M^2/(2\gamma)\) and \(-\inf\Phi_{r_y}\le-\inf F+r_yL_h^2/2\).
+Combining these bounds with \(\|\hat\blmbd\|\le L_h\) completes the proof.
+\end{proof}
+
+\begin{lemma}[Residual transfer]
+\label{lem:ub-residual-transfer}
+Suppose that \(\tau\ell\le1/11\). Then, for every \(k\ge0\),
+\[
+R_k\le\frac{11}{10}S_{k+1}+\frac{1}{10s}\|\blmbd^k-\bmu^k\|.
+\]
+\end{lemma}
+
+\begin{proof}
+By~\eqref{eq:kkt-gs-identity},
+\(R_k=\max\{\|\nabla_{\bx}\calD_\rho(\bx^{k+1},\blmbd^k)\|,\|\mathbf g\|\}\)
+with \(\mathbf g:=\nabla_{\blmbd}\calD_\rho(\bx^{k+1},\blmbd^k)\). Write
+\(e:=\|\blmbd^k-\bmu^k\|\). The dual step gives
+\(\blmbd^{k+1}-\blmbd^k=\tau(\mathbf g-(\blmbd^k-\bmu^k)/s)\). Since both
+gradients of \(\calD_\rho\) are \(\ell\)-Lipschitz in \(\blmbd\),
+\[
+\|\mathbf g\|\le S_{k+1}+\tau\ell\Bigl(\|\mathbf g\|+\frac es\Bigr),
+\qquad
+\|\nabla_{\bx}\calD_\rho(\bx^{k+1},\blmbd^k)\|
+\le S_{k+1}+\tau\ell\Bigl(\|\mathbf g\|+\frac es\Bigr).
+\]
+Solving the first inequality for \(\|\mathbf g\|\) and substituting into the
+second gives \(R_k\le(S_{k+1}+\tau\ell e/s)/(1-\tau\ell)\). Since
+\(\tau\ell\le1/11\), we have \(1/(1-\tau\ell)\le11/10\) and
+\(\tau\ell/(1-\tau\ell)\le1/10\).
+\end{proof}
+
+\subsection{Proof of Proposition~\ref{prop:upper-beta1}}
+\label{app:upper-beta1}
+
+\begin{proof}[Proof of Proposition~\ref{prop:upper-beta1}]
+Set \(\bar\gamma:=1/(4\ell)\) and \(\bar\tau:=(\eta/\gamma)^2/(21\ell)\), and
+let \(\gamma\le\bar\gamma\), \(\eta\le\gamma/2\), \(\tau\le\bar\tau\), and
+\(s\ge\tau\). We first check~\cite[Condition~3.2(i)]{li2026smoothing} at
+\(r_y=0\): \(r_x=1/\gamma\ge4\ell>3\ell\), \(1/(r_x+\ell)\ge4\gamma/5>\eta\),
+and \(\eta(r_x-\ell)\in[\frac34\frac\eta\gamma,\frac\eta\gamma]\subset(0,\frac12]\)
+gives
+\[
+\frac{\eta^2(r_x-\ell)^2}{4\ell(1+\eta(r_x-\ell))^2}
+\ge\frac{(\eta/\gamma)^2}{16\ell}\ge\bar\tau\ge\tau,
+\qquad
+\tau\le\bar\tau\le\frac1{84\ell}\le\min\Bigl\{\frac\rho{84},\,\frac1{11\ell}\Bigr\}.
+\]
+Choose \(\alpha=c\epsilon^2\) with \(c:=\kappa/(\ell^2D_{\mathcal Y}^2)\),
+where \(\kappa>0\) is small enough that
+\(c\le\min\{1/36,(r_x-\ell)^2/(384r_x(r_x+\ell)^2)\}\), matching
+\(\beta_{\mathrm{Li}}=\Theta(\epsilon^2/(\ell^2D_{\mathcal Y}^2))\) in
+\cite[Condition~3.2(i)]{li2026smoothing}.
+
+Given \(I\in\mathcal I(\mathbf C,\Delta)\) and
+\(\bu^0\in\mathcal S_0(\mathbf C)\). Since \(\tau\le\rho/84<\rho/2\),
+Lemma~\ref{lem:ub-reduction}(i) identifies the shifted sequence
+\(\{(\bx^{t+1},\blmbd^{t+1},\bz^{t+1})\}_{t\ge0}\) with Smoothed GDA from
+\((\bx^1,\blmbd^1,\bz^1)\), independently of \(s\), with
+\(\|\blmbd^k\|\le L_h\) for all \(k\ge0\) and \(\bmu^k=\blmbd^k\) for all
+\(k\ge1\). From \(\bx^0=\zero\), \(\|\bz^0\|\le1\), and \(\eta/\gamma\le1/2\),
+the first primal step gives \(\|\bx^1\|\le\eta G_F+\frac12\) and
+\(\|\bx^1-\bz^1\|=(1-\alpha)\|\bx^1-\bz^0\|\le\eta G_F+\frac32\). Since \(F\)
+is \(G_F\)-Lipschitz, \(F(\bx^1)-\inf F\le\Delta+G_F(\eta G_F+\frac12)\), so
+Lemma~\ref{lem:ub-initial-gap} with \(r_y=0\) bounds \(\Delta_{\Psi_2}\) by a
+constant \(\hat\Delta\) depending only on \((\Delta,\rho,\gamma,\eta,\mathbf C)\).
+
+Applying~\cite[Theorem~B.1]{li2026smoothing} at accuracy \(\frac{10}{11}\epsilon\)
+to the shifted sequence yields an index \(t\ge0\) with
+\(t+1\le C_0\ell^3D_{\mathcal Y}^2\hat\Delta\epsilon^{-4}\) such that
+\((\bx^{t+2},\blmbd^{t+2})\) is a \(\frac{10}{11}\epsilon\)-GS point, where
+\(C_0\) depends only on \((r_x/\ell,\eta\ell,\tau\ell,\kappa)\). Setting
+\(k:=t+1\ge1\), we have \(S_{k+1}\le\frac{10}{11}\epsilon\) and
+\(\bmu^k=\blmbd^k\), so Lemma~\ref{lem:ub-residual-transfer} gives
+\(R_k\le\epsilon\). Therefore
+\(T_\epsilon(\theta,c\epsilon^2,1;I,\bu^0)\le k+1\le C\epsilon^{-4}\) with
+\(C:=C_0\ell^3D_{\mathcal Y}^2\hat\Delta+1\) (using \(\epsilon\le1\)),
+uniformly over \(I\in\mathcal I(\mathbf C,\Delta)\) and
+\(\bu^0\in\mathcal S_0(\mathbf C)\).
+\end{proof}
+
+\subsection{Proof of Proposition~\ref{prop:upper-beta0}}
+\label{app:upper-beta0}
+
+The stepsize conditions in Proposition~\ref{prop:upper-beta0} read
 \begin{equation}
-S_{k+1}\le C_*\ell\sqrt{\frac{s\bar\Delta}{K}}
-+\frac{D_{\mathcal Y}}s.
-\label{eq:beta0-gs-rate}
+    \gamma<\frac{1}{3\ell},\qquad
+    \eta<\frac{1}{\gamma^{-1}+\ell},\qquad
+    \tau<\min\Bigl\{\frac{1}{11\ell},\;
+    \frac{\eta^2(\gamma^{-1}-\ell)^2}{4\ell\bigl(1+\eta(\gamma^{-1}-\ell)\bigr)^2}\Bigr\}.
+    \label{eq:beta0-main-stepsizes}
 \end{equation}
-Here we take \(s\) sufficiently large that \(\ell s\ge1\), so the
-term of order \(\sqrt{\ell\bar\Delta/K}\) is absorbed into the first
-term. We average the descent estimate over \(k=0,\ldots,K-1\);
-a fixed factor in this averaging is included in \(C_*\).
-Thus the index in~\eqref{eq:beta0-gs-rate} refers to an output among the
-first \(K\) updates of Definition~\ref{def:complexity-measure}.
 
-Choose
-\begin{equation}
-c_s:=\max\{1,4D_{\mathcal Y}\}=\max\{1,16L_h\},\qquad
-s:=\frac{c_s}{\epsilon},\qquad
-K:=\max\Bigl\{1,\Bigl\lceil
-16C_*^2\ell^2c_s\bar\Delta\,\epsilon^{-3}
-\Bigr\rceil\Bigr\}.
-\label{eq:beta0-budget}
-\end{equation}
-Then \(D_{\mathcal Y}/s\le\epsilon/4\), and the first term
-in~\eqref{eq:beta0-gs-rate} is at most \(\epsilon/4\).
-Consequently, some \(0\le k<K\) has \(S_{k+1}\le\epsilon/2\).
+\begin{proof}[Proof of Proposition~\ref{prop:upper-beta0}]
+Let \(\gamma,\eta,\tau\) satisfy~\eqref{eq:beta0-main-stepsizes}, and set
+\(c_s:=4D_{\mathcal Y}\), \(s:=c_s/\epsilon\), and
+\(r_y:=1/s=\epsilon/(4D_{\mathcal Y})\). The strict inequalities
+in~\eqref{eq:beta0-main-stepsizes} are precisely the conditions on
+\((r_x,c,\alpha_{\mathrm{Li}})\) in~\cite[Condition~3.2]{li2026smoothing} at
+\(r_y=0\). By continuity in \(r_y\), there exists \(\bar r>0\), depending only
+on \((\rho,\gamma,\eta,\tau,\mathbf C)\), such that they continue to hold
+with \(\ell+r_y\) in place of \(\ell\) for all \(r_y\in(0,\bar r]\). On this
+interval, the quantity \(\omega^t\) in~\cite[Condition~3.2(ii)]{li2026smoothing}
+satisfies \((\omega^t)^2\le\bar\Omega/r_y\) for a constant \(\bar\Omega\)
+independent of \(r_y\); hence there exists \(c_\alpha>0\), depending only on
+\((\rho,\gamma,\eta,\tau,\mathbf C)\), such that \(\alpha=c_\alpha\epsilon\)
+satisfies~\cite[Condition~3.2(ii)]{li2026smoothing} whenever
+\(\epsilon\in(0,\bar\epsilon]\) with \(\bar\epsilon:=\min\{1,c_s\bar r\}\).
 
-\paragraph{Step 6: from \(S_{k+1}\) to the KKT residual}
-Write \(\mathbf d_k:=\blmbd^{k+1}-\blmbd^k\). The dual update and
-Step~2 yield
+Given \(I\in\mathcal I(\mathbf C,\Delta)\), \(\bu^0\in\mathcal S_0(\mathbf C)\),
+and \(\epsilon\in(0,\bar\epsilon]\). Since
+\(\tau(1/\rho+1/s)\le\tau(\ell+r_y)\le1/11\), Lemma~\ref{lem:ub-reduction}(ii)
+identifies LRALM with Perturbed Smoothed GDA from \((\zero,\blmbd^0,\bz^0)\),
+with \(\bmu^k=\zero\) and \(\|\blmbd^k\|\le L_h\) for all \(k\ge0\). Moreover,
+\(M=\|\bz^0\|\le1\) and \(r_y\le1/\tau\), so Lemma~\ref{lem:ub-initial-gap}
+gives
 \[
-\|\mathbf d_k\|\le\tau\Bigl(S_{k+1}
-+\frac{\|\mathbf d_k\|}\rho+\frac{L_h}s\Bigr),\qquad
-\|\mathbf d_k\|\le\frac\tau{1-\tau/\rho}
-\Bigl(S_{k+1}+\frac{L_h}s\Bigr).
+\Delta_{\Psi_2}\le\bar\Delta:=\Delta+\frac{2L_h^2}{\rho}+\frac{L_h^2}{\tau}
++\frac1{2\gamma}+\frac{3\gamma}2\Bigl(G_F+\frac1\gamma\Bigr)^2,
 \]
-By~\eqref{eq:kkt-residual} and~\eqref{eq:prox-multiplier}, the output
-residual is
-\[
-R_k:=\mathcal R_{\mathrm{KKT}}(\bx^{k+1},\by^{k+1},\bq^k)
-=\max\Bigl\{\|\nabla_{\bx}\calD_\rho(\bx^{k+1},\blmbd^k)\|,
-\|\nabla_{\blmbd}\calD_\rho(\bx^{k+1},\blmbd^k)\|\Bigr\}.
-\]
-Both gradients change by at most \(\ell\|\mathbf d_k\|\) when the
-multiplier changes from \(\blmbd^{k+1}\) to \(\blmbd^k\). Since
-\(\tau\ell\le1/11\) and \(\tau/\rho\le1/11\), we obtain
-\begin{equation}
-R_k\le\Bigl(1+\frac{\tau\ell}{1-\tau/\rho}\Bigr)S_{k+1}
-+\frac{\tau\ell}{1-\tau/\rho}\frac{L_h}s
-\le\frac{11}{10}S_{k+1}+\frac{L_h}{10s}.
-\label{eq:beta0-residual-transfer}
-\end{equation}
-For the index selected in Step~5, \(c_s\ge16L_h\) gives
-\[
-R_k\le\frac{11}{20}\epsilon+\frac1{160}\epsilon
-=\frac{89}{160}\epsilon<\epsilon.
-\]
-For all sufficiently small \(\epsilon\in(0,1]\), it follows that
-\[
-T_\epsilon(\theta(\epsilon),\alpha,0;I)
-\le k+1\le K\le C'\epsilon^{-3},\qquad
-C':=1+16C_*^2\ell^2c_s\bar\Delta.
-\]
-Finally, \(\alpha=\varkappa\epsilon/(\ell c_s)\), so
-\(c_\alpha=\varkappa/(\ell c_s)>0\). Our fixed choice of \(\varkappa\)
-ensures that \(c_\alpha\) depends only on
-\(\rho,\gamma,\eta,\tau,\mathbf C\), and \(C'\) depends in addition
-on \(\Delta\). Neither constant depends on the instance, the dimensions,
-or \(\epsilon\).
-\hfill\(\square\)
+independently of \(s\), \(\epsilon\), and the dimensions.
 
-% Verification status (2026-10-14): the existence and parameter dependence
-% of C_* in eq:beta0-gs-rate are taken from GPT Pro's conversion of Li26 v2,
-% Section 4.2, (4.19)--(4.23), recorded in
-% notes/gpt-proofs/beta0-upper-check-20261013.md, item 7.
-% That conversion, including its fixed averaging factor, has not been
-% independently verified line by line. Reading the cited statements and
-% estimates does not constitute such a verification.
+Finally,~\cite[Theorem~3.3(i) and (4.20)]{li2026smoothing} control the dual
+game-stationarity residual by a decaying term plus \(r_yD_{\mathcal Y}\). Since
+\(r_yD_{\mathcal Y}=\epsilon/4\), applying~\cite[Theorem~3.3(i)]{li2026smoothing}
+at accuracy \(\epsilon/2\) yields an index \(k\ge0\) with
+\(S_{k+1}\le\epsilon/2\) and
+\(k+1\le C_0'\ell^2D_{\mathcal Y}\bar\Delta\epsilon^{-3}\), where \(C_0'\)
+depends only on \((\rho,\gamma,\eta,\tau,\mathbf C)\). Applying
+Lemma~\ref{lem:ub-residual-transfer} with \(\|\blmbd^k-\bmu^k\|\le L_h\) and
+\(c_s=8(L_h+1)\ge8L_h\) gives
+\[
+R_k\le\frac{11}{20}\epsilon+\frac{L_h}{10c_s}\epsilon
+\le\frac{11}{20}\epsilon+\frac1{80}\epsilon<\epsilon.
+\]
+Hence
+\(T_\epsilon(\theta(\epsilon),c_\alpha\epsilon,0;I,\bu^0)\le k+1\le
+C'\epsilon^{-3}\) with \(C':=C_0'\ell^2D_{\mathcal Y}\bar\Delta\), uniformly
+over \(I\in\mathcal I(\mathbf C,\Delta)\) and
+\(\bu^0\in\mathcal S_0(\mathbf C)\).
+\end{proof}
+

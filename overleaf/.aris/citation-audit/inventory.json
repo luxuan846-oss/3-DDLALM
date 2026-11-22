@@ -1,0 +1,2317 @@
+{
+  "tex_files": [
+    "appendix/LowerBoundConstructions.tex",
+    "appendix/UpperBounds.tex",
+    "appendix/ValueFunctions.tex",
+    "main.tex",
+    "sections/Acceleration.tex",
+    "sections/Conclusion.tex",
+    "sections/Experiments.tex",
+    "sections/Introduction.tex",
+    "sections/LRALMFamily.tex",
+    "sections/Preliminaries.tex",
+    "sections/fig_roadmap_acceleration.tex",
+    "tools/shared.tex"
+  ],
+  "bib_files": [
+    "tools/refer.bib"
+  ],
+  "total_citation_occurrences": 131,
+  "unique_cited_keys": 48,
+  "bib_keys": 164,
+  "uncited_keys": [
+    "Alacaoglu24a",
+    "Bolte2018",
+    "Cao2017HashNetDL",
+    "Davis2020",
+    "LuMeiXiao24",
+    "LuXiao25",
+    "Shen2015Supervised",
+    "Xia2014Supervised",
+    "Yang2024",
+    "alacaoglu2023augmented",
+    "alcantara2024",
+    "arjevani2023lower",
+    "banert2019general",
+    "bao2025convergence",
+    "benaim2005",
+    "berahas2025linearized",
+    "bertsekas1982",
+    "bertsekas1997nonlinear",
+    "boct2016inertial",
+    "boct2020proximal",
+    "boct2020variable",
+    "bolte2020",
+    "boob2022level",
+    "boob2023stochastic",
+    "bot2015variable",
+    "bot2019proximal",
+    "bot2020proximal",
+    "bot2020variable",
+    "bot2025full",
+    "cartis2014complexity",
+    "charisopoulos2019composite",
+    "cohen2022dynamic",
+    "cui2022complexity",
+    "cui2024adaptive",
+    "curtis2021sqp",
+    "cutkosky2019storm",
+    "davis2019",
+    "davis2019stochastic",
+    "deng2025single",
+    "duchi2018",
+    "fang2018spider",
+    "fl2001variable",
+    "gao2024gradient",
+    "gao2024stochastic",
+    "gong2013general",
+    "grapiglia2021complexity",
+    "guan2022cmpb",
+    "guo2023preconditioned",
+    "hoeOneLossAll2021",
+    "hoffman1952",
+    "hu2026fixed",
+    "hu23",
+    "huang2025stochastic",
+    "jang2022dhd",
+    "jia2023first",
+    "jin2022nested",
+    "jordan2023deterministic",
+    "karimi2025differences",
+    "karimi2025hingeLogistic",
+    "kor22",
+    "kume2024variable",
+    "le2024minimizing",
+    "lessard2016analysis",
+    "li2017deep",
+    "li2024stochastic",
+    "li2025nonsmooth",
+    "liDeepSupervisedHashing",
+    "liFeatureLearningBased2016",
+    "liu2019refined",
+    "liu2019successive",
+    "liu2022exact",
+    "liu2022inexact",
+    "liu2026lower",
+    "liuDeepSupervisedHashing",
+    "lou2015computing",
+    "lu2022single",
+    "lu2024variancereduced",
+    "lu2026variance",
+    "luo1994error",
+    "luo2024learning",
+    "ma2022quadratically",
+    "majewski2018",
+    "manna2025deep",
+    "moreau1965",
+    "na2022sqp",
+    "nesterov2005smooth",
+    "nitanda2017stochastic",
+    "nocedal2006numerical",
+    "pmlr-v267-jin25e",
+    "pong2019",
+    "rockafellar2009variational",
+    "shen2016fast",
+    "shi2022linearized",
+    "shi2025adaptive",
+    "sun2023algorithms",
+    "sun2026equivalence",
+    "tan2022bsth",
+    "tao1986algorithms",
+    "tran2018smooth",
+    "trandinh2018smooth",
+    "wang2024",
+    "wang2024alexr",
+    "wangADMMEfficientDeep2019",
+    "wen2018proximal",
+    "xu2019stochastic",
+    "yang2025inexact",
+    "yang2025nonmonotone",
+    "yao2024note",
+    "yin2015minimization",
+    "yun2021adaptive",
+    "zhang20",
+    "zhang2010nearly",
+    "zhang2020optimal",
+    "zhang2020proximal",
+    "zhang2025complexity",
+    "zhuang2019surrogate"
+  ],
+  "repeated_ge3": {
+    "li2026smoothing": {
+      "count": 32,
+      "locations": [
+        "appendix/LowerBoundConstructions.tex:226",
+        "appendix/UpperBounds.tex:7",
+        "appendix/UpperBounds.tex:8",
+        "appendix/UpperBounds.tex:22",
+        "appendix/UpperBounds.tex:42",
+        "appendix/UpperBounds.tex:50",
+        "appendix/UpperBounds.tex:74",
+        "appendix/UpperBounds.tex:106",
+        "appendix/UpperBounds.tex:109",
+        "appendix/UpperBounds.tex:123",
+        "appendix/UpperBounds.tex:134",
+        "appendix/UpperBounds.tex:191",
+        "appendix/UpperBounds.tex:205",
+        "appendix/UpperBounds.tex:220",
+        "appendix/UpperBounds.tex:251",
+        "appendix/UpperBounds.tex:255",
+        "appendix/UpperBounds.tex:259",
+        "appendix/UpperBounds.tex:275",
+        "appendix/UpperBounds.tex:277",
+        "sections/Acceleration.tex:342",
+        "sections/Acceleration.tex:359",
+        "sections/Introduction.tex:103",
+        "sections/Introduction.tex:190",
+        "sections/Introduction.tex:261",
+        "sections/Introduction.tex:264",
+        "sections/LRALMFamily.tex:150",
+        "sections/LRALMFamily.tex:181",
+        "sections/LRALMFamily.tex:312",
+        "sections/LRALMFamily.tex:468",
+        "sections/Preliminaries.tex:177",
+        "sections/Preliminaries.tex:196",
+        "sections/Preliminaries.tex:198"
+      ]
+    },
+    "zhang2020smoothed": {
+      "count": 10,
+      "locations": [
+        "appendix/ValueFunctions.tex:238",
+        "sections/Acceleration.tex:342",
+        "sections/Acceleration.tex:359",
+        "sections/Introduction.tex:44",
+        "sections/Introduction.tex:97",
+        "sections/Introduction.tex:261",
+        "sections/LRALMFamily.tex:145",
+        "sections/LRALMFamily.tex:178",
+        "sections/LRALMFamily.tex:263",
+        "sections/Preliminaries.tex:197"
+      ]
+    },
+    "kong2021accelerated": {
+      "count": 3,
+      "locations": [
+        "sections/Acceleration.tex:100",
+        "sections/Acceleration.tex:401",
+        "sections/Introduction.tex:310"
+      ]
+    },
+    "zhang2021complexity": {
+      "count": 3,
+      "locations": [
+        "sections/Acceleration.tex:100",
+        "sections/Acceleration.tex:401",
+        "sections/Introduction.tex:304"
+      ]
+    },
+    "nesterov2018lectures": {
+      "count": 4,
+      "locations": [
+        "sections/Acceleration.tex:115",
+        "sections/Acceleration.tex:362",
+        "sections/Acceleration.tex:524",
+        "sections/LRALMFamily.tex:188"
+      ]
+    },
+    "hajinezhad2019perturbed": {
+      "count": 3,
+      "locations": [
+        "sections/Acceleration.tex:164",
+        "sections/Introduction.tex:74",
+        "sections/Introduction.tex:244"
+      ]
+    },
+    "luSingleLoopGradientDescent2022": {
+      "count": 6,
+      "locations": [
+        "sections/Acceleration.tex:164",
+        "sections/Introduction.tex:74",
+        "sections/Introduction.tex:253",
+        "sections/LRALMFamily.tex:152",
+        "sections/LRALMFamily.tex:177",
+        "sections/Preliminaries.tex:158"
+      ]
+    },
+    "li2021rate": {
+      "count": 4,
+      "locations": [
+        "sections/Acceleration.tex:172",
+        "sections/Introduction.tex:64",
+        "sections/Introduction.tex:247",
+        "sections/Introduction.tex:312"
+      ]
+    },
+    "kong2023iteration": {
+      "count": 3,
+      "locations": [
+        "sections/Acceleration.tex:172",
+        "sections/Introduction.tex:247",
+        "sections/Introduction.tex:312"
+      ]
+    },
+    "lu2020hybrid": {
+      "count": 4,
+      "locations": [
+        "sections/Introduction.tex:98",
+        "sections/LRALMFamily.tex:155",
+        "sections/LRALMFamily.tex:180",
+        "sections/Preliminaries.tex:198"
+      ]
+    },
+    "xu2023unified": {
+      "count": 4,
+      "locations": [
+        "sections/Introduction.tex:98",
+        "sections/LRALMFamily.tex:155",
+        "sections/LRALMFamily.tex:180",
+        "sections/Preliminaries.tex:198"
+      ]
+    },
+    "carmon2020lower": {
+      "count": 3,
+      "locations": [
+        "sections/Introduction.tex:180",
+        "sections/LRALMFamily.tex:188",
+        "sections/Preliminaries.tex:72"
+      ]
+    },
+    "pan2026optimal": {
+      "count": 5,
+      "locations": [
+        "sections/Introduction.tex:270",
+        "sections/Introduction.tex:302",
+        "sections/Introduction.tex:305",
+        "sections/Introduction.tex:333",
+        "sections/Preliminaries.tex:177"
+      ]
+    },
+    "zheng2023universal": {
+      "count": 3,
+      "locations": [
+        "sections/LRALMFamily.tex:147",
+        "sections/LRALMFamily.tex:183",
+        "sections/Preliminaries.tex:198"
+      ]
+    }
+  },
+  "counts": {
+    "li2026smoothing": 32,
+    "zhang2020smoothed": 10,
+    "kong2021accelerated": 3,
+    "zhang2021complexity": 3,
+    "nesterov2018lectures": 4,
+    "hajinezhad2019perturbed": 3,
+    "luSingleLoopGradientDescent2022": 6,
+    "li2021rate": 4,
+    "kong2023iteration": 3,
+    "khlebnikov2011optimization": 1,
+    "zhang2022proximal": 2,
+    "wilson2021lyapunov": 1,
+    "charisopoulos2021low": 2,
+    "markovsky2008structured": 1,
+    "parekh2015convex": 1,
+    "duchi2019solving": 1,
+    "Drusvyatskiy2019": 1,
+    "kong2019complexity": 1,
+    "lin2022complexity": 2,
+    "sahin2019inexact": 1,
+    "xie2021proximal": 1,
+    "bohm2021variable": 1,
+    "hallak2023adaptive": 1,
+    "alacaoglu2024complexity": 1,
+    "sun2024dual_descent_alm_admm": 2,
+    "elbourkhissi2025perturbed": 1,
+    "shi2025momentum": 1,
+    "zhang2022global": 2,
+    "elbourkhissi2025linearized": 1,
+    "liu2026fixed": 2,
+    "lin2020gradient": 1,
+    "lu2020hybrid": 4,
+    "xu2023unified": 4,
+    "pan2021efficient": 1,
+    "he2024approximation": 1,
+    "xu2026rada": 1,
+    "carmon2020lower": 3,
+    "mahdavinia2022tight": 2,
+    "zhang2026matching": 2,
+    "pan2026optimal": 5,
+    "li2021complexity": 2,
+    "ke2026efficient": 1,
+    "zheng2023universal": 3,
+    "rockafellar1970convex": 2,
+    "rockafellar1976augmented": 1,
+    "hestenes1969multiplier": 1,
+    "powell1969method": 1,
+    "rockafellar1973multiplier": 1
+  },
+  "locations": {
+    "li2026smoothing": [
+      "appendix/LowerBoundConstructions.tex:226",
+      "appendix/UpperBounds.tex:7",
+      "appendix/UpperBounds.tex:8",
+      "appendix/UpperBounds.tex:22",
+      "appendix/UpperBounds.tex:42",
+      "appendix/UpperBounds.tex:50",
+      "appendix/UpperBounds.tex:74",
+      "appendix/UpperBounds.tex:106",
+      "appendix/UpperBounds.tex:109",
+      "appendix/UpperBounds.tex:123",
+      "appendix/UpperBounds.tex:134",
+      "appendix/UpperBounds.tex:191",
+      "appendix/UpperBounds.tex:205",
+      "appendix/UpperBounds.tex:220",
+      "appendix/UpperBounds.tex:251",
+      "appendix/UpperBounds.tex:255",
+      "appendix/UpperBounds.tex:259",
+      "appendix/UpperBounds.tex:275",
+      "appendix/UpperBounds.tex:277",
+      "sections/Acceleration.tex:342",
+      "sections/Acceleration.tex:359",
+      "sections/Introduction.tex:103",
+      "sections/Introduction.tex:190",
+      "sections/Introduction.tex:261",
+      "sections/Introduction.tex:264",
+      "sections/LRALMFamily.tex:150",
+      "sections/LRALMFamily.tex:181",
+      "sections/LRALMFamily.tex:312",
+      "sections/LRALMFamily.tex:468",
+      "sections/Preliminaries.tex:177",
+      "sections/Preliminaries.tex:196",
+      "sections/Preliminaries.tex:198"
+    ],
+    "zhang2020smoothed": [
+      "appendix/ValueFunctions.tex:238",
+      "sections/Acceleration.tex:342",
+      "sections/Acceleration.tex:359",
+      "sections/Introduction.tex:44",
+      "sections/Introduction.tex:97",
+      "sections/Introduction.tex:261",
+      "sections/LRALMFamily.tex:145",
+      "sections/LRALMFamily.tex:178",
+      "sections/LRALMFamily.tex:263",
+      "sections/Preliminaries.tex:197"
+    ],
+    "kong2021accelerated": [
+      "sections/Acceleration.tex:100",
+      "sections/Acceleration.tex:401",
+      "sections/Introduction.tex:310"
+    ],
+    "zhang2021complexity": [
+      "sections/Acceleration.tex:100",
+      "sections/Acceleration.tex:401",
+      "sections/Introduction.tex:304"
+    ],
+    "nesterov2018lectures": [
+      "sections/Acceleration.tex:115",
+      "sections/Acceleration.tex:362",
+      "sections/Acceleration.tex:524",
+      "sections/LRALMFamily.tex:188"
+    ],
+    "hajinezhad2019perturbed": [
+      "sections/Acceleration.tex:164",
+      "sections/Introduction.tex:74",
+      "sections/Introduction.tex:244"
+    ],
+    "luSingleLoopGradientDescent2022": [
+      "sections/Acceleration.tex:164",
+      "sections/Introduction.tex:74",
+      "sections/Introduction.tex:253",
+      "sections/LRALMFamily.tex:152",
+      "sections/LRALMFamily.tex:177",
+      "sections/Preliminaries.tex:158"
+    ],
+    "li2021rate": [
+      "sections/Acceleration.tex:172",
+      "sections/Introduction.tex:64",
+      "sections/Introduction.tex:247",
+      "sections/Introduction.tex:312"
+    ],
+    "kong2023iteration": [
+      "sections/Acceleration.tex:172",
+      "sections/Introduction.tex:247",
+      "sections/Introduction.tex:312"
+    ],
+    "khlebnikov2011optimization": [
+      "sections/Acceleration.tex:240"
+    ],
+    "zhang2022proximal": [
+      "sections/Acceleration.tex:342",
+      "sections/Acceleration.tex:359"
+    ],
+    "wilson2021lyapunov": [
+      "sections/Acceleration.tex:362"
+    ],
+    "charisopoulos2021low": [
+      "sections/Introduction.tex:17",
+      "sections/Introduction.tex:32"
+    ],
+    "markovsky2008structured": [
+      "sections/Introduction.tex:17"
+    ],
+    "parekh2015convex": [
+      "sections/Introduction.tex:17"
+    ],
+    "duchi2019solving": [
+      "sections/Introduction.tex:20"
+    ],
+    "Drusvyatskiy2019": [
+      "sections/Introduction.tex:61"
+    ],
+    "kong2019complexity": [
+      "sections/Introduction.tex:62"
+    ],
+    "lin2022complexity": [
+      "sections/Introduction.tex:62",
+      "sections/Introduction.tex:312"
+    ],
+    "sahin2019inexact": [
+      "sections/Introduction.tex:64"
+    ],
+    "xie2021proximal": [
+      "sections/Introduction.tex:64"
+    ],
+    "bohm2021variable": [
+      "sections/Introduction.tex:71"
+    ],
+    "hallak2023adaptive": [
+      "sections/Introduction.tex:74"
+    ],
+    "alacaoglu2024complexity": [
+      "sections/Introduction.tex:74"
+    ],
+    "sun2024dual_descent_alm_admm": [
+      "sections/Introduction.tex:74",
+      "sections/Introduction.tex:253"
+    ],
+    "elbourkhissi2025perturbed": [
+      "sections/Introduction.tex:74"
+    ],
+    "shi2025momentum": [
+      "sections/Introduction.tex:74"
+    ],
+    "zhang2022global": [
+      "sections/Introduction.tex:80",
+      "sections/Introduction.tex:250"
+    ],
+    "elbourkhissi2025linearized": [
+      "sections/Introduction.tex:81"
+    ],
+    "liu2026fixed": [
+      "sections/Introduction.tex:81",
+      "sections/Introduction.tex:256"
+    ],
+    "lin2020gradient": [
+      "sections/Introduction.tex:96"
+    ],
+    "lu2020hybrid": [
+      "sections/Introduction.tex:98",
+      "sections/LRALMFamily.tex:155",
+      "sections/LRALMFamily.tex:180",
+      "sections/Preliminaries.tex:198"
+    ],
+    "xu2023unified": [
+      "sections/Introduction.tex:98",
+      "sections/LRALMFamily.tex:155",
+      "sections/LRALMFamily.tex:180",
+      "sections/Preliminaries.tex:198"
+    ],
+    "pan2021efficient": [
+      "sections/Introduction.tex:106"
+    ],
+    "he2024approximation": [
+      "sections/Introduction.tex:106"
+    ],
+    "xu2026rada": [
+      "sections/Introduction.tex:106"
+    ],
+    "carmon2020lower": [
+      "sections/Introduction.tex:180",
+      "sections/LRALMFamily.tex:188",
+      "sections/Preliminaries.tex:72"
+    ],
+    "mahdavinia2022tight": [
+      "sections/Introduction.tex:190",
+      "sections/LRALMFamily.tex:469"
+    ],
+    "zhang2026matching": [
+      "sections/Introduction.tex:267",
+      "sections/Introduction.tex:307"
+    ],
+    "pan2026optimal": [
+      "sections/Introduction.tex:270",
+      "sections/Introduction.tex:302",
+      "sections/Introduction.tex:305",
+      "sections/Introduction.tex:333",
+      "sections/Preliminaries.tex:177"
+    ],
+    "li2021complexity": [
+      "sections/Introduction.tex:304",
+      "sections/LRALMFamily.tex:188"
+    ],
+    "ke2026efficient": [
+      "sections/Introduction.tex:310"
+    ],
+    "zheng2023universal": [
+      "sections/LRALMFamily.tex:147",
+      "sections/LRALMFamily.tex:183",
+      "sections/Preliminaries.tex:198"
+    ],
+    "rockafellar1970convex": [
+      "sections/Preliminaries.tex:8",
+      "sections/Preliminaries.tex:212"
+    ],
+    "rockafellar1976augmented": [
+      "sections/Preliminaries.tex:110"
+    ],
+    "hestenes1969multiplier": [
+      "sections/Preliminaries.tex:160"
+    ],
+    "powell1969method": [
+      "sections/Preliminaries.tex:160"
+    ],
+    "rockafellar1973multiplier": [
+      "sections/Preliminaries.tex:160"
+    ]
+  },
+  "contexts": {
+    "li2026smoothing": [
+      {
+        "file": "appendix/LowerBoundConstructions.tex",
+        "line": 226,
+        "context": "The construction in~\\cite[Section~5.1.1]{li2026smoothing} chooses both the hard instance and the initial point, with the latter lying along an"
+      },
+      {
+        "file": "appendix/UpperBounds.tex",
+        "line": 7,
+        "context": "by reducing \\(\\mathrm{LRALM}_{\\theta,\\alpha,\\beta}\\) at \\(\\beta\\in\\{0,1\\}\\) to (Perturbed) Smoothed GDA~\\cite{li2026smoothing} on \\(\\calD_\\rho\\). All references to~\\cite{li2026smoothing} follow the numbering of"
+      },
+      {
+        "file": "appendix/UpperBounds.tex",
+        "line": 8,
+        "context": "(Perturbed) Smoothed GDA~\\cite{li2026smoothing} on \\(\\calD_\\rho\\). All references to~\\cite{li2026smoothing} follow the numbering of arXiv:2602.14185v2. Throughout, we set"
+      },
+      {
+        "file": "appendix/UpperBounds.tex",
+        "line": 22,
+        "context": "\\(\\calD_\\rho(\\bx,\\cdot)\\) is concave and \\(\\mathcal Y\\) is compact and convex, so Assumptions~2.1 and~2.2 of~\\cite{li2026smoothing} hold on \\(\\RR^n\\times\\mathcal Y\\). We first collect three auxiliary lemmas and then"
+      },
+      {
+        "file": "appendix/UpperBounds.tex",
+        "line": 42,
+        "context": "\\(\\{(\\bx^{t+1},\\blmbd^{t+1},\\bz^{t+1})\\}_{t\\ge0}\\) coincides with Smoothed GDA~\\cite[Algorithm~3, \\(r_y=0\\)]{li2026smoothing} applied to \\(\\min_{\\bx\\in\\RR^n}\\max_{\\blmbd\\in\\mathcal Y}\\calD_\\rho(\\bx,\\blmbd)\\) from"
+      },
+      {
+        "file": "appendix/UpperBounds.tex",
+        "line": 50,
+        "context": "\\(\\{(\\bx^k,\\blmbd^k,\\bz^k)\\}_{k\\ge0}\\) coincides with Perturbed Smoothed GDA~\\cite[Algorithm~3, \\(r_y=1/s\\)]{li2026smoothing} applied to the same problem from \\((\\zero,\\blmbd^0,\\bz^0)\\) with the same parameters."
+      },
+      {
+        "file": "appendix/UpperBounds.tex",
+        "line": 74,
+        "context": "is \\(L_h\\)-Lipschitz. Notice that~\\eqref{eq:splalm-updates} and \\cite[Algorithm~3]{li2026smoothing} have the same update order (old multiplier in the primal step, new primal iterate in the dual and center steps); whenever"
+      },
+      {
+        "file": "appendix/UpperBounds.tex",
+        "line": 106,
+        "context": "By~\\eqref{eq:ub-bridge}, \\(\\inf\\Phi_{r_y}\\ge\\inf F-\\frac{r_y}{2}L_h^2>-\\infty\\); the descent argument of~\\cite[Section~4]{li2026smoothing} uses only a lower bound on its Lyapunov function, so attainment of \\(\\inf\\Phi_{r_y}\\) is not"
+      },
+      {
+        "file": "appendix/UpperBounds.tex",
+        "line": 109,
+        "context": "needed. We next bound the initial gap \\(\\Delta_{\\Psi_2}\\) of~\\cite[Definition~3.1(ii)]{li2026smoothing} and relate its game-stationarity residual"
+      },
+      {
+        "file": "appendix/UpperBounds.tex",
+        "line": 123,
+        "context": "satisfy \\(\\|\\hat\\blmbd\\|\\le L_h\\). Set \\(M:=\\|\\hat\\bx-\\hat\\bz\\|\\). Then the initial gap of~\\cite[Definition~3.1(ii)]{li2026smoothing} for \\(\\calD_\\rho\\) at \\((\\hat\\bx,\\hat\\blmbd,\\hat\\bz)\\) satisfies"
+      },
+      {
+        "file": "appendix/UpperBounds.tex",
+        "line": 134,
+        "context": "Let \\(K(\\bx):=\\calD_\\rho(\\bx,\\hat\\blmbd)+\\frac1{2\\gamma}\\|\\bx-\\hat\\bz\\|^2\\). By~\\cite[(3.1) and Definition~3.1(ii)]{li2026smoothing} and the definition of \\(\\Phi_{r_y}\\),"
+      },
+      {
+        "file": "appendix/UpperBounds.tex",
+        "line": 191,
+        "context": "let \\(\\gamma\\le\\bar\\gamma\\), \\(\\eta\\le\\gamma/2\\), \\(\\tau\\le\\bar\\tau\\), and \\(s\\ge\\tau\\). We first check~\\cite[Condition~3.2(i)]{li2026smoothing} at \\(r_y=0\\): \\(r_x=1/\\gamma\\ge4\\ell>3\\ell\\), \\(1/(r_x+\\ell)\\ge4\\gamma/5>\\eta\\),"
+      },
+      {
+        "file": "appendix/UpperBounds.tex",
+        "line": 205,
+        "context": "\\(\\beta_{\\mathrm{Li}}=\\Theta(\\epsilon^2/(\\ell^2D_{\\mathcal Y}^2))\\) in \\cite[Condition~3.2(i)]{li2026smoothing}."
+      },
+      {
+        "file": "appendix/UpperBounds.tex",
+        "line": 220,
+        "context": "Applying~\\cite[Theorem~B.1]{li2026smoothing} at accuracy \\(\\frac{10}{11}\\epsilon\\) to the shifted sequence yields an index \\(t\\ge0\\) with"
+      },
+      {
+        "file": "appendix/UpperBounds.tex",
+        "line": 251,
+        "context": "in~\\eqref{eq:beta0-main-stepsizes} are precisely the conditions on \\((r_x,c,\\alpha_{\\mathrm{Li}})\\) in~\\cite[Condition~3.2]{li2026smoothing} at \\(r_y=0\\). By continuity in \\(r_y\\), there exists \\(\\bar r>0\\), depending only"
+      },
+      {
+        "file": "appendix/UpperBounds.tex",
+        "line": 255,
+        "context": "with \\(\\ell+r_y\\) in place of \\(\\ell\\) for all \\(r_y\\in(0,\\bar r]\\). On this interval, the quantity \\(\\omega^t\\) in~\\cite[Condition~3.2(ii)]{li2026smoothing} satisfies \\((\\omega^t)^2\\le\\bar\\Omega/r_y\\) for a constant \\(\\bar\\Omega\\)"
+      },
+      {
+        "file": "appendix/UpperBounds.tex",
+        "line": 259,
+        "context": "\\((\\rho,\\gamma,\\eta,\\tau,\\mathbf C)\\), such that \\(\\alpha=c_\\alpha\\epsilon\\) satisfies~\\cite[Condition~3.2(ii)]{li2026smoothing} whenever \\(\\epsilon\\in(0,\\bar\\epsilon]\\) with \\(\\bar\\epsilon:=\\min\\{1,c_s\\bar r\\}\\)."
+      },
+      {
+        "file": "appendix/UpperBounds.tex",
+        "line": 275,
+        "context": "Finally,~\\cite[Theorem~3.3(i) and (4.20)]{li2026smoothing} control the dual game-stationarity residual by a decaying term plus \\(r_yD_{\\mathcal Y}\\). Since"
+      },
+      {
+        "file": "appendix/UpperBounds.tex",
+        "line": 277,
+        "context": "game-stationarity residual by a decaying term plus \\(r_yD_{\\mathcal Y}\\). Since \\(r_yD_{\\mathcal Y}=\\epsilon/4\\), applying~\\cite[Theorem~3.3(i)]{li2026smoothing} at accuracy \\(\\epsilon/2\\) yields an index \\(k\\ge0\\) with"
+      },
+      {
+        "file": "sections/Acceleration.tex",
+        "line": 342,
+        "context": "Building on the potential function in~\\cite{zhang2022proximal,zhang2020smoothed,li2026smoothing}, we define the Lyapunov sequence tied to Algorithm~\\ref{alg:b2-prime} as"
+      },
+      {
+        "file": "sections/Acceleration.tex",
+        "line": 359,
+        "context": "The above Lyapunov sequence differs from the potential function in~\\cite{zhang2022proximal,zhang2020smoothed,li2026smoothing} in the dual and primal parts. The dual part adds"
+      },
+      {
+        "file": "sections/Introduction.tex",
+        "line": 103,
+        "context": "$\\Omega(\\epsilon^{-4})$ and $\\Omega(\\epsilon^{-3})$ certify that these rates are tight for the two algorithms~\\cite{li2026smoothing}. Single-loop methods exploiting the nonconvex-linear structure likewise achieve"
+      },
+      {
+        "file": "sections/Introduction.tex",
+        "line": 190,
+        "context": "primal-dual methods apply only to individual algorithms under prescribed stepsizes~\\cite{mahdavinia2022tight,li2026smoothing}, whether parameter growth is inherent to single-loop linearized ALMs, and whether the penalty itself must"
+      },
+      {
+        "file": "sections/Introduction.tex",
+        "line": 261,
+        "context": "\\multicolumn{8}{l}{\\textit{Smooth NC-C minimax}\\tnote{a}} \\\\ Smoothed GDA~\\cite{zhang2020smoothed,li2026smoothing} & \\checkmark & \\checkmark & \\checkmark & -- & -- & $\\Theta(1)$"
+      },
+      {
+        "file": "sections/Introduction.tex",
+        "line": 264,
+        "context": "& $\\Theta(\\epsilon^{-4})$ \\\\ Perturbed Smoothed GDA~\\cite{li2026smoothing} & \\checkmark & \\checkmark & \\checkmark & -- & \\cellcolor{gray!25}$\\Theta(\\epsilon^{-1})$ & $\\Theta(1)$"
+      },
+      {
+        "file": "sections/LRALMFamily.tex",
+        "line": 150,
+        "context": "\\node[anchor=south,text=cTeal] at (0.5,0.04) {Perturbed Smoothed GDA~\\cite{li2026smoothing}}; \\node[cRed,anchor=south west,align=left] at (1.03,0.99)"
+      },
+      {
+        "file": "sections/LRALMFamily.tex",
+        "line": 181,
+        "context": "GDA~\\cite{lu2020hybrid,xu2023unified} at \\(\\alpha=1\\) and Perturbed Smoothed GDA~\\cite{li2026smoothing} for \\(\\alpha\\in(0,1)\\). Finally, the region \\((\\alpha,\\beta)\\in(0,1)^2\\) shares the constant-stepsize update structure of"
+      },
+      {
+        "file": "sections/LRALMFamily.tex",
+        "line": 312,
+        "context": "The matching upper bound is attained by Perturbed Smoothed GDA~\\cite{li2026smoothing}, the member of \\(\\calC_{\\theta(\\epsilon)}\\) with \\(\\beta=0\\)."
+      },
+      {
+        "file": "sections/LRALMFamily.tex",
+        "line": 468,
+        "context": "For \\(\\alpha>\\alpha_\\epsilon\\) and \\(\\beta\\in(0,1]\\), we adapt the quadratic rotational construction of~\\cite[Example~5.1]{li2026smoothing} and~\\cite[Appendix~C.1]{mahdavinia2022tight}, attaching a convex turnaround and"
+      },
+      {
+        "file": "sections/Preliminaries.tex",
+        "line": 177,
+        "context": "\\(\\epsilon\\)-game-stationary (\\(\\epsilon\\)-GS) point of \\(\\min_{\\bx}\\max_{\\blmbd}\\calD_\\rho(\\bx,\\blmbd)\\)~\\cite{li2026smoothing,pan2026optimal} if"
+      },
+      {
+        "file": "sections/Preliminaries.tex",
+        "line": 196,
+        "context": "is a smooth nonconvex-concave (NC-C) problem, where single-timescale GDA may fail to converge~\\cite{li2026smoothing}. To induce strong convexity in \\(\\bx\\) and strong concavity in \\(\\blmbd\\), we add primal~\\cite{zhang2020smoothed} and"
+      },
+      {
+        "file": "sections/Preliminaries.tex",
+        "line": 198,
+        "context": "and strong concavity in \\(\\blmbd\\), we add primal~\\cite{zhang2020smoothed} and dual~\\cite{lu2020hybrid,xu2023unified,zheng2023universal,li2026smoothing} quadratic regularizers centered at \\((\\bz,\\bmu)\\in\\RR^n\\times\\RR^m\\), yielding"
+      }
+    ],
+    "zhang2020smoothed": [
+      {
+        "file": "appendix/ValueFunctions.tex",
+        "line": 238,
+        "context": "\\(\\bx_s^\\star(\\cdot)\\) parallel those for the smoothed gradient descent--ascent method in~\\cite[Lemma~B.2]{zhang2020smoothed}; the bound on \\(\\blmbd_s^\\star(\\cdot)\\) additionally uses the \\(s^{-1}\\)-strong concavity"
+      },
+      {
+        "file": "sections/Acceleration.tex",
+        "line": 342,
+        "context": "Building on the potential function in~\\cite{zhang2022proximal,zhang2020smoothed,li2026smoothing}, we define the Lyapunov sequence tied to Algorithm~\\ref{alg:b2-prime} as"
+      },
+      {
+        "file": "sections/Acceleration.tex",
+        "line": 359,
+        "context": "The above Lyapunov sequence differs from the potential function in~\\cite{zhang2022proximal,zhang2020smoothed,li2026smoothing} in the dual and primal parts. The dual part adds"
+      },
+      {
+        "file": "sections/Introduction.tex",
+        "line": 44,
+        "context": "\\textbf{Minimizing a pointwise maximum}~\\cite{zhang2020smoothed}. For smooth losses $f_1,\\dots,f_m$, such as the losses on $m$ data subgroups, one solves"
+      },
+      {
+        "file": "sections/Introduction.tex",
+        "line": 97,
+        "context": "iterations~\\cite{lin2020gradient}. Primal smoothing in Smoothed GDA~\\cite{zhang2020smoothed} and dual perturbation in Perturbed GDA~\\cite{lu2020hybrid,xu2023unified} each improve the rate to"
+      },
+      {
+        "file": "sections/Introduction.tex",
+        "line": 261,
+        "context": "\\multicolumn{8}{l}{\\textit{Smooth NC-C minimax}\\tnote{a}} \\\\ Smoothed GDA~\\cite{zhang2020smoothed,li2026smoothing} & \\checkmark & \\checkmark & \\checkmark & -- & -- & $\\Theta(1)$"
+      },
+      {
+        "file": "sections/LRALMFamily.tex",
+        "line": 145,
+        "context": "\\node[anchor=north,text=cRed] at (0.5,0.96) {Smoothed GDA~\\cite{zhang2020smoothed}}; \\node[align=center,text=cNavy] at (0.5,0.5)"
+      },
+      {
+        "file": "sections/LRALMFamily.tex",
+        "line": 178,
+        "context": "linearized ALM~\\cite{luSingleLoopGradientDescent2022}, while \\(\\beta=1\\) with \\(\\alpha\\in(0,1)\\) gives Smoothed GDA~\\cite{zhang2020smoothed}. Setting \\(\\beta=0\\) with \\(\\bmu^0=\\zero\\) yields Perturbed"
+      },
+      {
+        "file": "sections/LRALMFamily.tex",
+        "line": 263,
+        "context": "The matching upper bound is attained by Smoothed GDA~\\cite{zhang2020smoothed}, the member of \\(\\calC_\\theta\\) with \\(\\beta=1\\)."
+      },
+      {
+        "file": "sections/Preliminaries.tex",
+        "line": 197,
+        "context": "fail to converge~\\cite{li2026smoothing}. To induce strong convexity in \\(\\bx\\) and strong concavity in \\(\\blmbd\\), we add primal~\\cite{zhang2020smoothed} and dual~\\cite{lu2020hybrid,xu2023unified,zheng2023universal,li2026smoothing}"
+      }
+    ],
+    "kong2021accelerated": [
+      {
+        "file": "sections/Acceleration.tex",
+        "line": 100,
+        "context": "whose exact computation requires solving a minimax subproblem and leads to double-loop schemes~\\cite{kong2021accelerated,zhang2021complexity}. Instead, we replace \\(\\bx_s^\\star(\\bz^k)\\) with the primal iterate \\(\\bx^{k+1}\\), which"
+      },
+      {
+        "file": "sections/Acceleration.tex",
+        "line": 401,
+        "context": "the single-loop analysis. Double-loop accelerated minimax methods~\\cite{kong2021accelerated,zhang2021complexity} avoid this difficulty by solving each proximal subproblem to high accuracy before updating the center."
+      },
+      {
+        "file": "sections/Introduction.tex",
+        "line": 310,
+        "context": "rely on nested loops, including multi-loop proximal-point or anchored minimax schemes~\\cite{kong2021accelerated,ke2026efficient} and inexact ALM or penalty methods with accelerated inner"
+      }
+    ],
+    "zhang2021complexity": [
+      {
+        "file": "sections/Acceleration.tex",
+        "line": 100,
+        "context": "whose exact computation requires solving a minimax subproblem and leads to double-loop schemes~\\cite{kong2021accelerated,zhang2021complexity}. Instead, we replace \\(\\bx_s^\\star(\\bz^k)\\) with the primal iterate \\(\\bx^{k+1}\\), which"
+      },
+      {
+        "file": "sections/Acceleration.tex",
+        "line": 401,
+        "context": "the single-loop analysis. Double-loop accelerated minimax methods~\\cite{kong2021accelerated,zhang2021complexity} avoid this difficulty by solving each proximal subproblem to high accuracy before updating the center."
+      },
+      {
+        "file": "sections/Introduction.tex",
+        "line": 304,
+        "context": "consistent with the nonconvex-strongly-concave lower bound at dual condition number $\\Theta(\\epsilon^{-1})$~\\cite{zhang2021complexity,li2021complexity}. This rate is attained by multi-loop schemes~\\cite{pan2026optimal} and by a"
+      }
+    ],
+    "nesterov2018lectures": [
+      {
+        "file": "sections/Acceleration.tex",
+        "line": 115,
+        "context": "\\(\\kappa=s/\\tau\\) grows with \\(s\\). We therefore take one step of Nesterov's accelerated gradient ascent~\\cite{nesterov2018lectures} with \\(\\omega=(\\sqrt{\\kappa}-1)/(\\sqrt{\\kappa}+1)\\). By Danskin's theorem,"
+      },
+      {
+        "file": "sections/Acceleration.tex",
+        "line": 362,
+        "context": "the distance term of the estimate-sequence Lyapunov function~\\cite{nesterov2018lectures,wilson2021lyapunov}, since under Nesterov extrapolation the dual gap alone need not decrease. The primal part replaces"
+      },
+      {
+        "file": "sections/Acceleration.tex",
+        "line": 524,
+        "context": "\\(\\bx_s(\\bar{\\blmbd}^k;\\bz^k)\\), so the contraction of gradient descent~\\cite{nesterov2018lectures} and the \\(L_x\\)-smoothness give \\begin{align*}"
+      },
+      {
+        "file": "sections/LRALMFamily.tex",
+        "line": 188,
+        "context": "iteration complexity over \\(\\mathcal I(\\mathbf C,\\Delta)\\)~\\cite{nesterov2018lectures,carmon2020lower,li2021complexity} as follows."
+      }
+    ],
+    "hajinezhad2019perturbed": [
+      {
+        "file": "sections/Acceleration.tex",
+        "line": 164,
+        "context": "which resembles the multiplier update of single-loop perturbed ALMs~\\cite{hajinezhad2019perturbed,luSingleLoopGradientDescent2022} except that it is evaluated at the extrapolated multiplier \\(\\bar{\\blmbd}^k\\). However,"
+      },
+      {
+        "file": "sections/Introduction.tex",
+        "line": 74,
+        "context": "single-loop penalty and linearized ALM or ADMM schemes~\\cite{hajinezhad2019perturbed,luSingleLoopGradientDescent2022,hallak2023adaptive,alacaoglu2024complexity,sun2024dual_descent_alm_admm,elbourkhissi2025perturbed,shi2025momentum} drive the penalty or dual perturbation parameter to order $\\epsilon^{-1}$ to"
+      },
+      {
+        "file": "sections/Introduction.tex",
+        "line": 244,
+        "context": "\\multicolumn{8}{l}{\\textit{ALM-based methods}} \\\\ PProx-PDA~\\cite{hajinezhad2019perturbed} & \\checkmark & -- & \\checkmark & $\\Theta(\\epsilon^{-1})$ & $\\Theta(\\epsilon^{-1})$ & --"
+      }
+    ],
+    "luSingleLoopGradientDescent2022": [
+      {
+        "file": "sections/Acceleration.tex",
+        "line": 164,
+        "context": "which resembles the multiplier update of single-loop perturbed ALMs~\\cite{hajinezhad2019perturbed,luSingleLoopGradientDescent2022} except that it is evaluated at the extrapolated multiplier \\(\\bar{\\blmbd}^k\\). However,"
+      },
+      {
+        "file": "sections/Introduction.tex",
+        "line": 74,
+        "context": "single-loop penalty and linearized ALM or ADMM schemes~\\cite{hajinezhad2019perturbed,luSingleLoopGradientDescent2022,hallak2023adaptive,alacaoglu2024complexity,sun2024dual_descent_alm_admm,elbourkhissi2025perturbed,shi2025momentum} drive the penalty or dual perturbation parameter to order $\\epsilon^{-1}$ to"
+      },
+      {
+        "file": "sections/Introduction.tex",
+        "line": 253,
+        "context": "& $\\mathcal O(\\epsilon^{-2})$ \\\\ GDPA~\\cite{luSingleLoopGradientDescent2022,sun2024dual_descent_alm_admm} & \\checkmark & \\checkmark & -- & $\\Theta(\\epsilon^{-1})$ & $\\Theta(\\epsilon^{-1})$ & --"
+      },
+      {
+        "file": "sections/LRALMFamily.tex",
+        "line": 152,
+        "context": "\\node[cRed,anchor=south west,align=left] at (1.03,0.99) {Linearized ALM~\\cite{luSingleLoopGradientDescent2022}\\\\[-1pt] \\scriptsize\\textcolor{cRed!80}{(GDA on $\\calD_\\rho$)}};"
+      },
+      {
+        "file": "sections/LRALMFamily.tex",
+        "line": 177,
+        "context": "Figure~\\ref{fig:lralm-family}. At \\((\\alpha,\\beta)=(1,1)\\), LRALM recovers linearized ALM~\\cite{luSingleLoopGradientDescent2022}, while \\(\\beta=1\\) with \\(\\alpha\\in(0,1)\\) gives Smoothed GDA~\\cite{zhang2020smoothed}. Setting"
+      },
+      {
+        "file": "sections/Preliminaries.tex",
+        "line": 158,
+        "context": "By Lemma~\\ref{lem:reduced-al}, linearized ALM~\\cite{luSingleLoopGradientDescent2022}, which replaces the exact \\(\\bx\\)-minimization of classical"
+      }
+    ],
+    "li2021rate": [
+      {
+        "file": "sections/Acceleration.tex",
+        "line": 172,
+        "context": "needed for Nesterov acceleration. Inexact ALMs~\\cite{li2021rate,kong2023iteration} likewise solve proximal subproblems, but they fix each one and run an inner accelerated solver until a stopping"
+      },
+      {
+        "file": "sections/Introduction.tex",
+        "line": 64,
+        "context": "augmented Lagrangian methods (ALMs)~\\cite{sahin2019inexact,li2021rate,xie2021proximal} solve a subproblem approximately at every outer iteration, which incurs inner-loop overhead and"
+      },
+      {
+        "file": "sections/Introduction.tex",
+        "line": 247,
+        "context": "& $\\mathcal O(\\epsilon^{-4})$ \\\\ iALM~\\cite{li2021rate,kong2023iteration} & -- & -- & -- & $\\Theta(\\epsilon^{-1})$ & -- & $\\Theta(1)$"
+      },
+      {
+        "file": "sections/Introduction.tex",
+        "line": 312,
+        "context": "methods with accelerated inner solvers~\\cite{li2021rate,lin2022complexity,kong2023iteration}. This contrast motivates the second question we tackle in this paper."
+      }
+    ],
+    "kong2023iteration": [
+      {
+        "file": "sections/Acceleration.tex",
+        "line": 172,
+        "context": "needed for Nesterov acceleration. Inexact ALMs~\\cite{li2021rate,kong2023iteration} likewise solve proximal subproblems, but they fix each one and run an inner accelerated solver until a stopping"
+      },
+      {
+        "file": "sections/Introduction.tex",
+        "line": 247,
+        "context": "& $\\mathcal O(\\epsilon^{-4})$ \\\\ iALM~\\cite{li2021rate,kong2023iteration} & -- & -- & -- & $\\Theta(\\epsilon^{-1})$ & -- & $\\Theta(1)$"
+      },
+      {
+        "file": "sections/Introduction.tex",
+        "line": 312,
+        "context": "methods with accelerated inner solvers~\\cite{li2021rate,lin2022complexity,kong2023iteration}. This contrast motivates the second question we tackle in this paper."
+      }
+    ],
+    "khlebnikov2011optimization": [
+      {
+        "file": "sections/Acceleration.tex",
+        "line": 240,
+        "context": "We next show that the multipliers remain bounded, adapting the quadratic Lyapunov function of~\\cite[Section~2.3]{khlebnikov2011optimization} to the dual recursion of Fast LRALM. \\begin{lemma}[Uniform multiplier bound]"
+      }
+    ],
+    "zhang2022proximal": [
+      {
+        "file": "sections/Acceleration.tex",
+        "line": 342,
+        "context": "Building on the potential function in~\\cite{zhang2022proximal,zhang2020smoothed,li2026smoothing}, we define the Lyapunov sequence tied to Algorithm~\\ref{alg:b2-prime} as"
+      },
+      {
+        "file": "sections/Acceleration.tex",
+        "line": 359,
+        "context": "The above Lyapunov sequence differs from the potential function in~\\cite{zhang2022proximal,zhang2020smoothed,li2026smoothing} in the dual and primal parts. The dual part adds"
+      }
+    ],
+    "wilson2021lyapunov": [
+      {
+        "file": "sections/Acceleration.tex",
+        "line": 362,
+        "context": "the distance term of the estimate-sequence Lyapunov function~\\cite{nesterov2018lectures,wilson2021lyapunov}, since under Nesterov extrapolation the dual gap alone need not decrease. The primal part replaces"
+      }
+    ],
+    "charisopoulos2021low": [
+      {
+        "file": "sections/Introduction.tex",
+        "line": 17,
+        "context": "$\\calA(\\bx)$ \\cite{charisopoulos2021low,markovsky2008structured,parekh2015convex}. Several models of practical interest take this form."
+      },
+      {
+        "file": "sections/Introduction.tex",
+        "line": 32,
+        "context": "\\textbf{Robust low-rank matrix recovery}~\\cite{charisopoulos2021low}. Given a linear measurement map $\\mathcal M\\colon\\RR^{d_1\\times d_2}\\to\\RR^m$ and"
+      }
+    ],
+    "markovsky2008structured": [
+      {
+        "file": "sections/Introduction.tex",
+        "line": 17,
+        "context": "$\\calA(\\bx)$ \\cite{charisopoulos2021low,markovsky2008structured,parekh2015convex}. Several models of practical interest take this form."
+      }
+    ],
+    "parekh2015convex": [
+      {
+        "file": "sections/Introduction.tex",
+        "line": 17,
+        "context": "$\\calA(\\bx)$ \\cite{charisopoulos2021low,markovsky2008structured,parekh2015convex}. Several models of practical interest take this form."
+      }
+    ],
+    "duchi2019solving": [
+      {
+        "file": "sections/Introduction.tex",
+        "line": 20,
+        "context": "\\subsection{Motivating Examples} \\textbf{Robust phase retrieval}~\\cite{duchi2019solving}. Given measurement vectors $\\mathbf a_i\\in\\RR^n$ and observations"
+      }
+    ],
+    "Drusvyatskiy2019": [
+      {
+        "file": "sections/Introduction.tex",
+        "line": 61,
+        "context": "Most algorithms for Problems~\\eqref{prob:main} and~\\eqref{prob:split} rely on nested loops. Prox-linear methods~\\cite{Drusvyatskiy2019}, quadratic penalty methods~\\cite{kong2019complexity,lin2022complexity}, and inexact or proximal"
+      }
+    ],
+    "kong2019complexity": [
+      {
+        "file": "sections/Introduction.tex",
+        "line": 62,
+        "context": "loops. Prox-linear methods~\\cite{Drusvyatskiy2019}, quadratic penalty methods~\\cite{kong2019complexity,lin2022complexity}, and inexact or proximal augmented Lagrangian methods"
+      }
+    ],
+    "lin2022complexity": [
+      {
+        "file": "sections/Introduction.tex",
+        "line": 62,
+        "context": "loops. Prox-linear methods~\\cite{Drusvyatskiy2019}, quadratic penalty methods~\\cite{kong2019complexity,lin2022complexity}, and inexact or proximal augmented Lagrangian methods"
+      },
+      {
+        "file": "sections/Introduction.tex",
+        "line": 312,
+        "context": "methods with accelerated inner solvers~\\cite{li2021rate,lin2022complexity,kong2023iteration}. This contrast motivates the second question we tackle in this paper."
+      }
+    ],
+    "sahin2019inexact": [
+      {
+        "file": "sections/Introduction.tex",
+        "line": 64,
+        "context": "augmented Lagrangian methods (ALMs)~\\cite{sahin2019inexact,li2021rate,xie2021proximal} solve a subproblem approximately at every outer iteration, which incurs inner-loop overhead and"
+      }
+    ],
+    "xie2021proximal": [
+      {
+        "file": "sections/Introduction.tex",
+        "line": 64,
+        "context": "augmented Lagrangian methods (ALMs)~\\cite{sahin2019inexact,li2021rate,xie2021proximal} solve a subproblem approximately at every outer iteration, which incurs inner-loop overhead and"
+      }
+    ],
+    "bohm2021variable": [
+      {
+        "file": "sections/Introduction.tex",
+        "line": 71,
+        "context": "$\\mathcal O(\\epsilon^{-3})$ complexity only by letting a parameter scale with $\\epsilon$. Variable smoothing~\\cite{bohm2021variable} replaces $h$ with its Moreau envelope using a smoothing parameter of order $\\epsilon$, while"
+      }
+    ],
+    "hallak2023adaptive": [
+      {
+        "file": "sections/Introduction.tex",
+        "line": 74,
+        "context": "single-loop penalty and linearized ALM or ADMM schemes~\\cite{hajinezhad2019perturbed,luSingleLoopGradientDescent2022,hallak2023adaptive,alacaoglu2024complexity,sun2024dual_descent_alm_admm,elbourkhissi2025perturbed,shi2025momentum} drive the penalty or dual perturbation parameter to order $\\epsilon^{-1}$ to"
+      }
+    ],
+    "alacaoglu2024complexity": [
+      {
+        "file": "sections/Introduction.tex",
+        "line": 74,
+        "context": "single-loop penalty and linearized ALM or ADMM schemes~\\cite{hajinezhad2019perturbed,luSingleLoopGradientDescent2022,hallak2023adaptive,alacaoglu2024complexity,sun2024dual_descent_alm_admm,elbourkhissi2025perturbed,shi2025momentum} drive the penalty or dual perturbation parameter to order $\\epsilon^{-1}$ to"
+      }
+    ],
+    "sun2024dual_descent_alm_admm": [
+      {
+        "file": "sections/Introduction.tex",
+        "line": 74,
+        "context": "single-loop penalty and linearized ALM or ADMM schemes~\\cite{hajinezhad2019perturbed,luSingleLoopGradientDescent2022,hallak2023adaptive,alacaoglu2024complexity,sun2024dual_descent_alm_admm,elbourkhissi2025perturbed,shi2025momentum} drive the penalty or dual perturbation parameter to order $\\epsilon^{-1}$ to"
+      },
+      {
+        "file": "sections/Introduction.tex",
+        "line": 253,
+        "context": "& $\\mathcal O(\\epsilon^{-2})$ \\\\ GDPA~\\cite{luSingleLoopGradientDescent2022,sun2024dual_descent_alm_admm} & \\checkmark & \\checkmark & -- & $\\Theta(\\epsilon^{-1})$ & $\\Theta(\\epsilon^{-1})$ & --"
+      }
+    ],
+    "elbourkhissi2025perturbed": [
+      {
+        "file": "sections/Introduction.tex",
+        "line": 74,
+        "context": "single-loop penalty and linearized ALM or ADMM schemes~\\cite{hajinezhad2019perturbed,luSingleLoopGradientDescent2022,hallak2023adaptive,alacaoglu2024complexity,sun2024dual_descent_alm_admm,elbourkhissi2025perturbed,shi2025momentum} drive the penalty or dual perturbation parameter to order $\\epsilon^{-1}$ to"
+      }
+    ],
+    "shi2025momentum": [
+      {
+        "file": "sections/Introduction.tex",
+        "line": 74,
+        "context": "single-loop penalty and linearized ALM or ADMM schemes~\\cite{hajinezhad2019perturbed,luSingleLoopGradientDescent2022,hallak2023adaptive,alacaoglu2024complexity,sun2024dual_descent_alm_admm,elbourkhissi2025perturbed,shi2025momentum} drive the penalty or dual perturbation parameter to order $\\epsilon^{-1}$ to"
+      }
+    ],
+    "zhang2022global": [
+      {
+        "file": "sections/Introduction.tex",
+        "line": 80,
+        "context": "complexity rely on structural regularity conditions, such as polyhedral error bounds for affine constraints~\\cite{zhang2022global} or uniform LICQ for smooth nonlinear constraints~\\cite{elbourkhissi2025linearized,liu2026fixed}."
+      },
+      {
+        "file": "sections/Introduction.tex",
+        "line": 250,
+        "context": "& $\\tilde{\\mathcal O}(\\epsilon^{-5/2})$ \\\\ S-prox-ALM~\\cite{zhang2022global} & \\checkmark & -- & \\checkmark & $\\Theta(1)$ & -- & $\\Theta(1)$"
+      }
+    ],
+    "elbourkhissi2025linearized": [
+      {
+        "file": "sections/Introduction.tex",
+        "line": 81,
+        "context": "bounds for affine constraints~\\cite{zhang2022global} or uniform LICQ for smooth nonlinear constraints~\\cite{elbourkhissi2025linearized,liu2026fixed}."
+      }
+    ],
+    "liu2026fixed": [
+      {
+        "file": "sections/Introduction.tex",
+        "line": 81,
+        "context": "bounds for affine constraints~\\cite{zhang2022global} or uniform LICQ for smooth nonlinear constraints~\\cite{elbourkhissi2025linearized,liu2026fixed}."
+      },
+      {
+        "file": "sections/Introduction.tex",
+        "line": 256,
+        "context": "& $\\mathcal O(\\epsilon^{-3})$ \\\\ NR-LALM~\\cite{liu2026fixed} & \\checkmark & \\checkmark & -- & $\\Theta(1)$ & -- & --"
+      }
+    ],
+    "lin2020gradient": [
+      {
+        "file": "sections/Introduction.tex",
+        "line": 96,
+        "context": "minimax problems, two-timescale GDA requires $\\mathcal O(\\epsilon^{-6})$ iterations~\\cite{lin2020gradient}. Primal smoothing in Smoothed GDA~\\cite{zhang2020smoothed} and dual perturbation in Perturbed"
+      }
+    ],
+    "lu2020hybrid": [
+      {
+        "file": "sections/Introduction.tex",
+        "line": 98,
+        "context": "GDA~\\cite{zhang2020smoothed} and dual perturbation in Perturbed GDA~\\cite{lu2020hybrid,xu2023unified} each improve the rate to $\\mathcal O(\\epsilon^{-4})$. Combining both techniques, Perturbed Smoothed GDA"
+      },
+      {
+        "file": "sections/LRALMFamily.tex",
+        "line": 155,
+        "context": "\\node[cTeal,anchor=south west] at (1.03,0.04) {Perturbed GDA~\\cite{lu2020hybrid,xu2023unified}}; % the two regularization directions"
+      },
+      {
+        "file": "sections/LRALMFamily.tex",
+        "line": 180,
+        "context": "\\(\\beta=0\\) with \\(\\bmu^0=\\zero\\) yields Perturbed GDA~\\cite{lu2020hybrid,xu2023unified} at \\(\\alpha=1\\) and Perturbed Smoothed GDA~\\cite{li2026smoothing} for \\(\\alpha\\in(0,1)\\). Finally, the region"
+      },
+      {
+        "file": "sections/Preliminaries.tex",
+        "line": 198,
+        "context": "and strong concavity in \\(\\blmbd\\), we add primal~\\cite{zhang2020smoothed} and dual~\\cite{lu2020hybrid,xu2023unified,zheng2023universal,li2026smoothing} quadratic regularizers centered at \\((\\bz,\\bmu)\\in\\RR^n\\times\\RR^m\\), yielding"
+      }
+    ],
+    "xu2023unified": [
+      {
+        "file": "sections/Introduction.tex",
+        "line": 98,
+        "context": "GDA~\\cite{zhang2020smoothed} and dual perturbation in Perturbed GDA~\\cite{lu2020hybrid,xu2023unified} each improve the rate to $\\mathcal O(\\epsilon^{-4})$. Combining both techniques, Perturbed Smoothed GDA"
+      },
+      {
+        "file": "sections/LRALMFamily.tex",
+        "line": 155,
+        "context": "\\node[cTeal,anchor=south west] at (1.03,0.04) {Perturbed GDA~\\cite{lu2020hybrid,xu2023unified}}; % the two regularization directions"
+      },
+      {
+        "file": "sections/LRALMFamily.tex",
+        "line": 180,
+        "context": "\\(\\beta=0\\) with \\(\\bmu^0=\\zero\\) yields Perturbed GDA~\\cite{lu2020hybrid,xu2023unified} at \\(\\alpha=1\\) and Perturbed Smoothed GDA~\\cite{li2026smoothing} for \\(\\alpha\\in(0,1)\\). Finally, the region"
+      },
+      {
+        "file": "sections/Preliminaries.tex",
+        "line": 198,
+        "context": "and strong concavity in \\(\\blmbd\\), we add primal~\\cite{zhang2020smoothed} and dual~\\cite{lu2020hybrid,xu2023unified,zheng2023universal,li2026smoothing} quadratic regularizers centered at \\((\\bz,\\bmu)\\in\\RR^n\\times\\RR^m\\), yielding"
+      }
+    ],
+    "pan2021efficient": [
+      {
+        "file": "sections/Introduction.tex",
+        "line": 106,
+        "context": "$\\mathcal O(\\epsilon^{-3})$ through $\\epsilon$-dependent dual regularization~\\cite{pan2021efficient,he2024approximation,xu2026rada}."
+      }
+    ],
+    "he2024approximation": [
+      {
+        "file": "sections/Introduction.tex",
+        "line": 106,
+        "context": "$\\mathcal O(\\epsilon^{-3})$ through $\\epsilon$-dependent dual regularization~\\cite{pan2021efficient,he2024approximation,xu2026rada}."
+      }
+    ],
+    "xu2026rada": [
+      {
+        "file": "sections/Introduction.tex",
+        "line": 106,
+        "context": "$\\mathcal O(\\epsilon^{-3})$ through $\\epsilon$-dependent dual regularization~\\cite{pan2021efficient,he2024approximation,xu2026rada}."
+      }
+    ],
+    "carmon2020lower": [
+      {
+        "file": "sections/Introduction.tex",
+        "line": 180,
+        "context": "$\\mathcal O(\\epsilon^{-5/2})$. The baseline lower bound $\\Omega(\\epsilon^{-2})$ is due to~\\cite{carmon2020lower}.} \\label{fig:complexity-axis}"
+      },
+      {
+        "file": "sections/LRALMFamily.tex",
+        "line": 188,
+        "context": "iteration complexity over \\(\\mathcal I(\\mathbf C,\\Delta)\\)~\\cite{nesterov2018lectures,carmon2020lower,li2021complexity} as follows."
+      },
+      {
+        "file": "sections/Preliminaries.tex",
+        "line": 72,
+        "context": "For complexity analysis, we specify the problem class~\\cite{carmon2020lower} and the oracle model for Problem~\\eqref{prob:main}."
+      }
+    ],
+    "mahdavinia2022tight": [
+      {
+        "file": "sections/Introduction.tex",
+        "line": 190,
+        "context": "primal-dual methods apply only to individual algorithms under prescribed stepsizes~\\cite{mahdavinia2022tight,li2026smoothing}, whether parameter growth is inherent to single-loop linearized ALMs, and whether the penalty itself must"
+      },
+      {
+        "file": "sections/LRALMFamily.tex",
+        "line": 469,
+        "context": "rotational construction of~\\cite[Example~5.1]{li2026smoothing} and~\\cite[Appendix~C.1]{mahdavinia2022tight}, attaching a convex turnaround and a linear tail outside radius \\(R_*\\) so that \\(f\\) remains \\(1\\)-smooth,"
+      }
+    ],
+    "zhang2026matching": [
+      {
+        "file": "sections/Introduction.tex",
+        "line": 267,
+        "context": "& \\cellcolor{gray!25}$\\Theta(\\epsilon^{-3})$ \\\\ Alg.~1 of~\\cite{zhang2026matching}\\tnote{b} & \\checkmark & \\checkmark & \\checkmark & -- & $\\Theta(\\epsilon^{-1})$ & $\\Theta(1)$"
+      },
+      {
+        "file": "sections/Introduction.tex",
+        "line": 307,
+        "context": "single-loop projected extragradient method with dual gradient averaging~\\cite{zhang2026matching}. For nonsmooth composite minimax and affinely constrained problems, existing $\\epsilon^{-5/2}$-order algorithms all"
+      }
+    ],
+    "pan2026optimal": [
+      {
+        "file": "sections/Introduction.tex",
+        "line": 270,
+        "context": "& $\\mathcal O(\\epsilon^{-5/2})$ \\\\ Tracked-FOAM~\\cite{pan2026optimal} & -- & \\checkmark & \\checkmark & -- & $\\Theta(\\epsilon^{-1})$ & $\\Theta(1)$"
+      },
+      {
+        "file": "sections/Introduction.tex",
+        "line": 302,
+        "context": "smooth NC-C minimax problems, the optimal deterministic first-order complexity for $\\epsilon$-GS points is $\\Theta(\\epsilon^{-5/2})$~\\cite{pan2026optimal}, consistent with the nonconvex-strongly-concave lower bound at dual condition"
+      },
+      {
+        "file": "sections/Introduction.tex",
+        "line": 305,
+        "context": "number $\\Theta(\\epsilon^{-1})$~\\cite{zhang2021complexity,li2021complexity}. This rate is attained by multi-loop schemes~\\cite{pan2026optimal} and by a single-loop projected extragradient method with dual gradient"
+      },
+      {
+        "file": "sections/Introduction.tex",
+        "line": 333,
+        "context": "optimal deterministic first-order rate for smooth nonconvex--concave minimax problems under game stationarity~\\cite{pan2026optimal}. In the absence of dual projection, we derive uniform multiplier bounds directly from the reduced"
+      },
+      {
+        "file": "sections/Preliminaries.tex",
+        "line": 177,
+        "context": "\\(\\epsilon\\)-game-stationary (\\(\\epsilon\\)-GS) point of \\(\\min_{\\bx}\\max_{\\blmbd}\\calD_\\rho(\\bx,\\blmbd)\\)~\\cite{li2026smoothing,pan2026optimal} if"
+      }
+    ],
+    "li2021complexity": [
+      {
+        "file": "sections/Introduction.tex",
+        "line": 304,
+        "context": "consistent with the nonconvex-strongly-concave lower bound at dual condition number $\\Theta(\\epsilon^{-1})$~\\cite{zhang2021complexity,li2021complexity}. This rate is attained by multi-loop schemes~\\cite{pan2026optimal} and by a"
+      },
+      {
+        "file": "sections/LRALMFamily.tex",
+        "line": 188,
+        "context": "iteration complexity over \\(\\mathcal I(\\mathbf C,\\Delta)\\)~\\cite{nesterov2018lectures,carmon2020lower,li2021complexity} as follows."
+      }
+    ],
+    "ke2026efficient": [
+      {
+        "file": "sections/Introduction.tex",
+        "line": 310,
+        "context": "rely on nested loops, including multi-loop proximal-point or anchored minimax schemes~\\cite{kong2021accelerated,ke2026efficient} and inexact ALM or penalty methods with accelerated inner"
+      }
+    ],
+    "zheng2023universal": [
+      {
+        "file": "sections/LRALMFamily.tex",
+        "line": 147,
+        "context": "\\node[align=center,text=cNavy] at (0.5,0.5) {DS-GDA~\\cite{zheng2023universal}\\\\[-1pt] \\scriptsize\\textcolor{cNavy!75}{$(\\alpha,\\beta)\\in(0,1)^2$}};"
+      },
+      {
+        "file": "sections/LRALMFamily.tex",
+        "line": 183,
+        "context": "\\((\\alpha,\\beta)\\in(0,1)^2\\) shares the constant-stepsize update structure of doubly smoothed GDA (DS-GDA)~\\cite{zheng2023universal}."
+      },
+      {
+        "file": "sections/Preliminaries.tex",
+        "line": 198,
+        "context": "and strong concavity in \\(\\blmbd\\), we add primal~\\cite{zhang2020smoothed} and dual~\\cite{lu2020hybrid,xu2023unified,zheng2023universal,li2026smoothing} quadratic regularizers centered at \\((\\bz,\\bmu)\\in\\RR^n\\times\\RR^m\\), yielding"
+      }
+    ],
+    "rockafellar1970convex": [
+      {
+        "file": "sections/Preliminaries.tex",
+        "line": 8,
+        "context": "Following~\\cite{rockafellar1970convex}, for a proper closed convex function \\(h\\colon\\RR^m\\to\\RR\\cup\\{+\\infty\\}\\), its subdifferential, convex conjugate,"
+      },
+      {
+        "file": "sections/Preliminaries.tex",
+        "line": 212,
+        "context": "saddle-point properties of \\(\\mathcal P_s\\), which follow directly from standard convex analysis~\\cite{rockafellar1970convex}."
+      }
+    ],
+    "rockafellar1976augmented": [
+      {
+        "file": "sections/Preliminaries.tex",
+        "line": 110,
+        "context": "Eliminating \\(\\by\\) yields the reduced augmented Lagrangian~\\cite{rockafellar1976augmented}, \\begin{equation}"
+      }
+    ],
+    "hestenes1969multiplier": [
+      {
+        "file": "sections/Preliminaries.tex",
+        "line": 160,
+        "context": "\\(\\bx\\)-minimization of classical ALM~\\cite{hestenes1969multiplier,powell1969method,rockafellar1973multiplier} by a single gradient step, is alternating gradient descent-ascent (GDA) on"
+      }
+    ],
+    "powell1969method": [
+      {
+        "file": "sections/Preliminaries.tex",
+        "line": 160,
+        "context": "\\(\\bx\\)-minimization of classical ALM~\\cite{hestenes1969multiplier,powell1969method,rockafellar1973multiplier} by a single gradient step, is alternating gradient descent-ascent (GDA) on"
+      }
+    ],
+    "rockafellar1973multiplier": [
+      {
+        "file": "sections/Preliminaries.tex",
+        "line": 160,
+        "context": "\\(\\bx\\)-minimization of classical ALM~\\cite{hestenes1969multiplier,powell1969method,rockafellar1973multiplier} by a single gradient step, is alternating gradient descent-ascent (GDA) on"
+      }
+    ]
+  },
+  "bibmeta": {
+    "manna2025deep": {
+      "file": "tools/refer.bib",
+      "author": "Manna, Asim and Sista, Raviteja and Sheet, Debdoot",
+      "title": "Deep neural hashing for content-based medical image retrieval: A survey",
+      "year": "2025"
+    },
+    "luo2024learning": {
+      "file": "tools/refer.bib",
+      "author": "Luo, Fangyuan and Chen, Yankai and Wu, Jun and Li, Tong and Yu, Philip S and Liu, Xue",
+      "title": "Learning to Hash for Recommendation: A Survey",
+      "year": "2024"
+    },
+    "Xia2014Supervised": {
+      "file": "tools/refer.bib",
+      "author": "Xia, Rui and Pan, Yin and Lai, Hao and Liu, Cong and Yan, Shuicheng",
+      "title": "Supervised Hashing for Image Retrieval via Image Representation Learning",
+      "year": "2014"
+    },
+    "Shen2015Supervised": {
+      "file": "tools/refer.bib",
+      "author": "Shen, Fumin and Shen, Chunhua and Liu, Wei and Shen, Heng Tao",
+      "title": "Supervised Discrete Hashing",
+      "year": "2015"
+    },
+    "Cao2017HashNetDL": {
+      "file": "tools/refer.bib",
+      "author": "Zhangjie Cao and Mingsheng Long and Jianmin Wang and Philip S Yu",
+      "title": "Hashnet: Deep learning to hash by continuation",
+      "year": "2017"
+    },
+    "liDeepSupervisedHashing": {
+      "file": "tools/refer.bib",
+      "author": "Jiang, Qing-Yuan and Cui, Xue and Li, Wu-Jun",
+      "title": "Deep Discrete Supervised Hashing",
+      "year": "2018"
+    },
+    "li2017deep": {
+      "file": "tools/refer.bib",
+      "author": "Li, Qi and Sun, Zhenan and He, Ran and Tan, Tieniu",
+      "title": "Deep supervised discrete hashing",
+      "year": "2017"
+    },
+    "liFeatureLearningBased2016": {
+      "file": "tools/refer.bib",
+      "author": "Li, Wu-Jun and Wang, Sheng and Kang, Wang-Cheng",
+      "title": "Feature Learning Based Deep Supervised Hashing with Pairwise Labels",
+      "year": "2016"
+    },
+    "hoeOneLossAll2021": {
+      "file": "tools/refer.bib",
+      "author": "iun Tian Hoe and Kam Woh Ng and Tianyu Zhang and Chee Seng Chan and Yi-Zhe Song and Tao Xiang",
+      "title": "One Loss for All: Deep Hashing with a Single Cosine Similarity Based Learning Objective",
+      "year": "2021"
+    },
+    "wangADMMEfficientDeep2019": {
+      "file": "tools/refer.bib",
+      "author": "Wang, Junxiang and Yu, Fuxun and Chen, Xiang and Zhao, Liang",
+      "title": "{{ADMM",
+      "year": "2019"
+    },
+    "jang2022dhd": {
+      "file": "tools/refer.bib",
+      "author": "Young Kyun Jang and Geonmo Gu and ByungSoo Ko and Isaac Kang and Nam Ik Cho",
+      "title": "Deep Hash Distillation for Image Retrieval",
+      "year": "2022"
+    },
+    "tan2022bsth": {
+      "file": "tools/refer.bib",
+      "author": "Wentao Tan and Lei Zhu and Weili Guan and Jingjing Li and Zhiyong Cheng",
+      "title": "Bit-aware Semantic Transformer Hashing for Multi-modal Retrieval",
+      "year": "2022"
+    },
+    "guan2022cmpb": {
+      "file": "tools/refer.bib",
+      "author": "Guan, Ling and others",
+      "title": "Precision medical image hash retrieval by interpretability and feature fusion",
+      "year": "2022"
+    },
+    "karimi2025hingeLogistic": {
+      "file": "tools/refer.bib",
+      "author": "Akbar Karimi",
+      "title": "Differences Between Hinge Loss and Logistic Loss",
+      "year": "2025"
+    },
+    "shen2016fast": {
+      "file": "tools/refer.bib",
+      "author": "Shen, Fumin and Zhou, Xiang and Yang, Yang and Song, Jingkuan and Shen, Heng Tao and Tao, Dacheng",
+      "title": "A fast optimization method for general binary code learning",
+      "year": "2016"
+    },
+    "davis2019stochastic": {
+      "file": "tools/refer.bib",
+      "author": "Davis, Damek and Drusvyatskiy, Dmitriy",
+      "title": "Stochastic model-based minimization of weakly convex functions",
+      "year": "2019"
+    },
+    "gao2024stochastic": {
+      "file": "tools/refer.bib",
+      "author": "Gao, Wenzhi and Deng, Qi",
+      "title": "Stochastic weakly convex optimization beyond lipschitz continuity",
+      "year": "2024"
+    },
+    "bao2025convergence": {
+      "file": "tools/refer.bib",
+      "author": "Bao, Chenglong and Yuan, Yancheng and Zhu, Shulan",
+      "title": "On the Convergence Analysis of an Inexact Preconditioned Stochastic Model-Based Algorithm",
+      "year": "2025"
+    },
+    "tao1986algorithms": {
+      "file": "tools/refer.bib",
+      "author": "Tao, Pham Dinh and others",
+      "title": "Algorithms for solving a class of nonconvex optimization problems. Methods of subgradients",
+      "year": "1986"
+    },
+    "liu2019successive": {
+      "file": "tools/refer.bib",
+      "author": "Liu, Tianxiang and Pong, Ting Kei and Takeda, Akiko",
+      "title": "A successive difference-of-convex approximation method for a class of nonconvex nonsmooth optimization problems",
+      "year": "2019"
+    },
+    "liu2019refined": {
+      "file": "tools/refer.bib",
+      "author": "Liu, Tianxiang and Pong, Ting Kei and Takeda, Akiko",
+      "title": "A refined convergence analysis of pDCA e with applications to simultaneous sparse recovery and outlier detection",
+      "year": "2019"
+    },
+    "liu2022inexact": {
+      "file": "tools/refer.bib",
+      "author": "T. Liu and A. Takeda",
+      "title": "{A",
+      "year": "2022"
+    },
+    "yang2025inexact": {
+      "file": "tools/refer.bib",
+      "author": "Yang, Lei and Hu, Jingjing and Toh, Kim-Chuan",
+      "title": "{A",
+      "year": "2025"
+    },
+    "nitanda2017stochastic": {
+      "file": "tools/refer.bib",
+      "author": "Nitanda, Atsushi and Suzuki, Taiji",
+      "title": "Stochastic difference of convex algorithm and its application to training deep {B",
+      "year": "2017"
+    },
+    "sun2023algorithms": {
+      "file": "tools/refer.bib",
+      "author": "Sun, Kaizhao and Sun, Xu Andy",
+      "title": "Algorithms for difference-of-convex programs based on difference-of-{M",
+      "year": "2023"
+    },
+    "sun2026equivalence": {
+      "file": "tools/refer.bib",
+      "author": "Sun, Shuzhong",
+      "title": "Equivalence of the Polyak-{\\L",
+      "year": "2026"
+    },
+    "bot2025full": {
+      "file": "tools/refer.bib",
+      "author": "Bot, Radu Ioan and Nenov, Radoslav and Tao, Ming",
+      "title": "A full splitting algorithm for structured difference-of-convex programs",
+      "year": "2025"
+    },
+    "trandinh2018smooth": {
+      "file": "tools/refer.bib",
+      "author": "Q. Tran-Dinh and O. Fercoq and V. Cevher",
+      "title": "A smooth primal-dual optimization framework for nonsmooth composite convex minimization",
+      "year": "2018"
+    },
+    "tran2018smooth": {
+      "file": "tools/refer.bib",
+      "author": "Q. Tran-Dinh and O. Fercoq and V. Cevher",
+      "title": "A smooth primal-dual optimization framework for nonsmooth composite convex minimization",
+      "year": "2018"
+    },
+    "bot2020variable": {
+      "file": "tools/refer.bib",
+      "author": "R. I. Bo\\c{t",
+      "title": "A forward-backward-forward differential equation and its asymptotic properties",
+      "year": "2020"
+    },
+    "boct2020variable": {
+      "file": "tools/refer.bib",
+      "author": "R. I. Bo{\\c{t",
+      "title": "Variable smoothing for convex optimization problems using stochastic gradients",
+      "year": "2020"
+    },
+    "bot2015variable": {
+      "file": "tools/refer.bib",
+      "author": "R. I. Bo{\\c{t",
+      "title": "A variable smoothing algorithm for solving convex optimization problems",
+      "year": "2015"
+    },
+    "bohm2021variable": {
+      "file": "tools/refer.bib",
+      "author": "A. B\\",
+      "title": "Variable smoothing for weakly convex composite functions",
+      "year": "2021"
+    },
+    "yao2024note": {
+      "file": "tools/refer.bib",
+      "author": "Y. Yao and Q. Lin and T. Yang",
+      "title": "A note on complexity for two classes of structured non-smooth non-convex compositional optimization",
+      "year": "2024"
+    },
+    "kume2024variable": {
+      "file": "tools/refer.bib",
+      "author": "K. Kume and I. Yamada",
+      "title": "A variable smoothing for nonconvexly constrained nonsmooth optimization with application to sparse spectral clustering",
+      "year": "2024"
+    },
+    "Alacaoglu24a": {
+      "file": "tools/refer.bib",
+      "author": "A. Alacaoglu and S. J. Wright",
+      "title": "Complexity of single loop algorithms for nonlinear programming with stochastic objective and constraints",
+      "year": "2024"
+    },
+    "lu2024variancereduced": {
+      "file": "tools/refer.bib",
+      "author": "Z. Lu and X. Mei and Y. Xiao",
+      "title": "Variance-reduced stochastic proximal methods for weakly convex regularized problems with nonsmooth nonconvex composite terms",
+      "year": "2024"
+    },
+    "deng2025single": {
+      "file": "tools/refer.bib",
+      "author": "K. Deng and Z. Peng and W. Wu",
+      "title": "Single-loop $\\mathcal{O",
+      "year": "2025"
+    },
+    "LuMeiXiao24": {
+      "file": "tools/refer.bib",
+      "author": "Z. Lu and S. Mei and Y. Xiao",
+      "title": "Variance-reduced first-order methods for deterministically constrained stochastic nonconvex optimization with strong convergence guarantees",
+      "year": "2024"
+    },
+    "LuXiao25": {
+      "file": "tools/refer.bib",
+      "author": "Z. Lu and Y. Xiao",
+      "title": "First-order methods for stochastic and finite-sum convex optimization with deterministic constraints",
+      "year": "2025"
+    },
+    "zhang2025complexity": {
+      "file": "tools/refer.bib",
+      "author": "H. Zhang and N. Marumo and T. K. Pong and A. Takeda",
+      "title": "Complexity and convergence analysis of a single-loop SDCAM for Lipschitz composite optimization and beyond",
+      "year": "2025"
+    },
+    "karimi2025differences": {
+      "file": "tools/refer.bib",
+      "author": "A. Karimi",
+      "title": "Differences between hinge loss and logistic loss",
+      "year": "2025"
+    },
+    "gao2024gradient": {
+      "file": "tools/refer.bib",
+      "author": "Gao, Wenzhi and Chu, Ya-Chi and Ye, Yinyu and Udell, Madeleine",
+      "title": "Gradient methods with online scaling",
+      "year": "2024"
+    },
+    "zhuang2019surrogate": {
+      "file": "tools/refer.bib",
+      "author": "Zhuang, Zhenxun and Cutkosky, Ashok and Orabona, Francesco",
+      "title": "Surrogate losses for online learning of stepsizes in stochastic non-convex optimization",
+      "year": "2019"
+    },
+    "rockafellar2009variational": {
+      "file": "tools/refer.bib",
+      "author": "Rockafellar, R Tyrrell and Wets, Roger J-B",
+      "title": "Variational analysis",
+      "year": "2009"
+    },
+    "bot2019proximal": {
+      "file": "tools/refer.bib",
+      "author": "Bot, Radu Ioan and Csetnek, Erno Robert and Nguyen, Dang-Khoa",
+      "title": "A proximal minimization algorithm for structured nonconvex and nonsmooth problems",
+      "year": "2019"
+    },
+    "boct2016inertial": {
+      "file": "tools/refer.bib",
+      "author": "Bo{\\c{t",
+      "title": "An inertial forward--backward algorithm for the minimization of the sum of two nonconvex functions",
+      "year": "2016"
+    },
+    "boct2020proximal": {
+      "file": "tools/refer.bib",
+      "author": "Bo{\\c{t",
+      "title": "The proximal alternating direction method of multipliers in the nonconvex setting: convergence analysis and rates",
+      "year": "2020"
+    },
+    "zhang2020optimal": {
+      "file": "tools/refer.bib",
+      "author": "Zhang, Zhe and Lan, Guanghui",
+      "title": "Optimal algorithms for convex nested stochastic composite optimization",
+      "year": "2020"
+    },
+    "wang2024alexr": {
+      "file": "tools/refer.bib",
+      "author": "Bokun Wang and Tianbao Yang",
+      "title": "ALEXR: An Optimal Single-Loop Algorithm for Convex Finite-Sum Coupled Compositional Stochastic Optimization",
+      "year": "2024"
+    },
+    "duchi2018": {
+      "file": "tools/refer.bib",
+      "author": "Duchi, John C. and Ruan, Feng",
+      "title": "Stochastic Methods for Composite and Weakly Convex Optimization Problems",
+      "year": "2018"
+    },
+    "davis2019": {
+      "file": "tools/refer.bib",
+      "author": "Davis, Damek and Drusvyatskiy, Dmitriy",
+      "title": "Stochastic Model-Based Minimization of Weakly Convex Functions",
+      "year": "2019"
+    },
+    "Drusvyatskiy2019": {
+      "file": "tools/refer.bib",
+      "author": "Drusvyatskiy, D. and Paquette, C.",
+      "title": "Efficiency of minimizing compositions of convex functions and smooth maps",
+      "year": "2019"
+    },
+    "wang2024": {
+      "file": "tools/refer.bib",
+      "author": "Wang, Xiao and Chen, Xiaojun",
+      "title": "Complexity of Finite-Sum Optimization with Nonsmooth Composite Functions and Non-Lipschitz Regularization",
+      "year": "2024"
+    },
+    "hu23": {
+      "file": "tools/refer.bib",
+      "author": "Hu, Quanqi and Zhu, Dixian and Yang, Tianbao",
+      "title": "Non-Smooth Weakly-Convex Finite-sum Coupled Compositional Optimization",
+      "year": "2023"
+    },
+    "pong2019": {
+      "file": "tools/refer.bib",
+      "author": "Liu, Tianxiang and Pong, Ting Kei and Takeda, Akiko",
+      "title": "A successive difference-of-convex approximation method for a class of nonconvex nonsmooth optimization problems",
+      "year": "2019"
+    },
+    "Bolte2018": {
+      "file": "tools/refer.bib",
+      "author": "Bolte, Jérôme and Sabach, Shoham and Teboulle, Marc",
+      "title": "Nonconvex Lagrangian-Based Optimization: Monitoring Schemes and Global Convergence",
+      "year": "2018"
+    },
+    "nocedal2006numerical": {
+      "file": "tools/refer.bib",
+      "author": "Nocedal, Jorge",
+      "title": "Numerical optimization",
+      "year": "2006"
+    },
+    "charisopoulos2019composite": {
+      "file": "tools/refer.bib",
+      "author": "Charisopoulos, Vasileios and Davis, Damek and D{\\'\\i",
+      "title": "Composite optimization for robust blind deconvolution",
+      "year": "2019"
+    },
+    "charisopoulos2021low": {
+      "file": "tools/refer.bib",
+      "author": "V. Charisopoulos and Y. Chen and D. Davis and M. D{\\'\\i",
+      "title": "Low-rank matrix recovery with composite optimization: good conditioning and rapid convergence",
+      "year": "2021"
+    },
+    "markovsky2008structured": {
+      "file": "tools/refer.bib",
+      "author": "I. Markovsky",
+      "title": "Structured low-rank approximation and its applications",
+      "year": "2008"
+    },
+    "parekh2015convex": {
+      "file": "tools/refer.bib",
+      "author": "A. Parekh and I. W. Selesnick",
+      "title": "Convex fused {LASSO",
+      "year": "2015"
+    },
+    "bertsekas1997nonlinear": {
+      "file": "tools/refer.bib",
+      "author": "Bertsekas, Dimitri P",
+      "title": "Nonlinear programming",
+      "year": "1997"
+    },
+    "liuDeepSupervisedHashing": {
+      "file": "tools/refer.bib",
+      "author": "Liu, Haomiao and Wang, Ruiping and Shan, Shiguang and Chen, Xilin",
+      "title": "Deep Supervised Hashing for Fast Image Retrieval",
+      "year": "2016"
+    },
+    "guo2023preconditioned": {
+      "file": "tools/refer.bib",
+      "author": "Guo, Jiahong and Wang, Xiao and Xiao, Xiantao",
+      "title": "Preconditioned primal-dual gradient methods for nonconvex composite and finite-sum optimization",
+      "year": "2023"
+    },
+    "benaim2005": {
+      "file": "tools/refer.bib",
+      "author": "Bena\\",
+      "title": "Stochastic approximations and differential inclusions",
+      "year": "2005"
+    },
+    "majewski2018": {
+      "file": "tools/refer.bib",
+      "author": "Majewski, Sebastian and Hu, Hsiang",
+      "title": "Convergence analysis of stochastic gradient descent with projection for nonconvex nonsmooth problems",
+      "year": "2018"
+    },
+    "Davis2020": {
+      "file": "tools/refer.bib",
+      "author": "Davis, Damek and Drusvyatskiy, Dmitriy",
+      "title": "Stochastic subgradient method converges on tame functions",
+      "year": "2020"
+    },
+    "bolte2020": {
+      "file": "tools/refer.bib",
+      "author": "Bolte, J\\'er\\^ome and Pauwels, Edouard",
+      "title": "Majorization-Minimization Procedures and Convergence of Descent Algorithms",
+      "year": "2020"
+    },
+    "Yang2024": {
+      "file": "tools/refer.bib",
+      "author": "Yang, Lei and Hu, Jingjing and Liu, Tianxiang",
+      "title": "A unified convergence analysis for nonconvex nonsmooth optimization with adaptive stepsizes",
+      "year": "2024"
+    },
+    "zhang20": {
+      "file": "tools/refer.bib",
+      "author": "Zhang, Jiaoyang and Mei, Song and Bai, Yu and Wang, Rong",
+      "title": "Stochastic gradient method converges to global optima for nonconvex problems",
+      "year": "2020"
+    },
+    "kor22": {
+      "file": "tools/refer.bib",
+      "author": "Kor, S. and others",
+      "title": "Non-asymptotic convergence of stochastic subgradient methods for nonsmooth nonconvex optimization",
+      "year": "2022"
+    },
+    "alcantara2024": {
+      "file": "tools/refer.bib",
+      "author": "Alc\\'antara, A. and others",
+      "title": "Non-asymptotic analysis of proximal methods for nonsmooth nonconvex optimization",
+      "year": "2024"
+    },
+    "jordan2023deterministic": {
+      "file": "tools/refer.bib",
+      "author": "Jordan, M. I. and others",
+      "title": "Deterministic and stochastic methods for nonsmooth nonconvex optimization: non-asymptotic guarantees",
+      "year": "2023"
+    },
+    "gong2013general": {
+      "file": "tools/refer.bib",
+      "author": "Gong, Pinghua and Zhang, Changshui and Lu, Zhaosong and Huang, Jianhua and Ye, Jieping",
+      "title": "General iterative shrinkage and thresholding algorithm for non-convex regularized optimization problems",
+      "year": "2013"
+    },
+    "xu2019stochastic": {
+      "file": "tools/refer.bib",
+      "author": "Xu, Yangyang and Qi, Qi and Lin, Qihang and Jin, Rong and Yang, Tianbao",
+      "title": "Stochastic variance-reduced prox-linear algorithms for nonconvex composite optimization",
+      "year": "2019"
+    },
+    "wen2018proximal": {
+      "file": "tools/refer.bib",
+      "author": "Wen, Bo and Chen, Xiaojun and Pong, Ting Kei",
+      "title": "A proximal difference-of-convex algorithm with extrapolation",
+      "year": "2018"
+    },
+    "lou2015computing": {
+      "file": "tools/refer.bib",
+      "author": "Lou, Yifei and Yan, Ming",
+      "title": "Computing sparse representation in a highly coherent dictionary based on difference of $\\ell_1$ and $\\ell_2$",
+      "year": "2015"
+    },
+    "yin2015minimization": {
+      "file": "tools/refer.bib",
+      "author": "Yin, Penghang and Lou, Yifei and He, Qi and Xin, Jack",
+      "title": "Minimization of $\\ell_{1-2",
+      "year": "2015"
+    },
+    "fl2001variable": {
+      "file": "tools/refer.bib",
+      "author": "Fan, Jianqing and Li, Runze",
+      "title": "Variable selection via nonconcave penalized likelihood and its oracle properties",
+      "year": "2001"
+    },
+    "zhang2010nearly": {
+      "file": "tools/refer.bib",
+      "author": "Zhang, Cun-Hui and others",
+      "title": "Nearly unbiased variable selection under minimax concave penalty",
+      "year": "2010"
+    },
+    "yun2021adaptive": {
+      "file": "tools/refer.bib",
+      "author": "Yun, Jihun and Lozano, Aur{\\'e",
+      "title": "Adaptive proximal gradient methods for structured neural networks",
+      "year": "2021"
+    },
+    "banert2019general": {
+      "file": "tools/refer.bib",
+      "author": "Banert, Sebastian and Boț, Radu Ioan",
+      "title": "A general double-proximal gradient algorithm for dc programming",
+      "year": "2019"
+    },
+    "le2024minimizing": {
+      "file": "tools/refer.bib",
+      "author": "Le Thi, Hoai An and Huynh, Van Ngai and Dinh, Tao Pham",
+      "title": "Minimizing compositions of differences-of-convex functions with smooth mappings",
+      "year": "2024"
+    },
+    "yang2025nonmonotone": {
+      "file": "tools/refer.bib",
+      "author": "Yang, Lei and Hu, Jingjing and Liu, Tianxiang",
+      "title": "A nonmonotone extrapolated proximal gradient-subgradient algorithm beyond global {L",
+      "year": "2025"
+    },
+    "cutkosky2019storm": {
+      "file": "tools/refer.bib",
+      "author": "Cutkosky, Ashok and Orabona, Francesco",
+      "title": "Momentum-Based Variance Reduction in Non-Convex {SGD",
+      "year": "2019"
+    },
+    "fang2018spider": {
+      "file": "tools/refer.bib",
+      "author": "Fang, Cong and Li, Chris Junchi and Lin, Zhouchen and Zhang, Tong",
+      "title": "{SPIDER",
+      "year": "2018"
+    },
+    "arjevani2023lower": {
+      "file": "tools/refer.bib",
+      "author": "Arjevani, Yossi and Carmon, Yair and Duchi, John C. and Foster, Dylan J. and Srebro, Nathan and Woodworth, Blake",
+      "title": "Lower Bounds for Non-Convex Stochastic Optimization",
+      "year": "2023"
+    },
+    "luo1994error": {
+      "file": "tools/refer.bib",
+      "author": "Luo, Zhi-Quan and Pang, Jong-Shi",
+      "title": "Error Bounds for Analytic Systems and Their Applications",
+      "year": "1994"
+    },
+    "boob2023stochastic": {
+      "file": "tools/refer.bib",
+      "author": "Boob, Digvijay and Deng, Qi and Lan, Guanghui",
+      "title": "Stochastic First-Order Methods for Convex and Nonconvex Functional Constrained Optimization",
+      "year": "2023"
+    },
+    "ma2022quadratically": {
+      "file": "tools/refer.bib",
+      "author": "Ma, Shiqian and Hou, Lingxiao and Kolar, Mladen",
+      "title": "Proximally Constrained Methods for Weakly Convex Optimization with Weakly Convex Constraints",
+      "year": "2022"
+    },
+    "boob2022level": {
+      "file": "tools/refer.bib",
+      "author": "Boob, Digvijay and Deng, Qi and Lan, Guanghui",
+      "title": "Feasible and Objective Convergence of a First-Order Method for Nonconvex and Nonsmooth Constrained Optimization",
+      "year": "2024"
+    },
+    "xie2021proximal": {
+      "file": "tools/refer.bib",
+      "author": "Xie, Yue and Wright, Stephen J.",
+      "title": "Complexity of Proximal Augmented {Lagrangian",
+      "year": "2021"
+    },
+    "li2021rate": {
+      "file": "tools/refer.bib",
+      "author": "Li, Zichong and Chen, Pin-Yu and Liu, Sijia and Lu, Songtao and Xu, Yangyang",
+      "title": "Rate-Improved Inexact Augmented {Lagrangian",
+      "year": "2021"
+    },
+    "jia2023first": {
+      "file": "tools/refer.bib",
+      "author": "Jia, Zhuoxu and Grimmer, Benjamin",
+      "title": "First-order Constraint-Qualification-Free Optimality Conditions and Algorithms for Nonconvex Constrained Optimization",
+      "year": "2023"
+    },
+    "curtis2021sqp": {
+      "file": "tools/refer.bib",
+      "author": "Curtis, Frank E. and Robinson, Daniel P. and Shi, Baoyu",
+      "title": "A Stochastic Sequential Quadratic Programming Algorithm for Nonlinear-Equality-Constrained Optimization with Rank-Deficient {Jacobians",
+      "year": "2021"
+    },
+    "cartis2014complexity": {
+      "file": "tools/refer.bib",
+      "author": "Cartis, Coralia and Gould, Nicholas I. M. and Toint, Philippe L.",
+      "title": "On the Complexity of Steepest Descent, {Newton's",
+      "year": "2010"
+    },
+    "shi2022linearized": {
+      "file": "tools/refer.bib",
+      "author": "Shi, Chuwen and Lin, Runcheng",
+      "title": "A Linearized Augmented {Lagrangian",
+      "year": "2022"
+    },
+    "lu2022single": {
+      "file": "tools/refer.bib",
+      "author": "Lu, Haihao and Mei, Song",
+      "title": "Single-Loop Algorithms for Stochastic Nonconvex Functional Constrained Optimization",
+      "year": "2022"
+    },
+    "jin2022nested": {
+      "file": "tools/refer.bib",
+      "author": "Jin, Zhiyan and Wang, Tianhao",
+      "title": "A Single-Loop Smoothed Gradient Descent-Ascent Algorithm for Nonconvex-Concave Min-Max Problems with Coupled Linear Constraints",
+      "year": "2022"
+    },
+    "alacaoglu2023augmented": {
+      "file": "tools/refer.bib",
+      "author": "Alacaoglu, Ahmet and Fercoq, Olivier and Wright, Stephen J.",
+      "title": "Convergence of First-Order Algorithms for Meta-Learning with Moreau Envelopes",
+      "year": "2023"
+    },
+    "cui2022complexity": {
+      "file": "tools/refer.bib",
+      "author": "Cui, Ying and Tang, Bo and Liu, Yanli",
+      "title": "Complexity of an Inexact Proximal-Point Penalty Method for Constrained Smooth Non-Convex Optimization",
+      "year": "2022"
+    },
+    "liu2022exact": {
+      "file": "tools/refer.bib",
+      "author": "Liu, Sijia and Xu, Yangyang",
+      "title": "A First-Order Algorithmic Framework for Distributionally Robust Logistic Regression",
+      "year": "2021"
+    },
+    "cui2024adaptive": {
+      "file": "tools/refer.bib",
+      "author": "Cui, Ying and Tang, Bo and Liu, Yanli",
+      "title": "An Adaptive Exact Penalty Method for Nonconvex Stochastic Equality-Constrained Optimization",
+      "year": "2024"
+    },
+    "na2022sqp": {
+      "file": "tools/refer.bib",
+      "author": "Na, Sen and Anitescu, Mihai and Kolar, Mladen",
+      "title": "Inequality Constrained Stochastic Nonlinear Optimization via Active-Set Sequential Quadratic Programming",
+      "year": "2022"
+    },
+    "zhang2022proximal": {
+      "file": "tools/refer.bib",
+      "author": "Zhang, Jiawei and Luo, Zhi-Quan",
+      "title": "A Proximal Alternating Direction Method of Multiplier for Linearly Constrained Nonconvex Minimization",
+      "year": "2020"
+    },
+    "alacaoglu2024complexity": {
+      "file": "tools/refer.bib",
+      "author": "Alacaoglu, Ahmet and Wright, Stephen J.",
+      "title": "Complexity of Single Loop Algorithms for Nonlinear Programming with Stochastic Objective and Constraints",
+      "year": "2024"
+    },
+    "huang2025stochastic": {
+      "file": "tools/refer.bib",
+      "author": "Huang, Ruichuan and Zhang, Jiawei and Alacaoglu, Ahmet",
+      "title": "Stochastic Smoothed Primal-Dual Algorithms for Nonconvex Optimization with Linear Inequality Constraints",
+      "year": "2025"
+    },
+    "li2024stochastic": {
+      "file": "tools/refer.bib",
+      "author": "Li, Zichong and Chen, Pin-Yu and Liu, Sijia and Lu, Songtao and Xu, Yangyang",
+      "title": "Stochastic Inexact Augmented {Lagrangian",
+      "year": "2024"
+    },
+    "shi2025momentum": {
+      "file": "tools/refer.bib",
+      "author": "Shi, Qiankun and Wang, Xiao and Wang, Hao",
+      "title": "A Momentum-Based Linearized Augmented {Lagrangian",
+      "year": "2026"
+    },
+    "lu2026variance": {
+      "file": "tools/refer.bib",
+      "author": "Lu, Zhaosong and Mei, Sanyou and Xiao, Yifeng",
+      "title": "Variance-Reduced First-Order Methods for Deterministically Constrained Stochastic Nonconvex Optimization with Strong Convergence Guarantees",
+      "year": "2026"
+    },
+    "sun2024dual_descent_alm_admm": {
+      "file": "tools/refer.bib",
+      "author": "Sun, Kaizhao and Sun, Xu Andy",
+      "title": "Dual Descent Augmented {L",
+      "year": "2024"
+    },
+    "luSingleLoopGradientDescent2022": {
+      "file": "tools/refer.bib",
+      "author": "Lu, Songtao",
+      "title": "A Single-Loop Gradient Descent and Perturbed Ascent Algorithm for Nonconvex Functional Constrained Optimization",
+      "year": "2022"
+    },
+    "shi2025adaptive": {
+      "file": "tools/refer.bib",
+      "author": "Shi, Qiankun and Wang, Xiao",
+      "title": "Adaptive Directional Decomposition Methods for Nonconvex Constrained Optimization",
+      "year": "2025"
+    },
+    "pmlr-v267-jin25e": {
+      "file": "tools/refer.bib",
+      "author": "Jin, Lisa and Ma, Jianhao and Liu, Zechun and Gromov, Andrey and Defazio, Aaron and Xiao, Lin",
+      "title": "{PARQ",
+      "year": "2025"
+    },
+    "berahas2025linearized": {
+      "file": "tools/refer.bib",
+      "author": "El Bourkhissi, Lahcen and Necoara, Ion and Patrinos, Panagiotis and Tran-Dinh, Quoc",
+      "title": "Complexity of Linearized Perturbed Augmented Lagrangian Methods for Nonsmooth Nonconvex Optimization with Nonlinear Equality Constraints",
+      "year": "2025"
+    },
+    "zhang2020smoothed": {
+      "file": "tools/refer.bib",
+      "author": "Zhang, Jiawei and Xiao, Peijun and Sun, Ruoyu and Luo, Zhi-Quan",
+      "title": "A Single-Loop Smoothed Gradient Descent-Ascent Algorithm for Nonconvex-Concave Min-Max Problems",
+      "year": "2020"
+    },
+    "li2026smoothing": {
+      "file": "tools/refer.bib",
+      "author": "Li, Jiajin and Nagarajan, Mahesh and Pan, Siyu and Zhang, Nanxi",
+      "title": "Smoothing Meets Perturbation: Unified and Tight Analysis for Nonconvex-Concave Minimax Optimization",
+      "year": "2026"
+    },
+    "zheng2023universal": {
+      "file": "tools/refer.bib",
+      "author": "Zheng, Taoli and Zhu, Linglingzhi and So, Anthony Man-Cho and Blanchet, Jose and Li, Jiajin",
+      "title": "Universal Gradient Descent Ascent Method for Nonconvex-Nonconcave Minimax Optimization",
+      "year": "2023"
+    },
+    "xu2026rada": {
+      "file": "tools/refer.bib",
+      "author": "Xu, Meng and Jiang, Bo and Liu, Ya-Feng and So, Anthony Man-Cho",
+      "title": "A {R",
+      "year": "2026"
+    },
+    "hu2026fixed": {
+      "file": "tools/refer.bib",
+      "author": "Hu, Jiang and Deng, Kangkang",
+      "title": "Fixed-Penalty Manifold Augmented Lagrangian Methods",
+      "year": "2026"
+    },
+    "hestenes1969multiplier": {
+      "file": "tools/refer.bib",
+      "author": "Hestenes, Magnus R.",
+      "title": "Multiplier and gradient methods",
+      "year": "1969"
+    },
+    "powell1969method": {
+      "file": "tools/refer.bib",
+      "author": "Powell, M. J. D.",
+      "title": "A method for nonlinear constraints in minimization problems",
+      "year": "1969"
+    },
+    "rockafellar1973multiplier": {
+      "file": "tools/refer.bib",
+      "author": "Rockafellar, R. Tyrrell",
+      "title": "The multiplier method of {H",
+      "year": "1973"
+    },
+    "kong2019complexity": {
+      "file": "tools/refer.bib",
+      "author": "Kong, Weiwei and Melo, Jefferson G. and Monteiro, Renato D. C.",
+      "title": "Complexity of a quadratic penalty accelerated inexact proximal point method for solving linearly constrained nonconvex composite programs",
+      "year": "2019"
+    },
+    "lin2022complexity": {
+      "file": "tools/refer.bib",
+      "author": "Lin, Qihang and Ma, Runchao and Xu, Yangyang",
+      "title": "Complexity of an inexact proximal-point penalty method for constrained smooth non-convex optimization",
+      "year": "2022"
+    },
+    "sahin2019inexact": {
+      "file": "tools/refer.bib",
+      "author": "Sahin, Mehmet Fatih and Eftekhari, Armin and Alacaoglu, Ahmet and Latorre, Fabian and Cevher, Volkan",
+      "title": "An inexact augmented {L",
+      "year": "2019"
+    },
+    "grapiglia2021complexity": {
+      "file": "tools/refer.bib",
+      "author": "Grapiglia, Geovani N. and Yuan, Ya-xiang",
+      "title": "On the complexity of an augmented {L",
+      "year": "2021"
+    },
+    "hajinezhad2019perturbed": {
+      "file": "tools/refer.bib",
+      "author": "Hajinezhad, Davood and Hong, Mingyi",
+      "title": "Perturbed proximal primal-dual algorithm for nonconvex nonsmooth optimization",
+      "year": "2019"
+    },
+    "hallak2023adaptive": {
+      "file": "tools/refer.bib",
+      "author": "Hallak, Nadav and Teboulle, Marc",
+      "title": "An adaptive {L",
+      "year": "2023"
+    },
+    "elbourkhissi2025perturbed": {
+      "file": "tools/refer.bib",
+      "author": "El Bourkhissi, Lahcen and Necoara, Ion and Patrinos, Panagiotis and Tran-Dinh, Quoc",
+      "title": "Complexity of linearized perturbed augmented {L",
+      "year": "2025"
+    },
+    "elbourkhissi2025linearized": {
+      "file": "tools/refer.bib",
+      "author": "El Bourkhissi, Lahcen and Necoara, Ion",
+      "title": "Complexity of a linearized augmented {L",
+      "year": "2025"
+    },
+    "liu2026fixed": {
+      "file": "tools/refer.bib",
+      "author": "Liu, Benqi and Deng, Kangkang and Wang, Zichen and Wen, Zaiwen",
+      "title": "A fixed-penalty linearized augmented {L",
+      "year": "2026"
+    },
+    "pan2021efficient": {
+      "file": "tools/refer.bib",
+      "author": "Pan, W. and Shen, J. and Xu, Z.",
+      "title": "An efficient algorithm for nonconvex-linear minimax optimization problem and its application in solving weighted maximin dispersion problem",
+      "year": "2021"
+    },
+    "he2024approximation": {
+      "file": "tools/refer.bib",
+      "author": "He, J. and Zhang, H. and Xu, Z.",
+      "title": "An approximation proximal gradient algorithm for nonconvex-linear minimax problems with nonconvex nonsmooth terms",
+      "year": "2024"
+    },
+    "lin2020gradient": {
+      "file": "tools/refer.bib",
+      "author": "Lin, Tianyi and Jin, Chi and Jordan, Michael I.",
+      "title": "On gradient descent ascent for nonconvex-concave minimax problems",
+      "year": "2020"
+    },
+    "bertsekas1982": {
+      "file": "tools/refer.bib",
+      "author": "Bertsekas, Dimitri P.",
+      "title": "Constrained Optimization and Lagrange Multiplier Methods",
+      "year": "1982"
+    },
+    "zhang2022global": {
+      "file": "tools/refer.bib",
+      "author": "Zhang, Jiawei and Luo, Zhi-Quan",
+      "title": "A Global Dual Error Bound and Its Application to the Analysis of Linearly Constrained Nonconvex Optimization",
+      "year": "2022"
+    },
+    "lu2020hybrid": {
+      "file": "tools/refer.bib",
+      "author": "Lu, Songtao and Tsaknakis, Ioannis and Hong, Mingyi and Chen, Yongxin",
+      "title": "Hybrid Block Successive Approximation for One-Sided Non-Convex Min-Max Problems: Algorithms and Applications",
+      "year": "2020"
+    },
+    "xu2023unified": {
+      "file": "tools/refer.bib",
+      "author": "Xu, Zi and Zhang, Huiling and Xu, Yang and Lan, Guanghui",
+      "title": "A Unified Single-Loop Alternating Gradient Projection Algorithm for Nonconvex--Concave and Convex--Nonconcave Minimax Problems",
+      "year": "2023"
+    },
+    "hoffman1952": {
+      "file": "tools/refer.bib",
+      "author": "Hoffman, Alan J.",
+      "title": "On Approximate Solutions of Systems of Linear Inequalities",
+      "year": "1952"
+    },
+    "zhang2020proximal": {
+      "file": "tools/refer.bib",
+      "author": "Zhang, Jiawei and Luo, Zhi-Quan",
+      "title": "A Proximal Alternating Direction Method of Multiplier for Linearly Constrained Nonconvex Minimization",
+      "year": "2020"
+    },
+    "duchi2019solving": {
+      "file": "tools/refer.bib",
+      "author": "Duchi, John C. and Ruan, Feng",
+      "title": "Solving (Most) of a Set of Quadratic Equalities: Composite Optimization for Robust Phase Retrieval",
+      "year": "2019"
+    },
+    "bot2020proximal": {
+      "file": "tools/refer.bib",
+      "author": "Bo{\\c{t",
+      "title": "The Proximal Alternating Direction Method of Multipliers in the Nonconvex Setting: Convergence Analysis and Rates",
+      "year": "2020"
+    },
+    "cohen2022dynamic": {
+      "file": "tools/refer.bib",
+      "author": "Cohen, Eyal and Hallak, Nadav and Teboulle, Marc",
+      "title": "A Dynamic Alternating Direction of Multipliers for Nonconvex Minimization with Nonlinear Functional Equality Constraints",
+      "year": "2022"
+    },
+    "moreau1965": {
+      "file": "tools/refer.bib",
+      "author": "Moreau, Jean-Jacques",
+      "title": "Proximit{\\'e",
+      "year": "1965"
+    },
+    "nesterov2005smooth": {
+      "file": "tools/refer.bib",
+      "author": "Nesterov, Yurii",
+      "title": "Smooth minimization of non-smooth functions",
+      "year": "2005"
+    },
+    "rockafellar1976augmented": {
+      "file": "tools/refer.bib",
+      "author": "Rockafellar, R. Tyrrell",
+      "title": "Augmented {L",
+      "year": "1976"
+    },
+    "li2025nonsmooth": {
+      "file": "tools/refer.bib",
+      "author": "Li, Jiajin and Zhu, Linglingzhi and So, Anthony Man-Cho",
+      "title": "Nonsmooth Nonconvex--Nonconcave Minimax Optimization: Primal--Dual Balancing and Iteration Complexity Analysis",
+      "year": "2025"
+    },
+    "rockafellar1970convex": {
+      "file": "tools/refer.bib",
+      "author": "Rockafellar, R. Tyrrell",
+      "title": "Convex Analysis",
+      "year": "1970"
+    },
+    "zhang2026matching": {
+      "file": "tools/refer.bib",
+      "author": "Zhang, Minghao and Xu, Zi",
+      "title": "Matching Multi-Loop Complexities with a Single Loop: Optimal Optimization Stationarity and Best-Known Game Stationarity in Nonconvex--Concave Minimax Optimization",
+      "year": "2026"
+    },
+    "carmon2020lower": {
+      "file": "tools/refer.bib",
+      "author": "Carmon, Yair and Duchi, John C. and Hinder, Oliver and Sidford, Aaron",
+      "title": "Lower Bounds for Finding Stationary Points {I",
+      "year": "2020"
+    },
+    "pan2026optimal": {
+      "file": "tools/refer.bib",
+      "author": "Pan, Siyu and Zheng, Taoli and Li, Jiajin",
+      "title": "Optimal Deterministic First-Order Oracle Complexity for Nonconvex-Concave Minimax Optimization",
+      "year": "2026"
+    },
+    "mahdavinia2022tight": {
+      "file": "tools/refer.bib",
+      "author": "Mahdavinia, Pouria and Deng, Yuyang and Li, Haochuan and Mahdavi, Mehrdad",
+      "title": "Tight Analysis of Extra-gradient and Optimistic Gradient Methods for Nonconvex Minimax Problems",
+      "year": "2022"
+    },
+    "nesterov2018lectures": {
+      "file": "tools/refer.bib",
+      "author": "Nesterov, Yurii",
+      "title": "Lectures on Convex Optimization",
+      "year": "2018"
+    },
+    "wilson2021lyapunov": {
+      "file": "tools/refer.bib",
+      "author": "Wilson, Ashia C. and Recht, Benjamin and Jordan, Michael I.",
+      "title": "A {L",
+      "year": "2021"
+    },
+    "zhang2021complexity": {
+      "file": "tools/refer.bib",
+      "author": "Zhang, Siqi and Yang, Junchi and Guzm{\\'a",
+      "title": "The complexity of nonconvex-strongly-concave minimax optimization",
+      "year": "2021"
+    },
+    "li2021complexity": {
+      "file": "tools/refer.bib",
+      "author": "Li, Haochuan and Tian, Yi and Zhang, Jingzhao and Jadbabaie, Ali",
+      "title": "Complexity lower bounds for nonconvex-strongly-concave min-max optimization",
+      "year": "2021"
+    },
+    "liu2026lower": {
+      "file": "tools/refer.bib",
+      "author": "Liu, Wei and Lin, Qihang and Xu, Yangyang",
+      "title": "Lower complexity bounds of first-order methods for affinely constrained composite nonconvex problems",
+      "year": "2026"
+    },
+    "kong2023iteration": {
+      "file": "tools/refer.bib",
+      "author": "Kong, Weiwei and Melo, Jefferson G. and Monteiro, Renato D. C.",
+      "title": "Iteration Complexity of an Inner Accelerated Inexact Proximal Augmented {L",
+      "year": "2023"
+    },
+    "lessard2016analysis": {
+      "file": "tools/refer.bib",
+      "author": "Lessard, Laurent and Recht, Benjamin and Packard, Andrew",
+      "title": "Analysis and Design of Optimization Algorithms via Integral Quadratic Constraints",
+      "year": "2016"
+    },
+    "kong2021accelerated": {
+      "file": "tools/refer.bib",
+      "author": "Kong, Weiwei and Monteiro, Renato D. C.",
+      "title": "An Accelerated Inexact Proximal Point Method for Solving Nonconvex-Concave Min-Max Problems",
+      "year": "2021"
+    },
+    "ke2026efficient": {
+      "file": "tools/refer.bib",
+      "author": "Ke, Shaozhe and Mei, Sanyou and Zhang, Jiheng",
+      "title": "Efficient Parameter-Free First-Order Methods for Nonsmooth Composite Minimax Optimization",
+      "year": "2026"
+    },
+    "khlebnikov2011optimization": {
+      "file": "tools/refer.bib",
+      "author": "Khlebnikov, M. V. and Polyak, B. T. and Kuntsevich, V. M.",
+      "title": "Optimization of linear systems subject to bounded exogenous disturbances: The invariant ellipsoid technique",
+      "year": "2011"
+    }
+  }
+}

@@ -87,6 +87,18 @@
 | (4) is a linear time-invariant system, and due to the simplicity of quadratic form, we are able to track the dynamic of primal and dual variables. By iterating this linear system and analyzing the eigenvalues of the transition matrix, we are able to lower bound the gradient at final iterations. | [Mah22] §5 |
 | The general proof idea is to consider the following quadratic … function | [Mah22] §5 |
 
+## 困难实例构造概览（2026-11-21 补充）
+
+| 表达或结构 | 出处 |
+|---|---|
+| 节名 "The Construction of … Hard Instances"，首个子节 "Overview of the construction" | [PZL26] §4、§4.1 |
+| We construct three hard instances f1, f2, f3 to prove Theorem 3.1. The lower bound has the form … | [PZL26] §4.1 |
+| 每个实例一句：⟨instance⟩ uses ⟨mechanism⟩ to obtain ⟨factor⟩（如 "f2 uses a dual chain on an unconstrained primal domain to obtain the required diameter dependence"） | [PZL26] §4.1 |
+| In this section, we first construct the … hard instance and then establish the properties needed to prove … | Wu–Gu–Yang §3 |
+| The hard instance is constructed as the sum of primal and dual components. The primal component … The dual component … | Wu–Gu–Yang §3.1 |
+| The general proof idea is to consider the following quadratic … function | [Mah22] §5 |
+| we construct hard instances and derive lower bounds on the number of iterations required by each algorithm … Comparing these lower bounds with the corresponding upper bounds … establishes the tightness claims. | [Li26] §5 |
+
 ## 证明行文（用户本人风格）
 
 几乎不用 "Fix …"（全文附录仅 Lemma A.1 一处 "Fix t ∈ (−1, 1)"）；量词放在引理陈述里（"for any T ≥ 1"）。每句「依据 + 动词 + 显示公式或结论编号」，证明以 "which completes the proof" 或 "yields (X) and completes the proof" 收尾。
@@ -228,3 +240,12 @@
 | the overall iteration complexity … is determined by the slower of the primal and dual updates | [LZS25] L2133–2135 |
 
 用词统计：[LZS25] 用 "crucial" 8 次、"Recall that" 9 次、"The proof is complete" 8 次；[PZL26] 不用 "Note that / Recall / Therefore"，用 "Thus" 40 次、"Consequently" 20 次；三篇均不用 "clearly / obviously"。
+
+## 内部引用句式轮换（替代连续 `By Lemma ...` 与句末括号引用）
+
+| 句法角色 | 表达 |
+|---|---|
+| 引理/命题作主语 | `Lemma~\ref{...} shows / implies / ensures that ...`；`Proposition~\ref{...} guarantees that ...`；`Combining Lemma~\ref{...} with Assumption~\ref{...} yields ...` |
+| 放句中或句尾 | `..., which follows from Proposition~\ref{...}.`；`..., as established in Lemma~\ref{...}.`；`... is independent of s under Proposition~\ref{...}.` |
+| 推导句首轮换 | `From Lemma~\ref{...}, we obtain ...`；`Using~\eqref{...} together with Lemma~\ref{...}, ...`；`In view of Proposition~\ref{...}, ...` |
+| 紧跟其后省略 | `Consequently, ...`；`Thus, ...`；`Equation~\eqref{...} gives ...` |

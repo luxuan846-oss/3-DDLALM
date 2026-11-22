@@ -14,7 +14,8 @@
 \else \errmessage{Unknown \string\paperformat: use arxiv, mp, or siopt}
 \fi\fi\fi
 
-\showlinenumberstrue  % set to \showlinenumbersfalse to hide line numbers
+% \showlinenumberstrue  % set to \showlinenumbersfalse to hide line numbers
+\showlinenumbersfalse
 
 \makeatletter
 \ifdefined\XeTeXversion
@@ -80,49 +81,68 @@
 % ----------------------------- front matter ---------------------------
 \newcommand{\papertitle}{Accelerated Linearized Augmented Lagrangian
 Method with a Fixed Penalty for Nonconvex Composite Optimization}
-\newcommand{\paperkeywords}{augmented Lagrangian method, nonconvex composite
-optimization, iteration complexity, lower bound, dual regularization,
-gradient descent--ascent}
-\newcommand{\papermsc}{65K05, 90C26, 90C30, 90C46, 90C60}
+\newcommand{\paperkeywords}{nonconvex composite optimization, augmented
+Lagrangian method, single-loop method, fixed penalty, dual regularization,
+lower complexity bound}
+\newcommand{\papermsc}{90C26, 90C30, 90C47, 90C60, 65K05, 49M37}
 \newcommand{\paperabstract}{%
-We study single-loop linearized augmented Lagrangian methods (ALMs) for the
-nonconvex composite problem. Existing single-loop guarantees reach $\mathcal O(\epsilon^{-3})$ iteration complexity only by
-taking a large penalty $\rho=\Theta(\epsilon^{-1})$, which inflates the primal
-smoothness modulus and shrinks the stepsize. To keep $\rho$ fixed, we analyze a
-family of linearized regularized ALMs (LRALM) parameterized by $\rho$, a dual
-regularization parameter $s$, and moving primal and dual centers; here the
-primal smoothness depends only on $\rho$, whereas $\rho+s$ acts as an effective
-penalty. Combining upper bounds with hard-instance lower bounds for finding an
-$\epsilon$-KKT point, we obtain a sharp dichotomy within LRALM: the tight
-complexity is $\Theta(\epsilon^{-4})$ whenever $\rho+s$ stays below a constant
-multiple of $\epsilon^{-1}$, and improves to $\Theta(\epsilon^{-3})$ when
-$\rho=\Theta(1)$ and $s=\Theta(\epsilon^{-1})$. Stepping outside LRALM, we
-propose Fast LRALM, which adds Nesterov extrapolation to the dual update and
-attains $\mathcal O(\epsilon^{-5/2})$ complexity with a fixed penalty, matching
-the best known multi-loop rate without inner solvers or dual projections.
+In this paper, we study single-loop linearized augmented Lagrangian methods
+(ALMs) for nonconvex composite optimization. Existing single-loop penalty and
+linearized ALM methods typically attain $\mathcal O(\epsilon^{-3})$ complexity
+by scaling the penalty parameter as $\Theta(\epsilon^{-1})$, which inflates the
+primal smoothness modulus and shrinks the primal stepsize. To keep the penalty
+fixed, we study a family of linearized regularized ALMs (LRALM) with dual
+regularization and moving centers, where dual regularization raises the
+effective penalty without increasing primal smoothness. Combining upper bounds
+with matching hard-instance lower bounds for finding an $\epsilon$-KKT point,
+we prove that the tight complexity within LRALM is $\Theta(\epsilon^{-4})$
+whenever the effective penalty remains below a threshold of order
+$\epsilon^{-1}$, and improves to $\Theta(\epsilon^{-3})$ with a fixed penalty
+and $\Theta(\epsilon^{-1})$ dual regularization. Beyond this family, we develop
+Fast LRALM by adding Nesterov extrapolation to the dual update. It attains
+$\mathcal O(\epsilon^{-5/2})$ complexity with a fixed penalty, matching, to the
+best of our knowledge, the fastest multi-loop rate for this problem class
+without inner solvers or dual projections.
 }
 
 \ifsiopt
-  \headers{Fixed-Penalty ALMs for Nonconvex Composite Optimization}{}
+  \headers{Accelerated Linearized ALMs with a Fixed Penalty}{}
   \title{{\papertitle}}
-  % \author{...}
+  \author{}
+  % \author{Luxuan Li \and Chunfeng Cui \and Kangkang Deng \and Jiang Hu}
 \fi
 \ifmp
   \title{\papertitle}
-  \titlerunning{Fixed-penalty ALMs for nonconvex composite optimization}
-  \authorrunning{L. Li et al.}
-  % \author{Luxuan Li \and Kangkang Deng \and Chunfeng Cui \and Jiang Hu}
-  % \institute{...}
+  \titlerunning{Accelerated linearized ALMs with a fixed penalty}
+  \authorrunning{}
+  % \authorrunning{L. Li et al.}
   \author{}
+  % \author{Luxuan Li \and Chunfeng Cui \and Kangkang Deng \and Jiang Hu}
   \institute{}
   \date{Received: date / Accepted: date}
 \fi
 \ifarxiv
   \title{\papertitle}
-  % \author{...}
+  \providecommand{\email}[1]{\href{mailto:#1}{\texttt{#1}}}
   \author{}
+  % \author{%
+  % Luxuan Li\thanks{School of Mathematical Sciences, Beihang University,
+  % Beijing 100191, China; Faculty of Mathematics, University of Vienna,
+  % A-1090 Vienna, Austria (\email{lil00@univie.ac.at}).}
+  % \and
+  % Chunfeng Cui\thanks{School of Mathematical Sciences and State Key
+  % Laboratory of Virtual Reality Technology and Systems, Beihang University,
+  % Beijing 100191, China (\email{chunfengcui@buaa.edu.cn}).}
+  % \and
+  % Kangkang Deng\thanks{College of Science, National University of Defense
+  % Technology, Changsha 410073, China (\email{freedeng1208@gmail.com}).
+  % Corresponding author.}
+  % \and
+  % Jiang Hu\thanks{Yau Mathematical Sciences Center, Tsinghua University,
+  % Beijing 100084, China (\email{jianghu@tsinghua.edu.cn}).}
+  % }
   \date{}
-\fi
+\fi 
 
 \begin{document}
 
@@ -141,10 +161,10 @@ the best known multi-loop rate without inner solvers or dual projections.
 \fi
 \ifarxiv
   \begin{abstract}\paperabstract\end{abstract}
-  \noindent\textbf{Key words.} \paperkeywords
+  \noindent\textbf{Keywords.} \paperkeywords
 
-  \medskip
-  \noindent\textbf{AMS subject classifications.} \papermsc
+  \medskip 
+  \noindent\textbf{Mathematics Subject Classification.} \papermsc 
 \fi
 
 \input{sections/Introduction}
@@ -165,7 +185,7 @@ the best known multi-loop rate without inner solvers or dual projections.
 
 \appendix
 \input{appendix/ValueFunctions}
-% \input{appendix/LowerBoundConstructions}
-% \input{appendix/UpperBounds}
+\input{appendix/LowerBoundConstructions}
+\input{appendix/UpperBounds}
 
 \end{document}

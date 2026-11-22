@@ -1,65 +1,230 @@
 \section{Properties of the Regularized Potential and Value Functions}
 \label{app:fast-lralm-value-functions}
 
-\subsection{Proof of Proposition~\ref{prop:curvature-smoothness}}
-\label{app:curvature-smoothness}
+% \subsection{Proof of Lemma~\ref{lem:reduced-al}}
+% \label{app:reduced-al}
+%
+% \begin{proof}
+% (a) Completing the square in~\eqref{eq:reduced-al} yields
+% \(\calD_\rho(\bx,\blmbd)=f(\bx)+M_{h/\rho}(\calA(\bx)+\blmbd/\rho)-\frac{1}{2\rho}\|\blmbd\|^2\),
+% where \(M_{h/\rho}(\bu):=\min_{\by\in\RR^m}\{h(\by)+\frac{\rho}{2}\|\by-\bu\|^2\}\)
+% is the Moreau envelope of \(h\). By~\cite{rockafellar1970convex}, \(M_{h/\rho}\)
+% is continuously differentiable with
+% \(\nabla M_{h/\rho}(\bu)=\rho[\bu-\prox_{h/\rho}(\bu)]\), and the optimality
+% condition of~\eqref{eq:prox-definition} gives
+% \(\bq(\bx,\blmbd)\in\partial h(\by(\bx,\blmbd))\). Applying the chain rule
+% establishes~\eqref{eq:reduced-al-gradient}. For fixed \(\bx\in\RR^n\),
+% \(\calD_\rho(\bx,\cdot)\) is concave as a pointwise infimum of affine
+% functions of \(\blmbd\), and the nonexpansiveness of
+% \(\prox_{h/\rho}\)~\cite{rockafellar1970convex} yields
+% \[
+%     \bigl\|\nabla_{\blmbd}\calD_\rho(\bx,\blmbd)-\nabla_{\blmbd}\calD_\rho(\bx,\blmbd')\bigr\|
+%     =\Bigl\|\prox_{h/\rho}\Bigl(\calA(\bx)+\frac{\blmbd}{\rho}\Bigr)
+%     -\prox_{h/\rho}\Bigl(\calA(\bx)+\frac{\blmbd'}{\rho}\Bigr)\Bigr\|
+%     \le\frac{1}{\rho}\|\blmbd-\blmbd'\|.
+% \]
+%
+% (b) The identity~\eqref{eq:dual-smoothing} is proved in
+% Appendix~\ref{app:effective-penalty}. Since the objective
+% in~\eqref{eq:dual-smoothing} is \((1/\rho)\)-strongly concave in \(\bq\), its
+% unique maximizer is characterized by
+% \(\calA(\bx)-(\bq-\blmbd)/\rho\in\partial h^*(\bq)\), which is equivalent to
+% \(\bq\in\partial h(\calA(\bx)-(\bq-\blmbd)/\rho)\)
+% by~\cite{rockafellar1970convex}. Because
+% \(\calA(\bx)-(\bq(\bx,\blmbd)-\blmbd)/\rho=\by(\bx,\blmbd)\) and
+% \(\bq(\bx,\blmbd)\in\partial h(\by(\bx,\blmbd))\) by~(a), the unique
+% maximizer is \(\bq(\bx,\blmbd)\). Maximizing~\eqref{eq:dual-smoothing} over
+% \(\blmbd\in\RR^m\) yields
+% \(\sup_{\blmbd\in\RR^m}\calD_\rho(\bx,\blmbd)=\sup_{\bq\in\RR^m}\calL(\bx,\bq)=F(\bx)\).
+% By~(a), \(\blmbd\) attains this maximum if and only if
+% \(\nabla_{\blmbd}\calD_\rho(\bx,\blmbd)=\zero\), i.e.,
+% \(\by(\bx,\blmbd)=\calA(\bx)\) and \(\blmbd=\bq(\bx,\blmbd)\), which by the
+% optimality condition of~\eqref{eq:prox-definition} holds if and only if
+% \(\blmbd\in\partial h(\calA(\bx))\) (nonempty under Assumption~\ref{ass:h}).
+% This establishes the second claim in~(b) and completes the proof.
+% \end{proof}
+
+% \subsection{Proof of Proposition~\ref{prop:kkt-gs}}
+% \label{app:kkt-gs}
+%
+% \begin{proof}
+% Since \(\bq(\bx,\blmbd)\in\partial h(\by(\bx,\blmbd))\),
+% \eqref{eq:kkt-gs-identity} follows directly from~\eqref{eq:kkt-residual}
+% and~\eqref{eq:reduced-al-gradient}. Conversely, if \(\bq\in\partial h(\by)\)
+% and \(\blmbd:=\bq-\rho[\calA(\bx)-\by]\), then
+% \(\rho\bigl(\calA(\bx)+\frac{\blmbd}{\rho}-\by\bigr)=\bq\in\partial h(\by)\),
+% which is the optimality condition for
+% \(\by=\prox_{h/\rho}\bigl(\calA(\bx)+\frac{\blmbd}{\rho}\bigr)
+% =\by(\bx,\blmbd)\). By~\eqref{eq:prox-multiplier},
+% \(\bq(\bx,\blmbd)=\blmbd+\rho[\calA(\bx)-\by]=\bq\), and the same relation
+% recovers \(\blmbd\) uniquely from \((\bx,\by(\bx,\blmbd),\bq(\bx,\blmbd))\).
+% \end{proof}
+
+% \subsection{Proof of Proposition~\ref{prop:curvature-smoothness}}
+% \label{app:curvature-smoothness}
+%
+% \begin{proof}
+% (a) By~\eqref{eq:prox-multiplier} and the Moreau decomposition~\cite{rockafellar1970convex},
+% we have
+% \[
+%     \bq(\bx,\blmbd)
+%     =\rho\Bigl[\calA(\bx)+\frac{\blmbd}{\rho}
+%     -\prox_{h/\rho}\Bigl(\calA(\bx)+\frac{\blmbd}{\rho}\Bigr)\Bigr]
+%     =\prox_{\rho h^*}\bigl(\blmbd+\rho\calA(\bx)\bigr).
+% \]
+% Since \(\prox_{\rho h^*}\) is nonexpansive and \(\calA\) is
+% \(G_{\calA}\)-Lipschitz by Assumption~\ref{ass:smoothness}, for all
+% \(\bx,\bx'\in\RR^n\) and \(\blmbd,\blmbd'\in\RR^m\),
+% \[
+%     \|\bq(\bx,\blmbd)-\bq(\bx',\blmbd')\|
+%     \le\|\blmbd-\blmbd'\|+\rho G_{\calA}\|\bx-\bx'\|.
+% \]
+% Moreover, \(\bq(\bx,\blmbd)\in\partial h(\by(\bx,\blmbd))\) implies
+% \(\|\bq(\bx,\blmbd)\|\le L_h\) by Assumption~\ref{ass:h}. Combining these
+% bounds with~\eqref{eq:reduced-al-gradient} and Assumption~\ref{ass:smoothness}
+% gives, for fixed \(\blmbd\),
+% \[
+%     \|\nabla_{\bx}\calD_\rho(\bx,\blmbd)-\nabla_{\bx}\calD_\rho(\bx',\blmbd)\|
+%     \le(L_f+L_{\calA}L_h+\rho G_{\calA}^2)\|\bx-\bx'\|
+%     =L_{\calD,\bx}\|\bx-\bx'\|,
+% \]
+% and, for fixed \(\bx\),
+% \[
+%     \|\nabla_{\bx}\calD_\rho(\bx,\blmbd)-\nabla_{\bx}\calD_\rho(\bx,\blmbd')\|
+%     =\|J_{\calA}(\bx)^\top(\bq(\bx,\blmbd)-\bq(\bx,\blmbd'))\|
+%     \le G_{\calA}\|\blmbd-\blmbd'\|.
+% \]
+% In particular, \(\calD_\rho(\cdot,\blmbd)\) is \(L_{\calD,\bx}\)-smooth and
+% hence \(L_{\calD,\bx}\)-weakly convex. Adding \(\frac{1}{2\gamma}\|\bx-\bz\|^2\)
+% with \(\gamma L_{\calD,\bx}<1/2\) makes
+% \(\mathcal P_s(\cdot,\blmbd;\bz,\bmu)\) \(\mu_\gamma\)-strongly convex and
+% \(L_x\)-smooth in \(\bx\), and yields~\eqref{eq:payoff-x-smoothness}.
+%
+% For fixed \((\bx,\bz,\bmu)\), \(\calD_\rho(\bx,\cdot)\) is concave in
+% \(\blmbd\) by Lemma~\ref{lem:reduced-al}(a), so subtracting
+% \(\frac{1}{2s}\|\blmbd-\bmu\|^2\) makes \(\mathcal P_s(\bx,\cdot;\bz,\bmu)\)
+% \(s^{-1}\)-strongly concave in \(\blmbd\). Furthermore,
+% by~\eqref{eq:reduced-al-gradient} and~\eqref{eq:potential},
+% \[
+%     \nabla_{\blmbd}\mathcal P_s(\bx,\blmbd;\bz,\bmu)
+%     =\frac{1}{\rho}\bigl(\bq(\bx,\blmbd)-\blmbd\bigr)
+%     -\frac{1}{s}(\blmbd-\bmu).
+% \]
+% By Lemma~\ref{lem:reduced-al}(a),
+% \(\|\nabla_{\blmbd}\calD_\rho(\bx,\blmbd)-\nabla_{\blmbd}\calD_\rho(\bx,\blmbd')\|
+% \le\frac{1}{\rho}\|\blmbd-\blmbd'\|\), and the bound on \(\bq\) above gives
+% \(\|\nabla_{\blmbd}\calD_\rho(\bx,\blmbd)-\nabla_{\blmbd}\calD_\rho(\bx',\blmbd)\|
+% =\frac{1}{\rho}\|\bq(\bx,\blmbd)-\bq(\bx',\blmbd)\|\le G_{\calA}\|\bx-\bx'\|\).
+% Adding the linear term \(-\frac{1}{s}(\blmbd-\bmu)\)
+% yields~\eqref{eq:payoff-lambda-smoothness} and shows that
+% \(\mathcal P_s(\bx,\cdot;\bz,\bmu)\) is \(L_\lambda\)-smooth in \(\blmbd\).
+%
+% (b) Fix \((\bz,\bmu)\in\RR^n\times\RR^m\). By~(a), for every \(\bx\in\RR^n\),
+% \(\mathcal P_s(\bx,\cdot;\bz,\bmu)\) is continuously differentiable and
+% \(s^{-1}\)-strongly concave on \(\RR^m\), so it attains its maximum at a
+% unique point
+% \(\blmbd^\star(\bx):=\argmax_{\blmbd\in\RR^m}\mathcal P_s(\bx,\blmbd;\bz,\bmu)\)
+% satisfying \(\nabla_{\blmbd}\mathcal P_s(\bx,\blmbd^\star(\bx);\bz,\bmu)=\zero\).
+% For any \(\bx,\bx'\in\RR^n\), strong concavity in \(\blmbd\)
+% and~\eqref{eq:payoff-lambda-smoothness} yield
+% \begin{align*}
+%     \frac{1}{s}\|\blmbd^\star(\bx)-\blmbd^\star(\bx')\|^2
+%     &\le\bigl\langle\nabla_{\blmbd}\mathcal P_s(\bx',\blmbd^\star(\bx');\bz,\bmu)
+%     -\nabla_{\blmbd}\mathcal P_s(\bx,\blmbd^\star(\bx');\bz,\bmu),\,
+%     \blmbd^\star(\bx')-\blmbd^\star(\bx)\bigr\rangle\\
+%     &\le G_{\calA}\|\bx-\bx'\|\,\|\blmbd^\star(\bx)-\blmbd^\star(\bx')\|,
+% \end{align*}
+% so \(\blmbd^\star(\cdot)\) is \((sG_{\calA})\)-Lipschitz continuous. Define
+% \[
+%     \psi(\bx):=\max_{\blmbd\in\RR^m}\mathcal P_s(\bx,\blmbd;\bz,\bmu)
+%     =\mathcal P_s(\bx,\blmbd^\star(\bx);\bz,\bmu).
+% \]
+% Since
+% \(\mathcal P_s(\cdot,\blmbd;\bz,\bmu)-\frac{\mu_\gamma}{2}\|\cdot\|^2\) is
+% convex for every \(\blmbd\in\RR^m\), its pointwise supremum
+% \(\psi-\frac{\mu_\gamma}{2}\|\cdot\|^2\) is convex; hence \(\psi\) is
+% finite-valued and \(\mu_\gamma\)-strongly convex on \(\RR^n\), and therefore
+% has a unique minimizer \(\bx^\star\in\RR^n\).
+%
+% Set \(\blmbd^\star:=\blmbd^\star(\bx^\star)\). For any \(\bx\in\RR^n\), the
+% convexity of \(\mathcal P_s(\cdot,\blmbd^\star;\bz,\bmu)\) and
+% \(\mathcal P_s(\cdot,\blmbd^\star(\bx);\bz,\bmu)\) gives
+% \[
+%     \bigl\langle\nabla_{\bx}\mathcal P_s(\bx^\star,\blmbd^\star;\bz,\bmu),\,
+%     \bx-\bx^\star\bigr\rangle
+%     \le\psi(\bx)-\psi(\bx^\star)
+%     \le\bigl\langle\nabla_{\bx}\mathcal P_s(\bx,\blmbd^\star(\bx);\bz,\bmu),\,
+%     \bx-\bx^\star\bigr\rangle.
+% \]
+% By the continuity of \(\blmbd^\star(\cdot)\) and
+% \(\nabla_{\bx}\mathcal P_s(\cdot,\cdot;\bz,\bmu)\), it follows that \(\psi\)
+% is differentiable at \(\bx^\star\) with
+% \(\nabla\psi(\bx^\star)=\nabla_{\bx}\mathcal P_s(\bx^\star,\blmbd^\star;\bz,\bmu)\).
+% Optimality of \(\bx^\star\) therefore yields
+% \(\nabla_{\bx}\mathcal P_s(\bx^\star,\blmbd^\star;\bz,\bmu)=\zero\). Together
+% with \(\nabla_{\blmbd}\mathcal P_s(\bx^\star,\blmbd^\star;\bz,\bmu)=\zero\),
+% convexity in \(\bx\) and concavity in \(\blmbd\) imply that
+% \((\bx^\star,\blmbd^\star)\) is a saddle point of
+% \(\mathcal P_s(\cdot,\cdot;\bz,\bmu)\), which also establishes the strong
+% duality identity. Finally, if \((\tilde\bx,\tilde\blmbd)\) is any saddle point
+% of \(\mathcal P_s(\cdot,\cdot;\bz,\bmu)\), then
+% \(\tilde\blmbd=\blmbd^\star(\tilde\bx)\) and
+% \(\psi(\tilde\bx)=\mathcal P_s(\tilde\bx,\tilde\blmbd;\bz,\bmu)
+% \le\mathcal P_s(\bx,\tilde\blmbd;\bz,\bmu)\le\psi(\bx)\) for all
+% \(\bx\in\RR^n\), so \(\tilde\bx\) minimizes \(\psi\). By uniqueness of
+% \(\bx^\star\) and \(\blmbd^\star(\bx^\star)\), we obtain
+% \((\tilde\bx,\tilde\blmbd)=(\bx^\star,\blmbd^\star)\), which completes the
+% proof.
+% \end{proof}
+
+\subsection{Proof of \texorpdfstring{\eqref{eq:dual-smoothing} and}{dual smoothing and} Lemma~\ref{lem:effective-penalty}}
+\label{app:effective-penalty}
 
 \begin{proof}
-By~\eqref{eq:prox-multiplier} and the Moreau decomposition~\cite{rockafellar1970convex},
-we have
+Write \(\bu=\calA(\bx)\) and \(h(\by)=\max_{\bq}\{\langle\bq,\by\rangle-h^*(\bq)\}\).
+Since \(\dom h^*\) lies in a ball by Assumption~\ref{ass:h}, Sion's minimax
+theorem allows the minimum over \(\by\) and the maximum over \(\bq\) in
+\(\min_{\by}\max_{\bq}\{\langle\bq-\blmbd,\by\rangle-h^*(\bq)
++\frac{\rho}{2}\|\bu-\by\|^2\}\) to be interchanged. The inner minimizer is
+\(\by=\bu-(\bq-\blmbd)/\rho\), which gives~\eqref{eq:dual-smoothing}.
+Applying~\eqref{eq:dual-smoothing} and exchanging the two maximizations yields
 \[
-    \bq(\bx,\blmbd)
-    =\rho\Bigl[\calA(\bx)+\frac{\blmbd}{\rho}
-    -\prox_{h/\rho}\Bigl(\calA(\bx)+\frac{\blmbd}{\rho}\Bigr)\Bigr]
-    =\prox_{\rho h^*}\bigl(\blmbd+\rho\calA(\bx)\bigr).
+    \max_{\blmbd\in\RR^m}\Bigl\{\calD_\rho(\bx,\blmbd)
+    -\frac{1}{2s}\|\blmbd-\bmu\|^2\Bigr\}
+    =\max_{\bq\in\RR^m}\Bigl\{\calL(\bx,\bq)
+    -\min_{\blmbd\in\RR^m}\Bigl[\frac{\|\bq-\blmbd\|^2}{2\rho}
+    +\frac{\|\blmbd-\bmu\|^2}{2s}\Bigr]\Bigr\},
 \]
-Since \(\prox_{\rho h^*}\) is nonexpansive and \(\calA\) is
-\(G_{\calA}\)-Lipschitz by Assumption~\ref{ass:smoothness}, for all
-\(\bx,\bx'\in\RR^n\) and \(\blmbd,\blmbd'\in\RR^m\),
-\[
-    \|\bq(\bx,\blmbd)-\bq(\bx',\blmbd')\|
-    \le\|\blmbd-\blmbd'\|+\rho G_{\calA}\|\bx-\bx'\|.
-\]
-Moreover, \(\bq(\bx,\blmbd)\in\partial h(\by(\bx,\blmbd))\) implies
-\(\|\bq(\bx,\blmbd)\|\le L_h\) by Assumption~\ref{ass:h}. Combining these
-bounds with~\eqref{eq:reduced-al-gradient} and Assumption~\ref{ass:smoothness}
-gives, for fixed \(\blmbd\),
-\[
-    \|\nabla_{\bx}\calD_\rho(\bx,\blmbd)-\nabla_{\bx}\calD_\rho(\bx',\blmbd)\|
-    \le(L_f+L_{\calA}L_h+\rho G_{\calA}^2)\|\bx-\bx'\|
-    =L_{\calD,\bx}\|\bx-\bx'\|,
-\]
-and, for fixed \(\bx\),
-\[
-    \|\nabla_{\bx}\calD_\rho(\bx,\blmbd)-\nabla_{\bx}\calD_\rho(\bx,\blmbd')\|
-    =\|J_{\calA}(\bx)^\top(\bq(\bx,\blmbd)-\bq(\bx,\blmbd'))\|
-    \le G_{\calA}\|\blmbd-\blmbd'\|.
-\]
-In particular, \(\calD_\rho(\cdot,\blmbd)\) is \(L_{\calD,\bx}\)-smooth and
-hence \(L_{\calD,\bx}\)-weakly convex. Adding \(\frac{1}{2\gamma}\|\bx-\bz\|^2\)
-with \(\gamma L_{\calD,\bx}<1/2\) makes
-\(\mathcal P_s(\cdot,\blmbd;\bz,\bmu)\) \(\mu_\gamma\)-strongly convex and
-\(L_x\)-smooth in \(\bx\), and yields~\eqref{eq:payoff-x-smoothness}.
+where the inner minimum equals \(\|\bq-\bmu\|^2/(2(\rho+s))\).
+Applying~\eqref{eq:dual-smoothing} with penalty \(\rho+s\)
+gives~\eqref{eq:effective-penalty}.
 
-For fixed \((\bx,\bz,\bmu)\), \(\calD_\rho(\bx,\cdot)\) is concave in
-\(\blmbd\) as the pointwise infimum of affine functions of \(\blmbd\), so
-subtracting \(\frac{1}{2s}\|\blmbd-\bmu\|^2\) makes
-\(\mathcal P_s(\bx,\cdot;\bz,\bmu)\) \(s^{-1}\)-strongly concave in \(\blmbd\).
-Furthermore, by~\eqref{eq:prox-multiplier} and~\eqref{eq:reduced-al-gradient},
+Next, since \(\calD_\rho(\bx,\cdot)\) is concave and continuously
+differentiable by Lemma~\ref{lem:reduced-al}(a), the function
+\(\blmbd\mapsto\calD_\rho(\bx,\blmbd)-\frac{1}{2s}\|\blmbd-\bmu\|^2\) is
+\(s^{-1}\)-strongly concave and continuously differentiable. Its unique
+maximizer \(\blmbd^\star:=\blmbd^\star(\bx,\bmu)\) is characterized by
+\(\nabla_{\blmbd}\calD_\rho(\bx,\blmbd^\star)-(\blmbd^\star-\bmu)/s=\zero\),
+which by~\eqref{eq:reduced-al-gradient} reads
 \[
-    \nabla_{\blmbd}\mathcal P_s(\bx,\blmbd;\bz,\bmu)
-    =\frac{1}{\rho}\bigl(\bq(\bx,\blmbd)-\blmbd\bigr)
-    -\frac{1}{s}(\blmbd-\bmu).
+    \calA(\bx)-\by(\bx,\blmbd^\star)=\frac{\blmbd^\star-\bmu}{s}.
 \]
-Since \(\prox_{\rho h^*}\) is firmly nonexpansive, so is
-\(I-\prox_{\rho h^*}\), whence
-\(\|\nabla_{\blmbd}\calD_\rho(\bx,\blmbd)-\nabla_{\blmbd}\calD_\rho(\bx,\blmbd')\|
-\le\frac{1}{\rho}\|\blmbd-\blmbd'\|\) and
-\(\|\nabla_{\blmbd}\calD_\rho(\bx,\blmbd)-\nabla_{\blmbd}\calD_\rho(\bx',\blmbd)\|
-=\frac{1}{\rho}\|\bq(\bx,\blmbd)-\bq(\bx',\blmbd)\|\le G_{\calA}\|\bx-\bx'\|\).
-Adding the linear term \(-\frac{1}{s}(\blmbd-\bmu)\)
-yields~\eqref{eq:payoff-lambda-smoothness} and shows that
-\(\mathcal P_s(\bx,\cdot;\bz,\bmu)\) is \(L_\lambda\)-smooth in \(\blmbd\).
+Combining this identity with
+\(\calA(\bx)-\by(\bx,\blmbd^\star)=(\bq^\star-\blmbd^\star)/\rho\)
+from~\eqref{eq:reduced-al-gradient}, where
+\(\bq^\star=\bq(\bx,\blmbd^\star)\in\partial h(\by(\bx,\blmbd^\star))\),
+eliminates \(\blmbd^\star\) and yields
+\(\blmbd^\star=\frac{s}{\rho+s}\bq^\star+\frac{\rho}{\rho+s}\bmu\) together
+with \(\calA(\bx)-\by(\bx,\blmbd^\star)=(\bq^\star-\bmu)/(\rho+s)\).
+Rearranging the latter gives
+\((\rho+s)\bigl(\calA(\bx)+\frac{\bmu}{\rho+s}-\by(\bx,\blmbd^\star)\bigr)
+=\bq^\star\in\partial h(\by(\bx,\blmbd^\star))\), so
+\(\by(\bx,\blmbd^\star)=\prox_{h/(\rho+s)}\bigl(\calA(\bx)+\frac{\bmu}{\rho+s}\bigr)\).
+Applying~\eqref{eq:reduced-al-gradient} to \(\calD_{\rho+s}(\bx,\bmu)\) then
+gives
+\(\nabla_{\bmu}\calD_{\rho+s}(\bx,\bmu)=\calA(\bx)-\by(\bx,\blmbd^\star)\),
+which completes the verification of~\eqref{eq:effective-penalty-maximizer} and
+the proof.
 \end{proof}
 
 \subsection{Properties of the value functions}
@@ -70,7 +235,7 @@ Section~\ref{subsec:fast-lralm-analysis} to bound the three terms
 in~\eqref{eq:b2-prime-decomposition}, first at a fixed center and then with
 respect to the center. The Lipschitz bounds on \(\bx_s(\cdot;\cdot)\) and
 \(\bx_s^\star(\cdot)\) parallel those for the smoothed gradient
-descent--ascent method in~\cite[Lemma~B.2]{zhang2020smoothed}; the bound on
+descent-ascent method in~\cite[Lemma~B.2]{zhang2020smoothed}; the bound on
 \(\blmbd_s^\star(\cdot)\) additionally uses the \(s^{-1}\)-strong concavity
 of \(\mathcal P_s\) in \(\blmbd\).
 
@@ -105,7 +270,7 @@ we have
 \(\nabla_{\bx}\mathcal P_s(\bx_s(\blmbd;\bz),\blmbd;\bz)
 =\nabla_{\bx}\mathcal P_s(\bx_s(\blmbd';\bz),\blmbd';\bz)=\zero\). Then, the
 \(\mu_\gamma\)-strong convexity of \(\mathcal P_s(\cdot,\blmbd;\bz)\)
-and~\eqref{eq:payoff-x-smoothness} yield
+and Proposition~\ref{prop:curvature-smoothness}(a) yield
 \begin{align*}
     &\mu_\gamma\|\bx_s(\blmbd;\bz)-\bx_s(\blmbd';\bz)\|^2\\
     &\le\bigl\langle\nabla_{\bx}\mathcal P_s(\bx_s(\blmbd';\bz),\blmbd';\bz)
@@ -150,14 +315,13 @@ Suppose that Assumptions~\ref{ass:smoothness} and~\ref{ass:h} hold. Let
     +\frac{1}{2\gamma}\|\bz'-\bz\|^2 ,
 \end{align*}
 and
-\[
+\begin{gather*}
     \max\bigl\{\|\bx_s(\blmbd;\bz')-\bx_s(\blmbd;\bz)\|,\,
     \|\bx_s^\star(\bz')-\bx_s^\star(\bz)\|\bigr\}
-    \le\frac{\|\bz'-\bz\|}{\gamma\mu_\gamma},
-    \qquad
+    \le\frac{\|\bz'-\bz\|}{\gamma\mu_\gamma},\\
     \|\blmbd_s^\star(\bz')-\blmbd_s^\star(\bz)\|
     \le\frac{\sqrt{s}\,\|\bz'-\bz\|}{2\gamma\sqrt{\mu_\gamma}} .
-\]
+\end{gather*}
 \end{lemma}
 
 \begin{proof}
