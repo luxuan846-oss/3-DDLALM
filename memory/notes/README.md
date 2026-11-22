@@ -1,6 +1,6 @@
 # DDLALM 研究材料
 
-当前阶段：论文初稿完善，同时推进两条后续研究线。论文入口为 `../main.tex`。**当前进度与待办只读 [PROJECT_STATUS.md](progress/PROJECT_STATUS.md)**。
+当前阶段：论文初稿完善，同时推进两条后续研究线。论文入口为 `../main.tex`。**当前进度与待办只读 [PROJECT_STATUS.md](../../core/PROJECT_STATUS.md)**。
 
 - [后续两条研究线](project/next-lines-plan-20261025.md)：加速线与 Boț 合作线的分工和顺序；10-26 的复核结论见项目状态第 7 节。
 - [GPT Pro 初稿评议指令](prompts/gptpro-draft-review-prompt.md)：附件清单、阅读顺序及研究判断要求。

@@ -49,3 +49,4 @@
 ## 2026-11-23
 
 - [决策] Overleaf 只同步论文；实验代码、笔记和状态文件只推送到 GitHub，供 GPT Pro 读取｜来源：本次对话「反重力 CLI 链接问题」｜影响：`/paper-wrap`
+- [决策] 项目瘦身：根目录只留 `overleaf/`、`experiments/`、`slides/`、`core/`、`memory/`；和老大反复一起改的文件集中到 `core/`（状态、milestone、定位、三份清单、phrasebook），novelty-check 和旧讲稿进 `memory/archive/`｜来源：本次对话「反重力 CLI 链接问题」｜影响：全项目与 hub 的路径约定

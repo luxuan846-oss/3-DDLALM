@@ -1,6 +1,6 @@
 # LRALM 项目状态
 
-更新日期：2026-11-21。**本文件是当前进度与待办的唯一入口。** 依据 11-21 02:36 的本地源码、`overleaf/main.log`、`overleaf/CITATION_AUDIT.md`、`memory/notes/project/citation-candidates-20261121.md` 和 11-16 至 11-21 的对话记录整理。本次整理没有重新核对数学证明。上一版（10-16 至 11-17 的逐条记录，含 Fast LRALM 重构交接细节、10-26 加速与 Tikhonov 线结论表）见 commit `5c34731` 中的同名文件。
+更新日期：2026-11-21。**本文件是当前进度与待办的唯一入口。** 依据 11-21 02:36 的本地源码、`overleaf/main.log`、`memory/notes/project/CITATION_AUDIT.md`、`memory/notes/project/citation-candidates-20261121.md` 和 11-16 至 11-21 的对话记录整理。本次整理没有重新核对数学证明。上一版（10-16 至 11-17 的逐条记录，含 Fast LRALM 重构交接细节、10-26 加速与 Tikhonov 线结论表）见 commit `5c34731` 中的同名文件。
 
 ## 1. 当前阶段与范围
 
@@ -66,7 +66,7 @@
 
 ### 4.2 引用修订（2026-11-21 开始）
 
-材料：`overleaf/CITATION_AUDIT.md`（引用上下文审计，48 个已引条目尚未全部核完）与 `memory/notes/project/citation-candidates-20261121.md`（候选新引用，已读原文，标 SUPPORTS / PARTIAL / DOES NOT FIT，附 BibTeX）。已落盘的只有 `refer.bib` 删 5 条、增 2 条。待用户拍板后执行：
+材料：`memory/notes/project/CITATION_AUDIT.md`（引用上下文审计，48 个已引条目尚未全部核完）与 `memory/notes/project/citation-candidates-20261121.md`（候选新引用，已读原文，标 SUPPORTS / PARTIAL / DOES NOT FIT，附 BibTeX）。已落盘的只有 `refer.bib` 删 5 条、增 2 条。待用户拍板后执行：
 
 1. **改写或收窄的句子**：Intro 第 70–81 行八篇文献混在一个 $\epsilon^{-1}$ 参数论断下；GDPA 行混合 `luSingleLoopGradientDescent2022` 与 `sun2024dual_descent_alm_admm`；`carmon2020lower` 只能作为无约束子类继承的下界；`xu2026rada` 需注明 Riemannian 设定；Prelim 第 177–198 行的复合 KKT 残差恒等式属于本文结果。
 2. **So 组与谱系**：`li2025nonsmooth`（LZS25，bib 中已有，未引）用于 GS/OS 段；`li2020nonconvex`（Li–Zhu–So–Vidal）与 `charisopoulos2021low` 并列；Zhu–Li（arXiv:2607.08954）为 PARTIAL，只放固定罚加局部正则一类。
@@ -98,7 +98,7 @@
 
 - 当前定位和任务只在本文件维护。完成任务时更新对应条目，不在文件末尾追加与正文冲突的"最新状态"。
 - 历史交接、旧任务表、白板与已完成提示词在 `memory/archive/`，其中的旧标题、章节号和任务不能自动恢复为当前要求。
-- `memory/notes/gpt-proofs/` 保存证明来源；`memory/notes/project/` 下的 `literature.md`、`lower-bound-references.md`、`writing-phrasebook.md` 分别用于文献总表、下界参考和英文表达。
+- `memory/notes/gpt-proofs/` 保存证明来源；`memory/notes/project/` 下的 `literature.md`、`lower-bound-references.md` 分别用于文献总表和下界参考；英文表达在 `core/writing-phrasebook.md`。
 - 已撤回判断：不能由任意 oracle 下界推断本文的参数区域下界会被替代；同一问题类与度量下的 oracle 下界能向子族转移，但不增加下界的阶。
 
 ## 6. 同步范围
