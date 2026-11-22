@@ -33,8 +33,8 @@
 | 附录 B | `appendix/LowerBoundConstructions.tex` | 下界归约、四个分支、两个下界定理的证明 |
 | 附录 C | `appendix/UpperBounds.tex` | 两个上界命题经 `lem:ub-reduction` 换算到 Li26 |
 
-- **编译**：11-21 02:36 生成 `main.pdf`，49 页，`main.log` 无警告、无未定义引用。
-- **版本**：最近 commit `5c34731`（11-20）；之后的修改（三个附录与正文均有大幅改动，`refer.bib` 删 5 条、增 `deng2026augmented`、`zhu2026primal`）尚未提交。Overleaf 远端状态未查。
+- **编译**：11-23 生成 `main.pdf`，50 页，无错误、无未定义引用。
+- **版本**：11-23 提交 `55f0755` 并推送到 GitHub（含论文、实验、`MILESTONES.md`、引用审计）；Overleaf 远端为 `272032f`，与本地 `overleaf/` 的论文源码一致。88M 的 `novelty-check-20261122/` 和 ReasBook 子模块未提交。
 
 ## 4. 当前待办
 

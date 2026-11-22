@@ -45,3 +45,7 @@
 - [导师] 实验只需要一个小的复合优化例子｜影响：第 5 节
 - [决策] 实验实例只要求属于问题类 $\mathcal{I}(C,\Delta)$，不按呈现效果筛选；phase retrieval 的 Jacobian 关于 $x$ 无界，不满足要求｜影响：第 5 节
 - [决策] 写作流程固定到 agent-hub：文献准备、GPT Pro 推导、写作循环（你理逻辑、Gemini 起草、Claude 和 Codex 核查）、会话收尾 `/paper-wrap`｜来源：本次对话「反重力 CLI 链接问题」
+
+## 2026-11-23
+
+- [决策] Overleaf 只同步论文；实验代码、笔记和状态文件只推送到 GitHub，供 GPT Pro 读取｜来源：本次对话「反重力 CLI 链接问题」｜影响：`/paper-wrap`
