@@ -64,3 +64,9 @@
 - [判断] Zhang–Xu–So v2 算法未变（MC-EGM），新增 GS 匹配下界，中心步长同为 $\Theta(\epsilon^{1/2})$；本文可主张族内上限 $\alpha\le B\epsilon$ 与单参数 $\omega$ 突破，以及 $\mathcal{D}_\rho$ 结构下无投影、每步 1 次 oracle｜依据：arXiv:2609.17973v2 全文与 `memory/notes/codex-review-c1c6-20261124.md`
 - [决策] 改正文流程：用户提修改，agent 先给逻辑，同意后交 Gemini CLI 起草，用户确认后写入｜来源：本次对话｜影响：已写入 agent-hub 科研 STATUS 偏好
 
+
+## 2026-11-25
+
+- [决策] 摘要按单一核心问题组织：固定罚参数能否达到 $\mathcal{O}(\epsilon^{-3})$；LRALM 族的上下界作答并给出机制（对偶正则提供有效罚参数），再由「乘子更新是光滑强凹对偶目标上的非精确梯度上升步」这一机制引出 Nesterov 加速；不写成 Q1/Q2 设问句，删去未作答的「对偶正则能否有界」一问｜来源：本次对话｜影响：摘要（替换稿已给出，尚未写入 `main.tex`）
+- [决策] 「first」主张只落在乘子加速：Fast LRALM 是首个带加速乘子更新且对非凸问题有复杂度保证的 linearized ALM；不主张首个单循环 $\mathcal{O}(\epsilon^{-5/2})$，因为 MC-EGM 已是单循环 $\epsilon^{-5/2}$｜来源：本次对话｜影响：摘要、引言贡献段；投稿前需 novelty-check 补查
+- [决策] 摘要实验句只用已有数值事实：共同 oracle 预算下只有 Fast LRALM 在三个实例上 stationarity 与 feasibility 残差同时低于 $\epsilon$；实验节目前没有与理论对照的收束句｜来源：本次对话｜影响：摘要、§5

@@ -101,7 +101,8 @@
 - **卖点与引言（11-24 定）**：族内与加速的联系落在原始中心步长上限，族内 $\alpha\le B\epsilon$（radial 实例）对 Fast LRALM $\alpha=\Theta(\epsilon^{1/2})$（$\kappa^{-1/2}$ 收缩裕量）；不写「族内收缩率 $1-\kappa^{-1}$」。$\Theta(\epsilon^{-3})$ 上界只对 Proposition 3.2 的 $c_s$ 成立，引言需注明。中心步是包络上的非精确梯度步这一观点 Zhang–Xu (3.3) 已写，不作创新点。
 - **GPT Pro 审稿（11-24）未处理项**：Remark 3.2 限定为族内最佳最坏复杂度；§5 对两条 GDA 曲线重合的理论解释删去；p.4 两句（固定零对偶中心、已有同阶方法全依赖嵌套循环）；p.13「$f$ 有下界」改为 $F$；p.26 without convexity；Lemma 4.1 补 $\eta\le\gamma$。
 
-- 摘要、引言贡献段与新标题对齐：标题突出加速与固定罚参数，贡献段需同时交代族的两组 $\Theta$ 结果。
+- 摘要、引言贡献段与新标题对齐：标题突出加速与固定罚参数，贡献段需同时交代族的两组 $\Theta$ 结果。**摘要（11-25）**：替换稿已定结构（固定罚核心问题 → 族给机制 → 机制引出 Nesterov → 「first」限于加速乘子更新 → 实验句），待老大确认后写入 `main.tex`；机制句「乘子更新是光滑强凹对偶目标上的非精确梯度上升步」需对照 §3、§4 核实；「first」投稿前用 novelty-check 补查。
+- §5 实验节缺与理论对照的收束句；lint 提示 12 处缩写首次出现无全称（LSALM、NR-LALM、CQ 等）。
 - 标签仍用旧名：`splalm` 出现在 `Acceleration.tex`、`LRALMFamily.tex` 与两个附录中（共 10 处）；`eq:x-weak-convexity-modulus` 名不副实。改名需同步全部引用。
 - LRALM 尚未做重名检索。
 - `xie2021proximal`（Intro 第 64 行）的 proximal 项作用在原始变量上，引用措辞需与原文一致。
