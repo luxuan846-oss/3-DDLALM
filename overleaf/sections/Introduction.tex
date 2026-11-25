@@ -3,85 +3,90 @@
 In this paper, we study the structured nonsmooth nonconvex composite problem
 \begin{align}
     \min_{\bx\in\RR^n}\quad & F(\bx) := f(\bx) + h(\calA(\bx)),
-    \tag{\textbf{P}} 
+    \tag{\textbf{P}}    
     \label{prob:main}
 \end{align}
-where $f\colon\RR^n\to\RR$ is a possibly nonconvex function with a Lipschitz
-continuous gradient, $\calA\colon\RR^n\to\RR^m$ is a smooth and possibly nonlinear
-mapping, and $h\colon\RR^m\to\RR\cup\{+\infty\}$ is a proper closed convex function
+where \(f\colon\RR^n\to\RR\) is a possibly nonconvex function with a Lipschitz
+continuous gradient, \(\calA\colon\RR^n\to\RR^m\) is a smooth and possibly nonlinear
+mapping, and \(h\colon\RR^m\to\RR\cup\{+\infty\}\) is a proper closed convex function
 whose proximal mapping is easy to evaluate; the complete assumptions are stated in
-Section~\ref{sec:assumptions}. In this formulation, $f$ is
-usually a smooth loss or data-fidelity term, whereas $h$ is a nonsmooth convex function
+Section~\ref{sec:assumptions}. In this formulation, \(f\) is
+usually a smooth loss or data-fidelity term, whereas \(h\) is a nonsmooth convex function
 that imposes robustness, sparsity, or other structure on the transformed variable
-$\calA(\bx)$  
-\cite{charisopoulos2021low}. Several models 
+\(\calA(\bx)\)~\cite{charisopoulos2021low}. Several models 
 of practical interest take this form.  
 \subsection{Motivating examples}
-\textbf{Robust phase  retrieval}~\cite{duchi2019solving}.
-Given measurement vectors $\mathbf a_i\in\RR^n$ and observations
-$b_i\approx\langle\mathbf a_i,\bx^\star\rangle^2$, a fraction of which may be grossly
-corrupted, one solves 
-\begin{equation*} 
-  \min_{\bx\in\RR^n}\;\frac1m\sum_{i=1}^m
-  \bigl|\langle\mathbf a_i,\bx\rangle^2-b_i\bigr|.
-\end{equation*}
-This is Problem~\eqref{prob:main} with $f\equiv0$, $h=\frac1m\|\cdot\|_1$, and
-$\calA(\bx)_i=\langle\mathbf a_i,\bx\rangle^2-b_i$; the $\ell_1$ loss makes the
-model robust to outliers.
-
-\textbf{Robust low-rank matrix recovery}~\cite{li2020nonconvex}.
-Given a linear measurement map $\mathcal M\colon\RR^{d_1\times d_2}\to\RR^m$ and
-observations $\mathbf b$ containing outliers, a rank-$r$ matrix is recovered in
-factorized form via
-\begin{equation*}
-  \min_{\mathbf U\in\RR^{d_1\times r},\,\mathbf V\in\RR^{d_2\times r}}
-  \frac1m\bigl\|\mathcal M(\mathbf U\mathbf V^\top)-\mathbf b\bigr\|_1.
-\end{equation*}
-Here $\bx=(\mathbf U,\mathbf V)$, $h=\frac1m\|\cdot\|_1$, and
-$\calA(\bx)=\mathcal M(\mathbf U\mathbf V^\top)-\mathbf b$ is bilinear in
-$(\mathbf U,\mathbf V)$, so the model again has the form of Problem~\eqref{prob:main}.
-
 \textbf{Minimizing a pointwise maximum}~\cite{zhang2020smoothed}.
-For smooth losses $f_1,\dots,f_m$, such as the losses on $m$ data subgroups, one solves
+For smooth losses \(f_1,\dots,f_m\), such as logistic or robust classification
+losses on \(m\) data subgroups, one solves  
 \begin{equation*}
   \min_{\bx\in\RR^n}\;\max_{1\le i\le m} f_i(\bx).
 \end{equation*}
-This is Problem~\eqref{prob:main} with $h(\bu)=\max_{1\le i\le m}u_i$ and
-$\calA(\bx)=(f_1(\bx),\dots,f_m(\bx))$; a smooth regularizer, if present, enters
-through $f$, and the proximal mapping of $h$ reduces to a projection onto the unit simplex. 
+This is Problem~\eqref{prob:main} with \(h(\bu)=\max_{1\le i\le m}u_i\) and
+\(\calA(\bx)=(f_1(\bx),\dots,f_m(\bx))\); a smooth regularizer, if present, 
+enters through \(f\). 
+
+\textbf{Nonconvex robust regression with structured regularization}~\cite{bohm2021variable}.
+Given samples \(\{(\ba_j,b_j)\}_{j=1}^N\) and a linear analysis operator
+\(\bB\in\RR^{m\times n}\), such as a finite-difference matrix for total variation
+or fused lasso, one solves
+\begin{equation*}
+  \min_{\bx\in\RR^n}\;
+  \frac{1}{2N}\sum_{j=1}^N\log\bigl(1+(\langle\ba_j,\bx\rangle-b_j)^2\bigr)
+  +\|\bB\bx\|_1.
+\end{equation*}
+This is Problem~\eqref{prob:main} with the Cauchy loss \(f\),
+\(\calA(\bx)=\bB\bx\), and \(h=\|\cdot\|_1\).
+
+\textbf{Exact \(\ell_1\)-penalty reformulations}~\cite{burke1985descent,Drusvyatskiy2019}.
+For a smooth constrained problem \(\min_{\bx\in\RR^n} f(\bx)\) subject to
+\(\bc(\bx)\le\zero\), such as logistic or sigmoid risk constraints, an exact
+penalty formulation solves
+\begin{equation*}
+  \min_{\bx\in\RR^n}\; f(\bx)+\nu\bigl\|[\bc(\bx)]_+\bigr\|_1,
+\end{equation*}
+with weight \(\nu>0\) and \([\bu]_+:=\max\{\bu,\zero\}\) applied componentwise.
+This is Problem~\eqref{prob:main} with \(\calA=\bc\) and
+\(h(\bu)=\nu\|[\bu]_+\|_1\).
 
 \subsection{Related work}
-A standard way to handle the nonsmooth composition $h\circ\calA$ in
-Problem~\eqref{prob:main} is to introduce an auxiliary variable $\by=\calA(\bx)$
+A standard way to handle the nonsmooth composition \(h\circ\calA\) in
+Problem~\eqref{prob:main} is to introduce an auxiliary variable \(\by=\calA(\bx)\)
 and reformulate it as the equality-constrained problem
 \begin{equation}\label{prob:split}
   \min_{\bx,\by}\; f(\bx)+h(\by)\quad\text{s.t.}\quad \calA(\bx)=\by.
 \end{equation}
-Most algorithms for Problems~\eqref{prob:main} and~\eqref{prob:split} rely on nested
-loops. Prox-linear methods~\cite{Drusvyatskiy2019,burke1985descent,lewis2016proximal}, quadratic penalty
-methods~\cite{kong2019complexity,lin2022complexity}, and inexact or proximal
-augmented Lagrangian methods
-(ALMs)~\cite{sahin2019inexact,li2021rate,xie2021proximal,zhu2026nonconvex} solve a subproblem
-approximately at every outer iteration, which incurs inner-loop overhead and
-requires careful tuning of termination criteria. In large-scale settings,
-single-loop first-order methods become attractive because they perform a single
-explicit gradient or proximal update per variable at each iteration. Existing
-single-loop schemes for Problem~\eqref{prob:main}, however, typically
-attain an $\mathcal O(\epsilon^{-3})$ complexity by letting a parameter
-scale with $\epsilon$. Variable smoothing~\cite{bohm2021variable,bot2015variable} replaces $h$ with its
-Moreau envelope~\cite{moreau1965} using a smoothing parameter of order $\epsilon$, while
-single-loop penalty and linearized ALM or ADMM
-schemes~\cite{hajinezhad2019perturbed,luSingleLoopGradientDescent2022,hallak2023adaptive,alacaoglu2024complexity,sun2024dual_descent_alm_admm,elbourkhissi2025perturbed,shi2025momentum},
-including a linearized ALM for orthogonality constraints~\cite{zhu2026primal},
-drive the penalty or dual perturbation parameter to order $\epsilon^{-1}$ to
-control feasibility. In either route, the primal smoothness modulus inflates to
-$\Theta(\epsilon^{-1})$ and forces the primal stepsize down to
-$\Theta(\epsilon)$. Fixed-penalty methods with $\mathcal O(\epsilon^{-2})$
-complexity rely on structural regularity conditions, such as polyhedral error
-bounds for affine constraints~\cite{zhang2022global} or uniform LICQ for smooth
-nonlinear constraints~\cite{elbourkhissi2025linearized,liu2026fixed}.
+Most algorithms for Problems~\eqref{prob:main} and~\eqref{prob:split}, including
+prox-linear~\cite{Drusvyatskiy2019,burke1985descent,lewis2016proximal},
+quadratic penalty~\cite{kong2019complexity,lin2022complexity}, and inexact or
+proximal augmented Lagrangian methods
+(ALMs)~\cite{sahin2019inexact,li2021rate,xie2021proximal}, are
+multi-loop methods that solve an inner subproblem approximately at each outer
+iteration and require precise termination criteria. In large-scale settings,
+single-loop designs become attractive. Existing
+single-loop methods for Problem~\eqref{prob:main}, however, typically
+attain an \(\mathcal O(\epsilon^{-3})\) complexity by letting a parameter
+scale with \(\epsilon\). Single-loop penalty and linearized ALM or alternating direction method of
+multipliers (ADMM) 
+methods~\cite{luSingleLoopGradientDescent2022,sun2024dual_descent_alm_admm,elbourkhissi2025perturbed}
+drive the penalty parameter to order \(\epsilon^{-1}\) to
+control feasibility. As a result, the primal smoothness bound grows as
+\(\Theta(\epsilon^{-1})\) and restricts the primal stepsize to
+\(\Theta(\epsilon)\), which slows convergence. Keeping the penalty 
+fixed avoids this growth and is a classical appeal of ALMs over penalty
+methods~\cite{bertsekas1982,nocedal2006numerical}. Recent fixed-penalty
+methods attain \(\mathcal O(\epsilon^{-2})\) complexity under
+structural regularity conditions, such as uniform linear independence
+constraint qualification (LICQ) for smooth nonlinear
+constraints~\cite{elbourkhissi2025linearized,liu2026fixed}, or solve exact
+prox-linear subproblems under local regularity~\cite{zhu2026nonconvex}. For
+orthogonality constraints, a single-loop linearized ALM keeps the penalty
+fixed and transfers the \(\epsilon^{-1}\) scaling to a dual regularizer,
+attaining \(\mathcal O(\epsilon^{-3})\) complexity~\cite{zhu2026primal}. Beyond such special structures, a
+convergence theory for nonconvex ALMs with a constant penalty is still
+lacking~\cite{deng2026augmented}.
 
-Writing $h$ via its convex conjugate recasts Problem~\eqref{prob:main} as the
+Writing \(h\) via its convex conjugate recasts Problem~\eqref{prob:main} as the
 nonconvex-linear minimax formulation
 \[
   \min_{\bx\in\RR^n}\max_{\bq\in\RR^m}\;
@@ -89,26 +94,78 @@ nonconvex-linear minimax formulation
   \Phi(\bx,\bq):=f(\bx)+\langle\bq,\calA(\bx)\rangle,
 \]
 whose game-stationary (GS) points coincide with the KKT points
-of Problem~\eqref{prob:main}. Likewise, eliminating $\by$ from the augmented
-Lagrangian for a fixed penalty $\rho>0$ produces a smooth nonconvex-concave
-(NC-C) minimax problem, on which single-loop linearized ALMs act as gradient
-descent-ascent (GDA) schemes. For smooth NC-C
-minimax problems, two-timescale GDA requires $\mathcal O(\epsilon^{-6})$
-iterations~\cite{lin2020gradient}, as does its alternating proximal
-variant~\cite{bot2023alternating}. Primal smoothing in Smoothed
-GDA~\cite{zhang2020smoothed} and dual perturbation in Perturbed
-GDA~\cite{lu2020hybrid,xu2023unified} each improve the rate to
-$\mathcal O(\epsilon^{-4})$, a rate also attained by doubly smoothed
+of Problem~\eqref{prob:main}. Linearized ALM replaces the exact \(\bx\)-minimization of classical
+ALM~\cite{hestenes1969multiplier,powell1969method,rockafellar1973multiplier} by
+one gradient step on the reduced augmented Lagrangian and becomes gradient
+descent-ascent (GDA) on a smooth nonconvex-concave (NC-C) minimax problem. In
+the general smooth NC-C setting, two-timescale GDA requires
+\(\mathcal O(\epsilon^{-6})\) iterations in Moreau-envelope optimization
+stationarity~\cite{lin2020gradient}, as does its alternating proximal
+variant~\cite{bot2023alternating}. For game stationarity, primal
+smoothing in Smoothed GDA~\cite{zhang2020smoothed} and dual perturbation in
+Perturbed GDA~\cite{lu2020hybrid,xu2023unified} each attain
+\(\mathcal O(\epsilon^{-4})\), a rate also attained by doubly smoothed
 GDA~\cite{zheng2023universal}. Combining both techniques, Perturbed Smoothed GDA
-reduces the GS complexity to $\mathcal O(\epsilon^{-3})$ with a dual
-regularization parameter of order $\epsilon^{-1}$, and matching lower bounds of
-$\Omega(\epsilon^{-4})$ and $\Omega(\epsilon^{-3})$ certify that these rates
-are tight for the two algorithms~\cite{li2026smoothing}. Single-loop methods
-exploiting the nonconvex-linear structure likewise achieve
-$\mathcal O(\epsilon^{-3})$ through $\epsilon$-dependent dual
+reduces the GS complexity to \(\mathcal O(\epsilon^{-3})\) with a dual
+regularization parameter of order \(\epsilon^{-1}\), and matching
+lower bounds show that these rates are tight for the two
+methods~\cite{li2026smoothing}. Single-loop methods exploiting the
+nonconvex-linear structure likewise achieve \(\mathcal O(\epsilon^{-3})\) through
+\(\epsilon\)-dependent dual
 regularization~\cite{pan2021efficient,he2024approximation,xu2026rada}.
 
-\begin{figure}[t]
+In these \(\mathcal O(\epsilon^{-3})\) single-loop guarantees, either
+the penalty parameter or the dual regularization parameter \(s\) grows as
+\(\epsilon^{-1}\). For Problem~\eqref{prob:main}, existing lower bounds
+either hold over general first-order method classes at
+order \(\epsilon^{-2}\)~\cite{carmon2020lower,liu2026lower}, which cannot separate
+the \(\epsilon^{-3}\) and \(\epsilon^{-4}\) rates, or apply only to
+individual single-loop primal-dual algorithms under prescribed
+stepsizes~\cite{mahdavinia2022tight,li2026smoothing}. They leave unclear
+whether this growth is necessary and what complexity single-loop
+primal-dual methods attain with a fixed penalty. Motivated by this,
+we introduce a regularized augmented Lagrangian \(\mathcal P_s\) for
+Problem~\eqref{prob:main} in~\eqref{eq:potential}, which adds primal and
+dual quadratic regularizers with parameters \(\gamma>0\) and \(s>0\) to
+the reduced augmented Lagrangian \(\calD_\rho\) in~\eqref{eq:reduced-al}. It
+decouples feasibility control from the penalty \(\rho\) and recasts
+Problem~\eqref{prob:main} as a smooth NC-C minimax problem. In this general
+setting, similar primal-dual regularization has led to
+compelling \(\mathcal O(\epsilon^{-3})\) guarantees with a dual regularization
+parameter of order \(\epsilon^{-1}\)~\cite{li2026smoothing}. These results
+motivate our first question for Problem~\eqref{prob:main}.
+\begin{quote}
+  \phantomsection\hypertarget{Q1}{\textbf{(Q1)}}
+  \emph{Can a fixed-penalty linearized ALM (\(\rho=\Theta(1)\)) still
+  attain \(\mathcal O(\epsilon^{-3})\) complexity for Problem~\eqref{prob:main},
+  and if so, can its dual regularization parameter \(s\) also remain
+  \(\Theta(1)\)?}
+\end{quote}
+
+We resolve \hyperlink{Q1}{\textbf{(Q1)}} by studying a family \(\calC_\theta\)
+of single-loop linearized regularized ALMs (LRALM) for
+Problem~\eqref{prob:main} with penalty \(\rho\), dual regularization parameter
+\(s\), and constant center stepsizes, which take alternating GDA steps on
+\(\mathcal P_s\) together with moving primal and dual centers. The family contains linearized ALM
+and, viewed as minimax methods on \(\calD_\rho\), Smoothed GDA and Perturbed
+Smoothed GDA. Specifically, we establish matching
+lower and upper bounds yielding the tight worst-case complexities  
+\[
+    \underbrace{\Theta(\epsilon^{-4})}_{\rho+s\le c_1/\epsilon} 
+    \qquad\text{and}\qquad
+    \underbrace{\Theta(\epsilon^{-3})}_{\rho=\Theta(1),\; s=c_s/\epsilon}
+\]
+in Theorems~\ref{thm:lower-bound} and~\ref{thm:lower-bound-fixed-rho} and their
+matching upper bounds. Thus, for a fixed-penalty linearized ALM, the dual
+regularization parameter must grow as \(\epsilon^{-1}\) to improve on
+\(\epsilon^{-4}\), and \(s=\Theta(\epsilon^{-1})\) suffices for \(\epsilon^{-3}\).
+Within the family, \(\epsilon^{-3}\) cannot be improved, and the limitation comes
+from the primal center stepsize \(\alpha\). Whereas prior lower bounds cover only
+general first-order classes or individual methods, these results establish tight
+complexity bounds across a family of single-loop linearized ALMs and show that
+leaving \(\calC_\theta\) is necessary for acceleration.
+
+\begin{figure}[t] 
 \centering
 \definecolor{cSlate}{RGB}{65,78,96}
 \definecolor{cSlateBg}{RGB}{245,247,250}
@@ -156,11 +213,11 @@ regularization~\cite{pan2021efficient,he2024approximation,xu2026rada}.
   % Markers and regime labels
   \fill[cRed] (\xA, \yDot) circle (2.6pt);
   \node[above=4.5pt, text=cRed] at (\xA, \yDot)
-    {$\rho+s\le c_1/\epsilon$};
+    {$\rho+s\le c_1/\epsilon$};  
 
   \fill[cTeal] (\xB, \yDot) circle (2.6pt);
   \node[above=4.5pt, text=cTeal] at (\xB, \yDot)
-    {$\rho=\Theta(1)$,\; $s=\Theta(\epsilon^{-1})$};
+    {$\rho=\Theta(1)$,\; $s=c_s/\epsilon$};
 
   \fill[cNavy] (\xC, \yDot) circle (2.8pt);
   \node[above=4.5pt, text=cNavy, font=\footnotesize\bfseries] at (\xC, \yDot)
@@ -173,190 +230,150 @@ regularization~\cite{pan2021efficient,he2024approximation,xu2026rada}.
 \end{tikzpicture}%
 }
 \caption{Summary of our iteration-complexity results for finding an
-$\epsilon$-KKT point of Problem~\eqref{prob:main}.
+\(\epsilon\)-KKT point of Problem~\eqref{prob:main}.
 Theorems~\ref{thm:lower-bound} and~\ref{thm:lower-bound-fixed-rho}, together
 with Propositions~\ref{prop:upper-beta1} and~\ref{prop:upper-beta0}, establish
-tight $\Theta(\epsilon^{-4})$ and $\Theta(\epsilon^{-3})$ bounds for the LRALM
-family $\calC_\theta$, while Theorem~\ref{thm:b2-prime-complexity} shows that
-Fast LRALM breaks the $\Theta(\epsilon^{-3})$ barrier to attain
-$\mathcal O(\epsilon^{-5/2})$. The baseline lower bound $\Omega(\epsilon^{-2})$
-is due to~\cite{carmon2020lower}.}
+tight \(\Theta(\epsilon^{-4})\) and \(\Theta(\epsilon^{-3})\) bounds for the LRALM
+family \(\calC_\theta\), while Theorem~\ref{thm:b2-prime-complexity} shows that
+Fast LRALM improves on the \(\Theta(\epsilon^{-3})\) rate to attain
+\(\mathcal O(\epsilon^{-5/2})\). The baseline lower bound \(\Omega(\epsilon^{-2})\)
+is from~\cite{carmon2020lower}.}
 \label{fig:complexity-axis}
 \end{figure}
 
-Across all of these $\mathcal O(\epsilon^{-3})$ single-loop guarantees, either
-the penalty parameter or the dual regularization parameter grows as
-$\epsilon^{-1}$. Keeping the penalty parameter fixed is a classical appeal of
-ALMs over penalty methods~\cite{bertsekas1982,nocedal2006numerical}, since it prevents the primal smoothness modulus from
-growing as $\epsilon\to0$, yet a general convergence theory for nonconvex ALMs
-with a constant penalty is still lacking~\cite{deng2026augmented}. Moreover,
-existing lower bounds either hold over general first-order method classes at
-order $\epsilon^{-2}$~\cite{carmon2020lower,liu2026lower}, which cannot separate
-the $\epsilon^{-3}$ and $\epsilon^{-4}$ rates, or apply only to
-individual single-loop primal-dual algorithms under prescribed
-stepsizes~\cite{mahdavinia2022tight,li2026smoothing}, leaving unclear whether
-parameter growth is inherent to single-loop linearized ALMs and whether the
-penalty itself must carry it. This motivates our first question.
-\begin{quote}
-  \phantomsection\hypertarget{Q1}{\textbf{(Q1)}}
-  \emph{Can a fixed-penalty linearized ALM ($\rho=\Theta(1)$) still
-  attain $\mathcal O(\epsilon^{-3})$ complexity for Problem~\eqref{prob:main},
-  and if so, can its dual regularization parameter $s$ also remain
-  $\Theta(1)$?}
-\end{quote}
-
-We resolve \hyperlink{Q1}{\textbf{(Q1)}} by studying a family $\calC_\theta$
-of single-loop linearized regularized ALMs (LRALM) with penalty $\rho$, dual
-regularization parameter $s$, and constant center stepsizes that subsumes
-Smoothed GDA and Perturbed Smoothed GDA. In
-Section~\ref{sec:algorithm-framework}, we show that every member shares the
-effective penalty $\rho+s$, and establish matching lower and upper bounds
-yielding the tight worst-case complexities
-\[
-    \underbrace{\Theta(\epsilon^{-4})}_{\rho+s\le c_1/\epsilon}
-    \qquad\text{and}\qquad
-    \underbrace{\Theta(\epsilon^{-3})}_{\rho=\Theta(1),\; s=\Theta(\epsilon^{-1})}
-\]
-in Theorems~\ref{thm:lower-bound} and~\ref{thm:lower-bound-fixed-rho} and their
-matching upper bounds. Thus, the answer to \hyperlink{Q1}{\textbf{(Q1)}} is
-negative when both $\rho$ and $s$ remain $\Theta(1)$ (in fact whenever
-$\rho+s\le c_1/\epsilon$), and positive when $\rho$ stays fixed while
-$s=\Theta(\epsilon^{-1})$, with $\Theta(\epsilon^{-3})$ being tight across
-$\calC_\theta$.
-
-\begin{table}[tbp]
+\begin{table}[t]
 \centering
 \begin{threeparttable}
 \caption{Comparison of complexity bounds (iterations for single-loop methods;
-first-order oracle calls for multi-loop methods) for finding an $\epsilon$-KKT
-point (ALM-based methods and ours) or an $\epsilon$-GS point (smooth NC-C
-minimax methods).}
+first-order oracle calls for multi-loop methods) for finding an
+\(\epsilon\)-GS point (smooth NC-C minimax) or an \(\epsilon\)-KKT point
+(nonlinear constrained optimization).}
 \label{tab:known-results}
 \scriptsize
 \setlength{\tabcolsep}{2.4pt}
 \renewcommand{\arraystretch}{1.12}
 \setlength{\aboverulesep}{0pt}
 \setlength{\belowrulesep}{0pt}
-\begin{tabular}{lccccccc}
+\begin{tabular}{llcccccc}
 \toprule
-\multirow{2}{*}[-1.2ex]{Method} & \multirow{2}{*}[-1.2ex]{Single-loop}
- & \multirow{2}{*}[-1.2ex]{Nonlinear} & \multirow{2}{*}[-1.2ex]{CQ-free}
- & \multicolumn{3}{c}{Parameter scale}
+\multirow{2}{*}[-1.2ex]{Problem} & \multirow{2}{*}[-1.2ex]{Primal-dual algorithm}
+ & \multirow{2}{*}[-1.2ex]{Single-loop}
+ & \multirow{2}{*}[-1.2ex]{CQ-free}
+ & \multicolumn{3}{c}{\rule{0pt}{2.2ex}Core parameters}
  & \multirow{2}{*}[-1.2ex]{Complexity} \\
 \cmidrule(lr){5-7}
- & & & & Penalty $\rho$ & Dual reg.\ $s$
- & Primal prox.\ $\gamma$ & \\
+ & & & & Penalty \(\rho\) & Dual reg.\ \(s\)
+ & Center step \(\alpha\) & \\[2.5pt]
 \midrule
-\multicolumn{8}{l}{\textit{ALM-based methods}} \\
-PProx-PDA~\cite{hajinezhad2019perturbed}
- & \checkmark & -- & \checkmark & $\Theta(\epsilon^{-1})$ & $\Theta(\epsilon^{-1})$ & --
- & $\mathcal O(\epsilon^{-4})$ \\
-iALM~\cite{li2021rate,kong2023iteration}
- & -- & -- & -- & $\Theta(\epsilon^{-1})$ & -- & $\Theta(1)$
- & $\tilde{\mathcal O}(\epsilon^{-5/2})$ \\
-S-prox-ALM~\cite{zhang2022global}
- & \checkmark & -- & \checkmark & $\Theta(1)$ & -- & $\Theta(1)$
- & $\mathcal O(\epsilon^{-2})$ \\
-GDPA~\cite{luSingleLoopGradientDescent2022,sun2024dual_descent_alm_admm}
- & \checkmark & \checkmark & -- & $\Theta(\epsilon^{-1})$ & $\Theta(\epsilon^{-1})$ & --
- & $\mathcal O(\epsilon^{-3})$ \\
-NR-LALM~\cite{liu2026fixed}
- & \checkmark & \checkmark & -- & $\Theta(1)$ & -- & --
- & $\mathcal O(\epsilon^{-2})$ \\
+\multirow{4}{*}{\makecell[l]{Smooth NC-C\\ minimax}}
+ & Smoothed GDA~\cite{zhang2020smoothed,li2026smoothing}
+ & \checkmark & n/a & n/a & -- & \(\Theta(\epsilon^2)\)
+ & \(\Theta(\epsilon^{-4})\) \\
+ & Perturbed Smoothed GDA~\cite{li2026smoothing}
+ & \checkmark & n/a & n/a & \(\Theta(\epsilon^{-1})\) & \(\Theta(\epsilon)\)
+ & \(\Theta(\epsilon^{-3})\) \\
+ & Tracked-FOAM~\cite{pan2026optimal}
+ & -- & n/a & n/a & \(\Theta(\epsilon^{-1})\) & --
+ & \(\Theta(\epsilon^{-5/2})\) \\
+ & MC-EGM~\cite{zhang2026matching}
+ & \checkmark & n/a & n/a & \(\Theta(\epsilon^{-1})\) & \(\Theta(\epsilon^{1/2})\)
+ & \(\Theta(\epsilon^{-5/2})\) \\
 \midrule
-\multicolumn{8}{l}{\textit{Smooth NC-C minimax}\tnote{a}} \\
-Smoothed GDA~\cite{zhang2020smoothed,li2026smoothing}
- & \checkmark & \checkmark & \checkmark & -- & -- & $\Theta(1)$
- & $\Theta(\epsilon^{-4})$ \\
-Perturbed Smoothed GDA~\cite{li2026smoothing}
- & \checkmark & \checkmark & \checkmark & -- & \cellcolor{gray!25}$\Theta(\epsilon^{-1})$ & $\Theta(1)$
- & \cellcolor{gray!25}$\Theta(\epsilon^{-3})$ \\
-Alg.~1 of~\cite{zhang2026matching}\tnote{b}
- & \checkmark & \checkmark & \checkmark & -- & $\Theta(\epsilon^{-1})$ & $\Theta(1)$
- & $\mathcal O(\epsilon^{-5/2})$ \\
-Tracked-FOAM~\cite{pan2026optimal}
- & -- & \checkmark & \checkmark & -- & $\Theta(\epsilon^{-1})$ & $\Theta(1)$
- & $\Theta(\epsilon^{-5/2})$ \\
-\midrule
-\multicolumn{8}{l}{\textit{Ours}} \\
-\phantom{\textbf{LRALM} $\boldsymbol{\calC_\theta}$} (Thm.~\ref{thm:lower-bound}, Prop.~\ref{prop:upper-beta1})
- & \checkmark & \checkmark & \checkmark & \cellcolor{gray!25}$\Theta(1)$ & \cellcolor{gray!25}$\Theta(1)$ & $\Theta(1)$
- & \cellcolor{gray!25}$\Theta(\epsilon^{-4})$ \\
-\multirow{-2}{*}{\textbf{LRALM} $\boldsymbol{\calC_\theta}$} (Thm.~\ref{thm:lower-bound-fixed-rho}, Prop.~\ref{prop:upper-beta0})
- & \checkmark & \checkmark & \checkmark & \cellcolor{gray!25}$\Theta(1)$ & \cellcolor{gray!25}$\Theta(\epsilon^{-1})$ & $\Theta(1)$
- & \cellcolor{gray!25}$\Theta(\epsilon^{-3})$ \\
-\textbf{Fast LRALM} (Alg.~\ref{alg:b2-prime})
- & \checkmark & \checkmark & \checkmark & \cellcolor{gray!25}$\Theta(1)$ & \cellcolor{gray!25}$\Theta(\epsilon^{-1})$ & $\Theta(1)$
- & \cellcolor{gray!25}$\mathcal O(\epsilon^{-5/2})$ \\
+\multirow{9}{*}{\makecell[l]{Nonlinear\\ constrained\\ optimization}}
+ & iALM (Sahin et~al.)~\cite{sahin2019inexact}
+ & -- & -- & \(\Theta(\epsilon^{-1})\) & -- & --
+ & \(\tilde{\mathcal O}(\epsilon^{-4})\) \\
+ & iALM (Li et~al.)~\cite{li2021rate}
+ & -- & -- & \(\Theta(\epsilon^{-1})\) & -- & --
+ & \(\tilde{\mathcal O}(\epsilon^{-3})\) \\
+ & GDPA~\cite{luSingleLoopGradientDescent2022}
+ & \checkmark & -- & \(\Theta(\epsilon^{-1})\) & \(\Theta(\epsilon^{-1})\) & --
+ & \(\mathcal O(\epsilon^{-3})\) \\
+ & LIPAL~\cite{elbourkhissi2025perturbed}
+ & \checkmark & -- & \(\Theta(\epsilon^{-1})\) & \(\Theta(\epsilon^{-1})\) & --
+ & \(\mathcal O(\epsilon^{-3})\) \\
+ & LSALM~\cite{zhu2026primal}
+ & \checkmark & -- & \(\Theta(1)\) & \(\Theta(\epsilon^{-1})\) & \(\Theta(\epsilon)\)
+ & \(\mathcal O(\epsilon^{-3})\) \\
+ & NR-LALM~\cite{liu2026fixed}
+ & \checkmark & -- & \(\Theta(1)\) & -- & --
+ & \(\mathcal O(\epsilon^{-2})\) \\[2.5pt]
+\cdashline{2-8}[2pt/2pt]
+\noalign{\vskip 2pt}
+ & \phantom{\textbf{LRALM} \(\boldsymbol{\calC_\theta}\)} (Thm.~\ref{thm:lower-bound}, Prop.~\ref{prop:upper-beta1})
+ & \checkmark & \checkmark & \(\Theta(1)\) & \(\Theta(1)\) & \(\Theta(\epsilon^2)\)
+ & \(\Theta(\epsilon^{-4})\) \\
+ & \multirow{-2}{*}{\textbf{LRALM} \(\boldsymbol{\calC_\theta}\)} (Thm.~\ref{thm:lower-bound-fixed-rho}, Prop.~\ref{prop:upper-beta0})
+ & \checkmark & \checkmark & \(\Theta(1)\) & \(\Theta(\epsilon^{-1})\) & \(\Theta(\epsilon)\)
+ & \(\Theta(\epsilon^{-3})\) \\[1.5pt]
+ & \cellcolor{gray!22}\rule{0pt}{2.3ex}\rule[-0.8ex]{0pt}{0pt}\textbf{Fast LRALM} (Alg.~\ref{alg:b2-prime})
+ & \cellcolor{gray!22}\checkmark & \cellcolor{gray!22}\checkmark
+ & \cellcolor{gray!22}\(\Theta(1)\) & \cellcolor{gray!22}\(\Theta(\epsilon^{-1})\)
+ & \cellcolor{gray!22}\(\Theta(\epsilon^{1/2})\)
+ & \cellcolor{gray!22}\(\mathcal O(\epsilon^{-5/2})\) \\
 \bottomrule
-\end{tabular}
+\end{tabular} 
 \begin{tablenotes}[flushleft]
 \scriptsize
-\item[] ``Nonlinear'' denotes nonlinear constraints or couplings, and
-``CQ-free'' indicates that no constraint qualification is required. Gray
-shading highlights the scales of $\rho,s$ and the resulting complexity.
-\item[a] Lower bounds for Smoothed GDA and Perturbed Smoothed GDA are
-algorithm-specific; that for Tracked-FOAM holds over the smooth NC-C class.
-\item[b] Applied to $\mathcal D_\rho$ on the dual ball of radius $2L_h$, this
-method also yields $\mathcal O(\epsilon^{-5/2})$ for Problem~\eqref{prob:main}.
+\item[] \textbf{Notes.}\;
+``CQ-free'' indicates
+no constraint qualification is required; \(\alpha\) denotes the primal center
+stepsize. Here ``--'' indicates that the property is not satisfied or the
+parameter is not used, and ``n/a'' marks an item not applicable to smooth
+minimax. For NR-LALM, each primal step solves a Gauss--Newton-type linear
+system instead of taking an explicit gradient step. For LIPAL, the single-loop
+entry refers to its prox-gradient variant. LSALM is restricted to orthogonality
+constraints, where a local uniform constraint qualification holds automatically,
+and requires a compact primal domain and dual
+projection. For GDPA, LIPAL, and LSALM, \(s\) denotes the dual regularization
+parameter obtained by writing the dual update in the form of \(\mathcal P_s\).
+Lower bounds in \(\Theta(\cdot)\)
+are algorithm-specific for Smoothed GDA and Perturbed Smoothed GDA, hold over
+first-order method classes on smooth NC-C problems for Tracked-FOAM and MC-EGM,
+and hold over constant center stepsizes in \(\calC_\theta\) for LRALM.
 \end{tablenotes}
 \end{threeparttable}
 \end{table}
 
-While $\Theta(\epsilon^{-3})$ is an unimprovable barrier for $\calC_\theta$,
-faster $\epsilon^{-5/2}$ rates are achievable in closely related settings. For
-smooth NC-C minimax problems, the optimal deterministic first-order complexity
-for $\epsilon$-GS points is $\Theta(\epsilon^{-5/2})$~\cite{pan2026optimal},
-consistent with the nonconvex-strongly-concave lower bound at dual condition
-number $\Theta(\epsilon^{-1})$~\cite{zhang2021complexity,li2021complexity}.
-This rate is attained by multi-loop schemes~\cite{pan2026optimal}, with
-earlier ones reaching it up to logarithmic
-factors~\cite{lin2020near,ostrovskii2021efficient}, and by a
-single-loop projected extragradient method with dual gradient
-averaging~\cite{zhang2026matching}. For nonsmooth composite minimax and
-affinely constrained problems, existing $\epsilon^{-5/2}$-order algorithms all 
-rely on nested loops, including multi-loop proximal-point or anchored minimax
-schemes~\cite{kong2021accelerated,ke2026efficient} and inexact ALM or penalty
-methods with accelerated inner
-solvers~\cite{li2021rate,lin2022complexity,kong2023iteration,li2021augmented}. This contrast
-motivates the second question we tackle in this paper.
+In smooth NC-C minimax optimization, faster rates have recently
+been attained. The optimal deterministic first-order complexity
+for \(\epsilon\)-GS points is \(\Theta(\epsilon^{-5/2})\), matched by the
+multi-loop methods~\cite{lin2020near,ostrovskii2021efficient,pan2026optimal} and by the
+single-loop moving-center extragradient method with momentum (MC-EGM) of
+Zhang et~al.~\cite{zhang2026matching}. While these methods are developed
+for general smooth minimax problems, Problem~\eqref{prob:main} carries
+additional structure through \(\calD_\rho\) that a tailored method can exploit.
+These results motivate our second question for Problem~\eqref{prob:main}.
 \begin{quote}
   \phantomsection\hypertarget{Q2}{\textbf{(Q2)}}
-  \emph{Can a single-loop linearized ALM with a fixed penalty parameter break
-  the $\Theta(\epsilon^{-3})$ barrier of $\calC_\theta$ and match the
-  $\mathcal O(\epsilon^{-5/2})$ rate for Problem~\eqref{prob:main}?}
+  \emph{Can a single-loop linearized ALM with a fixed penalty parameter improve on
+  the \(\Theta(\epsilon^{-3})\) complexity of \(\calC_\theta\) and match the
+  \(\mathcal O(\epsilon^{-5/2})\) rate for Problem~\eqref{prob:main}?}
 \end{quote}
 
-To answer \hyperlink{Q2}{\textbf{(Q2)}}, we introduce Fast LRALM. A structural insight from
-\hyperlink{Q1}{\textbf{(Q1)}} is that, with $\rho$ fixed and $s=\Theta(\epsilon^{-1})$,
-anchoring the dual center at zero preserves the optimal rate inside
-$\calC_\theta$ and turns the regularized dual objective into a strongly
-concave function that does not vary across iterations. Going beyond $\calC_\theta$, Fast LRALM applies Nesterov
-extrapolation~\cite{nesterov1983method} directly to the dual multiplier
-update, as in accelerated ALMs for linearly constrained convex
-problems~\cite{he2010acceleration}, while retaining a single
-explicit primal-dual step per iteration. Our analysis shows that Fast LRALM
-finds an $\epsilon$-KKT point of Problem~\eqref{prob:main} in
-$\mathcal O(\epsilon^{-5/2})$ iterations with a fixed penalty $\rho$
-by Theorem~\ref{thm:b2-prime-complexity}, matching, to the best of our
-knowledge, the fastest multi-loop rate for this problem class without
-inner solvers or dual projections. This rate also matches the
-optimal deterministic first-order rate for smooth NC-C minimax
-problems under game stationarity~\cite{pan2026optimal}. In the absence of dual
-projection, we derive uniform multiplier bounds directly from the reduced
-augmented Lagrangian structure and analyze the coupled primal-dual dynamics via
-a Lyapunov sequence in Section~\ref{sec:acceleration}.
+To answer \hyperlink{Q2}{\textbf{(Q2)}}, we develop Fast LRALM, a single-loop
+linearized ALM with a fixed penalty. Going beyond \(\calC_\theta\), the method
+exploits the smooth strongly concave dual structure of \(\mathcal P_s\) via a
+projection-free inexact Nesterov accelerated ascent
+step~\cite{nesterov1983method}. This dual acceleration supports a primal
+center stepsize \(\alpha=\Theta(\epsilon^{1/2})\) instead of \(\mathcal O(\epsilon)\)
+without inner loops. A refined analysis
+then shows that Fast LRALM finds an \(\epsilon\)-KKT point of Problem~\eqref{prob:main} in
+\(\mathcal O(\epsilon^{-5/2})\) iterations with a fixed penalty \(\rho\)
+by Theorem~\ref{thm:b2-prime-complexity}. This result matches both the
+best-known single-loop rate for this problem class and the optimal rate for
+smooth NC-C minimax problems~\cite{pan2026optimal}.
 Figure~\ref{fig:complexity-axis} summarizes our results, and
 Table~\ref{tab:known-results} compares our complexity bounds and parameter
 scales with representative methods.
 
 \paragraph{Organization.}
-Section~\ref{sec:preliminaries} introduces the notation and preliminaries.
+Section~\ref{sec:preliminaries} introduces the problem setup and preliminaries.
 Section~\ref{sec:algorithm-framework} defines the LRALM family and establishes
 its tight complexity bounds. Section~\ref{sec:acceleration} presents Fast LRALM
-and its convergence analysis. Section~\ref{sec:experiments} reports numerical
-experiments, and Section~\ref{sec:conclusion} concludes the paper. Technical
-proofs and hard-instance constructions are deferred to the appendices.
+and its convergence analysis.
+Section~\ref{sec:experiments} reports numerical experiments, and
+Section~\ref{sec:conclusion} concludes the paper.  
 
 \paragraph{Notation.} We use \(\langle\cdot,\cdot\rangle\) and \(\|\cdot\|\) for the Euclidean inner
 product and norm; for a matrix, \(\|\cdot\|\) denotes the spectral norm. For

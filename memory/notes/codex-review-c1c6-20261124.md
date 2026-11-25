@@ -1,0 +1,16 @@
+**中心步长 $\alpha$ 确实联系了族内下界与加速上界。关键限制是初值：族内下界对 $\mathcal S_0$ 取最坏情形，Fast LRALM 上界从零初值出发。**
+
+1. **C1 部分正确。** 现有证明不能照搬。$\bar\lambda^k$ 可能越出 $Y$，投影后 $\nabla_\lambda P_s-(\lambda^{k+1}-\bar\lambda^k)/\tau\in N_Y(\lambda^{k+1})$，原证明使用的梯度等式失效。仅投影对偶时，只要外推处仍满足所需光滑性，原始二次误差上界保留；原始最优点在约束边界时，非零一阶项可使该上界失效。同一势函数经新估计能否达到同阶，仍未证。[Acceleration.tex L467–485、548–554](/Users/liluxuan/Documents/My_Papers/3_DDLALM/overleaf/sections/Acceleration.tex:467)
+
+2. **C2 正确。** 在 prox 生成的三元组上，KKT 残差恰等于两块梯度范数的最大值。球上 $g_\lambda=(q-\lambda)/\rho$，因 $q\in B(0,L_h)\subset Y$，对所有 $n\in N_Y(\lambda)$ 有 $\langle g_\lambda,n\rangle\le0$，故 $\mathrm{dist}(g_\lambda,N_Y)=\lVert g_\lambda\rVert$。MC-EGM 的平方和型 GS 残差因此控制同精度 KKT，保留 $O(\epsilon^{-5/2})$。[Preliminaries.tex L130–152、174–189](/Users/liluxuan/Documents/My_Papers/3_DDLALM/overleaf/sections/Preliminaries.tex:130)；[c.txt L280–287、430–438](/Users/liluxuan/Documents/My_Papers/3_DDLALM/memory/literature/readings/arxiv-2609.17973/v2/c.txt:280)
+
+3. **C3 正确。** 在 $D_\rho$ 上复用梯度后，按 $(\mathcal O_{f,A},\mathrm{prox}_h,\text{对偶投影})$ 计，每步 Fast LRALM 为 $(1,2,0)$，MC-EGM 为 $(2,2,2)$。组件的必要性没有下界支持。[Acceleration.tex L896–897](/Users/liluxuan/Documents/My_Papers/3_DDLALM/overleaf/sections/Acceleration.tex:896)；[c.txt L315–326、384–389](/Users/liluxuan/Documents/My_Papers/3_DDLALM/memory/literature/readings/arxiv-2609.17973/v2/c.txt:315)
+
+4. **C4 部分正确。** 对照 $\beta=0,\mu^0=0$ 的成员，固定中心时两者都以一次原始梯度步近似 $\nabla d_s$。Fast 把原始、对偶两步的求值点都换为 $\bar\lambda^k$，中心更新公式相同。“仅加一次外推”准确描述算法结构。证明还须用原始收缩吸收非精确梯度误差，并控制中心移动；三条结构本身不足以推出速率。[LRALMFamily.tex L19–23](/Users/liluxuan/Documents/My_Papers/3_DDLALM/overleaf/sections/LRALMFamily.tex:19)；[Acceleration.tex L85–91、111–129、409–414、509–561](/Users/liluxuan/Documents/My_Papers/3_DDLALM/overleaf/sections/Acceleration.tex:85)
+
+5. **C5 核心正确。** 在定理参数下，对充分小的 $\epsilon$、每个 $\alpha>B\epsilon$ 和每个 $\beta\in[0,1]$，均存在实例及 $u^0\in\mathcal S_0$ 使 $T_\epsilon=\infty$。故引言可写“要对所有允许实例和初值保证有限复杂度，必须取 $\alpha=O(\epsilon)$”。对 $0<\alpha\le B\epsilon$，零初值 plateau 给出 $\Omega(1/(\alpha\epsilon^2))$。Fast 的收缩裕量 $\kappa^{-1/2}$ 吸收中心移动，允许 $\alpha=\Theta(\sqrt\epsilon)$，这是有证明的机制联系。族内 $\beta=0$ 上界的 $\alpha=\Theta(\epsilon)$ 来自 Li 等的 Condition 3.2(ii)；稿中未证明族内耦合迭代以 $1-1/\kappa$ 收缩。[LRALMFamily.tex L570–579](/Users/liluxuan/Documents/My_Papers/3_DDLALM/overleaf/sections/LRALMFamily.tex:570)；[LowerBoundConstructions.tex L1183–1199](/Users/liluxuan/Documents/My_Papers/3_DDLALM/overleaf/appendix/LowerBoundConstructions.tex:1183)；[UpperBounds.tex L247–260](/Users/liluxuan/Documents/My_Papers/3_DDLALM/overleaf/appendix/UpperBounds.tex:247)；[Acceleration.tex L429–438、822–830](/Users/liluxuan/Documents/My_Papers/3_DDLALM/overleaf/sections/Acceleration.tex:429)
+
+6. **C6 错误。** 现稿已明写 $0<\epsilon\le c_s/(4\tau)$。[Acceleration.tex L832–839](/Users/liluxuan/Documents/My_Papers/3_DDLALM/overleaf/sections/Acceleration.tex:832)
+
+**创新点表述还有三处边界。** ① 同为零初值时的族内分离尚缺下界。② $\Theta(\epsilon^{-3})$ 的匹配上界只对命题选定的 $c_s$ 成立，引言的 $s=\Theta(\epsilon^{-1})$ 隐去了这个条件。③ MC-EGM 的匹配下界针对一般 NC-C 类中的 projected zero-respecting 方法；迁移到 $D_\rho$ 的是上界，本文问题类的最优指数仍未确定。[LRALMFamily.tex L214–226、319–337](/Users/liluxuan/Documents/My_Papers/3_DDLALM/overleaf/sections/LRALMFamily.tex:214)；[Introduction.tex L149–159、313–319](/Users/liluxuan/Documents/My_Papers/3_DDLALM/overleaf/sections/Introduction.tex:313)
+

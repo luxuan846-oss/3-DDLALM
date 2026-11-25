@@ -1,25 +1,23 @@
 % !TEX root = ../main.tex
 \section{Conclusion}
 \label{sec:conclusion}
-This paper studies the LRALM family \(\calC_\theta\) for the structured
-nonsmooth nonconvex composite Problem~\eqref{prob:main}. Within
-\(\calC_\theta\), we establish tight worst-case complexity bounds for finding
-an \(\epsilon\)-KKT point, obtaining \(\Theta(\epsilon^{-4})\) whenever
-\(\rho+s\le c_1/\epsilon\) and \(\Theta(\epsilon^{-3})\) for a fixed penalty
-\(\rho\) and dual regularization \(s=c_s/\epsilon\) with sufficiently large
-\(c_s\). These results delineate the complementary roles of \(\rho\) and \(s\).
-Because the complexity order of \(\calC_\theta\) is governed by the effective
-penalty \(\rho+s\) uniformly across all constant center stepsizes, \(s\) alone
-can carry the required \(1/\epsilon\) growth while keeping \(\rho\) and the
-primal smoothness modulus fixed. Moving beyond \(\calC_\theta\) with the dual center anchored at zero, we
-develop Fast LRALM by adding Nesterov extrapolation to the dual update and
-prove that it attains \(\mathcal O(\epsilon^{-5/2})\) iteration complexity with
-a fixed penalty, matching, to the best of our knowledge, the fastest multi-loop
-rate for this problem class without inner solvers or dual projections. An
-interesting direction for future research is to
-determine whether \(\mathcal O(\epsilon^{-5/2})\) is optimal for
-Problem~\eqref{prob:main} and whether accuracy-independent parameter schedules
-can achieve the same rate.
+In this paper, we study single-loop linearized ALMs with a fixed penalty for
+the nonsmooth nonconvex composite Problem~\eqref{prob:main}. Within the LRALM
+family \(\calC_\theta\), matching upper and lower bounds show that the best
+worst-case complexity for finding an \(\epsilon\)-KKT point is
+\(\Theta(\epsilon^{-4})\) whenever the effective penalty remains below a
+threshold of order \(\epsilon^{-1}\), and \(\Theta(\epsilon^{-3})\) for a fixed
+penalty \(\rho\) with dual regularization \(s=\Theta(\epsilon^{-1})\). Thus,
+dual regularization of order \(\epsilon^{-1}\) suffices for a fixed-penalty
+member of \(\calC_\theta\) to attain \(\Theta(\epsilon^{-3})\), yet no member of
+the family improves on this rate. Beyond \(\calC_\theta\), Fast LRALM uses a
+projection-free Nesterov-accelerated dual update and attains
+\(\mathcal O(\epsilon^{-5/2})\) iteration complexity with a fixed penalty. This
+result establishes a complexity separation from \(\calC_\theta\) and matches the
+optimal rate for smooth NC-C minimax problems~\cite{pan2026optimal}. An
+interesting direction for future research is to determine whether
+\(\mathcal O(\epsilon^{-5/2})\) is optimal for Problem~\eqref{prob:main} and
+whether accuracy-independent parameter schedules can achieve the same rate.
 
 \paragraph{Acknowledgment.}
 Generative artificial intelligence tools were used to assist in the
@@ -27,3 +25,6 @@ exploratory development, checking, and exposition of mathematical proofs, as
 well as the implementation of numerical experiments. The authors independently
 verified, critically assessed, and revised all arguments, and retain full
 responsibility for the mathematical content and the final manuscript.
+
+\setcounter{topnumber}{1}\setcounter{totalnumber}{1}
+ 

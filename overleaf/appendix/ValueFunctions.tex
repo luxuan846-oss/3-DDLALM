@@ -177,6 +177,7 @@
 % proof.
 % \end{proof}
 
+\ifsupp
 \subsection{Proof of \texorpdfstring{\eqref{eq:dual-smoothing} and}{dual smoothing and} Lemma~\ref{lem:effective-penalty}}
 \label{app:effective-penalty}
 
@@ -226,45 +227,15 @@ gives
 which completes the verification of~\eqref{eq:effective-penalty-maximizer} and
 the proof.
 \end{proof}
+\fi
 
 \subsection{Properties of the value functions}
 
-This subsection establishes the properties of the dual and proximal functions
-in Table~\ref{tab:acc-notation} that are used in
-Section~\ref{subsec:fast-lralm-analysis} to bound the three terms
-in~\eqref{eq:b2-prime-decomposition}, first at a fixed center and then with
-respect to the center. The Lipschitz bounds on \(\bx_s(\cdot;\cdot)\) and
-\(\bx_s^\star(\cdot)\) parallel those for the smoothed gradient
-descent-ascent method in~\cite[Lemma~B.2]{zhang2020smoothed}; the bound on
-\(\blmbd_s^\star(\cdot)\) additionally uses the \(s^{-1}\)-strong concavity
-of \(\mathcal P_s\) in \(\blmbd\).
+This subsection proves Lemmas~\ref{lem:b2-prime-fixed-center-values}
+and~\ref{lem:b2-prime-center-dependence} stated in
+Section~\ref{subsec:fast-lralm-analysis}.
 
-\begin{lemma}
-\label{lem:b2-prime-fixed-center-values}
-Suppose that Assumptions~\ref{ass:smoothness} and~\ref{ass:h} hold. Then, for
-every \(\bz\in\RR^n\), the following statements hold.
-\begin{enumerate}[label=(\roman*)]
-\item For all \(\blmbd,\blmbd'\in\RR^m\),
-\[
-    \|\bx_s(\blmbd;\bz)-\bx_s(\blmbd';\bz)\|
-    \le\frac{G_{\calA}}{\mu_\gamma}\|\blmbd-\blmbd'\| .
-\]
-\item For all \(\bx\in\RR^n\) and \(\blmbd\in\RR^m\),
-\[
-    \frac{\mu_\gamma}{2}\|\bx-\bx_s(\blmbd;\bz)\|^2
-    \le\mathcal P_s(\bx,\blmbd;\bz)-d_s(\blmbd;\bz)
-    \le\frac{L_x}{2}\|\bx-\bx_s(\blmbd;\bz)\|^2 .
-\]
-\item For every \(\blmbd\in\RR^m\),
-\[
-    p_s(\bz)-d_s(\blmbd;\bz)
-    \ge\frac{1}{2s}\|\blmbd-\blmbd_s^\star(\bz)\|^2
-    +\frac{\mu_\gamma}{2}\|\bx_s(\blmbd;\bz)-\bx_s^\star(\bz)\|^2 .
-\]
-\end{enumerate}
-\end{lemma}
-
-\begin{proof}
+\begin{proof}[Proof of Lemma~\ref{lem:b2-prime-fixed-center-values}]
 (i) By the optimality of \(\bx_s(\blmbd;\bz)\) and \(\bx_s(\blmbd';\bz)\),
 we have
 \(\nabla_{\bx}\mathcal P_s(\bx_s(\blmbd;\bz),\blmbd;\bz)
@@ -302,29 +273,7 @@ maximizes the \(s^{-1}\)-strongly concave function
 the proof.
 \end{proof}
 
-\begin{lemma}
-\label{lem:b2-prime-center-dependence}
-Suppose that Assumptions~\ref{ass:smoothness} and~\ref{ass:h} hold. Let
-\(\bz,\bz'\in\RR^n\) and \(\blmbd\in\RR^m\). Then
-\begin{align*}
-    p_s(\bz')-p_s(\bz)
-    &\le\frac1\gamma\bigl\langle\bz-\bx_s^\star(\bz),\bz'-\bz\bigr\rangle
-    +\frac{1}{2\gamma}\|\bz'-\bz\|^2,\\
-    d_s(\blmbd;\bz')-d_s(\blmbd;\bz)
-    &\ge\frac1\gamma\bigl\langle\bz-\bx_s(\blmbd;\bz'),\bz'-\bz\bigr\rangle
-    +\frac{1}{2\gamma}\|\bz'-\bz\|^2 ,
-\end{align*}
-and
-\begin{gather*}
-    \max\bigl\{\|\bx_s(\blmbd;\bz')-\bx_s(\blmbd;\bz)\|,\,
-    \|\bx_s^\star(\bz')-\bx_s^\star(\bz)\|\bigr\}
-    \le\frac{\|\bz'-\bz\|}{\gamma\mu_\gamma},\\
-    \|\blmbd_s^\star(\bz')-\blmbd_s^\star(\bz)\|
-    \le\frac{\sqrt{s}\,\|\bz'-\bz\|}{2\gamma\sqrt{\mu_\gamma}} .
-\end{gather*}
-\end{lemma}
-
-\begin{proof}
+\begin{proof}[Proof of Lemma~\ref{lem:b2-prime-center-dependence}]
 By~\eqref{eq:potential}, for all \(\bx\in\RR^n\) and \(\blmbd\in\RR^m\), we
 have
 \begin{equation}

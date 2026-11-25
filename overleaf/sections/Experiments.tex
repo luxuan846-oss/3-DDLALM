@@ -1,4 +1,45 @@
 \section{Numerical Experiments}
 \label{sec:experiments}
+\setcounter{topnumber}{2}\setcounter{totalnumber}{2}
 
-% TODO: experiments.
+We compare Fast LRALM in Algorithm~\ref{alg:b2-prime} on nonconvex composite optimization with three single-loop baselines, namely Smoothed GDA~\cite{zhang2020smoothed} and Perturbed Smoothed GDA~\cite{li2026smoothing} from \(\calC_\theta\) and the projected extragradient method MC-EGM~\cite{zhang2026matching}, together with the multi-loop inexact augmented Lagrangian method iALM (Sahin et~al.)~\cite{sahin2019inexact} with the inner solver of~\cite[Appendix~F.1]{luSingleLoopGradientDescent2022}.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/stationarity.pdf}
+\caption{Comparison of stationarity residual versus oracle calls on Problem~\eqref{eq:exp-illcond} for \(\sigma_{\min}=10^{-2},10^{-3},10^{-4}\). The dashed line marks \(\epsilon=10^{-5}\).}
+\label{fig:exp-stat}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/feasibility.pdf}
+\caption{Comparison of feasibility residual versus oracle calls on Problem~\eqref{eq:exp-illcond} for \(\sigma_{\min}=10^{-2},10^{-3},10^{-4}\). The dashed line marks \(\epsilon=10^{-5}\).}
+\label{fig:exp-feas}
+\end{figure}
+
+\subsection{Experimental setup}
+\label{subsec:exp-illcond}
+
+We consider the nonconvex composite problem
+\begin{equation}
+  \min_{\bx\in\RR^n}\;
+  \frac{1}{2}\sum_{l=1}^{n}\log\bigl(1+(x_l-d_l)^2\bigr)
+  +\|\bB\bx-\bc\|_1,
+  \label{eq:exp-illcond}
+\end{equation}
+which takes the form of Problem~\eqref{prob:main} with \(\calA(\bx)=\bB\bx-\bc\) and \(h=\|\cdot\|_1\). We set \(n=50\), \(m=20\), and \(\bB=\bU\operatorname{diag}(\bsigma)\bV^\top\in\RR^{m\times n}\), where \(\bU\in\RR^{m\times m}\) is an orthogonal matrix, \(\bV\in\RR^{n\times m}\) has orthonormal columns, and the entries of \(\bsigma\in\RR^m\) are logarithmically spaced from \(1\) down to \(\sigma_{\min}\in\{10^{-2},10^{-3},10^{-4}\}\). The vectors \(\bc\) and \(\bd\) are constructed from a prescribed pair \((\bx^\star,\bq^\star)\) satisfying the KKT conditions of~\eqref{eq:exp-illcond} with \(\|\bq^\star\|_\infty<1\).
+
+Fast LRALM, Smoothed GDA, Perturbed Smoothed GDA, and iALM solve~\eqref{eq:exp-illcond} via the reduced augmented Lagrangian, whereas MC-EGM is applied to the equivalent smooth minimax formulation \(\min_{\bx\in\RR^n}\max_{\blmbd\in[-1,1]^m}\{f(\bx)+\langle\blmbd,\bB\bx-\bc\rangle\}\). For each instance, we set \(\epsilon=10^{-5}\) and run all five methods under a common budget of \(15{,}000\) calls to the first-order oracle \(\mathcal{O}_{f,\calA}\) in Definition~\ref{def:oracle-model}. After initialization, Fast LRALM, Smoothed GDA, and Perturbed Smoothed GDA use one call per iteration, MC-EGM uses two, and the count for iALM includes all inner-loop calls. Hyperparameters for each method, including the center stepsize \(\alpha\) for both GDA methods and the moving-center parameterization of MC-EGM, are tuned independently by grid search for each instance and metric. In Figures~\ref{fig:exp-stat}, \ref{fig:exp-feas}, and~\ref{fig:exp-obj}, each curve plots the latest recorded value averaged over five independent runs, and shaded bands indicate the minimum-to-maximum range.
+
+\subsection{Numerical results}
+\label{subsec:exp-results}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/objective.pdf}
+\caption{Comparison of objective value versus oracle calls on Problem~\eqref{eq:exp-illcond} for \(\sigma_{\min}=10^{-2},10^{-3},10^{-4}\). Insets zoom in on \(2{,}500\) to \(15{,}000\) oracle calls.}
+\label{fig:exp-obj}
+\end{figure}
+
+Figures~\ref{fig:exp-stat} and~\ref{fig:exp-feas} show the two components of \(\mathcal R_{\mathrm{KKT}}\) in~\eqref{eq:kkt-residual}. In Figure~\ref{fig:exp-stat}, Fast LRALM and both GDA methods reach final stationarity residuals below \(\epsilon\) across all three instances, while Fast LRALM drives the residual several orders of magnitude lower, reaching orders \(10^{-16}\) to \(10^{-11}\) compared with \(10^{-8}\) to \(10^{-7}\) for the two GDA methods. In Figure~\ref{fig:exp-feas}, only Fast LRALM reaches final feasibility residuals below \(\epsilon\) on every instance, finishing at orders \(10^{-7}\) to \(10^{-6}\). Across both plots, Smoothed GDA and Perturbed Smoothed GDA trace nearly identical curves and remain at order \(10^{-5}\) in feasibility. Meanwhile, iALM exhibits spikes at outer updates and stays at order \(10^{-4}\) in both residuals, whereas MC-EGM ends at order \(10^{-1}\) in stationarity and \(10^{-2}\) in feasibility. In Figure~\ref{fig:exp-obj}, Fast LRALM also attains the lowest final objective value on all three instances, with the insets showing a consistent margin below both GDA methods and iALM, while MC-EGM ends at higher objective values. Overall, under the same first-order oracle budget, Fast LRALM achieves smaller KKT residuals and lower objective values across all three levels of ill-conditioning than both \(\calC_\theta\) baselines, multi-loop iALM, and projected extragradient MC-EGM.

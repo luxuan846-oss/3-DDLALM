@@ -30,6 +30,7 @@
 \usepackage{multirow}       % Multirow tables
 \usepackage{array}          % Enhanced table formatting
 \usepackage{tabularx}
+\usepackage{arydshln}       % Dashed rules in tables (load after colortbl/array/tabularx)
 \usepackage{setspace}       % Line spacing control
 
 % Algorithms
@@ -238,6 +239,8 @@
 \numberwithin{equation}{section}
 \newcommand{\blue}[1]{{\color{blue}#1}}
 \newcommand{\red}[1]{{\color{red}#1}}
+\usepackage[normalem]{ulem}
+\newcommand{\del}[1]{{\color{red}\sout{#1}}}
 \newcommand{\todo}[1]{{\color{red}\textbf{TODO:} #1}}
 
 %% Packages and macros go here
@@ -262,3 +265,8 @@
 \newtcolorbox{stepbox}{enhanced, colback=gray!6, colframe=gray!55,
   boxrule=0.6pt, arc=2pt, left=6pt, right=6pt, top=4pt, bottom=4pt,
   before skip=8pt, after skip=6pt}
+
+% Float placement: at most one top float per page, no stacking or mid-text floats.
+\setcounter{topnumber}{1}
+\setcounter{totalnumber}{1}
+\setcounter{bottomnumber}{0}

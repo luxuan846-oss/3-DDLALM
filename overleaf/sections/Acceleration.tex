@@ -1,8 +1,22 @@
 \section{Acceleration Beyond the Family with Fast LRALM}
 \label{sec:acceleration}
+
+By Theorem~\ref{thm:lower-bound-fixed-rho} and
+Proposition~\ref{prop:upper-beta0}, \(\Theta(\epsilon^{-3})\) is the best
+order that \(\calC_\theta\) attains with fixed \(\rho\) and
+\(s=c_s/\epsilon\), so a faster rate requires leaving the family. To resolve
+\hyperlink{Q2}{\textbf{(Q2)}}, we construct Fast LRALM, a fixed-penalty
+single-loop method that performs inexact Nesterov accelerated gradient ascent on
+the regularized dual objective. Throughout
+this section, we set \(\bmu=\zero\) and write
+\(\mathcal P_s(\bx,\blmbd;\bz):=\mathcal P_s(\bx,\blmbd;\bz,\zero)\). In
+Table~\ref{tab:acc-notation}, we summarize the value functions and solution
+mappings, which are well defined under \(\gamma L_{\calD,\bx}<1/2\) by
+Proposition~\ref{prop:curvature-smoothness}.
+
 \begin{table}[t]
-\centering
-\small
+\centering  
+\small 
 \caption{Value functions and solution mappings for Fast LRALM.}
 \label{tab:acc-notation}
 \renewcommand{\arraystretch}{1.2}
@@ -26,22 +40,6 @@ Notation & Definition & Notes \\
 \bottomrule
 \end{tabular}
 \end{table}
-By Theorem~\ref{thm:lower-bound-fixed-rho} and
-Proposition~\ref{prop:upper-beta0}, \(\Theta(\epsilon^{-3})\) is the best
-order that \(\calC_\theta\) attains with fixed \(\rho\) and
-\(s=c_s/\epsilon\), so a faster rate requires leaving the family. In this
-section, we construct Fast LRALM, a single-loop method with a fixed penalty
-\(\rho\) that adds Nesterov extrapolation to the dual step and attains
-\(\mathcal O(\epsilon^{-5/2})\).
-
-Since \(s=c_s/\epsilon\) already keeps the feasibility bias of order
-\(\epsilon\) at \(\bmu=\zero\), we fix \(\bmu=\zero\) and write
-\(\mathcal P_s(\bx,\blmbd;\bz):=\mathcal P_s(\bx,\blmbd;\bz,\zero)\)
-throughout this section. When \(\gamma L_{\calD,\bx}<1/2\),
-Proposition~\ref{prop:curvature-smoothness} ensures that
-\(\mathcal P_s(\cdot,\cdot;\bz)\) is \(\mu_\gamma\)-strongly convex in \(\bx\)
-and \(s^{-1}\)-strongly concave in \(\blmbd\) for every \(\bz\in\RR^n\), so
-the quantities collected in Table~\ref{tab:acc-notation} are well defined.
 
 We target the three-level coupled problem
 \begin{equation}
@@ -80,37 +78,38 @@ describe these steps from the outer level to the inner one.
         \STATE \textbf{Input:} Parameters \(\rho,s,\gamma,\eta,\tau>0\),
         \(\alpha\in(0,1]\); \(\kappa:=s/\tau\),
         \(\omega:=\frac{\sqrt{\kappa}-1}{\sqrt{\kappa}+1}\); iteration limit \(K\).
-        \STATE \textbf{Initialize:} \(\bx^0=\bz^0=\zero\),
-        \(\blmbd^{-1}=\blmbd^0=\zero\).
-             \FOR{\(k=0,1,\ldots,K-1\)}
+        \STATE \textbf{Initialize:} \((\bx^0,\blmbd^0,\bz^0,\zero)\in\mathcal S_0(\mathbf C)\)
+        and \(\blmbd^{-1}=\blmbd^0\).
+        \FOR{\(k=0,1,\ldots,K-1\)}
             \STATE \(\bar{\blmbd}^k=\blmbd^k+\omega(\blmbd^k-\blmbd^{k-1})\).
             \STATE \(\bx^{k+1}=\bx^k-\eta\Bigl(\nabla_{\bx}\calL_\rho\bigl(\bx^k,\by(\bx^k,\bar{\blmbd}^k),\bar{\blmbd}^k\bigr)+\tfrac{1}{\gamma}(\bx^k-\bz^k)\Bigr)\).
             \STATE \(\blmbd^{k+1}=\bar{\blmbd}^k+\tau\Bigl(\calA(\bx^{k+1})-\by(\bx^{k+1},\bar{\blmbd}^k)-\tfrac{1}{s}\bar{\blmbd}^k\Bigr)\).
             \STATE \(\bz^{k+1}=\bz^k+\alpha(\bx^{k+1}-\bz^k)\).
-            \STATE \textbf{Output:}
-            \(\bigl(\bx^{k+1},\,\by(\bx^{k+1},\bar{\blmbd}^k),\,\bq(\bx^{k+1},\bar{\blmbd}^k)\bigr)\).
         \ENDFOR
+        \STATE \textbf{Output:}
+        \(\bigl\{\bigl(\bx^{k+1},\,\by(\bx^{k+1},\bar{\blmbd}^k),\,\bq(\bx^{k+1},\bar{\blmbd}^k)\bigr)\bigr\}_{k=0}^{K-1}\).
     \end{algorithmic}
-\end{algorithm} 
+\end{algorithm}
 \paragraph{Inexact gradient descent on \(p_s\).}
 Since \(p_s\) is smooth, a natural approach is gradient descent on \(p_s\).
 However, the gradient \(\nabla p_s(\bz^k)=(\bz^k-\bx_s^\star(\bz^k))/\gamma\)
 involves the minimizer \(\bx_s^\star(\bz^k)\) of~\eqref{eq:minimax-equality},
 whose exact computation requires solving a minimax subproblem and leads to
-double-loop schemes~\cite{kong2021accelerated,zhang2021complexity}. Instead,
+double-loop methods~\cite{kong2021accelerated,lin2020near}. Following
+the single-loop proximal-center framework~\cite{zhang2020smoothed,li2026smoothing,zhang2026matching},
 we replace \(\bx_s^\star(\bz^k)\) with the primal iterate \(\bx^{k+1}\), which
-tracks \(\bx_s^\star(\bz^k)\) through the dual and primal steps below, and take
-one inexact gradient step with stepsize \(\alpha\gamma\):
+approximates \(\bx_s^\star(\bz^k)\) through the dual and primal steps below, and take
+one inexact gradient step with stepsize \(\alpha\gamma\), giving
 \begin{equation}
     \bz^{k+1}=\bz^k-\alpha\gamma\,\frac{\bz^k-\bx^{k+1}}{\gamma}
     =\bz^k+\alpha(\bx^{k+1}-\bz^k).
     \label{eq:fast-lralm-center-step}
-\end{equation}  
+\end{equation}
 \paragraph{Nesterov's accelerated gradient ascent on \(d_s\).}
 Since \(\bx_s^\star(\bz^k)=\bx_s(\blmbd_s^\star(\bz^k);\bz^k)\), the exact center
 step requires solving the dual maximization problem \(\max_{\blmbd}d_s(\blmbd;\bz^k)\). For every \(\bz\in\RR^n\),
 \(d_s(\cdot;\bz)\) is \(s^{-1}\)-strongly concave and smooth with a modulus
-independent of \(s\), as established in Appendix~\ref{app:fast-lralm-value-functions}, so its condition number
+independent of \(s\), as established in \supploc{app:fast-lralm-value-functions}, so its condition number
 \(\kappa=s/\tau\) grows with \(s\). We therefore take one step of Nesterov's
 accelerated gradient ascent~\cite{nesterov2018lectures} with
 \(\omega=(\sqrt{\kappa}-1)/(\sqrt{\kappa}+1)\). By Danskin's theorem,
@@ -160,28 +159,31 @@ multiplier update
     \blmbd^{k+1}=(1-\tau/s)\bar{\blmbd}^k
     +\tau\bigl(\calA(\bx^{k+1})-\by(\bx^{k+1},\bar{\blmbd}^k)\bigr),
 \]
-which resembles the multiplier update of single-loop perturbed
-ALMs~\cite{hajinezhad2019perturbed,luSingleLoopGradientDescent2022} except that
-it is evaluated at the extrapolated multiplier \(\bar{\blmbd}^k\). However,
-perturbed ALMs omit the primal regularization term
-\(\frac{1}{2\gamma}\|\bx-\bz\|^2\). Since \(\calD_\rho(\cdot,\blmbd)\) is
-nonconvex and its minimizer need not be unique, they have no smooth dual
-objective for Nesterov momentum to act on. Including this term makes
-\(d_s(\cdot;\bz^k)\) smooth and strongly concave, providing the dual objective
-needed for Nesterov acceleration. Inexact
-ALMs~\cite{li2021rate,kong2023iteration} likewise solve proximal subproblems,
-but they fix each one and run an inner accelerated solver until a stopping
-criterion is met. In contrast, Fast LRALM moves \(\bz^k\) at every iteration
-with a small stepsize \(\alpha\), so \(d_s(\cdot;\bz^k)\) changes little between
-iterations and a single primal-dual step tracks the saddle point without inner
-loops.
+which resembles the multiplier update of single-loop perturbed ALMs such as
+GDPA~\cite{luSingleLoopGradientDescent2022} and
+LIPAL~\cite{elbourkhissi2025perturbed}, except that it is evaluated at the
+extrapolated multiplier \(\bar{\blmbd}^k\). However, perturbed ALMs do not use the
+primal regularization term \(\frac{1}{2\gamma}\|\bx-\bz\|^2\). Since
+\(\calD_\rho(\cdot,\blmbd)\) is nonconvex and its minimizer need not be unique,
+they have no smooth dual objective for Nesterov momentum to act on. Including
+this term makes \(d_s(\cdot;\bz^k)\) smooth and strongly concave, providing the
+dual objective needed for Nesterov acceleration. Inexact
+ALMs~\cite{sahin2019inexact,li2021rate} solve outer augmented Lagrangian
+subproblems inside an inner loop until a stopping criterion is met. In contrast,
+Fast LRALM moves \(\bz^k\) at every iteration with stepsize
+\(\alpha=\Theta(\epsilon^{1/2})\), so \(d_s(\cdot;\bz^k)\) changes little
+between iterations and a single primal-dual step tracks the saddle point without
+inner loops.
 \end{remark}
 
 \subsection{KKT residual bounds}
 \label{subsec:fast-lralm-residual}
-We now analyze the iteration complexity of Fast LRALM. Let
+We now analyze the iteration complexity of Fast LRALM. Throughout the
+remainder of this section, let \(\mathbf C\in\RR^5_{\ge0}\), \(\Delta>0\),
+\(I=(f,\calA,h)\in\mathcal I(\mathbf C,\Delta)\), and
+\(\bu^0=(\bx^0,\blmbd^0,\bz^0,\zero)\in\mathcal S_0(\mathbf C)\). Let
 \(\{(\bx^k,\blmbd^k,\bz^k)\}_{k\ge0}\) be the sequence generated by
-Algorithm~\ref{alg:b2-prime}, and write its output as
+Algorithm~\ref{alg:b2-prime} from \(\bu^0\), and write its output as
 \((\bx^{k+1},\by^{k+1},\bq^k)\), where
 \begin{equation}
     \by^{k+1}:=\by(\bx^{k+1},\bar{\blmbd}^k),
@@ -189,7 +191,7 @@ Algorithm~\ref{alg:b2-prime}, and write its output as
     \label{eq:b2-prime-outputs}
 \end{equation}
 The following lemma bounds the KKT residual at \((\bx^{k+1},\by^{k+1},\bq^k)\).
-\begin{lemma}[KKT residual bound]
+\begin{lemma}
 \label{lem:b2-prime-residual-decomposition}
 Suppose that Assumptions~\ref{ass:smoothness} and~\ref{ass:h} hold. Then,
 for every \(k\ge0\), \(\bq^k\in\partial h(\by^{k+1})\), and the two components
@@ -236,11 +238,11 @@ Algorithm~\ref{alg:b2-prime} and~\eqref{eq:b2-prime-outputs} give
     \frac{\blmbd^{k+1}-\bar{\blmbd}^k}{\tau}
     =\calA(\bx^{k+1})-\by^{k+1}-\frac{1}{s}\bar{\blmbd}^k,
 \]
-from which the second bound follows by the triangle inequality.
+from which the second bound follows by the triangle inequality, completing the proof.
 \end{proof}
 
 We next show that the multipliers remain bounded, adapting the quadratic Lyapunov function of~\cite[Section~2.3]{khlebnikov2011optimization} to the dual recursion of Fast LRALM.
-\begin{lemma}[Uniform multiplier bound]
+\begin{lemma}
 \label{lem:b2-prime-multiplier-bounds}
 Suppose that Assumption~\ref{ass:h} holds and
 \(\tau L_\lambda\le\frac12\). Then, for every \(k\ge0\),
@@ -316,12 +318,22 @@ inequality in~\eqref{eq:b2-prime-V-squares}. Taking square roots, and using \(\|
     \le\sqrt{b}\,\sqrt{V_k}+\frac{\tau}{\rho}L_h
     \le\Bigl(1-\frac t2\Bigr)\sqrt{V_k}+\frac t2\cdot2L_h .
 \]
-As \(\blmbd^{-1}=\blmbd^0=\zero\) gives \(V_0=0\), induction shows
-\(\sqrt{V_k}\le2L_h\) for all \(k\ge0\). The first inequality
-in~\eqref{eq:b2-prime-V-squares} then yields
-\(\|\blmbd^k\|\le\sqrt{\rho/\tau}\,\sqrt{V_k}\le2\sqrt{\rho/\tau}\,L_h\), and
-consequently \(\|\bar{\blmbd}^k\|\le(1+\omega)\|\blmbd^k\|+\omega\|\blmbd^{k-1}\|
-\le6\sqrt{\rho/\tau}\,L_h\), which completes the proof.
+Since \(\blmbd^{-1}=\blmbd^0\), \(\|\blmbd^0\|\le L_h\), and \(t\le\frac12\),
+we have
+\[
+    V_0=(1-a+b)\|\blmbd^0\|^2=t\|\blmbd^0\|^2\le\frac12L_h^2,
+\]
+so \(\sqrt{V_0}\le 2L_h\). Induction on the preceding recursion then gives
+\(\sqrt{V_k}\le 2L_h\) for all \(k\ge0\). Combining this bound with the first
+inequality in~\eqref{eq:b2-prime-V-squares} and using \(\omega\in(0,1)\) yield
+\[
+    \|\blmbd^k\|\le\sqrt{\frac{\rho}{\tau}}\,\sqrt{V_k}
+    \le 2\sqrt{\frac{\rho}{\tau}}\,L_h,
+    \qquad
+    \|\bar{\blmbd}^k\|\le(1+\omega)\|\blmbd^k\|+\omega\|\blmbd^{k-1}\|
+    \le 6\sqrt{\frac{\rho}{\tau}}\,L_h,
+\]
+which completes the proof.
 \end{proof}
    
 \subsection{Analysis framework}
@@ -341,7 +353,7 @@ the dual step in \(\blmbd\), and the center step in \(\bz\).
 \end{stepbox}
 
 Building on the potential function
-in~\cite{zhang2022proximal,zhang2020smoothed,li2026smoothing}, we define the
+in~\cite{zhang2020proximal,zhang2020smoothed,li2026smoothing}, we define the
 Lyapunov sequence tied to Algorithm~\ref{alg:b2-prime} as
 \[
     \mathcal W_k:=\underbrace{p_s(\bz^k)}_{\text{center}}
@@ -370,44 +382,44 @@ Following the order of the updates in Algorithm~\ref{alg:b2-prime}, we
 decompose the one-step change of \(\mathcal W_k\) as
 \begin{equation}
     \mathcal W_{k+1}-\mathcal W_k
-    =\frac12\underbrace{\bigl[\mathcal E_{k+1}(\bz^k)-\mathcal E_k(\bz^k)\bigr]}_{\text{fixed-center contraction}}
+    =\frac12\underbrace{\bigl[\mathcal E_{k+1}(\bz^k)-\mathcal E_k(\bz^k)\bigr]}_{\text{primal-dual contraction}}
     +\underbrace{\bigl[p_s(\bz^{k+1})-p_s(\bz^k)\bigr]}_{\text{proximal descent}}
-    +\frac12\underbrace{\bigl[\mathcal E_{k+1}(\bz^{k+1})-\mathcal E_{k+1}(\bz^k)\bigr]}_{\text{center update}}.
+    +\frac12\underbrace{\bigl[\mathcal E_{k+1}(\bz^{k+1})-\mathcal E_{k+1}(\bz^k)\bigr]}_{\text{proximal-point shift}}.
     \label{eq:b2-prime-decomposition}
 \end{equation}
 
 We bound the three terms in~\eqref{eq:b2-prime-decomposition} in turn,
 starting with the first two.
 \begin{stepbox}
-\textbf{Step 2:} Bound the fixed-center contraction and proximal-descent
+\textbf{Step 2:} Bound the primal-dual contraction and proximal-descent
 terms in~\eqref{eq:b2-prime-decomposition} via
 Lemmas~\ref{lem:b2-prime-fixed-center-contraction}
 and~\ref{lem:b2-prime-z-step-p}.
 \end{stepbox}
 
-At a fixed center \(\bz^k\), Lemma~\ref{lem:b2-prime-fixed-center-contraction}
+With \(\bz^k\) held fixed, Lemma~\ref{lem:b2-prime-fixed-center-contraction}
 shows that one primal-dual step with dual Nesterov extrapolation contracts
 \(\mathcal E_k\) at the accelerated rate \(1-\kappa^{-1/2}\) while producing
-negative squared primal and dual increments together with a negative tracking
-term \(-\Theta(\kappa^{-1/2})\|\bx^{k+1}-\bx_s^\star(\bz^k)\|^2\).
-For the proximal-descent term, the center update~\eqref{eq:fast-lralm-center-step}
+negative squared primal and dual increments together with a negative
+primal-subproblem term \(-\Theta(\kappa^{-1/2})\|\bx^{k+1}-\bx_s^\star(\bz^k)\|^2\).
+For the proximal-descent term, the center step~\eqref{eq:fast-lralm-center-step}
 is an inexact gradient step on \(p_s\) that replaces \(\bx_s^\star(\bz^k)\)
 with \(\bx^{k+1}\); by Lemma~\ref{lem:b2-prime-z-step-p}, it therefore yields a
 negative center term \(-\Theta(\alpha)\|\bx^{k+1}-\bz^k\|^2\) at the cost of a
-positive tracking error \(\Theta(\alpha)\|\bx^{k+1}-\bx_s^\star(\bz^k)\|^2\).
+positive primal-subproblem error \(\Theta(\alpha)\|\bx^{k+1}-\bx_s^\star(\bz^k)\|^2\).
 
-We now turn to the remaining center-update term
+We now turn to the remaining proximal-shift term
 in~\eqref{eq:b2-prime-decomposition}, which is the main difficulty specific to
 the single-loop analysis. Double-loop accelerated minimax
-methods~\cite{kong2021accelerated,zhang2021complexity} avoid this difficulty by
+methods avoid this difficulty by
 solving each proximal subproblem to high accuracy before updating the center.
-In our single-loop scheme, however, the center moves at every iteration, so
+In our single-loop method, however, the center moves at every iteration, so
 the resulting increase in \(\mathcal E_{k+1}\) must instead be absorbed by the
 contraction and negative center term from Step~2.
 
 \begin{stepbox}
-\textbf{Step 3:} Bound the center-update term and choose
-\(\alpha=\Theta(\kappa^{-1/2})\) to balance the outer center update against the
+\textbf{Step 3:} Bound the proximal-shift term and choose
+\(\alpha=\Theta(\kappa^{-1/2})\) to balance the outer center step against the
 inner contraction rate via Lemmas~\ref{lem:b2-prime-center-error}
 and~\ref{lem:b2-prime-potential-descent}.
 \end{stepbox}
@@ -419,24 +431,77 @@ independent of \(s\). If \(\alpha\) is too large, this drift outpaces the
 inner contraction and prevents descent. Matching the center stepsize to the
 accelerated inner contraction rate, \(\alpha=\Theta(\kappa^{-1/2})\), ensures
 that each iterate warm-starts the next subproblem; the contraction margin and
-negative terms from Step~2 then absorb both the center-update increase and the
-tracking error, yielding the sufficient decrease of
+negative terms from Step~2 then absorb both the proximal-shift increase and the
+primal-subproblem error, yielding the sufficient decrease of
 \(\{\mathcal W_k\}_{k\ge0}\) in Lemma~\ref{lem:b2-prime-potential-descent}.
 
 \subsection{Iteration complexity analysis}
 \label{subsec:fast-lralm-analysis}
-Throughout this subsection, we impose the parameters conditions
+Throughout this subsection, we impose the parameter conditions
 \begin{equation}
     \eta=\gamma,\quad \gamma L_{\calD,\bx}\le\frac{1}{10},\quad
     0<\tau\le\frac14\min\{\rho,s\},\quad 14\gamma\tau G_{\calA}^2\le1,\quad
     \alpha=\frac{c_\alpha}{\sqrt{\kappa}},\quad c_\alpha\in\Bigl(0,\frac16\Bigr],
     \label{eq:b2-prime-stepsizes}
 \end{equation}
-and use the value-function properties established in
-Appendix~\ref{app:fast-lralm-value-functions}. We begin with Step~2 and bound
-the fixed-center term in~\eqref{eq:b2-prime-decomposition}.
+and use the following properties of the value functions in
+Table~\ref{tab:acc-notation}. The Lipschitz bounds on \(\bx_s(\cdot;\cdot)\)
+and \(\bx_s^\star(\cdot)\) parallel~\cite[Lemma~B.2]{zhang2020smoothed}, and
+the bound on \(\blmbd_s^\star(\cdot)\) additionally uses the
+\(s^{-1}\)-strong concavity of \(\mathcal P_s\) in \(\blmbd\); the proofs
+are given in \supploc{app:fast-lralm-value-functions}.
 
-\begin{lemma}[Fixed-center contraction]
+\begin{lemma}
+\label{lem:b2-prime-fixed-center-values}
+Suppose that Assumptions~\ref{ass:smoothness} and~\ref{ass:h} hold. Then, for
+every \(\bz\in\RR^n\), the following statements hold.
+\begin{enumerate}[label=(\roman*)]
+\item For all \(\blmbd,\blmbd'\in\RR^m\),
+\[
+    \|\bx_s(\blmbd;\bz)-\bx_s(\blmbd';\bz)\|
+    \le\frac{G_{\calA}}{\mu_\gamma}\|\blmbd-\blmbd'\| .
+\]
+\item For all \(\bx\in\RR^n\) and \(\blmbd\in\RR^m\),
+\[
+    \frac{\mu_\gamma}{2}\|\bx-\bx_s(\blmbd;\bz)\|^2
+    \le\mathcal P_s(\bx,\blmbd;\bz)-d_s(\blmbd;\bz)
+    \le\frac{L_x}{2}\|\bx-\bx_s(\blmbd;\bz)\|^2 .
+\]
+\item For every \(\blmbd\in\RR^m\),
+\[
+    p_s(\bz)-d_s(\blmbd;\bz)
+    \ge\frac{1}{2s}\|\blmbd-\blmbd_s^\star(\bz)\|^2
+    +\frac{\mu_\gamma}{2}\|\bx_s(\blmbd;\bz)-\bx_s^\star(\bz)\|^2 .
+\]
+\end{enumerate}
+\end{lemma}
+
+\begin{lemma}
+\label{lem:b2-prime-center-dependence}
+Suppose that Assumptions~\ref{ass:smoothness} and~\ref{ass:h} hold. Let
+\(\bz,\bz'\in\RR^n\) and \(\blmbd\in\RR^m\). Then
+\begin{align*}
+    p_s(\bz')-p_s(\bz)
+    &\le\frac1\gamma\bigl\langle\bz-\bx_s^\star(\bz),\bz'-\bz\bigr\rangle
+    +\frac{1}{2\gamma}\|\bz'-\bz\|^2,\\
+    d_s(\blmbd;\bz')-d_s(\blmbd;\bz)
+    &\ge\frac1\gamma\bigl\langle\bz-\bx_s(\blmbd;\bz'),\bz'-\bz\bigr\rangle
+    +\frac{1}{2\gamma}\|\bz'-\bz\|^2 ,
+\end{align*}
+and
+\begin{gather*}
+    \max\bigl\{\|\bx_s(\blmbd;\bz')-\bx_s(\blmbd;\bz)\|,\,
+    \|\bx_s^\star(\bz')-\bx_s^\star(\bz)\|\bigr\}
+    \le\frac{\|\bz'-\bz\|}{\gamma\mu_\gamma},\\
+    \|\blmbd_s^\star(\bz')-\blmbd_s^\star(\bz)\|
+    \le\frac{\sqrt{s}\,\|\bz'-\bz\|}{2\gamma\sqrt{\mu_\gamma}} .
+\end{gather*}
+\end{lemma}
+
+We begin with Step~2 and bound
+the primal-dual contraction term in~\eqref{eq:b2-prime-decomposition}.
+
+\begin{lemma}
 \label{lem:b2-prime-fixed-center-contraction}
 Suppose that Assumptions~\ref{ass:smoothness} and~\ref{ass:h}
 and~\eqref{eq:b2-prime-stepsizes} hold. Then, for every \(k\ge0\),
@@ -468,7 +533,7 @@ invoking the convexity of \(\|\cdot-\blmbd_s^\star(\bz^k)\|^2\) together with
     +\frac{1}{2s\sqrt{\kappa}}\|\bar{\blmbd}^k-\blmbd_s^\star(\bz^k)\|^2\\
     &\quad+\frac{1}{2\tau}\|\blmbd^{k+1}-\bar{\blmbd}^k\|^2
     +\frac{1}{\tau\sqrt{\kappa}}
-    \bigl\langle\blmbd^{k+1}-\bar{\blmbd}^k,\,
+    \bigl\langle\blmbd^{k+1}-\bar{\blmbd}^k,\, 
     (\sqrt{\kappa}-1)(\bar{\blmbd}^k-\blmbd^k)
     +\bar{\blmbd}^k-\blmbd_s^\star(\bz^k)\bigr\rangle .
 \end{aligned}
@@ -514,9 +579,9 @@ adding \(p_s(\bz^k)-d_s(\blmbd^{k+1};\bz^k)
 \end{aligned}
 \end{equation}
 
-\emph{Step 2 (Primal tracking and error absorption).} It remains to control
+\emph{Step 2 (Primal-subproblem error and absorption).} It remains to control
 the three brackets on the right-hand side of~\eqref{eq:b2-prime-dual-nesterov},
-which requires \(\bx^{k+1}\) to track \(\bx_s(\bar{\blmbd}^k;\bz^k)\). Under~\eqref{eq:b2-prime-stepsizes},
+which requires \(\bx^{k+1}\) to approximate \(\bx_s(\bar{\blmbd}^k;\bz^k)\). Under~\eqref{eq:b2-prime-stepsizes},
 the primal step of Algorithm~\ref{alg:b2-prime} is a gradient descent step
 with stepsize \(\gamma=2/(\mu_\gamma+L_x)\) on the \(\mu_\gamma\)-strongly
 convex and \(L_x\)-smooth function
@@ -555,7 +620,7 @@ Combining the last three inequalities with
     \|\bx^{k+1}-\bx^k\|^2
     \le3(\gamma L_x)^2S_k\le\frac{363}{100}S_k .
 \end{equation}
-With this tracking estimate, Lemma~\ref{lem:b2-prime-fixed-center-values}(i)--(ii)
+With this primal-error estimate, Lemma~\ref{lem:b2-prime-fixed-center-values}(i)--(ii)
 and the optimality of \(\bx_s^\star(\bz^k)\) for
 \(\mathcal P_s(\cdot,\blmbd_s^\star(\bz^k);\bz^k)\) bound the three brackets as
 \begin{align*}
@@ -586,8 +651,7 @@ adding the last two terms of
     -\frac{\mu_\gamma}{2\sqrt{\kappa}}\|\bx^{k+1}-\bx_s^\star(\bz^k)\|^2 .
 \end{aligned}
 \]
-Finally, \eqref{eq:b2-prime-tracking} and~\eqref{eq:b2-prime-stepsizes}
-bound the two coefficients as
+Finally, we bound the two coefficients on the right-hand side by
 \begin{align*}
     \frac{\mu_\gamma}{8}S_k
     -\Bigl(L_x+\frac{3\mu_\gamma}{4}\Bigr)
@@ -598,12 +662,17 @@ bound the two coefficients as
     -\frac{G_{\calA}^2}{\mu_\gamma^2}\Bigl(L_x+\frac{\mu_\gamma}{4}\Bigr)
     &\ge\frac{1}{8\tau},
 \end{align*}
-and substituting them into the preceding display completes the proof.
+where the first chain uses~\eqref{eq:b2-prime-tracking} together with
+\(\mu_\gamma\ge\frac{9}{10\gamma}\) and \(L_x\le\frac{11}{10\gamma}\)
+under~\eqref{eq:b2-prime-stepsizes}, and the second uses
+\(\tau L_\lambda\le\frac12\) and \(14\gamma\tau G_{\calA}^2\le1\)
+from~\eqref{eq:b2-prime-stepsizes}. Substituting both bounds into the preceding
+display yields the claimed inequality and completes the proof.
 \end{proof}
 
 We next bound the proximal-descent term in~\eqref{eq:b2-prime-decomposition}.
 
-\begin{lemma}[One-step proximal descent]
+\begin{lemma}
 \label{lem:b2-prime-z-step-p}
 Suppose that Assumptions~\ref{ass:smoothness} and~\ref{ass:h} hold, and let
 \(0\le\alpha\le1\). Then, for every \(k\ge0\),
@@ -632,14 +701,14 @@ and \(\bz'=\bz^{k+1}\) yields
 \end{align*}
 where the equality splits
 \(\bz^k-\bx_s^\star(\bz^k)
-=(\bx^{k+1}-\bx_s^\star(\bz^k))-(\bx^{k+1}-\bz^k)\), and the last step is
-Young's inequality.
+=(\bx^{k+1}-\bx_s^\star(\bz^k))-(\bx^{k+1}-\bz^k)\), and the last step
+follows from Young's inequality, which completes the proof.
 \end{proof}
 
 We next carry out Step~3. The following lemma bounds the change of
-\(\mathcal E_{k+1}\) caused by the center update.
+\(\mathcal E_{k+1}\) caused by shifting the proximal center.
 
-\begin{lemma}[Center-update error]
+\begin{lemma}
 \label{lem:b2-prime-center-error}
 Suppose that Assumptions~\ref{ass:smoothness} and~\ref{ass:h} hold. Then,
 for every \(k\ge0\),
@@ -706,7 +775,7 @@ and~\ref{lem:b2-prime-z-step-p} from Step~2 with
 Lemma~\ref{lem:b2-prime-center-error} from Step~3 yields the sufficient descent
 and an \(s\)-independent initial gap for \(\{\mathcal W_k\}_{k\ge0}\).
 
-\begin{lemma}[Sufficient descent and initial gap]
+\begin{lemma}
 \label{lem:b2-prime-potential-descent}
 Suppose that Assumptions~\ref{ass:smoothness} and~\ref{ass:h} and
 \eqref{eq:b2-prime-stepsizes} hold. Then, for every \(k\ge0\),
@@ -716,14 +785,13 @@ Suppose that Assumptions~\ref{ass:smoothness} and~\ref{ass:h} and
         -\frac{1}{16\tau}\|\blmbd^{k+1}-\bar{\blmbd}^k\|^2
         -\frac{\alpha}{6\gamma}\|\bx^{k+1}-\bz^k\|^2.
 \]
-Moreover, for every \(K\ge0\),
+Moreover, there exists a constant \(\tilde{\Delta}>0\), depending only on
+\(\mathbf C\), \(\Delta\), \(\rho\), \(\gamma\), and \(\tau\), such that for
+every \(K\ge0\),
 \begin{equation}
-    \mathcal W_0-\mathcal W_K\le\Delta_{\mathcal W}
-    :=\Delta+\frac{L_h^2}{\rho}+\frac{(G_f+G_{\calA}L_h)^2}{2\mu_\gamma},
+    \mathcal W_0-\mathcal W_K\le\tilde{\Delta}.
     \label{eq:b2-prime-initial-gap}
 \end{equation}
-where \(G_f\), \(G_{\calA}\), \(L_h\), and \(\Delta\) are the constants in
-Definition~\ref{def:problem-class}.
 \end{lemma}
 
 \begin{proof}
@@ -783,80 +851,111 @@ follows that
     \ge\inf_{\bx\in\RR^n}F(\bx)-\frac{L_h^2}{2(\rho+s)} .
     \label{eq:b2-prime-WK-lower}
 \end{equation}
-For \(\mathcal W_0\), the initialization \(\bx^0=\bz^0=\zero\) and
-\(\blmbd^{-1}=\blmbd^0=\zero\) gives \(\bar{\blmbd}^{-1}=\bw^0=\zero\),
-so
+For \(\mathcal W_0\), the initialization conditions \(\bx^0=\zero\),
+\(\|\blmbd^0\|\le L_h\), \(\|\bz^0\|\le1\), and \(\blmbd^{-1}=\blmbd^0\) give
+\(\bar{\blmbd}^{-1}=\bw^0=\blmbd^0\), so
 \begin{equation}
-    \mathcal W_0=p_s(\zero)+\frac12\Bigl[
-    p_s(\zero)-d_s(\zero;\zero)
-    +\frac{1}{2s}\|\blmbd_s^\star(\zero)\|^2
-    +\frac{\mu_\gamma}{4}\|\bx_s(\zero;\zero)\|^2\Bigr].
+    \mathcal W_0=p_s(\bz^0)+\frac12\Bigl[
+    p_s(\bz^0)-d_s(\blmbd^0;\bz^0)
+    +\frac{1}{2s}\|\blmbd^0-\blmbd_s^\star(\bz^0)\|^2
+    +\frac{\mu_\gamma}{4}\|\bx_s(\blmbd^0;\bz^0)\|^2\Bigr].
     \label{eq:b2-prime-W0}
 \end{equation}
-To bound the bracket, Lemma~\ref{lem:reduced-al}(a) together with
-Assumptions~\ref{ass:smoothness} and~\ref{ass:h} gives
-\(\|\bq(\zero,\zero)\|\le L_h\) and
-\(\|\nabla_{\bx}\mathcal P_s(\zero,\zero;\zero)\|
-=\|\nabla_{\bx}\calD_\rho(\zero,\zero)\|\le G_f+G_{\calA}L_h\). The
-\(\mu_\gamma\)-strong convexity of \(\mathcal P_s(\cdot,\zero;\zero)\)
-and~\eqref{eq:b2-prime-D-bounds} with \(\sigma=\rho\) then yield
+Set \(G_0:=G_f+G_{\calA}L_h+1/\gamma\). By Lemma~\ref{lem:reduced-al}(a),
+Assumptions~\ref{ass:smoothness} and~\ref{ass:h}, and \(\|\bz^0\|\le1\), we
+have \(\|\bq(\zero,\blmbd^0)\|\le L_h\) and
 \[
-    \|\bx_s(\zero;\zero)\|\le\frac{G_f+G_{\calA}L_h}{\mu_\gamma},
-    \qquad
-    d_s(\zero;\zero)
-    \ge\calD_\rho(\zero,\zero)-\frac{(G_f+G_{\calA}L_h)^2}{2\mu_\gamma}
-    \ge F(\zero)-\frac{L_h^2}{2\rho}
-    -\frac{(G_f+G_{\calA}L_h)^2}{2\mu_\gamma} .
+    \|\nabla_{\bx}\mathcal P_s(\zero,\blmbd^0;\bz^0)\|
+    =\Bigl\|\nabla_{\bx}\calD_\rho(\zero,\blmbd^0)-\frac{1}{\gamma}\bz^0\Bigr\|
+    \le G_0.
 \]
+Next, for every \(\by\in\RR^m\), the \(L_h\)-Lipschitz continuity of \(h\) and
+the Cauchy--Schwarz inequality with \(\|\blmbd^0\|\le L_h\) yield
+\begin{align*}
+    h(\by)+\langle\blmbd^0,\calA(\zero)-\by\rangle
+    +\frac{\rho}{2}\|\calA(\zero)-\by\|^2
+    &\ge h(\calA(\zero))-2L_h\|\calA(\zero)-\by\|
+    +\frac{\rho}{2}\|\calA(\zero)-\by\|^2\\
+    &\ge h(\calA(\zero))-\frac{2L_h^2}{\rho},
+\end{align*}
+where the second inequality completes the square in \(\|\calA(\zero)-\by\|\).
+Minimizing over \(\by\in\RR^m\) in~\eqref{eq:reduced-al} gives
+\(\calD_\rho(\zero,\blmbd^0)\ge F(\zero)-\frac{2L_h^2}{\rho}\). Together with
+\(\|\blmbd^0\|\le L_h\) in~\eqref{eq:potential}, we obtain
+\[
+    \mathcal P_s(\zero,\blmbd^0;\bz^0)
+    =\calD_\rho(\zero,\blmbd^0)+\frac{1}{2\gamma}\|\bz^0\|^2
+    -\frac{1}{2s}\|\blmbd^0\|^2
+    \ge F(\zero)-\frac{2L_h^2}{\rho}-\frac{L_h^2}{2s}.
+\]
+By the \(\mu_\gamma\)-strong convexity of
+\(\mathcal P_s(\cdot,\blmbd^0;\bz^0)\), its minimizer \(\bx_s(\blmbd^0;\bz^0)\)
+and minimum value \(d_s(\blmbd^0;\bz^0)\) satisfy
+\begin{align*}
+    \|\bx_s(\blmbd^0;\bz^0)\|
+    &\le\frac{1}{\mu_\gamma}\|\nabla_{\bx}\mathcal P_s(\zero,\blmbd^0;\bz^0)\|
+    \le\frac{G_0}{\mu_\gamma},\\
+    d_s(\blmbd^0;\bz^0)
+    &\ge\mathcal P_s(\zero,\blmbd^0;\bz^0)
+    -\frac{1}{2\mu_\gamma}\|\nabla_{\bx}\mathcal P_s(\zero,\blmbd^0;\bz^0)\|^2
+    \ge F(\zero)-\frac{2L_h^2}{\rho}-\frac{L_h^2}{2s}-\frac{G_0^2}{2\mu_\gamma}.
+\end{align*}
 Moreover, applying~\eqref{eq:effective-penalty-maximizer} at
-\(\bx=\bx_s^\star(\zero)\) and \(\bmu=\zero\) gives
+\(\bx=\bx_s^\star(\bz^0)\) and \(\bmu=\zero\) gives
+\(\blmbd_s^\star(\bz^0)
+=\frac{s}{\rho+s}\bq(\bx_s^\star(\bz^0),\blmbd_s^\star(\bz^0))\), so
+\(\|\blmbd_s^\star(\bz^0)\|\le L_h\) by Lemma~\ref{lem:reduced-al}(a), and
+using \(\|\blmbd^0\|\le L_h\) yields
 \[
-    \blmbd_s^\star(\zero)
-    =\frac{s}{\rho+s}\bq\bigl(\bx_s^\star(\zero),\blmbd_s^\star(\zero)\bigr),
-    \qquad
-    \frac{1}{2s}\|\blmbd_s^\star(\zero)\|^2\le\frac{L_h^2}{2(\rho+s)} .
+    \frac{1}{2s}\|\blmbd^0-\blmbd_s^\star(\bz^0)\|^2\le\frac{2L_h^2}{s}.
 \]
-Substituting these bounds and \(p_s(\zero)\le F(\zero)\)
-into~\eqref{eq:b2-prime-W0}, together with~\eqref{eq:b2-prime-WK-lower} and
-\(F(\zero)-\inf F\le\Delta\), yields
+Evaluating \(p_s(\bz^0)\) at \(\bx=\zero\) and applying~\eqref{eq:b2-prime-D-bounds}
+with \(\sigma=\rho+s\) and \(\|\bz^0\|\le1\) give
 \[
+    p_s(\bz^0)\le\calD_{\rho+s}(\zero,\zero)+\frac{1}{2\gamma}\|\bz^0\|^2
+    \le F(\zero)+\frac{1}{2\gamma}.
+\]
+Substituting these four estimates into~\eqref{eq:b2-prime-W0} and subtracting~\eqref{eq:b2-prime-WK-lower}, we obtain
+\begin{align*}
     \mathcal W_0-\mathcal W_K
-    \le\Delta+\frac{L_h^2}{4\rho}+\frac{3L_h^2}{4(\rho+s)}
-    +\frac{3(G_f+G_{\calA}L_h)^2}{8\mu_\gamma}
-    \le\Delta+\frac{L_h^2}{\rho}+\frac{(G_f+G_{\calA}L_h)^2}{2\mu_\gamma}
-    =\Delta_{\mathcal W},
-\]
-which completes the proof.
-\end{proof} 
+    &\le\bigl(F(\zero)-\inf_{\bx\in\RR^n}F(\bx)\bigr)
+    +\frac{3}{4\gamma}+\frac{L_h^2}{\rho}+\frac{5L_h^2}{4s}
+    +\frac{L_h^2}{2(\rho+s)}+\frac{3G_0^2}{8\mu_\gamma}\\
+    &\le\Delta+\frac1\gamma+\frac{2L_h^2}{\rho}+\frac{L_h^2}{2\tau}
+    +\frac{G_0^2}{2\mu_\gamma}=:\tilde{\Delta},
+\end{align*}
+where the second inequality uses \(F(\zero)-\inf F\le\Delta\),
+\(\rho+s\ge\rho\), and \(s\ge4\tau\) from~\eqref{eq:b2-prime-stepsizes}. Since
+\(\tilde{\Delta}\) depends only on \(\mathbf C\), \(\Delta\), \(\rho\),
+\(\gamma\), and \(\tau\), this establishes~\eqref{eq:b2-prime-initial-gap} and
+completes the proof.
+\end{proof}
 
-We now establish the iteration complexity of Fast LRALM. Since the initial
-gap \(\Delta_{\mathcal W}\) in Lemma~\ref{lem:b2-prime-potential-descent} is
-independent of \(s\), telescoping its descent inequality gives
-\(\mathcal O(\epsilon^{-2}/\alpha)\) iterations once \(s=\Theta(\epsilon^{-1})\)
-keeps the feasibility bias of order \(\epsilon\). Dual extrapolation improves
-the inner contraction factor from \(1-\kappa^{-1}\) to \(1-\kappa^{-1/2}\) and
-thus admits \(\alpha=\Theta(\epsilon^{1/2})\) in place of
-\(\alpha=\Theta(\epsilon)\), reducing the complexity from
-\(\mathcal O(\epsilon^{-3})\) to \(\mathcal O(\epsilon^{-5/2})\).
+Combining Lemma~\ref{lem:b2-prime-potential-descent} with the residual and
+multiplier bounds in Lemmas~\ref{lem:b2-prime-residual-decomposition}
+and~\ref{lem:b2-prime-multiplier-bounds} yields the iteration complexity of
+Fast LRALM.
 
-\begin{theorem}[Iteration complexity of Fast LRALM]
+\begin{theorem}
 \label{thm:b2-prime-complexity}
-Suppose that Assumptions~\ref{ass:smoothness} and~\ref{ass:h} hold. Given
-\(\epsilon>0\), let \(\{(\bx^k,\blmbd^k,\bz^k)\}_{k\ge0}\) be generated by
+Suppose that Assumptions~\ref{ass:smoothness} and~\ref{ass:h} hold, and
+let \(\rho,\gamma,\tau,c_\alpha,c_s>0\) be independent of \(I\), \(\bu^0\), and
+\(\epsilon\) with
+\(c_s\ge12\sqrt{\rho/\tau}\,L_h\). Given \(0<\epsilon\le c_s/(4\tau)\),
+let \(\{(\bx^k,\blmbd^k,\bz^k)\}_{k\ge0}\) be generated by
 Algorithm~\ref{alg:b2-prime} under~\eqref{eq:b2-prime-stepsizes} with
-\(s=c_s/\epsilon\) and \(c_s\ge12\sqrt{\rho/\tau}\,L_h\), where
-\(\rho,\gamma,\tau,c_\alpha,c_s\) are independent of \(\epsilon\). Then,
+\(s=c_s/\epsilon\). Then,
 for every \(K\ge1\),
 \begin{equation}
     \min_{0\le k<K}\mathcal R_{\mathrm{KKT}}(\bx^{k+1},\by^{k+1},\bq^k)
-    \le\frac{C_R\sqrt{\sqrt{\kappa}\,\Delta_{\mathcal W}}}{\sqrt{K}}
+    \le\frac{C_R\sqrt{\sqrt{\kappa}\,\tilde{\Delta}}}{\sqrt{K}}
     +\frac{6\sqrt{\rho/\tau}\,L_h}{s},
     \label{eq:b2-prime-rate}
 \end{equation}
 where \(\by^{k+1}\) and \(\bq^k\) are defined in~\eqref{eq:b2-prime-outputs},
 \(C_R:=\max\bigl\{8\sqrt{\gamma}\,L_{\calD,\bx}+\sqrt{6/(c_\alpha\gamma)},\,
-\sqrt{8/\tau}\bigr\}\), and \(\Delta_{\mathcal W}\) is given
-in~\eqref{eq:b2-prime-initial-gap}. Consequently, the iteration complexity of Fast LRALM to obtain an \(\epsilon\)-KKT point is of order
+\sqrt{8/\tau}\bigr\}\), and \(\tilde{\Delta}\) is the constant in
+Lemma~\ref{lem:b2-prime-potential-descent}. Consequently, the iteration complexity of Fast LRALM to obtain an \(\epsilon\)-KKT point is of order
 \(\mathcal O(\epsilon^{-5/2})\).
 \end{theorem}
 \begin{proof}
@@ -869,15 +968,15 @@ dividing by \(K\), together with~\eqref{eq:b2-prime-initial-gap} and
     \frac{1}{128\gamma}\|\bx^{k+1}-\bx^k\|^2
     +\frac{1}{16\tau}\|\blmbd^{k+1}-\bar{\blmbd}^k\|^2
     +\frac{c_\alpha}{6\gamma\sqrt{\kappa}}\|\bx^{k+1}-\bz^k\|^2\Bigr)
-    \le\frac{\Delta_{\mathcal W}}{K}.
+    \le\frac{\tilde{\Delta}}{K}.
 \]
 Hence there exists \(0\le k<K\) such that
 \[
-    \|\bx^{k+1}-\bx^k\|\le8\sqrt{\frac{2\gamma\Delta_{\mathcal W}}{K}},
+    \|\bx^{k+1}-\bx^k\|\le8\sqrt{\frac{2\gamma\tilde{\Delta}}{K}},
     \qquad
-    \|\blmbd^{k+1}-\bar{\blmbd}^k\|\le4\sqrt{\frac{\tau\Delta_{\mathcal W}}{K}},
+    \|\blmbd^{k+1}-\bar{\blmbd}^k\|\le4\sqrt{\frac{\tau\tilde{\Delta}}{K}},
     \qquad
-    \|\bx^{k+1}-\bz^k\|\le\sqrt{\frac{6\gamma\sqrt{\kappa}\,\Delta_{\mathcal W}}{c_\alpha K}}.
+    \|\bx^{k+1}-\bz^k\|\le\sqrt{\frac{6\gamma\sqrt{\kappa}\,\tilde{\Delta}}{c_\alpha K}}.
 \]
 Because~\eqref{eq:b2-prime-stepsizes} ensures \(\tau L_\lambda\le\frac12\),
 Lemma~\ref{lem:b2-prime-residual-decomposition} with \(\eta=\gamma\) and
@@ -890,15 +989,36 @@ Lemma~\ref{lem:b2-prime-multiplier-bounds} give
     +\frac{6\sqrt{\rho/\tau}\,L_h}{s}.
 \]
 Substituting the three bounds above and using \(\kappa=s/\tau\ge4\)
-yields~\eqref{eq:b2-prime-rate}.
+yield~\eqref{eq:b2-prime-rate}.
 
 Finally, with \(s=c_s/\epsilon\) and \(c_s\ge12\sqrt{\rho/\tau}\,L_h\), the
 second term of~\eqref{eq:b2-prime-rate} is at most \(\epsilon/2\), and the
 first term is at most \(\epsilon/2\) whenever
-\(K\ge4C_R^2\Delta_{\mathcal W}\sqrt{c_s/\tau}\,\epsilon^{-5/2}\), which
+\(K\ge4C_R^2\tilde{\Delta}\sqrt{c_s/\tau}\,\epsilon^{-5/2}\), which
 gives \(\min_{0\le k<K}\mathcal R_{\mathrm{KKT}}(\bx^{k+1},\by^{k+1},\bq^k)\le\epsilon\).
-Since \(C_R\) and \(\Delta_{\mathcal W}\) are independent of \(\epsilon\), the
+Since \(C_R\) and \(\tilde{\Delta}\) are independent of \(\epsilon\), the
 iteration complexity is \(\mathcal O(\epsilon^{-5/2})\), which completes the
 proof.
 \end{proof}
+
+\begin{remark}
+\begin{enumerate}[label=(\roman*)]
+\item Recent minimax methods also achieve \(\mathcal O(\epsilon^{-5/2})\)
+complexity on smooth NC-C problems, including
+the multi-loop method of~\cite{ke2026efficient} and the single-loop projected extragradient method MC-EGM of Zhang
+et~al.~\cite{zhang2026matching}. Complementing
+these results, Fast LRALM exploits the unconstrained smooth dual of
+\(\calD_\rho\) and the uniform bound on the proximal multiplier \(\bq\) to
+achieve the same \(\mathcal O(\epsilon^{-5/2})\) rate in a single loop without
+dual projections or extragradient steps, using one call to \(\mathcal O_{f,\calA}\)
+per iteration.
+\item On the ALM side, Nesterov acceleration has been studied
+for constrained convex
+problems~\cite{he2010acceleration,he2026augmented}.
+Alongside these developments, Theorem~\ref{thm:b2-prime-complexity} extends
+Nesterov multiplier extrapolation to nonconvex \(f\) and convex Lipschitz \(h\)
+with a fixed penalty \(\rho\), establishing a single-loop
+\(\mathcal O(\epsilon^{-5/2})\) complexity guarantee.
+\end{enumerate}
+\end{remark}
 

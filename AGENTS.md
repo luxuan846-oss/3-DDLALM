@@ -47,7 +47,8 @@
 
 ### 2.3 段落逻辑与结构推进
 
-- **结论放前面，用显式逻辑连接词推进，不平铺直叙**（如 `while ..., we ..., we therefore ...`）。
+- **重要见解写正文，按「结论先行 → `Specifically` 落机制 → 实质收束」推进**：用显式逻辑连接词推进，不平铺直叙（如 `while ..., we ..., we therefore ...`）；收束句给出明确判断或以数学因果推入下一点，不写浮于表面的过场句。
+- **Remark 专写高层次归纳的文献区别与优势**：不复述定理、不堆砌细碎公式与特例；先正面肯定已有工作的保证，再以 `Complementing`、`Alongside` 等谦虚句式切入，突出本文更底层的结果，不用 `On the ... side` 一类生硬口吻，起手与对照参照 MOSSP、DualHash 的 Remark 原文。
 - **子标题要短，节首过渡句只提最重要、有卖点的 summary**（`We now ...` 过渡，不把细枝末节全塞进去，也不提前后引尚未定义的概念）。
 - **不用碎小标题堆叠、不用机械表格划分**，改用连贯段落与公式自然讲清（如去掉 `\emph{Zero center}` 碎段，不用表格机械分参数）。
 - **主线与细节分层**：roadmap / 导引段只讲逻辑主线不塞代数细节；简单证明放附录；每步前给一句过渡，各步详略风格对称。
@@ -67,7 +68,8 @@
 
 | 范文 | 标题与出处 | 链接 | 主要借鉴点 |
 |---|---|---|---|
-| **MOSSP（`[DH25]`）** | 本人写作范文（arXiv:2510.18218） | [arXiv](https://arxiv.org/abs/2510.18218) / [PDF](https://arxiv.org/pdf/2510.18218) | 证明行文、引理/定理组织与过渡句 |
+| **MOSSP** | 本人写作范文（本地最新稿 `~/Documents/My_Papers/2_MoSSP/main_body/icml_2026/`） | 本地 | 证明行文、引理/定理组织与过渡句 |
+| **DualHash（`[DH25]`）** | 本人论文（arXiv:2510.18218） | [arXiv](https://arxiv.org/abs/2510.18218) / [PDF](https://arxiv.org/pdf/2510.18218) | 附录 D 证明句式 |
 | **Li–Zhu–So（`[LZS25]`）** | *Nonsmooth Nonconvex–Nonconcave Minimax Optimization: Primal–Dual Balancing and Iteration Complexity Analysis*（Math. Program. 2025） | [arXiv](https://arxiv.org/abs/2209.10825) / [PDF](https://arxiv.org/pdf/2209.10825) / [DOI](https://doi.org/10.1007/s10107-025-02197-1) | MP 风格分析节结构、动机过渡与证明句式 |
 | **Li–Tian–Zhang–Jadbabaie** | *Complexity Lower Bounds for Nonconvex-Strongly-Concave Min-Max Optimization*（NeurIPS 2021） | [arXiv](https://arxiv.org/abs/2104.08708) / [PDF](https://arxiv.org/pdf/2104.08708) | 算法类/复杂度的正式定义引入与下界叙述节奏 |
 | **Pan–Zheng–Li（`[PZL26]`）** | *Optimal Deterministic First-Order Oracle Complexity for Nonconvex-Concave Minimax Optimization*（arXiv:2609.14235v2） | [arXiv](https://arxiv.org/abs/2609.14235) / [PDF](https://arxiv.org/pdf/2609.14235) | 主结果集中呈现、上下界陈述句式与节首过渡 |

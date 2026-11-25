@@ -30,7 +30,7 @@ For \(r_y\ge0\), define the perturbed value function
 \(\Phi_{r_y}(\bx):=\max_{\blmbd\in\mathcal Y}\bigl\{\calD_\rho(\bx,\blmbd)
 -\frac{r_y}{2}\|\blmbd\|^2\bigr\}\).
 
-\begin{lemma}[Reduction to (Perturbed) Smoothed GDA]
+\begin{lemma}
 \label{lem:ub-reduction}
 Let \(I\in\mathcal I(\mathbf C,\Delta)\) and
 \(\bu^0=(\zero,\blmbd^0,\bz^0,\zero)\in\mathcal S_0(\mathbf C)\), and run
@@ -116,7 +116,7 @@ S_{k+1}:=\max\bigl\{\|\nabla_{\bx}\calD_\rho(\bx^{k+1},\blmbd^{k+1})\|,\
 \(\blmbd^{k+1}\)) to the KKT residual
 \(R_k:=\mathcal R_{\mathrm{KKT}}(\bx^{k+1},\by^{k+1},\bq^k)\).
 
-\begin{lemma}[Initial gap]
+\begin{lemma}
 \label{lem:ub-initial-gap}
 Let \(\gamma<1/(3\ell)\), \(r_y\ge0\), and let \((\hat\bx,\hat\blmbd,\hat\bz)\)
 satisfy \(\|\hat\blmbd\|\le L_h\). Set \(M:=\|\hat\bx-\hat\bz\|\). Then the
@@ -155,7 +155,7 @@ by~\eqref{eq:ub-bridge}, the minimum over \(\bx\) is at most
 Combining these bounds with \(\|\hat\blmbd\|\le L_h\) completes the proof.
 \end{proof}
 
-\begin{lemma}[Residual transfer]
+\begin{lemma}
 \label{lem:ub-residual-transfer}
 Suppose that \(\tau\ell\le1/11\). Then, for every \(k\ge0\),
 \[
@@ -186,7 +186,7 @@ second gives \(R_k\le(S_{k+1}+\tau\ell e/s)/(1-\tau\ell)\). Since
 \label{app:upper-beta1}
 
 \begin{proof}[Proof of Proposition~\ref{prop:upper-beta1}]
-Set \(\bar\gamma:=1/(4\ell)\) and \(\bar\tau:=(\eta/\gamma)^2/(21\ell)\), and
+It suffices to take \(\bar c=1/21\). Set \(\bar\gamma:=1/(4\ell)\) and \(\bar\tau:=(\eta/\gamma)^2/(21\ell)\), and
 let \(\gamma\le\bar\gamma\), \(\eta\le\gamma/2\), \(\tau\le\bar\tau\), and
 \(s\ge\tau\). We first check~\cite[Condition~3.2(i)]{li2026smoothing} at
 \(r_y=0\): \(r_x=1/\gamma\ge4\ell>3\ell\), \(1/(r_x+\ell)\ge4\gamma/5>\eta\),
@@ -234,7 +234,8 @@ uniformly over \(I\in\mathcal I(\mathbf C,\Delta)\) and
 \subsection{Proof of Proposition~\ref{prop:upper-beta0}}
 \label{app:upper-beta0}
 
-The stepsize conditions in Proposition~\ref{prop:upper-beta0} read
+By the estimates in the proof of Proposition~\ref{prop:upper-beta1}, the
+stepsize conditions of Proposition~\ref{prop:upper-beta0} imply
 \begin{equation}
     \gamma<\frac{1}{3\ell},\qquad
     \eta<\frac{1}{\gamma^{-1}+\ell},\qquad
@@ -244,9 +245,9 @@ The stepsize conditions in Proposition~\ref{prop:upper-beta0} read
 \end{equation}
 
 \begin{proof}[Proof of Proposition~\ref{prop:upper-beta0}]
-Let \(\gamma,\eta,\tau\) satisfy~\eqref{eq:beta0-main-stepsizes}, and set
-\(c_s:=4D_{\mathcal Y}\), \(s:=c_s/\epsilon\), and
-\(r_y:=1/s=\epsilon/(4D_{\mathcal Y})\). The strict inequalities
+Let \(\gamma,\eta,\tau\) satisfy~\eqref{eq:beta0-main-stepsizes}, let
+\(c_s\ge4D_{\mathcal Y}=8(L_h+1)\), which suffices for the proposition, and set \(s:=c_s/\epsilon\) and
+\(r_y:=1/s\le\epsilon/(4D_{\mathcal Y})\). The strict inequalities
 in~\eqref{eq:beta0-main-stepsizes} are precisely the conditions on
 \((r_x,c,\alpha_{\mathrm{Li}})\) in~\cite[Condition~3.2]{li2026smoothing} at
 \(r_y=0\). By continuity in \(r_y\), there exists \(\bar r>0\), depending only
@@ -255,7 +256,7 @@ with \(\ell+r_y\) in place of \(\ell\) for all \(r_y\in(0,\bar r]\). On this
 interval, the quantity \(\omega^t\) in~\cite[Condition~3.2(ii)]{li2026smoothing}
 satisfies \((\omega^t)^2\le\bar\Omega/r_y\) for a constant \(\bar\Omega\)
 independent of \(r_y\); hence there exists \(c_\alpha>0\), depending only on
-\((\rho,\gamma,\eta,\tau,\mathbf C)\), such that \(\alpha=c_\alpha\epsilon\)
+\((\rho,\gamma,\eta,\tau,\mathbf C,c_s)\), such that \(\alpha=c_\alpha\epsilon\)
 satisfies~\cite[Condition~3.2(ii)]{li2026smoothing} whenever
 \(\epsilon\in(0,\bar\epsilon]\) with \(\bar\epsilon:=\min\{1,c_s\bar r\}\).
 
@@ -274,13 +275,13 @@ independently of \(s\), \(\epsilon\), and the dimensions.
 
 Finally,~\cite[Theorem~3.3(i) and (4.20)]{li2026smoothing} control the dual
 game-stationarity residual by a decaying term plus \(r_yD_{\mathcal Y}\). Since
-\(r_yD_{\mathcal Y}=\epsilon/4\), applying~\cite[Theorem~3.3(i)]{li2026smoothing}
+\(r_yD_{\mathcal Y}\le\epsilon/4\), applying~\cite[Theorem~3.3(i)]{li2026smoothing}
 at accuracy \(\epsilon/2\) yields an index \(k\ge0\) with
 \(S_{k+1}\le\epsilon/2\) and
 \(k+1\le C_0'\ell^2D_{\mathcal Y}\bar\Delta\epsilon^{-3}\), where \(C_0'\)
-depends only on \((\rho,\gamma,\eta,\tau,\mathbf C)\). Applying
+depends only on \((\rho,\gamma,\eta,\tau,\mathbf C,c_s)\). Applying
 Lemma~\ref{lem:ub-residual-transfer} with \(\|\blmbd^k-\bmu^k\|\le L_h\) and
-\(c_s=8(L_h+1)\ge8L_h\) gives
+\(c_s\ge8(L_h+1)\ge8L_h\) gives
 \[
 R_k\le\frac{11}{20}\epsilon+\frac{L_h}{10c_s}\epsilon
 \le\frac{11}{20}\epsilon+\frac1{80}\epsilon<\epsilon.

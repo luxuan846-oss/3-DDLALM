@@ -50,3 +50,17 @@
 
 - [决策] Overleaf 只同步论文；实验代码、笔记和状态文件只推送到 GitHub，供 GPT Pro 读取｜来源：本次对话「反重力 CLI 链接问题」｜影响：`/paper-wrap`
 - [决策] 项目瘦身：根目录只留 `overleaf/`、`experiments/`、`slides/`、`core/`、`memory/`；和老大反复一起改的文件集中到 `core/`（状态、milestone、定位、三份清单、phrasebook），novelty-check 和旧讲稿进 `memory/archive/`｜来源：本次对话「反重力 CLI 链接问题」｜影响：全项目与 hub 的路径约定
+- [决策] 主卖点定为「分离」：一次对偶 Nesterov 外推让固定罚参数的单循环线性化 ALM 达到 $\mathcal{O}(\epsilon^{-5/2})$，而 LRALM 族内任何方法都做不到｜来源：本次对话定位讨论｜影响：摘要、引言、各节节首
+- [灵感] 非光滑非线性复合优化 $\min_{\mathbf{x}} f(\mathbf{x})+h(\mathcal{A}(\mathbf{x}))$ 在分离 oracle 下的两大核心科学问题与正则性子类 $\mathcal{C}_\nu$ 最优复杂度（$\Theta(\mathrm{poly}(1/\nu)\,\epsilon^{-2})$ vs $\Theta(\epsilon^{-5/2})$）｜孵化包：`~/agent-hub/domains/research/ideas/20261119-composite-lower-bound/`｜影响：后续新线
+- [判断] 仅在带正则性 $\nu \gt 0$ 的子类 $\mathcal{C}_\nu$ 上做问题类上下界才不易被现有结果覆盖，不加 $\nu$ 的一般类 $\mathcal{C}$ 大概率被 Pan–Zheng–Li 或 Wu–Gu–Yang 的 NC-C 下界直接覆盖｜依据：$\mathcal{A}$ 非线性叠加 $J_{\mathcal{A}}$ 退化才会使复杂度高于 $\epsilon^{-2}$，而一般 NC-C 链式实例若关于 $\mathbf{y}$ 线性即可嵌入 $\mathcal{C}$ 且最小奇异值趋零｜验证：阶段 1 调研，核对两篇困难实例是否关于 $\mathbf{y}$ 线性、耦合矩阵最小奇异值如何随 $\epsilon$ 变化，以及 $\mathcal{C}_\nu$ 上是否已有 $\epsilon^{-2}$ 结果（见 `~/agent-hub/domains/research/ideas/20261119-composite-lower-bound/summary.md`）
+
+- [决策] 投稿目标定为 Mathematical Programming（MP）｜来源：2026-11-23 对话｜影响：篇幅组织、正文与附录结构及模板
+- [导师] 六点修改意见：篇幅过长考虑压缩；明确 (2.8) 对 ALM 新、对 minimax 非新并前移至 Q1/表 1 前；§3 交代 $(\alpha,\beta)$ 无法改进阶及数值对照；§4 与徐姿组 $\epsilon^{-5/2}$ 做理论和数值对比；补足 minimax 社区视角；摘要围绕 Q1/Q2 组织｜来源：`memory/dialogue/2026-11-23-200716-comments.txt`｜影响：全文
+
+## 2026-11-24
+
+- [决策] 术语约定写入 `core/writing-phrasebook.md`：class 只用于问题、family 只用于算法；已有算法称 method，不用 scheme；方法 applied to $\mathcal{D}_\rho$、每步为 $\mathcal{P}_s$ 上的 GDA step；参数和统一写 effective penalty（取代 combined penalty）；Table 1 分组为 smooth NC-C minimax 与 equality-constrained optimization，表头 Algorithm｜来源：本次对话｜影响：全文
+- [决策] Fast LRALM 初值推广到 $\mathcal{S}_0(\mathbf{C})$、$\boldsymbol{\lambda}^{-1}=\boldsymbol{\lambda}^0$，使族下界与加速上界同口径；Definition 3.2 拆出单成员最坏复杂度，Proposition 3.1、3.2 结论改用单成员记号，Theorem 3.2 后补三种情形并说明对偶中心移动不降阶｜来源：本次对话｜影响：§3、§4
+- [判断] Zhang–Xu–So v2 算法未变（MC-EGM），新增 GS 匹配下界，中心步长同为 $\Theta(\epsilon^{1/2})$；本文可主张族内上限 $\alpha\le B\epsilon$ 与单参数 $\omega$ 突破，以及 $\mathcal{D}_\rho$ 结构下无投影、每步 1 次 oracle｜依据：arXiv:2609.17973v2 全文与 `memory/notes/codex-review-c1c6-20261124.md`
+- [决策] 改正文流程：用户提修改，agent 先给逻辑，同意后交 Gemini CLI 起草，用户确认后写入｜来源：本次对话｜影响：已写入 agent-hub 科研 STATUS 偏好
+

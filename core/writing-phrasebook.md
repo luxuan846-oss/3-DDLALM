@@ -7,7 +7,7 @@
 
 - [Li26] Li, Nagarajan, Pan, Zhang, *Smoothing Meets Perturbation*, arXiv:2602.14185v2（PDF，2026-10-13 读 §2、§3.2、App. B）
 - [Mah22] Mahdavinia, Deng, Li, Mahdavi, *Tight Analysis of Extra-gradient and Optimistic Gradient Methods*, arXiv:2210.09382（PDF，2026-10-13 读 §4、§5）
-- [DH25] arXiv:2510.18218，用户指定的本人写作风格参照（PDF，2026-11-17 读 App. D，pp. 40–44）。证明行文优先按此文
+- [DH25] DualHash（arXiv:2510.18218），用户指定的本人写作风格参照（PDF，2026-11-17 读 App. D，pp. 40–44）。证明行文优先按此文
 - [LZS25] Li, Zhu, So, *Nonsmooth nonconvex–nonconcave minimax optimization: Primal–dual balancing and iteration complexity analysis*, Math. Program. 214:591–641 (2025)（Zotero `EXFIU3P8`，2026-11-19 读 §4、§5、App. A–B；行号指 `zotero_md/minmax/root/11_EXFIU3P8_Q8PGXF4W.md`）
 - [PZL26] Pan, Zheng, Li, *Optimal Deterministic First-Order Oracle Complexity for Nonconvex-Concave Minimax Optimization*, arXiv:2609.14235v2（Zotero `BGBUCRWE`，2026-11-19 读 §1、§3、§6、§9；行号指 `zotero_md/minmax/Smooth_NC-SC/05_BGBUCRWE_CD4FXTQ6.md`）
 - [Li26] 补读 2026-11-19：§3–§5、Remarks、App. A（行号指 `zotero_md/minmax/Smooth_NC-SC/07_8MZKMW3B_ND299347.md`）
@@ -151,7 +151,7 @@
 | An interesting direction for future research is to … | [Li26] §7 Closing Remarks，2026-10-14 对照 v2 原文核对 |
 
 2026-10-14 结论段：沿用上述两种句式，第一句省去修饰词 "clearly"。
-"combined penalty" 沿用下方用户指定术语。
+"effective penalty" 沿用下方用户指定术语。
 "connects penalty selection in ALMs with dual regularization in the reduced minimax formulation"
 为本文 Lemma `lem:effective-penalty` 的内容表述，未作为文献中的固定表达引用。
 
@@ -161,7 +161,15 @@
 
 ## 用户指定术语
 
-- 2026-10-14：用户指定将表示参数和的 “effective penalty” 统一替换为 **combined penalty parameter**，后文简称 **combined penalty**。首次出现时写出参数和；既有 LaTeX 标签保留。此用词由用户指定，尚未确认参考文献中的逐字出处。单独描述其他方法的正则化所对应的罚参数时使用 **penalty parameter**。
+- 2026-11-24 术语约定：class 只用于问题，family 只用于算法。
+  - 问题类型：smooth NC-C minimax；equality-constrained optimization（拆分形式含非线性约束 \(\calA(\bx)-\by=\zero\)）。Table 1 分组名同此，表头写 Algorithm。
+  - 问题类：problem class \(\mathcal I(\mathbf C,\Delta)\)。
+  - 算法族：the LRALM family \(\calC_\theta\)；族内单个算法 \(\mathrm{LRALM}_{\theta,\alpha,\beta}\)，称 a member of \(\calC_\theta\)；更新式称 the LRALM update~\eqref{eq:splalm-updates}。
+  - 已有算法称 method(s)，不用 scheme(s)。
+  - 作用对象：方法 applied to \(\calD_\rho\)；每次迭代是 \(\mathcal P_s\) 上的 GDA step。
+  - 中心：写 the movement of the primal / dual center，\(\alpha,\beta\) 作为刻画移动的参数出现，不把调中心步长写成机制。
+
+- 2026-11-24：表示参数和 \(\rho+s\) 统一写 **effective penalty**（如 "raises the effective penalty from \(\rho\) to \(\rho+s\)"），取代 2026-10-14 的 combined penalty。单独描述其他方法的正则化所对应的罚参数时使用 **penalty parameter**。
 
 ## Li 组三篇的写法（2026-11-19 补充）
 
@@ -249,3 +257,10 @@
 | 放句中或句尾 | `..., which follows from Proposition~\ref{...}.`；`..., as established in Lemma~\ref{...}.`；`... is independent of s under Proposition~\ref{...}.` |
 | 推导句首轮换 | `From Lemma~\ref{...}, we obtain ...`；`Using~\eqref{...} together with Lemma~\ref{...}, ...`；`In view of Proposition~\ref{...}, ...` |
 | 紧跟其后省略 | `Consequently, ...`；`Thus, ...`；`Equation~\eqref{...} gives ...` |
+
+## 实验结果
+
+| 表达与组织 | 出处 |
+|---|---|
+| `Figure ... reports ...` 后接 `After ... oracle calls, ... reaches ..., compared with ...`；在相同预算点报告各方法的指标。 | Zhang–Xu §6.2，Figure 2 前后 |
+| 先解读轨迹，再按数据集或预算报告最终指标，具体陈述各方法的优势与限制。 | MOSSP §Results Analysis |

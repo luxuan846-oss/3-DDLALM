@@ -2,10 +2,8 @@
 \label{sec:preliminaries}
 
 We collect the problem setup and oracle model for
-Problem~\eqref{prob:main}. We then introduce the reduced augmented
-Lagrangian and the regularized potential that underlie our algorithms.
-
-Following~\cite{rockafellar1970convex}, for a proper closed convex function
+Problem~\eqref{prob:main}. We then introduce the regularized augmented
+Lagrangian that underlies our algorithms. Following~\cite{rockafellar1970convex}, for a proper closed convex function
 \(h\colon\RR^m\to\RR\cup\{+\infty\}\), its subdifferential, convex conjugate,
 and proximal mapping are
 \begin{gather*}
@@ -15,7 +13,7 @@ and proximal mapping are
     h^*(\bq):=\sup_{\by\in\RR^m}\{\langle\bq,\by\rangle-h(\by)\},\\
     \prox_{t h}(\bu)
     :=\argmin_{\by\in\RR^m}
-       \Bigl\{h(\by)+\frac{1}{2t}\|\by-\bu\|^2\Bigr\},
+       \Bigl\{h(\by)+\frac{1}{2t}\|\by-\bu\|^2\Bigr\}, 
     \qquad t>0.
 \end{gather*}
 
@@ -40,7 +38,7 @@ all \(\bx,\bx'\in\RR^n\),
 
 \begin{assumption}
 \label{ass:h}
-The function \(h\colon\RR^m\to\RR\) is convex and \(L_h\)-Lipschitz:
+The function \(h\colon\RR^m\to\RR\) is convex and \(L_h\)-Lipschitz, in the sense that
 \[
     |h(\bu)-h(\bv)|\le L_h\|\bu-\bv\|,
     \qquad \bu,\bv\in\RR^m.
@@ -101,12 +99,12 @@ and an exact proximal oracle
 Each call to either oracle counts as one oracle evaluation.
 \end{definition}
 
-\subsection{Reduced augmented Lagrangian}
-\label{subsec:reduced-al}
-For \(\rho>0\), the augmented Lagrangian of Problem~\eqref{prob:split} is
+\subsection{\texorpdfstring{Regularized augmented Lagrangian for Problem~\eqref{prob:main}}{Regularized augmented Lagrangian for Problem (P)}}
+\label{subsec:regularized-al}
+For \(\rho>0\), the augmented Lagrangian of Problem~\eqref{prob:main} is
 \(\calL_\rho(\bx,\by,\blmbd):=f(\bx)+h(\by)+\langle\blmbd,\calA(\bx)-\by\rangle+\frac{\rho}{2}\|\calA(\bx)-\by\|^2\).
 Eliminating \(\by\) yields the reduced augmented
-Lagrangian~\cite{rockafellar1976augmented},
+Lagrangian~\cite{rockafellar1976augmented}, 
 \begin{equation}
     \calD_\rho(\bx,\blmbd)
     :=\min_{\by\in\RR^m}\calL_\rho(\bx,\by,\blmbd),
@@ -119,8 +117,8 @@ with unique minimizer and associated multiplier
     \bq(\bx,\blmbd):=\blmbd+\rho\bigl[\calA(\bx)-\by(\bx,\blmbd)\bigr].
     \label{eq:prox-multiplier}
 \end{equation}
-The next lemma records the smoothness
-of \(\calD_\rho\) and its equivalence to Problem~\eqref{prob:main}.
+The next lemma records the smoothness of \(\calD_\rho\) and shows that
+maximizing it over \(\blmbd\) recovers \(F\).
 
 \begin{lemma}
 \label{lem:reduced-al}
@@ -153,29 +151,8 @@ with maximizer set \(\partial h(\calA(\bx))\).
 \end{enumerate}
 \end{lemma}
 
-By Lemma~\ref{lem:reduced-al}, linearized
-ALM~\cite{luSingleLoopGradientDescent2022,yang2013linearized}, which replaces the exact
-\(\bx\)-minimization of classical
-ALM~\cite{hestenes1969multiplier,powell1969method,rockafellar1973multiplier}
-by a single gradient step, is alternating GDA on
-\(\min_{\bx}\max_{\blmbd}\calD_\rho(\bx,\blmbd)\), i.e.,
-\begin{equation}
-\left\{
-\begin{aligned}
-    \bx^{k+1}
-    &=\bx^k-\eta\nabla_{\bx}\calD_\rho(\bx^k,\blmbd^k),\\
-    \blmbd^{k+1}
-    &=\blmbd^k+\rho\nabla_{\blmbd}\calD_\rho(\bx^{k+1},\blmbd^k)
-    =\bq(\bx^{k+1},\blmbd^k),
-\end{aligned}
-\right.
-\label{eq:alm-reduced}
-\end{equation}
-where \(\eta>0\). Call \((\bx,\blmbd)\in\RR^n\times\RR^m\) an
-\(\epsilon\)-GS point of
-\(\min_{\bx}\max_{\blmbd}\calD_\rho(\bx,\blmbd)\)~\cite{pan2026optimal,li2025nonsmooth}
-if
-\(\max\{\|\nabla_{\bx}\calD_\rho(\bx,\blmbd)\|,\|\nabla_{\blmbd}\calD_\rho(\bx,\blmbd)\|\}\le\epsilon\).
+By Lemma~\ref{lem:reduced-al}, Problem~\eqref{prob:main} reduces to the
+unconstrained smooth NC-C minimax problem \(\min_{\bx\in\RR^n}\max_{\blmbd\in\RR^m}\calD_\rho(\bx,\blmbd)\).
 By~\eqref{eq:kkt-residual} and~\eqref{eq:reduced-al-gradient},
 \begin{equation}
     \mathcal R_{\mathrm{KKT}}\bigl(\bx,\by(\bx,\blmbd),\bq(\bx,\blmbd)\bigr)
@@ -185,31 +162,47 @@ By~\eqref{eq:kkt-residual} and~\eqref{eq:reduced-al-gradient},
     \bigr\},
     \label{eq:kkt-gs-identity}
 \end{equation}
-so every \(\epsilon\)-GS point directly yields an \(\epsilon\)-KKT point
-\((\bx,\by(\bx,\blmbd),\bq(\bx,\blmbd))\) of Problem~\eqref{prob:main}.
+so any \(\epsilon\)-GS point
+\((\bx,\blmbd)\)~\cite{pan2026optimal}, where the right-hand
+side is at most \(\epsilon\), directly gives an \(\epsilon\)-KKT point
+\((\bx,\by(\bx,\blmbd),\bq(\bx,\blmbd))\) of Problem~\eqref{prob:main}. 
 
-\subsection{Regularized augmented Lagrangian}
-\label{subsec:regularized-al}
-By Lemma~\ref{lem:reduced-al}, \(\min_{\bx}\max_{\blmbd}\calD_\rho(\bx,\blmbd)\)
-is a smooth NC-C problem, where single-timescale GDA may
-fail to converge~\cite{daskalakis2018training}. To induce strong convexity in \(\bx\)
-and strong concavity in \(\blmbd\), we add primal~\cite{zhang2020smoothed} and
+In this view, a gradient-type linearized
+ALM replaces the
+exact \(\bx\)-minimization of classical
+ALM~\cite{hestenes1969multiplier,powell1969method,rockafellar1973multiplier}
+by one gradient step and becomes alternating GDA on
+\(\calD_\rho\),
+\begin{equation}
+\left\{
+\begin{aligned} 
+    \bx^{k+1}
+    &=\bx^k-\eta\nabla_{\bx}\calD_\rho(\bx^k,\blmbd^k),\\
+    \blmbd^{k+1}
+    &=\blmbd^k+\rho\nabla_{\blmbd}\calD_\rho(\bx^{k+1},\blmbd^k)
+    =\bq(\bx^{k+1},\blmbd^k),
+\end{aligned} 
+\right.
+\label{eq:alm-reduced}
+\end{equation} 
+with \(\eta>0\). Since single-timescale GDA can fail to
+converge even on bilinear problems~\cite{daskalakis2018training},
+we adopt the primal~\cite{zhang2020smoothed} and
 dual~\cite{lu2020hybrid,xu2023unified,zheng2023universal,li2026smoothing}
-quadratic regularizers centered at \((\bz,\bmu)\in\RR^n\times\RR^m\), yielding
-the regularized potential
+quadratic regularizers of smooth minimax methods and define the
+regularized augmented Lagrangian for Problem~\eqref{prob:main},
 \begin{equation}
     \mathcal P_s(\bx,\blmbd;\bz,\bmu)
     :=\calD_\rho(\bx,\blmbd)+\frac{1}{2\gamma}\|\bx-\bz\|^2
     -\frac{1}{2s}\|\blmbd-\bmu\|^2,
     \label{eq:potential}
 \end{equation}
-with \(\gamma,s>0\). Set \(L_{\calD,\bx}:=L_f+L_{\calA}L_h+\rho G_{\calA}^{2}\),
+where \(\gamma,s>0\) and \((\bz,\bmu)\in\RR^n\times\RR^m\). Set \(L_{\calD,\bx}:=L_f+L_{\calA}L_h+\rho G_{\calA}^{2}\),
 \(\mu_\gamma:=\gamma^{-1}-L_{\calD,\bx}\),
 \(L_x:=\gamma^{-1}+L_{\calD,\bx}\), and \(L_\lambda:=\rho^{-1}+s^{-1}\).
 The next proposition records the curvature, block-Lipschitz smoothness, and
 saddle-point properties of \(\mathcal P_s\), which follow directly from
 standard convex analysis~\cite{rockafellar1970convex}.
-
 \begin{proposition}
 \label{prop:curvature-smoothness}
 Suppose that Assumptions~\ref{ass:smoothness} and~\ref{ass:h} hold, and let

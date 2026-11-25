@@ -1,0 +1,841 @@
+
+❯ <ide_opened_file>The user opened the file /Users/liluxuan/Documents/My_Papers
+  /3_DDLALM/experiments/colab_runner_r6_waterbirds.ipynb in the IDE. This may
+  or may not be related to the current task.</ide_opened_file>
+
+❯ 接下来 我们需要微调我们前面几张的内容 老师的comments；
+  我们来讨论出最好的方案。
+
+⏺ 先读项目进度和老师意见的位置。
+
+⏺ Bash(sed -n 1,80p core/PROJECT_STATUS.md; echo ----; grep -rniEl
+      "老师|comment|advisor|导师" core memory/notes 2>/dev/null | head -20; ls
+      overleaf/sections)
+  ⎿  (No output)
+
+⏺ Bash(sed -n 80,200p core/PROJECT_STATUS.md | grep -niE
+      "老师|comment|意见|导师|前几" ; grep -niE "老师.*(意见|comment)|comment"
+      core/MILESTONES.md | tail -10; git diff --stat ov…)
+  ⎿  (No output)
+
+⏺ 项目文件里没有找到老师意见的记录。再查一下稿件中有没有批注宏。
+
+⏺ Bash(cd overleaf; grep -rnoE
+      "\\\\(todo|comment|note|ag|anthony|advisor|teacher|red|blue)\{[^}]{0,60}"
+      sections appendix main.tex 2>/dev/null | head -20; grep -rnE "…)
+  ⎿  (No output)
+
+⏺ 老大，仓库里没有老师意见的记录。我查了这几处：core/PROJECT_STATUS.md、core/MIL
+  ESTONES.md、memory/notes，以及 overleaf/ 稿件里的批注宏。稿件里只有 §5
+  实验的几个 \red{} 占位，没有老师的批注。
+
+  请把老师的意见发给我。粘贴文字、给批注 PDF
+  的路径或截图都行。也请说明意见针对哪几节，§1 Introduction、§2
+  Preliminaries、§3 LRALM Family 还是 §4 Acceleration。
+
+  拿到意见后，我会把每条意见归到对应章节和行号。然后逐条判断这条意见是要改叙事、
+  改表述还是改数学，并给出修改方案和备选方案，你定了再写入。
+
+  另外，工作区里 Introduction.tex 和 LRALMFamily.tex 有还没提交的修改（+91/−58
+  行级别）。我会以磁盘上的当前版本为准来讨论。
+
+❯ 1，论文整体很长，不知道要不要拆成两篇。2，第三节的主要结论是不是移动中心在理
+  论上不本质，jiajin的方法是很巧的?不知道数值上结论是否相同。3，第四节更interes
+  ting，最好介绍与徐姿老师最新-2.5的区别，包括理论和数值。
+
+  老师，我想了一下“1，论文整体很长，不知道要不要拆成两篇。”
+  我个人感觉是不是可以付上一个arxiv链接，arxiv上传长文版，接下来投稿稍微缩减，
+  缩减哪部分和老师们讨论一下？
+  https://arxiv.org/abs/1807.01695
+  看到了spider是这么干的，不知道是不是默认操作😂
+
+⏺ 先核对篇幅分布、§3 的核心表述和 Zhang–Xu 的已有对比。
+
+⏺ Bash(cd /Users/liluxuan/Documents/My_Papers/3_DDLALM/overleaf; grep -E
+      "contentsline \{(section|subsection)\}" main.toc 2>/dev/null | sed -E
+      's/\\contentsline \{(sub…)
+  ⎿  (No output)
+
+⏺ Bash(cd /Users/liluxuan/Documents/My_Papers/3_DDLALM/overleaf; grep -hE
+      "newlabel\{(sec|app)[^}]*\}\{\{[^}]*\}\{[0-9]+\}" main.aux | sed -E
+      's/\\newlabel\{([^}]*)\}\…)
+  ⎿  (No output)
+
+⏺ 再核对 §3 的核心引理、引言里对 Zhang–Xu 的现有表述，以及实验的对比方法。
+
+⏺ Bash(cd /Users/liluxuan/Documents/My_Papers/3_DDLALM/overleaf/sections; grep
+      -n "begin{lemma}\|begin{theorem}\|begin{proposition}\|label{lem:effective\
+      |label{thm\|la…)
+  ⎿  (No output)
+
+❯ （2.8）是新的吗？老师，对alm算法是新的；对minmax不是
+  要说清楚，现在写法看不出来；
+
+❯ 而且（2.8）应该放在Q1和表1前面, 否则不知道参数是什么
+
+❯ 老师，我先按Fast LRALM多写一点来
+
+❯ 还有第3，4节minimax人会怎么看? 引用了但是贡献部分没有comment
+
+⏺ 老师又补了几条意见。我先定位 (2.8) 和引言里 Q1、表 1 的位置。
+
+⏺ Bash(cd /Users/liluxuan/Documents/My_Papers/3_DDLALM/overleaf; grep -E
+      "newlabel\{[^}]*\}\{\{2\.(7|8|9)\}" main.aux | cut -c1-120; grep -nE
+      "hypertarget\{Q1\}|hypert…)
+  ⎿  (No output)
+
+❯ 好的老师我想一下这个，改一遍，minmax圈子最具体的关注的点可能得问问户老师他们
+
+⏺ Bash(cd /Users/liluxuan/Documents/My_Papers/3_DDLALM/overleaf/sections;
+      n=$(grep -n "label{eq:potential}" Preliminaries.tex | cut -d: -f1); sed -n
+      "$((n-22)),$((n+12…)
+  ⎿  (No output)
+
+⏺ 精华总结
+
+  老师的几条意见指向同一个调整：以 Fast LRALM
+  为主线，把每个结果的新颖性边界写清楚。这里要写明两条边界，一是相对 ALM 和
+  minimax 各新在哪里，二是与 Zhang–Xu 的区别。我建议不分成两篇。§3 压缩为 Fast
+  LRALM 的动机和族内障碍。§4 补充与 Zhang–Xu 在理论和数值上的对比。
+
+  结论与方案
+
+  1. 篇幅与是否分篇。你给老师的回复里有一处需要修正。SPIDER 是 NeurIPS
+  论文，会议有页数限制，所以「arXiv
+  长文版加投稿精简版」是会议论文的常规做法。SIOPT 和 MP 没有硬性页数限制，arXiv
+  版与期刊版一般保持一致。因此投期刊时问题出在主线是否集中，页数本身影响不大。
+
+  分成两篇的风险在于两篇都难以独立成立：
+  - §3 单独成文时，老师第 2 点会成为审稿的主要质疑。Li26
+    已有针对单个算法的紧下界，族层面的结果容易被看成增量。
+  - §4 单独成文时，正面撞上 Zhang–Xu 的 $\epsilon^{-5/2}$。
+
+  合在一起的叙事是「族内最优只到 $\epsilon^{-3}$，所以需要走出族外才能加速」，两
+  部分互为支撑。目标若改为会议，SPIDER 模式才适用。这一点值得向老师确认。
+
+  2. §3 的主结论。老师的读法与定理基本一致，但措辞需要精确。现有结果的含义如下：
+  - 族内复杂度由有效罚参数 $\rho+s$ 决定。
+  - 中心步长只需低于阈值，即 $\alpha=\Theta(\epsilon^2)$ 或
+    $\alpha=\Theta(\epsilon)$，而且不能改进阶。
+  - 原始中心仍须移动。$\alpha=0$ 时，迭代求的是以 $\mathbf{z}^0$
+    为中心的近端问题，得不到原问题的驻点。
+
+  建议正面写成：Smoothed GDA 与 Perturbed Smoothed GDA 在整个
+  $\mathcal{C}_\theta$ 内已经是最优成员。这样写对 Jiajin 一组的方法是肯定性的结
+  论。如果写成「移动中心不本质」，容易引起作者方的反感，而他们很可能就是审稿人。
+
+  数值方面需要补一个消融实验：固定 $\rho+s$，扫描 $(\alpha,\beta)$ 和 $(\rho,s)$
+  的分配，再在困难实例上让 $\alpha$ 超过阈值。需要预先说明，下界只刻画最坏情形
+  ，良态实例上移动中心可能有常数级收益。曲线不重合时如实报告即可。
+
+  3. 与 Zhang–Xu 的区别。这是最大的风险点。表 1 脚注 b 已经承认，他们的方法用在
+  $\mathcal{D}_\rho$ 上同样得到 $\epsilon^{-5/2}$，所以速率本身不是新结果。
+
+  「无需投影」这条论据偏弱，原因有两个：
+  - 我们的参数条件 $c_s\ge 12\sqrt{\rho/\tau},L_h$ 同样需要知道 $L_h$。
+  - 向球上投影的代价可以忽略。
+
+  更站得住的区别是控制对偶变量的机制：
+  - 他们用投影、extragradient 和对偶梯度平均。
+  - 我们用标准 ALM 乘子步加 Nesterov 外推，乘子有界由 Lyapunov
+    函数证明。我们每步一次梯度，他们每步两次。
+
+  每步 oracle 次数这一点，要先读他们的 Alg. 1 核实。数值对比按 oracle
+  调用次数作横轴，并测两种方法对 $L_h$
+  估计值（投影半径、$c_s$）的敏感性。这部分可以并入 r6。
+
+  4. (2.8) 的新颖性与位置。
+  - 新颖性：对 minimax，$\mathcal{P}s$ 就是 doubly smoothed / perturbed smoothed
+    GDA 的势函数，不是新的。新的部分是把它用在约束问题的 reduced AL
+    $\mathcal{D}\rho$ 上，从而得到固定罚的单循环 ALM。现在 Prelim
+    那一段只列了引用，没有写出这条边界，需要补一句。
+  - 位置：在引言 Q1 之前用一个公式块引入 $\mathcal{D}_\rho$ 和
+    $\mathcal{P}_s$，交代 $\rho$、$s$ 和两个中心。Q1 和表 1
+    的参数列随后就有定义，Prelim 中引用回这个公式即可。
+
+  5. minimax 读者的视角。引言目前没有 Contributions 段，建议新增一段，分别写对
+  ALM 和对 minimax 的意义。对 minimax 读者的价值有两条：
+  - 在 Pan 已证明的类最优 $\epsilon^{-5/2}$ 下，GDA 型单循环方法的族在
+    $\mathcal{D}_\rho$ 结构上卡在 $\epsilon^{-3}$。
+  - 单步梯度加对偶外推可以达到 $\epsilon^{-5/2}$。
+
+  这两条的适用范围是 $\mathcal{D}_\rho$ 结构还是一般
+  NC-C，需要写明。这正适合拿去问户老师。我可以先列出 3 个具体问题，交给你转达。
+
+  建议顺序
+
+  1. 修改引言：前移 (2.8)，写清 ALM 与 minimax 的新颖性边界，新增 Contributions
+     段。
+  2. 在 §4 补一个与 Zhang–Xu 对比的小节。核实他们 Alg. 1
+     的细节之前，这一节不能定稿。
+  3. 实验：并入 Zhang–Xu 对比和 §3 中心消融。
+  4. 篇幅最后再定。
+
+  请老大确认：一是目标是期刊还是会议；二是从第 1 步开始，我按 Edit
+  只替换对应段落吗？
+
+❯ 1，论文整体很长，不知道要不要拆成两篇。2，第三节的主要结论是不是移动中心在理
+  论上不本质，jiajin的方法是很巧的?不知道数值上结论是否相同。3，第四节更interes
+  ting，最好介绍与徐姿老师最新-2.5的区别，包括理论和数值。
+
+  2.老师，是的，我目前感觉，本质在于s怎么取。s取的大，无需乘子额外移动中心；
+  3. 好的老师，我对比实验。
+
+  老师，很巧的是啥意思 ：
+
+  少了一个字，巧妙
+
+  理论负责度用对偶中心，alpha,beta都无法改进 你整理一下
+
+❯ 这是老师的comments和我的回复
+
+⏺ 以下是老师的意见和你的回复，按议题整理，每条附上对应的待办。
+
+  1. 篇幅与是否分篇
+
+  - 老师：论文整体很长，不知道要不要分成两篇。
+  - 你：arXiv 上传长文版，投稿时适当缩减，缩减哪部分和老师们讨论；参照
+    SPIDER（arXiv:1807.01695）的做法。
+  - 待办：先定目标是期刊还是会议。SPIDER 的做法对应会议的页数限制。
+
+  2. §3 主结论：移动中心的作用
+
+  - 老师：第三节的主要结论是不是移动中心在理论上不本质？Jiajin
+    的方法很巧妙。不知道数值上结论是否相同。
+  - 你：是的，关键在于 $s$ 怎么取。$s$ 取得大时，乘子无需额外移动中心。
+  - 老师：理论复杂度上用对偶中心，$\alpha$、$\beta$ 都无法改进。
+  - 共识：族内复杂度的阶由 $\rho+s$ 决定，中心步长 $(\alpha,\beta)$ 改进不了阶。
+  - 待办：
+    - §3 节首和结论按这个共识重写。
+    - 措辞上，原始中心仍须以低于阈值的步长移动，所以写「$\alpha$、$\beta$
+      不能改进阶」，不写「中心不需要移动」。
+    - 补数值验证：固定 $\rho+s$，扫描 $(\alpha,\beta)$。
+
+  3. §4 与 Zhang–Xu 的区别
+
+  - 老师：第四节更有意思，最好介绍与徐姿老师最新 $\epsilon^{-5/2}$
+    结果的区别，理论和数值都要有。
+  - 你：好的，做对比实验；先按 Fast LRALM 多写一些。
+  - 待办：
+    - §4 增加与 Zhang–Xu 的理论对比，先核实他们 Alg. 1 的细节。
+    - 实验中加入数值对比。
+
+  4. (2.8) 的新颖性与位置
+
+  - 老师：(2.8) 是新的吗？对 ALM 算法是新的，对 minimax
+    不是，要说清楚，现在的写法看不出来。另外，(2.8) 应该放在 Q1 和表 1
+    之前，否则读者不知道参数是什么。
+  - 待办：
+    - 在引言 Q1 之前引入 $\mathcal{D}_\rho$ 和 $\mathcal{P}_s$。
+    - 在 Prelim 写明：这个势函数在 minimax 中已有，用到 reduced AL
+      上是本文的做法。
+
+  5. minimax 读者的视角
+
+  - 老师：minimax 圈子的人会怎么看第 3、4
+    节？文中引用了相关工作，但贡献部分没有评论。
+  - 你：想一想再修改一遍；minimax 圈子最关注的具体问题可能要问问户老师他们。
+  - 待办：引言新增 Contributions 段，分别写对 ALM 和对 minimax
+    的意义；同时整理要问户老师的问题。
+
+❯ 先说这些问题 老师触及的本质是什么 我们怎么怎么回答 先说逻辑
+⏺ 精华总结
+
+  老师的五条意见都在追问同一件事：每个结果的阶由什么机制决定，对 ALM 和 minimax
+  两个圈子各新在哪里。回答的主线是：族内 $\Theta(\epsilon^{-3})$
+  是对偶条件数带来的障碍；Fast LRALM 用对偶外推，把对 $\kappa$
+  的依赖从一次降到平方根。其余几条都从这条主线展开。
+
+  主线逻辑
+
+  1. 族内的阶由有效罚参数 $\rho+s$ 决定。对偶正则项让对偶变量强凹，模数为
+  $1/s$；对偶光滑常数为 $1/\rho+1/s$。
+
+  $$
+  \kappa = 1+\frac{s}{\rho}
+  $$
+
+  固定对偶中心会带来偏差 $\mathcal{O}(L_h/s)$，要把它压到 $\epsilon$ 以内，需要
+  $s=\Theta(\epsilon^{-1})$，此时 $\kappa=\Theta(\epsilon^{-1})$。GDA 型方法对
+  $\kappa$ 是一次依赖，代价为 $\kappa\epsilon^{-2}=\epsilon^{-3}$。
+
+  2. 中心步长改进不了阶。下界对所有常数 $(\alpha,\beta)$
+  成立，所以移动中心最多改变常数。
+
+  3. 要突破 $\epsilon^{-3}$，必须离开这个族。Fast LRALM 在乘子步上加 Nesterov
+  外推，代价降为 $\sqrt{\kappa},\epsilon^{-2}=\epsilon^{-5/2}$，与 NC-SC
+  下界一致。
+
+  这条主线把 §3 和 §4 连成一个结论：§3 给出障碍，§4 突破障碍。
+
+  逐条：本质与回答逻辑
+
+  意见 1：篇幅与是否分篇。
+  - 本质：两部分结果的主次不清，篇幅长是这个问题的表现。
+  - 回答：按上面的主线，§3 是 §4 的动机，两部分合成一个故事，因此不分篇。§3
+    的困难实例和证明移到附录，正文只保留定理和阈值。
+
+  意见 2：移动中心是否不本质。
+  - 本质：族内的阶由什么机制决定。
+  - 回答：阶由 $\rho+s$ 决定，具体是偏差与条件数之间的权衡。$s$ 取
+    $\Theta(\epsilon^{-1})$ 就消除了偏差，乘子无需再移动中心。原始中心仍须以低于
+    阈值的步长移动，只是改进不了阶。
+  - 卖点：$\epsilon^{-1}$ 的增长放在 $s$ 上，罚参数 $\rho$
+    可以保持固定，原始光滑常数也就不随 $\epsilon$ 增大。这正是 Q1 的答案。
+  - 对 Jiajin 方法的定位：正面写 Smoothed GDA 与 Perturbed Smoothed GDA
+    是族内的最优成员。
+
+  意见 3：与 Zhang–Xu 的区别。
+  - 本质：$\epsilon^{-5/2}$ 是不是新结果。$\mathcal{D}_\rho$ 是对偶光滑的 NC-C
+    问题，任何 NC-C 最优方法用在它上面都能得到 $\epsilon^{-5/2}$。
+  - 回答：理论上承认速率相同，区别写在机制上：
+    - Zhang–Xu 用投影、extragradient 和平均来控制对偶变量。
+    - 我们用标准乘子步加外推，对偶变量不投影，乘子有界由 Lyapunov 函数证明。
+  - 数值：数值对比承担说明实际优势的任务，优势体现在 oracle 次数和对 $L_h$
+    估计值的稳健性。这部分没有优势的话，§4 的贡献就站不住。
+
+  意见 4：(2.8) 是否新。
+  - 本质：新颖性的归属。同一个势函数在 minimax 里已有，在 ALM 里是新的。
+  - 回答：新的是这次迁移本身。reduced AL 把约束问题变成对偶无约束、对偶光滑的
+    NC-C 问题，在它上面做 GDA，就得到固定罚的单循环 ALM，输出可以直接换算成 KKT
+    点。
+  - 位置：Q1 和表 1 用到了 $\rho$ 和 $s$，所以定义要放在问题之前。
+
+  意见 5：minimax 读者怎么看。
+  - 本质：minimax 读者能学到什么。$\mathcal{D}_\rho$ 是一般 NC-C
+    问题的子类，而子类上的结论，方向不同，强弱也不同。
+  - §3 的下界：困难实例属于子类，所以下界对一般 NC-C
+    同样成立。这个结论是强的，它把 Li26
+    针对单个算法的下界推广到了所有常数中心步长。
+  - §4 的上界：只在子类上成立。需要写明用到了哪些结构：对偶无约束、光滑常数
+    $1/\rho$、乘子以 $L_h$ 为界。能否推广到一般 NC-C，是请教户老师的问题。
+
+❯ 我记得我们今天早晨找过arxiv 和找过最近的文献 和进行文献check ？
+
+⏺ 先查今天的对话记录和文献检查产物。
+
+⏺ Bash(cd /Users/liluxuan/Documents/My_Papers/3_DDLALM; find . -path
+      ./overleaf/node_modules -prune -o -newermt "2026-11-23 00:00" -type f
+      -print 2>/dev/null | grep -v…)
+  ⎿  Error: Exit code 1
+     ./.gitignore
+     ./AGENTS.md
+     ./core/PROJECT_STATUS.md
+     ./core/写作对照清单.md
+     ./core/定位.md
+     ./core/writing-phrasebook.md
+     ./core/文献清单.md
+     ./core/MILESTONES.md
+     ./core/逻辑清单.md
+     … +12 lines (ctrl+o to expand)
+
+  Called convo-hub (ctrl+o to expand)
+
+⏺ 今天这个项目的会话标题里没有看到文献检索，再按关键词搜一下。
+
+  Called convo-hub 2 times (ctrl+o to expand)
+
+⏺ 查新是在昨晚（11-22 晚上
+  20:53–21:51）做的，不在今天早上。我来找终审报告所在位置。
+
+⏺ Bash(cd /Users/liluxuan/Documents/My_Papers; find . -maxdepth 6 -type d -name
+      "novelty-check-2026112*" 2>/dev/null; find . -maxdepth 8 -path
+      "*novelty-check-20261122…)
+  ⎿  (No output)
+
+⏺ Bash(cd memory/archive/novelty-check-20261122/stage3; wc -l
+      opus-final-verdict.md; grep -nE
+      "^#|裁决|Verdict|结论|撞车|Zhang|Xu|2609\.17973|COLLIDE|NOVEL|PARTIAL"
+      opus-fin…)
+  ⎿  (No output)
+
+  Called convo-hub (ctrl+o to expand)
+
+❯ 应该是agent-sub里面的domain
+
+⏺ 老大指的应该是 agent-hub 下的 domains
+  目录。我查一下其中今天修改过的文献相关文件。
+
+⏺ Bash(cd ~/agent-hub; find domains inbox -newermt "2026-11-23 00:00" -type f
+      2>/dev/null | grep -v "/private/" | head -30)
+  ⎿  (No output)
+
+⏺ 今天有两处候选可看：每日文献 inbox
+  文件和今天的开放问题核对目录，我接下来查看两处与本文相关的内容。 · summary
+
+⏺ Bash(cd ~/agent-hub; wc -l inbox/1_lit/2026-11-23-lit-daily.md
+      domains/research/ideas/20261119-composite-lower-bound/summary.md; grep -nE
+      "^#|LRALM|ALM|minimax|min-m…)
+  ⎿  (No output)
+
+⏺ Bash(sed -n 12,32p ~/agent-hub/inbox/1_lit/2026-11-23-lit-daily.md | cut
+      -c1-330)
+  ⎿  (No output)
+
+⏺ 老大记得的两件事都有，但时间需要更正一下。查新是昨晚（11-22
+  20:53–21:51）做的。今天上午 12:24 跑的是每日文献简报。本次会话前面的讨论没有用
+  到这两份结果，下面补上与老师意见相关的部分。
+
+  1. 昨晚的查新：直接关系到老师第 3 条
+
+  终审报告在
+  memory/archive/novelty-check-20261122/stage3/opus-final-verdict.md。结论如下。
+
+  - 没有撞车：56
+    篇全文里，没有一篇在本文问题类上给出与三个创新点实质相同的定理。
+  - 创新点 1、2 保持新颖，即 §3 的有效罚参数
+    $\rho+s$、族内紧界的相变、中心步长阈值。
+  - 创新点 3 的新意只在算法形式与分析：$\epsilon^{-5/2}$
+    在本文问题类上已有三个先例，不能写「首个」。
+    - Zhang–Xu（arXiv:2609.17973）：确定性单循环。
+    - C06 Ke–Mei–Zhang（arXiv:2609.25752）：多层循环，无对数因子。
+    - C14 Zhang–Zhang–Xu–Dai，SPDE（arXiv:2609.21747）：令 $\sigma=0$
+      可退化出确定性单循环。终审把它列为最接近的第 1 名，它同样用以 $\mathbf{0}$
+      为中心的对偶 Tikhonov 正则。
+
+  需要向老师确认：「徐姿老师最新的 $-2.5$」指的是 Zhang–Xu，还是 C14
+  SPDE？两篇都出自徐姿组。按终审报告，C14 与 Fast LRALM 的结构更接近。区分只剩
+  extragradient 加 normal-cone 修正与 Nesterov
+  外推单梯度步的差别，以及对偶投影。对比实验最好两篇都纳入。
+
+  2. 今天上午的每日文献：§4 相关工作可以补一篇
+
+  文件在 ~/agent-hub/inbox/1_lit/2026-11-23-lit-daily.md，其中 Fast LRALM 栏下有
+  7 篇。与老师意见直接相关的只有一篇：
+
+  - He，arXiv:2611.20134：Nesterov 加速的
+    ALM，带约束差分外推和投影乘子，只覆盖凸情形。可以在 §4 用来区分「ALM
+    乘子外推」在凸情形已有先例，本文的贡献是非凸、不投影的情形。
+
+  其余几篇（Pan 的 IP-ADMM、Zuo–Lin–Liu
+  的精确罚方法等）放进相关工作即可，不影响对老师的回答。
+
+❯ 如果我们模仿spider 他们的文章应该怎么做呢？
+  2. 我们现在似乎就是平铺只需 但是 是不是需要加remark和过渡 或者调整表达
+
+⏺ 我分头核实：一是 SPIDER 的 arXiv 版本记录，二是 §3、§4 现有的 Remark
+  和节首过渡。
+
+⏺ Bash(cd overleaf/sections; for f in LRALMFamily.tex Acceleration.tex; do echo
+      "== $f"; grep -nE
+      "begin\{(remark|theorem|proposition|lemma|corollary)\}|\\\\(sub)?sect…)
+  ⎿  (No output)
+
+⏺ Fetch(https://arxiv.org/abs/1807.01695)
+  ⎿  Received 42.2KB (200 OK)
+
+⏺ SPIDER 的版本记录已核实。接下来读 §4 现有的那条 Remark，以及 §3
+  结尾处的文字，避免新增内容与已有文字重复。
+
+⏺ Bash(sed -n 1,12p Acceleration.tex | cut -c1-250; echo ...; sed -n 154,178p
+      Acceleration.tex | cut -c1-250; echo ====; sed -n 330,343p LRALMFamily.tex
+      | cut -c1-250;…)
+  ⎿  (No output)
+
+❯ 或者 怎么让gpt Pro
+⏺ 精华总结
+
+  模仿 SPIDER 的做法是：arXiv 放完整长文，投稿版只保留一条主线，其余内容引用
+  arXiv 全文。这种做法适合会议投稿。投 SIOPT/MP 时，等价做法是正文压到约 25
+  页，证明放进期刊的补充材料。
+
+  第二个问题的回答是肯定的。§3 目前没有一条 Remark。§4
+  一开头就是记号表，没有节首过渡。主定理之后也没有与 Zhang–Xu 的对比。需要补 3
+  条 Remark 和 1 段过渡。
+
+  1. 模仿 SPIDER
+
+  SPIDER 的做法（已核实部分）。arXiv:1807.01695 有两个版本：v1 于 2018-07-04
+  提交，v2 于 2018-10-17 提交，即 NeurIPS 2018 接收之后，PDF 从 972 KB 增至 1.5
+  MB。摘要列出的结果有一阶、二阶近似驻点、零阶方法，以及一个近乎匹配的下界。会议
+  版 9 页正文只容得下一部分。具体哪些结果只出现在 arXiv
+  版，我没有核对会议论文集的 PDF。
+
+  我们的对应做法。
+  - arXiv 版：现在的 52 页全文原样上传。
+  - 投稿版按 Fast LRALM 主线组织：
+    a. 引言：前移 (2.8)，写明新颖性边界。
+    b. §3 只保留族的定义、两组 $\Theta$
+       定理和阈值，加一段机制解释。困难实例构造（LRALMFamily.tex 第 398
+       行以后）和附录 B、C 引用 arXiv 版。
+    c. §4 写算法、主定理和证明路线图，引理证明放进附录。
+    d. 与 Zhang–Xu、C14、C06 的对比。
+    e. 实验。
+  - 前提是先定投稿去向：
+    - 会议：完全照搬
+      SPIDER。但会议版发表后再投期刊，需要实质性扩展，这条路要事先想好。
+    - 期刊：审稿人需要完整证明，正文引用 arXiv
+      代替主定理的证明行不通。因此要把证明放进 SIAM 允许的 supplementary
+      materials。
+
+  2. Remark 与过渡
+
+  位置: lem:effective-penalty 之后
+  新增内容: Remark：移动对偶中心等价于把罚参数抬到 $\rho+s$。$\mathcal{P}_s$
+    在 minimax 中已有，用在 reduced AL 上是 ALM 方面的新做法
+  回应: 老师对 (2.8) 的意见
+  ────────────────────────────────────────
+  位置: 第 336–341 行阈值段之后
+  新增内容: Remark：阶由 $\rho+s$ 决定，$(\alpha,\beta)$
+    只要低于阈值即可，改进不了阶。Smoothed GDA 与 Perturbed Smoothed GDA
+    是族内最优成员。增长放在 $s$ 上，原始光滑常数就不随 $\epsilon$ 增大
+  回应: 老师第 2 条，以及 minimax 视角
+  ────────────────────────────────────────
+  位置: §4 节首，记号表之前
+  新增内容: 过渡段：族内障碍是 $\kappa\epsilon^{-2}$，其中
+    $\kappa=\Theta(\epsilon^{-1})$；外推把 $\kappa$ 降为 $\sqrt{\kappa}$
+  回应: 主线
+  ────────────────────────────────────────
+  位置: thm:b2-prime-complexity 之后
+  新增内容: Remark：速率与 Zhang–Xu、C14、C06
+    相同，区别在对偶控制机制。He（arXiv:2611.20134）的乘子外推只覆盖凸情形
+  回应: 老师第 3 条
+
+  还有两处现有文字可以保留：
+  - 第 384–389 行已经写了从 §3 到 §4 的过渡，挪到 §3 结尾即可。
+  - 第 156 行的 Remark 只与 ALM 一侧比较，保留不动。
+
+  另外，§3 节首（第 3–9 行）建议调整成结论在前：先说族的复杂度由 $\rho+s$
+  决定，再引入定义。
+
+  3. 交给 GPT Pro
+
+  老大这句话没有说完，我理解为把上面的工作交给 GPT Pro 来做。具体有两种分工：
+  - 审方案：发 main.pdf、老师意见和上面的表，让它判断 Remark
+    的位置与论断是否成立。
+  - 起草 Remark 文字：需要附上 LRALMFamily.tex 和 Acceleration.tex
+    的相关段落，以及本项目的写作规范（2.1–2.4 节）。
+
+  请确认是哪一种。确认后我按对应用途写提示词。
+
+❯ 给一个指令 让他帮我们想创新点？ 我记得我们之前仔细讨论过：
+  找到了。11 月 18 日的原始讨论是 [单循环Nesterov加速与minmax双循环](t3-thread:
+  //v2/412ed0e7-6abe-4448-afff-372b7a754470/import:claude-valerie:df7b9402-0680
+  -477b-931e-3663c66f585c)。第一条就是你问的：「为什么我们只需要单循环的
+  Nesterov 加速就可以得到 minmax
+  需要双循环的事情？」接着你要求把两个问题的结构并排比较。
+
+  更深入的证明核对在 [单循环Nesterov加速与minmax双循环 (fork)
+  (fork)](t3-thread://v2/412ed0e7-6abe-4448-afff-372b7a754470/import:claude-val
+  erie:345f9cc8-80a1-485b-9c59-f56065e506f5)。直接看最后一条回复：对偶外推点可
+  能落到紧集之外；给外推点加投影，又会破坏原 Lyapunov 证明用到的递推恒等式。若
+  primal 变量也受约束，原证明的二次误差上界在边界处还会多出一阶项。
+
+  这段讨论的核心是：Fast LRALM 的 prox 结构允许全空间对偶外推，配合一步 primal
+  跟踪达到 O(ε⁻²·⁵)；一般带约束 minimax 无法靠加一次投影直接复用这套证明。
+  你看下嫩
+
+⏺ 先读一下 11-18
+  讨论分支的最后一条结论，确保提示词里的论断与当时的核对结果一致。
+
+  Called convo-hub (ctrl+o to expand)
+
+⏺ 精华总结
+
+  我核对了 11-18 讨论分支的最后结论。Fast LRALM 的结构性优势成立，准确内容有两条
+  ：对偶变量无约束，所以外推合法；原始变量无约束，所以二次误差上界成立。
+
+  那段摘要里有一处说法需要更正。「minimax 需要双循环」已经过时：Zhang–Xu 和 C14
+  都是单循环。因此创新点不能放在「单循环」上，只能放在「结构允许不投影的单梯度外
+  推」上。下面的提示词按这个口径写。
+
+  发给 GPT Pro 时附上的文件
+
+  1. overleaf/main.pdf
+  2. memory/archive/novelty-check-20261122/stage3/opus-final-verdict.md
+  3. Zhang–Xu 的 PDF（arXiv:2609.17973）
+  4. 可选：C14 的 PDF（arXiv:2609.21747）
+
+  提示词
+
+  You are a senior researcher in nonconvex constrained optimization and minimax
+  optimization (SIOPT / Math. Program. referee level). Help me identify and
+  sharpen the contribution claims of the attached manuscript. Be skeptical;
+  every claim must survive comparison with the attached prior work.
+
+  ## Paper in brief
+  Problem: min_x f(x) + h(A(x)), f, A smooth (possibly nonconvex), h convex and
+  L_h-Lipschitz, no constraint qualification; target an eps-KKT point. Via the
+  reduced augmented Lagrangian D_rho(x, lambda) (dual variable unconstrained in
+  R^m, smooth in lambda with modulus 1/rho), the problem becomes a smooth NC-C
+  minimax problem. We add primal/dual proximal terms:
+  P_s(x, lambda; z, mu) = D_rho(x, lambda) + ||x - z||^2/(2 gamma) - ||lambda -
+  mu||^2/(2 s).
+
+  Results:
+  (R1) Family C_theta of single-loop linearized regularized ALMs with constant
+  center stepsizes (alpha, beta): every member has effective penalty rho + s.
+  Tight bounds: Theta(eps^-4) when rho + s = Theta(1); Theta(eps^-3) with fixed
+  rho and s = c_s/eps. Center stepsizes alpha = Theta(eps^2) and Theta(eps) are
+  sharp thresholds; above them T_eps = +inf on instances in the class. No
+  constant (alpha, beta) improves the order. Smoothed GDA (beta = 1) and
+  Perturbed Smoothed GDA (beta = 0) attain the bounds.
+  (R2) Fast LRALM (outside the family): fixed rho, s = c_s/eps, Nesterov
+  extrapolation on the multiplier step, one gradient step per iteration, no
+  projection, no extragradient, no inner solver; O(eps^-5/2).
+
+  Structural facts already verified in our proofs:
+  - The dual of D_rho is unconstrained, so the extrapolated multiplier is a
+  legal query point and the linear identity (sqrt(kappa)+1) lambda_bar^k =
+  sqrt(kappa) lambda^k + w^k used in the Lyapunov argument holds exactly.
+  - x is unconstrained, so grad_x P(x_s(lambda), lambda) = 0 and the quadratic
+  gap bound P(x, lambda) - d(lambda) <= O(||x - x_s(lambda)||^2) holds; with x
+  in a compact X this bound acquires a first-order term.
+  - The proximal multiplier q satisfies ||q|| <= L_h, which keeps the
+  x-smoothness constant independent of eps and gives lambda_s^* = s/(rho+s) q^*.
+
+  ## Prior work that already reaches eps^-5/2 on our problem class (do not claim
+  "first eps^-5/2" or "first single-loop")
+  - Zhang-Xu, arXiv:2609.17973: single-loop projected extragradient with dual
+  gradient averaging, compact X and Y, about four projections per iteration plus
+  normal-cone variables; applied to D_rho on the dual ball of radius 2 L_h it
+  yields eps^-5/2.
+  - Zhang-Zhang-Xu-Dai (SPDE), arXiv:2609.21747: single-loop, dual Tikhonov term
+  centered at 0; deterministic eps^-5/2 follows by setting sigma = 0.
+  - Ke-Mei-Zhang, arXiv:2609.25752: multi-loop, explicit eps^-5/2 on our class.
+  - Pan-Zheng-Li: Theta(eps^-5/2) optimal over smooth NC-C. Li et al. 2026:
+  algorithm-specific tight bounds for Smoothed GDA / Perturbed Smoothed GDA.
+  - He, arXiv:2611.20134: Nesterov-accelerated ALM with multiplier
+  extrapolation, convex case only.
+
+  ## Advisor comments to address
+  1. Is (2.8) new? New for ALM, known for minimax; the paper must say which.
+  2. Is the main message of R1 that moving centers are inessential in theory?
+  3. Explain the difference from Zhang-Xu's eps^-5/2, in theory and in
+  experiments.
+  4. How will minimax researchers read R1 and R2? The contribution statement
+  currently says nothing to them.
+
+  ## Task
+  1. Propose 3-5 candidate contribution claims, separately for (a) the ALM
+  community and (b) the minimax community. For each give: the precise claim;
+  which result in the paper supports it (theorem/lemma); the closest prior work
+  and the exact difference; the strongest referee objection; whether the claim
+  is proved now, needs a short extra argument, or is a conjecture.
+  2. For R2 vs Zhang-Xu and SPDE: identify the differences that matter
+  mathematically (assumptions used, oracle calls per iteration, projections,
+  knowledge of L_h, output type) and say which are substantive and which are
+  cosmetic.
+  3. Assess whether the structural facts above define a natural subclass of NC-C
+  minimax problems (e.g., duals generated by proximal smoothing of a Lipschitz
+  convex function, unconstrained primal) on which projection-free single-step
+  dual extrapolation is optimal. State it as a conjecture with the minimal
+  conditions, a proof sketch if possible, and a candidate counterexample outside
+  the subclass.
+  4. Propose numerical experiments that would separate R2 from Zhang-Xu and SPDE
+  in practice (metric, x-axis in oracle calls, sensitivity to the L_h estimate
+  / projection radius).
+
+  ## Rules
+  - Label every statement as PROVED (in the attached paper), PROVABLE (short
+  argument, sketch it), or CONJECTURE.
+  - Cite theorem/equation numbers from the attached files for every comparison;
+  if you cannot locate a fact, write UNVERIFIED.
+  - No promotional wording. Do not inflate R1 or R2.
+  - Output: a ranked list of claims, then a 150-word contribution paragraph for
+  the Introduction based only on PROVED items.
+
+  使用说明
+
+  - 第 3 项任务是在找新的创新点：它要求 GPT Pro 判断这两条结构事实能否界定一个
+    NC-C
+    子类，使得在这个子类上不投影的单步外推就是最优的。这条如果站得住，就是给
+    minimax 读者的卖点；目前它是猜想。
+  - 提示词里「约四次投影加法锥变量」这一条，来自 11-19
+    的核对：原文用了投影和法锥变量，「4 次」是 Antigravity 的统计，未经复核。GPT
+    Pro 若与原文对不上，以原文为准。
+
+❯ 我认为主要把我们的算法写的漂亮一点
+
+⏺ 老大的判断与查新结论一致：创新点 3 的新意就在算法形式上，所以算法写得好不好，
+  直接决定这部分贡献能不能被读者看到。我先读 §4 现在的算法呈现方式。
+
+⏺ Bash(sed -n 24,153p Acceleration.tex | cut -c1-200)
+  ⎿  (No output)
+
+⏺ 我先核对 q 和 y 的定义，看乘子步能否写成关于 q 的组合，以便算法框直接呈现经典
+  ALM 形式。 · summary
+
+⏺ Bash(grep -nE "\\\\bq\(\\\\bx,\\\\blmbd\)\s*(:=|=)|by\(\\\\bx,\\\\blmbd\)\s*(:
+      =|=)|label\{eq:reduced-al-gradient\}" Preliminaries.tex | cut -c1-200;
+      n=$(grep -n "lab…)
+  ⎿  (No output)
+
+⏺ 精华总结
+
+  我同意这个方向。查新结论是创新点 3
+  的新意只在算法形式与分析，因此算法写得漂亮，本身就是在呈现贡献。
+
+  我核对了定义：乘子步可以完全用近端乘子 $\mathbf{q}$ 改写。改写后，Fast LRALM
+  就呈现为「经典线性化 ALM 加三处修改」，ALM 读者和 minimax
+  读者都能一眼看出它是什么。
+
+  核心改写：乘子步的 ALM 形式
+
+  由 (2.4) 下方 eq:reduced-al-gradient 的恒等式
+
+  $$
+  \mathcal{A}(\mathbf{x})-\mathbf{y}(\mathbf{x},\boldsymbol{\lambda})=\frac{\mat
+  hbf{q}(\mathbf{x},\boldsymbol{\lambda})-\boldsymbol{\lambda}}{\rho},
+  $$
+
+  记 $\mathbf{q}^{k+1}:=\mathbf{q}(\mathbf{x}^{k+1},\bar{\boldsymbol{\lambda}}^k
+  )$，对偶步 (4.x) 变为
+
+  $$
+  \boldsymbol{\lambda}^{k+1}=\Bigl(1-\frac{\tau}{\rho}-\frac{\tau}{s}\Bigr)\bar{
+  \boldsymbol{\lambda}}^k+\frac{\tau}{\rho},\mathbf{q}^{k+1}.
+  $$
+
+  这个形式说明三件事：
+
+  1. 取 $\omega=0$、$s=\infty$、$\tau=\rho$ 时，上式化为
+     $\boldsymbol{\lambda}^{k+1}=\mathbf{q}^{k+1}$，就是经典 ALM 的乘子更新
+     $\boldsymbol{\lambda}+\rho(\mathcal{A}(\mathbf{x})-\mathbf{y})$。
+  2. 三处修改各有一个作用：
+     - $1/s$ 把乘子拉向 $\mathbf{0}$，产生强凹性；
+     - $\omega$ 做外推，带来加速；
+     - $\mathbf{z}$ 作为原始中心，产生强凸性。
+  3. 若 $\tau(1/\rho+1/s)\le 1$，新乘子是
+     $\bar{\boldsymbol{\lambda}}^k$、$\mathbf{q}^{k+1}$ 与 $\mathbf{0}$
+     的凸组合。由此可以直接看出乘子为什么有界。待核：主定理中 $\tau$ 的取值是否
+     满足这个条件。满足的话，这句可以写进正文；不满足的话，只写「线性组合」。
+
+  原始步同理可以写成 $\nabla f(\mathbf{x}^k)+J_{\mathcal{A}}(\mathbf{x}^k)^\top\
+  mathbf{q}(\mathbf{x}^k,\bar{\boldsymbol{\lambda}}^k)+(\mathbf{x}^k-\mathbf{z}^
+  k)/\gamma$。这样算法框里每一行都是 ALM 的原始量，不再出现
+  $\nabla_{\mathbf{x}}\mathcal{L}_\rho(\mathbf{x},\mathbf{y}(\cdot),\cdot)$
+  这种嵌套写法。
+
+  其余几处修改（按影响排序）
+
+  1. 节首：§4 现在一开头就是记号表 tab:acc-notation，读者还没看到动机就先面对 7
+     个记号。建议节首先用两句话写清障碍 $\kappa\epsilon^{-2}$
+     和外推的思路，记号表移到 §4.2 Analysis framework 第一次用到的地方。
+  2. 叙述顺序：现在第 98–150
+     行按「外层到内层」推导，执行顺序却是「内层到外层」，所以需要第 147
+     行一段专门解释顺序反转。建议改为按执行顺序叙述：外推、原始步、乘子步、中心
+     步。每段先说这一步近似的是什么，再给一个公式，第 147 行那段就可以删掉。
+  3. 两种读法合成一条 Remark：用 ALM 的眼光看，它是线性化 ALM 加三处修改；用
+     minimax 的眼光看，它是在 $\mathcal{P}_s$ 上做 GDA，再加对偶 Nesterov
+     外推。第 156 行现有的 Remark 并入这一条，同时回应老师第 4 条意见。
+  4. 参数尺度：算法框后紧接一句，写明 $s=c_s/\epsilon$、$\kappa=s/\tau=\Theta(\e
+     psilon^{-1})$、$\omega=1-\Theta(\sqrt{\epsilon})$ 和 $\alpha$
+     的阶，让读者当场看到 $\sqrt{\kappa}$ 从哪里来。
+  5. 算法框细节：Output
+     移出循环；三处修改用行尾注释标出（damping、extrapolation、center）。
+
+  待确认
+
+  1. 这 5 条是否采纳。
+  2. 采纳的话，我先用 paper-write
+     起草算法框和节首两段，给你看替换片段，确认后再写入 Acceleration.tex。GPT
+     Pro 的提示词也可以对应改成审这一版写法。
+
+❯ 总结一下任务 不要落座
+
+⏺ 下面汇总本次讨论定下的任务，只在对话里列出，不写入任何文件。
+
+  任务清单
+
+  A. 引言
+  1. 在 Q1 和表 1 之前引入 $\mathcal{D}_\rho$ 与 $\mathcal{P}_s$（即
+     (2.8)），交代 $\rho$、$s$ 和两个中心。
+  2. 写明 (2.8) 的新颖性边界：在 minimax 中已有，用在 reduced AL 上、得到固定罚
+     ALM 是本文的做法。
+  3. 新增 Contributions 段，分别写对 ALM 和对 minimax 的意义。
+
+  B. §3
+  1. 节首改为结论在前：族的复杂度由 $\rho+s$ 决定。
+  2. lem:effective-penalty 之后加 Remark：移动对偶中心等价于把罚参数抬到
+     $\rho+s$。
+  3. 阈值段（第 336–341 行）之后加 Remark：$(\alpha,\beta)$ 改进不了阶，增长放在
+     $s$ 上。Smoothed GDA 与 Perturbed Smoothed GDA 是族内最优成员。
+  4. 第 384–389 行的过渡段挪到节末。
+
+  C. §4，重点
+  1. 节首先写障碍与思路，记号表移到 §4.2。
+  2. 算法框改用 $\mathbf{q}$ 写成 ALM 形式，标出三处修改，Output 移出循环。
+  3. 叙述改为按执行顺序，删去第 147 行解释顺序反转的那段。
+  4. 算法框后写明参数尺度。
+  5. 写一条两种读法（ALM 与 minimax）的 Remark，并入第 156 行现有的 Remark。
+  6. 主定理后加 Remark，与 Zhang–Xu、C14、C06、He（arXiv:2611.20134）对比。
+  7. 待核：主定理中 $\tau$ 是否满足 $\tau(1/\rho+1/s)\le 1$。
+
+  D. 实验
+  1. 与 Zhang–Xu（以及 C14）做数值对比：横轴为 oracle 调用次数，并测对 $L_h$
+     估计值的敏感性。
+  2. §3 的中心步长消融：固定 $\rho+s$，扫描 $(\alpha,\beta)$；在困难实例上让
+     $\alpha$ 超过阈值。
+
+  E. 待老大决定或沟通
+  1. 投稿去向：期刊还是会议。它决定是否采用 SPIDER 的「arXiv 长文版 +
+     投稿精简版」做法。
+  2. 向老师确认：「徐姿老师最新的 $-2.5$」指 Zhang–Xu 还是 C14 SPDE。
+  3. 准备向户老师请教的 minimax 问题。
+  4. GPT Pro 提示词的用途：想创新点，还是审算法写法。
+
+  建议顺序
+
+  建议按 C → A → B → D 的顺序推进，E 中的事项并行沟通。
+
+❯ 期刊 但是我们打算新建一个文档 是全版本  就是我们目前这个版本（的副本） ；
+  另一个版本是稍微化简版本 会提一下
+
+⏺ 确认投期刊，用两个版本：全版本为当前稿的副本，精简版正文中引用全版本。复制的时
+  机和方式有一个问题需要先定。
+
+  问题：现在复制，两个版本会各自演变
+
+  任务清单 A–C 大部分要同时修改两个版本，比如引言、§4 算法框、Remark。如果现在复
+  制，每处修改都要做两遍，两版本很快就会对不上。另外，全版本要上
+  arXiv，现在的副本还带着老师指出的那些问题。
+
+  两种做法
+
+  1. 单一源文件加编译开关（推荐）：保留 overleaf/ 一份源码，在 main.tex 里定义
+     \newif\iffull。只属于全版本的内容用 \iffull ... \fi 包起来，比如 §3.3
+     困难实例构造、附录 B 的分支证明、扩展讨论；精简版在相应位置写一句「see the
+     full version [arXiv]」。切换 \fulltrue 或 \fullfalse 就能编出两个
+     PDF。修改只做一次，两版本始终一致。
+  2. 先修改后复制：先在现有稿上完成
+     A–C，再复制出精简版去删减。之后只在精简版上继续修改，全版本冻结为 arXiv
+     稿。
+
+  期刊版的一个约束
+
+  精简版仍须自含主结果的完整证明。SIOPT 审稿人不会接受用 arXiv
+  链接代替证明。可以引用全版本的，只有扩展内容和次要结论，比如困难实例的全部分支
+  、附加讨论。精简版的主体证明放在附录或 SIAM 的 supplementary materials 里。
+
+  需要老大定的事
+
+  1. 采用做法 1 还是做法 2？
+  2. 精简版删到什么程度？我的初步建议是：§3 只保留定理和阈值，困难实例和附录 B
+     全文放进全版本；§4
+     的引理证明留在精简版附录里。这一条也可以等和老师讨论后再定。
+
+❯ 你说咋办吧
+
+⏺ 按做法 1 办：保留一份源码，用编译开关同时生成全版本和精简版。
+
+  理由
+
+  - 任务 A–C 的修改两个版本都要用，单一源码保证每处只改一次。
+  - 全版本上 arXiv 时，就已经包含对老师意见的修改。
+  - 精简版删去的只是整块内容，比如困难实例构造和附录 B 的分支证明，用 \iffull
+    ... \fi 包住就能切换，不会产生两份互相对不上的文字。
+
+  执行顺序
+
+  1. 建开关：在 main.tex 中加入 \newif\iffull，默认 \fulltrue，现在的 PDF
+     不受影响。
+  2. 按 C → A → B 修改正文：两个版本共用这些修改。
+  3. D 实验：与修改正文并行。
+  4. 定删减范围：和老师讨论后，用 \iffull 包住要删的块，在精简版对应位置写「see
+     the full version」。我的初步建议是：§3.3 困难实例构造和附录 B
+     只放在全版本；§4 的引理证明留在精简版附录，满足期刊对完整证明的要求。
+  5. 出两个 PDF：全版本上传 arXiv，精简版投 SIOPT，并在其中引用 arXiv 编号。
+
+  按你前面的要求，现在我没有写任何文件。确认后，我先做第 1 步建开关，再开始 C
+  的算法框改写，修改片段会先给你看。

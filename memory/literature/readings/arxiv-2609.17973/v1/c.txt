@@ -1,0 +1,3216 @@
+Matching Multi-Loop Complexities with a Single Loop:
+Optimal Optimization Stationarity and Best-Known Game
+Stationarity in Nonconvex–Concave Minimax Optimization
+Minhao Zhang1 and Zi Xu1*
+arXiv:2609.17973v1 [math.OC] 16 Sep 2026
+1*
+Department of Mathematics, College of Sciences, Shanghai University, Shanghai,
+200444, P.R.China.
+*Corresponding author(s). E-mail(s): xuzi@shu.edu.cn;
+Contributing authors: zhangminhao@shu.edu.cn;
+Abstract
+We introduce a new single-loop algorithmic framework for smooth nonconvex–concave minimax
+optimization. The resulting projected damped extragradient method combines projected extra-
+gradient updates, dual momentum, and a moving proximal center. Under both the optimization-
+stationarity and game-stationarity criteria, our method achieves the best-known complexity among
+single-loop first-order methods. For optimization stationarity, our method achieves a gradient
+complexity of O(L2 DY ∆ ¯ 0 ε−3 ), where L is the gradient Lipschitz constant, DY bounds the
+diameter of the dual feasible set, and ∆ ¯ 0 is an initialization quantity involving the value-function
+gap and the initial gradients. Moreover, by incorporating a fixed-center warm-up phase, the
+complexity can be improved to O(L2 DY ∆ϕ ε−3 ), up to an additive lower-order cost, where
+∆ϕ := ϕ(x0 ) − inf x ϕ(x). We further establish a lower bound of Ω(L2 DY ∆ϕ ε−3 ) for optimiza-
+tion stationarity over projected zero-respecting first-order methods. This lower bound proves that
+the warm-started version of our algorithm is optimal up to a constant factor for optimization station-
+
+1/2
+arity within this oracle class. For game stationarity, our method achieves O L3/2 DY ∆ϕ ε−5/2
+gradient complexity. This matches the best-known complexity of multi-loop first-order methods,
+thereby establishing the same complexity with a single-loop algorithmic structure. Under dual
+√
+strong concavity, the proposed framework achieves O κ L∆ϕ ε−2 leading complexity for both
+
+stationarity criteria, where κ = L/µ is the dual condition number, up to an additive initialization
+cost. The ε−2 accuracy dependence is optimal under fixed regularity and initialization bounds.
+Keywords: Minimax optimization, Nonconvex optimization, Single-loop methods, Extragradient
+methods, Oracle complexity, Lyapunov analysis
+1 Introduction
+We study the deterministic nonconvex–concave (NC–C) minimax problem
+min max f (x, y ),
+x∈X y∈Y
+where X is nonempty, closed, and convex, Y is nonempty, compact, and convex, and f has an L-
+Lipschitz continuous gradient. The objective is possibly nonconvex in x and concave in y . Smooth
+instances arise in distributionally robust learning [1], group robust learning [2], and learning with
+average top-k losses [3]. In these applications, the dual variable weights samples or groups, or selects
+large losses, while the primal variable parametrizes a possibly nonconvex model. A central algorithmic
+1
+challenge is to attain sharp stationarity guarantees using simple first-order updates, without repeatedly
+solving auxiliary optimization problems.
+Two stationarity criteria are relevant to this problem. Optimization stationarity (OS) measures the
+gradient of a Moreau envelope of the value function ϕ(x) = maxy∈Y f (x, y ), extended by +∞ outside
+X . Game stationarity (GS) measures the joint first-order residual of f , including the normal cones
+to X and Y . These criteria capture different aspects of stationarity and must also be distinguished
+from the value-gradient and projected-gradient-mapping criteria used in earlier works. Their formal
+definitions are given in Section 2. In the literature review below, complexity bounds suppress fixed
+smoothness, domain, and initialization quantities unless displayed explicitly; O e additionally suppresses
+logarithmic factors.
+Dual strong concavity provides an important point of comparison. In the nonconvex–strongly
+concave (NC–SC) setting, let µ > 0 be the strong concavity parameter and write κ = L/µ. For an
+unconstrained primal variable, two-timescale gradient descent ascent (TS-GDA) attains O(κ2 ε−2 )
+complexity for value-gradient stationarity [4, 5]. Under a dual Polyak–Lojasiewicz condition on
+unconstrained domains, Smoothed-AGDA improves the dependence to O(κε−2 ) for GS, with a terminal
+refinement giving the same leading order for value-gradient stationarity [6]. Minimax-PPA and Catalyst-
+EG/OGDA attain O e (√κε−2 ) complexity under strong concavity [7, 8]. The single-loop mirror descent
+√
+ascent method MDA also reports O( κε−2 ) complexity under √ its prescribed mirror geometry and
+mirror-gradient-mapping criterion [9]. Lower bounds of Ω( κL∆ϕ ε−2 ) are known for value-gradient
+stationarity in the corresponding unconstrained oracle models [8, 10], where ∆ϕ = ϕ(x0 ) − inf x∈X ϕ(x).
+The general NC–C setting is more difficult because the value function can be nonsmooth. Multi-
+loop methods address this difficulty by solving auxiliary optimization problems. Prox-DIAG [11] and
+Minimax-PPA [7] attain O e (ε−3 ) complexity for OS. Minimax-PPA also gives O e (ε−5/2 ) complexity
+under its game-stationarity formulation. Li et al. [12] develop Perturbed Smoothed FOAM, which
+attains Oe (ε−3 ) for OS and O
+e (ε−5/2 ) for GS. These methods obtain their guarantees through regularized
+strongly convex–strongly concave subproblems, whose solution requires inner iterations.
+Single-loop methods use a fixed number of elementary first-order updates per iteration, but their
+representative NC–C guarantees have been weaker. TS-GDA has an O(ε−6 ) OS bound under an
+additional primal Lipschitz assumption [4, 5], while AGP attains O(ε−4 ) under a projected
+primal–dual gradient-mapping criterion on compact convex domains [13]. The analysis of Li et al. [12]
+establishes O(ε−4 ) complexity for Smoothed GDA under both OS and GS. Their Perturbed
+Smoothed GDA improves the GS bound to O(ε−3 ), while retaining an O(ε−4 ) OS bound. Thus,
+under both criteria, a complexity gap remains between these single-loop methods and methods that
+rely on auxiliary solvers. This motivates the following question:
+Can a single-loop first-order method attain the best-known multi-loop complexity rates under both OS and
+GS, and can its complexity be certified as optimal by a matching lower bound?
+We answer the algorithmic question affirmatively under both stationarity criteria and establish a
+matching lower bound for OS. Our method achieves the best-known complexity among single-loop
+first-order methods under both OS and GS. Its warm-started OS complexity is optimal up to a
+constant factor within the projected zero-respecting first-order oracle class, while its GS complexity
+matches the √best-known rate of multi-loop first-order methods. The same framework also attains
+the sharp O( κε−2 ) dependence under dual strong concavity. Our contributions are as follows; DY
+denotes an upper bound on the dual diameter.
+1. A new single-loop algorithm and Lyapunov analysis. We develop a projected damped
+extragradient framework combining projected prediction–correction steps, dual momentum, and a
+moving proximal center. A new joint Lyapunov function couples descent of a regularized envelope
+with tracking of its saddle point, allowing both effects to be controlled within a single loop. A
+predetermined fixed-center warm-up reduces the initialization dependence while using the same
+elementary updates, without resetting the state or introducing repeated inner solves.
+2. Optimal OS complexity and a matching lower bound. For NC–C problems, the method
+achieves gradient complexity
+O L2 DY ∆¯ 0 ε−3 ,
+
+where ∆¯ 0 involves the initial value-function gap and initial gradients. The fixed-center warm-up
+improves this bound to
+O L2 DY ∆ϕ ε−3 ,
+
+2
+up to an additive lower-order cost, with an expected squared Moreau-gradient guarantee
+(Corollary 4.3). We also prove the lower bound
+Ω L2 DY ∆ϕ ε−3
+
+for projected zero-respecting first-order methods, including randomized output rules at a fixed
+query budget (Theorem 5.1). The upper and lower bounds match in their dependence on L, DY , ∆ϕ ,
+and ε, establishing optimality up to a constant factor for the leading warm-started OS complexity
+within this oracle class.
+3. Multi-loop GS complexity attained with a single loop. For NC–C problems, the warm-started
+method returns a deterministic best-certificate iterate with leading gradient complexity
+ 
+1/2
+O L3/2 DY ∆ϕ ε−5/2 ,
+with an additive lower-order warm-up cost (Corollary 4.4). To the best of our knowledge, this is
+the first single-loop method to attain the best-known ε−5/2 GS complexity of multi-loop first-order
+methods for general smooth NC–C problems. The leading term has no multiplicative logarithmic
+factor.
+4. A common framework for the strongly concave case. √ Under dual strong concavity, the
+same framework requires no dual perturbation and yields O( κL∆0 ε−2 ) complexity for both OS
+and GS, where ∆0 is the corresponding initialization quantity. With the fixed-center warm-up, the
+leading complexity becomes √
+O κL∆ϕ ε−2
+
+for fixed problem and initialization quantities with ∆ϕ > 0 as ε ↓ 0 (Corollary 4.2). This dependence
+matches the known NC–SC lower-bound rate for value-gradient stationarity in the corresponding
+unconstrained oracle models.
+Table 1 compares our NC–C upper bounds with representative single- and multi-loop first-order
+methods and records the OS lower bound established in this paper.
+Organization. Section 2 states the assumptions and stationarity criteria. Section 3 presents the
+algorithm. Section 4 develops the common Lyapunov analysis and establishes the NC–SC and NC–C
+complexity bounds, together with the warm-up refinement. Section 5 proves the matching OS lower
+bound and specifies the oracle class in which the leading warm-started complexity is optimal. Section 6
+presents numerical illustrations, and Section 7 concludes. The appendices contain the technical proofs.
+Notation. We use ⟨·, ·⟩ and ∥·∥ for the Euclidean inner product and norm, respectively, with
+∥(x, y )∥2 = ∥x∥2 + ∥y∥2 on product spaces. For matrices, ∥·∥ denotes the spectral norm. For a nonempty
+closed convex set C ⊆ Rd , let ΠC (w) := argminu∈C ∥u − w∥2 /2 be the Euclidean projection onto C ,
+and let NC (u) := {η ∈ Rd : ⟨η, a − u⟩ ≤ 0 for all a ∈ C} be its normal cone at u ∈ C . For a nonempty
+set S , write dist(w, S ) := inf u∈S ∥w − u∥ and diam(S ) := supu,v∈S ∥u − v∥. The support of a vector u
+is supp(u) := {i : ui ̸= 0}, and E denotes expectation over all randomness.
+2 Problem Formulation and Preliminaries
+2.1 Problem setting and assumptions
+We consider the deterministic minimax problem
+min max f (x, y ), (2.1)
+x∈X y∈Y
+where X ⊆ Rn is nonempty, closed, and convex, and Y ⊆ Rp is nonempty, compact, and convex. Let
+DY > 0 be an upper bound on the diameter of Y . After a translation of the dual coordinates, we
+assume 0 ∈ Y , so that ∥y∥ ≤ DY for every y ∈ Y .
+Assumption 2.1 The function f is continuously differentiable on an open neighborhood of X × Y and
+satisfies the following conditions.
+(i) For some L > 0 and all (x, y), (x′ , y ′ ) ∈ X × Y ,
+∥∇f (x′ , y ′ ) − ∇f (x, y)∥ ≤ L∥(x′ − x, y ′ − y)∥. (2.2)
+3
+Table 1 First-order oracle complexity bounds for NC–C minimax optimization, with problem and initialization
+parameters.
+Optimization Game
+Algorithm stationarity stationarity
+Single-loop algorithms
+L3 L2f DY2 ∆ϕ L3 L2f DY2 ∆ϕ
+! !
+TS-GDA [4, 5] O O
+ε6 ε6
+! !
+L3 DY2 ∆Ψ2 L3 DY2 ∆Ψ2
+Smoothed GDA [12] O O
+ε4 ε4
+! !
+L5 DY4 ∆Ψ1 L3 DY2 ∆Ψ1
+Perturbed GDA [12, 13] O O
+ε6 ε4
+! !
+L3 DY2 ∆Ψ2 L2 DY ∆Ψ2
+Perturbed Smoothed O O
+ε4 ε3
+GDA [12]
+1/2 ¯
+! !
+¯0
+L2 DY ∆ L3/2 DY ∆0
+Ours (Algorithm 1) O O
+ε3 ε5/2
+1/2
+! !
+L2 DY ∆ϕ L3/2 DY ∆ϕ
+Ours with warm-up O O
+(Algorithm 2) ε3 ε5/2
+Multi-loop algorithms
+! !
+2 2
+Prox-DIAG [11] e L DY ∆ϕ
+O e L DY ∆ϕ
+O
+ε3 ε3
+1/2
+! !
+2
+L3/2 DY ∆ϕ
+Minimax-PPA [7] e L DY ∆ϕ
+O O
+e
+ε3 ε5/2
+1/2
+! !
+2 3/2
+L DY ∆p0
+Perturbed Smoothed e L DY ∆p0
+O O
+e
+ε3 ε5/2
+FOAM [12]
+!
+L2 DY ∆ϕ
+Lower bound (this Ω —
+paper) ε3
+Note. DY bounds the dual diameter, Lf is the additional primal Lipschitz constant required by TS-GDA, and
+∆ϕ = ϕ(x0 ) − ϕinf , where ϕinf = inf x∈X ϕ(x). The quantities ∆Ψ1 and ∆Ψ2 are the initial potential gaps in [12,
+Definition 3.1], evaluated with each method’s corresponding perturbation. The quantity ∆p0 is the initial regularized-envelope
+gap in [12, Theorem 6.1]. The lower-bound row concerns OS and applies to the projected zero-respecting first-order oracle class.
+The warm-up row reports leading terms for fixed problem and initialization quantities with ∆ϕ > 0 as ε ↓ 0; the full bound,
+including the additive warm-up cost, is given in (4.38).
+(ii) For some 0 ≤ µ ≤ L, the function f (x, ·) is µ-strongly concave on Y for every x ∈ X; namely,
+µ
+f (x, y ′ ) ≤ f (x, y) + ⟨∇y f (x, y), y ′ − y⟩ − ∥y ′ − y∥2 , y, y ′ ∈ Y. (2.3)
+2
+(iii) The value function is bounded below:
+inf max f (x, y) > −∞. (2.4)
+x∈X y∈Y
+Define the extended-valued value function of (2.1) by
+(
+maxy∈Y f (x, y ), x ∈ X,
+ϕ(x) = (2.5)
++∞, x∈/ X.
+By (2.4), we have ϕinf := inf x∈X ϕ(x) > −∞. When µ > 0, the maximizer over Y is unique and the
+finite-valued mapping x 7→ maxy∈Y f (x, y ) is differentiable at every x ∈ X . When µ = 0, this mapping
+may be nonsmooth even though f is smooth, motivating the use of the Moreau envelope to study
+4
+stationarity. For λ > L, define the Moreau envelope and proximal mapping of ϕ by
+ 
+λ 2
+Φλ (z ) = min ϕ(x) + ∥x − z∥ , (2.6)
+x∈X 2
+ 
+λ 2
+x̄(z ) = proxϕ/λ (z ) = argmin ϕ(x) + ∥x − z∥ . (2.7)
+x∈X 2
+The function ϕ is L-weakly convex. Thus the minimizer in (2.7) is unique and
+
+∇Φλ (z ) = λ z − x̄(z ) . (2.8)
+For properties of the value function ϕ and its Moreau envelope Φλ , see [5].
+2.2 Stationarity measures
+We use two stationarity criteria for (2.1): optimization stationarity (OS), based on the Moreau envelope
+of the value function, and game stationarity (GS), based on first-order residuals in both variables.
+Definition 2.1 (ε-optimization stationary point) For λ > L and ε > 0, a point x ∈ X is an ε-optimization
+stationary point relative to λ if
+∥∇Φλ (x)∥ ≤ ε. (2.9)
+A random point Z ∈ X almost surely is ε-optimization stationary in expectation relative to λ if
+E∥∇Φλ (Z)∥ ≤ ε.
+The OS upper bounds below establish the stronger guarantee E∥∇Φλ (Z )∥2 ≤ ε2 , which implies
+this expected-norm criterion by Jensen’s inequality.
+For game stationarity, define the residual at (x, y ) ∈ X × Y by
+q
+dist2 0, ∇x f (x, y ) + NX (x) + dist2 0, −∇y f (x, y ) + NY (y ) .
+ 
+R(x, y ) = (2.10)
+Definition 2.2 (ε-game stationary point) For ε > 0, a pair (x, y) ∈ X × Y is an ε-game stationary point
+of (2.1) if
+R(x, y) ≤ ε. (2.11)
+For further discussion of these stationarity criteria and their relationships, see [5, 12].
+3 Algorithm
+3.1 Regularized saddle-point formulation
+We first introduce a regularized saddle-point problem. Fix λ > L and choose τ ≥ 0 such that
+µy := µ + τ > 0. For a center z ∈ Rn , define
+p(z ) = min max G(x, y ; z ), (3.1)
+x∈X y∈Y
+where
+λ τ
+∥x − z∥2 − ∥y∥2 .
+G(x, y ; z ) = f (x, y ) +
+2 2
+The function G(·, ·; z ) is (λ − L)-strongly convex in x and µy -strongly concave in y , so the auxiliary
+problem has a unique saddle point (x⋆ (z ), y ⋆ (z )). Write G⋆ (z ) = G(x⋆ (z ), y ⋆ (z ); z ) = p(z ). The
+envelope is continuously differentiable and
+∇p(z ) = λ z − x⋆ (z ) .
+
+(3.2)
+For this regularized formulation and its envelope properties, see [12, Sections 3.1 and 6]. If τ = 0,
+then p = Φλ . Positive τ supplies the dual curvature needed when the original problem is merely
+concave. The same auxiliary problem is used by Li et al. [12], whereas our method employs different
+primal–dual updates and a different Lyapunov function.
+5
+3.2 Algorithm and implementation
+We now use the regularized saddle-point formulation (3.1) to construct a single-loop method. At
+iteration t, with z = zt fixed, we apply a projected extragradient step with dual momentum: a
+prediction is followed by a correction using gradients at the predicted pair. We then update zt toward
+the corrected primal iterate xt+1 . The complete procedure is presented in Algorithm 1.
+Algorithm 1 Single-loop projected damped extragradient method
+Input: x0 ∈ X, y0 ∈ Y , T ≥ 1; λ > L, τ ≥ 0, µ + τ > 0, h > 0, 0 < α < 1, γ ≥ 0, 0 < β ≤ 1.
+1: Initialize z0 = x0 and ξ0 = n0 = v0 = 0.
+2: for t = 0, . . . , T − 1 do
+3: et = ΠX (xt − h[∇x G(xt , yt ; zt ) + ξt ]).
+x
+4: et = ΠY (yt + h[∇y G(xt , yt ; zt ) − nt + vt ]).
+y
+5: v̄t = αvt + (1 − α)γ∇y G(e xt , y
+et ; zt ).
+6: xt+1 = ΠX (xt − h∇x G(e xt , y
+et ; zt )).
+7: ξt+1 = (xt − xt+1 )/h − ∇x G(e xt , y
+et ; zt ).
+8: yt+1 = ΠY (yt + h[∇y G(e xt , y
+et ; zt ) + v̄t ]).
+(yt − yt+1 )/h + ∇y G(e xt , y
+et ; zt ) + v̄t
+9: nt+1 = .
+1 + (1 − α)γ
+10: vt+1 = αvt + (1 − α)γ[∇y G(xt+1 , yt+1 ; zt ) − nt+1 ].
+11: zt+1 = zt + β(xt+1 − zt ).
+12: end for
+Output: OS: zout = zJ with J ∼ Unif{0, . . . , T − 1}.
+Optional GS: (xout , yout ) = (xj+1 , yj+1 ) with j ∈ argmin0≤t<T St .
+The subproblem iteration is a modified version of the damped extragradient method developed in
+our unpublished manuscript on unconstrained strongly convex–strongly concave minimax optimization.
+To handle the constraints X and Y , we introduce projections and the normal-cone variables ξt and
+nt . The dual correction nt enters both the prediction and momentum updates. The following lemma
+shows that these variables belong to the normal cones at the corresponding iterates.
+Lemma 3.1 The iterates of Algorithm 1 satisfy
+ξt ∈ NX (xt ), nt ∈ NY (yt ), t = 0, . . . , T. (3.3)
+Proof At initialization, both normal-cone inequalities hold because ξ0 = n0 = 0. For any x ∈ X, the projection
+theorem applied to the primal correction gives
+Dx − x E
+t t+1
+− ∇x f (e
+xt , yet ) − λ(ext − zt ), x − xt+1 ≤ 0.
+h
+By the definition of ξt+1 , this is ⟨ξt+1 , x − xt+1 ⟩ ≤ 0. Similarly, for any y ∈ Y , the dual projection gives
+Dy − y E
+t t+1
++ ∇y f (e
+xt , yet ) − τ yet + v̄t , y − yt+1 ≤ 0.
+h
+The first argument is [1 + (1 − α)γ]nt+1 . Since 1 + (1 − α)γ > 0, division yields ⟨nt+1 , y − yt+1 ⟩ ≤ 0. As x ∈ X
+and y ∈ Y are arbitrary, these inequalities prove ξt+1 ∈ NX (xt+1 ) and nt+1 ∈ NY (yt+1 ). □
+To implement the game-stationarity output in Algorithm 1, define the computable certificate at
+each corrected iterate by
+St = ∥∇x f (xt+1 , yt+1 ) + ξt+1 ∥2 + ∥−∇y f (xt+1 , yt+1 ) + τ yt+1 + nt+1 ∥2 . (3.4)
+The quantity St is the squared norm of a stationarity residual for the dual-regularized objective
+f (x, y ) −τ ∥y∥2 /2, evaluated using the normal-cone vectors supplied by the algorithm. It is used to select
+the game-stationarity output. The following lemma relates this certificate and the auxiliary envelope
+gradient to the stationarity measures of the original problem. Its proof is given in Appendix C.1.
+Lemma 3.2 Suppose that Assumption 2.1 holds, τ ≥ 0, λ > L, and µ + τ > 0. Then the iterates of Algorithm 1
+satisfy p
+R(xt+1 , yt+1 ) ≤ St + τ DY (3.5)
+Moreover, for every z ∈ Rn , r
+τ
+∥∇Φλ (z) − ∇p(z)∥ ≤ λDY . (3.6)
+λ−L
+6
+Consequently, for every iterate zt ,
+r
+τ
+∥∇Φλ (zt )∥ ≤ ∥∇p(zt )∥ + λDY . (3.7)
+λ−L
+In particular, if τ = 0, then ∥∇Φλ (zt )∥ = ∥∇p(zt )∥.
+√Game stationarity incurs a bias linear in τ , whereas the envelope gradient incurs a bias proportional
+to τ . These different dependences determine the two regularization choices in the concave case.
+We count one full first-order oracle call at (x, y ) as returning (∇x f (x, y ), ∇y f (x, y )). After one call
+at (x0 , y0 ), each iteration queries only the predicted and corrected pairs. The corrected-point gradient
+is used for the momentum update and St , then cached for the next prediction. Thus T iterations
+require at most 1 + 2T calls; the regularization terms are computed explicitly.
+4 Convergence and Complexity Analysis
+We first establish the Lyapunov and residual estimates shared by both regimes. We then present
+the NC–SC and NC–C complexity bounds in Sections 4.1 and 4.2, respectively, and give a common
+fixed-center warm-up refinement in Section 4.3. The common descent proof is in Appendices A–B; the
+initialization, output, and complexity arguments are collected in Appendix C.
+Common Lyapunov estimates.
+Throughout this section, we set λ = 2L and fix τ ≥ 0 such that 0 < µy ≤ L. The center update
+decreases p up to an error proportional to ∥xt+1 − x⋆ (zt )∥2 . Since the algorithm makes only one
+auxiliary update before moving the center, this error must be controlled together with the auxiliary
+dynamics. Let wt = (xt , yt , ξt , nt , vt ) and define
+p
+2Lµy
+Vt := p(zt ) − inf p(z ) + Ezt (wt ) + ∥vt ∥2 . (4.1)
+z 256L2
+The first two terms together form the optimality gap of the auxiliary envelope, while the last two
+terms measure the error in tracking its saddle point. For x ∈ X , y ∈ Y , ξ ∈ NX (x), n ∈ NY (y ), and
+arbitrary v , write w = (x, y, ξ, n, v ) and set
+p
+16L − 2Lµy  1
+Ez (w) := − G(x, y ; z ) − G⋆ (z ) + ∥∇x G(x, y ; z ) + ξ∥2
+16L p L (4.2)
+1 2 Lµy µy
++ ∥ − ∇y G(x, y ; z ) + n − v∥2 + ⟨v, y − y ⋆ (z )⟩ + ∥y − y ⋆ (z )∥2 .
+L 16L 256
+The residual and momentum terms are chosen so that their decrease absorbs the tracking error in the
+envelope estimate below.
+We now specify the algorithm parameters used in the descent analysis. A Lipschitz constant for
+the full gradient of G(·, ·; z ) is LG := 3L + τ ≤ 4L. Choose
+p !−1 s
+1 h 2Lµy 2L
+h= , α= 1+ , γ=4 − 1,
+64LG 16 µy
+p p (4.3)
+h(8L − 2Lµy ) h 2Lµy
+(1 − α)γ = p , β= .
+16 + h 2Lµy 4096
+The parameters of Algorithm 1 remain fixed during a run. The parameter τ is chosen to balance the
+convergence bound and the bias in the stationarity measure of the original problem.
+Lemma 4.1 Suppose that Assumption 2.1 holds and the parameters are chosen as in (4.3). Then the center
+update satisfies
+β 5
+p(zt+1 ) − p(zt ) ≤ − ∥∇p(zt )∥2 + βL∥xt+1 − x⋆ (zt )∥2 . (4.4)
+4L 2
+7
+Lemma 4.2 Under Assumption 2.1 and the parameter choice (4.3),
+p
+2Lµy 5 β
+∥vt+1 ∥2 − ∥vt ∥2 ≤ − βL∥xt+1 − x⋆ (zt )∥2 + ∥∇p(zt )∥2 . (4.5)
+
+Ezt+1 (wt+1 ) − Ezt (wt ) + 2
+256L 2 8L
+Define the one-step dissipation at the center zt by
+h
+Dzt (wt+1 , wt ) := ∥∇x G(xt+1 , yt+1 ; zt ) + ξt+1 ∥2
+4 p p
+3h 2Lµy 2 7h 2Lµy
++ ∥ − ∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 ∥ + ∥vt+1 ∥2
+512
+p L p p 4096 L (4.6)
+hµy 2Lµy ⋆ 2 h 2Lµy (16L − 2Lµy ) ⋆ 2
++ ∥yt+1 − y (zt )∥ + ∥xt+1 − x (zt )∥
+128 1024
+1
++ Iz (wt+1 , wt ).
+4L t
+Here Izt (wt+1 , wt ) is the sum of squared residual increments defined in (B3). All terms in Dzt (wt+1 , wt )
+are nonnegative.
+Theorem 4.1 (Unified Lyapunov descent) Under Assumption 2.1 and the parameter choice (4.3), Algorithm 1
+satisfies Vt ≥ 0 for every t. Moreover,
+1 β
+Vt+1 − Vt ≤ − Dzt (wt+1 , wt ) − ∥∇p(zt )∥2 . (4.7)
+2 8L
+In particular,
+β
+Vt+1 − Vt ≤ − ∥∇p(zt )∥2 . (4.8)
+8L
+For a fixed problem and initial point (x0 , y0 ), define the initial energy
+∆τ := V0 = p(x0 ) − inf p(z ) + Ex0 (x0 , y0 , 0, 0, 0). (4.9)
+z
+It depends on τ , but is fixed throughout the run.
+Lemma 4.3 Under Assumption 2.1 and the parameter choice (4.3), the iterates of Algorithm 1 satisfy, for
+every integer T ≥ 1,
+−1
+TX TX−1
+32L∆τ 8L∆τ
+St ≤ , ∥∇p(zt )∥2 ≤ . (4.10)
+β β
+t=0 t=0
+More generally, let a ≥ 0 and suppose that the same elementary updates use the moving-center step β for
+a ≤ t < a + T , starting from a feasible state satisfying the normal-cone inclusions. Then
+X−1
+a+T
+32LVa X−1
+a+T
+8LVa
+St ≤ , ∥∇p(zt )∥2 ≤ . (4.11)
+β β
+t=a t=a
+The state at index a need not have zero normal-cone or momentum variables.
+To turn the aggregate estimates in Lemma 4.3 into output guarantees, Algorithm 1 selects the
+corrected pair minimizing the computable quantity St for GS and samples a center uniformly for OS.
+Lemma 3.2 then transfers the corresponding bounds to the original problem. Neither rule evaluates
+∇p(zt ) or solves an auxiliary saddle problem exactly.
+Corollary 4.1 Under the conditions of Theorem 4.1, the deterministic output satisfies
+r
+p 32L∆τ
+R(xout , yout ) ≤ Sj + τ ∥yj+1 ∥ ≤ + τ DY . (4.12)
+βT
+The random output zout ∈ X satisfies
+8L∆τ
+E∥∇p(zout )∥2 ≤ (4.13)
+βT
+and
+16L∆τ
+E∥∇Φ2L (zout )∥2 ≤ + 8Lτ DY2 . (4.14)
+βT
+8
+The expectations are taken with respect to the independently sampled output index J , while the
+iterates themselves are generated deterministically.
+4.1 Nonconvex–strongly concave complexity results
+When µ > 0, taking τ = 0 gives p = Φ2L . The two output rules give the following OS and GS
+guarantees for the constrained problem. Write κ = L/µ, and let ∆0 denote the initial energy ∆τ in
+(4.9) evaluated at τ = 0.
+Theorem 4.2 (Nonconvex–strongly concave optimization-stationarity complexity) Suppose that Assump-
+tion 2.1 holds with µ > 0. For ε > 0, let τ = 0, µy = µ, and λ = 2L, and choose the remaining parameters as
+in (4.3). Run Algorithm 1 for   
+128L∆0
+T = max 1, (4.15)
+βε2
+iterations. The random center returned by Algorithm 1 satisfies
+E∥∇Φ2L (zout )∥2 ≤ ε2 . (4.16)
+Remark 4.1 For fixed ∆0 > 0, as ε ↓ 0, the first-order oracle complexity of Theorem 4.2 is
+√ 
+O κL∆0 ε−2 . (4.17)
+Theorem 4.3 (Nonconvex–strongly concave game-stationarity complexity) Under the assumptions and
+parameter choices of Theorem 4.2, run Algorithm 1 for T iterations, with T given by (4.15). The deterministic
+game output satisfies
+R(xout , yout ) ≤ ε. (4.18)
+Remark 4.2 For fixed ∆0 > 0, as ε ↓ 0, the first-order oracle complexity of Theorem 4.3 is
+√ 
+O κL∆0 ε−2 . (4.19)
+The two theorems use the same trajectory and iteration budget; only the output rule differs.
+Section 4.3 sharpens the leading initialization dependence from ∆0 to the value-function gap by adding
+a fixed-center warm-up. No warm-up is needed for the baseline bounds above.
+4.2 Nonconvex–concave complexity results
+We next take µ = 0. We first bound the dependence of the initial energy ∆τ on the regularization
+parameter τ .
+Lemma 4.4 Suppose that µ = 0, 0 < τ ≤ L, µy = τ , and z0 = x0 , ξ0 = n0 = v0 = 0. Define
+2 2
+¯ 0 := ϕ(x0 ) − ϕinf + DY ∥∇y f (x0 , y0 )∥ + ∥∇x f (x0 , y0 )∥ + 2∥∇y f (x0 , y0 )∥ .
+∆ (4.20)
+L
+Then
+2τ 2
+  
+1
+¯0 +
+0 ≤ ∆τ ≤ ∆ 1+ τ+ DY2 . (4.21)
+256 L
+Theorem 4.4 (Nonconvex–concave optimization-stationarity complexity) Suppose that Assumption 2.1 holds
+with µ = 0. For ε > 0, let ( )
+ε2
+τ = min L, , µy = τ, (4.22)
+16LDY2
+let λ = 2L, and choose the remaining parameters as in (4.3). Run Algorithm 1 for
+  
+128L∆τ
+T = max 1, (4.23)
+βε2
+iterations. The random output of Algorithm 1 satisfies
+E∥∇Φ2L (zout )∥2 ≤ ε2 . (4.24)
+9
+Remark 4.3 By Lemma 4.4 and the choice of τ , ∆τ ≤ ∆¯ 0 + O(ε2 /L) as ε ↓ 0. For fixed ∆
+¯ 0 > 0, the first-order
+oracle complexity of Theorem 4.4 is therefore
+ 
+¯ 0 ε−3 .
+O L2 DY ∆ (4.25)
+We next consider game stationarity. The game-stationarity bound (4.12) contains the regularization
+bias τ DY . To keep this term below ε/2, we choose τ ≤ ε/(2DY ).
+Theorem 4.5 (Nonconvex–concave game-stationarity complexity) Suppose that Assumption 2.1 holds with
+µ = 0. For ε > 0, let  
+ε
+τ = min L, , µy = τ, (4.26)
+2DY
+let λ = 2L, and choose the remaining parameters as in (4.3). Run Algorithm 1 for T iterations, with T given
+by (4.23) using the present values of β and ∆τ . The deterministic game output of Algorithm 1 satisfies
+R(xout , yout ) ≤ ε. (4.27)
+Remark 4.4 By Lemma 4.4 and the choice of τ , ∆τ ≤ ∆¯ 0 + O(εDY ) as ε ↓ 0. For fixed ∆
+¯ 0 > 0, the first-order
+oracle complexity of Theorem 4.5 is therefore
+ 
+1/2 ¯ −5/2
+O L3/2 DY ∆ 0ε . (4.28)
+Both results follow from the common residual estimates.
+√ Their different accuracy exponents arise
+from the perturbation choices: the OS transfer has a τ bias, whereas the GS transfer has a τ bias.
+The following warm-up refinement leaves these choices unchanged.
+4.3 Fixed-center warm-up and refined complexity bounds
+We now improve the initialization dependence of both the NC–SC and NC–C bounds. A single fixed-
+center argument applies to both regimes: only the effective dual curvature and the warm-up tolerance
+change. Throughout this subsection, Assumption 2.1 holds, λ = 2L, τ ≥ 0, and 0 < µy = µ + τ ≤ L.
+The parameters h, α, γ, β are given by (4.3). Write
+∆ϕ := ϕ(x0 ) − ϕinf .
+For a feasible state w = (x, y, ξ, n, v ) satisfying the normal-cone inclusions, abbreviate its tracking
+energy by p
+2Lµy
+Hz (w) := Ez (w) + ∥v∥2 . (4.29)
+256L2
+Thus Vt = p(zt ) − inf z p(z ) + Hzt (wt ). Define the computable initialization bound
+H µ,τ := DY ∥∇y f (x0 , y0 )∥
+∥∇x f (x0 , y0 )∥2 + ∥ − ∇y f (x0 , y0 ) + τ y0 ∥2 (4.30)
+ 
+τ µ+τ
++ + + DY2 .
+L 2 256
+Keeping the squared regularized gradient unexpanded makes this bound valid for τ = 0 as well as τ > 0.
+One warm-up schedule for both regimes.
+For an arbitrary tolerance η > 0, set
+   
+H µ,τ log qµ,τ,η
+qµ,τ,η := max 1, , Tw := . (4.31)
+η log(1 + 128β )
+For a target accuracy ε > 0, define
+τ DY2
+Bµ,τ,η := ∆ϕ + + η,
+2
+   (4.32)
+128LBµ,τ,η
+T := max 1, .
+βε2
+10
+Algorithm 2 Projected damped extragradient with a fixed-center warm-up
+Input: x0 ∈ X, y0 ∈ Y , ε > 0, η > 0; τ ≥ 0, 0 < µy = µ + τ ≤ L; ∆ϕ or a known upper bound.
+1: Set λ = 2L and choose the parameters in (4.3).
+2: Initialize z0 = x0 , ξ0 = n0 = v0 = 0; query and cache ∇f (x0 , y0 ).
+3: for t = 0, . . . , Tw + T − 1 do
+4: Execute lines 3–10 of Algorithm 1 at center zt to obtain wt+1 .
+5: zt+1 = zt + βt (xt+1 − zt ), with (4.33).
+6: end for
+Output: OS: zout = zJ with J ∼ Unif{Tw , . . . , Tw + T − 1}.
+GS: (xout , yout ) = (xj+1 , yj+1 ), j ∈ argminTw ≤t<Tw +T St .
+Use the predetermined center-step schedule
+(
+0, 0 ≤ t < Tw ,
+βt = (4.33)
+β, Tw ≤ t < Tw + T.
+All other parameters stay fixed, and the entire state is retained at the transition. Algorithm 2 therefore
+uses the same explicit updates as Algorithm 1, with no inner solve or state reset.
+Lemma 4.5 (Unified warm-up energy bound) Let Ht := Hx0 (wt ) for 0 ≤ t ≤ Tw and
+∆w
+τ := VTw = p(x0 ) − inf p(z) + HTw . (4.34)
+z
+Algorithm 2 satisfies
+0 ≤ H0 ≤ H µ,τ , HTw ≤ η, 0 ≤ ∆w
+τ ≤ Bµ,τ,η . (4.35)
+The proof uses the fixed-center contraction in Theorem B.1 and the common initialization estimate
+in Appendix C.4; it is given in Appendix C.7.1.
+Theorem 4.6 (Warm-started residual bounds and oracle complexity) Under the conditions above, Algorithm 2
+satisfies
+ε2 ε2
+E∥∇p(zout )∥2 ≤ , Sj ≤ . (4.36)
+16 4
+Consequently,
+ε ε2
+R(xout , yout ) ≤ + τ DY , E∥∇Φ2L (zout )∥2 ≤ + 8Lτ DY2 . (4.37)
+2 8
+2 2
+When τ = 0, the OS bound is sharpened to E∥∇Φ2L (zout )∥ ≤ ε /16. The number N of full first-order oracle
+calls satisfies
+N ≤ 1 + 2(Tw + T )
+log qµ,τ,η 256LBµ,τ,η (4.38)
+≤5+ + .
+32β βε2
+There are 4(Tw + T ) projections. The initial query used to compute (4.30) is shared with the first prediction,
+and no additional query is required at the phase transition.
+The inherited-state form of Lemma 4.3 supplies both residual bounds. Appendix C.7.2 contains
+the proof and the query count. The following three corollaries only specialize (µ, τ, η ).
+Corollary 4.2 (Warm-started NC–SC complexity) Suppose that µ > 0. Set τ = 0, η = ε2 /L, and κ = L/µ,
+and write H µ := H µ,0 . Algorithm 2 returns a random OS center and a deterministic GS pair satisfying
+E∥∇Φ2L (zout )∥2 ≤ ε2 , R(xout , yout ) ≤ ε. (4.39)
+Its oracle complexity is
+√ L∆ϕ
+   
+LH µ
+N =O κ + 1 + log 1 + . (4.40)
+ε2 ε2
+√
+For a fixed instance with ∆ϕ > 0, the leading term is O( κL∆ϕ ε−2 ).
+11
+Corollary 4.3 (Warm-started NC–C optimization stationarity) Suppose that µ = 0. Choose τ as in (4.22)
+and set η = τ DY2 . Algorithm 2 returns a random center satisfying
+E∥∇Φ2L (zout )∥2 ≤ ε2 . (4.41)
+The full query bound is (4.38), with B0,τ,η = ∆ϕ + 3τ DY2 /2. For a fixed instance with ∆ϕ > 0, its leading
+order as ε ↓ 0 is  
+O L2 DY ∆ϕ ε−3 . (4.42)
+Corollary 4.4 (Warm-started NC–C game stationarity) Suppose that µ = 0. Choose τ as in (4.26) and set
+η = τ DY2 . Algorithm 2 returns a deterministic pair satisfying
+R(xout , yout ) ≤ ε. (4.43)
+The full query bound is again (4.38), with B0,τ,η = ∆ϕ + 3τ DY2 /2. For a fixed instance with ∆ϕ > 0, its
+leading order as ε ↓ 0 is  
+1/2
+O L3/2 DY ∆ϕ ε−5/2 . (4.44)
+Remark 4.5 (Tolerance and budget information) The positive tolerance η is distinct from the perturbation
+parameter τ . In the NC–C case, η = τ DY2 recovers the original warm-up target; in the NC–SC case, τ = 0 and
+this target must be replaced by a positive tolerance. The choice η = ε2 /L is valid even when ∆ϕ = 0. If only a
+known bound ∆ ≥ ∆ϕ is available, it may replace ∆ϕ in the budget and complexity statements. In particular,
+for NC–SC and ∆ > 0, the alternative η = ∆ and B = 2∆ gives
+√ L∆
+  
+N =O κ + 1 + log max{1, H µ /∆} , (4.45)
+ε2
+whose warm-up length is independent of ε. Neither version evaluates the envelope or its infimum. The additive
+terms in the full bounds cannot be discarded for a zero gap or unbounded initialization errors.
+5 Lower Bound for Optimization Stationarity
+5.1 Problem class and oracle model
+Fix L, ∆, DY > 0. Consider instances of (2.1) with X = Rdx , a nonempty compact convex dual
+set Y ⊂ Rdy containing the origin, and a globally continuously differentiable objective function
+f : Rdx +dy → R satisfying
+∥∇f (w) − ∇f (w′ )∥ ≤ L∥w − w′ ∥ (w, w′ ∈ Rdx +dy ),
+(5.1)
+f (x, ·) is concave, diam(Y ) ≤ DY , ϕ(0) − inf ϕ(x) ≤ ∆.
+x
+Let ∆ϕ := ϕ(0) − inf x ϕ(x) ≤ ∆ denote the actual initial gap. The dimensions are not fixed in advance.
+In particular, global smoothness in (5.1) is stronger than the product-domain smoothness required in
+Assumption 2.1. Since ϕ is L-weakly convex and bounded below, Φ2L under the convention (2.6) is
+differentiable. The pointwise OS target is
+∥∇Φ2L (xout )∥ ≤ ε. (5.2)
+Definition 5.1 (Projected zero-respecting first-order method) Let Z = Rdx × Y and F (x, y) =
+(∇x f (x, y), −∇y f (x, y)). A deterministic method starts at w0 = 0 and queries F at feasible points wt ∈ Z. It
+is projected zero-respecting if each subsequent query satisfies
+wt+1 = ΠZ (at+1 ),
+t (5.3)
+supp(at+1 ) ⊆ supp(ws ) ∪ supp(F (ws )) .
+[ 
+s=0
+12
+After T queries, at w0 , . . . , wT −1 , its output must also satisfy
+wout = ΠZ (aout ),
+−1
+T[ (5.4)
+supp(aout ) ⊆ supp(ws ) ∪ supp(F (ws )) .
+
+s=0
+A primal-only output is permitted if it is the first block of such a wout . For T = 0, the union is empty and the
+output is the origin. Complexity counts first-order oracle calls; projections are not charged.
+The output restriction is part of the model. Accordingly, the result does not cover methods that
+introduce arbitrary unexplored coordinates or arbitrary changes of basis.
+5.2 Hard instance and zero-chain structure
+Let M ≥ 1 and n ≥ 2 be integers. Write x = (x1 , . . . , xM ) ∈ RM and y = (y 1 , . . . , y M ) ∈ RM n , where
+y i ∈ Rn . Define the scalar functions
+ 
+0,
+ t ≤ 0, t,
+ |t| ≤ 1,
+2 2
+
+s(t) = sin (πt/2), 0 < t < 1, h(t) = sgn(t) 2 − (3 − |t|) /4 , 1 < |t| < 3, (5.5)
+ 
+1, t ≥ 1, 2 sgn(t), |t| ≥ 3,
+ 
+and set √
+1 (|t| − n)2+
+g (t) := h(t), Rn (t) := , t− := max{−t, 0},
+4 2n
+Yi (5.6)
+Pi (x) := s(xj ), P0 (x) := 1, wi (x) := Pi−1 (x)(1 − s(xi )).
+j=1
+The symmetric matrix Qn and the dual feasible set YM,n are defined by
+n−1
+⊤
+X u21 + u2n
+u Qn u := (uj − uj+1 )2 + (u ∈ Rn ) (5.7)
+j=1
+n
+and √
+YM,n := {y ∈ RM n : ∥y∥2 ≤ n, ∥y∥∞ ≤ n}. (5.8)
+Consider the globally defined objective
+M M   i   i 
+1X i ⊤ X y1 y
+fM,n (x, y ) = −
+b i
+(y ) Qn y + wi (x) h √ − g (xi )h √n
+2 i=1 i=1
+n n
+(5.9)
+M M M
+X X 1X − 2
+Rn (y1i ) + Rn (yni ) − 4
+
+− s(xi ) + (x ) .
+i=1 i=1
+2 i=1 i
+The corresponding base value function is
+φM,n (x) := max fbM,n (x, y ). (5.10)
+y∈YM,n
+Zero-chain structure. On the feasible set YM,n , the endpoint function h is linear and the penalty
+Rn has zero derivative. Hence
+wi (x)
+∇yi fbM,n (x, y ) = −Qn y i + √
+
+e1 − g (xi )en , (5.11)
+n
+where e1 , en ∈ Rn are the first and last standard basis vectors.
+1. Propagation within a dual block. When xi = 0, the forcing in (5.11) acts only on e1 . Since
+Qn is tridiagonal, a vector supported on y1i , . . . , yri with r < n produces a dual gradient supported
+on at most y1i , . . . , yr+1
+i
+. Hence yni can only be reached sequentially.
+13
+2. Dual-to-primal activation. At xi = 0, the identities s(0) = s′ (0) = 0 and g ′ (0) = 1/4 give
+Pi−1 (x) i
+∂xi fbM,n (x, y ) = − √ y . (5.12)
+4 n n
+Thus xi cannot be revealed until yni has been revealed.
+3. Primal-to-dual gating. For i < M , if xi+1 = 0,
+wi+1 (x) = Pi (x) = Pi−1 (x)s(xi ). (5.13)
+Hence the next dual block cannot be activated until s(xi ) > 0.
+Consequently, information can propagate only according to the order
+y11 → · · · → yn1 → x1 → · · · → y1M → · · · → ynM → xM . (5.14)
+Lemma D.5 formalizes the corresponding support induction for projected zero-respecting methods
+and shows that
+T < M (n + 1) =⇒ xout M = 0. (5.15)
+5.3 Oracle lower bound and scope of optimality
+By appropriately scaling the instance constructed in Section 5.2 and applying Lemmas D.5 and D.7,
+we obtain the following lower bound.
+Theorem 5.1 (Optimization-stationarity query lower bound) Let L0 = 128, c0 = 1/512, and define
+( r )
+L∆ c0 LDY c30
+ε∗ := min c0 , , c∗ := . (5.16)
+40L0 8L0 320L20
+For every 0 < ε ≤ ε∗ , there is an instance satisfying (5.1), with initial gap 2∆/5 ≤ ∆ϕ ≤ ∆, such that any
+method in Definition 5.1 whose output satisfies (5.2) must make at least
+L2 ∆ϕ DY
+T ≥ c∗ (5.17)
+ε3
+first-order oracle calls. More precisely, for the dimensions chosen in the proof, every output after T < M (n + 1)
+queries satisfies ∥∇Φ2L (xout )∥ > 2ε.
+Proof For the base value function (5.10), define its envelope with curvature ℓ > L0 by
+ 
+ℓ
+ΦM,n,ℓ (x) := min φM,n (u) + ∥u − x∥2 . (5.18)
+u 2
+The full gradient of fbM,n is globally L0 -Lipschitz and the objective is concave in the dual variable (Lemma D.3).
+The dual diameter is 2n, and the initial value gap is at most 5M (Lemmas D.1 and D.4). After fewer than
+M (n + 1) queries, every admissible output has xout M = 0 (Lemma D.5). Finally,
+xM = 0 =⇒ ∥∇ΦM,n,2L0 (x)∥ > c0 (5.19)
+by Lemma D.7.
+To meet the prescribed L, ∆, and DY , choose the scale factors b, a > 0 and the integers M, n as
+Lb2
+   
+2L0 ε ∆ DY
+b= , a= , M= , n= . (5.20)
+c0 L L0 5a 2b
+These choices make a = Θ(ε2 /L) and b = Θ(ε/L), so M = Θ(L∆/ε2 ) and n = Θ(LDY /ε) for fixed positive
+L, ∆, DY as ε ↓ 0. Since a = 4L0 ε2 /(c20 L), the accuracy range (5.16) implies a ≤ ∆/10 and b ≤ DY /4. Thus
+M ≥ 1, n ≥ 2, and
+∆ ∆ DY D
+≤M ≤ , ≤n≤ Y . (5.21)
+10a 5a 4b 2b
+With these parameters, define the scaled instance by
+fsc (x, y) = afbM,n (x/b, y/b), Y = bYM,n . (5.22)
+14
+Its gradient Lipschitz constant is at most aL0 /b2 = L. Positive scaling preserves dual concavity and primal
+nonconvexity, and diam(Y) = 2bn ≤ DY . Its value function is ϕsc (x) = aφM,n (x/b), so
+2  an 
+∆ ≤ 4aM ≤ ∆ϕ := ϕsc (0) − inf ϕsc = a 4M + ≤ 5aM ≤ ∆.
+5 2
+Here an is defined in Lemma D.4; the lower bound uses (5.21). Hence (5.1) holds, and ∆ϕ and ∆ differ by at
+most a constant factor.
+Projection and the first-order operator obey
+a
+ΠbYM,n (v) = bΠYM,n (v/b), Fsc (w) = FM,n (w/b).
+b
+Positive scaling changes neither coordinate support nor the chain subspaces in Lemma D.5. Therefore that
+lemma also applies to the scaled instance, and T < M (n + 1) implies xout M = 0.
+Let Φsc,ℓ denote the envelope of ϕsc with curvature ℓ. Substituting u = bq gives
+ℓb2
+ 
+Φsc,ℓ (x) = min aφM,n (q) + ∥q − x/b∥2
+q 2 (5.23)
+= aΦM,n,ℓb2 /a (x/b).
+At ℓ = 2L, the base curvature is 2Lb2 /a = 2L0 . Consequently, if T < M (n + 1), then (5.19) gives
+a a
+∥∇Φsc,2L (xout )∥ = ∥∇ΦM,n,2L0 (xout /b)∥ > c0 = 2ε.
+b b
+This contradicts (5.2). The query bound follows from
+∆DY c30 L2 ∆DY
+M (n + 1) ≥ M n ≥ = .
+40ab 320L20 ε3
+Since ∆ϕ ≤ ∆, this proves (5.17). □
+Remark 5.1 (Randomized outputs) The support induction and Moreau-gradient barrier hold pathwise. For
+randomized methods satisfying (5.3)–(5.4) almost surely, any fixed query budget T < M (n + 1) therefore gives
+E∥∇Φ2L (xout )∥ > 2ε, E∥∇Φ2L (xout )∥2 > 4ε2 .
+Thus the lower bound also holds for the expected-norm OS criterion in Definition 2.1 and the expected
+squared-norm criterion in Theorem 4.4, at a fixed total query budget.
+Remark 5.2 (Matching the upper bound) The leading OS upper bound (4.42) for Algorithm 2 matches the lower
+bound in Theorem 5.1 in its L2 DY ∆ϕ ε−3 dependence within the class of projected zero-respecting methods.
+The additional terms in (4.38) are lower order for each fixed instance with ∆ϕ > 0 as ε ↓ 0. Appendix D.4
+verifies the initialization and oracle-class conditions required for this comparison.
+6 Numerical Experiments
+We provide two numerical examples to illustrate the empirical behavior of the proposed method. We
+compare our method with GDA, AGP, Smoothed GDA (SGDA), and Perturbed Smoothed GDA
+(PSGDA). Performance is measured against the number of full-gradient oracle calls; for the Waterbirds
+experiment, we additionally report elapsed time.
+6.1 Dirac-GAN
+We first consider the Dirac-GAN game used in [13],
+min max f (x, y ) = − log(1 + e−xy ) + log 2. (6.1)
+x∈R y∈R
+Its stationary point is (0, 0). We measure convergence by
+q
+dt = x2t + yt2 .
+We compare Ours with GDA, AGP, SGDA, and PSGDA. All methods start from (x0 , y0 ) = (1, 1).
+Figure 1 reports the distance to the stationary point against full-gradient oracle calls and shows the
+corresponding trajectories in the (x, y ) plane.
+15
+GDA AGP SGDA PSGDA Ours
+100
+Distance dt
+10−5
+10−10
+10−15
+0 50 100 150
+(a) Full-gradient oracle calls
+3
+(1, 1)
+yt 0
+(0, 0)
+−3
+−1.0 −0.5 0.0 0.5 1.0
+(b) Trajectories: xt
+Fig. 1 Dirac-GAN: (a) distance over 150 oracle calls (dotted line: 10−2 ; display floor: 10−16 ); (b) one GDA revolution
+(1160 calls) and 150 calls for the other methods. Circles mark selected iterates; the diamond and star mark (1, 1) and
+(0, 0), respectively.
+Figure 1(a) shows that Ours converges rapidly to the stationary point. It first reaches and remains
+below d = 10−2 after 7 oracle calls, compared with 9 calls for PSGDA, 15 calls for AGP, and 23 calls
+for SGDA. For the more stringent threshold d = 10−8 , Ours reaches the threshold after 13 calls, while
+PSGDA requires 25 calls in the displayed run.
+Figure 1(b) further illustrates the different dynamics of the methods. Ours approaches the origin
+directly and rapidly, whereas GDA exhibits pronounced rotational behavior. Taken together, the two
+panels show that the proposed method outperforms all compared baselines in this example: it reaches
+the reported distance thresholds with fewer oracle calls and follows a more direct trajectory toward
+the stationary point.
+6.2 Waterbirds Group DRO
+We next consider a group distributionally robust optimization problem based on the Waterbirds
+dataset [2]:
+4
+X yg X  
+min max f (θ, y ) = log 1 + e−bj sθ (aj ) . (6.2)
+∥θ∥2 ≤5 y∈∆4 |I |
+g=1 g j∈Ig
+⊤
+Here ∆4 = {y ≥ 0 : 1 y = 1}, Ig indexes the samples in group g , and bj ∈ {−1, 1} is the bird label.
+The four groups are determined by the bird labels and backgrounds. We use fixed ImageNet-pretrained
+ResNet18 features followed by a fixed projection to R32 . The classifier is
+sθ (a) = v ⊤ tanh(W ⊤ a + u) + c, θ = (vec(W ), u, v, c) ∈ R137 ,
+16
+where W ∈ R32×4 , u, v ∈ R4 , and c ∈ R. The resulting objective is nonconvex in θ and linear in y .
+With X = {θ : ∥θ∥2 ≤ 5}, we evaluate the methods using the projected first-order residual
+q
+Rproj (θ, y ) = ∥θ − ΠX (θ − ∇θ f )∥22 + ∥y − Π∆4 (y + ∇y f )∥22 . (6.3)
+We compare Ours with GDA, AGP, SGDA, and PSGDA from the same initial point and on the
+same data split. Figure 2 reports the best projected residual against both full-gradient oracle calls
+and elapsed time.
+GDA AGP SGDA PSGDA Ours
+100
+10−1
+proj
+10−2
+10−3
+1 501 1001 0.0 0.3 0.6 0.9
+(a) Full-gradient oracle calls (b) Elapsed time (s)
+Fig. 2 Waterbirds: best original-game projected residual versus (a) full-gradient oracle calls and (b) elapsed time for
+the same runs. Time includes algorithm updates and diagnostics.
+Figure 2(a) shows that the proposed method achieves the smallest projected residual among all
+compared methods. After 1001 full-gradient oracle calls, Ours reaches 3.457 × 10−4 , compared with
+1.520 × 10−3 for PSGDA, 8.269 × 10−3 for SGDA, 2.797 × 10−2 for AGP, and 1.914 × 10−1 for GDA.
+The elapsed-time curves in Figure 2(b) show a similar trend: the proposed method decreases
+the residual rapidly and attains the best final residual among the compared methods. Thus, on this
+Waterbirds instance, the proposed method outperforms all compared baselines under both the full-
+gradient-oracle-call and elapsed-time comparisons, achieving the smallest projected residual in each
+case.
+7 Conclusions
+This work closes the complexity gap between single-loop and multi-loop first-order methods for
+smooth nonconvex–concave minimax optimization under both optimization stationarity (OS) and
+game stationarity (GS). The algorithmic contribution lies in coordinating projected extragradient steps,
+dual momentum, and proximal-center evolution within a single loop. The theoretical contribution is
+a Lyapunov analysis that jointly controls optimization progress and saddle-point tracking, together
+with a lower-bound construction certifying the sharpness of the OS guarantee.
+For OS, the fixed-center warm-up converts the initialization-dependent bound O(L2 DY ∆ ¯ 0 ε−3 )
+2 −3
+into the leading complexity O(L DY ∆ϕ ε ), relegating the initial-gradient dependence to an additive
+lower-order cost. Our globally smooth hard instances require Ω(L2 DY ∆ϕ ε−3 ) queries from projected
+zero-respecting first-order methods, even when admissible randomized outputs are allowed at a fixed
+query budget. Thus, on the common initialization class, the upper and lower bounds agree up to a
+constant factor in all displayed parameters. This establishes optimality of the leading warm-started
+OS complexity within the stated oracle class, beyond merely identifying the sharp ε−3 exponent.
+1/2
+For GS, the leading bound O(L3/2 DY ∆ϕ ε−5/2 ) shows that the best-known multi-loop rate can
+be attained through elementary single-loop updates, without a logarithmic factor in the leading term.
+17
+To our knowledge, no previous single-loop method achieves this
+√ bound for general smooth nonconvex–
+−2
+concave problems. Dual strong concavity further
+√ yields O ( κL ∆ 0 ε ) complexity for both criteria;
+after warm-up, the leading term becomes O( κL∆ϕ ε−2 ), matching the known lower-bound rate for
+value-gradient stationarity in the corresponding unconstrained oracle models. These warm-started
+leading bounds apply for fixed problem and initialization quantities with ∆ϕ > 0 as ε ↓ 0.
+The resulting picture is that sharp complexity guarantees need not rely on nested auxiliary solvers:
+a suitably coordinated single-loop dynamics can attain them, with oracle optimality established for
+OS. Natural next steps include stochastic extensions, treatment of unbounded dual domains, and
+lower bounds for broader first-order oracle classes.
+Appendix A Saddle-Point Sensitivity and Center Descent
+Throughout this appendix, Assumption 2.1 holds, λ = 2L, 0 < µy = µ + τ ≤ L, and the parameters
+are given by (4.3).
+A.1 Saddle-point sensitivity
+We first estimate how the saddle point changes with the center. For z, z ′ ∈ Rn , write δz = z ′ − z ,
+δx⋆ = x⋆ (z ′ ) − x⋆ (z ), and δy ⋆ = y ⋆ (z ′ ) − y ⋆ (z ). Adding the variational inequalities at the two saddle
+points and using L-strong convexity in x, µy -strong concavity in y , and Young’s inequality gives
+L
+L∥δx⋆ ∥2 + µy ∥δy ⋆ ∥2 ≤ 2L⟨δz, δx⋆ ⟩ ≤ ∥δx⋆ ∥2 + 2L∥δz∥2 . (A1)
+2
+Consequently,
+∥x⋆ (z ′ ) − x⋆ (z )∥ ≤ 2∥z ′ − z∥,
+s
+⋆ ′ ⋆ 2L ′ (A2)
+∥y (z ) − y (z )∥ ≤ ∥z − z∥.
+µy
+A.2 Smoothness of the auxiliary envelope
+Combining the first estimate in (A2) with (3.2) yields
+∇p(z ) = 2L(z − x⋆ (z )),
+(A3)
+∥∇p(z ) − ∇p(z )∥ ≤ 6L∥z ′ − z∥.
+′
+A.3 Proof of Lemma 4.1
+Proof The center update and (3.2) give
+zt+1 − zt = β(xt+1 − zt )
+= β xt+1 − x⋆ (zt ) + x⋆ (zt ) − zt
+ 
+  (A4)
+1
+= β xt+1 − x⋆ (zt ) − ∇p(zt ) .
+2L
+In particular,
+β2
+∥zt+1 − zt ∥2 ≤ 2β 2 ∥xt+1 − x⋆ (zt )∥2 + ∥∇p(zt )∥2 . (A5)
+2L2
+By 6L-smoothness and Young’s inequality,
+1
+⟨∇p(zt ), xt+1 − x⋆ (zt )⟩ ≤ ∥∇p(zt )∥2 + 2L∥xt+1 − x⋆ (zt )∥2 ,
+8L
+we obtain
+p(zt+1 ) − p(zt ) ≤ ⟨∇p(zt ), zt+1 − zt ⟩ + 3L∥zt+1 − zt ∥2
+ 
+β 3 3
+≤− − β ∥∇p(zt )∥2
+L 8 2
++ βL(2 + 6β)∥xt+1 − x⋆ (zt )∥2 .
+√
+By (4.3), µy ≤ L, and LG ≥ 3L, we have 0 < β ≤ 2/(3 · 64 · 4096) < 1/12. Consequently, 3/8 − 3β/2 ≥ 1/4
+and 2 + 6β ≤ 5/2, which gives (4.4). □
+The squared-distance term in this bound is absorbed by the decrease in the auxiliary error
+established in the next appendix.
+18
+Appendix B Auxiliary Saddle Dynamics and Lyapunov Descent
+The parameters are those in (4.3), with λ = 2L and 0 < µy = µ + τ ≤ L. The proof separates the
+value-function change from the change in the auxiliary tracking error:
+Vt+1 − Vt = p(zt+1 ) − p(zt )
++ Ezt+1 (wt+1 ) − Ezt (wt )
+p (B1)
+2Lµy
+∥vt+1 ∥2 − ∥vt ∥2 .
+
++ 2
+256L
+Appendix A.3 bounds the first difference. We establish the auxiliary estimate by combining fixed-
+center dissipation with the effect of the center update. Appendix B.4 combines the two estimates to
+prove Theorem 4.1.
+B.1 Projection and extragradient error identities
+We estimate the second term in (B1). Adding and subtracting Ezt (wt+1 ) in the auxiliary error difference
+gives p
+2Lµy
+∥vt+1 ∥2 − ∥vt ∥2
+
+Ezt+1 (wt+1 ) − Ezt (wt ) + 2
+pL
+256
+2Lµy
+∥vt+1 ∥2 − ∥vt ∥2
+
+= Ezt (wt+1 ) − Ezt (wt ) + 2
+| 256
+{z L } (B2)
+one-step change at a fixed center
++ Ezt+1 (wt+1 ) − Ezt (wt+1 ) .
+| {z }
+change due to center movement
+For a fixed center, G(·, ·; zt ) is strongly convex–strongly concave. We first control the extragradient
+error induced by the projections, and then estimate the three potential components to prove the
+one-step contraction (B21), retaining all dissipation terms. These terms absorb the error due to center
+movement in Lemma B.4, which yields Lemma 4.2.
+Lemma 3.1 guarantees the normal-cone inclusions required by the algorithm. Fix iteration t. The
+prediction, correction, and momentum updates use the center zt and map wt = (xt , yt , ξt , nt , vt )
+to wt+1 = (xt+1 , yt+1 , ξt+1 , nt+1 , vt+1 ). Both gradient evaluations below refer to the same function
+G(·, ·; zt ); the change from zt to zt+1 is estimated separately. Define the sum of squared increments
+Izt (wt+1 , wt )
+= ∥∇x G(xt+1 , yt+1 ; zt ) + ξt+1 − ∇x G(xt , yt ; zt ) − ξt ∥2 (B3)
+2
++ −∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 + ∇y G(xt , yt ; zt ) − nt + vt .
+For iteration t, define
+ex,t = ∇x G(x
+et , yet ; zt ) − ∇x G(xt+1 , yt+1 ; zt ),
+  (B4)
+ey,t = 1 + (1 − α)γ ∇y G(xt+1 , yt+1 ; zt ) − ∇y G(x et , yet ; zt ) .
+Lemma B.1 The iterates of Algorithm 1 satisfy
+
+xt+1 − xt = −h ∇x G(xt+1 , yt+1 ; zt ) + ξt+1 + ex,t , (B5)
+
+yt+1 − yt = −h −∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 + ey,t , (B6)
+q p
+∥ex,t ∥2 + ∥ey,t ∥2 ≤ 2hLG Izt (wt+1 , wt ). (B7)
+Proof By the definition of ξt+1 and (B4),
+
+xt+1 − xt = −h ∇x G(e
+xt , yet ; zt ) + ξt+1
+ 
+= −h ∇x G(xt+1 , yt+1 ; zt ) + ξt+1 + ∇x G(e xt , yet ; zt ) − ∇x G(xt+1 , yt+1 ; zt )
+
+= −h ∇x G(xt+1 , yt+1 ; zt ) + ξt+1 + ex,t ,
+19
+which proves (B5). Subtracting the two momentum updates gives
+v̄t − vt+1 = αvt + (1 − α)γ∇y G(e
+xt , yet ; zt )
+
+− αvt − (1 − α)γ ∇y G(xt+1 , yt+1 ; zt ) − nt+1
+
+= (1 − α)γ ∇y G(e
+xt , yet ; zt ) − ∇y G(xt+1 , yt+1 ; zt ) + nt+1 . (B8)
+By the definition of nt+1 ,
+ 
+yt+1 − yt = h ∇y G(e
+xt , yet ; zt ) + v̄t − 1 + (1 − α)γ nt+1 .
+Substituting v̄t = vt+1 + (v̄t − vt+1 ) and (B8), we obtain
+yt+1 − yt  
+= ∇y G(e xt , yet ; zt ) + vt+1 + (1 − α)γ ∇y G(e
+xt , yet ; zt ) − ∇y G(xt+1 , yt+1 ; zt )
+h  
++ (1 − α)γ − 1 − (1 − α)γ nt+1
+= ∇y G(xt+1 , yt+1 ; zt ) + vt+1 − nt+1
+ 
++ 1 + (1 − α)γ ∇y G(e xt , yet ; zt ) − ∇y G(xt+1 , yt+1 ; zt )
+= ∇y G(xt+1 , yt+1 ; zt ) + vt+1 − nt+1 − ey,t ,
+which is (B6).
+Let  
+bt = xt − h ∇x G(xt , yt ; zt ) + ξt ,
+x ybt = yt − h −∇y G(xt , yt ; zt ) + nt − vt .
+Subtracting these identities from (B5) and (B6), respectively, gives
+
+xt+1 − x
+bt = xt+1 − xt + h ∇x G(xt , yt ; zt ) + ξt
+ 
+= −h ∇x G(xt+1 , yt+1 ; zt ) + ξt+1 + ex,t + h ∇x G(xt , yt ; zt ) + ξt
+ 
+= −h ∇x G(xt+1 , yt+1 ; zt ) + ξt+1 − ∇x G(xt , yt ; zt ) − ξt − hex,t ,
+
+yt+1 − ybt = yt+1 − yt + h −∇y G(xt , yt ; zt ) + nt − vt
+
+= −h −∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 + ey,t
+
++ h −∇y G(xt , yt ; zt ) + nt − vt
+ 
+= −h −∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 + ∇y G(xt , yt ; zt ) − nt + vt − hey,t .
+The triangle inequality and (B3) yield
+∥(xt+1 − x
+bt , yt+1 − ybt )∥
+   
+∇x G(xt+1 , yt+1 ; zt ) + ξt+1 − ∇x G(xt , yt ; zt ) − ξt e
+=h + x,t
+−∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 + ∇y G(xt , yt ; zt ) − nt + vt ey,t
+    (B9)
+∇x G(xt+1 , yt+1 ; zt ) + ξt+1 − ∇x G(xt , yt ; zt ) − ξt ex,t
+≤h +h
+−∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 + ∇y G(xt , yt ; zt ) − nt + vt ey,t
+p q
+= h Izt (wt+1 , wt ) + h ∥ex,t ∥2 + ∥ey,t ∥2 .
+By the projection updates and the nonexpansiveness of Euclidean projection,
+xt − xt+1 , yet − yt+1 )∥2 = ∥ΠX (b
+∥(e xt ) − ΠX (xt+1 )∥2 + ∥ΠY (b
+yt ) − ΠY (yt+1 )∥2
+xt − xt+1 ∥2 + ∥b
+≤ ∥b yt − yt+1 ∥2
+xt − xt+1 , ybt − yt+1 )∥2 .
+= ∥(b
+Taking square roots gives
+∥(e
+xt − xt+1 , yet − yt+1 )∥ ≤ ∥(b
+xt − xt+1 , ybt − yt+1 )∥. (B10)
+The parameters in (4.3) satisfy 0 ≤ (1 − α)γ ≤ hL/2. Combining the two gradient differences in (B4), we obtain
+∥ex,t ∥2 + ∥ey,t ∥2 = ∥∇x G(e
+xt , yet ; zt ) − ∇x G(xt+1 , yt+1 ; zt )∥2
+2
++ 1 + (1 − α)γ ∥∇y G(xt+1 , yt+1 ; zt ) − ∇y G(e xt , yet ; zt )∥2
+2
+≤ 1 + (1 − α)γ ∥∇G(e xt , yet ; zt ) − ∇G(xt+1 , yt+1 ; zt )∥2
+ 2
+hL
+≤ 1+ L2G ∥(e xt − xt+1 , yet − yt+1 )∥2 ,
+2
+where the last inequality uses the LG -Lipschitz continuity of the full gradient stated above. Taking square
+roots and then applying (B10) and (B9) gives
+ 
+hL
+q
+∥ex,t ∥2 + ∥ey,t ∥2 ≤ 1 + LG ∥(e
+xt − xt+1 , yet − yt+1 )∥
+2
+ 
+hL
+≤ 1+ LG ∥(b
+xt − xt+1 , ybt − yt+1 )∥
+2
+20
+  
+hL p q
+≤ hLG 1 + Izt (wt+1 , wt ) + ∥ex,t ∥2 + ∥ey,t ∥2 .
+2
+Since hLG = 1/64 and hL/2 ≤ 1/128, rearranging and dividing by the positive coefficient yields
+hLG (1 + hL/2) p
+q
+∥ex,t ∥2 + ∥ey,t ∥2 ≤ Izt (wt+1 , wt )
+1 − hLG (1 + hL/2)
+p
+≤ 2hLG Izt (wt+1 , wt ),
+This proves (B7). □
+B.2 Positivity and fixed-center dissipation
+We use the potential function defined in (4.2).
+Lemma B.2 For every state w admitted by the definition in (4.2),
+Ez (w)
+p
+1 2Lµy µy
+≥ ∥∇x G(x, y; z) + ξ∥2 + ∥x − x⋆ (z)∥2 + ∥y − y ⋆ (z)∥2
+2L 32 2
+p 2
+1 2Lµy
++ −∇y G(x, y; z) + n − v − (y − y ⋆ (z)) . (B11)
+L 32
+Moreover,
+L µy
+⟨−∇y G(x, y; z) + n, y − y ⋆ (z)⟩ + G(x, y; z) − G⋆ (z) ≥ ∥x − x⋆ (z)∥2 + ∥y − y ⋆ (z)∥2 . (B12)
+2 2
+Proof Strong convexity–strong concavity and saddle-point optimality imply
+L
+G(x, y ⋆ (z); z) − G⋆ (z) ≥ ∥x − x⋆ (z)∥2 , (B13)
+2
+⋆ ⋆ µy
+G(x, y (z); z) ≤ G(x, y; z) − ⟨∇y G(x, y; z), y − y (z)⟩ − ∥y − y ⋆ (z)∥2 . (B14)
+2
+Since ⟨n, y − y ⋆ (z)⟩ ≥ 0, combining the two inequalities proves (B12).
+Completing the square in (4.2), we obtain
+Ez (w)
+p
+16L − 2Lµy  1
+= − G(x, y; z) − G⋆ (z) + ∥∇x G(x, y; z) + ξ∥2
+16L L
+p
+2Lµy ⋆
++ ⟨−∇y G(x, y; z) + n, y − y (z)⟩
+16L
+p 2
+1 2Lµy µy
++ −∇y G(x, y; z) + n − v − (y − y ⋆ (z)) + ∥y − y ⋆ (z)∥2 . (B15)
+L 32 512
+Substituting (B14) and ⟨n, y − y ⋆ (z)⟩ ≥ 0 gives
+Ez (w)
+p
+2Lµy  1
+≥ − G(x, y; z) − G⋆ (z) + G(x, y ⋆ (z); z) − G⋆ (z) + ∥∇x G(x, y; z) + ξ∥2
+
+16L L
+p 2
+1 2Lµy
++ −∇y G(x, y; z) + n − v − (y − y ⋆ (z)) . (B16)
+L 32
+Here, we have dropped the nonnegative term involving ∥y − y ⋆ (z)∥2 . For any a ∈ X, strong convexity and
+⟨ξ, a − x⟩ ≤ 0 give
+L
+∥a − x∥2
+G(a, y; z) ≥ G(x, y; z) + ⟨∇x G(x, y; z) + ξ, a − x⟩ +
+2
+2
+1 L ∇x G(x, y; z) + ξ
+= G(x, y; z) − ∥∇x G(x, y; z) + ξ∥2 + a−x+
+2L 2 L
+1 2
+≥ G(x, y; z) − ∥∇x G(x, y; z) + ξ∥ .
+2L
+Taking the infimum over a ∈ X and rearranging yields
+1
+G(x, y; z) − min G(a, y; z) ≤ ∥∇x G(x, y; z) + ξ∥2 ,
+a∈X 2L
+21
+whereas strong concavity at the saddle point gives
+µy
+min G(a, y; z) ≤ G(x⋆ (z), y; z) ≤ G⋆ (z) − ∥y − y ⋆ (z)∥2 .
+a∈X 2
+Consequently,
+1 µy
+∥∇x G(x, y; z) + ξ∥2 − G(x, y; z) − G⋆ (z) ≥ ∥y − y ⋆ (z)∥2 .
+
+2L 2
+Substituting this inequality and (B13) into (B16) proves (B11). □
+To relate the one-step change at a fixed center to its dissipation terms, we split the auxiliary
+subproblem error into three components:
+p
+16L − 2Lµy  1
+Az (w) := − G(x, y ; z ) − G⋆ (z ) + ∥∇x G(x, y ; z ) + ξ∥2 ,
+32 2
+1 2
+Bz (w) := ∥ − ∇y G(x, y ; z ) + n − v∥ ,
+2
+p p
+2Lµy ⋆ Lµy ⋆ 2 2Lµy
+Cz (w) := ⟨v, y − y (z )⟩ + ∥y − y (z )∥ + ∥v∥2 . (B17)
+32 512 512L
+Then " p #
+L 2Lµy
+Az (w) + Bz (w) + Cz (w) = Ez (w) + ∥v∥2 . (B18)
+2 256L2
+The third component contains the momentum cross term, the squared dual distance, and the kinetic
+energy. We estimate the changes of all three components jointly and retain the dissipation terms
+needed to control center movement.
+We use the full one-step dissipation defined in (4.6).
+To make the residual control explicit, define the two corrected residuals at the old center by
+Pt+1 := ∇x G(xt+1 , yt+1 ; zt ) + ξt+1 ,
+(B19)
+Qt+1 := −∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 .
+The definition (4.6) gives the following lower bound:
+Dzt (wt+1 , wt )
+p
+h 2 3h 2Lµy
+≥ ∥Pt+1 ∥ + ∥Qt+1 ∥2
+4 p 512L
+7h 2Lµy (B20)
++ ∥vt+1 ∥2
+p4096 L p
+h 2Lµy (16L − 2Lµy )
++ ∥xt+1 − x⋆ (zt )∥2 .
+1024
+The omitted terms are nonnegative dual-tracking and projection-error terms. All displayed coefficients
+are positive because 0 < µy ≤ L. Thus the dissipation controls both blocks of the auxiliary stationarity
+residual, including the momentum needed to recover the dual residual Qt+1 + vt+1 , and the primal
+tracking error in the envelope descent.
+Theorem B.1 For each iteration t, the update from wt to wt+1 at the fixed center zt satisfies
+p
+2Lµy
+∥vt+1 ∥2 − ∥vt ∥2
+
+Ezt (wt+1 ) − Ezt (wt ) + 2
+256L
+p " p # (B21)
+h 2Lµy 2Lµy 2
++ Ezt (wt+1 ) + ∥vt+1 ∥ ≤ −Dzt (wt+1 , wt ).
+32 256L2
+Both terms in brackets are nonnegative by Lemma B.2.
+Proof By (B18), it suffices to prove
+Azt (wt+1 ) − Azt (wt ) + Bzt (wt+1 ) − Bzt (wt )
+22
++ Czt (wt+1 ) − Czt (wt )
+p
+h 2Lµy   L
++ Azt (wt+1 ) + Bzt (wt+1 ) + Czt (wt+1 ) ≤ − Dzt (wt+1 , wt ). (B22)
+32 2
+We first expand Azt and then add Bzt and Czt in turn. The kinetic energy in Czt is kept as an explicit
+difference of squares and estimated using the momentum update in the final step.
+Step 1: Estimating Azt (wt+1 ) − Azt (wt ).
+Since ξt ∈ NX (xt ) and nt+1 ∈ NY (yt+1 ),
+⟨ξt , xt+1 − xt ⟩ ≤ 0, ⟨nt+1 , yt+1 − yt ⟩ ≥ 0.
+Combining these inequalities with strong convexity in x and strong concavity in y, respectively, gives
+G(xt+1 , yt ; zt ) ≥ G(xt , yt ; zt )
+L
++ ⟨∇x G(xt , yt ; zt ) + ξt , xt+1 − xt ⟩ + ∥xt+1 − xt ∥2 ,
+2
+G(xt+1 , yt ; zt ) ≤ G(xt+1 , yt+1 ; zt )
+µy
++ ⟨−∇y G(xt+1 , yt+1 ; zt ) + nt+1 , yt+1 − yt ⟩ − ∥yt+1 − yt ∥2 .
+2
+It follows that
+G(xt+1 , yt+1 ; zt ) − G(xt , yt ; zt ) ≥ ⟨∇x G(xt , yt ; zt ) + ξt , xt+1 − xt ⟩
+− ⟨−∇y G(xt+1 , yt+1 ; zt ) + nt+1 , yt+1 − yt ⟩
+L µy
++ ∥xt+1 − xt ∥2 + ∥yt+1 − yt ∥2 . (B23)
+2 2
+The difference of squares and the cross term in the x variable satisfy
+1
+∥∇x G(xt+1 , yt+1 ; zt ) + ξt+1 ∥2 − ∥∇x G(xt , yt ; zt ) + ξt ∥2
+
+2
+p
+16L − 2Lµy
+− ⟨∇x G(xt , yt ; zt ) + ξt , xt+1 − xt ⟩
+32
+p
+L(16L − 2Lµy )
+− ∥xt+1 − xt ∥2
+64
+= ⟨∇x G(xt+1 , yt+1 ; zt ) + ξt+1 , ∇x G(xt+1 , yt+1 ; zt ) + ξt+1 − ∇x G(xt , yt ; zt ) − ξt ⟩
+p
+16L − 2Lµy
+− ⟨∇x G(xt+1 , yt+1 ; zt ) + ξt+1 , xt+1 − xt ⟩
+32
+2
+∇x G(xt+1 , yt+1 ; zt ) + ξt+1
+1
+− p
+16L − 2Lµy
+2 − ∇x G(xt , yt ; zt ) − ξt − (xt+1 − xt )
+32
+L(128L − µy )
+− ∥xt+1 − xt ∥2 . (B24)
+1024
+√
+16L− 2Lµy
+The last term is nonpositive because 0 < µy ≤ L. Multiplying (B23) by − 32 and using (B24) bounds
+the function-value term and the squared x-residual in the potential.
+Specifically, dropping the last term in (B24) yields
+Azt (wt+1 ) − Azt (wt )
+p
+16L − 2Lµy
+≤− ⟨∇x G(xt+1 , yt+1 ; zt ) + ξt+1 , xt+1 − xt ⟩
+32
+p
+16L − 2Lµy
++ ⟨−∇y G(xt+1 , yt+1 ; zt ) + nt+1 , yt+1 − yt ⟩
+32
++ ⟨∇x G(xt+1 , yt+1 ; zt ) + ξt+1 , ∇x G(xt+1 , yt+1 ; zt ) + ξt+1 − ∇x G(xt , yt ; zt ) − ξt ⟩
+2
+∇x G(xt+1 , yt+1 ; zt ) + ξt+1
+1
+− p
+16L − 2Lµy
+2 − ∇x G(xt , yt ; zt ) − ξt − (xt+1 − xt )
+32
+p
+µy (16L − 2Lµy )
+− ∥yt+1 − yt ∥2 . (B25)
+64
+Step 2: Jointly estimating the increments of Azt and Bzt . The difference-of-squares identity gives
+Bzt (wt+1 ) − Bzt (wt )
+= ∥−∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 ∥2
++ ⟨−∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 , ∇y G(xt , yt ; zt ) − nt + vt ⟩
+23
+1
+− ∥−∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 + ∇y G(xt , yt ; zt ) − nt + vt ∥2 . (B26)
+2
+Applying strong convexity in x at the two endpoints yields
+L
+G(xt+1 , yt ; zt ) ≥ G(xt , yt ; zt ) + ⟨∇x G(xt , yt ; zt ), xt+1 − xt ⟩ + ∥xt+1 − xt ∥2 ,
+2
+L
+G(xt , yt+1 ; zt ) ≥ G(xt+1 , yt+1 ; zt ) − ⟨∇x G(xt+1 , yt+1 ; zt ), xt+1 − xt ⟩ + ∥xt+1 − xt ∥2 .
+2
+Strong concavity in y gives
+µy
+G(xt , yt+1 ; zt ) ≤ G(xt , yt ; zt ) + ⟨∇y G(xt , yt ; zt ), yt+1 − yt ⟩ − ∥yt+1 − yt ∥2 ,
+2
+µy
+G(xt+1 , yt ; zt ) ≤ G(xt+1 , yt+1 ; zt ) − ⟨∇y G(xt+1 , yt+1 ; zt ), yt+1 − yt ⟩ − ∥yt+1 − yt ∥2 .
+2
+Adding the first two inequalities gives a lower bound for the same mixed difference that is bounded from
+above by the sum of the last two inequalities. Eliminating the function values yields
+⟨∇x G(xt+1 , yt+1 ; zt ) − ∇x G(xt , yt ; zt ), xt+1 − xt ⟩
++ ⟨−∇y G(xt+1 , yt+1 ; zt ) + ∇y G(xt , yt ; zt ), yt+1 − yt ⟩
+≥ L∥xt+1 − xt ∥2 + µy ∥yt+1 − yt ∥2 .
+By monotonicity of the normal cones,
+⟨ξt+1 − ξt , xt+1 − xt ⟩ ≥ 0, ⟨nt+1 − nt , yt+1 − yt ⟩ ≥ 0.
+Adding these inequalities gives
+⟨∇x G(xt+1 , yt+1 ; zt ) + ξt+1 − ∇x G(xt , yt ; zt ) − ξt , xt+1 − xt ⟩
++ ⟨−∇y G(xt+1 , yt+1 ; zt ) + nt+1 + ∇y G(xt , yt ; zt ) − nt , yt+1 − yt ⟩
+≥ L∥xt+1 − xt ∥2 + µy ∥yt+1 − yt ∥2 . (B27)
+By (4.3), p p
+1 h 2Lµy (1 − α)γ h(8L − 2Lµy )
+=1+ , = .
+α 16 α 16
+Dividing the momentum update
+
+vt+1 = αvt − (1 − α)γ −∇y G(xt+1 , yt+1 ; zt ) + nt+1
+by α and substituting these parameter identities gives
+p ! p
+h 2Lµy h(8L − 2Lµy ) 
+1+ vt+1 = vt − −∇y G(xt+1 , yt+1 ; zt ) + nt+1 ,
+16 16
+p p
+h 2Lµy h(8L − 2Lµy ) 
+vt+1 − vt = − vt+1 − −∇y G(xt+1 , yt+1 ; zt ) + nt+1 .
+16 16
+Rearranging the momentum identity and using (B5) and (B6), we obtain
+xt+1 − xt = −h(∇x G(xt+1 , yt+1 ; zt ) + ξt+1 + ex,t ),
+yt+1 − yt = −h(−∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 + ey,t ), (B28)
+hL 
+vt+1 − vt = − −∇y G(xt+1 , yt+1 ; zt ) + nt+1
+2
+p
+h 2Lµy 
++ −∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 . (B29)
+16
+Substituting (B28) into (B27) gives
+* +
+1 ∇x G(xt+1 , yt+1 ; zt ) + ξt+1 ,
+h ∇x G(xt+1 , yt+1 ; zt ) + ξt+1 − ∇x G(xt , yt ; zt ) − ξt
+* +
+1 − ∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 ,
++
+h − ∇y G(xt+1 , yt+1 ; zt ) + nt+1 + ∇y G(xt , yt ; zt ) − nt
+≤ −L∥∇x G(xt+1 , yt+1 ; zt ) + ξt+1 + ex,t ∥2
+− µy ∥ − ∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 + ey,t ∥2
+1
+− ⟨ex,t , ∇x G(xt+1 , yt+1 ; zt ) + ξt+1 − ∇x G(xt , yt ; zt ) − ξt ⟩
+h
+1
+− ⟨ey,t , −∇y G(xt+1 , yt+1 ; zt ) + nt+1 + ∇y G(xt , yt ; zt ) − nt ⟩. (B30)
+h
+Since
+− ∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 + ∇y G(xt , yt ; zt ) − nt + vt
+= (−∇y G(xt+1 , yt+1 ; zt ) + nt+1 + ∇y G(xt , yt ; zt ) − nt ) − (vt+1 − vt ),
+24
+the last error inner product can be rewritten using (B29) as
+1
+− ⟨ey,t , −∇y G(xt+1 , yt+1 ; zt ) + nt+1 + ∇y G(xt , yt ; zt ) − nt ⟩
+h
+1
+= − ⟨ey,t , −∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 + ∇y G(xt , yt ; zt ) − nt + vt ⟩
+h
+*e , L (−∇ G(x
+t+1 , yt+1 ; zt ) + nt+1 )
++
+y,t y
+2
++ p . (B31)
+2Lµy
+− (−∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 )
+16
+Add (B25) and (B26) and divide by h. After applying (B30) to the two increment inner products, the
+momentum increment and the dual error satisfy
+1
+− ⟨−∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 , vt+1 − vt ⟩
+h
+1
+− ⟨ey,t , −∇y G(xt+1 , yt+1 ; zt ) + nt+1 + ∇y G(xt , yt ; zt ) − nt ⟩
+h
+1
+= − ⟨ey,t , −∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 + ∇y G(xt , yt ; zt ) − nt + vt ⟩
+h
+1
+− ⟨−∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 + ey,t , vt+1 − vt ⟩
+h
+1
+= − ⟨ey,t , −∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 + ∇y G(xt , yt ; zt ) − nt + vt ⟩
+h
+* +
+L − ∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 + ey,t ,
++
+2 − ∇y G(xt+1 , yt+1 ; zt ) + nt+1
+p * +
+2Lµy − ∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 + ey,t ,
+− .
+16 − ∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1
+Substituting (B28) into the two displacement inner products in the increment of Azt gives
+Azt (wt+1 ) − Azt (wt )
++Bzt (wt+1 ) − Bzt (wt )
+h
+p
+16L − 2Lµy
+≤ ∥∇x G(xt+1 , yt+1 ; zt ) + ξt+1 ∥2
+32
+− L∥∇x G(xt+1 , yt+1 ; zt ) + ξt+1 + ex,t ∥2
+− µy ∥ − ∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 + ey,t ∥2
+p
+16L − 2Lµy
++ ⟨∇x G(xt+1 , yt+1 ; zt ) + ξt+1 , ex,t ⟩
+32
+p
+2Lµy
++ ⟨−∇y G(xt+1 , yt+1 ; zt ) + nt+1 , −∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 + ey,t ⟩
+32 * +
+p
+2Lµy − ∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 ,
+−
+16 − ∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 + ey,t
+1
+− ⟨ex,t , ∇x G(xt+1 , yt+1 ; zt ) + ξt+1 − ∇x G(xt , yt ; zt ) − ξt ⟩
+h
+1
+− ⟨ey,t , −∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 + ∇y G(xt , yt ; zt ) − nt + vt ⟩
+h
+2
+∇x G(xt+1 , yt+1 ; zt ) + ξt+1
+1
+− p
+16L − 2Lµy
+2h − ∇x G(xt , yt ; zt ) − ξt − (xt+1 − xt )
+32
+1
+− ∥−∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 + ∇y G(xt , yt ; zt ) − nt + vt ∥2
+2h
+p
+µy (16L − 2Lµy )
+− ∥yt+1 − yt ∥2 . (B32)
+64h
+The coefficient of the cross term involving −∇y G(xt+1 , yt+1 ; zt ) + nt+1 is
+p p
+16L − 2Lµy L 2Lµy
+− + = .
+32 2 32
+This term will cancel after the increment of Czt is added.
+Step 3: Adding the increment of Czt and canceling the coupling terms. Adding and subtracting
+⟨vt+1 , yt − y ⋆ (zt )⟩ in the momentum cross-term difference gives
+⟨vt+1 , yt+1 − y ⋆ (zt )⟩ − ⟨vt , yt − y ⋆ (zt )⟩
+25
+= ⟨vt+1 − vt , yt − y ⋆ (zt )⟩ + ⟨vt+1 , yt+1 − yt ⟩
+= ⟨vt+1 − vt , yt+1 − y ⋆ (zt )⟩ + ⟨vt+1 , yt+1 − yt ⟩ − ⟨vt+1 − vt , yt+1 − yt ⟩.
+For the squared distance, we use
+1 1
+∥yt+1 − y ⋆ (zt )∥2 − ∥yt − y ⋆ (zt )∥2 = ⟨yt+1 − y ⋆ (zt ), yt+1 − yt ⟩ − ∥yt+1 − yt ∥2 .
+
+2 2
+Hence,
+Czt (wt+1 ) − Czt (wt )
+p
+2Lµy
+= ⟨vt+1 − vt , yt+1 − y ⋆ (zt )⟩
+32
+p p
+2Lµy 2Lµy
++ ⟨vt+1 , yt+1 − yt ⟩ − ⟨vt+1 − vt , yt+1 − yt ⟩
+32 32
+Lµy Lµy
++ ⟨yt+1 − y ⋆ (zt ), yt+1 − yt ⟩ − ∥yt+1 − yt ∥2
+256 512
+p
+2Lµy
+∥vt+1 ∥2 − ∥vt ∥2 .
+
++ (B33)
+512L
+By the definitions of the three components, removing the last term gives
+Azt (wt+1 ) − Azt (wt ) + Bzt (wt+1 ) − Bzt (wt )
++ Czt (wt+1 ) − Czt (wt )
+p
+2Lµy L
+∥vt+1 ∥2 − ∥vt ∥2 =
+ 
+− Ezt (wt+1 ) − Ezt (wt ) .
+512L 2
+Thus, adding (B25), (B26), and (B33) gives the complete bound on the potential difference:
+L 
+Ezt (wt+1 ) − Ezt (wt )
+2
+p
+16L − 2Lµy
+≤− ⟨∇x G(xt+1 , yt+1 ; zt ) + ξt+1 , xt+1 − xt ⟩
+32
+p
+16L − 2Lµy
++ ⟨−∇y G(xt+1 , yt+1 ; zt ) + nt+1 , yt+1 − yt ⟩
+32
++ ⟨∇x G(xt+1 , yt+1 ; zt ) + ξt+1 , ∇x G(xt+1 , yt+1 ; zt ) + ξt+1 − ∇x G(xt , yt ; zt ) − ξt ⟩
++ ∥−∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 ∥2
++ ⟨−∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 , ∇y G(xt , yt ; zt ) − nt + vt ⟩
+p
+2Lµy
++ ⟨vt+1 − vt , yt+1 − y ⋆ (zt )⟩
+32
+p
+2Lµy
++ ⟨vt+1 , yt+1 − yt ⟩
+32
+p
+2Lµy
+− ⟨vt+1 − vt , yt+1 − yt ⟩
+32
+Lµy
++ ⟨yt+1 − y ⋆ (zt ), yt+1 − yt ⟩
+256
+2
+∇x G(xt+1 , yt+1 ; zt ) + ξt+1
+1
+− p
+16L − 2Lµy
+2 − ∇x G(xt , yt ; zt ) − ξt − (xt+1 − xt )
+32
+1
+− ∥ − ∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 + ∇y G(xt , yt ; zt ) − nt + vt ∥2
+2 !
+p
+µy (16L − 2Lµy ) Lµy
+− + ∥yt+1 − yt ∥2 . (B34)
+64 512
+Next, apply (B28)–(B29) to (B33) and rewrite vt+1 as
+ 
+vt+1 = −∇y G(xt+1 , yt+1 ; zt ) + nt+1 − −∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 .
+The two terms involving the dual residual and the distance cancel because
+p p
+2Lµy 2Lµy Lµy
+− = 0.
+32 16 256
+Expanding the remaining terms gives
+p
+Czt (wt+1 ) − Czt (wt ) 2Lµy
+∥vt+1 ∥2 − ∥vt ∥2
+
+−
+h 512Lh
+26
+p
+2Lµy
+=− ⟨−∇y G(xt+1 , yt+1 ; zt ) + nt+1 , −∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 + ey,t ⟩
+32
+p
+2Lµy
++ ∥ − ∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 ∥2
+32
+p
+2Lµy
++ ⟨−∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 , ey,t ⟩
+32
+p
+L 2Lµy
+− ⟨−∇y G(xt+1 , yt+1 ; zt ) + nt+1 , yt+1 − y ⋆ (zt )⟩
+64
+p
+Lµy ⋆ 2Lµy
+− ⟨yt+1 − y (zt ), ey,t ⟩ − ⟨vt+1 − vt , yt+1 − yt ⟩
+256 32h
+Lµy
+− ∥yt+1 − yt ∥2 . (B35)
+512h
+When this identity is added to (B32), the two terms involving ⟨−∇y G(xt+1 , yt+1 ; zt ) +
+nt+1 , −∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 + ey,t ⟩ cancel. The coefficients of the squared residual and its inner
+product with the error both become
+p p p
+2Lµy 2Lµy 2Lµy
+− + =− .
+16 32 32
+Step 4: Adding the endpoint weight and estimating the current-iterate terms. First add (B32)
+and (B35), and then add the weighted sum of the three endpoint components excluding the kinetic energy:
+p " p # p
+2Lµy 2Lµy L 2Lµy
+Azt (wt+1 ) + Bzt (wt+1 ) + Czt (wt+1 ) − ∥vt+1 ∥2 = Ezt (wt+1 ).
+32 512L 64
+Expanding the right-hand side according to the potential definition gives
+p
+L 2Lµy
+Ezt (wt+1 )
+64
+p p
+2Lµy (16L − 2Lµy )
+G(xt+1 , yt+1 ; zt ) − G⋆ (zt )
+
+=−
+1024
+p
+2Lµy
+∥∇x G(xt+1 , yt+1 ; zt ) + ξt+1 ∥2 + ∥ − ∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 ∥2
+
++
+64
+p
+Lµy Lµy 2Lµy
++ ⟨vt+1 , yt+1 − y ⋆ (zt )⟩ + ∥yt+1 − y ⋆ (zt )∥2 . (B36)
+512 16384
+The terms associated with the function value combine as follows:
+p p
+2Lµy (16L − 2Lµy )
+G(xt+1 , yt+1 ; zt ) − G⋆ (zt )
+
+−
+1024
+p p
+2Lµy (16L − 2Lµy )
+− ⟨−∇y G(xt+1 , yt+1 ; zt ) + nt+1 , yt+1 − y ⋆ (zt )⟩
+1024
+p p
+L 2Lµy (16L − 2Lµy )
+≤− ∥xt+1 − x⋆ (zt )∥2
+2048
+p p
+µy 2Lµy (16L − 2Lµy )
+− ∥yt+1 − y ⋆ (zt )∥2 ,
+2048
+Here, we have used (B12).
+We retain both negative squared distances from xt+1 and yt+1 to the saddle point.
+Denote the current-iterate terms and the increment terms resulting from the three-component sum by (i)
+and (ii), respectively:
+p
+32L − 2Lµy
+(i) := ∥∇x G(xt+1 , yt+1 ; zt ) + ξt+1 ∥2
+64
+− L∥∇x G(xt+1 , yt+1 ; zt ) + ξt+1 + ex,t ∥2
+− µy ∥ − ∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 + ey,t ∥2
+p
+2Lµy
+− ∥ − ∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 ∥2
+64
+p
+16L − 2Lµy
++ ⟨∇x G(xt+1 , yt+1 ; zt ) + ξt+1 , ex,t ⟩
+32
+p
+2Lµy
+− ⟨−∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 , ey,t ⟩
+32
+Lµy
+− ⟨yt+1 − y ⋆ (zt ), ey,t ⟩
+256
+27
+Lµy
+− ⟨−∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 , yt+1 − y ⋆ (zt )⟩
+512
+p
+Lµy 2Lµy
++ ∥yt+1 − y ⋆ (zt )∥2
+16384
+p p
+µy 2Lµy (16L − 2Lµy )
+− ∥yt+1 − y ⋆ (zt )∥2
+2048
+p p
+L 2Lµy (16L − 2Lµy )
+− ∥xt+1 − x⋆ (zt )∥2 , (B37)
+2048
+(ii) :=
+2
+∇x G(xt+1 , yt+1 ; zt ) + ξt+1
+1
+− p
+16L − 2Lµy
+2h − ∇x G(xt , yt ; zt ) − ξt − (xt+1 − xt )
+32
+1
+− ∥ − ∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 + ∇y G(xt , yt ; zt ) − nt + vt ∥2
+2h !
+p
+µy (16L − 2Lµy ) Lµy
+− + ∥yt+1 − yt ∥2
+64h 512h
+p
+2Lµy
+− ⟨vt+1 − vt , yt+1 − yt ⟩
+32h
+1
+− ⟨ex,t , ∇x G(xt+1 , yt+1 ; zt ) + ξt+1 − ∇x G(xt , yt ; zt ) − ξt ⟩
+h
+1
+− ⟨ey,t , −∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 + ∇y G(xt , yt ; zt ) − nt + vt ⟩. (B38)
+h
+Adding the three component increments and the endpoint weight, and then applying the saddle-point
+growth inequality, gives
+" p #
+L h 2Lµy
+Ezt (wt+1 ) − Ezt (wt ) + Ezt (wt+1 ) ≤ (i) + (ii). (B39)
+2h 32
+We now estimate the first block obtained from the three-component sum.
+Expanding the squared x terms yields
+p
+32L − 2Lµy
+∥∇x G(xt+1 , yt+1 ; zt ) + ξt+1 ∥2
+64
+− L∥∇x G(xt+1 , yt+1 ; zt ) + ξt+1 + ex,t ∥2
+p
+16L − 2Lµy
++ ⟨∇x G(xt+1 , yt+1 ; zt ) + ξt+1 , ex,t ⟩
+32
+p
+32L + 2Lµy
+=− ∥∇x G(xt+1 , yt+1 ; zt ) + ξt+1 ∥2
+64
+p
+48L + 2Lµy
+− ⟨∇x G(xt+1 , yt+1 ; zt ) + ξt+1 , ex,t ⟩ − L∥ex,t ∥2
+32
+L
+≤ − ∥∇x G(xt+1 , yt+1 ; zt ) + ξt+1 ∥2 + 4L∥ex,t ∥2 . (B40)
+4
+p
+Here, we have used 2Lµy ≤ 2L and
+L
+2L∥∇x G(xt+1 , yt+1 ; zt ) + ξt+1 ∥∥ex,t ∥ ≤ ∥∇x G(xt+1 , yt+1 ; zt ) + ξt+1 ∥2 + 4L∥ex,t ∥2 .
+4
+The remaining three cross terms satisfy
+p
+2Lµy
+|⟨−∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 , ey,t ⟩|
+32
+p p
+2Lµy 2 2Lµy
+≤ ∥ − ∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 ∥ + ∥ey,t ∥2 , (B41)
+256 16
+Lµy
+|⟨−∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 , yt+1 − y ⋆ (zt )⟩|
+512
+p
+2Lµy
+≤ ∥ − ∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 ∥2
+256
+p
+Lµy 2Lµy
++ ∥yt+1 − y ⋆ (zt )∥2 , (B42)
+8192
+Lµy
+|⟨yt+1 − y ⋆ (zt ), ey,t ⟩|
+256
+28
+p p
+Lµy 2Lµy ⋆ 2 2Lµy
+≤ ∥yt+1 − y (zt )∥ + ∥ey,t ∥2 . (B43)
+16384 32
+After these estimates are added, the coefficient of ∥ − ∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 ∥2 is − 2Lµy /128.
+p
+The coefficient of the squared dual distance satisfies
+p p p p
+Lµy 2Lµy µy 2Lµy (16L − 2Lµy ) Lµy 2Lµy
+− ≤− . (B44)
+4096 2048 256
+p p
+Indeed, 2Lµy ≤ 2L implies that the left-hand coefficient is at most −27Lµy 2Lµy /4096. Finally, dropping
+the nonpositive term
+−µy ∥ − ∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 + ey,t ∥2 ,
+and bounding the coefficient of ∥ey,t ∥2 by 3 2Lµy /32 ≤ 4L, we obtain
+p
+L
+(i) ≤ − ∥∇x G(xt+1 , yt+1 ; zt ) + ξt+1 ∥2
+4
+p p
+2Lµy 2 Lµy 2Lµy
+− ∥ − ∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 ∥ − ∥yt+1 − y ⋆ (zt )∥2
+128 256
+p p
+L 2Lµy (16L − 2Lµy )
+∥xt+1 − x⋆ (zt )∥2 + 4L ∥ex,t ∥2 + ∥ey,t ∥2 .
+
+− (B45)
+2048
+Step 5: Absorbing the increment errors and completing the kinetic-energy contraction. The
+negative squared terms in the second block absorb the projection error.
+By ∥a − b∥2 ≥ ∥a∥2 /2 − ∥b∥2 and (B28),
+2
+∇x G(xt+1 , yt+1 ; zt ) + ξt+1
+1
+− p
+16L − 2Lµy
+2h − ∇x G(xt , yt ; zt ) − ξt − (xt+1 − xt )
+32
+1
+− ∥ − ∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 + ∇y G(xt , yt ; zt ) − nt + vt ∥2
+2h
+1
+≤ − Izt (wt+1 , wt )
+4h
+h(16L − 2Lµy )2
+p
+∥∇x G(xt+1 , yt+1 ; zt ) + ξt+1 ∥2 + ∥ex,t ∥2 .
+
++ (B46)
+1024
+For the feedback increment, the identity
+vt+1 − vt = − ∇y G(xt+1 , yt+1 ; zt ) + ∇y G(xt , yt ; zt ) + (nt+1 − nt )
+− (−∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 + ∇y G(xt , yt ; zt ) − nt + vt )
+and ⟨nt+1 − nt , yt+1 − yt ⟩ ≥ 0 allow us to drop the nonpositive term due to the normal-cone increment.
+Applying LG -Lipschitz continuity only to ∇y G(·, ·; zt ) then gives
+p
+2Lµy
+− ⟨vt+1 − vt , yt+1 − yt ⟩
+32h
+p
+LG 2Lµy q
+≤ ∥xt+1 − xt ∥2 + ∥yt+1 − yt ∥2 ∥yt+1 − yt ∥
+32h
+p
+2Lµy
++ ∥ − ∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 + ∇y G(xt , yt ; zt ) − nt + vt ∥∥yt+1 − yt ∥
+32h
+p
+LG 2Lµy
+≤ ∥xt+1 − xt ∥2
+64h !
+p
+3LG 2Lµy Lµy
++ + ∥yt+1 − yt ∥2
+64h 64h
+1
++ ∥ − ∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 + ∇y G(xt , yt ; zt ) − nt + vt ∥2
+32h
+p
+hLG 2Lµy
+∥∇x G(xt+1 , yt+1 ; zt ) + ξt+1 ∥2 + ∥ex,t ∥2
+
+≤
+32 !
+p
+3hLG 2Lµy hLµy
+∥ − ∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 ∥2 + ∥ey,t ∥2
+
++ +
+32 32
+1
++ Iz (wt+1 , wt ). (B47)
+32h t
+√ 2 2
+The second inequality uses a2 + b2 b ≤ a /2 + 3b /2 for a, b ≥ 0 and Young’s inequality. By (B7) and the
+Cauchy–Schwarz inequality,
+1
+− ⟨ex,t , ∇x G(xt+1 , yt+1 ; zt ) + ξt+1 − ∇x G(xt , yt ; zt ) − ξt ⟩
+h
+29
+1
+− ⟨ey,t , −∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 + ∇y G(xt , yt ; zt ) − nt + vt ⟩
+h
+1
+q p
+≤ ∥ex,t ∥2 + ∥ey,t ∥2 Izt (wt+1 , wt )
+h
+2hLG
+≤ Izt (wt+1 , wt ). (B48)
+h
+p p
+Moreover, L ≤ LG , 2Lµy ≤ 2L, and 2Lµy ≤ 2LG imply
+h(16L − 2Lµy )2
+p p
+hLG 2Lµy 5LhLG
++ ≤ , (B49)
+1024 32 16
+p p
+3hLG 2Lµy hLµy hLG 2Lµy
++ ≤ . (B50)
+32 32 8
+Both coefficients are at most L/2. Adding (B46), (B47), and (B48), using (B49)–(B50), and dropping the
+explicit nonpositive ∥yt+1 − yt ∥2 term in (B38), we obtain
+5LhLG
+(ii) ≤ ∥∇x G(xt+1 , yt+1 ; zt ) + ξt+1 ∥2
+16
+p
+hLG 2Lµy L
+∥ − ∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 ∥2 + ∥ex,t ∥2 + ∥ey,t ∥2
+
++
+8 2
+7/32 − 2hLG
+− Izt (wt+1 , wt ). (B51)
+h
+Substituting (B45) and (B51) into (B39) gives
+" p #
+L h 2Lµy
+Ezt (wt+1 ) − Ezt (wt ) + Ezt (wt+1 )
+2h 32
+(4 − 5hLG )L
+≤− ∥∇x G(xt+1 , yt+1 ; zt ) + ξt+1 ∥2
+16
+p
+(1 − 16hLG ) 2Lµy
+− ∥ − ∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 ∥2
+128
+p p p
+Lµy 2Lµy ⋆ 2 L 2Lµy (16L − 2Lµy )
+− ∥yt+1 − y (zt )∥ − ∥xt+1 − x⋆ (zt )∥2
+256 2048
+9L  7/32 − 2hLG
++ ∥ex,t ∥2 + ∥ey,t ∥2 − Izt (wt+1 , wt ). (B52)
+2 h
+By (B7) and L ≤ LG ,
+9L 18(hLG )3
+∥ex,t ∥2 + ∥ey,t ∥2 ≤
+
+Izt (wt+1 , wt ).
+2 h
+Substituting hLG = 1/64 gives
+4 − 5hLG 251 1
+= ≥ ,
+16 1024 8
+1 − 16hLG 3 1
+= ≥ ,
+128 512 256
+7 24567 1
+− 2hLG − 18(hLG )3 = ≥ .
+32 131072 8
+Multiplying both sides of (B52) by 2h/L therefore yields
+p
+h 2Lµy
+Ezt (wt+1 ) − Ezt (wt ) + Ezt (wt+1 )
+32
+h
+≤ − ∥∇x G(xt+1 , yt+1 ; zt ) + ξt+1 ∥2
+4
+p
+h 2Lµy
+− ∥ − ∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 ∥2
+128L
+p p p
+hµy 2Lµy h 2Lµy (16L − 2Lµy )
+− ∥yt+1 − y ⋆ (zt )∥2 − ∥xt+1 − x⋆ (zt )∥2
+128 1024
+1
+− Iz (wt+1 , wt ). (B53)
+4L t
+It remains to estimate the kinetic-energy difference in Czt and its endpoint weight. By (B29),
+p
+h(8L − 2Lµy )
+ 
+hL
+1+ vt+1 = vt − (−∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 ). (B54)
+2 16
+p
+Since 0 ≤ (8L − 2Lµy )/16 ≤ L/2, the difference-of-squares identity and Young’s inequality give
+∥vt ∥2 − ∥vt+1 ∥2
+30
+p
+2 h(8L − 2Lµy )
+≥ hL∥vt+1 ∥ + ⟨vt+1 , −∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 ⟩
+8
+hL hL
+≥ ∥vt+1 ∥2 − ∥ − ∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 ∥2 . (B55)
+2 2
+Multiplying this inequality by 2Lµy /(256L2 ), rearranging, and adding the contraction term for the updated
+p
+kinetic energy yields
+p
+2Lµy hµy
+∥vt+1 ∥2 − ∥vt ∥2 + ∥vt+1 ∥2
+
+256L2 4096L !
+p p p
+h 2Lµy 2 h 2Lµy 2Lµy
+≤ ∥ − ∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 ∥ − 1− ∥vt+1 ∥2
+512L 512L 16L
+p p
+h 2Lµy 2 7h 2Lµy
+≤ ∥ − ∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 ∥ − ∥vt+1 ∥2 . (B56)
+512L 4096L
+p
+The last inequality uses 2Lµy ≤ 2L. Note that
+p p
+hµy h 2Lµy 2Lµy
+= .
+4096L 32 256L2
+2
+Adding (B56)p and (B53), the magnitude of the negative coefficient of ∥ − ∇y G(xt+1 , yt+1 ; zt ) + nt+1 − vt+1 ∥
+becomes 3h 2Lµy /(512L), which gives (B21). Multiplying both sides by L/2 and applying (B18) identifies
+the left-hand side with the three component increments and their weighted endpoint sum in (B22), completing
+the proof.
+□
+B.3 Effect of moving the center
+We use the saddle-point sensitivity and envelope smoothness estimates in Appendices A.1 and A.2 to
+compare auxiliary errors at different centers.
+Lemma B.3 Fix w = (x, y, ξ, n, v), where x ∈ X, y ∈ Y , ξ ∈ NX (x), and n ∈ NY (y). For any z ′ = z + δ, we
+have
+Ez ′ (w) − Ez (w)
+
+≤ 2L∥x − x⋆ (z)∥ + 4∥∇x G(x, y; z) + ξ∥
+(B57)
+p 
+1 2Lµy 1025L
++ ∥v∥ + ∥y − y ⋆ (z)∥ ∥δ∥ + ∥δ∥2 .
+8 128 128
+Proof First,
+G(x, y; z ′ ) − G(x, y; z) = −2L⟨x − z, δ⟩ + L∥δ∥2 .
+By (A3),
+p(z ′ ) − p(z) − ⟨∇p(z), δ⟩ ≤ 3L∥δ∥2 .
+Since
+2L(x − z) = 2L(x − x⋆ (z)) − ∇p(z),
+we obtain
+[G(x, y; z ′ ) − p(z ′ )] − [G(x, y; z) − p(z)]
+(B58)
++ 2L⟨x − x⋆ (z), δ⟩ ≤ 4L∥δ∥2 .
+p
+The coefficient of the function-value term in the potential satisfies 0 < 1 − 2Lµy /(16L) < 1. The change in
+this term is therefore bounded above by
+2L∥x − x⋆ (z)∥∥δ∥ + 4L∥δ∥2 .
+Next, ∇x G(x, y; z ′ ) = ∇x G(x, y; z) − 2Lδ, so
+1 
+∥∇x G(x, y; z ′ ) + ξ∥2 − ∥∇x G(x, y; z) + ξ∥2
+L
+= −4⟨∇x G(x, y; z) + ξ, δ⟩ + 4L∥δ∥2 (B59)
+≤ 4∥∇x G(x, y; z) + ξ∥∥δ∥ + 4L∥δ∥2 .
+31
+Finally, by (A2), the cross term in the potential satisfies
+p
+2Lµy
+⟨v, y − y ⋆ (z ′ )⟩ − ⟨v, y − y ⋆ (z)⟩
+
+16L
+p
+2Lµy (B60)
+≤ ∥v∥∥y ⋆ (z ′ ) − y ⋆ (z)∥
+16L
+1
+≤ ∥v∥∥δ∥,
+8
+whereas the squared-distance term satisfies
+µy  
+∥y − y ⋆ (z ′ )∥2 − ∥y − y ⋆ (z)∥2
+256
+µy
+≤ ∥y − y ⋆ (z)∥∥y ⋆ (z ′ ) − y ⋆ (z)∥
+128
+µy ⋆ ′ (B61)
++ ∥y (z ) − y ⋆ (z)∥2
+256
+p
+2Lµy L
+≤ ∥y − y ⋆ (z)∥∥δ∥ + ∥δ∥2 .
+128 128
+The gradient ∇y G(x, y; z) is independent of z, and the remaining squared terms do not change. Adding the
+bounds associated with (B58)–(B61) gives (B57). □
+Lemma B.4 (Moving-center auxiliary dissipation) Under Assumption 2.1, let λ = 2L, τ ≥ 0, and 0 < µy =
+µ + τ ≤ L, and choose the parameters as in (4.3). Then the iterates of Algorithm 1 satisfy
+Ezt+1 (wt+1 ) − Ezt (wt )
+p
+2Lµy
+∥vt+1 ∥2 − ∥vt ∥2
+
++
+256L2
+1 5 (B62)
+≤ − Dzt (wt+1 , wt ) − βL∥xt+1 − x⋆ (zt )∥2
+2 2
+β
++ ∥∇p(zt )∥2 .
+8L
+Proof We combine Theorem B.1 with Lemma B.3 to absorb the error due to center movement while retaining
+half of the nonnegative dissipation defined in (4.6). To allocate the negative terms in the fixed-center estimate,
+define p
+h 2Lµy
+Bt := ∥∇x G(xt+1 , yt+1 ; zt ) + ξt+1 ∥2
+8L
+p p
+7h 2Lµy hµy 2Lµy
++ ∥vt+1 ∥2 + ∥yt+1 − y ⋆ (zt )∥2 (B63)
+4096L 128
+p
+7hL 2Lµy
++ ∥xt+1 − x⋆ (zt )∥2 .
+p 512
+Since 2Lµy ≤ 2L,
+p p
+h 2Lµy 4 h L 2Lµy 7L
+≤ , − ≥ .
+32 L 4 2 32 16
+A termwise comparison with (4.6) gives
+0 ≤ Bt ≤ Dzt (wt+1 , wt ). (B64)
+The weighted Cauchy–Schwarz inequality yields
+
+2L∥xt+1 − x⋆ (zt )∥ + 4∥∇x G(xt+1 , yt+1 ; zt ) + ξt+1 ∥
+p 2
+1 2Lµy
++ ∥vt+1 ∥ + ∥yt+1 − y ⋆ (zt )∥ (B65)
+8 128
+432L
+≤ p Bt .
+h 2Lµy
+Indeed, dividing each squared coefficient by the corresponding coefficient in (B63) gives constants whose sum is
+ 
+16L 128 4 1 432L
+p +8+ + < p .
+h 2Lµy 7 7 1024 h 2Lµy
+Set z ′ = zt+1 , z = zt , and w = wt+1 in (B57). Applying ab ≤ a2 /4 + b2 to its linear term gives
+Ezt+1 (wt+1 ) − Ezt (wt+1 )
+32
+!
+1 432L 1025L
+≤ Bt + p + ∥zt+1 − zt ∥2
+4 h 2Lµy 128
+1 704L
+≤ Bt + p ∥zt+1 − zt ∥2 .
+4 h 2Lµy
+p
+The last inequality uses h 2Lµy /32 ≤ 1. Substituting (A5) then yields
+Ezt+1 (wt+1 ) − Ezt (wt+1 )
+1 1408Lβ 2
+≤ Bt + p ∥xt+1 − x⋆ (zt )∥2
+4 h 2Lµy (B66)
+2
+352β
++ p ∥∇p(zt )∥2 .
+Lh 2Lµy
+Dropping the nonnegative contraction term on the left-hand side of (B21) and adding (B66), we obtain
+Ezt+1 (wt+1 ) − Ezt (wt )
+p
+2Lµy
+∥vt+1 ∥2 − ∥vt ∥2
+
++
+256L2
+1 1408Lβ 2
+≤ −Dzt (wt+1 , wt ) + Bt + p ∥xt+1 − x⋆ (zt )∥2
+4 h 2Lµy
+352β 2
++ p ∥∇p(zt )∥2 .
+Lh 2Lµy
+p
+Since β = h 2Lµy /4096 and 4096 = 32 · 128,
+1408Lβ 2
+p  
+5 hL 2Lµy 5 88
+βL + p = +
+2 h 2Lµy 64 128 1282
+p (B67)
+7hL 2Lµy
+≤ ,
+2048
+and
+352β 2
+ 
+β β 1 22 β
+− p = − ≥ . (B68)
+4L Lh 2Lµy 2L 2 128 8L
+The right-hand side of (B67) equals the coefficient of ∥xt+1 − x⋆ (zt )∥2 in Bt /4. Consequently, (B67) gives
+1408Lβ 2 1 5
+p ∥xt+1 − x⋆ (zt )∥2 ≤ Bt − βL∥xt+1 − x⋆ (zt )∥2 ,
+h 2Lµy 4 2
+while (B68) gives
+352β 2 β
+p ≤ .
+Lh 2Lµy 8L
+Substituting these bounds into the preceding auxiliary-error estimate and using (B64), we obtain
+Ezt+1 (wt+1 ) − Ezt (wt )
+p
+2Lµy
+∥vt+1 ∥2 − ∥vt ∥2
+
++
+256L2
+1 5
+≤ −Dzt (wt+1 , wt ) + Bt − βL∥xt+1 − x⋆ (zt )∥2
+2 2
+β 2
++ ∥∇p(zt )∥ .
+8L
+Since Bt ≤ Dzt (wt+1 , wt ), this proves (B62). □
+Proof of Lemma 4.2 The dissipation in (4.6) is nonnegative. Dropping the term −Dzt (wt+1 , wt )/2 from
+Lemma B.4 gives (4.5). □
+B.4 Proof of the unified Lyapunov descent
+Proof of Theorem 4.1 By (2.4) and ∥y∥ ≤ DY ,
+τ DY2
+inf p(z) ≥ inf ϕ(x) − > −∞.
+z x∈X 2
+Thus p(zt ) − inf z p(z) ≥ 0. Lemma B.2 gives Ezt (wt ) ≥ 0. Together with the nonnegative momentum term,
+this proves Vt ≥ 0.
+33
+Add the center-descent estimate of Lemma 4.1 to the auxiliary dissipation estimate of Lemma B.4,
+namely (4.4) and (B62). The coefficients of the primal tracking term ∥xt+1 − x⋆ (zt )∥2 are −5βL/2 and 5βL/2,
+and hence cancel. The remaining coefficient of ∥∇p(zt )∥2 is
+β β β
+− =− .
+8L 4L 8L
+The definition (4.1) now gives (4.7). Dropping the nonpositive dissipation term yields (4.8). □
+Appendix C From Lyapunov Descent to Complexity Bounds
+We first establish the stationarity transfer and aggregate residual bounds. A common initialization
+calculation is then used by the baseline NC–SC and NC–C proofs and by the unified warm-up analysis.
+The fixed-center contraction and moving-center descent themselves remain in Appendix B.
+C.1 Transfer to the original problem
+Proof of Lemma 3.2 By Lemma 3.1 and the definition of distance to a set,
+
+dist 0, ∇x f (xt+1 , yt+1 ) + NX (xt+1 )
+≤ ∥∇x f (xt+1 , yt+1 ) + ξt+1 ∥,
+
+dist 0, −∇y f (xt+1 , yt+1 ) + NY (yt+1 )
+≤ ∥ − ∇y f (xt+1 , yt+1 ) + nt+1 ∥.
+Consequently,
+R(xt+1 , yt+1 )
+ 
+∇x f (xt+1 , yt+1 ) + ξt+1
+≤
+−∇y f (xt+1 , yt+1 ) + nt+1
+   
+∇x f (xt+1 , yt+1 ) + ξt+1 0
+= −
+−∇y f (xt+1 , yt+1 ) + τ yt+1 + nt+1 τ yt+1
+p p
+≤ St + τ ∥yt+1 ∥ ≤ St + τ DY .
+The last line follows from the triangle inequality and ∥yt+1 ∥ ≤ DY , proving (3.5).
+To estimate the envelope-gradient bias, fix z ∈ Rn and recall x̄(z) from (2.7). Since ∥y∥ ≤ DY , for every
+x ∈ X,
+λ τ DY2
+0 ≤ ϕ(x) + ∥x − z∥2 − max G(x, y; z) ≤ .
+2 y∈Y 2
+By the (λ − L)-strong convexity of the original proximal objective, this perturbation bound, and the optimality
+of x⋆ (z), respectively,
+λ−L
+∥x̄(z) − x⋆ (z)∥2
+2
+λ λ
+≤ ϕ(x⋆ (z)) + ∥x⋆ (z) − z∥2 − ϕ(x̄(z)) − ∥x̄(z) − z∥2
+2 2
+τ DY2
+≤ max G(x⋆ (z), y; z) − max G(x̄(z), y; z) +
+y∈Y y∈Y 2
+τ DY2
+≤ .
+2
+Therefore, r
+⋆ τ
+∥x̄(z) − x (z)∥ ≤ DY . (C1)
+λ−L
+Equations (2.8) and (3.2) give
+∇Φλ (z) − ∇p(z) = λ(z − x̄(z)) − λ(z − x⋆ (z))
+= λ x⋆ (z) − x̄(z) .
+
+Taking norms and using (C1), we obtain
+∥∇Φλ (z) − ∇p(z)∥ = λ∥x⋆ (z) − x̄(z)∥
+r
+τ
+≤ λDY .
+λ−L
+This proves (3.6). Finally, at z = zt , the triangle inequality gives
+∥∇Φλ (zt )∥ ≤ ∥∇p(zt )∥ + ∥∇Φλ (zt ) − ∇p(zt )∥
+r
+τ
+≤ ∥∇p(zt )∥ + λDY ,
+λ−L
+which proves (3.7). When τ = 0, the definitions give p = Φλ , so their gradients coincide. □
+34
+C.2 Summation and residual bounds
+We retain the full dissipation term in (4.7) to bound the sums of the auxiliary envelope gradients and
+the computable certificates.
+Proof of Lemma 4.3 Summing (4.7) and using VT ≥ 0 gives
+TX−1  
+1 β
+Dzt (wt+1 , wt ) + ∥∇p(zt )∥2 ≤ ∆τ , (C2)
+2 8L
+t=0
+p
+where Dzt (wt+1 , wt ) is defined in (4.6). Using β = h 2Lµy /4096 and
+p
+16L − 2Lµy 7L
+≥ ,
+32 16
+we retain individual nonnegative terms in Dzt (wt+1 , wt ) to obtain
+−1
+TX
+∥∇x f (xt+1 , yt+1 ) + 2L(xt+1 − zt ) + ξt+1 ∥2
+t=0
+8∆τ
+≤ , (C3)
+h
+−1
+TX
+∥ − ∇y f (xt+1 , yt+1 ) + τ yt+1 + nt+1 − vt+1 ∥2
+t=0
+L∆τ
+≤ , (C4)
+12β
+−1
+TX
+2L∆τ
+∥vt+1 ∥2 ≤ , (C5)
+7β
+t=0
+−1
+TX
+∆τ
+∥xt+1 − x⋆ (zt )∥2 ≤ , (C6)
+28βL
+t=0
+−1
+TX
+8L∆τ
+∥∇p(zt )∥2 ≤ . (C7)
+β
+t=0
+Since ∇p(zt ) = 2L(zt − x⋆ (zt )),
+∇x f (xt+1 , yt+1 ) + ξt+1
+= ∇x f (xt+1 , yt+1 ) + 2L(xt+1 − zt ) + ξt+1 (C8)
+− 2L(xt+1 − x⋆ (zt )) + ∇p(zt ).
+Applying the squared-norm bounds for sums of three and two vectors, respectively, gives
+St ≤ 3∥∇x f (xt+1 , yt+1 ) + 2L(xt+1 − zt ) + ξt+1 ∥2
++ 12L2 ∥xt+1 − x⋆ (zt )∥2 + 3∥∇p(zt )∥2
+(C9)
++ 2∥ − ∇y f (xt+1 , yt+1 ) + τ yt+1 + nt+1 − vt+1 ∥2
++ 2∥vt+1 ∥2 .
+Summing (C9) and substituting (C3)–(C7) yields
+TX−1  
+24β 3 1 4 L∆τ
+St ≤ + + 24 + +
+hL 7 6 7 β
+t=0
+ 
+1 24β L∆τ 32L∆τ
+= 25 + + ≤ .
+6 hL β β
+p √
+The last inequality uses β/(hL) = 2µy /L/4096 ≤ 2/4096.
+For an interval a ≤ t < a + T , sum the same one-step inequality from a rather than zero. The right-hand
+side of (C2) becomes Va − Va+T ≤ Va , and each of the retained dissipation estimates has Va in place of ∆τ .
+The remaining algebra is unchanged, proving (4.11). Only feasibility and the normal-cone inclusions were used;
+the values of ξa , na , va need not vanish. □
+35
+C.3 Output guarantees
+Proof of Corollary 4.1 By the definition of j and (4.10),
+T −1
+1 X 32L∆τ
+Sj ≤ St ≤ .
+T βT
+t=0
+Combining this bound with the residual estimate in the proof of Lemma 3.2 and ∥yj+1 ∥ ≤ DY gives (4.12).
+Since z0 = x0 ∈ X and 0 < β ≤ 1, the center update preserves zt ∈ X. The uniform random output rule
+and (4.10) yield
+T −1
+1 X 8L∆τ
+E∥∇p(zJ )∥2 = ∥∇p(zt )∥2 ≤ ,
+T βT
+t=0
+which is (4.13). Setting λ = 2L in (3.6) and applying the squared-norm inequality gives
+E∥∇Φ2L (zJ )∥2 ≤ 2E∥∇p(zJ )∥2
++ 2E∥∇Φ2L (zJ ) − ∇p(zJ )∥2
+16L∆τ
+≤ + 8Lτ DY2 .
+βT
+This proves (4.14). □
+C.4 Common initialization estimates
+The estimates in this subsection hold for both regimes: µ ≥ 0, τ ≥ 0, and 0 < µy = µ + τ ≤ L. Define
+max f (x, y ) − τ ∥y∥2 , x ∈ X,
+ n o
+ϕτ (x) := y∈Y 2 (C10)
++∞, x∈/ X.
+Thus ϕ0 = ϕ. Let Hz and H µ,τ be as in (4.29) and (4.30).
+Lemma C.1 (Initialization with effective dual curvature) If z0 = x0 and ξ0 = n0 = v0 = 0, then
+τ DY2
+p(x0 ) − inf p(z) ≤ ∆ϕ + , (C11)
+z 2
+and
+0 ≤ Hx0 (w0 ) ≤ H µ,τ . (C12)
+Consequently, 0 ≤ ∆τ ≤ ∆ϕ + τ DY2 /2 + H µ,τ .
+Proof The diameter assumption and 0 ∈ Y imply, for every x ∈ X,
+τ DY2
+0 ≤ ϕ(x) − ϕτ (x) ≤. (C13)
+2
+The quadratic term in the envelope is nonnegative, and choosing z = x gives
+inf p(z) = inf inf {ϕτ (x) + L∥x − z∥2 } = inf ϕτ (x).
+z x∈X z x∈X
+Together with p(x0 ) ≤ ϕτ (x0 ) ≤ ϕ(x0 ), this proves (C11).
+Since v0 = 0, the momentum terms vanish at initialization. Expanding the potential gives
+p !
+2Lµy h τ i
+Hx0 (w0 ) = 1 − p(x0 ) − f (x0 , y0 ) + ∥y0 ∥2
+16L 2
+(C14)
+∥∇x f (x0 , y0 )∥2 + ∥ − ∇y f (x0 , y0 ) + τ y0 ∥2 µy
++ + ∥y0 − y ⋆ (x0 )∥2 .
+L 256
+Concavity of f (x0 , ·) and the diameter bound yield
+τ τ DY2
+p(x0 ) − f (x0 , y0 ) + ∥y0 ∥2 ≤ max f (x0 , y) − f (x0 , y0 ) +
+2 y∈Y 2
+τ DY2
+≤ DY ∥∇y f (x0 , y0 )∥ +
+.
+2
+The last expression is nonnegative, whereas the function difference
+p on the left need not be. We first replace
+that difference by its nonnegative upper bound, then use 0 < 1 − 2Lµy /(16L) < 1 to bound the coefficient.
+Since ∥y0 − y ⋆ (x0 )∥ ≤ DY , this proves the upper bound in (C12). Its lower bound follows from Lemma B.2.
+Adding the envelope and tracking bounds proves the final claim. □
+36
+C.5 Baseline nonconvex–strongly concave complexity
+Proof of Theorems 4.2 and 4.3 Since τ = 0, Lemma 3.2 gives ∥∇Φ2L (zt )∥ = ∥∇p(zt )∥. Lemma 4.3 and (4.15)
+give
+32L∆0 ε2
+Sj ≤ ≤ ,
+βT 4
+8L∆0 ε2
+E∥∇Φ2L (zout )∥2 ≤ ≤ .
+βT 16
+Combining the first inequality with (4.12) proves the game-stationarity claim. For τ = 0, the parameters satisfy
+p r 
+1 2µ/L µ
+h= , β= =Θ .
+192L 786432 L
+Under the full first-order oracle and gradient-caching convention in Section 3.2, initialization requires one
+query and each iteration requires two additional queries. Thus the total number is at most 1 + 2T , which
+gives (4.17) and (4.19) as ε ↓ 0 for fixed ∆0 > 0. □
+Remark C.1 (Budget from an initial-energy upper bound) The budget does not require computing ∆0 exactly.
+Given any known ∆0 ≥ ∆0 , choose instead
+  
+128L∆0
+T = max 1, . (C15)
+βε2
+The conclusions of Theorems 4.2 and 4.3 then hold, and for fixed ∆0 > 0 the complexity as ε ↓ 0 is
+r 
+L L∆0
+O (C16)
+µ ε2
+first-order oracle calls. This follows from the same proof by using ∆0 ≤ ∆0 in the two summation estimates.
+Thus an available upper bound suffices to prescribe the run length, without evaluating the envelope or its
+infimum.
+Remark C.2 (Optimal accuracy dependence under strong concavity) The ε−2 accuracy dependence is optimal
+with the regularity and initialization bounds fixed. To see this, embed a smooth nonconvex minimization
+instance g into f (x, y) = g(x) − µ∥y∥2 /2, with X = Rn and a fixed compact convex Y containing 0. Then
+ϕ = g, and the game residual controls ∥∇g(x)∥. For OS, let u = proxg/(2L) (z). Proximal optimality and
+smoothness give
+∇Φ2L (z) = ∇g(u) = 2L(z − u), ∥∇g(z)∥ ≤ 32 ∥∇Φ2L (z)∥.
+This pointwise inequality also transfers an expected squared-norm guarantee. Initialize z0 = x0 , y0 = 0, and
+the normal and momentum variables at zero. The definition of ∆0 and the gradient-gap inequality imply
+∥∇g(x0 )∥2 
+∆0 ≤ g(x0 ) − inf g + ≤ 3 g(x0 ) − inf g .
+L
+The smooth-minimization lower bound of [14] therefore applies under a common bounded initialization budget.
+This establishes optimality of the accuracy exponent, without asserting optimality of the condition-number
+dependence.
+Remark C.3 (Dependence on the condition number) Writing κ = L/µ, Theorems 4.2 and 4.3 give a baseline
+√
+gradient complexity upper bound of order 1+ κL∆0 ε−2 for each stated output criterion. Corollary 4.2 replaces
+∆0 in the leading term by ∆ϕ , with an additive initialization cost. An optimality comparison must retain both
+the stationarity criterion and the initialization quantity: lower bounds expressed through the gradient of the
+value function do not, by themselves, establish a matching lower bound for either guarantee stated here.
+C.6 Nonconvex–concave complexity
+Proof of Lemma 4.4 Apply Lemma C.1 with µ = 0 and µy = τ . The elementary inequality
+∥ − ∇y f (x0 , y0 ) + τ y0 ∥2 ≤ 2∥∇y f (x0 , y0 )∥2 + 2τ 2 DY2
+implies
+2τ 2
+ 
+129τ
+¯ 0 − ∆ϕ +
+H 0,τ ≤ ∆ + DY2 .
+256 L
+Adding the envelope-gap bound (C11) gives (4.21). This proves the NC–C initial-energy bound using the
+common initialization estimate. □
+37
+Proof of Theorem 4.4 By (4.13) and (4.23),
+8L∆τ ε2
+E∥∇p(zout )∥2 ≤ ≤ .
+βT 16
+Taking λ = 2L in the envelope-gradient perturbation bound (3.6) of Lemma 3.2 and using the choice (4.22)
+give, for every z ∈ Rn ,
+√
+∥∇Φ2L (z) − ∇p(z)∥ ≤ 2DY Lτ
+s
+ε2 ε
+≤ 2DY = .
+16DY2 2
+It follows that
+E∥∇Φ2L (zout )∥2 ≤ 2E∥∇p(zout )∥2
++ 2E∥∇Φ2L (zout ) − ∇p(zout )∥2
+ε2 ε2
+≤ + ≤ ε2 .
+8 2
+□
+Proof of Theorem 4.5 Lemma 4.3 and (4.23) imply
+32L∆τ ε2
+Sj ≤ ≤ .
+βT 4
+The choice (4.26) ensures τ DY ≤ ε/2. Hence (4.12) gives
+p ε ε
+R(xout , yout ) ≤ Sj + τ DY ≤ + = ε.
+2 2
+□
+C.7 Unified warm-up and its complexity consequences
+C.7.1 Warm-up energy
+Proof of Lemma 4.5 The projection argument in Lemma 3.1 does not use the center-step length. Hence
+both phases preserve feasibility and ξt ∈ NX (xt ), nt ∈ NY (yt ). Lemma B.2 gives Ht ≥ 0, and Lemma C.1
+p H0 ≤ H µ,τ . For 0 ≤ t < Tw , the center remains x0 . Applying the fixed-center estimate (B21), with
+gives
+h 2Lµy /32 = 128β, and dropping its nonnegative dissipation gives
+(1 + 128β)Ht+1 ≤ Ht , 0 ≤ t < Tw . (C17)
+Therefore
+H µ,τ
+HTw ≤ ≤ η.
+(1 + 128β)Tw
+This includes Tw = 0, which occurs when H µ,τ ≤ η. Since zTw = x0 , (C11) then gives
+τ DY2
+∆w
+τ = p(x0 ) − inf p(z) + HTw ≤ ∆ϕ + + η = Bµ,τ,η .
+z 2
+All arguments depend on µ and τ through µy = µ + τ except for the explicit perturbation bias. □
+C.7.2 Inherited-state residuals and query count
+Proof of Theorem 4.6 Retaining the complete state preserves the assumptions of the interval version of
+Lemma 4.3. Apply (4.11) with a = Tw to obtain
++T −1
+TwX +T −1
+TwX
+32L∆w 8L∆w
+St ≤ τ
+, ∥∇p(zt )∥2 ≤ τ
+. (C18)
+β β
+t=Tw t=Tw
+Using ∆w
+τ ≤ Bµ,τ,η and (4.32), uniform sampling and certificate minimization give
+8LBµ,τ,η ε2 32LBµ,τ,η ε2
+E∥∇p(zout )∥2 ≤ ≤ , Sj ≤ ≤ .
+βT 16 βT 4
+The transfer argument in Appendix C.1 then proves (4.37). For τ = 0, p = Φ2L , so the stronger auxiliary
+estimate is already an OS estimate.
+The parameters imply
+r 
+−1 262144(3L + τ ) L
+0 < 128β < 1, β = p =Θ .
+2L(µ + τ ) µ+τ
+38
+Using log(1 + s) ≥ s/2 for 0 ≤ s ≤ 1 and the iteration budgets,
+log qµ,τ,η 128LBµ,τ,η
+Tw ≤ 1 + , T ≤1+ .
+64β βε2
+The gradient-caching convention in Section 3.2 uses one initial query and two further queries per iteration.
+Each iteration makes four projections, and the center-step switch requires neither a new gradient nor a state
+reset. These observations prove (4.38) and the projection count. □
+C.7.3 NC–SC and NC–C specializations
+Proof of Corollary 4.2 Set τ = 0. The definition (4.30) reduces to
+∥∇x f (x0 , y0 )∥2 + ∥∇y f (x0 , y0 )∥2 µDY2
+H µ = DY ∥∇y f (x0 , y0 )∥ + + .
+L 256
+√
+Here Bµ,0,η = ∆ϕ + η and β −1 = Θ( κ). Theorem 4.6 gives both stated stationarity guarantees. For η = ε2 /L,
+its query bound becomes (4.40), since
+L(∆ϕ + η) L∆ϕ
+= 2 + 1, log max{1, LH µ /ε2 } ≤ log(1 + LH µ /ε2 ).
+ε2 ε
+For a fixed instance with ∆ϕ > 0, ε2 log(1 + LH µ /ε2 ) → 0. This proves the leading-order assertion. For the
+alternative in Remark 4.5, use η = ∆ > 0 and ∆ϕ + η ≤ 2∆ in the same theorem. This proves (4.45); both
+H µ and ∆ are independent of ε, so the warm-up length is also independent of it. □
+Proof of Corollaries 4.3 and 4.4 Set µ = 0 and η = τ DY2 . Then
+3
+B0,τ,η = ∆ϕ + τ DY2 , q0,τ,η = max{1, H 0,τ /(τ DY2 )}.
+2
+For OS, the choice (4.22) gives 8Lτ DY2 ≤ ε2 /2. Theorem 4.6 therefore yields
+ε2 ε2
+E∥∇Φ2L (zout )∥2 ≤ + ≤ ε2 .
+8 2
+For GS, the choice (4.26) gives τ DY ≤ ε/2, so the same theorem gives R(xout , yout ) ≤ ε.
+For fixed problem and initialization data, H 0,τ is bounded as τ ↓ 0. For sufficiently small ε, the OS choice
+satisfies τ = ε2 /(16LDY2 ) and β −1 = Θ(LDY /ε). The leading term in (4.38) is then O(L2 DY ∆ϕ ε−3 ); its
+other terms are O((LDY /ε)[1 + log(1 + LH 0,τ /ε2 )]). For GS, τ = ε/(2DY ) and β −1 = Θ( LDY /ε). The
+p
+1/2
+contribution of the value-function gap is O(L3/2 DY ∆ϕ ε−5/2 ). The remaining terms are bounded by
+r " !#!
+3/2 3/2 −3/2 LDY H 0,τ
+O L DY ε + 1 + log 1 + .
+ε εDY
+Dividing these additional terms by the respective leading terms shows that their ratios tend to zero for each
+fixed instance with ∆ϕ > 0. This proves (4.42) and (4.44); the full nonasymptotic statement remains (4.38). □
+Appendix D Lower-Bound Construction
+We first establish the regularity of the base instance and its value function, then show how the oracle
+reveals the chain coordinates. A value-gradient barrier yields the Moreau-gradient barrier needed for
+Theorem 5.1. The final subsection verifies the initialization and oracle-class conditions for comparing
+the bounds. All constants in the base construction are independent of M and n.
+D.1 Analytic properties of the base instance
+We establish the regularity properties of the base instance defined in Section 5.2. For the proofs,
+introduce the simpler expression
+M M
+1X i ⊤ 1 X
+fM,n (x, y ) := − (y ) Qn y i + √ wi (x)(y1i − g (xi )yni )
+2 i=1 n i=1
+(D1)
+M M
+X 1X − 2
+−4 s(xi ) + (x )
+i=1
+2 i=1 i
+39
+Lemma D.1 (Scalar functions, quadratic chain, and feasible set) The functions s, h, g, Rn belong to C 1,1 and
+satisfy
+0 ≤ s ≤ 1, s′ ≥ 0, (s′ )2 = π 2 s(1 − s), Lip(s′ ) ≤ π 2 /2,
+s(0) = s′ (0) = s′ (1) = 0, s(1) = 1,
+′
+(D2)
+|h| ≤ 2, 0 ≤ h ≤ 1, Lip(h′ ) ≤ 1/2,
+|g| ≤ 1/2, 0 ≤ g ′ ≤ 1/4, Lip(g ′ ) ≤ 1/8, g(t) = t/4 (|t| ≤ 1).
+Moreover,
+M
+X
+wi ≥ 0, wi = 1 − PM ≤ 1, (D3)
+i=1
+and
+1 2
+≤ λmin (Qn ) ≤ 2 , ∥Qn ∥ ≤ 5. (D4)
+2n2 n
+The set YM,n is nonempty, compact, and convex, and, for every v ∈ RM n ,
+diam(YM,n ) = 2n, supp(ΠYM,n (v)) ⊆ supp(v). (D5)
+Proof For 0 < t < 1, we have s′ (t) = (π/2) sin(πt) and s′′ (t) = (π 2 /2) cos(πt); outside this interval, s′ = 0.
+On the intervals |t| < 1, 1 < |t| < 3, and |t| > 3, the derivative h′ equals 1, (3 − |t|)/2, and 0, respectively. The
+first derivatives agree at all junctions, which proves (D2). Furthermore,
+√
+′ sgn(t)(|t| − n)+ ′′ 1
+Rn (t) = , Rn (t) = 1{|t|>√n} almost everywhere.
+n n
+′
+Thus Lip(Rn ) ≤ 1/n. Summing the identity wi = PPi−1 − Pi gives (D3).
+Let δj = uj+1 − uj . The identity uj = u1 + ℓ<j δℓ and the Cauchy–Schwarz inequality yield
+n−1
+u2j ≤ 2u21 + 2(j − 1) δℓ2 .
+X
+ℓ=1
+Summing over j gives
+n−1
+∥u∥2 ≤ 2nu21 + n(n − 1) δℓ2 ≤ 2n2 u⊤ Qn u.
+X
+ℓ=1
+Consequently, λmin (Qn ) ≥ 1/(2n2 ). Taking u = 1n gives a Rayleigh quotient of 2/n2 and hence the upper
+bound on λmin (Qn ). On the other hand,
+n−1
+u21 + u2n
+u⊤ Qn u ≤ 2 (u2j + u2j+1 ) + ≤ 5∥u∥2 ,
+X
+n
+j=1
+which proves (D4).
+The set YM,n is the intersection of a closed ball and a closed cube; it contains the origin and is bounded.
+√
+Hence it is nonempty, compact, and convex. Its diameter is at most 2n. Take ȳ 1 = n1n and ȳ i = 0 for i > 1.
+Then ±ȳ ∈ YM,n and ∥ȳ − (−ȳ)∥ = 2n, so the diameter equals 2n. Let p = ΠYM,n (v). If va = 0 but pa ̸= 0,
+replace pa by zero to obtain pe. Neither constraint norm increases, so pe ∈ YM,n , whereas
+p − v∥2 = ∥p − v∥2 − |pa |2 < ∥p − v∥2 .
+∥e
+This contradicts the optimality of the projection and proves the support inclusion. □
+Lemma D.2 (Dimension-independent bounds for the product weights) Suppose that vi ∈ C 1,1 (R) satisfy
+|vi | ≤ V0 , |vi′ | ≤ V1 , and Lip(vi′ ) ≤ V2 . For G(x) = M
+P
+i=1 wi (x)vi (xi ), we have
+∥∇G(x)∥ ≤ πV0 + V1 ,
+√ (D6)
+1+ 3 2
+Lip(∇G) ≤ KV0 + 2πV1 + V2 , K := π .
+2
+Proof Let θi = (π/2) min{1, max{0, xi }}, ui = (cos θi , sin θi ), and A = M
+N
+i=1 ui . Index the tensor coordinates
+M
+by σ ∈ {0, 1} , where 0 selects cos θi and 1 selects sin θi . If m(σ) := min{i : σi = 0} exists, define
+Vσσ (x) = vm(σ) (xm(σ) ). Set the diagonal entry indexed by the all-one vector to zero and all off-diagonal
+entries to zero. Then
+ 
+A2σ =  sin2 θj  cos2 θi (cos2 θj + sin2 θj ) = wi .
+X Y Y
+σ:m(σ)=i j<i j>i
+40
+It follows that G = A⊤ V A and ∥A∥ = 1.
+We first differentiate within any open region determined by the hyperplanes xi = 0, 1. For a direction q, set
+ai = (π/2)qi when 0 < xi < 1 and ai = 0 otherwise. Let Bi be the tensor obtained by replacing the ith factor
+of A with u⊥i = (− sin θi , cos θi ), and let Bij be the tensor obtained by replacing both the ith and jth factors.
+Since each pair ui , u⊥
+i is orthonormal, A, all Bi , and all Bij form an orthonormal collection. Therefore,
+X
+DA[q] = ai Bi ,
+i
+!
+2
+a2i
+X X
+D A[q, q] = − A+2 ai aj Bij ,
+i i<j
+π2
+∥DA[q]∥2 = ∥q∥2 , a2i ≤
+X
+4
+i
+!2
+2 2
+X 2 X 2 2 3π 4
+∥D A[q, q]∥ = ai +4 ai aj ≤ ∥q∥4 .
+16
+i i<j
+By the definition of the diagonal entries,
+∥V ∥ ≤ V0 , ∥DV [q]∥ ≤ V1 ∥q∥, ∥D2 V [q, q]∥ ≤ V2 ∥q∥2 almost everywhere.
+⊤
+Differentiating A V A gives
+DG[q] = 2(DA[q])⊤ V A + A⊤ (DV [q])A
+and
+D2 G[q, q] = 2(D2 A[q, q])⊤ V A + 2(DA[q])⊤ V DA[q]
++ 4(DA[q])⊤ (DV [q])A + A⊤ (D2 V [q, q])A.
+Hence |DG[q]| ≤ (πV0 + V1 )∥q∥, and
+√ 2
+π2
+
+3π
+|D2 G[q, q]| ≤ V0 + V0 + 2πV1 + V2 ∥q∥2
+2 2
+= (KV0 + 2πV1 + V2 )∥q∥2 .
+As a finite sum of finite products of C 1,1 functions, G is locally C 1,1 , and its gradient is continuous across
+the hyperplanes xi = 0, 1. The preceding Hessian bound holds almost everywhere in the full space. For an
+arbitrary segment [a, b], Fubini’s theorem provides translations ηj → 0 such that the bound holds almost
+everywhere on each translated segment [a + ηj , b + ηj ]. The gradient is absolutely continuous on each compact
+segment, so integration yields
+∥∇G(b + ηj ) − ∇G(a + ηj )∥ ≤ (KV0 + 2πV1 + V2 )∥b − a∥.
+Letting j → ∞ and using continuity proves the global Lipschitz bound. Continuity also extends the gradient
+norm bound to the boundaries of the regions. □
+Lemma D.3 (Global regularity) The function fbM,n is jointly L0 -smooth on RM +M n , where L0 := 128 is
+independent of M and n. For every x, the function fbM,n (x, ·) is µ0 -strongly concave, where µ0 = λmin (Qn ).
+Moreover, fbM,n is nonconvex in x, and
+fbM,n = fM,n , ∇fbM,n = ∇fM,n on RM × YM,n . (D7)
+Proof Denote the coupling term in (5.9) by C(x, y). For fixed y, set
+√ i √
+vi (t) = h(y1i / n) − g(t)h(yn / n).
+By (D2), we may take V0 = 3, V1 = 1/2, and V2 = 1/4. Applying Lemma D.2 and including the second
+derivatives of −4s(xi ) and (x− 2
+i ) /2 yields, almost everywhere,
+1
+∥∇2xx fbM,n ∥ ≤ 3K + π + + 2π 2 + 1 < 65. (D8)
+4
+For r = (r1 , . . . , rM ) ∈ RM n with ∥r∥ = 1, we have
+X
+Dy C(x, y)[r] = wi (x)e
+vi (xi ),
+i
+√ i √
+h (y1i / n)r1i − g(t)h′ (yn
+′ i
+/ n)rn
+vei (t) = √ .
+n
+41
+√ √
+Since |rji | ≤ 1, it follows that |e
+vi | ≤ 3/(2 n) and |e vi′ | ≤ 1/(4 n). The gradient bound in Lemma D.2 therefore
+gives
+3π/2 + 1/4
+∥∇2xy fbM,n ∥ ≤ √ < 4. (D9)
+n
+Apart from −IM ⊗ Qn , the yy Hessian has only diagonal corrections at the first and last coordinates of
+each block. These corrections are
+w √
+di,1 = i h′′ (y1i / n) − Rn ′′ i
+(y1 ),
+n
+w g(xi ) ′′ i √ ′′ i
+di,n = − i h (yn / n) − Rn (yn ).
+n
+√ √
+If the absolute value of the corresponding coordinate is less than n, both terms vanish. If it exceeds n, the
+bound 0 ≤ wi ≤ 1 implies, almost everywhere,
+3 1 5 3
+− ≤ di,1 ≤ − , − ≤ di,n ≤ − .
+2n 2n 4n 4n
+Consequently,
+∇2yy fbM,n ⪯ −IM ⊗ Qn ⪯ −µ0 I,
+3 (D10)
+∥∇2yy fbM,n ∥ ≤ 5 + < 6.
+2n
+Decompose the full Hessian into its block-diagonal and off-diagonal parts. Equations (D8)–(D10) give
+∥∇2 fbM,n ∥ ≤ max{65, 6} + 4 = 69 < 128 almost everywhere.
+The function fbM,n is locally C 1,1 , with a continuous gradient across the boundaries of its pieces. Integrating
+along segments and using continuity at the boundaries proves global L0 -smoothness. For fixed x, integrating
+(D10) in the same way yields
+fbM,n (x, y ′ ) ≤ fbM,n (x, y) + ⟨∇y fbM,n (x, y), y ′ − y⟩
+µ
+− 0 ∥y ′ − y∥2 .
+2
+For y = 0 and 0 < t < 1/2, we have fbM,n (te1 , 0) = −4s(t), whose second derivative is −2π 2 cos(πt) < 0.
+√
+Thus the objective is nonconvex in x. Finally, every coordinate of a point in YM,n satisfies |yji | ≤ n. Hence
+√ √
+h(yji / n) = yji / n, h′ = 1, and Rn = Rn ′
+= 0. Substitution proves (D7), including at boundary points. □
+D.2 Value function and oracle information propagation
+Lemma D.4 (Dual maximizer, value function, and initial gap) Let
+2n − 1 n an
+an := , bn := , kn (t) := (1 + g(t)2 ) − bn g(t).
+3n − 1 3n − 1 2
+For every x, the unique dual maximizer is
+wi (x) −1
+y i,∗ (x) = √ Qn (e1 − g(xi )en ), i = 1, . . . , M. (D11)
+n
+This vector belongs to YM,n , and
+M M M
+1X − 2
+wi (x)2 kn (xi ) − 4
+X X
+φM,n (x) = s(xi ) + (xi ) . (D12)
+2
+i=1 i=1 i=1
+Moreover, 0 ≤ kn ≤ 1 and
+an
+inf φM,n = −4M, φM,n (0) − inf φM,n = 4M + ≤ 5M. (D13)
+2
+Proof Define
+n(2n − j) n(n + j − 1)
+uj = , vj = , j = 1, . . . , n.
+3n − 1 3n − 1
+Since uj is affine in j, it satisfies 2uj − uj−1 − uj+1 = 0 for 2 ≤ j ≤ n − 1. At the endpoints,
+(n + 1)(2n − 1) − n(2n − 2)
+(1 + 1/n)u1 − u2 = = 1,
+3n − 1
+n(n + 1) − n(n + 1)
+(1 + 1/n)un − un−1 = = 0.
+3n − 1
+Thus Qn u = e1 . The matrix Qn is invariant under reversal of the coordinate order, and vj = un+1−j , so
+Qn v = en . Since Qn ≻ 0, we obtain u = Q−1 −1
+n e1 and v = Qn en . Completing the square in each quadratic
+block of (D1) gives the unique unconstrained maximizer in (D11).
+42
+Because uj , vj ≥ 0 and uj + vj = n,
+|uj − g(xi )vj | ≤ uj + |g(xi )|vj ≤ n.
+Consequently, √
+∥y i,∗ (x)∥∞ ≤ n wi (x), ∥y i,∗ (x)∥2 ≤ nwi (x).
+Together with (D3), these estimates imply
+!2
+∗ √ ∗
+(x)∥22 ≤ n2 2 2
+≤ n2 .
+X X
+∥y (x)∥∞ ≤ n, ∥y wi (x) ≤ n wi (x)
+i i
+∗
+Hence y (x) ∈ YM,n . By (D7), this point is also the unique maximizer of fbM,n over YM,n .
+The displayed columns of Q−1
+n give
+e⊤ −1 ⊤ −1
+1 Qn e1 = en Qn en = nan , e⊤ −1
+1 Qn en = nbn .
+The maximum of each quadratic block is therefore
+wi2
+(e1 − g(xi )en )⊤ Q−1 2
+n (e1 − g(xi )en ) = wi kn (xi ),
+2n
+which proves (D12). Positive definiteness gives kn ≥ 0. Since an ≤ 1, bn ≤ 1/2, and |g| ≤ 1/2,
+ 
+1 1 1 1 7
+kn (t) ≤ 1+ + · = ≤ 1.
+2 4 2 2 8
+The signs of the terms in (D12) and the bound s ≤ 1 give φM,n (x) ≥ −4M . At x = 1M , all wi and x− i
+vanish and all s(xi ) equal one, attaining −4M . At x = 0, only w1 = 1 is nonzero and kn (0) = an /2. This
+proves (D13). □
+Lemma D.5 (Query support of projected zero-respecting algorithms) Let d = M (n + 1) and label the
+coordinates c1 , . . . , cd in the order
+y11 , . . . , yn
+1
+, x1 , y12 , . . . , yn
+2
+, x2 , . . . , y1M , . . . , yn
+M
+, xM . (D14)
+Define
+V0 := {0}, Vk := {z : supp(z) ⊆ {c1 , . . . , cmin{k,d} }} (k ≥ 1).
+M
+For fbM,n on ZM,n := R × YM,n , every algorithm in Definition 5.1 satisfies
+wt ∈ Vt , wout ∈ VT . (D15)
+In particular, xout
+M = 0 whenever T < M (n + 1).
+Proof Projection onto the product set separates as
+ΠZM,n (vx , vy ) = (vx , ΠYM,n (vy )).
+By (D5), v ∈ Vk implies ΠZM,n (v) ∈ Vk .
+Write FM,n = (∇x fbM,n , −∇y fbM,n ). By (D7), at a feasible point we have
+wi (x)
+∇yi fbM,n = −Qn y i + √ (e1 − g(xi )en ). (D16)
+n
+If xi = 0, then s′ (xi ) = 0 and consequently ∂xi wj (x) = 0 for every j. Indeed, for j < i the weight does not
+depend on xi ; for j = i its derivative is −Pi−1 s′ (xi ); and for j > i each derivative contains the factor s′ (xi ).
+Since g ′ (0) = 1/4, it follows that
+P (x) i
+∂xi fbM,n (x, y) = − i−1
+√ yn (xi = 0, y ∈ YM,n ). (D17)
+4 n
+We show that z ∈ Vk ∩ ZM,n implies FM,n (z) ∈ Vk+1 . This holds trivially for k ≥ d. For k < d, write
+uniquely k = (i − 1)(n + 1) + r, where 1 ≤ i ≤ M and 0 ≤ r ≤ n. Then xi = 0, only the first r coordinates of
+y i may be nonzero, and xj = y j = 0 for all j > i. In block i, g(xi ) = 0 and Qn is tridiagonal. If r < n, (D16)
+i i
+can therefore activate only the next coordinate yr+1 , while yn = 0 makes (D17) zero. If r = n, every dual
+coordinate of block i already belongs to Vk , and only xi can be newly activated. For j > i, the product Pj−1
+contains s(xi ) = 0, so wj = 0. Together with y j = 0, this makes both (D16) and (D17) zero in those blocks.
+Thus the gradient support lies in the first k + 1 coordinates.
+Starting from w0 = 0 ∈ V0 , suppose inductively that ws ∈ Vs for every s ≤ t. Then FM,n (ws ) ∈ Vs+1 ⊆
+Vt+1 . The support restriction (5.3) gives at+1 ∈ Vt+1 , and projection gives wt+1 ∈ Vt+1 . Every vector in the
+union in (5.4) belongs to VT , so aout ∈ VT and its projection remains in VT . If T = 0, the output is zero and
+the same conclusion holds. Finally, xM is the dth coordinate, so T < d implies xout M = 0. □
+43
+D.3 Stationarity barriers
+Lemma D.6 (Value-function gradient barrier) If xM ≤ 1/2, then
+1
+∥∇φM,n (x)∥ ≥ . (D18)
+256
+Proof By Lemma D.4, φM,n is continuously differentiable, and
+′
+kn (t) = (an g(t) − bn )g ′ (t).
+Since
+an 1
+an g(t) − bn ≤ − bn = − <0
+2 2(3n − 1)
+and g ′ ≥ 0, we have kn
+′
+≤ 0. For t ∈ [−1, 1/2], g(t) = t/4 ≤ 1/8 and g ′ (t) = 1/4, so
+′ 1  an  6n + 1 1
+kn (t) ≤ − bn = − ≤− . (D19)
+4 8 32(3n − 1) 16
+Write si = s(xi ) and s′i = s′ (xi ), and define
+ 
+M m−1
+Y 2
+sj  (1 − sm )2 kn (xm ).
+X
+Hi (x) = 
+m=i+1 j=i+1
+Empty sums equal zero and empty products equal one. The bounds 0 ≤ kn ≤ 1 and (1 − sm )2 ≤ 1 − s2m imply
+ 
+M m−1
+Y 2
+sj  (1 − s2m )
+X
+0 ≤ Hi ≤ 
+m=i+1 j=i+1
+(D20)
+M
+s2j ≤ 1.
+Y
+=1−
+j=i+1
+Decompose the first term of the value function as
+X 2 X 2 2
+(1 − si )2 kn (xi ) + s2i Hi .
+
+wm kn (xm ) = wm kn (xm ) + Pi−1
+m m<i
+P 2
+The terms m<i wm kn (xm ), Pi−1 , and Hi do not depend on xi . Differentiating (D12) term by term yields
+′
+2
+(1 − si )2 kn (xi ) − 2(1 − si )s′i kn (xi ) + 2si s′i Hi
+
+∂i φM,n (x) = Pi−1
+(D21)
+− 4s′i + min{xi , 0}.
+Because 0 ≤ Pi−1 , si , Hi ≤ 1, s′i ≥ 0, kn ≥ 0, and kn
+′
+≤ 0,
+′
+2
+∂i φM,n (x) ≤ Pi−1 (1 − si )2 kn (xi ) − 2s′i + min{xi , 0}
+(D22)
+≤ −2s′i ≤ 0.
+Consequently,
+∥∇φM,n (x)∥2 ≥ 4 (s′i )2 .
+X
+(D23)
+i
+Suppose, for a contradiction, that ∥∇φM,n (x)∥ < 1/256. Let k be the smallest index for which sk ≤ 1/2.
+Such an index exists because xM ≤ 1/2 and s(1/2) = 1/2. For i < k, we have si > 1/2; hence (D2) and (D23)
+give
+(s′ )2 2 ∥∇φM,n (x)∥2 1
+1 − si = 2i ≤ 2 (s′i )2 ,
+X
+(1 − si ) ≤ < .
+π si π 2π 2 2
+i<k
+Q P
+For ai ∈ [0, 1], repeated use of (1 − a)(1 − b) ≥ 1 − a − b yields i (1 − ai ) ≥ 1 − i ai . Therefore,
+Y X 1
+Pk−1 = si ≥ 1 − (1 − si ) ≥ .
+2
+i<k i<k
+If xk < −1, then (D22) implies ∂k φM,n (x) ≤ xk < −1, contradicting the assumed gradient bound. Otherwise,
+sk ≤ 1/2 and the definition of s give xk ∈ [−1, 1/2]. Applying (D19) and (D22), we obtain
+ 2  2
+1 1 1 1
+∂k φM,n (x) ≤ − =− ,
+2 2 16 256
+again a contradiction. □
+44
+Lemma D.7 (Moreau-envelope gradient barrier) Let c0 = 1/512 and use the curvature convention
+ΦM,n,2L0 (x) := min{φM,n (u) + L0 ∥u − x∥2 }.
+u
+If xM = 0, then
+∥∇ΦM,n,2L0 (x)∥ > c0 . (D24)
+Consequently, the output of every projected zero-respecting first-order algorithm after T < M (n + 1) queries
+satisfies (D24).
+Proof Lemma D.3 implies that φM,n is L0 -weakly convex: for each feasible y, fbM,n (·, y) + (L0 /2)∥ · ∥2 is
+convex, and taking its pointwise maximum preserves convexity. By (D13), φM,n is bounded below. Hence
+p = argmin{φM,n (u) + L0 ∥u − x∥2 }
+u
+exists and is unique. Set d = ∇ΦM,n,2L0 (x). The Moreau-gradient identity and the proximal optimality
+condition give
+d = 2L0 (x − p), 0 = ∇φM,n (p) + 2L0 (p − x).
+Thus d = ∇φM,n (p) and p = x − d/(2L0 ). If xM = 0 and ∥d∥ ≤ c0 , then
+|dM | 1 1
+|pM | = ≤ < .
+2L0 2L0 · 512 2
+Lemma D.6 then gives ∥d∥ = ∥∇φM,n (p)∥ ≥ 1/256 > c0 , a contradiction. The output statement follows from
+Lemma D.5. □
+D.4 Initialization for the upper-bound comparison
+On the scaled hard instance, initialization at the origin gives
+a a LDY
+∇x fsc (0, 0) = 0, ∇y fsc (0, 0) = √ e1 , √ ≤ .
+b n b n 4
+Substitution into (4.20) yields
+¯ 0 ≤ ∆ + 3 LD2 .
+∆ (D25)
+Y
+8
+For fixed L, ∆, DY , Lemma 4.4 therefore bounds ∆τ uniformly for 0 < τ ≤ L on the common class
+¯ 0 ≤ ∆ + 3 LD2 . The OS upper and lower bounds match in their ε−3 accuracy
+satisfying (5.1) and ∆ 8 Y
+dependence on this class. If ∆ ≥ LDY2 , the hard family also belongs to the common initialization class
+¯ 0 ≤ 2∆, on which the leading dependence matches at order L2 ∆DY ε−3 .
+∆
+With all states initialized at zero, Algorithms 1 and 2 satisfy the oracle support restrictions on
+these domains. Their linear combinations, regularization gradients, momentum and center updates,
+and stored-output selection preserve revealed support. Projections preserve support by Lemma D.1,
+as do their residuals. Each gradient evaluation counts as a query; the fixed-center warm-up and its
+transition to the main phase introduce no new coordinates.
+References
+[1] Rafique, H., Liu, M., Lin, Q., Yang, T.: Weakly-convex–concave min–max optimization: provable
+algorithms and applications in machine learning. Optimization Methods and Software 37(3),
+1087–1121 (2022) https://doi.org/10.1080/10556788.2021.1895152
+[2] Sagawa, S., Koh, P.W., Hashimoto, T.B., Liang, P.: Distributionally robust neural networks for
+group shifts: On the importance of regularization for worst-case generalization. In: International
+Conference on Learning Representations (2020). https://arxiv.org/abs/1911.08731
+[3] Fan, Y., Lyu, S., Ying, Y., Hu, B.-G.: Learning with average top-k loss. In: Advances in Neural
+Information Processing Systems, vol. 30, pp. 497–505 (2017). https://proceedings.neurips.cc/pap
+er/2017/hash/6c524f9d5d7027454a783c841250ba71-Abstract.html
+[4] Lin, T., Jin, C., Jordan, M.I.: On gradient descent ascent for nonconvex-concave minimax
+problems. In: Proceedings of the 37th International Conference on Machine Learning. Proceedings
+of Machine Learning Research, vol. 119, pp. 6083–6093 (2020). https://proceedings.mlr.press/v1
+19/lin20a.html
+45
+[5] Lin, T., Jin, C., Jordan, M.I.: Two-timescale gradient descent ascent algorithms for nonconvex
+minimax optimization. Journal of Machine Learning Research 26(11), 1–45 (2025)
+[6] Yang, J., Orvieto, A., Lucchi, A., He, N.: Faster single-loop algorithms for minimax optimization
+without strong concavity. In: Proceedings of the 25th International Conference on Artificial
+Intelligence and Statistics. Proceedings of Machine Learning Research, vol. 151, pp. 5485–5517
+(2022). https://proceedings.mlr.press/v151/yang22b.html
+[7] Lin, T., Jin, C., Jordan, M.I.: Near-optimal algorithms for minimax optimization. In: Proceedings
+of the Thirty Third Conference on Learning Theory. Proceedings of Machine Learning Research,
+vol. 125, pp. 2738–2779 (2020). https://proceedings.mlr.press/v125/lin20a.html
+[8] Zhang, S., Yang, J., Guzmán, C., Kiyavash, N., He, N.: The complexity of nonconvex-strongly-
+concave minimax optimization. In: Proceedings of the Thirty-Seventh Conference on Uncertainty
+in Artificial Intelligence. Proceedings of Machine Learning Research, vol. 161, pp. 482–492 (2021).
+https://proceedings.mlr.press/v161/zhang21c.html
+[9] Huang, F., Wu, X., Huang, H.: Efficient mirror descent ascent methods for nonsmooth minimax
+problems. In: Advances in Neural Information Processing Systems, vol. 34 (2021). https://procee
+dings.neurips.cc/paper/2021/hash/56503192b14190d3826780d47c0d3bf3-Abstract.html
+[10] Li, H., Tian, Y., Zhang, J., Jadbabaie, A.: Complexity lower bounds for nonconvex-strongly-
+concave min-max optimization. In: Advances in Neural Information Processing Systems, vol. 34,
+pp. 1792–1804 (2021). https://proceedings.neurips.cc/paper files/paper/2021/hash/0e105949d99
+a32ca1751703e94ece601-Abstract.html
+[11] Thekumparampil, K.K., Jain, P., Netrapalli, P., Oh, S.: Efficient algorithms for smooth minimax
+optimization. In: Advances in Neural Information Processing Systems, vol. 32 (2019). https:
+//proceedings.neurips.cc/paper/2019/hash/05d0abb9a864ae4981e933685b8b915c-Abstract.html
+[12] Li, J., Nagarajan, M., Pan, S., Zhang, N.: Smoothing Meets Perturbation: Unified and Tight
+Analysis for Nonconvex-Concave Minimax Optimization. Version 2, April 29, 2026 (2026). https:
+//arxiv.org/abs/2602.14185v2
+[13] Xu, Z., Zhang, H., Xu, Y., Lan, G.: A unified single-loop alternating gradient projection algorithm
+for nonconvex-concave and convex-nonconcave minimax problems. Mathematical Programming
+201, 635–706 (2023) https://doi.org/10.1007/s10107-022-01919-z
+[14] Carmon, Y., Duchi, J.C., Hinder, O., Sidford, A.: Lower bounds for finding stationary points I.
+Mathematical Programming 184, 71–120 (2020) https://doi.org/10.1007/s10107-019-01406-y
+46

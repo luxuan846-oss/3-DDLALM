@@ -5,13 +5,18 @@
 % ======================================================================
 \ifdefined\paperformat\else\def\paperformat{arxiv}\fi
 \newif\ifshowlinenumbers
+% Supplementary switch: \supptrue includes the proofs of Section 3
+% (Appendices on hard instances and upper bounds); \suppfalse omits them and
+% refers to the supplementary material instead.
+\newif\ifsupp \suppfalse % \supptrue
+\newcommand{\supploc}[1]{\ifsupp Appendix~\ref{#1}\else the supplementary material\fi}
 
 \def\fmtARXIV{arxiv}\def\fmtMP{mp}\def\fmtSIOPT{siopt}
 \newif\ifarxiv \newif\ifmp \newif\ifsiopt
 \ifx\paperformat\fmtARXIV \arxivtrue
 \else\ifx\paperformat\fmtMP \mptrue
 \else\ifx\paperformat\fmtSIOPT \siopttrue
-\else \errmessage{Unknown \string\paperformat: use arxiv, mp, or siopt}
+\else \errmessage{Unknown \string\paperformat: use arxiv, mp, or siopt}  
 \fi\fi\fi
 
 % \showlinenumberstrue  % set to \showlinenumbersfalse to hide line numbers
@@ -19,7 +24,7 @@
 
 \makeatletter
 \ifdefined\XeTeXversion
-  \providecommand{\headerps@out}[1]{}
+  \providecommand{\headerps@out}[1]{} 
 \else\ifdefined\directlua
   \providecommand{\headerps@out}[1]{}
 \fi\fi
@@ -87,60 +92,62 @@ lower complexity bound}
 \newcommand{\papermsc}{90C26, 90C30, 90C47, 90C60, 65K05, 49M37}
 \newcommand{\paperabstract}{%
 In this paper, we study single-loop linearized augmented Lagrangian methods
-(ALMs) for nonconvex composite optimization. Existing single-loop penalty and
-linearized ALM methods typically attain $\mathcal O(\epsilon^{-3})$ complexity
-by scaling the penalty parameter as $\Theta(\epsilon^{-1})$, which inflates the
-primal smoothness modulus and shrinks the primal stepsize. To keep the penalty
-fixed, we study a family of linearized regularized ALMs (LRALM) with dual
-regularization and moving centers, where dual regularization raises the
-effective penalty without increasing primal smoothness. Combining upper bounds
-with matching hard-instance lower bounds for finding an $\epsilon$-KKT point,
-we prove that the tight complexity within LRALM is $\Theta(\epsilon^{-4})$
-whenever the effective penalty remains below a threshold of order
-$\epsilon^{-1}$, and improves to $\Theta(\epsilon^{-3})$ with a fixed penalty
-and $\Theta(\epsilon^{-1})$ dual regularization. Beyond this family, we develop
-Fast LRALM by adding Nesterov extrapolation to the dual update. It attains
-$\mathcal O(\epsilon^{-5/2})$ complexity with a fixed penalty, matching, to the
-best of our knowledge, the fastest multi-loop rate for this problem class
-without inner solvers or dual projections.
+(ALMs) for nonsmooth nonconvex composite optimization. Existing single-loop
+penalty and linearized ALM methods typically attain \(\mathcal O(\epsilon^{-3})\)
+complexity by scaling the penalty as \(\Theta(\epsilon^{-1})\), which inflates the
+primal smoothness modulus and shrinks the primal stepsize. Although a constant
+penalty avoids this growth, the achievable complexity of fixed-penalty
+single-loop methods remains largely unexplored. To address this gap, we study a
+family of linearized regularized ALMs (LRALM) with moving centers, where dual
+regularization raises the effective penalty without increasing the primal
+smoothness modulus. Matching upper and lower bounds show that, over constant
+center stepsizes, the best worst-case \(\epsilon\)-KKT complexity in this family
+is \(\Theta(\epsilon^{-4})\) for an effective penalty below order \(\epsilon^{-1}\),
+and \(\Theta(\epsilon^{-3})\) under a fixed penalty with \(\Theta(\epsilon^{-1})\)
+dual regularization. With a zero dual center in this regime, the multiplier
+update performs inexact gradient ascent on a smooth strongly concave dual
+objective. Motivated by this structure, we propose Fast LRALM, which updates the
+multipliers via inexact Nesterov accelerated gradient ascent. Using one
+first-order oracle call per iteration without inner solvers or dual projections,
+Fast LRALM achieves \(\mathcal O(\epsilon^{-5/2})\) complexity with a fixed
+penalty. To our knowledge, it is the first single-loop linearized ALM to attain
+this rate for nonconvex composite optimization without constraint
+qualifications, matching the optimal rate for smooth nonconvex-concave minimax
+problems.
 }
 
 \ifsiopt
   \headers{Accelerated Linearized ALMs with a Fixed Penalty}{}
   \title{{\papertitle}}
-  \author{}
-  % \author{Luxuan Li \and Chunfeng Cui \and Kangkang Deng \and Jiang Hu}
+  \author{Luxuan Li \and Chunfeng Cui \and Kangkang Deng \and Jiang Hu}
 \fi
 \ifmp
   \title{\papertitle}
   \titlerunning{Accelerated linearized ALMs with a fixed penalty}
-  \authorrunning{}
-  % \authorrunning{L. Li et al.}
-  \author{}
-  % \author{Luxuan Li \and Chunfeng Cui \and Kangkang Deng \and Jiang Hu}
+  \authorrunning{L. Li et al.}
+  \author{Luxuan Li \and Chunfeng Cui \and Kangkang Deng \and Jiang Hu}
   \institute{}
   \date{Received: date / Accepted: date}
 \fi
 \ifarxiv
   \title{\papertitle}
   \providecommand{\email}[1]{\href{mailto:#1}{\texttt{#1}}}
-  \author{}
-  % \author{%
-  % Luxuan Li\thanks{School of Mathematical Sciences, Beihang University,
-  % Beijing 100191, China; Faculty of Mathematics, University of Vienna,
-  % A-1090 Vienna, Austria (\email{lil00@univie.ac.at}).}
-  % \and
-  % Chunfeng Cui\thanks{School of Mathematical Sciences and State Key
-  % Laboratory of Virtual Reality Technology and Systems, Beihang University,
-  % Beijing 100191, China (\email{chunfengcui@buaa.edu.cn}).}
-  % \and
-  % Kangkang Deng\thanks{College of Science, National University of Defense
-  % Technology, Changsha 410073, China (\email{freedeng1208@gmail.com}).
-  % Corresponding author.}
-  % \and
-  % Jiang Hu\thanks{Yau Mathematical Sciences Center, Tsinghua University,
-  % Beijing 100084, China (\email{jianghu@tsinghua.edu.cn}).}
-  % }
+  \author{%
+  Luxuan Li\thanks{School of Mathematical Sciences, Beihang University,
+  Beijing 100191, China; Faculty of Mathematics, University of Vienna,
+  A-1090 Vienna, Austria (\email{lil00@univie.ac.at}).}
+  \and
+  Chunfeng Cui\thanks{School of Mathematical Sciences and State Key
+  Laboratory of Virtual Reality Technology and Systems, Beihang University,
+  Beijing 100191, China (\email{chunfengcui@buaa.edu.cn}).}
+  \and 
+  Kangkang Deng\thanks{College of Science, National University of Defense
+  Technology, Changsha 410073, China (\email{freedeng1208@gmail.com}).
+  Corresponding author.}
+  \and
+  Jiang Hu\thanks{Yau Mathematical Sciences Center, Tsinghua University,
+  Beijing 100084, China (\email{jianghu@tsinghua.edu.cn}).}
+  }
   \date{}
 \fi 
 
@@ -158,7 +165,7 @@ without inner solvers or dual projections.
   \keywords{\paperkeywords}
   \subclass{\papermsc}
   \end{abstract}
-\fi
+\fi 
 \ifarxiv
   \begin{abstract}\paperabstract\end{abstract}
   \noindent\textbf{Keywords.} \paperkeywords
@@ -184,8 +191,10 @@ without inner solvers or dual projections.
 \bibliography{tools/refer}
 
 \appendix
+\ifsupp
 \input{appendix/ValueFunctions}
 \input{appendix/LowerBoundConstructions}
 \input{appendix/UpperBounds}
+\fi
 
 \end{document}
